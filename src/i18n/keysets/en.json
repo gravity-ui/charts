@@ -1,0 +1,80 @@
+{
+  "common": {
+    "tooltip-sum": "Sum",
+    "tooltip-rest": "Rest"
+  },
+  "chartkit": {
+    "error": "Error",
+    "legend-series-hide": "Hide all lines",
+    "legend-series-show": "Show all lines",
+
+    "tooltip-point-format-size": "Size",
+    "tooltip-sum": "Sum",
+    "tooltip-rest": "Rest",
+
+    "error-incorrect-key-value-intro": "Incorrect notation of an object passed to",
+    "error-incorrect-key": ", object keys must be convertible to integer",
+    "error-incorrect-value": ", object values must be a string or a function which returns a string"
+  },
+  "chartkit-table": {
+    "message-no-data": "No data",
+    "paginator-rows": "Rows"
+  },
+  "chartkit-ymap-legend": {
+    "label-more": "Show more {{count}}",
+    "label-hide": "Hide",
+    "label-heatmap": "Heatmap"
+  },
+  "error": {
+    "label_no-data": "No data",
+    "label_unknown-plugin": "Unknown plugin type \"{{type}}\"",
+    "label_unknown-error": "Unknown error",
+    "label_invalid-axis-category-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"category\". Strings and numbers are allowed.",
+    "label_invalid-axis-datetime-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"datetime\". Only numbers are allowed.",
+    "label_invalid-axis-linear-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"linear\". Numbers and nulls are allowed.",
+    "label_invalid-pie-data-value": "It seems you are trying to use inappropriate data type for \"value\" value. Only numbers are allowed.",
+    "label_invalid-series-type": "It seems you haven't defined \"series.type\" property, or defined it incorrectly. Available values: [{{types}}].",
+    "label_invalid-series-property": "It seems you are trying to use inappropriate value for \"{{key}}\", or defined it incorrectly. Available values: [{{values}}].",
+    "label_invalid-treemap-redundant-value": "It seems you are trying to set \"value\" for container node. Check node with this properties: { id: \"{{id}}\", name: \"{{name}}\" }",
+    "label_invalid-treemap-missing-value": "It seems you are trying to use node without \"value\". Check node with this properties: { id: \"{{id}}\", name: \"{{name}}\" }",
+    "label_invalid-y-axis-index": "It seems you are trying to use inappropriate index for Y axis: \"{{index}}\""
+  },
+  "highcharts": {
+    "reset-zoom-title": "Reset zoom",
+
+    "decimal-point": ".",
+    "thousands-sep": " ",
+
+    "Mon": "Mon",
+    "Tue": "Tue",
+    "Wed": "Wed",
+    "Thu": "Thu",
+    "Fri": "Fri",
+    "Sat": "Sat",
+    "Sun": "Sun",
+    "Jan": "Jan",
+
+    "January": "January",
+    "Feb": "Feb",
+    "February": "February",
+    "Mar": "Mar",
+    "March": "March",
+    "Apr": "Apr",
+    "April": "April",
+    "May": "May",
+    "Jun": "Jun",
+    "June": "June",
+    "Jul": "Jul",
+    "July": "July",
+    "Aug": "Aug",
+    "August": "August",
+    "Sep": "Sep",
+    "September": "September",
+    "Oct": "Oct",
+    "October": "October",
+    "Nov": "Nov",
+    "November": "November",
+    "Dec": "Dec",
+    "December": "December"
+  }
+}

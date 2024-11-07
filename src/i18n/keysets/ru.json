@@ -1,0 +1,79 @@
+{
+  "common": {
+    "tooltip-sum": "Сумма",
+    "tooltip-rest": "Остальные"
+  },
+  "chartkit": {
+    "error": "Ошибка",
+    "legend-series-hide": "Скрыть все линии",
+    "legend-series-show": "Показать все линии",
+    "loading": "Загрузка",
+    "tooltip-point-format-size": "Размер",
+    "tooltip-sum": "Сумма",
+    "tooltip-rest": "Остальные",
+    "error-incorrect-key-value-intro": "Некорректный формат объекта переданного как значение в",
+    "error-incorrect-key": ", ключи объекта должны быть преобразуемы в целое число",
+    "error-incorrect-value": ", значением объекта может быть либо строка, либо функция возвращающая строку"
+  },
+  "chartkit-table": {
+    "message-no-data": "Нет данных",
+    "paginator-rows": "Строки"
+  },
+  "chartkit-ymap-legend": {
+    "label-more": "Показать ещё {{count}}",
+    "label-hide": "Свернуть",
+    "label-heatmap": "Тепловая карта"
+  },
+  "error": {
+    "label_no-data": "Нет данных",
+    "label_unknown-plugin": "Неизвестный тип плагина \"{{type}}\"",
+    "label_unknown-error": "Неизвестная ошибка",
+    "label_invalid-axis-category-data-point": "Похоже, что вы пытаетесь использовать недопустимый тип данных для значения \"{{key}}\" в серии \"{{seriesName}}\" для оси с типом \"category\". Допускается использование строк и чисел.",
+    "label_invalid-axis-datetime-data-point": "Похоже, что вы пытаетесь использовать недопустимый тип данных для значения \"{{key}}\" в серии \"{{seriesName}}\" для оси с типом \"datetime\". Допускается только использование чисел.",
+    "label_invalid-axis-linear-data-point": "Похоже, что вы пытаетесь использовать недопустимый тип данных для значения \"{{key}}\" в серии \"{{seriesName}}\" для оси с типом \"linear\". Допускается использование чисел и значений null.",
+    "label_invalid-pie-data-value": "Похоже, что вы пытаетесь использовать недопустимый тип данных для значения \"value\". Допускается только использование чисел.",
+    "label_invalid-series-type": "Похоже, что вы не указали значение \"series.type\" или указали его неверно. Доступные значения: [{{types}}].",
+    "label_invalid-series-property": "Похоже, что вы пытаетесь использовать недопустимое значение для \"{{key}}\", или указали его неверно. Доступные значения: [{{values}}].",
+    "label_invalid-treemap-redundant-value": "Похоже, что вы пытаетесь установить значение \"value\" для узла, используемого в качестве контейнера. Проверьте узел с этими свойствами: { id: \"{{id}}\", name: \"{{name}}\" }",
+    "label_invalid-treemap-missing-value": "Похоже, что вы пытаетесь использовать узел без значения \"value\". Проверьте узел с этими свойствами: { id: \"{{id}}\", name: \"{{name}}\" }",
+    "label_invalid-y-axis-index": "Похоже, что вы пытаетесь использовать некорректный индекс для оси Y: \"{{index}}\""
+  },
+  "highcharts": {
+    "reset-zoom-title": "Сбросить увеличение",
+
+    "decimal-point": ",",
+    "thousands-sep": " ",
+
+    "Mon": "Пн",
+    "Tue": "Вт",
+    "Wed": "Ср",
+    "Thu": "Чт",
+    "Fri": "Пт",
+    "Sat": "Сб",
+    "Sun": "Вс",
+    "Jan": "Янв",
+
+    "January": "Январь",
+    "Feb": "Фев",
+    "February": "Февраль",
+    "Mar": "Мар",
+    "March": "Март",
+    "Apr": "Апр",
+    "April": "Апрель",
+    "May": "Май",
+    "Jun": "Июн",
+    "June": "Июнь",
+    "Jul": "Июл",
+    "July": "Июль",
+    "Aug": "Авг",
+    "August": "Август",
+    "Sep": "Сен",
+    "September": "Сентябрь",
+    "Oct": "Окт",
+    "October": "Октябрь",
+    "Nov": "Ноя",
+    "November": "Ноябрь",
+    "Dec": "Дек",
+    "December": "Декабрь"
+  }
+}

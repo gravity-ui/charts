@@ -1,0 +1,11 @@
+.chartkit-d3 {
+    position: absolute;
+
+    &__html-layer {
+        display: contents;
+
+        & > * {
+            transform: inherit;
+        }
+    }
+}
