@@ -17,37 +17,51 @@ import {
     barXStakingNormalData,
     barXStakingPercentData,
     barXTwoYAxisData,
+    barYBasicData,
+    barYGroupedColumnsData,
+    barYNegativeValuesData,
+    barYStakingNormalData,
+    barYStakingPercentData,
+    lineBasicData,
+    lineDataLabelsData,
+    lineMarkersData,
+    lineShapesData,
+    lineTwoYAxisData,
+    pieBasicData,
+    pieDonutData,
+    scatterBasicData,
+    scatterTwoYAxisData,
 } from './__data__';
 
 const ShowcaseStory = () => {
     return (
         <div style={{width: '100%', height: '100%'}}>
             <Container spaceRow={5}>
-                {/* <Row space={1}>
+                <Row space={1}>
                     <Text variant="header-2">Line charts</Text>
                 </Row>
                 <Row space={3}>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Basic line chart</Text>
-                        <BasicLine />
+                        <ChartStory data={lineBasicData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">With markers</Text>
-                        <LineWithMarkers />
+                        <ChartStory data={lineMarkersData} />
                     </Col>
                     <Col s={12} m={12} l={6}>
                         <Text variant="subheader-1">With data labels</Text>
-                        <LineWithDataLabels />
+                        <ChartStory data={lineDataLabelsData} />
                     </Col>
                     <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Lines with different shapes</Text>
-                        <LinesWithShapes />
+                        <ChartStory data={lineShapesData} />
                     </Col>
                     <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Line with two Y axis</Text>
-                        <LineTwoYAxis />
+                        <ChartStory data={lineTwoYAxisData} />
                     </Col>
-                </Row> */}
+                </Row>
                 <Row space={1}>
                     <Text variant="header-2">Area charts</Text>
                 </Row>
@@ -106,29 +120,29 @@ const ShowcaseStory = () => {
                         <ChartStory data={barXNegativeValuesData} />
                     </Col>
                 </Row>
-                {/* <Row space={1}>
+                <Row space={1}>
                     <Text variant="header-2">Bar-y charts</Text>
                 </Row>
                 <Row space={3}>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Basic bar chart</Text>
-                        <BasicBarY />
+                        <ChartStory data={barYBasicData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Grouped bars</Text>
-                        <GroupedColumnsBarY />
+                        <ChartStory data={barYGroupedColumnsData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Stacked bars</Text>
-                        <StackedColumnsBarY />
+                        <ChartStory data={barYStakingNormalData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Stacked percentage bars</Text>
-                        <PercentStackingBars />
+                        <ChartStory data={barYStakingPercentData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Bar-y chart with negative values</Text>
-                        <BarYNegativeValues />
+                        <ChartStory data={barYNegativeValuesData} />
                     </Col>
                 </Row>
                 <Row space={1}>
@@ -137,11 +151,11 @@ const ShowcaseStory = () => {
                 <Row space={3}>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Basic pie chart</Text>
-                        <BasicPie />
+                        <ChartStory data={pieBasicData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Donut chart</Text>
-                        <Donut />
+                        <ChartStory data={pieDonutData} />
                     </Col>
                 </Row>
                 <Row space={1}>
@@ -150,14 +164,14 @@ const ShowcaseStory = () => {
                 <Row space={3}>
                     <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Basic scatter</Text>
-                        <BasicScatter />
+                        <ChartStory data={scatterBasicData} />
                     </Col>
                     <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Scatter chart with two Y axis</Text>
-                        <ScatterTwoYAxis />
+                        <ChartStory data={scatterTwoYAxisData} />
                     </Col>
                 </Row>
-                <Row space={1}>
+                {/* <Row space={1}>
                     <Text variant="header-2">Combined charts</Text>
                 </Row>
                 <Row space={3} style={{minHeight: 280}}>

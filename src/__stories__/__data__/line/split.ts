@@ -43,9 +43,6 @@ function prepareData(): ChartKitWidgetData {
     ];
 
     return {
-        title: {
-            text: 'Chart title',
-        },
         series: {
             data: series,
         },
