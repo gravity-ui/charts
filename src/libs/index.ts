@@ -1,1 +1,2 @@
-export * from './gravity-chart-error/gravity-chart-error';
+export * from './chart-error';
+export * from './format-number';

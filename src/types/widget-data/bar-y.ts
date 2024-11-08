@@ -1,10 +1,11 @@
 import type {SeriesType} from '../../constants';
+import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartKitWidgetLegend, RectLegendSymbolOptions} from './legend';
-import type {ChartKitWidgetSeriesOptions} from './series';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartSeriesOptions} from './series';
 
-export type BarYSeriesData<T = any> = BaseSeriesData<T> & {
+export type BarYSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -25,7 +26,7 @@ export type BarYSeriesData<T = any> = BaseSeriesData<T> & {
     opacity?: number;
 };
 
-export type BarYSeries<T = any> = BaseSeries & {
+export type BarYSeries<T = MeaningfulAny> = BaseSeries & {
     type: typeof SeriesType.BarY;
     data: BarYSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -46,7 +47,7 @@ export type BarYSeries<T = any> = BaseSeries & {
      * @default true
      * */
     grouping?: boolean;
-    dataLabels?: ChartKitWidgetSeriesOptions['dataLabels'] & {
+    dataLabels?: ChartSeriesOptions['dataLabels'] & {
         /**
          * Whether to align the data label inside or outside the box.
          * For charts with a percentage stack, it is always true.
@@ -56,7 +57,7 @@ export type BarYSeries<T = any> = BaseSeries & {
         inside?: boolean;
     };
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartKitWidgetLegend & {
+    legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
 };

@@ -13,7 +13,7 @@ import type {
     BarYSeries,
     BarYSeriesData,
     BaseTextStyle,
-    ChartKitWidgetLegend,
+    ChartLegend,
     ConnectorCurve,
     ConnectorShape,
     LineSeries,
@@ -47,7 +47,7 @@ export type SymbolLegendSymbol = {
 
 export type PreparedLegendSymbol = RectLegendSymbol | PathLegendSymbol | SymbolLegendSymbol;
 
-export type PreparedLegend = Required<Omit<ChartKitWidgetLegend, 'title' | 'colorScale'>> & {
+export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>> & {
     height: number;
     lineHeight: number;
     title: {

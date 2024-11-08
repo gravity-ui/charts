@@ -1,5 +1,5 @@
 {
-  "chartkit-units": {
+  "units": {
     "value_short-bytes": "Б",
     "value_short-kilobytes": "КБ",
     "value_short-megabytes": "МБ",

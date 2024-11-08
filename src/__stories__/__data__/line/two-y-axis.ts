@@ -1,9 +1,9 @@
 import {dateTime} from '@gravity-ui/date-utils';
 
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 import marsWeatherData from '../mars-weather';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const data = marsWeatherData;
     const minTempData = data.map((d) => ({
         x: dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),

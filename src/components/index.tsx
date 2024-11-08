@@ -5,7 +5,7 @@ import type {DebouncedFunc} from 'lodash';
 import debounce from 'lodash/debounce';
 
 import {i18nFactory} from '../i18n';
-import type {ChartKitWidgetData} from '../types';
+import type {ChartData} from '../types';
 import {getUniqId} from '../utils';
 import {validateData} from '../validation';
 
@@ -21,7 +21,7 @@ type ChartDimentions = {
 };
 
 type GravityChartProps = {
-    data: ChartKitWidgetData;
+    data: ChartData;
     lang?: string;
     onResize?: (args: {dimensions?: ChartDimentions}) => void;
 };
@@ -29,7 +29,7 @@ type GravityChartProps = {
 export const GravityChart = React.forwardRef<GravityChartRef, GravityChartProps>(
     function GravityChart(props, forwardedRef) {
         const {data, lang, onResize} = props;
-        const validatedData = React.useRef<ChartKitWidgetData>();
+        const validatedData = React.useRef<ChartData>();
         const ref = React.useRef<HTMLDivElement>(null);
         const debounced = React.useRef<DebouncedFunc<() => void> | undefined>();
         const [dimensions, setDimensions] = React.useState<ChartDimentions>();

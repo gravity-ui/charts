@@ -1,6 +1,6 @@
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 
-export const XY_SERIES: Record<string, ChartKitWidgetData> = {
+export const XY_SERIES: Record<string, ChartData> = {
     INVALID_CATEGORY_X: {
         series: {
             data: [{type: 'scatter', data: [{x: undefined, y: 1}], name: 'Series'}],
@@ -37,7 +37,7 @@ export const XY_SERIES: Record<string, ChartKitWidgetData> = {
     },
 };
 
-export const PIE_SERIES: Record<string, ChartKitWidgetData> = {
+export const PIE_SERIES: Record<string, ChartData> = {
     INVALID_VALUE: {
         series: {
             // @ts-expect-error

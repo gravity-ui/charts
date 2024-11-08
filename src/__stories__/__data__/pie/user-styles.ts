@@ -1,6 +1,6 @@
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 
-export const pieUserStylesData: ChartKitWidgetData = {
+export const pieUserStylesData: ChartData = {
     series: {
         data: [
             {

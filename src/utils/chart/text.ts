@@ -1,7 +1,7 @@
 import type {Selection} from 'd3';
 import {select} from 'd3-selection';
 
-import type {BaseTextStyle} from '../../types';
+import type {BaseTextStyle, MeaningfulAny} from '../../types';
 
 export function handleOverflowingText(tSpan: SVGTSpanElement | null, maxWidth: number) {
     if (!tSpan) {
@@ -44,7 +44,7 @@ export function setEllipsisForOverflowText<T>(
 }
 
 export function setEllipsisForOverflowTexts<T>(
-    selection: Selection<SVGTextElement, T, any, unknown>,
+    selection: Selection<SVGTextElement, T, MeaningfulAny, unknown>,
     maxWidth: ((datum: T) => number) | number,
 ) {
     selection.each(function (datum) {
@@ -127,9 +127,9 @@ export function getLabelsSize({
         return {maxHeight: 0, maxWidth: 0};
     }
 
-    const container = select(document.body)
-        .append('div')
-        .attr('class', 'chartkit chartkit-theme_common');
+    const container = select(document.body).append('div');
+    // TODO: Why do we need this styles?
+    // .attr('class', 'chartkit chartkit-theme_common');
 
     const result = {maxHeight: 0, maxWidth: 0};
     let labelWrapper: HTMLElement | null;

@@ -1,9 +1,10 @@
 import type {SeriesType, SymbolType} from '../../constants';
+import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartKitWidgetLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type ScatterSeriesData<T = any> = BaseSeriesData<T> & {
+export type ScatterSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     /**
      * The `x` value of the point. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -30,7 +31,7 @@ export type ScatterSeriesData<T = any> = BaseSeriesData<T> & {
     opacity?: number;
 };
 
-export type ScatterSeries<T = any> = BaseSeries & {
+export type ScatterSeries<T = MeaningfulAny> = BaseSeries & {
     type: typeof SeriesType.Scatter;
     data: ScatterSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -40,7 +41,7 @@ export type ScatterSeries<T = any> = BaseSeries & {
     /** A predefined shape or symbol for the dot */
     symbolType?: `${SymbolType}`;
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartKitWidgetLegend & {
+    legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Y-axis index (when using two axes) */

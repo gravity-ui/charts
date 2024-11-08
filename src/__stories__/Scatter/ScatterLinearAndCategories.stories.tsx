@@ -5,8 +5,8 @@ import type {Meta, StoryFn} from '@storybook/react';
 import random from 'lodash/random';
 
 import type {
-    ChartKitWidgetAxis,
-    ChartKitWidgetData,
+    ChartAxis,
+    ChartData,
     MeaningfulAny,
     ScatterSeries,
     ScatterSeriesData,
@@ -71,14 +71,14 @@ const shapeScatterChartData = (
     series: ScatterSeries[],
     categoriesType: 'none' | 'x' | 'y',
     categories?: string[],
-): ChartKitWidgetData => {
-    let xAxis: ChartKitWidgetAxis = {
+): ChartData => {
+    let xAxis: ChartAxis = {
         title: {
             text: text('X axis title', ''),
         },
     };
 
-    let yAxis: ChartKitWidgetAxis = {
+    let yAxis: ChartAxis = {
         title: {
             text: text('Y axis title', ''),
         },

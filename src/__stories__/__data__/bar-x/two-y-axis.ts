@@ -1,9 +1,9 @@
 import {dateTime} from '@gravity-ui/date-utils';
 
-import type {ChartKitWidgetData, MeaningfulAny} from '../../../types';
+import type {ChartData, MeaningfulAny} from '../../../types';
 import marsWeatherData from '../mars-weather';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const data = marsWeatherData as MeaningfulAny[];
     const pressureData = data.map((d) => ({
         x: dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),

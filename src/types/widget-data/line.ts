@@ -2,7 +2,7 @@ import type {DashStyle, LineCap, SeriesType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartKitWidgetLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 
 export type LineSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
@@ -44,7 +44,7 @@ export type LineSeries<T = MeaningfulAny> = BaseSeries & {
      * */
     lineWidth?: number;
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartKitWidgetLegend & {
+    legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Options for the point markers of line series */

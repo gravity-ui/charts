@@ -1,9 +1,10 @@
 import type {SeriesType} from '../../constants';
+import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartKitWidgetLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type WaterfallSeriesData<T = any> = BaseSeriesData<T> & {
+export type WaterfallSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     /**
      * The `x` value. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -24,7 +25,7 @@ export type WaterfallSeriesData<T = any> = BaseSeriesData<T> & {
     total?: boolean;
 };
 
-export type WaterfallSeries<T = any> = BaseSeries & {
+export type WaterfallSeries<T = MeaningfulAny> = BaseSeries & {
     type: typeof SeriesType.Waterfall;
     data: WaterfallSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
@@ -36,7 +37,7 @@ export type WaterfallSeries<T = any> = BaseSeries & {
     /** The color used for negative values. If it is not specified, the general color of the series is used. */
     negativeColor?: string;
     /** Individual series legend options. Has higher priority than legend options in widget data. */
-    legend?: ChartKitWidgetLegend & {
+    legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
 };

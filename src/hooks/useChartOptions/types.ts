@@ -1,18 +1,15 @@
 import type {
     BaseTextStyle,
-    ChartKitWidgetAxis,
-    ChartKitWidgetAxisLabels,
-    ChartKitWidgetAxisTitleAlignment,
-    ChartKitWidgetAxisType,
-    ChartKitWidgetData,
+    ChartAxis,
+    ChartAxisLabels,
+    ChartAxisTitleAlignment,
+    ChartAxisType,
+    ChartData,
     ChartMargin,
 } from '../../types';
 
-type PreparedAxisLabels = Omit<
-    ChartKitWidgetAxisLabels,
-    'enabled' | 'padding' | 'style' | 'autoRotation'
-> &
-    Required<Pick<ChartKitWidgetAxisLabels, 'enabled' | 'padding' | 'margin' | 'rotation'>> & {
+type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' | 'autoRotation'> &
+    Required<Pick<ChartAxisLabels, 'enabled' | 'padding' | 'margin' | 'rotation'>> & {
         style: BaseTextStyle;
         rotation: number;
         height: number;
@@ -25,8 +22,8 @@ export type PreparedChart = {
     margin: ChartMargin;
 };
 
-export type PreparedAxis = Omit<ChartKitWidgetAxis, 'type' | 'labels'> & {
-    type: ChartKitWidgetAxisType;
+export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels'> & {
+    type: ChartAxisType;
     labels: PreparedAxisLabels;
     title: {
         height: number;
@@ -34,7 +31,7 @@ export type PreparedAxis = Omit<ChartKitWidgetAxis, 'type' | 'labels'> & {
         text: string;
         margin: number;
         style: BaseTextStyle;
-        align: ChartKitWidgetAxisTitleAlignment;
+        align: ChartAxisTitleAlignment;
         maxRowCount: number;
     };
     min?: number;
@@ -49,11 +46,11 @@ export type PreparedAxis = Omit<ChartKitWidgetAxis, 'type' | 'labels'> & {
     plotIndex: number;
 };
 
-export type PreparedTitle = ChartKitWidgetData['title'] & {
+export type PreparedTitle = ChartData['title'] & {
     height: number;
 };
 
-export type PreparedTooltip = ChartKitWidgetData['tooltip'] & {
+export type PreparedTooltip = ChartData['tooltip'] & {
     enabled: boolean;
 };
 

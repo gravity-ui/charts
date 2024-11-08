@@ -1,6 +1,6 @@
 import {groups} from 'd3';
 
-import type {AreaSeries, AreaSeriesData, ChartKitWidgetData} from '../../../types';
+import type {AreaSeries, AreaSeriesData, ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
 const years = Array.from(
@@ -11,7 +11,7 @@ const years = Array.from(
     ),
 ).sort();
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const grouped = groups(
         nintendoGames,
         (d) => d.platform,

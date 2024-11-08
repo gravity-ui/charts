@@ -12,8 +12,8 @@ import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
 import type {
     AreaSeries,
     BarXSeries,
-    ChartKitWidgetSeries,
-    ChartKitWidgetSeriesData,
+    ChartSeries,
+    ChartSeriesData,
     LineSeries,
     TooltipDataChunk,
     TreemapSeries,
@@ -30,8 +30,8 @@ export type ShapePoint = {
     x: number;
     y0: number;
     y1: number;
-    data: ChartKitWidgetSeriesData;
-    series: ChartKitWidgetSeries;
+    data: ChartSeriesData;
+    series: ChartSeries;
 };
 
 function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {

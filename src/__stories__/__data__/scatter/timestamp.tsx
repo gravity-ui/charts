@@ -5,7 +5,7 @@ import {date} from '@storybook/addon-knobs';
 import {range} from 'd3';
 import random from 'lodash/random';
 
-import type {ChartKitWidgetData, ScatterSeries, ScatterSeriesData} from '../../../types';
+import type {ChartData, ScatterSeries, ScatterSeriesData} from '../../../types';
 
 const rowData: ScatterSeriesData<string>[] = [
     {
@@ -38,7 +38,7 @@ const rowData: ScatterSeriesData<string>[] = [
     },
 ];
 
-function prepareData(): ChartKitWidgetData<string> {
+function prepareData(): ChartData<string> {
     const startDate = date('startDate', new Date(2023, 6, 28, 6)).valueOf();
     const endDate = date('endDate', new Date(2023, 6, 30, 6)).valueOf();
     const step = (endDate - startDate) / rowData.length;

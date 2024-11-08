@@ -1,9 +1,9 @@
 import {groups} from 'd3';
 
-import type {BarYSeries, BarYSeriesData, ChartKitWidgetData} from '../../../types';
+import type {BarYSeries, BarYSeriesData, ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(field: 'platform' | 'meta_score' | 'date' = 'platform'): ChartKitWidgetData {
+function prepareData(field: 'platform' | 'meta_score' | 'date' = 'platform'): ChartData {
     const gamesByPlatform = groups(nintendoGames, (item) => item[field]);
     const data = gamesByPlatform.map(([value, games]) => ({
         y: value,

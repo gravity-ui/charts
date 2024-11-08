@@ -1,6 +1,6 @@
-import type {ChartKitWidgetData, TreemapSeries} from '../../../types';
+import type {ChartData, TreemapSeries} from '../../../types';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const styledLabel = (label: string) =>
         `<span style="padding: 2px; background-color: #0a3069;color: #fff;">${label}</span>`;
     const treemapSeries: TreemapSeries = {

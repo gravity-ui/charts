@@ -5,7 +5,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 import random from 'lodash/random';
 import range from 'lodash/range';
 
-import type {ChartKitWidgetData, ScatterSeries} from '../../types';
+import type {ChartData, ScatterSeries} from '../../types';
 import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 
@@ -26,7 +26,7 @@ const generateSeriesData = (seriesCount = 5): ScatterSeries[] => {
     });
 };
 
-const shapeData = (): ChartKitWidgetData => {
+const shapeData = (): ChartData => {
     return {
         legend: {
             align: select('Align', ['left', 'right', 'center'], 'left', 'legend'),

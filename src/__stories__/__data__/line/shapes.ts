@@ -1,5 +1,5 @@
 import {DashStyle} from '../../../constants';
-import type {ChartKitWidgetData, LineSeries, LineSeriesData} from '../../../types';
+import type {ChartData, LineSeries, LineSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
 const SHAPES = {
@@ -21,7 +21,7 @@ const getShapesOrder = () => selectShapes().sort((a, b) => SHAPES[a] - SHAPES[b]
 
 const SHAPES_IN_ORDER = getShapesOrder();
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const games = nintendoGames.filter((d) => {
         return d.date && d.user_score;
     });
@@ -38,7 +38,7 @@ function prepareData(): ChartKitWidgetData {
             }) as LineSeriesData[];
     };
 
-    const data: ChartKitWidgetData = {
+    const data: ChartData = {
         series: {
             options: {
                 line: {

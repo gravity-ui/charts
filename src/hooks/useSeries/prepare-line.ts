@@ -4,8 +4,8 @@ import merge from 'lodash/merge';
 
 import {DashStyle, LineCap} from '../../constants';
 import type {
-    ChartKitWidgetSeries,
-    ChartKitWidgetSeriesOptions,
+    ChartSeries,
+    ChartSeriesOptions,
     LineSeries,
     RectLegendSymbolOptions,
 } from '../../types';
@@ -32,14 +32,14 @@ export const DEFAULT_MARKER = {
 type PrepareLineSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
     series: LineSeries[];
-    seriesOptions?: ChartKitWidgetSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
 };
 
 function prepareLinecap(
     dashStyle: DashStyle,
     series: LineSeries,
-    seriesOptions?: ChartKitWidgetSeriesOptions,
+    seriesOptions?: ChartSeriesOptions,
 ) {
     const defaultLineCap = dashStyle === DashStyle.Solid ? LineCap.Round : LineCap.None;
     const lineCapFromSeriesOptions = get(seriesOptions, 'line.linecap', defaultLineCap);
@@ -48,8 +48,8 @@ function prepareLinecap(
 }
 
 function prepareLineLegendSymbol(
-    series: ChartKitWidgetSeries,
-    seriesOptions?: ChartKitWidgetSeriesOptions,
+    series: ChartSeries,
+    seriesOptions?: ChartSeriesOptions,
 ): PreparedLegendSymbol {
     const symbolOptions: RectLegendSymbolOptions = series.legend?.symbol || {};
     const defaultLineWidth = get(seriesOptions, 'line.lineWidth', DEFAULT_LINE_WIDTH);
@@ -62,7 +62,7 @@ function prepareLineLegendSymbol(
     };
 }
 
-function prepareMarker(series: LineSeries, seriesOptions?: ChartKitWidgetSeriesOptions) {
+function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
     const seriesHoverState = get(seriesOptions, 'line.states.hover');
     const markerNormalState = Object.assign(
         {},

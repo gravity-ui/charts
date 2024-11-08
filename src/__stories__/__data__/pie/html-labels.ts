@@ -1,4 +1,4 @@
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 
 function getPieSegmentData(name: string, color: string) {
     const labelStyle = `background: ${color};color: #fff;padding: 4px;border-radius: 4px;`;
@@ -10,7 +10,7 @@ function getPieSegmentData(name: string, color: string) {
     };
 }
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     return {
         series: {
             data: [

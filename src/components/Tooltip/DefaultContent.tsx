@@ -4,13 +4,14 @@ import {dateTime} from '@gravity-ui/date-utils';
 import get from 'lodash/get';
 
 import type {PreparedAxis, PreparedPieSeries, PreparedWaterfallSeries} from '../../hooks';
+import {formatNumber} from '../../libs';
 import type {
-    ChartKitWidgetSeriesData,
+    ChartSeriesData,
     TooltipDataChunk,
     TreemapSeriesData,
     WaterfallSeriesData,
 } from '../../types';
-import {block, formatNumber, getDataCategoryValue, getWaterfallPointSubtotal} from '../../utils';
+import {block, getDataCategoryValue, getWaterfallPointSubtotal} from '../../utils';
 
 const b = block('d3-tooltip');
 
@@ -22,7 +23,7 @@ type Props = {
 
 const DEFAULT_DATE_FORMAT = 'DD.MM.YY';
 
-const getRowData = (fieldName: 'x' | 'y', axis: PreparedAxis, data: ChartKitWidgetSeriesData) => {
+const getRowData = (fieldName: 'x' | 'y', axis: PreparedAxis, data: ChartSeriesData) => {
     switch (axis.type) {
         case 'category': {
             const categories = get(axis, 'categories', [] as string[]);
@@ -43,11 +44,9 @@ const getRowData = (fieldName: 'x' | 'y', axis: PreparedAxis, data: ChartKitWidg
     }
 };
 
-const getXRowData = (xAxis: PreparedAxis, data: ChartKitWidgetSeriesData) =>
-    getRowData('x', xAxis, data);
+const getXRowData = (xAxis: PreparedAxis, data: ChartSeriesData) => getRowData('x', xAxis, data);
 
-const getYRowData = (yAxis: PreparedAxis, data: ChartKitWidgetSeriesData) =>
-    getRowData('y', yAxis, data);
+const getYRowData = (yAxis: PreparedAxis, data: ChartSeriesData) => getRowData('y', yAxis, data);
 
 const getMeasureValue = (data: TooltipDataChunk[], xAxis: PreparedAxis, yAxis: PreparedAxis) => {
     if (data.every((item) => ['pie', 'treemap', 'waterfall'].includes(item.series.type))) {

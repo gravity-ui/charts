@@ -1,12 +1,12 @@
 import get from 'lodash/get';
 
-import type {BaseTextStyle, ChartKitWidgetSplit, SplitPlotOptions} from '../../types';
+import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 import {calculateNumericProperty, getHorisontalSvgTextHeight} from '../../utils';
 
 import type {PreparedPlot, PreparedPlotTitle, PreparedSplit} from './types';
 
 type UseSplitArgs = {
-    split?: ChartKitWidgetSplit;
+    split?: ChartSplit;
     boundsHeight: number;
     chartWidth: number;
 };
@@ -43,7 +43,7 @@ function preparePlotTitle(args: {
 }
 
 export function getPlotHeight(args: {
-    split: ChartKitWidgetSplit | undefined;
+    split: ChartSplit | undefined;
     boundsHeight: number;
     gap: number;
 }) {

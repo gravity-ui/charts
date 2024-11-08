@@ -3,7 +3,7 @@ import React from 'react';
 import {group, scaleOrdinal} from 'd3';
 
 import {DEFAULT_PALETTE} from '../../constants';
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 import {getSeriesNames} from '../../utils';
 import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
 
@@ -17,8 +17,8 @@ type Args = {
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
-    legend: ChartKitWidgetData['legend'];
-    series: ChartKitWidgetData['series'];
+    legend: ChartData['legend'];
+    series: ChartData['series'];
     preparedYAxis: PreparedAxis[];
 };
 

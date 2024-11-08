@@ -1,9 +1,9 @@
 import {groups} from 'd3';
 
-import type {BarXSeries, ChartKitWidgetData} from '../../../types';
+import type {BarXSeries, ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const displayedYears = [2015, 2016, 2017, 2018, 2019];
     const games = nintendoGames.filter((ng) =>
         displayedYears.includes(new Date(ng.date as number).getFullYear()),

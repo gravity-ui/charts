@@ -1,11 +1,11 @@
 import type {MeaningfulAny} from './misc';
-import type {ChartKitWidgetXAxis, ChartKitWidgetYAxis} from './widget-data/axis';
-import type {ChartKitWidgetChart} from './widget-data/chart';
-import type {ChartKitWidgetLegend} from './widget-data/legend';
-import type {ChartKitWidgetSeries, ChartKitWidgetSeriesOptions} from './widget-data/series';
-import type {ChartKitWidgetSplit} from './widget-data/split';
-import type {ChartKitWidgetTitle} from './widget-data/title';
-import type {ChartKitWidgetTooltip} from './widget-data/tooltip';
+import type {ChartXAxis, ChartYAxis} from './widget-data/axis';
+import type {ChartOptions} from './widget-data/chart';
+import type {ChartLegend} from './widget-data/legend';
+import type {ChartSeries, ChartSeriesOptions} from './widget-data/series';
+import type {ChartSplit} from './widget-data/split';
+import type {ChartTitle} from './widget-data/title';
+import type {ChartTooltip} from './widget-data/tooltip';
 
 export * from './chart-ui';
 export * from './misc';
@@ -27,18 +27,18 @@ export * from './widget-data/halo';
 export * from './widget-data/treemap';
 export * from './widget-data/waterfall';
 
-export type ChartKitWidgetData<T = MeaningfulAny> = {
-    chart?: ChartKitWidgetChart;
-    legend?: ChartKitWidgetLegend;
+export type ChartData<T = MeaningfulAny> = {
+    chart?: ChartOptions;
+    legend?: ChartLegend;
     series: {
-        data: ChartKitWidgetSeries<T>[];
-        options?: ChartKitWidgetSeriesOptions;
+        data: ChartSeries<T>[];
+        options?: ChartSeriesOptions;
     };
-    title?: ChartKitWidgetTitle;
-    tooltip?: ChartKitWidgetTooltip<T>;
-    xAxis?: ChartKitWidgetXAxis;
-    yAxis?: ChartKitWidgetYAxis[];
+    title?: ChartTitle;
+    tooltip?: ChartTooltip<T>;
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis[];
     /** Setting for displaying charts on different plots.
      * It can be used to visualize related information on multiple charts. */
-    split?: ChartKitWidgetSplit;
+    split?: ChartSplit;
 };

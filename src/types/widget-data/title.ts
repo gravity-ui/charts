@@ -1,6 +1,6 @@
 import type {BaseTextStyle} from './base';
 
-export type ChartKitWidgetTitle = {
+export type ChartTitle = {
     text: string;
     style?: Partial<BaseTextStyle>;
 };

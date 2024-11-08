@@ -1,7 +1,7 @@
-import type {ChartKitWidgetData, ScatterSeries} from '../../../types';
+import type {ChartData, ScatterSeries} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const dataset = nintendoGames.filter((d) => d.date && d.user_score);
     const data = dataset.map((d) => ({
         x: d.date || undefined,

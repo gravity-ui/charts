@@ -1,12 +1,12 @@
 import type {ScaleOrdinal} from 'd3';
 
-import {GravityChartError} from '../../libs';
+import {ChartError} from '../../libs';
 import type {
     AreaSeries,
     BarXSeries,
     BarYSeries,
-    ChartKitWidgetSeries,
-    ChartKitWidgetSeriesOptions,
+    ChartSeries,
+    ChartSeriesOptions,
     LineSeries,
     PieSeries,
     ScatterSeries,
@@ -25,9 +25,9 @@ import {prepareWaterfallSeries} from './prepare-waterfall';
 import type {PreparedLegend, PreparedSeries} from './types';
 
 export function prepareSeries(args: {
-    type: ChartKitWidgetSeries['type'];
-    series: ChartKitWidgetSeries[];
-    seriesOptions?: ChartKitWidgetSeriesOptions;
+    type: ChartSeries['type'];
+    series: ChartSeries[];
+    seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
     colorScale: ScaleOrdinal<string, string>;
 }): PreparedSeries[] {
@@ -83,7 +83,7 @@ export function prepareSeries(args: {
             });
         }
         default: {
-            throw new GravityChartError({
+            throw new ChartError({
                 message: `Series type "${type}" does not support data preparation for series that do not support the presence of axes`,
             });
         }

@@ -14,7 +14,7 @@ import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
 
-export type ChartKitWidgetSeries<T = MeaningfulAny> =
+export type ChartSeries<T = MeaningfulAny> =
     | ScatterSeries<T>
     | PieSeries<T>
     | BarXSeries<T>
@@ -24,7 +24,7 @@ export type ChartKitWidgetSeries<T = MeaningfulAny> =
     | TreemapSeries<T>
     | WaterfallSeries<T>;
 
-export type ChartKitWidgetSeriesData<T = MeaningfulAny> =
+export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
     | PieSeriesData<T>
     | BarXSeriesData<T>
@@ -35,7 +35,7 @@ export type ChartKitWidgetSeriesData<T = MeaningfulAny> =
     | WaterfallSeriesData<T>;
 
 export type DataLabelRendererData<T = MeaningfulAny> = {
-    data: ChartKitWidgetSeriesData<T>;
+    data: ChartSeriesData<T>;
 };
 
 type BasicHoverState = {
@@ -71,7 +71,7 @@ export type BasicInactiveState = {
     opacity?: number;
 };
 
-export type ChartKitWidgetSeriesOptions = {
+export type ChartSeriesOptions = {
     /** Individual data label for each point. */
     dataLabels?: {
         /** Enable or disable the data labels */

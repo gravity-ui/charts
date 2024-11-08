@@ -1,11 +1,12 @@
 import type {BaseType} from 'd3';
 
 import type {SeriesType} from '../../constants';
+import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartKitWidgetLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type PieSeriesData<T = any> = BaseSeriesData<T> & {
+export type PieSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     /** The value of the pie segment. */
     value: number;
     /** The name of the pie segment (used in legend, tooltip etc). */
@@ -21,7 +22,7 @@ export type PieSeriesData<T = any> = BaseSeriesData<T> & {
 export type ConnectorShape = 'straight-line' | 'polyline';
 export type ConnectorCurve = 'linear' | 'basic';
 
-export type PieSeries<T = any> = BaseSeries & {
+export type PieSeries<T = MeaningfulAny> = BaseSeries & {
     type: typeof SeriesType.Pie;
     data: PieSeriesData<T>[];
     /**
@@ -49,7 +50,7 @@ export type PieSeries<T = any> = BaseSeries & {
     /** The radius of the pie relative to the chart area. The default behaviour is to scale to the chart area. */
     radius?: string | number;
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartKitWidgetLegend & {
+    legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     dataLabels?: BaseSeries['dataLabels'] & {

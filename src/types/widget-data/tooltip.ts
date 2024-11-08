@@ -1,3 +1,5 @@
+import type {MeaningfulAny} from '../misc';
+
 import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
@@ -7,17 +9,17 @@ import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
 
-export type TooltipDataChunkBarX<T = any> = {
+export type TooltipDataChunkBarX<T = MeaningfulAny> = {
     data: BarXSeriesData<T>;
     series: BarXSeries<T>;
 };
 
-export type TooltipDataChunkBarY<T = any> = {
+export type TooltipDataChunkBarY<T = MeaningfulAny> = {
     data: BarYSeriesData<T>;
     series: BarYSeries<T>;
 };
 
-export type TooltipDataChunkPie<T = any> = {
+export type TooltipDataChunkPie<T = MeaningfulAny> = {
     data: PieSeriesData<T>;
     series: {
         type: PieSeries['type'];
@@ -26,7 +28,7 @@ export type TooltipDataChunkPie<T = any> = {
     };
 };
 
-export type TooltipDataChunkScatter<T = any> = {
+export type TooltipDataChunkScatter<T = MeaningfulAny> = {
     data: ScatterSeriesData<T>;
     series: {
         type: ScatterSeries['type'];
@@ -35,7 +37,7 @@ export type TooltipDataChunkScatter<T = any> = {
     };
 };
 
-export type TooltipDataChunkLine<T = any> = {
+export type TooltipDataChunkLine<T = MeaningfulAny> = {
     data: LineSeriesData<T>;
     series: {
         type: LineSeries['type'];
@@ -44,7 +46,7 @@ export type TooltipDataChunkLine<T = any> = {
     };
 };
 
-export type TooltipDataChunkArea<T = any> = {
+export type TooltipDataChunkArea<T = MeaningfulAny> = {
     data: AreaSeriesData<T>;
     series: {
         type: AreaSeries['type'];
@@ -53,17 +55,17 @@ export type TooltipDataChunkArea<T = any> = {
     };
 };
 
-export type TooltipDataChunkTreemap<T = any> = {
+export type TooltipDataChunkTreemap<T = MeaningfulAny> = {
     data: TreemapSeriesData<T>;
     series: TreemapSeries<T>;
 };
 
-export type TooltipDataChunkWaterfall<T = any> = {
+export type TooltipDataChunkWaterfall<T = MeaningfulAny> = {
     data: WaterfallSeriesData<T>;
     series: WaterfallSeries<T>;
 };
 
-export type TooltipDataChunk<T = any> = (
+export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkBarX<T>
     | TooltipDataChunkBarY<T>
     | TooltipDataChunkPie<T>
@@ -74,7 +76,7 @@ export type TooltipDataChunk<T = any> = (
     | TooltipDataChunkWaterfall<T>
 ) & {closest?: boolean};
 
-export type ChartKitWidgetTooltip<T = any> = {
+export type ChartTooltip<T = MeaningfulAny> = {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
     renderer?: (args: {hovered: TooltipDataChunk<T>[]}) => React.ReactElement | null;

@@ -1,9 +1,10 @@
 import type {LayoutAlgorithm, SeriesType} from '../../constants';
+import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartKitWidgetLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type TreemapSeriesData<T = any> = BaseSeriesData<T> & {
+export type TreemapSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     /** The name of the node (used in legend, tooltip etc). */
     name: string | string[];
     /** The value of the node. All nodes should have this property except nodes that have children. */
@@ -17,7 +18,7 @@ export type TreemapSeriesData<T = any> = BaseSeriesData<T> & {
     parentId?: string;
 };
 
-export type TreemapSeries<T = any> = BaseSeries & {
+export type TreemapSeries<T = MeaningfulAny> = BaseSeries & {
     type: typeof SeriesType.Treemap;
     data: TreemapSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
@@ -25,7 +26,7 @@ export type TreemapSeries<T = any> = BaseSeries & {
     /** The main color of the series (hex, rgba). */
     color?: string;
     /** Individual series legend options. Has higher priority than legend options in widget data. */
-    legend?: ChartKitWidgetLegend & {
+    legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Set options on specific levels. Takes precedence over series options, but not point options. */

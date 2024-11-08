@@ -7,8 +7,8 @@ import isNil from 'lodash/isNil';
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../../constants';
 import type {PreparedAxis, PreparedWaterfallSeries, StackedSeries} from '../../hooks';
 import {getSeriesStackId} from '../../hooks/useSeries/utils';
-import type {BaseTextStyle, ChartKitWidgetSeries, ChartKitWidgetSeriesData} from '../../types';
-import {formatNumber, getNumberUnitRate} from '../format-number/format-number';
+import {formatNumber, getNumberUnitRate} from '../../libs/format-number';
+import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 
 import {getDefaultDateFormat} from './time';
 
@@ -22,18 +22,18 @@ export * from './symbol';
 export * from './series';
 export * from './color';
 
-const CHARTS_WITHOUT_AXIS: ChartKitWidgetSeries['type'][] = ['pie', 'treemap'];
-export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartKitWidgetSeries['type'][] = [
+const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap'];
+export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
     'bar-x',
     'area',
     'waterfall',
 ];
 
-export const CHART_SERIES_WITH_VOLUME_ON_X_AXIS: ChartKitWidgetSeries['type'][] = ['bar-y'];
+export const CHART_SERIES_WITH_VOLUME_ON_X_AXIS: ChartSeries['type'][] = ['bar-y'];
 
 export type AxisDirection = 'x' | 'y';
 
-type UnknownSeries = {type: ChartKitWidgetSeries['type']; data: unknown};
+type UnknownSeries = {type: ChartSeries['type']; data: unknown};
 
 /**
  * Checks whether the series should be drawn with axes.
@@ -46,21 +46,21 @@ export function isAxisRelatedSeries(series: UnknownSeries) {
 }
 
 export function isSeriesWithNumericalXValues(series: UnknownSeries): series is {
-    type: ChartKitWidgetSeries['type'];
+    type: ChartSeries['type'];
     data: {x: number}[];
 } {
     return isAxisRelatedSeries(series);
 }
 
 export function isSeriesWithNumericalYValues(series: UnknownSeries): series is {
-    type: ChartKitWidgetSeries['type'];
+    type: ChartSeries['type'];
     data: {y: number}[];
 } {
     return isAxisRelatedSeries(series);
 }
 
 export function isSeriesWithCategoryValues(series: UnknownSeries): series is {
-    type: ChartKitWidgetSeries['type'];
+    type: ChartSeries['type'];
     data: {category: string}[];
 } {
     return isAxisRelatedSeries(series);
@@ -165,7 +165,7 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
 };
 
 // Uses to get all series names array (except `pie` charts)
-export const getSeriesNames = (series: ChartKitWidgetSeries[]) => {
+export const getSeriesNames = (series: ChartSeries[]) => {
     return series.reduce<string[]>((acc, s) => {
         if ('name' in s && typeof s.name === 'string') {
             acc.push(s.name);
@@ -250,7 +250,7 @@ export const getHorisontalSvgTextHeight = (args: {
 const extractCategoryValue = (args: {
     axisDirection: AxisDirection;
     categories: string[];
-    data: ChartKitWidgetSeriesData;
+    data: ChartSeriesData;
 }) => {
     const {axisDirection, categories, data} = args;
     const dataCategory = get(data, axisDirection);
@@ -278,7 +278,7 @@ const extractCategoryValue = (args: {
 export const getDataCategoryValue = (args: {
     axisDirection: AxisDirection;
     categories: string[];
-    data: ChartKitWidgetSeriesData;
+    data: ChartSeriesData;
 }) => {
     const {axisDirection, categories, data} = args;
     const categoryValue = extractCategoryValue({axisDirection, categories, data});

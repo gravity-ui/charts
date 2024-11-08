@@ -7,7 +7,7 @@ export type SplitPlotOptions = {
     };
 };
 
-export type ChartKitWidgetSplit = {
+export type ChartSplit = {
     enable: boolean;
     layout?: 'vertical';
     gap?: string | number;

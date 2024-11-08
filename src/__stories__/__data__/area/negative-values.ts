@@ -1,6 +1,6 @@
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     return {
         series: {
             data: [

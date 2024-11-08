@@ -1,4 +1,4 @@
-import type {BaseTextStyle, ChartKitWidgetAxis, ChartKitWidgetAxisType} from '../../types';
+import type {BaseTextStyle, ChartAxis, ChartAxisType} from '../../types';
 
 export const axisLabelsDefaults = {
     margin: 10,
@@ -7,7 +7,7 @@ export const axisLabelsDefaults = {
     maxWidth: 80,
 };
 
-type AxisTitleDefaults = Required<ChartKitWidgetAxis['title']> & {
+type AxisTitleDefaults = Required<ChartAxis['title']> & {
     style: BaseTextStyle;
 };
 
@@ -31,4 +31,4 @@ export const yAxisTitleDefaults: AxisTitleDefaults = {
     margin: 8,
 };
 
-export const DEFAULT_AXIS_TYPE: ChartKitWidgetAxisType = 'linear';
+export const DEFAULT_AXIS_TYPE: ChartAxisType = 'linear';

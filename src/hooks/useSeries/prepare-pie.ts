@@ -2,7 +2,7 @@ import {scaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_PALETTE} from '../../constants';
-import type {ChartKitWidgetSeriesOptions, PieSeries} from '../../types';
+import type {ChartSeriesOptions, PieSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_PADDING, DEFAULT_DATALABELS_STYLE} from './constants';
@@ -11,7 +11,7 @@ import {prepareLegendSymbol} from './utils';
 
 type PreparePieSeriesArgs = {
     series: PieSeries;
-    seriesOptions?: ChartKitWidgetSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
 };
 

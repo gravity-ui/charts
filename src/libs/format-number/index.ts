@@ -4,7 +4,7 @@ import type {FormatNumberOptions, FormatOptions} from './types';
 import en from './i18n/en.json';
 import ru from './i18n/ru.json';
 
-const i18n = makeInstance('chartkit-units', {ru, en});
+const i18n = makeInstance('units', {ru, en});
 
 function getUnitRate(value: number, exponent: number, unitsI18nKeys: string[]) {
     let resultUnitRate = 1;

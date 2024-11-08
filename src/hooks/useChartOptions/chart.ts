@@ -1,13 +1,10 @@
 import get from 'lodash/get';
 
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 
 import type {PreparedChart, PreparedTitle} from './types';
 
-const getMarginTop = (args: {
-    chart: ChartKitWidgetData['chart'];
-    preparedTitle?: PreparedTitle;
-}) => {
+const getMarginTop = (args: {chart: ChartData['chart']; preparedTitle?: PreparedTitle}) => {
     const {chart, preparedTitle} = args;
     let marginTop = get(chart, 'margin.top', 0);
 
@@ -18,14 +15,14 @@ const getMarginTop = (args: {
     return marginTop;
 };
 
-const getMarginRight = (args: {chart: ChartKitWidgetData['chart']}) => {
+const getMarginRight = (args: {chart: ChartData['chart']}) => {
     const {chart} = args;
 
     return get(chart, 'margin.right', 0);
 };
 
 export const getPreparedChart = (args: {
-    chart: ChartKitWidgetData['chart'];
+    chart: ChartData['chart'];
     preparedTitle?: PreparedTitle;
 }): PreparedChart => {
     const {chart, preparedTitle} = args;

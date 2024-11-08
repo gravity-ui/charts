@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 
 import {getPreparedChart} from './chart';
 import {getPreparedTitle} from './title';
@@ -8,7 +8,7 @@ import {getPreparedTooltip} from './tooltip';
 import type {ChartOptions} from './types';
 
 type Args = {
-    data: ChartKitWidgetData;
+    data: ChartData;
 };
 
 export const useChartOptions = (args: Args): ChartOptions => {

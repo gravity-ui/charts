@@ -1,3 +1,5 @@
+import type {MeaningfulAny} from '../misc';
+
 export type BaseSeries = {
     /** Initial visibility of the series */
     visible?: boolean;
@@ -31,7 +33,7 @@ export type BaseSeries = {
     cursor?: string;
 };
 
-export type BaseSeriesData<T = any> = {
+export type BaseSeriesData<T = MeaningfulAny> = {
     /**
      * A reserved subspace to store options and values for customized functionality
      *

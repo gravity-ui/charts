@@ -3,15 +3,15 @@ import isEmpty from 'lodash/isEmpty';
 
 import {DEFAULT_AXIS_TYPE, SeriesType} from '../constants';
 import {i18n} from '../i18n';
-import {GRAVITY_CHART_ERROR_CODE, GravityChartError} from '../libs';
+import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {
     AreaSeries,
     BarXSeries,
     BarYSeries,
-    ChartKitWidgetData,
-    ChartKitWidgetSeries,
-    ChartKitWidgetXAxis,
-    ChartKitWidgetYAxis,
+    ChartData,
+    ChartSeries,
+    ChartXAxis,
+    ChartYAxis,
     LineSeries,
     PieSeries,
     ScatterSeries,
@@ -22,18 +22,14 @@ type XYSeries = ScatterSeries | BarXSeries | BarYSeries | LineSeries | AreaSerie
 
 const AVAILABLE_SERIES_TYPES = Object.values(SeriesType);
 
-const validateXYSeries = (args: {
-    series: XYSeries;
-    xAxis?: ChartKitWidgetXAxis;
-    yAxis?: ChartKitWidgetYAxis[];
-}) => {
+const validateXYSeries = (args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) => {
     const {series, xAxis, yAxis = []} = args;
 
     const yAxisIndex = get(series, 'yAxis', 0);
     const seriesYAxis = yAxis[yAxisIndex];
     if (yAxisIndex !== 0 && typeof seriesYAxis === 'undefined') {
-        throw new GravityChartError({
-            code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-y-axis-index', {
                 index: yAxisIndex,
             }),
@@ -46,8 +42,8 @@ const validateXYSeries = (args: {
         switch (xType) {
             case 'category': {
                 if (typeof x !== 'string' && typeof x !== 'number') {
-                    throw new GravityChartError({
-                        code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-category-data-point', {
                             key: 'x',
                             seriesName: series.name,
@@ -59,8 +55,8 @@ const validateXYSeries = (args: {
             }
             case 'datetime': {
                 if (typeof x !== 'number') {
-                    throw new GravityChartError({
-                        code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-datetime-data-point', {
                             key: 'x',
                             seriesName: series.name,
@@ -72,8 +68,8 @@ const validateXYSeries = (args: {
             }
             case 'linear': {
                 if (typeof x !== 'number' && x !== null) {
-                    throw new GravityChartError({
-                        code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-linear-data-point', {
                             key: 'x',
                             seriesName: series.name,
@@ -85,8 +81,8 @@ const validateXYSeries = (args: {
         switch (yType) {
             case 'category': {
                 if (typeof y !== 'string' && typeof y !== 'number') {
-                    throw new GravityChartError({
-                        code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-category-data-point', {
                             key: 'y',
                             seriesName: series.name,
@@ -98,8 +94,8 @@ const validateXYSeries = (args: {
             }
             case 'datetime': {
                 if (typeof y !== 'number') {
-                    throw new GravityChartError({
-                        code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-datetime-data-point', {
                             key: 'y',
                             seriesName: series.name,
@@ -111,8 +107,8 @@ const validateXYSeries = (args: {
             }
             case 'linear': {
                 if (typeof y !== 'number' && y !== null) {
-                    throw new GravityChartError({
-                        code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-linear-data-point', {
                             key: 'y',
                             seriesName: series.name,
@@ -127,8 +123,8 @@ const validateXYSeries = (args: {
 const validatePieSeries = ({series}: {series: PieSeries}) => {
     series.data.forEach(({value}) => {
         if (typeof value !== 'number') {
-            throw new GravityChartError({
-                code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
                 message: i18n('error', 'label_invalid-pie-data-value'),
             });
         }
@@ -139,8 +135,8 @@ const validateStacking = ({series}: {series: AreaSeries | BarXSeries | BarYSerie
     const availableStackingValues = ['normal', 'percent'];
 
     if (series.stacking && !availableStackingValues.includes(series.stacking)) {
-        throw new GravityChartError({
-            code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-series-property', {
                 key: 'stacking',
                 values: availableStackingValues,
@@ -163,8 +159,8 @@ const validateTreemapSeries = ({series}: {series: TreemapSeries}) => {
         }
 
         if (parentIds[idOrName] && typeof d.value === 'number') {
-            throw new GravityChartError({
-                code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
                 message: i18n('error', 'label_invalid-treemap-redundant-value', {
                     id: d.id,
                     name: d.name,
@@ -173,8 +169,8 @@ const validateTreemapSeries = ({series}: {series: TreemapSeries}) => {
         }
 
         if (!parentIds[idOrName] && typeof d.value !== 'number') {
-            throw new GravityChartError({
-                code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
                 message: i18n('error', 'label_invalid-treemap-missing-value', {
                     id: d.id,
                     name: d.name,
@@ -184,16 +180,12 @@ const validateTreemapSeries = ({series}: {series: TreemapSeries}) => {
     });
 };
 
-const validateSeries = (args: {
-    series: ChartKitWidgetSeries;
-    xAxis?: ChartKitWidgetXAxis;
-    yAxis?: ChartKitWidgetYAxis[];
-}) => {
+const validateSeries = (args: {series: ChartSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) => {
     const {series, xAxis, yAxis} = args;
 
     if (!AVAILABLE_SERIES_TYPES.includes(series.type)) {
-        throw new GravityChartError({
-            code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-series-type', {
                 types: AVAILABLE_SERIES_TYPES.join(', '),
             }),
@@ -223,10 +215,7 @@ const validateSeries = (args: {
     }
 };
 
-const countSeriesByType = (args: {
-    series: ChartKitWidgetSeries[];
-    type: ChartKitWidgetSeries['type'];
-}) => {
+const countSeriesByType = (args: {series: ChartSeries[]; type: ChartSeries['type']}) => {
     const {series, type} = args;
     let count = 0;
 
@@ -239,17 +228,17 @@ const countSeriesByType = (args: {
     return count;
 };
 
-export const validateData = (data?: ChartKitWidgetData) => {
+export const validateData = (data?: ChartData) => {
     if (isEmpty(data) || isEmpty(data.series) || isEmpty(data.series.data)) {
-        throw new GravityChartError({
-            code: GRAVITY_CHART_ERROR_CODE.NO_DATA,
+        throw new ChartError({
+            code: CHART_ERROR_CODE.NO_DATA,
             message: i18n('error', 'label_no-data'),
         });
     }
 
     if (data.series.data.some((s) => isEmpty(s.data))) {
-        throw new GravityChartError({
-            code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
             message: 'You should specify data for all series',
         });
     }
@@ -260,8 +249,8 @@ export const validateData = (data?: ChartKitWidgetData) => {
     });
 
     if (treemapSeriesCount > 1) {
-        throw new GravityChartError({
-            code: GRAVITY_CHART_ERROR_CODE.INVALID_DATA,
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
             message: 'It looks like you are trying to define more than one "treemap" series.',
         });
     }

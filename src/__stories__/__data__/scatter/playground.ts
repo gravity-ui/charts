@@ -1,9 +1,9 @@
 import {action} from '@storybook/addon-actions';
 
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const dataset = nintendoGames.filter((d) => d.date && d.user_score);
     const data = dataset.map((d) => ({
         x: d.date || undefined,
@@ -11,7 +11,7 @@ function prepareData(): ChartKitWidgetData {
         custom: d,
     }));
 
-    const widgetData: ChartKitWidgetData = {
+    const widgetData: ChartData = {
         series: {
             data: [
                 {

@@ -1,8 +1,8 @@
 import {action} from '@storybook/addon-actions';
 
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     return {
         series: {
             options: {

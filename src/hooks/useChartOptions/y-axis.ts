@@ -7,7 +7,7 @@ import {
     axisLabelsDefaults,
     yAxisTitleDefaults,
 } from '../../constants';
-import type {BaseTextStyle, ChartKitWidgetSeries, ChartKitWidgetYAxis} from '../../types';
+import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
     formatAxisTickLabel,
@@ -23,7 +23,7 @@ import type {PreparedSeries, PreparedWaterfallSeries} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
-const getAxisLabelMaxWidth = (args: {axis: PreparedAxis; series: ChartKitWidgetSeries[]}) => {
+const getAxisLabelMaxWidth = (args: {axis: PreparedAxis; series: ChartSeries[]}) => {
     const {axis, series} = args;
 
     if (!axis.labels.enabled) {
@@ -51,7 +51,7 @@ const getAxisLabelMaxWidth = (args: {axis: PreparedAxis; series: ChartKitWidgetS
     }).maxWidth;
 };
 
-function getAxisMin(axis?: ChartKitWidgetYAxis, series?: ChartKitWidgetSeries[]) {
+function getAxisMin(axis?: ChartYAxis, series?: ChartSeries[]) {
     const min = axis?.min;
 
     if (
@@ -88,12 +88,12 @@ export const getPreparedYAxis = ({
     yAxis,
     height,
 }: {
-    series: ChartKitWidgetSeries[];
-    yAxis: ChartKitWidgetYAxis[] | undefined;
+    series: ChartSeries[];
+    yAxis: ChartYAxis[] | undefined;
     height: number;
 }): PreparedAxis[] => {
-    const axisByPlot: ChartKitWidgetYAxis[][] = [];
-    const axisItems = yAxis || [{} as ChartKitWidgetYAxis];
+    const axisByPlot: ChartYAxis[][] = [];
+    const axisItems = yAxis || [{} as ChartYAxis];
     return axisItems.map((axisItem) => {
         const plotIndex = get(axisItem, 'plotIndex', 0);
         const firstPlotAxis = !axisByPlot[plotIndex];

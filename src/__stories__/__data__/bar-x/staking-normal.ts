@@ -1,9 +1,9 @@
 import {groups} from 'd3';
 
-import type {BarXSeries, ChartKitWidgetData} from '../../../types';
+import type {BarXSeries, ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const grouped = groups(
         nintendoGames,
         (d) => d.platform,

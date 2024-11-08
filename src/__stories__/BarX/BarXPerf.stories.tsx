@@ -3,7 +3,7 @@ import React from 'react';
 import type {StoryObj} from '@storybook/react';
 import {randomNormal} from 'd3';
 
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 
@@ -11,7 +11,7 @@ const randomFn = randomNormal(0, 10);
 const randomStr = () => randomString(Math.random() * 10, 'absdEFGHIJklmnopqrsTUvWxyz');
 
 const ChartStoryWithData = (args: {pointsCount: number; seriesCount: number}) => {
-    const widgetData: ChartKitWidgetData = React.useMemo(() => {
+    const widgetData: ChartData = React.useMemo(() => {
         const points = Array.from({length: args.pointsCount}).map(() =>
             Math.ceil(Math.abs(randomFn())),
         );

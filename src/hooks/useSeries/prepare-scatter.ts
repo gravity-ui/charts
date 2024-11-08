@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {ChartKitWidgetSeriesOptions, ScatterSeries} from '../../types';
+import type {ChartSeriesOptions, ScatterSeries} from '../../types';
 import type {PointMarkerOptions} from '../../types/widget-data/marker';
 import {getSymbolType, getUniqId} from '../../utils';
 
@@ -12,7 +12,7 @@ import {prepareLegendSymbol} from './utils';
 
 function prepareMarker(
     series: ScatterSeries,
-    seriesOptions: ChartKitWidgetSeriesOptions | undefined,
+    seriesOptions: ChartSeriesOptions | undefined,
     index: number,
 ) {
     const seriesHoverState = get(seriesOptions, 'scatter.states.hover');
@@ -42,7 +42,7 @@ interface PrepareScatterSeriesArgs {
     colorScale: ScaleOrdinal<string, string>;
     series: ScatterSeries[];
     legend: PreparedLegend;
-    seriesOptions?: ChartKitWidgetSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
 }
 
 export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedScatterSeries[] {

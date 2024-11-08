@@ -3,7 +3,7 @@ import React from 'react';
 import {Col, Container, Row, Text} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
 
-import type {ChartKitWidgetAxis, ChartKitWidgetData} from '../../types';
+import type {ChartAxis, ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
 
 const AxisTitle = () => {
@@ -12,7 +12,7 @@ const AxisTitle = () => {
     the grocer and the vegetable man and the butcher until one's cheeks burned with the silent
     imputation of parsimony that such close dealing implied. Three times Della counted it.
     One dollar and eighty - seven cents.`;
-    const getWidgetData = (title: ChartKitWidgetAxis['title']): ChartKitWidgetData => ({
+    const getWidgetData = (title: ChartAxis['title']): ChartData => ({
         yAxis: [
             {
                 title,

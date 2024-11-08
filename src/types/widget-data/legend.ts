@@ -1,6 +1,6 @@
 import type {BaseTextStyle} from './base';
 
-export type ChartKitWidgetLegend = {
+export type ChartLegend = {
     enabled?: boolean;
     /**
      * Different types for different color schemes.

@@ -1,6 +1,6 @@
 import {groups} from 'd3';
 
-import type {BarXSeries, BarXSeriesData, ChartKitWidgetData} from '../../../types';
+import type {BarXSeries, BarXSeriesData, ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
 function prepareSeriesAndCategoriesData(
@@ -31,7 +31,7 @@ function prepareSeriesAndCategoriesData(
     };
 }
 
-export const barXBasicData = (function (): ChartKitWidgetData {
+export const barXBasicData = (function (): ChartData {
     const {categories, series} = prepareSeriesAndCategoriesData();
 
     return {
@@ -53,7 +53,7 @@ export const barXBasicData = (function (): ChartKitWidgetData {
     };
 })();
 
-export const barXLinearData = (function (): ChartKitWidgetData {
+export const barXLinearData = (function (): ChartData {
     const {series} = prepareSeriesAndCategoriesData({field: 'meta_score'});
 
     return {
@@ -72,7 +72,7 @@ export const barXLinearData = (function (): ChartKitWidgetData {
     };
 })();
 
-export const barXDateTimeData = (function (): ChartKitWidgetData {
+export const barXDateTimeData = (function (): ChartData {
     const {series} = prepareSeriesAndCategoriesData({field: 'date', filterNulls: true});
 
     return {

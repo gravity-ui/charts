@@ -1,18 +1,18 @@
-import type {ChartKitWidgetSeriesOptions} from '../../types';
+import type {ChartSeriesOptions} from '../../types';
 
-type DefaultBarXSeriesOptions = Partial<ChartKitWidgetSeriesOptions['bar-x']> & {
+type DefaultBarXSeriesOptions = Partial<ChartSeriesOptions['bar-x']> & {
     'bar-x': {barMaxWidth: number; barPadding: number; groupPadding: number};
 };
 
-type DefaultBarYSeriesOptions = Partial<ChartKitWidgetSeriesOptions['bar-x']> & {
+type DefaultBarYSeriesOptions = Partial<ChartSeriesOptions['bar-x']> & {
     'bar-y': {barMaxWidth: number; barPadding: number; groupPadding: number};
 };
 
-type DefaultWaterfallSeriesOptions = Partial<ChartKitWidgetSeriesOptions['waterfall']> & {
+type DefaultWaterfallSeriesOptions = Partial<ChartSeriesOptions['waterfall']> & {
     waterfall: {barMaxWidth: number; barPadding: number};
 };
 
-export type SeriesOptionsDefaults = Partial<ChartKitWidgetSeriesOptions> &
+export type SeriesOptionsDefaults = Partial<ChartSeriesOptions> &
     DefaultBarXSeriesOptions &
     DefaultBarYSeriesOptions &
     DefaultWaterfallSeriesOptions;

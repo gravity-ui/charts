@@ -1,7 +1,7 @@
-import type {ChartKitWidgetLegend} from '../../types';
+import type {ChartLegend} from '../../types';
 
 export const legendDefaults = {
-    align: 'center' as Required<ChartKitWidgetLegend>['align'],
+    align: 'center' as Required<ChartLegend>['align'],
     itemDistance: 20,
     margin: 15,
     itemStyle: {

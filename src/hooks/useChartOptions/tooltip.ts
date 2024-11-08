@@ -1,12 +1,10 @@
 import get from 'lodash/get';
 
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 
 import type {PreparedTooltip} from './types';
 
-export const getPreparedTooltip = (args: {
-    tooltip: ChartKitWidgetData['tooltip'];
-}): PreparedTooltip => {
+export const getPreparedTooltip = (args: {tooltip: ChartData['tooltip']}): PreparedTooltip => {
     const {tooltip} = args;
 
     return {

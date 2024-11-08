@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {GravityChart} from '../components';
-import type {ChartKitWidgetData} from '../types';
+import type {ChartData} from '../types';
 
 type WrapperProps = {
     children?: React.ReactNode;
@@ -9,7 +9,7 @@ type WrapperProps = {
 };
 
 type ChartStoryProps = {
-    data: ChartKitWidgetData;
+    data: ChartData;
     wrapperProps?: WrapperProps;
 };
 

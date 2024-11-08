@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import merge from 'lodash/merge';
 
 import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../../constants';
-import type {BaseTextStyle, ChartKitWidgetData} from '../../types';
+import type {BaseTextStyle, ChartData} from '../../types';
 import {
     getDefaultColorStops,
     getDomainForContinuousColorScale,
@@ -20,8 +20,8 @@ import type {LegendConfig, LegendItem, PreparedLegend, PreparedSeries} from './t
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
 export const getPreparedLegend = (args: {
-    legend: ChartKitWidgetData['legend'];
-    series: ChartKitWidgetData['series']['data'];
+    legend: ChartData['legend'];
+    series: ChartData['series']['data'];
 }): PreparedLegend => {
     const {legend, series} = args;
     const enabled = Boolean(

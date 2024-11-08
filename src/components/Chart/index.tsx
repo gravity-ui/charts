@@ -14,7 +14,7 @@ import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
 import {useSplit} from '../../hooks/useSplit';
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 import {block, getD3Dispatcher} from '../../utils';
 import {getClosestPoints} from '../../utils/chart/get-closest-data';
 import {AxisX, AxisY} from '../Axis';
@@ -32,7 +32,7 @@ const THROTTLE_DELAY = 50;
 type Props = {
     width: number;
     height: number;
-    data: ChartKitWidgetData;
+    data: ChartData;
 };
 
 export const Chart = (props: Props) => {

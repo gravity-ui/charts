@@ -6,7 +6,7 @@ import {
     axisLabelsDefaults,
     xAxisTitleDefaults,
 } from '../../constants';
-import type {BaseTextStyle, ChartKitWidgetSeries, ChartKitWidgetXAxis} from '../../types';
+import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_X_AXIS,
     calculateCos,
@@ -31,7 +31,7 @@ function getLabelSettings({
     autoRotation = true,
 }: {
     axis: PreparedAxis;
-    series: ChartKitWidgetSeries[];
+    series: ChartSeries[];
     width: number;
     autoRotation?: boolean;
 }) {
@@ -71,7 +71,7 @@ function getLabelSettings({
     return {height: Math.min(maxHeight, labelsHeight), rotation};
 }
 
-function getAxisMin(axis?: ChartKitWidgetXAxis, series?: ChartKitWidgetSeries[]) {
+function getAxisMin(axis?: ChartXAxis, series?: ChartSeries[]) {
     const min = axis?.min;
 
     if (
@@ -93,8 +93,8 @@ export const getPreparedXAxis = ({
     series,
     width,
 }: {
-    xAxis?: ChartKitWidgetXAxis;
-    series: ChartKitWidgetSeries[];
+    xAxis?: ChartXAxis;
+    series: ChartSeries[];
     width: number;
 }): PreparedAxis => {
     const titleText = get(xAxis, 'title.text', '');

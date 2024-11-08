@@ -1,7 +1,7 @@
 import memoize from 'lodash/memoize';
 
 import {SymbolType} from '../../constants';
-import type {ChartKitWidgetSeries} from '../../types';
+import type {ChartSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './constants';
@@ -22,7 +22,7 @@ export const getAllLegendItems = (series: PreparedSeries[]) => {
 };
 
 export function prepareLegendSymbol(
-    series: ChartKitWidgetSeries,
+    series: ChartSeries,
     symbolType?: `${SymbolType}`,
 ): PreparedLegendSymbol {
     const symbolOptions = series.legend?.symbol || {};

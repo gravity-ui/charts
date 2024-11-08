@@ -2,10 +2,10 @@ import type {FormatNumberOptions} from '../formatter';
 
 import type {BaseTextStyle} from './base';
 
-export type ChartKitWidgetAxisType = 'category' | 'datetime' | 'linear' | 'logarithmic';
-export type ChartKitWidgetAxisTitleAlignment = 'left' | 'center' | 'right';
+export type ChartAxisType = 'category' | 'datetime' | 'linear' | 'logarithmic';
+export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 
-export type ChartKitWidgetAxisLabels = {
+export type ChartAxisLabels = {
     /** Enable or disable the axis labels. */
     enabled?: boolean;
     /** The label's pixel distance from the perimeter of the plot area.
@@ -32,12 +32,12 @@ export type ChartKitWidgetAxisLabels = {
     rotation?: number;
 };
 
-export type ChartKitWidgetAxis = {
+export type ChartAxis = {
     categories?: string[];
     timestamps?: number[];
-    type?: ChartKitWidgetAxisType;
+    type?: ChartAxisType;
     /** The axis labels show the number or category for each tick. */
-    labels?: ChartKitWidgetAxisLabels;
+    labels?: ChartAxisLabels;
     /** The color of the line marking the axis itself. */
     lineColor?: string;
     title?: {
@@ -50,7 +50,7 @@ export type ChartKitWidgetAxis = {
          * */
         margin?: number;
         /** Alignment of the title. */
-        align?: ChartKitWidgetAxisTitleAlignment;
+        align?: ChartAxisTitleAlignment;
         /** Allows limiting of the contents of a title block to the specified number of lines.
          *  Defaults to 1. */
         maxRowCount?: number;
@@ -78,9 +78,9 @@ export type ChartKitWidgetAxis = {
     maxPadding?: number;
 };
 
-export type ChartKitWidgetXAxis = ChartKitWidgetAxis;
+export type ChartXAxis = ChartAxis;
 
-export type ChartKitWidgetYAxis = ChartKitWidgetAxis & {
+export type ChartYAxis = ChartAxis & {
     /** Axis location.
      * Possible values - 'left' and 'right'.
      * */

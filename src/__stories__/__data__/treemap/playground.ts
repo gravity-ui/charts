@@ -1,8 +1,8 @@
 import {action} from '@storybook/addon-actions';
 
-import type {ChartKitWidgetData, TreemapSeries} from '../../../types';
+import type {ChartData, TreemapSeries} from '../../../types';
 
-const prepareData = (): ChartKitWidgetData => {
+const prepareData = (): ChartData => {
     const treemapSeries: TreemapSeries = {
         type: 'treemap',
         name: 'Example',

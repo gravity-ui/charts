@@ -1,9 +1,9 @@
 import {action} from '@storybook/addon-actions';
 
-import type {ChartKitWidgetData, LineSeries, LineSeriesData} from '../../../types';
+import type {ChartData, LineSeries, LineSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const games = nintendoGames.filter((d) => {
         return d.date && d.user_score;
     });

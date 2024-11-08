@@ -1,9 +1,9 @@
 import {range, scaleLinear} from 'd3';
 
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 
 export function getDomainForContinuousColorScale(args: {
-    series: ChartKitWidgetData['series']['data'];
+    series: ChartData['series']['data'];
 }): number[] {
     const {series} = args;
     const values = series.reduce<number[]>((acc, s) => {

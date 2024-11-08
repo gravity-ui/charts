@@ -1,10 +1,10 @@
 import {groups} from 'd3';
 
-import type {BarXSeriesData, ChartKitWidgetData} from '../../../types';
+import type {BarXSeriesData, ChartData} from '../../../types';
 import {getContinuesColorFn} from '../../../utils';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const colors = ['rgb(255, 61, 100)', 'rgb(255, 198, 54)', 'rgb(84, 165, 32)'];
     const stops = [0, 0.5, 1];
 

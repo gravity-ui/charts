@@ -1,7 +1,7 @@
-import type {ChartKitWidgetData, LineSeries} from '../../../types';
+import type {ChartData, LineSeries} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const dataset = nintendoGames.filter(
         (d) => d.date && d.user_score && new Date(d.date) > new Date(2022, 0, 1),
     );

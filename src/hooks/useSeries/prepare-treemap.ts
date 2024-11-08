@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
 import {LayoutAlgorithm} from '../../constants';
-import type {ChartKitWidgetSeriesOptions, TreemapSeries} from '../../types';
+import type {ChartSeriesOptions, TreemapSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_PADDING, DEFAULT_DATALABELS_STYLE} from './constants';
@@ -13,7 +13,7 @@ type PrepareTreemapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
     legend: PreparedLegend;
     series: TreemapSeries[];
-    seriesOptions?: ChartKitWidgetSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
 };
 
 export function prepareTreemap(args: PrepareTreemapSeriesArgs) {

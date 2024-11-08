@@ -1,6 +1,6 @@
 import {groups, sort} from 'd3';
 
-import type {BarXSeries, BarXSeriesData, ChartKitWidgetData, MeaningfulAny} from '../../../types';
+import type {BarXSeries, BarXSeriesData, ChartData, MeaningfulAny} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
 const years = Array.from(
@@ -11,7 +11,7 @@ const years = Array.from(
     ),
 );
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const games = sort(
         nintendoGames.filter((d) => {
             return d.date && d.user_score;

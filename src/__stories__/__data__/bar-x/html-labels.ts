@@ -1,6 +1,6 @@
-import type {ChartKitWidgetData} from '../../../types';
+import type {ChartData} from '../../../types';
 
-function prepareData(): ChartKitWidgetData {
+function prepareData(): ChartData {
     const getLabelData = (value: string, color: string) => {
         const labelStyle = `background: ${color};color: #fff;padding: 4px;border-radius: 4px;border: 1px solid #fff;`;
         return {

@@ -5,7 +5,7 @@ export type ChartMargin = {
     left: number;
 };
 
-export type ChartKitWidgetChart = {
+export type ChartOptions = {
     margin?: Partial<ChartMargin>;
     events?: {
         click?: (data: {point: unknown; series: unknown}, event: PointerEvent) => void;

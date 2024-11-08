@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {AreaSeries, ChartKitWidgetSeriesOptions} from '../../types';
+import type {AreaSeries, ChartSeriesOptions} from '../../types';
 import type {PointMarkerOptions} from '../../types/widget-data/marker';
 import {getUniqId} from '../../utils';
 
@@ -25,11 +25,11 @@ export const DEFAULT_MARKER = {
 type PrepareAreaSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
     series: AreaSeries[];
-    seriesOptions?: ChartKitWidgetSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
 };
 
-function prepareMarker(series: AreaSeries, seriesOptions?: ChartKitWidgetSeriesOptions) {
+function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
     const seriesHoverState = get(seriesOptions, 'area.states.hover');
     const markerNormalState: Required<PointMarkerOptions> = Object.assign(
         {},

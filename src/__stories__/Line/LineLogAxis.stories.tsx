@@ -4,12 +4,12 @@ import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
 import {randomNormal} from 'd3';
 
-import type {ChartKitWidgetData} from '../../types';
+import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
 
 const LineWithLogarithmicAxis = () => {
     const randomY = randomNormal(0, 100);
-    const widgetData: ChartKitWidgetData = {
+    const widgetData: ChartData = {
         series: {
             data: [
                 {
@@ -23,8 +23,8 @@ const LineWithLogarithmicAxis = () => {
             ],
         },
     };
-    const lineWidgetData: ChartKitWidgetData = {...widgetData, title: {text: 'linear'}};
-    const logarithmicWidgetData: ChartKitWidgetData = {
+    const lineWidgetData: ChartData = {...widgetData, title: {text: 'linear'}};
+    const logarithmicWidgetData: ChartData = {
         ...widgetData,
         title: {text: 'logarithmic'},
         yAxis: [

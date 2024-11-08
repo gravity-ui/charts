@@ -5,7 +5,7 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_AXIS_TYPE} from '../../constants';
-import type {ChartKitWidgetAxis, ChartKitWidgetAxisType, ChartKitWidgetSeries} from '../../types';
+import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
     getAxisHeight,
@@ -48,7 +48,7 @@ const isNumericalArrayData = (data: unknown[]): data is number[] => {
 const filterCategoriesByVisibleSeries = (args: {
     axisDirection: AxisDirection;
     categories: string[];
-    series: (PreparedSeries | ChartKitWidgetSeries)[];
+    series: (PreparedSeries | ChartSeries)[];
 }) => {
     const {axisDirection, categories, series} = args;
 
@@ -65,7 +65,7 @@ const filterCategoriesByVisibleSeries = (args: {
 };
 
 export function createYScale(axis: PreparedAxis, series: PreparedSeries[], boundsHeight: number) {
-    const yType: ChartKitWidgetAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
+    const yType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const yMin = get(axis, 'min');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
@@ -124,7 +124,7 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
     throw new Error('Failed to create yScale');
 }
 
-function calculateXAxisPadding(series: (PreparedSeries | ChartKitWidgetSeries)[]) {
+function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
     let result = 0;
 
     series.forEach((s) => {
@@ -146,13 +146,13 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartKitWidgetSeries)[]
 }
 
 export function createXScale(
-    axis: PreparedAxis | ChartKitWidgetAxis,
-    series: (PreparedSeries | ChartKitWidgetSeries)[],
+    axis: PreparedAxis | ChartAxis,
+    series: (PreparedSeries | ChartSeries)[],
     boundsWidth: number,
 ) {
     const xMin = get(axis, 'min');
     const xMax = getDefaultMaxXAxisValue(series);
-    const xType: ChartKitWidgetAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
+    const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const xCategories = get(axis, 'categories');
     const xTimestamps = get(axis, 'timestamps');
     const maxPadding = get(axis, 'maxPadding', 0);
