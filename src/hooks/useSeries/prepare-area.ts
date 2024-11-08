@@ -3,7 +3,7 @@ import get from 'lodash/get';
 import merge from 'lodash/merge';
 
 import type {AreaSeries, ChartSeriesOptions} from '../../types';
-import type {PointMarkerOptions} from '../../types/widget-data/marker';
+import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getUniqId} from '../../utils';
 
 import {

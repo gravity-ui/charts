@@ -35,7 +35,7 @@ type Props = {
     data: ChartData;
 };
 
-export const Chart = (props: Props) => {
+export const ChartInner = (props: Props) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);

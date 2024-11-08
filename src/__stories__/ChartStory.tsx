@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {GravityChart} from '../components';
+import {Chart} from '../components';
 import type {ChartData} from '../types';
 
 type WrapperProps = {
@@ -21,7 +21,7 @@ export const ChartStory = ({data, wrapperProps}: ChartStoryProps) => {
 
     return (
         <div style={styles}>
-            <GravityChart data={data} />
+            <Chart data={data} />
         </div>
     );
 };

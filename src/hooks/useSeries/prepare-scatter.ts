@@ -3,7 +3,7 @@ import get from 'lodash/get';
 import merge from 'lodash/merge';
 
 import type {ChartSeriesOptions, ScatterSeries} from '../../types';
-import type {PointMarkerOptions} from '../../types/widget-data/marker';
+import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getSymbolType, getUniqId} from '../../utils';
 
 import {DEFAULT_HALO_OPTIONS, DEFAULT_POINT_MARKER_OPTIONS} from './constants';

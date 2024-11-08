@@ -1,5 +1,5 @@
 import type {BaseTextStyle, Halo} from '../../types';
-import type {PointMarkerOptions} from '../../types/widget-data/marker';
+import type {PointMarkerOptions} from '../../types/chart/marker';
 
 export const DEFAULT_LEGEND_SYMBOL_SIZE = 8;
 

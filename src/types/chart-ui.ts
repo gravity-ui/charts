@@ -1,4 +1,4 @@
-import type {BaseTextStyle} from './widget-data/base';
+import type {BaseTextStyle} from './chart/base';
 
 export type LabelData = {
     text: string;
