@@ -1,0 +1,66 @@
+.gcharts-d3-legend {
+    color: var(--g-color-text-secondary);
+
+    &__title {
+        fill: var(--g-color-text-secondary);
+    }
+
+    &__item {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    &__item-symbol {
+        &_shape_rect#{&}_unselected {
+            fill: var(--g-color-text-hint);
+        }
+
+        &_shape_path#{&}_unselected {
+            stroke: var(--g-color-text-hint);
+        }
+
+        &_shape_symbol#{&}_unselected {
+            fill: var(--g-color-text-hint);
+        }
+    }
+
+    &__item-text {
+        fill: var(--g-color-text-secondary);
+        alignment-baseline: before-edge;
+
+        &_unselected {
+            fill: var(--g-color-text-hint);
+        }
+
+        &:hover {
+            fill: var(--g-color-text-complementary);
+        }
+    }
+
+    &__pagination {
+        user-select: none;
+
+        fill: var(--g-color-text-primary);
+    }
+
+    &__pagination-counter,
+    &__pagination-arrow {
+        alignment-baseline: middle;
+    }
+
+    &__pagination-arrow {
+        cursor: pointer;
+
+        fill: var(--g-color-text-brand);
+
+        &_inactive {
+            cursor: inherit;
+
+            fill: var(--g-color-base-generic-accent-disabled);
+        }
+
+        &:hover:not(#{&}_inactive) {
+            fill: var(--g-color-base-brand-hover);
+        }
+    }
+}

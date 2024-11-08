@@ -1,0 +1,25 @@
+.gcharts-d3-axis {
+    & .domain {
+        stroke: var(--g-color-line-generic-active);
+    }
+
+    & .tick text {
+        color: var(--g-color-text-secondary);
+        alignment-baseline: after-edge;
+    }
+
+    & .tick line,
+    & .tick path {
+        stroke: var(--g-color-line-generic);
+    }
+
+    &__title {
+        alignment-baseline: after-edge;
+
+        fill: var(--g-color-text-secondary);
+    }
+
+    &__title tspan {
+        alignment-baseline: after-edge;
+    }
+}

@@ -1,0 +1,52 @@
+.gcharts-d3-scatter {
+    &__point {
+        stroke-width: 1px;
+    }
+}
+
+.gcharts-d3-pie {
+    &__segment {
+        stroke: var(--g-color-base-background);
+    }
+
+    &__label {
+        font-size: 11px;
+        font-weight: bold;
+
+        fill: var(--g-color-text-complementary);
+        alignment-baseline: before-edge;
+    }
+}
+
+.gcharts-d3-bar-x {
+    &__label {
+        user-select: none;
+
+        fill: var(--g-color-text-complementary);
+    }
+}
+
+.gcharts-d3-bar-y {
+    &__label {
+        user-select: none;
+
+        fill: var(--g-color-text-complementary);
+        alignment-baseline: after-edge;
+    }
+}
+
+.gcharts-d3-treemap {
+    &__label {
+        user-select: none;
+        pointer-events: none;
+
+        fill: var(--g-color-text-complementary);
+        alignment-baseline: text-before-edge;
+    }
+}
+
+.gcharts-d3-waterfall {
+    &__connector {
+        stroke: var(--g-color-line-generic-active);
+    }
+}
