@@ -42,7 +42,7 @@ task('compile-to-cjs', () => {
 });
 
 task('copy-i18n', () => {
-    return src(['src/**/i18n/*.json'])
+    return src(['src/**/i18n/**/*.json'])
         .pipe(dest(path.resolve(BUILD_DIR, 'esm')))
         .pipe(dest(path.resolve(BUILD_DIR, 'cjs')));
 });
