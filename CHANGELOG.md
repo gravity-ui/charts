@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/gravity-ui/charts/compare/v0.1.1...v0.2.0) (2024-11-11)
+
+
+### Features
+
+* add CustomShapeRenderer export ([#7](https://github.com/gravity-ui/charts/issues/7)) ([2d7e009](https://github.com/gravity-ui/charts/commit/2d7e0097126814bb7de3a03ba2617fb5fdf443c7))
+
 ## [0.1.1](https://github.com/gravity-ui/charts/compare/v1.0.0...v1.0.1) (2024-11-11)
 
 
