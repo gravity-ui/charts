@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/gravity-ui/charts/compare/v0.2.0...v0.3.0) (2024-11-12)
+
+
+### Features
+
+* add chart.events.pointermove property ([#9](https://github.com/gravity-ui/charts/issues/9)) ([6e2822a](https://github.com/gravity-ui/charts/commit/6e2822ab49fd3650e91da81aaa69e375b62874ac))
+
 ## [0.2.0](https://github.com/gravity-ui/charts/compare/v0.1.1...v0.2.0) (2024-11-11)
 
 
