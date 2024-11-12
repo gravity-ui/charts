@@ -107,15 +107,25 @@ export const ChartInner = (props: Props) => {
     });
 
     const clickHandler = data.chart?.events?.click;
+    const pointerMoveHandler = data.chart?.events?.pointermove;
+
     React.useEffect(() => {
         if (clickHandler) {
             dispatcher.on('click-chart', clickHandler);
         }
 
+        if (pointerMoveHandler) {
+            dispatcher.on('hover-shape.chart', (...args) => {
+                const [hoverData, _position, event] = args;
+                pointerMoveHandler(hoverData, event);
+            });
+        }
+
         return () => {
             dispatcher.on('click-chart', null);
+            dispatcher.on('hover-shape.chrt', null);
         };
-    }, [dispatcher, clickHandler]);
+    }, [dispatcher, clickHandler, pointerMoveHandler]);
 
     const boundsOffsetTop = chart.margin.top;
     // We only need to consider the width of the first left axis
@@ -133,7 +143,7 @@ export const ChartInner = (props: Props) => {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
         if (isOutsideBounds(x, y)) {
-            dispatcher.call('hover-shape', {}, undefined);
+            dispatcher.call('hover-shape', {}, undefined, undefined, event);
             return;
         }
 
@@ -141,13 +151,13 @@ export const ChartInner = (props: Props) => {
             position: [x, y],
             shapesData,
         });
-        dispatcher.call('hover-shape', event.target, closest, [pointerX, pointerY]);
+        dispatcher.call('hover-shape', event.target, closest, [pointerX, pointerY], event);
     };
     const throttledHandleMouseMove = throttle(handleMouseMove, THROTTLE_DELAY);
 
-    const handleMouseLeave = () => {
+    const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
         throttledHandleMouseMove.cancel();
-        dispatcher.call('hover-shape', {}, undefined);
+        dispatcher.call('hover-shape', {}, undefined, undefined, event);
     };
 
     const handleChartClick = React.useCallback(
