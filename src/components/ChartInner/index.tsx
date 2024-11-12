@@ -123,7 +123,7 @@ export const ChartInner = (props: Props) => {
 
         return () => {
             dispatcher.on('click-chart', null);
-            dispatcher.on('hover-shape.chrt', null);
+            dispatcher.on('hover-shape.chart', null);
         };
     }, [dispatcher, clickHandler, pointerMoveHandler]);
 
