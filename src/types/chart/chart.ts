@@ -1,3 +1,5 @@
+import type {MeaningfulAny} from '../misc';
+
 export type ChartMargin = {
     top: number;
     right: number;
@@ -5,9 +7,12 @@ export type ChartMargin = {
     left: number;
 };
 
+type ChartEventData = {point: MeaningfulAny; series: MeaningfulAny};
+
 export type ChartOptions = {
     margin?: Partial<ChartMargin>;
     events?: {
-        click?: (data: {point: unknown; series: unknown}, event: PointerEvent) => void;
+        click?: (data: ChartEventData, event: PointerEvent) => void;
+        pointermove?: (data: ChartEventData | undefined, event: PointerEvent) => void;
     };
 };
