@@ -138,7 +138,7 @@ export const ChartInner = (props: Props) => {
         [boundsHeight, boundsWidth],
     );
 
-    const handleMouseMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
+    const handlePointerMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
         const [pointerX, pointerY] = pointer(event, svgRef.current);
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
@@ -153,10 +153,10 @@ export const ChartInner = (props: Props) => {
         });
         dispatcher.call('hover-shape', event.target, closest, [pointerX, pointerY], event);
     };
-    const throttledHandleMouseMove = throttle(handleMouseMove, THROTTLE_DELAY);
+    const throttledHandlePointerMove = throttle(handlePointerMove, THROTTLE_DELAY);
 
-    const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
-        throttledHandleMouseMove.cancel();
+    const handlePointerLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
+        throttledHandlePointerMove.cancel();
         dispatcher.call('hover-shape', {}, undefined, undefined, event);
     };
 
@@ -195,8 +195,8 @@ export const ChartInner = (props: Props) => {
                 className={b()}
                 width={width}
                 height={height}
-                onMouseMove={throttledHandleMouseMove}
-                onMouseLeave={handleMouseLeave}
+                onPointerMove={throttledHandlePointerMove}
+                onPointerLeave={handlePointerLeave}
                 onClick={handleChartClick}
             >
                 {title && <Title {...title} chartWidth={width} />}
