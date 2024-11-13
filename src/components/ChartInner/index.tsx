@@ -3,6 +3,7 @@ import React from 'react';
 import {pointer} from 'd3';
 import throttle from 'lodash/throttle';
 
+import {IS_TOUCH_ENABLED} from '../../constants';
 import {
     useAxisScales,
     useChartDimensions,
@@ -34,6 +35,8 @@ type Props = {
     height: number;
     data: ChartData;
 };
+
+type PointPosition = [number, number];
 
 export const ChartInner = (props: Props) => {
     const {width, height, data} = props;
@@ -138,8 +141,10 @@ export const ChartInner = (props: Props) => {
         [boundsHeight, boundsWidth],
     );
 
-    const handlePointerMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
-        const [pointerX, pointerY] = pointer(event, svgRef.current);
+    const handleMove = (
+        [pointerX, pointerY]: PointPosition,
+        event: React.MouseEvent | React.TouchEvent,
+    ) => {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
         if (isOutsideBounds(x, y)) {
@@ -153,12 +158,30 @@ export const ChartInner = (props: Props) => {
         });
         dispatcher.call('hover-shape', event.target, closest, [pointerX, pointerY], event);
     };
-    const throttledHandlePointerMove = throttle(handlePointerMove, THROTTLE_DELAY);
 
-    const handlePointerLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
-        throttledHandlePointerMove.cancel();
+    const handleMouseMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
+        const [pointerX, pointerY] = pointer(event, svgRef.current);
+        handleMove([pointerX, pointerY], event);
+    };
+
+    const throttledHandleMouseMove = IS_TOUCH_ENABLED
+        ? undefined
+        : throttle(handleMouseMove, THROTTLE_DELAY);
+
+    const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
+        throttledHandleMouseMove?.cancel();
         dispatcher.call('hover-shape', {}, undefined, undefined, event);
     };
+
+    const handleTouchMove: React.TouchEventHandler<SVGSVGElement> = (event) => {
+        const touch = event.touches[0];
+        const [pointerX, pointerY] = pointer(touch, svgRef.current);
+        handleMove([pointerX, pointerY], event);
+    };
+
+    const throttledHandleTouchMove = IS_TOUCH_ENABLED
+        ? throttle(handleTouchMove, THROTTLE_DELAY)
+        : undefined;
 
     const handleChartClick = React.useCallback(
         (event: React.MouseEvent<SVGSVGElement>) => {
@@ -195,8 +218,10 @@ export const ChartInner = (props: Props) => {
                 className={b()}
                 width={width}
                 height={height}
-                onPointerMove={throttledHandlePointerMove}
-                onPointerLeave={handlePointerLeave}
+                onMouseMove={throttledHandleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                onTouchStart={throttledHandleTouchMove}
+                onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
             >
                 {title && <Title {...title} chartWidth={width} />}
