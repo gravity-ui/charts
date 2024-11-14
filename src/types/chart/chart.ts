@@ -1,5 +1,7 @@
 import type {MeaningfulAny} from '../misc';
 
+import type {ChartTooltipRendererData} from './tooltip';
+
 export type ChartMargin = {
     top: number;
     right: number;
@@ -7,12 +9,10 @@ export type ChartMargin = {
     left: number;
 };
 
-type ChartEventData = {point: MeaningfulAny; series: MeaningfulAny};
-
 export type ChartOptions = {
     margin?: Partial<ChartMargin>;
     events?: {
-        click?: (data: ChartEventData, event: PointerEvent) => void;
-        pointermove?: (data: ChartEventData | undefined, event: PointerEvent) => void;
+        click?: (data: {point: MeaningfulAny; series: MeaningfulAny}, event: PointerEvent) => void;
+        pointermove?: (data: ChartTooltipRendererData | undefined, event: PointerEvent) => void;
     };
 };

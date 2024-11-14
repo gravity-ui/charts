@@ -77,6 +77,12 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkWaterfall<T>
 ) & {closest?: boolean};
 
+export type ChartTooltipRendererData<T = MeaningfulAny> = {
+    hovered: TooltipDataChunk<T>[];
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis;
+};
+
 export type ChartTooltip<T = MeaningfulAny> = {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
