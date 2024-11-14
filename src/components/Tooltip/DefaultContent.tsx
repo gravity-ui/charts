@@ -3,10 +3,12 @@ import React from 'react';
 import {dateTime} from '@gravity-ui/date-utils';
 import get from 'lodash/get';
 
-import type {PreparedAxis, PreparedPieSeries, PreparedWaterfallSeries} from '../../hooks';
+import type {PreparedPieSeries, PreparedWaterfallSeries} from '../../hooks';
 import {formatNumber} from '../../libs';
 import type {
     ChartSeriesData,
+    ChartXAxis,
+    ChartYAxis,
     TooltipDataChunk,
     TreemapSeriesData,
     WaterfallSeriesData,
@@ -17,14 +19,18 @@ const b = block('d3-tooltip');
 
 type Props = {
     hovered: TooltipDataChunk[];
-    xAxis: PreparedAxis;
-    yAxis: PreparedAxis;
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis;
 };
 
 const DEFAULT_DATE_FORMAT = 'DD.MM.YY';
 
-const getRowData = (fieldName: 'x' | 'y', axis: PreparedAxis, data: ChartSeriesData) => {
-    switch (axis.type) {
+const getRowData = (
+    fieldName: 'x' | 'y',
+    data: ChartSeriesData,
+    axis?: ChartXAxis | ChartYAxis,
+) => {
+    switch (axis?.type) {
         case 'category': {
             const categories = get(axis, 'categories', [] as string[]);
             return getDataCategoryValue({axisDirection: fieldName, categories, data});
@@ -44,20 +50,20 @@ const getRowData = (fieldName: 'x' | 'y', axis: PreparedAxis, data: ChartSeriesD
     }
 };
 
-const getXRowData = (xAxis: PreparedAxis, data: ChartSeriesData) => getRowData('x', xAxis, data);
+const getXRowData = (data: ChartSeriesData, xAxis?: ChartXAxis) => getRowData('x', data, xAxis);
 
-const getYRowData = (yAxis: PreparedAxis, data: ChartSeriesData) => getRowData('y', yAxis, data);
+const getYRowData = (data: ChartSeriesData, yAxis?: ChartYAxis) => getRowData('y', data, yAxis);
 
-const getMeasureValue = (data: TooltipDataChunk[], xAxis: PreparedAxis, yAxis: PreparedAxis) => {
+const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: ChartYAxis) => {
     if (data.every((item) => ['pie', 'treemap', 'waterfall'].includes(item.series.type))) {
         return null;
     }
 
     if (data.some((item) => item.series.type === 'bar-y')) {
-        return getYRowData(yAxis, data[0]?.data);
+        return getYRowData(data[0]?.data, yAxis);
     }
 
-    return getXRowData(xAxis, data[0]?.data);
+    return getXRowData(data[0]?.data, xAxis);
 };
 
 export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
@@ -77,7 +83,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     case 'bar-x': {
                         const value = (
                             <React.Fragment>
-                                {series.name}: {getYRowData(yAxis, data)}
+                                {series.name}: {getYRowData(data, yAxis)}
                             </React.Fragment>
                         );
                         return (
@@ -99,11 +105,11 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                                 {!isTotal && (
                                     <React.Fragment>
                                         <div key={id} className={b('content-row')}>
-                                            <b>{getXRowData(xAxis, data)}</b>
+                                            <b>{getXRowData(data, xAxis)}</b>
                                         </div>
                                         <div className={b('content-row')}>
                                             <span>{series.name}&nbsp;</span>
-                                            <span>{getYRowData(yAxis, data)}</span>
+                                            <span>{getYRowData(data, yAxis)}</span>
                                         </div>
                                     </React.Fragment>
                                 )}
@@ -116,7 +122,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     case 'bar-y': {
                         const value = (
                             <React.Fragment>
-                                {series.name}: {getXRowData(xAxis, data)}
+                                {series.name}: {getXRowData(data, xAxis)}
                             </React.Fragment>
                         );
                         return (

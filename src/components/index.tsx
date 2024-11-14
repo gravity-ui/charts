@@ -11,6 +11,8 @@ import {validateData} from '../validation';
 
 import {ChartInner} from './ChartInner';
 
+export * from './Tooltip/ChartTooltipContent';
+
 export type ChartRef = {
     reflow: () => void;
 };

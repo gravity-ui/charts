@@ -15,8 +15,8 @@ import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
 import {useSplit} from '../../hooks/useSplit';
-import type {ChartData} from '../../types';
-import {block, getD3Dispatcher} from '../../utils';
+import type {ChartData, ChartTooltipRendererData, ChartYAxis} from '../../types';
+import {EventType, block, getD3Dispatcher} from '../../utils';
 import {getClosestPoints} from '../../utils/chart/get-closest-data';
 import {AxisX, AxisY} from '../Axis';
 import {Legend} from '../Legend';
@@ -114,19 +114,19 @@ export const ChartInner = (props: Props) => {
 
     React.useEffect(() => {
         if (clickHandler) {
-            dispatcher.on('click-chart', clickHandler);
+            dispatcher.on(EventType.CLICK_CHART, clickHandler);
         }
 
         if (pointerMoveHandler) {
-            dispatcher.on('hover-shape.chart', (...args) => {
-                const [hoverData, _position, event] = args;
-                pointerMoveHandler(hoverData, event);
+            dispatcher.on(EventType.POINTERMOVE_CHART, (...args) => {
+                const [handlerData, event] = args;
+                pointerMoveHandler(handlerData, event);
             });
         }
 
         return () => {
-            dispatcher.on('click-chart', null);
-            dispatcher.on('hover-shape.chart', null);
+            dispatcher.on(EventType.CLICK_CHART, null);
+            dispatcher.on(EventType.POINTERMOVE_CHART, null);
         };
     }, [dispatcher, clickHandler, pointerMoveHandler]);
 
@@ -148,7 +148,8 @@ export const ChartInner = (props: Props) => {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
         if (isOutsideBounds(x, y)) {
-            dispatcher.call('hover-shape', {}, undefined, undefined, event);
+            dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
+            dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
             return;
         }
 
@@ -156,7 +157,17 @@ export const ChartInner = (props: Props) => {
             position: [x, y],
             shapesData,
         });
-        dispatcher.call('hover-shape', event.target, closest, [pointerX, pointerY], event);
+        dispatcher.call(EventType.HOVER_SHAPE, event.target, closest, [pointerX, pointerY]);
+        dispatcher.call(
+            EventType.POINTERMOVE_CHART,
+            {},
+            {
+                hovered: closest,
+                xAxis,
+                yAxis: yAxis[0] as ChartYAxis,
+            } satisfies ChartTooltipRendererData,
+            event,
+        );
     };
 
     const handleMouseMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
@@ -170,7 +181,8 @@ export const ChartInner = (props: Props) => {
 
     const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
         throttledHandleMouseMove?.cancel();
-        dispatcher.call('hover-shape', {}, undefined, undefined, event);
+        dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
+        dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
     };
 
     const handleTouchMove: React.TouchEventHandler<SVGSVGElement> = (event) => {

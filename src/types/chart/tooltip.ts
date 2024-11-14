@@ -1,6 +1,7 @@
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
+import type {ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {LineSeries, LineSeriesData} from './line';
@@ -76,8 +77,18 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkWaterfall<T>
 ) & {closest?: boolean};
 
+export type ChartTooltipRendererData<T = MeaningfulAny> = {
+    hovered: TooltipDataChunk<T>[];
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis;
+};
+
 export type ChartTooltip<T = MeaningfulAny> = {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
-    renderer?: (args: {hovered: TooltipDataChunk<T>[]}) => React.ReactElement | null;
+    renderer?: (args: {
+        hovered: TooltipDataChunk<T>[];
+        xAxis?: ChartXAxis;
+        yAxis?: ChartYAxis;
+    }) => React.ReactElement | null;
 };

@@ -2,13 +2,13 @@ import React from 'react';
 
 import {Popup, useVirtualElementRef} from '@gravity-ui/uikit';
 import type {Dispatch} from 'd3';
-import isNil from 'lodash/isNil';
 
 import type {PreparedAxis, PreparedTooltip} from '../../hooks';
 import {useTooltip} from '../../hooks';
+import type {ChartYAxis} from '../../types';
 import {block} from '../../utils';
 
-import {DefaultContent} from './DefaultContent';
+import {ChartTooltipContent} from './ChartTooltipContent';
 
 import './styles.scss';
 
@@ -29,18 +29,6 @@ export const Tooltip = (props: TooltipProps) => {
     const left = (pointerPosition?.[0] || 0) + containerRect.left;
     const top = (pointerPosition?.[1] || 0) + containerRect.top;
     const anchorRef = useVirtualElementRef({rect: {top, left}});
-    const content = React.useMemo(() => {
-        if (!hovered) {
-            return null;
-        }
-
-        const customTooltip = tooltip.renderer?.({hovered});
-        return isNil(customTooltip) ? (
-            <DefaultContent hovered={hovered} xAxis={xAxis} yAxis={yAxis} />
-        ) : (
-            customTooltip
-        );
-    }, [hovered, tooltip, xAxis, yAxis]);
 
     React.useEffect(() => {
         window.dispatchEvent(new CustomEvent('scroll'));
@@ -55,7 +43,14 @@ export const Tooltip = (props: TooltipProps) => {
             placement={['right', 'left', 'top', 'bottom']}
             modifiers={[{name: 'preventOverflow', options: {padding: 10, altAxis: true}}]}
         >
-            <div className={b('content')}>{content}</div>
+            <div className={b('content')}>
+                <ChartTooltipContent
+                    hovered={hovered}
+                    xAxis={xAxis}
+                    yAxis={yAxis as ChartYAxis}
+                    renderer={tooltip.renderer}
+                />
+            </div>
         </Popup>
     ) : null;
 };
