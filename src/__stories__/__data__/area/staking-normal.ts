@@ -50,13 +50,6 @@ function prepareData(): ChartData {
             type: 'category',
             categories: years,
         },
-        chart: {
-            events: {
-                pointermove: (...args) => {
-                    console.log(args);
-                },
-            },
-        },
     };
 }
 
