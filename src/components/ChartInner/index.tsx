@@ -119,8 +119,8 @@ export const ChartInner = (props: Props) => {
 
         if (pointerMoveHandler) {
             dispatcher.on(EventType.POINTERMOVE_CHART, (...args) => {
-                const [hoverData, _position, event] = args;
-                pointerMoveHandler(hoverData, event);
+                const [handlerData, event] = args;
+                pointerMoveHandler(handlerData, event);
             });
         }
 
@@ -148,8 +148,8 @@ export const ChartInner = (props: Props) => {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
         if (isOutsideBounds(x, y)) {
-            dispatcher.call(EventType.HOVER_SHAPE, {}, undefined, undefined, event);
-            dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, undefined, event);
+            dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
+            dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
             return;
         }
 
@@ -157,7 +157,7 @@ export const ChartInner = (props: Props) => {
             position: [x, y],
             shapesData,
         });
-        dispatcher.call(EventType.HOVER_SHAPE, event.target, closest, [pointerX, pointerY], event);
+        dispatcher.call(EventType.HOVER_SHAPE, event.target, closest, [pointerX, pointerY]);
         dispatcher.call(
             EventType.POINTERMOVE_CHART,
             {},
@@ -166,7 +166,6 @@ export const ChartInner = (props: Props) => {
                 xAxis,
                 yAxis: yAxis[0] as ChartYAxis,
             } satisfies ChartTooltipRendererData,
-            undefined,
             event,
         );
     };
@@ -182,8 +181,8 @@ export const ChartInner = (props: Props) => {
 
     const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
         throttledHandleMouseMove?.cancel();
-        dispatcher.call(EventType.HOVER_SHAPE, {}, undefined, undefined, event);
-        dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, undefined, event);
+        dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
+        dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
     };
 
     const handleTouchMove: React.TouchEventHandler<SVGSVGElement> = (event) => {
