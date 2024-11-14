@@ -1,4 +1,5 @@
 export * from './defaults';
+export * from './misc';
 
 export const SeriesType = {
     Area: 'area',
