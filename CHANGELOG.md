@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/gravity-ui/charts/compare/v0.3.0...v0.4.0) (2024-11-14)
+
+
+### Features
+
+* add `ChartTooltipContent` & change chart.events.pointermove signature ([#13](https://github.com/gravity-ui/charts/issues/13)) ([5aed61d](https://github.com/gravity-ui/charts/commit/5aed61dd2e11692fff48d564d009e9a19710f6d8))
+* support moving touch events ([#11](https://github.com/gravity-ui/charts/issues/11)) ([b898f4e](https://github.com/gravity-ui/charts/commit/b898f4edbababad5b3b75da44d083533a5d9081d))
+
 ## [0.3.0](https://github.com/gravity-ui/charts/compare/v0.2.0...v0.3.0) (2024-11-12)
 
 
