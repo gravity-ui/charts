@@ -5,14 +5,14 @@ export type ChartErrorArgs = {
 };
 
 export const CHART_ERROR_CODE = {
-    NO_DATA: 'NO_DATA',
-    INVALID_DATA: 'INVALID_DATA',
-    UNKNOWN: 'UNKNOWN_ERROR',
+    NO_DATA: 'ERR.CK.NO_DATA',
+    INVALID_DATA: 'ERR.CK.INVALID_DATA',
+    UNKNOWN: 'ERR.CK.UNKNOWN_ERROR',
 };
 
 export class ChartError extends Error {
     readonly code: number | string;
-    readonly isChartError = true;
+    readonly isCustomError = true;
 
     constructor({originalError, message, code = CHART_ERROR_CODE.UNKNOWN}: ChartErrorArgs = {}) {
         super(message);
@@ -26,6 +26,6 @@ export class ChartError extends Error {
     }
 }
 
-export const isChartError = (error: unknown): error is ChartError => {
-    return error instanceof Error && 'isChartError' in error;
+export const isCustomError = (error: unknown): error is ChartError => {
+    return error instanceof Error && 'isCustomError' in error;
 };

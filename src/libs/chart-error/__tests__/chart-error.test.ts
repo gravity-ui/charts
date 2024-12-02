@@ -1,4 +1,4 @@
-import {CHART_ERROR_CODE, ChartError, isChartError} from '..';
+import {CHART_ERROR_CODE, ChartError, isCustomError} from '..';
 import type {ChartErrorArgs} from '..';
 
 describe('libs/chart-error', () => {
@@ -7,8 +7,8 @@ describe('libs/chart-error', () => {
         [new Error(), false],
         [null, false],
         [undefined, false],
-    ])('isChartError (args: %j)', (error, expected) => {
-        const result = isChartError(error);
+    ])('isCustomError (args: %j)', (error, expected) => {
+        const result = isCustomError(error);
         expect(result).toEqual(expected);
     });
 
@@ -21,7 +21,7 @@ describe('libs/chart-error', () => {
         try {
             throw new ChartError(args);
         } catch (error) {
-            if (isChartError(error)) {
+            if (isCustomError(error)) {
                 result = error.code;
             }
         }
