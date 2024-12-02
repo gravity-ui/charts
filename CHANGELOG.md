@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/gravity-ui/charts/compare/v0.4.0...v0.4.1) (2024-12-02)
+
+
+### Bug Fixes
+
+* **chart-error:** return backward compability with chartkit ([#15](https://github.com/gravity-ui/charts/issues/15)) ([7716851](https://github.com/gravity-ui/charts/commit/7716851ecc5f0622325b72f64cba903a31465ca6))
+
 ## [0.4.0](https://github.com/gravity-ui/charts/compare/v0.3.0...v0.4.0) (2024-11-14)
 
 
