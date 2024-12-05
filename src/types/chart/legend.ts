@@ -41,6 +41,8 @@ export type ChartLegend = {
          * Defaults to 4 for horizontal axes, 8 for vertical.
          * */
         margin?: number;
+        /** The horizontal alignment of the title. */
+        align?: 'left' | 'center' | 'right';
     };
     /* Gradient color settings for continuous legend type */
     colorScale?: {

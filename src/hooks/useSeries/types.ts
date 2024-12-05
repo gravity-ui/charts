@@ -56,6 +56,7 @@ export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>>
         margin: number;
         style: BaseTextStyle;
         height: number;
+        align: Required<Required<ChartLegend>['title']>['align'];
     };
     ticks: {
         labelsMargin: number;
