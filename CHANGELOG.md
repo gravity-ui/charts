@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/gravity-ui/charts/compare/v0.4.1...v0.5.0) (2024-12-05)
+
+
+### Features
+
+* add legend title alignment option ([#17](https://github.com/gravity-ui/charts/issues/17)) ([5d47b17](https://github.com/gravity-ui/charts/commit/5d47b170b42868cbd9ca40ae4e5aea7522ea3cfd))
+
 ## [0.4.1](https://github.com/gravity-ui/charts/compare/v0.4.0...v0.4.1) (2024-12-02)
 
 
