@@ -90,6 +90,7 @@ export const getPreparedLegend = (args: {
             margin: titleMargin,
             style: titleStyle,
             height: titleHeight,
+            align: get(legend, 'title.align', 'left'),
         },
         width: legendWidth,
         ticks,

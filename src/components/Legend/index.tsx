@@ -13,6 +13,7 @@ import type {
     SymbolLegendSymbol,
 } from '../../hooks';
 import {getLineDashArray} from '../../hooks/useShapes/utils';
+import {formatNumber} from '../../libs';
 import {
     block,
     createGradientRect,
@@ -39,9 +40,9 @@ const getLegendPosition = (args: {
     align: PreparedLegend['align'];
     contentWidth: number;
     width: number;
-    offsetWidth: number;
+    offsetWidth?: number;
 }) => {
-    const {align, offsetWidth, width, contentWidth} = args;
+    const {align, offsetWidth = 0, width, contentWidth} = args;
     const top = 0;
 
     if (align === 'left') {
@@ -311,14 +312,16 @@ export const Legend = (props: Props) => {
             });
 
             // ticks
+            const scale = scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>;
             const xAxisGenerator = axisBottom({
-                scale: scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>,
+                scale,
                 ticks: {
                     items: [[0, -rectHeight]],
                     labelsMargin: legend.ticks.labelsMargin,
                     labelsLineHeight: legend.ticks.labelsLineHeight,
                     maxTickCount: 4,
                     tickColor: '#fff',
+                    labelFormat: (value: number) => formatNumber(value, {unit: 'auto'}),
                 },
                 domain: {
                     size: legend.width,
@@ -334,15 +337,32 @@ export const Legend = (props: Props) => {
         }
 
         if (legend.title.enable) {
-            const {maxWidth: labelWidth} = getLabelsSize({
+            const {maxWidth: titleWidth} = getLabelsSize({
                 labels: [legend.title.text],
                 style: legend.title.style,
             });
+            let dx = 0;
+            switch (legend.title.align) {
+                case 'center': {
+                    dx = legend.width / 2 - titleWidth / 2;
+                    break;
+                }
+                case 'right': {
+                    dx = legend.width - titleWidth;
+                    break;
+                }
+                case 'left':
+                default: {
+                    dx = 0;
+                    break;
+                }
+            }
+
             svgElement
                 .append('g')
                 .attr('class', b('title'))
                 .append('text')
-                .attr('dx', legend.width / 2 - labelWidth / 2)
+                .attr('dx', dx)
                 .attr('font-weight', legend.title.style.fontWeight ?? null)
                 .attr('font-size', legend.title.style.fontSize ?? null)
                 .attr('fill', legend.title.style.fontColor ?? null)
