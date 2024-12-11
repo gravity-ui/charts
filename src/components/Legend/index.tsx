@@ -34,6 +34,7 @@ type Props = {
     items: LegendItem[][];
     config: LegendConfig;
     onItemClick: OnLegendItemClick;
+    onUpdate?: () => void;
 };
 
 const getLegendPosition = (args: {
@@ -203,7 +204,7 @@ function renderLegendSymbol(args: {
 }
 
 export const Legend = (props: Props) => {
-    const {boundsWidth, chartSeries, legend, items, config, onItemClick} = props;
+    const {boundsWidth, chartSeries, legend, items, config, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
     const [paginationOffset, setPaginationOffset] = React.useState(0);
 
@@ -236,6 +237,7 @@ export const Legend = (props: Props) => {
                     .attr('class', b('item'))
                     .on('click', function (e, d) {
                         onItemClick({name: d.name, metaKey: e.metaKey});
+                        onUpdate?.();
                     });
 
                 const getXPosition = (i: number) => {
@@ -377,7 +379,7 @@ export const Legend = (props: Props) => {
             contentWidth: legendWidth,
         });
         svgElement.attr('transform', `translate(${[left, config.offset.top].join(',')})`);
-    }, [boundsWidth, chartSeries, onItemClick, legend, items, config, paginationOffset]);
+    }, [boundsWidth, chartSeries, onItemClick, onUpdate, legend, items, config, paginationOffset]);
 
     return <g className={b()} ref={ref} width={boundsWidth} height={legend.height} />;
 };

@@ -38,7 +38,7 @@ export type DataLabelRendererData<T = MeaningfulAny> = {
     data: ChartSeriesData<T>;
 };
 
-type BasicHoverState = {
+export type BasicHoverState = {
     /**
      * Enable separate styles for the hovered series.
      *

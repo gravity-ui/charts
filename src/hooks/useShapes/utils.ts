@@ -46,7 +46,9 @@ export function getYValue(args: {
     return yLinearScale(point.y as number);
 }
 
-export const shapeKey = (d: unknown) => (d as PreparedLineData).id || -1;
+export function shapeKey(d: unknown) {
+    return (d as PreparedLineData).id || -1;
+}
 
 export function setActiveState<T extends {active?: boolean}>(args: {
     element: BaseType;
@@ -66,7 +68,7 @@ export function setActiveState<T extends {active?: boolean}>(args: {
     return datum;
 }
 
-export const getLineDashArray = (dashStyle: DashStyle, strokeWidth = 2) => {
+export function getLineDashArray(dashStyle: DashStyle, strokeWidth = 2) {
     const value = dashStyle.toLowerCase();
 
     const arrayValue = value
@@ -84,4 +86,4 @@ export const getLineDashArray = (dashStyle: DashStyle, strokeWidth = 2) => {
         });
 
     return arrayValue.join(',').replace(/NaN/g, 'none');
-};
+}

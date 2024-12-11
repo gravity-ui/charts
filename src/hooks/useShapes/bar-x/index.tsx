@@ -25,7 +25,7 @@ type Args = {
 
 export const BarXSeriesShapes = (args: Args) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
-
+    const hoveredDataRef = React.useRef<PreparedBarXData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -68,7 +68,8 @@ export const BarXSeriesShapes = (args: Args) => {
             .style('font-weight', (d) => d.style.fontWeight || null)
             .style('fill', (d) => d.style.fontColor || null);
 
-        dispatcher.on('hover-shape.bar-x', (data?: PreparedBarXData[]) => {
+        function handleShapeHover(data?: PreparedBarXData[]) {
+            hoveredDataRef.current = data;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
 
@@ -114,7 +115,13 @@ export const BarXSeriesShapes = (args: Args) => {
                         : inactiveOptions?.opacity || null;
                 });
             }
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on('hover-shape.bar-x', handleShapeHover);
 
         return () => {
             dispatcher.on('hover-shape.bar-x', null);

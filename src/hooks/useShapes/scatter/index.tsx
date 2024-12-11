@@ -31,6 +31,7 @@ const b = block('d3-scatter');
 
 export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = props;
+    const hoveredDataRef = React.useRef<TooltipDataChunkScatter[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -56,7 +57,8 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
         const hoverEnabled = hoverOptions?.enabled;
         const inactiveEnabled = inactiveOptions?.enabled;
 
-        dispatcher.on('hover-shape.scatter', (data?: TooltipDataChunkScatter[]) => {
+        function handleShapeHover(data?: TooltipDataChunkScatter[]) {
+            hoveredDataRef.current = data;
             const selected = data?.find((d) => d.series.type === 'scatter');
             const selectedDataItem = selected?.data;
             const selectedSeriesId = selected?.series?.id;
@@ -94,7 +96,13 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
                 }
                 return d;
             });
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on('hover-shape.scatter', handleShapeHover);
 
         return () => {
             dispatcher.on('hover-shape.scatter', null);

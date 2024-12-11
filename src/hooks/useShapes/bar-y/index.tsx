@@ -23,6 +23,7 @@ type Args = {
 
 export const BarYSeriesShapes = (args: Args) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
+    const hoveredDataRef = React.useRef<PreparedBarYData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -67,7 +68,9 @@ export const BarYSeriesShapes = (args: Args) => {
         const hoverOptions = get(seriesOptions, 'bar-y.states.hover');
         const inactiveOptions = get(seriesOptions, 'bar-y.states.inactive');
 
-        dispatcher.on('hover-shape.bar-y', (data?: PreparedBarYData[]) => {
+        function handleShapeHover(data?: PreparedBarYData[]) {
+            hoveredDataRef.current = data;
+
             if (hoverOptions?.enabled) {
                 const hovered = data?.reduce((acc, d) => {
                     acc.add(d.data.y);
@@ -100,7 +103,13 @@ export const BarYSeriesShapes = (args: Args) => {
                 rectSelection.attr('opacity', newOpacity);
                 labelSelection.attr('opacity', newOpacity);
             }
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on('hover-shape.bar-y', handleShapeHover);
 
         return () => {
             dispatcher.on('hover-shape.bar-y', null);

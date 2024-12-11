@@ -27,7 +27,7 @@ type Args = {
 
 export const WaterfallSeriesShapes = (args: Args) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
-
+    const hoveredDataRef = React.useRef<PreparedWaterfallData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement | null>(null);
     const connectorSelector = `.${b('connector')}`;
 
@@ -103,7 +103,8 @@ export const WaterfallSeriesShapes = (args: Args) => {
             .attr('stroke-width', 1)
             .attr('stroke-dasharray', () => getLineDashArray(DashStyle.Dash, 1));
 
-        dispatcher.on('hover-shape.waterfall', (data?: PreparedWaterfallData[]) => {
+        function handleShapeHover(data?: PreparedWaterfallData[]) {
+            hoveredDataRef.current = data;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
 
@@ -147,7 +148,13 @@ export const WaterfallSeriesShapes = (args: Args) => {
                         : inactiveOptions?.opacity || null;
                 });
             }
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on('hover-shape.waterfall', handleShapeHover);
 
         return () => {
             dispatcher.on('hover-shape.waterfall', null);

@@ -1,114 +1,67 @@
 import React from 'react';
 
-import {pointer} from 'd3';
-import throttle from 'lodash/throttle';
-
-import {IS_TOUCH_ENABLED} from '../../constants';
-import {
-    useAxisScales,
-    useChartDimensions,
-    useChartOptions,
-    useSeries,
-    useShapes,
-} from '../../hooks';
-import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
-import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
-import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
-import {useSplit} from '../../hooks/useSplit';
-import type {ChartData, ChartTooltipRendererData, ChartYAxis} from '../../types';
 import {EventType, block, getD3Dispatcher} from '../../utils';
-import {getClosestPoints} from '../../utils/chart/get-closest-data';
 import {AxisX, AxisY} from '../Axis';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
 
+import type {ChartInnerProps} from './types';
+import {useChartInnerHandlers} from './useChartInnerHandlers';
+import {useChartInnerProps} from './useChartInnerProps';
+import {useChartInnerState} from './useChartInnerState';
+
 import './styles.scss';
 
 const b = block('d3');
 
-const THROTTLE_DELAY = 50;
-
-type Props = {
-    width: number;
-    height: number;
-    data: ChartData;
-};
-
-type PointPosition = [number, number];
-
-export const ChartInner = (props: Props) => {
+export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
-    const dispatcher = React.useMemo(() => {
-        return getD3Dispatcher();
-    }, []);
-    const {chart, title, tooltip} = useChartOptions({
-        data,
-    });
-    const xAxis = React.useMemo(
-        () => getPreparedXAxis({xAxis: data.xAxis, width, series: data.series.data}),
-        [data, width],
-    );
-    const yAxis = React.useMemo(
-        () =>
-            getPreparedYAxis({
-                series: data.series.data,
-                yAxis: data.yAxis,
-                height,
-            }),
-        [data, height],
-    );
-
+    const dispatcher = React.useMemo(() => getD3Dispatcher(), []);
     const {
-        legendItems,
-        legendConfig,
-        preparedSeries,
-        preparedSeriesOptions,
-        preparedLegend,
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        boundsWidth,
         handleLegendItemClick,
-    } = useSeries({
-        chartWidth: width,
-        chartHeight: height,
-        chartMargin: chart.margin,
-        series: data.series,
-        legend: data.legend,
-        preparedYAxis: yAxis,
-    });
-    const {boundsWidth, boundsHeight} = useChartDimensions({
-        width,
-        height,
-        margin: chart.margin,
+        legendConfig,
+        legendItems,
+        preparedSeries,
+        preparedSplit,
         preparedLegend,
-        preparedXAxis: xAxis,
-        preparedYAxis: yAxis,
-        preparedSeries: preparedSeries,
-    });
-    const preparedSplit = useSplit({split: data.split, boundsHeight, chartWidth: width});
-    const {xScale, yScale} = useAxisScales({
-        boundsWidth,
-        boundsHeight,
-        series: preparedSeries,
-        xAxis,
-        yAxis,
-        split: preparedSplit,
-    });
-    const {shapes, shapesData} = useShapes({
-        boundsWidth,
-        boundsHeight,
-        dispatcher,
-        series: preparedSeries,
-        seriesOptions: preparedSeriesOptions,
+        prevHeight,
+        prevWidth,
+        shapes,
+        shapesData,
+        title,
+        tooltip,
         xAxis,
         xScale,
         yAxis,
         yScale,
-        split: preparedSplit,
-        htmlLayout: htmlLayerRef.current,
+    } = useChartInnerProps({...props, dispatcher, htmlLayout: htmlLayerRef.current});
+    const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
+        dispatcher,
+        tooltip,
     });
-
+    const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
+        useChartInnerHandlers({
+            boundsHeight,
+            boundsOffsetLeft,
+            boundsOffsetTop,
+            boundsWidth,
+            dispatcher,
+            shapesData,
+            svgContainer: svgRef.current,
+            togglePinTooltip,
+            tooltipPinned,
+            unpinTooltip,
+            xAxis,
+            yAxis,
+        });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
 
@@ -130,98 +83,11 @@ export const ChartInner = (props: Props) => {
         };
     }, [dispatcher, clickHandler, pointerMoveHandler]);
 
-    const boundsOffsetTop = chart.margin.top;
-    // We only need to consider the width of the first left axis
-    const boundsOffsetLeft = chart.margin.left + getYAxisWidth(yAxis[0]);
-
-    const isOutsideBounds = React.useCallback(
-        (x: number, y: number) => {
-            return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
-        },
-        [boundsHeight, boundsWidth],
-    );
-
-    const handleMove = (
-        [pointerX, pointerY]: PointPosition,
-        event: React.MouseEvent | React.TouchEvent,
-    ) => {
-        const x = pointerX - boundsOffsetLeft;
-        const y = pointerY - boundsOffsetTop;
-        if (isOutsideBounds(x, y)) {
-            dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
-            dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
-            return;
+    React.useEffect(() => {
+        if ((prevWidth !== width || prevHeight !== height) && tooltipPinned) {
+            unpinTooltip?.();
         }
-
-        const closest = getClosestPoints({
-            position: [x, y],
-            shapesData,
-        });
-        dispatcher.call(EventType.HOVER_SHAPE, event.target, closest, [pointerX, pointerY]);
-        dispatcher.call(
-            EventType.POINTERMOVE_CHART,
-            {},
-            {
-                hovered: closest,
-                xAxis,
-                yAxis: yAxis[0] as ChartYAxis,
-            } satisfies ChartTooltipRendererData,
-            event,
-        );
-    };
-
-    const handleMouseMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
-        const [pointerX, pointerY] = pointer(event, svgRef.current);
-        handleMove([pointerX, pointerY], event);
-    };
-
-    const throttledHandleMouseMove = IS_TOUCH_ENABLED
-        ? undefined
-        : throttle(handleMouseMove, THROTTLE_DELAY);
-
-    const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
-        throttledHandleMouseMove?.cancel();
-        dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
-        dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
-    };
-
-    const handleTouchMove: React.TouchEventHandler<SVGSVGElement> = (event) => {
-        const touch = event.touches[0];
-        const [pointerX, pointerY] = pointer(touch, svgRef.current);
-        handleMove([pointerX, pointerY], event);
-    };
-
-    const throttledHandleTouchMove = IS_TOUCH_ENABLED
-        ? throttle(handleTouchMove, THROTTLE_DELAY)
-        : undefined;
-
-    const handleChartClick = React.useCallback(
-        (event: React.MouseEvent<SVGSVGElement>) => {
-            const [pointerX, pointerY] = pointer(event, svgRef.current);
-            const x = pointerX - boundsOffsetLeft;
-            const y = pointerY - boundsOffsetTop;
-            if (isOutsideBounds(x, y)) {
-                return;
-            }
-
-            const items = getClosestPoints({
-                position: [x, y],
-                shapesData,
-            });
-            const selected = items?.find((item) => item.closest);
-            if (!selected) {
-                return;
-            }
-
-            dispatcher.call(
-                'click-chart',
-                undefined,
-                {point: selected.data, series: selected.series},
-                event,
-            );
-        },
-        [boundsOffsetLeft, boundsOffsetTop, dispatcher, isOutsideBounds, shapesData],
-    );
+    }, [prevWidth, width, prevHeight, height, tooltipPinned, unpinTooltip]);
 
     return (
         <React.Fragment>
@@ -277,6 +143,7 @@ export const ChartInner = (props: Props) => {
                         items={legendItems}
                         config={legendConfig}
                         onItemClick={handleLegendItemClick}
+                        onUpdate={unpinTooltip}
                     />
                 )}
             </svg>
@@ -293,6 +160,8 @@ export const ChartInner = (props: Props) => {
                 svgContainer={svgRef.current}
                 xAxis={xAxis}
                 yAxis={yAxis[0]}
+                onOutsideClick={unpinTooltip}
+                tooltipPinned={tooltipPinned}
             />
         </React.Fragment>
     );
