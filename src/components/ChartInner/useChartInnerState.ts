@@ -3,7 +3,7 @@ import React from 'react';
 import type {Dispatch} from 'd3';
 
 import type {ChartTooltip} from '../../types';
-import {EventType} from '../../utils';
+import {EventType, isMacintosh} from '../../utils';
 
 type Props = {
     dispatcher: Dispatch<object>;
@@ -28,7 +28,7 @@ export function useChartInnerState(props: Props) {
                         break;
                     }
                     case 'metaKey': {
-                        resultValue = event.metaKey;
+                        resultValue = isMacintosh() ? event.metaKey : event.ctrlKey;
                     }
                 }
             }
