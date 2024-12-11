@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/gravity-ui/charts/compare/v0.5.0...v0.6.0) (2024-12-11)
+
+
+### Features
+
+* support pinnable tooltip ([#19](https://github.com/gravity-ui/charts/issues/19)) ([ca0e324](https://github.com/gravity-ui/charts/commit/ca0e32414b69bdbcd2074e8a89093e9870e8b42f))
+
 ## [0.5.0](https://github.com/gravity-ui/charts/compare/v0.4.1...v0.5.0) (2024-12-05)
 
 
