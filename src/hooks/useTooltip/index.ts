@@ -2,10 +2,8 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
-import type {TooltipDataChunk} from '../../types';
+import type {PointPosition, TooltipDataChunk} from '../../types';
 import type {PreparedTooltip} from '../useChartOptions/types';
-
-import type {PointerPosition} from './types';
 
 type Args = {
     dispatcher: Dispatch<object>;
@@ -14,7 +12,7 @@ type Args = {
 
 type TooltipState = {
     hovered?: TooltipDataChunk[];
-    pointerPosition?: PointerPosition;
+    pointerPosition?: PointPosition;
 };
 
 export const useTooltip = ({dispatcher, tooltip}: Args) => {
@@ -24,7 +22,7 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
         if (tooltip?.enabled) {
             dispatcher.on(
                 'hover-shape.tooltip',
-                (nextHovered?: TooltipDataChunk[], nextPointerPosition?: PointerPosition) => {
+                (nextHovered?: TooltipDataChunk[], nextPointerPosition?: PointPosition) => {
                     setTooltipState({hovered: nextHovered, pointerPosition: nextPointerPosition});
                 },
             );

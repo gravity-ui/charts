@@ -31,7 +31,7 @@ type Args = {
 
 export const AreaSeriesShapes = (args: Args) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
-
+    const hoveredDataRef = React.useRef<TooltipDataChunkArea[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
@@ -108,7 +108,8 @@ export const AreaSeriesShapes = (args: Args) => {
         const hoverEnabled = hoverOptions?.enabled;
         const inactiveEnabled = inactiveOptions?.enabled;
 
-        dispatcher.on('hover-shape.area', (data?: TooltipDataChunkArea[]) => {
+        function handleShapeHover(data?: TooltipDataChunkArea[]) {
+            hoveredDataRef.current = data;
             const selected = data?.filter((d) => d.series.type === 'area') || [];
             const selectedDataItems = selected.map((d) => d.data);
             const selectedSeriesIds = selected.map((d) => d.series?.id);
@@ -185,7 +186,13 @@ export const AreaSeriesShapes = (args: Args) => {
                 }
                 return d;
             });
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on('hover-shape.area', handleShapeHover);
 
         return () => {
             dispatcher.on('hover-shape.area', null);

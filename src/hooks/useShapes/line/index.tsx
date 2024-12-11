@@ -31,7 +31,7 @@ type Args = {
 
 export const LineSeriesShapes = (args: Args) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
-
+    const hoveredDataRef = React.useRef<TooltipDataChunkLine[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -94,7 +94,8 @@ export const LineSeriesShapes = (args: Args) => {
         const hoverEnabled = hoverOptions?.enabled;
         const inactiveEnabled = inactiveOptions?.enabled;
 
-        dispatcher.on('hover-shape.line', (data?: TooltipDataChunkLine[]) => {
+        function handleShapeHover(data?: TooltipDataChunkLine[]) {
+            hoveredDataRef.current = data;
             const selected = data?.filter((d) => d.series.type === 'line') || [];
             const selectedDataItems = selected.map((d) => d.data);
             const selectedSeriesIds = selected.map((d) => d.series?.id);
@@ -172,7 +173,13 @@ export const LineSeriesShapes = (args: Args) => {
                 }
                 return d;
             });
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on('hover-shape.line', handleShapeHover);
 
         return () => {
             dispatcher.on('hover-shape.line', null);

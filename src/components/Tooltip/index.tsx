@@ -20,15 +20,25 @@ type TooltipProps = {
     svgContainer: SVGSVGElement | null;
     xAxis: PreparedAxis;
     yAxis: PreparedAxis;
+    tooltipPinned: boolean;
+    onOutsideClick?: () => void;
 };
 
 export const Tooltip = (props: TooltipProps) => {
-    const {tooltip, xAxis, yAxis, svgContainer, dispatcher} = props;
+    const {tooltip, xAxis, yAxis, svgContainer, dispatcher, tooltipPinned, onOutsideClick} = props;
     const {hovered, pointerPosition} = useTooltip({dispatcher, tooltip});
     const containerRect = svgContainer?.getBoundingClientRect() || {left: 0, top: 0};
     const left = (pointerPosition?.[0] || 0) + containerRect.left;
     const top = (pointerPosition?.[1] || 0) + containerRect.top;
-    const anchorRef = useVirtualElementRef({rect: {top, left}});
+    const anchorRef = useVirtualElementRef({rect: {left, top}});
+
+    const handleOutsideClick = (e: MouseEvent) => {
+        if (svgContainer?.contains(e.target as HTMLElement)) {
+            return;
+        }
+
+        onOutsideClick?.();
+    };
 
     React.useEffect(() => {
         window.dispatchEvent(new CustomEvent('scroll'));
@@ -36,12 +46,13 @@ export const Tooltip = (props: TooltipProps) => {
 
     return hovered?.length ? (
         <Popup
-            className={b()}
+            className={b({pinned: tooltipPinned})}
             open={true}
             anchorRef={anchorRef}
             offset={[0, 20]}
             placement={['right', 'left', 'top', 'bottom']}
             modifiers={[{name: 'preventOverflow', options: {padding: 10, altAxis: true}}]}
+            onOutsideClick={tooltipPinned ? handleOutsideClick : undefined}
         >
             <div className={b('content')}>
                 <ChartTooltipContent

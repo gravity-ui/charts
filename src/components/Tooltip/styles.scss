@@ -10,6 +10,10 @@
         }
     }
 
+    &[class]#{&}_pinned {
+        pointer-events: inherit;
+    }
+
     &__content {
         padding: 10px 14px;
 

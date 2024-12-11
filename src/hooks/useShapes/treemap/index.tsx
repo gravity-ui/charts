@@ -22,6 +22,7 @@ type ShapeProps = {
 
 export const TreemapSeriesShape = (props: ShapeProps) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = props;
+    const hoveredDataRef = React.useRef<TooltipDataChunkTreemap[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
@@ -68,7 +69,8 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
         const hoverOptions = get(seriesOptions, 'treemap.states.hover');
         const inactiveOptions = get(seriesOptions, 'treemap.states.inactive');
 
-        dispatcher.on(eventName, (data?: TooltipDataChunkTreemap[]) => {
+        function handleShapeHover(data?: TooltipDataChunkTreemap[]) {
+            hoveredDataRef.current = data;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
             const hoveredData = data?.[0]?.data;
@@ -112,7 +114,13 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
                 });
                 return d;
             });
-        });
+        }
+
+        if (hoveredDataRef.current !== null) {
+            handleShapeHover(hoveredDataRef.current);
+        }
+
+        dispatcher.on(eventName, handleShapeHover);
 
         return () => {
             dispatcher.on(eventName, null);

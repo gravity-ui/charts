@@ -3,3 +3,5 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MeaningfulAny = any;
+
+export type PointPosition = [number, number];

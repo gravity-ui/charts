@@ -77,7 +77,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkWaterfall<T>
 ) & {closest?: boolean};
 
-export type ChartTooltipRendererData<T = MeaningfulAny> = {
+export type ChartTooltipRendererArgs<T = MeaningfulAny> = {
     hovered: TooltipDataChunk<T>[];
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis;
@@ -86,9 +86,9 @@ export type ChartTooltipRendererData<T = MeaningfulAny> = {
 export type ChartTooltip<T = MeaningfulAny> = {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
-    renderer?: (args: {
-        hovered: TooltipDataChunk<T>[];
-        xAxis?: ChartXAxis;
-        yAxis?: ChartYAxis;
-    }) => React.ReactElement | null;
+    renderer?: (args: ChartTooltipRendererArgs<T>) => React.ReactElement | null;
+    pin?: {
+        enabled?: boolean;
+        modifierKey?: 'altKey' | 'metaKey';
+    };
 };
