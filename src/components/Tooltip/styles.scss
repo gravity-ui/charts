@@ -1,4 +1,4 @@
-.gcharts-d3-tooltip {
+.gcharts-tooltip {
     &[class] {
         --g-popup-border-width: 0;
         pointer-events: none;
@@ -14,13 +14,16 @@
         pointer-events: inherit;
     }
 
+    &__popup-content {
+        box-shadow: none;
+    }
+
     &__content {
-        padding: 10px 14px;
+        padding: 8px 14px;
 
         text-wrap: nowrap;
 
-        border: 1px solid var(--g-color-line-generic);
-        border-radius: 3px;
+        border-radius: 4px;
         background-color: var(--g-color-infographics-tooltip-bg);
         box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
     }

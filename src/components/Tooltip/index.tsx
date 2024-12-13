@@ -12,7 +12,7 @@ import {ChartTooltipContent} from './ChartTooltipContent';
 
 import './styles.scss';
 
-const b = block('d3-tooltip');
+const b = block('tooltip');
 
 type TooltipProps = {
     dispatcher: Dispatch<object>;
@@ -47,6 +47,7 @@ export const Tooltip = (props: TooltipProps) => {
     return hovered?.length ? (
         <Popup
             className={b({pinned: tooltipPinned})}
+            contentClassName={b('popup-content')}
             open={true}
             anchorRef={anchorRef}
             offset={[0, 20]}
