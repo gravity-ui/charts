@@ -3,8 +3,6 @@
         --g-popup-border-width: 0;
         pointer-events: none;
 
-        box-shadow: none;
-
         > div {
             animation-duration: unset;
             animation-timing-function: unset;
@@ -14,6 +12,10 @@
 
     &[class]#{&}_pinned {
         pointer-events: inherit;
+    }
+
+    &__popup-content {
+        box-shadow: none;
     }
 
     &__content {

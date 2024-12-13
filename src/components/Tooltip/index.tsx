@@ -47,6 +47,7 @@ export const Tooltip = (props: TooltipProps) => {
     return hovered?.length ? (
         <Popup
             className={b({pinned: tooltipPinned})}
+            contentClassName={b('popup-content')}
             open={true}
             anchorRef={anchorRef}
             offset={[0, 20]}
