@@ -12,7 +12,7 @@ import {ChartTooltipContent} from './ChartTooltipContent';
 
 import './styles.scss';
 
-const b = block('d3-tooltip');
+const b = block('tooltip');
 
 type TooltipProps = {
     dispatcher: Dispatch<object>;
