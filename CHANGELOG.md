@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/gravity-ui/charts/compare/v0.6.0...v0.6.1) (2024-12-13)
+
+
+### Bug Fixes
+
+* improve tooltip style ([#21](https://github.com/gravity-ui/charts/issues/21)) ([c9667fc](https://github.com/gravity-ui/charts/commit/c9667fcb2191888cefbe9e28959244bfe3f5ffde))
+
 ## [0.6.0](https://github.com/gravity-ui/charts/compare/v0.5.0...v0.6.0) (2024-12-11)
 
 
