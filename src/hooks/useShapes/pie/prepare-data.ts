@@ -107,8 +107,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
         return data;
     };
 
-    const prepareLabels = (args: {data: PreparedPieData; series: PreparedPieSeries[]}) => {
-        const {data, series} = args;
+    const prepareLabels = (prepareLabelsArgs: {
+        data: PreparedPieData;
+        series: PreparedPieSeries[];
+    }) => {
+        const {data, series} = prepareLabelsArgs;
         const {dataLabels} = series[0];
 
         const labels: PieLabelData[] = [];
