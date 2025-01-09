@@ -1,7 +1,7 @@
 import type {PieArcDatum} from 'd3';
 import {arc, group, line as lineGenerator} from 'd3';
 
-import type {PieSeries} from '../../../types';
+import type {HtmlItem, PieSeries} from '../../../types';
 import {
     calculateNumericProperty,
     getLabelsSize,
@@ -10,7 +10,7 @@ import {
 } from '../../../utils';
 import type {PreparedPieSeries} from '../../useSeries/types';
 
-import type {PieLabelData, PreparedPieData, SegmentData} from './types';
+import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';
 import {getCurveFactory, pieGenerator} from './utils';
 
 const FULL_CIRCLE = Math.PI * 2;
@@ -43,9 +43,9 @@ const getCenter = (
 export function preparePieData(args: Args): PreparedPieData[] {
     const {series: preparedSeries, boundsWidth, boundsHeight} = args;
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2;
-
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
-    return Array.from(groupedPieSeries).map<PreparedPieData>(([stackId, items]) => {
+
+    const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
         const series = items[0];
         const {
             center,
@@ -66,6 +66,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             radius,
             segments: [],
             labels: [],
+            htmlLabels: [],
             connectors: [],
             borderColor,
             borderWidth,
@@ -77,7 +78,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 opacity: series.states.hover.halo.opacity,
                 size: series.states.hover.halo.size,
             },
-            htmlElements: [],
         };
 
         const segments = items.map<SegmentData>((item) => {
@@ -93,164 +93,224 @@ export function preparePieData(args: Args): PreparedPieData[] {
         });
         data.segments = pieGenerator(segments);
 
+        if (dataLabels.enabled) {
+            const {style, connectorPadding, distance} = dataLabels;
+            const {maxHeight: labelHeight} = getLabelsSize({labels: ['Some Label'], style});
+            const minSegmentRadius = maxRadius - distance - connectorPadding - labelHeight;
+            if (data.radius > minSegmentRadius) {
+                data.radius = minSegmentRadius;
+                data.innerRadius =
+                    calculateNumericProperty({value: seriesInnerRadius, base: data.radius}) ?? 0;
+            }
+        }
+
+        return data;
+    };
+
+    const prepareLabels = (args: {data: PreparedPieData; series: PreparedPieSeries[]}) => {
+        const {data, series} = args;
+        const {dataLabels} = series[0];
+
+        const labels: PieLabelData[] = [];
+        const htmlLabels: HtmlItem[] = [];
+        const connectors: PieConnectorData[] = [];
+
+        if (!dataLabels.enabled) {
+            return {labels, htmlLabels, connectors};
+        }
+
         let line = lineGenerator();
         const curveFactory = getCurveFactory(data);
         if (curveFactory) {
             line = line.curve(curveFactory);
         }
 
-        if (dataLabels.enabled) {
-            const {style, connectorPadding, distance} = dataLabels;
-            const {maxHeight: labelHeight} = getLabelsSize({labels: ['Some Label'], style});
-            const minSegmentRadius = maxRadius - connectorPadding - distance - labelHeight;
-            if (data.radius > minSegmentRadius) {
-                data.radius = minSegmentRadius;
-                data.innerRadius =
-                    calculateNumericProperty({value: seriesInnerRadius, base: data.radius}) ?? 0;
-            }
-            const connectorStartPointGenerator = arc<PieArcDatum<SegmentData>>()
-                .innerRadius(data.radius)
-                .outerRadius(data.radius);
-            const connectorMidPointRadius = data.radius + distance / 2;
-            const connectorMidPointGenerator = arc<PieArcDatum<SegmentData>>()
-                .innerRadius(connectorMidPointRadius)
-                .outerRadius(connectorMidPointRadius);
-            const connectorArcRadius = data.radius + distance;
-            const connectorEndPointGenerator = arc<PieArcDatum<SegmentData>>()
-                .innerRadius(connectorArcRadius)
-                .outerRadius(connectorArcRadius);
-            const labelArcRadius = connectorArcRadius + connectorPadding;
-            const labelArcGenerator = arc<PieArcDatum<SegmentData>>()
-                .innerRadius(labelArcRadius)
-                .outerRadius(labelArcRadius);
+        const {style, connectorPadding, distance} = dataLabels;
+        const {maxHeight: labelHeight} = getLabelsSize({labels: ['Some Label'], style});
+        const connectorStartPointGenerator = arc<PieArcDatum<SegmentData>>()
+            .innerRadius(data.radius)
+            .outerRadius(data.radius);
+        const connectorMidPointRadius = data.radius + distance / 2;
+        const connectorMidPointGenerator = arc<PieArcDatum<SegmentData>>()
+            .innerRadius(connectorMidPointRadius)
+            .outerRadius(connectorMidPointRadius);
+        const connectorArcRadius = data.radius + distance;
+        const connectorEndPointGenerator = arc<PieArcDatum<SegmentData>>()
+            .innerRadius(connectorArcRadius)
+            .outerRadius(connectorArcRadius);
+        const labelArcRadius = connectorArcRadius + connectorPadding;
+        const labelArcGenerator = arc<PieArcDatum<SegmentData>>()
+            .innerRadius(labelArcRadius)
+            .outerRadius(labelArcRadius);
 
-            const labels: PieLabelData[] = [];
-            items.forEach((d, index) => {
-                const prevLabel = labels[labels.length - 1];
-                const text = String(d.data.label || d.data.value);
-                const shouldUseHtml = dataLabels.html;
-                const labelSize = getLabelsSize({labels: [text], style, html: shouldUseHtml});
-                const labelWidth = labelSize.maxWidth;
-                const relatedSegment = data.segments[index];
+        series.forEach((d, index) => {
+            const prevLabel = labels[labels.length - 1];
+            const text = String(d.data.label || d.data.value);
+            const shouldUseHtml = dataLabels.html;
+            const labelSize = getLabelsSize({labels: [text], style, html: shouldUseHtml});
+            const labelWidth = labelSize.maxWidth;
+            const relatedSegment = data.segments[index];
 
-                const getLabelPosition = (angle: number) => {
-                    let [x, y] = labelArcGenerator.centroid({
-                        ...relatedSegment,
-                        startAngle: angle,
-                        endAngle: angle,
-                    });
+            const getLabelPosition = (angle: number) => {
+                let [x, y] = labelArcGenerator.centroid({
+                    ...relatedSegment,
+                    startAngle: angle,
+                    endAngle: angle,
+                });
 
+                if (shouldUseHtml) {
+                    x = x < 0 ? x - labelWidth : x;
+                    y = y - labelSize.maxHeight;
+                } else {
                     y = y < 0 ? y - labelHeight : y;
+                }
 
-                    if (shouldUseHtml) {
-                        x = x < 0 ? x - labelWidth : x;
-                    }
+                x = Math.max(-boundsWidth / 2, x);
 
-                    x = Math.max(-boundsWidth / 2, x);
+                return [x, y];
+            };
 
-                    return [x, y];
-                };
+            const getConnectorPoints = (angle: number) => {
+                const connectorStartPoint = connectorStartPointGenerator.centroid(relatedSegment);
+                const connectorEndPoint = connectorEndPointGenerator.centroid({
+                    ...relatedSegment,
+                    startAngle: angle,
+                    endAngle: angle,
+                });
 
-                const getConnectorPoints = (angle: number) => {
-                    const connectorStartPoint =
-                        connectorStartPointGenerator.centroid(relatedSegment);
-                    const connectorEndPoint = connectorEndPointGenerator.centroid({
-                        ...relatedSegment,
-                        startAngle: angle,
-                        endAngle: angle,
-                    });
+                if (dataLabels.connectorShape === 'straight-line') {
+                    return [connectorStartPoint, connectorEndPoint];
+                }
 
-                    if (dataLabels.connectorShape === 'straight-line') {
-                        return [connectorStartPoint, connectorEndPoint];
-                    }
+                const connectorMidPoint = connectorMidPointGenerator.centroid(relatedSegment);
+                return [connectorStartPoint, connectorMidPoint, connectorEndPoint];
+            };
 
-                    const connectorMidPoint = connectorMidPointGenerator.centroid(relatedSegment);
-                    return [connectorStartPoint, connectorMidPoint, connectorEndPoint];
-                };
+            const midAngle = Math.max(
+                prevLabel?.angle || 0,
+                relatedSegment.startAngle +
+                    (relatedSegment.endAngle - relatedSegment.startAngle) / 2,
+            );
+            const [x, y] = getLabelPosition(midAngle);
+            const label: PieLabelData = {
+                text,
+                x,
+                y,
+                style,
+                size: {width: labelWidth, height: labelHeight},
+                maxWidth: labelWidth,
+                textAnchor: midAngle < Math.PI ? 'start' : 'end',
+                series: {id: d.id},
+                active: true,
+                segment: relatedSegment.data,
+                angle: midAngle,
+            };
 
-                const midAngle = Math.max(
-                    prevLabel?.angle || 0,
-                    relatedSegment.startAngle +
-                        (relatedSegment.endAngle - relatedSegment.startAngle) / 2,
-                );
-                const [x, y] = getLabelPosition(midAngle);
-                const label: PieLabelData = {
-                    text,
-                    x,
-                    y,
-                    style,
-                    size: {width: labelWidth, height: labelHeight},
-                    maxWidth: labelWidth,
-                    textAnchor: midAngle < Math.PI ? 'start' : 'end',
-                    series: {id: d.id},
-                    active: true,
-                    segment: relatedSegment.data,
-                    angle: midAngle,
-                };
+            let overlap = false;
+            if (prevLabel) {
+                overlap = isLabelsOverlapping(prevLabel, label, dataLabels.padding);
 
-                let overlap = false;
-                if (prevLabel) {
-                    overlap = isLabelsOverlapping(prevLabel, label, dataLabels.padding);
+                if (overlap) {
+                    let shouldAdjustAngle = true;
 
-                    if (overlap) {
-                        let shouldAdjustAngle = true;
+                    const step = Math.PI / 180;
+                    while (shouldAdjustAngle) {
+                        const newAngle = label.angle + step;
+                        if (newAngle > FULL_CIRCLE && newAngle % FULL_CIRCLE > labels[0].angle) {
+                            shouldAdjustAngle = false;
+                        } else {
+                            label.angle = newAngle;
+                            const [newX, newY] = getLabelPosition(newAngle);
 
-                        const step = Math.PI / 180;
-                        while (shouldAdjustAngle) {
-                            const newAngle = label.angle + step;
-                            if (
-                                newAngle > FULL_CIRCLE &&
-                                newAngle % FULL_CIRCLE > labels[0].angle
-                            ) {
+                            label.x = newX;
+                            label.y = newY;
+
+                            if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
                                 shouldAdjustAngle = false;
-                            } else {
-                                label.angle = newAngle;
-                                const [newX, newY] = getLabelPosition(newAngle);
-
-                                label.x = newX;
-                                label.y = newY;
-
-                                if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
-                                    shouldAdjustAngle = false;
-                                    overlap = false;
-                                }
+                                overlap = false;
                             }
                         }
                     }
                 }
+            }
 
-                if (dataLabels.allowOverlap || !overlap) {
-                    const left = getLeftPosition(label);
+            if (dataLabels.allowOverlap || !overlap) {
+                const left = getLeftPosition(label);
 
-                    if (Math.abs(left) > boundsWidth / 2) {
-                        label.maxWidth = label.size.width - (Math.abs(left) - boundsWidth / 2);
-                    } else {
-                        const right = left + label.size.width;
-                        if (right > boundsWidth / 2) {
-                            label.maxWidth = label.size.width - (right - boundsWidth / 2);
-                        }
+                if (Math.abs(left) > boundsWidth / 2) {
+                    label.maxWidth = label.size.width - (Math.abs(left) - boundsWidth / 2);
+                } else {
+                    const right = left + label.size.width;
+                    if (right > boundsWidth / 2) {
+                        label.maxWidth = label.size.width - (right - boundsWidth / 2);
                     }
-
-                    if (shouldUseHtml) {
-                        data.htmlElements.push({
-                            x: boundsWidth / 2 + label.x,
-                            y: boundsHeight / 2 + label.y,
-                            content: label.text,
-                        });
-                    } else {
-                        labels.push(label);
-                    }
-
-                    const connector = {
-                        path: line(getConnectorPoints(midAngle)),
-                        color: relatedSegment.data.color,
-                    };
-                    data.connectors.push(connector);
                 }
-            });
 
-            data.labels = labels;
+                if (shouldUseHtml) {
+                    htmlLabels.push({
+                        x: boundsWidth / 2 + label.x,
+                        y: boundsHeight / 2 + label.y,
+                        content: label.text,
+                        size: label.size,
+                    });
+                } else {
+                    labels.push(label);
+                }
+
+                const connector = {
+                    path: line(getConnectorPoints(midAngle)),
+                    color: relatedSegment.data.color,
+                };
+                connectors.push(connector);
+            }
+        });
+
+        return {
+            labels,
+            htmlLabels,
+            connectors,
+        };
+    };
+
+    return Array.from(groupedPieSeries).map<PreparedPieData>(([stackId, items]) => {
+        const data = prepareItem(stackId, items);
+        const preparedLabels = prepareLabels({
+            data,
+            series: items,
+        });
+        const allPreparedLabels = [...preparedLabels.labels, ...preparedLabels.htmlLabels];
+
+        const top = Math.min(
+            data.center[1] - data.radius,
+            ...allPreparedLabels.map((l) => l.y + data.center[1]),
+        );
+        const bottom = Math.max(
+            data.center[1] + data.radius,
+            ...allPreparedLabels.map((l) => data.center[1] + l.y + l.size.height),
+        );
+
+        const topAdjustment = Math.floor(top - data.halo.size);
+        if (topAdjustment > 0) {
+            // should adjust top position and height
+            data.radius += topAdjustment / 2;
+            data.center[1] -= topAdjustment / 2;
         }
+
+        const bottomAdjustment = Math.floor(boundsHeight - bottom - data.halo.size);
+        if (bottomAdjustment > 0) {
+            // should adjust position and radius
+            data.radius += bottomAdjustment / 2;
+            data.center[1] += bottomAdjustment / 2;
+        }
+
+        const {labels, htmlLabels, connectors} = prepareLabels({
+            data,
+            series: items,
+        });
+
+        data.labels = labels;
+        data.htmlLabels = htmlLabels;
+        data.connectors = connectors;
 
         return data;
     });

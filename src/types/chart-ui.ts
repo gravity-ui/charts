@@ -15,6 +15,7 @@ export type HtmlItem = {
     x: number;
     y: number;
     content: string;
+    size: {width: number; height: number};
 };
 
 export type ShapeDataWithHtmlItems = {

@@ -179,6 +179,7 @@ export const prepareBarXData = (args: {
                         x: label.x,
                         y: label.y,
                         content: label.text,
+                        size: label.size,
                     });
                 } else {
                     barData.label = getLabelData(barData);

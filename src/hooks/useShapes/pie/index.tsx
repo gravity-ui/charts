@@ -217,10 +217,12 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
         };
     }, [dispatcher, preparedData, seriesOptions]);
 
+    const htmlElements = preparedData.map((d) => d.htmlLabels).flat();
+
     return (
         <React.Fragment>
             <g ref={ref} className={b()} style={{zIndex: 9}} />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
+            <HtmlLayer preparedData={{htmlElements}} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 }
