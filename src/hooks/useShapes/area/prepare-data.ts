@@ -137,10 +137,14 @@ export const prepareAreaData = (args: {
                     const labelItems = points.map<LabelData>((p) => getLabelData(p, s, xMax));
                     if (s.dataLabels.html) {
                         const htmlLabels = labelItems.map((l) => {
+                            const style = l.style ?? s.dataLabels.style;
+                            const labelSize = getLabelsSize({labels: [l.text], style, html: true});
+
                             return {
                                 x: l.x - l.size.width / 2,
                                 y: l.y,
                                 content: l.text,
+                                size: {width: labelSize.maxWidth, height: labelSize.maxHeight},
                             };
                         });
                         htmlElements.push(...htmlLabels);

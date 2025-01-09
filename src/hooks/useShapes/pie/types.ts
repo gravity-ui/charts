@@ -42,5 +42,5 @@ export type PreparedPieData = {
         opacity: number;
         size: number;
     };
-    htmlElements: HtmlItem[];
+    htmlLabels: HtmlItem[];
 };

@@ -60,6 +60,7 @@ function getLabels(args: {
                       content: text,
                       x,
                       y,
+                      size: {width, height: lineHeight},
                   }
                 : {
                       text,

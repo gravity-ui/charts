@@ -93,6 +93,7 @@ function setLabel(prepared: PreparedBarYData) {
             x,
             y: y - height / 2,
             content,
+            size: {width, height},
         });
     } else {
         prepared.label = {
