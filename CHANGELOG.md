@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.1](https://github.com/gravity-ui/charts/compare/v0.6.0...v0.6.1) (2025-01-09)
+
+
+### Bug Fixes
+
+* improve tooltip style ([#21](https://github.com/gravity-ui/charts/issues/21)) ([c9667fc](https://github.com/gravity-ui/charts/commit/c9667fcb2191888cefbe9e28959244bfe3f5ffde))
+* make labels take up less pie chart space ([#23](https://github.com/gravity-ui/charts/issues/23)) ([9bc7756](https://github.com/gravity-ui/charts/commit/9bc77560659acb29f7b10df116653966e0559560))
+
 ## [0.6.0](https://github.com/gravity-ui/charts/compare/v0.5.0...v0.6.0) (2024-12-11)
 
 
