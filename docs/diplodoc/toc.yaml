@@ -1,0 +1,22 @@
+title: ''
+href: index.yaml
+navigation:
+  logo:
+    dark:
+      icon: https://storage.yandexcloud.net/gravity-ui-assets/gravity-logo-dark.svg
+      text: Charts
+    light:
+      icon: https://storage.yandexcloud.net/gravity-ui-assets/gravity-logo-light.svg
+      text: Charts
+  header:
+    rightItems:
+      - type: controls
+      - type: search
+items:
+  - name: Overview
+    href: ./pages/overview.md
+  - name: Get started
+    href: ./pages/get-started.md
+  - name: API
+    href: ./pages/api
+    autodoc: true
