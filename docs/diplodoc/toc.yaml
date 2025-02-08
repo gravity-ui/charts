@@ -13,8 +13,6 @@ navigation:
       - type: controls
       - type: search
 items:
-  - name: Overview
-    href: ./pages/overview.md
   - name: Get started
     href: ./pages/get-started.md
   - name: API

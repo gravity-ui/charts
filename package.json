@@ -51,9 +51,9 @@
     "start": "storybook dev -p 7007",
     "build-storybook": "storybook build -c .storybook -o storybook-static",
     "prepublishOnly": "npm run build",
-    "docs:build": "npm run docs:build-api && TEMP_DIR=$(node ./scripts/docs-pre-build.js) && yfm -i $TEMP_DIR -o ./dist-docs; RC=$?; rm -rf $TEMP_DIR; npm run docs:post-build; exit $RC",
+    "docs:build": "rm -rf ./dist-docs && npm run docs:build-api && TEMP_DIR=$(node ./scripts/docs-pre-build.js) && yfm -i $TEMP_DIR -o ./dist-docs; RC=$?; rm -rf $TEMP_DIR; npm run docs:post-build; exit $RC",
     "docs:dev": "gulp -f ./gulpfile.docs.js",
-    "docs:build-api": "rm -rf ./docs/diplodoc/pages/api/* && typedoc",
+    "docs:build-api": "rm -rf ./docs/diplodoc/pages/api && typedoc",
     "docs:pre-build": "node ./scripts/docs-pre-build.js",
     "docs:post-build": "node ./scripts/docs-post-build.js"
   },

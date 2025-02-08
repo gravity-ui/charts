@@ -1,8 +1,4 @@
 {
   "pathToTocFile": "./docs/diplodoc/toc.yaml",
-  "pathToDocsFolder": "./docs/diplodoc",
-  "typedocOptions": {
-    "out": "./docs/diplodoc/pages/api",
-    "entryFileName": "overview.md"
-  }
+  "pathToDocsFolder": "./docs/diplodoc"
 }

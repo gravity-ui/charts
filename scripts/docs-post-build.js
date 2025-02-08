@@ -21,7 +21,6 @@ function addStylesToHtmlFiles(dir) {
         if (stat.isDirectory()) {
             addStylesToHtmlFiles(filePath);
         } else if (path.extname(file) === '.html') {
-            console.log('Processing:', filePath);
             let content = fs.readFileSync(filePath, 'utf8');
             content = content.replace('</head>', `${styleToAdd}\n</head>`);
             fs.writeFileSync(filePath, content);
@@ -29,5 +28,4 @@ function addStylesToHtmlFiles(dir) {
     });
 }
 
-console.log('POSTBUILD: Adding styles to HTML files');
 addStylesToHtmlFiles(docsDir);
