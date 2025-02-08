@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@diplodoc/cli": "^4.53.11",
-    "@gravity-ui/tsconfig": "^1.0.0",
     "browser-sync": "^3.0.3",
     "gulp": "^5.0.0",
     "lodash": "^4.17.21",
