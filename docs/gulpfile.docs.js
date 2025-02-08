@@ -4,7 +4,7 @@ const path = require('node:path');
 const browserSync = require('browser-sync').create();
 const {watch, series, parallel} = require('gulp');
 
-const DIST_PATH = './dist';
+const DIST_PATH = '../dist-docs';
 
 function build(cb) {
     exec('npm run docs:build', (err, stdout, stderr) => {

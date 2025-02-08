@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const docsDir = path.resolve(process.cwd(), './dist');
+const docsDir = path.resolve(process.cwd(), '../dist-docs');
 const styleToAdd = `
     <style type="text/css">
         .yfm a code {
