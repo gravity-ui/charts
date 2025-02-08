@@ -15,6 +15,8 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - name: Install tsconfig
+        run: npm i @gravity-ui/tsconfig
       - name: Install dependencies
         run: npm run docs:deps
       - name: Build
