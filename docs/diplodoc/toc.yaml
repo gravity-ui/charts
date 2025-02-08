@@ -2,6 +2,7 @@ title: ''
 href: index.yaml
 navigation:
   logo:
+    url: '/'
     dark:
       icon: https://storage.yandexcloud.net/gravity-ui-assets/gravity-logo-dark.svg
       text: Charts
