@@ -6,7 +6,7 @@
 ## Install
 
 ```shell
-npm install --save-dev @gravity-ui/uikit @gravity-ui/charts
+npm install @gravity-ui/uikit @gravity-ui/charts
 ```
 
 ## Development

@@ -1,0 +1,11 @@
+
+allowHTML: true
+staticContent: true
+addSystemMeta: true
+lang: en
+langs:
+  - en
+search:
+  provider: local
+  confidence: phrased
+  tolerance: 2
