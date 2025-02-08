@@ -3,7 +3,6 @@ import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
-import type {ChartSeriesOptions} from './series';
 
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -26,7 +25,7 @@ export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     opacity?: number;
 }
 
-export type BarYSeries<T = MeaningfulAny> = BaseSeries & {
+export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.BarY;
     data: BarYSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -47,7 +46,7 @@ export type BarYSeries<T = MeaningfulAny> = BaseSeries & {
      * @default true
      * */
     grouping?: boolean;
-    dataLabels?: ChartSeriesOptions['dataLabels'] & {
+    dataLabels?: BaseSeries['dataLabels'] & {
         /**
          * Whether to align the data label inside or outside the box.
          * For charts with a percentage stack, it is always true.
@@ -60,4 +59,4 @@ export type BarYSeries<T = MeaningfulAny> = BaseSeries & {
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
-};
+}
