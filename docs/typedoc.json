@@ -1,9 +1,8 @@
 {
-  "entryPoints": ["./docs/src/**/*.ts"],
+  "entryPoints": ["./src/**/*.ts"],
   "entryFileName": "overview.md",
-  "out": "docs/diplodoc/pages/api",
-  "plugin": ["typedoc-plugin-markdown", "./test.mjs"],
-  "theme": "custom-markdown-theme",
+  "out": "./diplodoc/pages/api",
+  "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",
   "tableColumnSettings": {
     "hideSources": true

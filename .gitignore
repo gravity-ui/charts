@@ -7,7 +7,7 @@ node_modules
 
 # Artifacts
 dist
-dist-docs
+dist/docs
 docs/diplodoc/pages/api
 storybook-static
 .cache

@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const docsDir = path.resolve(process.cwd(), './dist-docs');
+const docsDir = path.resolve(process.cwd(), './dist');
 const styleToAdd = `
     <style type="text/css">
         .yfm a code {
@@ -13,7 +13,6 @@ const styleToAdd = `
 
 function addStylesToHtmlFiles(dir) {
     const files = fs.readdirSync(dir);
-
     files.forEach((file) => {
         const filePath = path.join(dir, file);
         const stat = fs.statSync(filePath);

@@ -22,8 +22,8 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Install Packages
-        run: npm ci
+      - name: Install dependencies
+        run: npm run docs:deps
         shell: bash
       - name: Build
         run: npm run docs:build
@@ -34,7 +34,7 @@ jobs:
         # if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist-docs
+          publish_dir: ./docs/dist
           cname: gravity-ui.com
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'

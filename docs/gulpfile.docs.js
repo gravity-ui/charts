@@ -1,16 +1,15 @@
-/* eslint-disable no-console */
 const {exec} = require('node:child_process');
 const path = require('node:path');
 
 const browserSync = require('browser-sync').create();
 const {watch, series, parallel} = require('gulp');
 
-const DIST_PATH = './dist-docs';
+const DIST_PATH = './dist';
 
 function build(cb) {
     exec('npm run docs:build', (err, stdout, stderr) => {
-        console.log(stdout);
-        console.error(stderr);
+        process.stdout.write(stdout);
+        process.stdout.write(stderr);
         cb(err);
     });
 }

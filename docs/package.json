@@ -1,0 +1,23 @@
+{
+  "name": "@gravity-ui/charts-docs",
+  "private": true,
+  "scripts": {
+    "docs:dev": "gulp -f ./gulpfile.docs.js",
+    "docs:build": "rm -rf ./dist && npm run docs:build-api && TEMP_DIR=$(node ./scripts/docs-pre-build.js) && yfm -i $TEMP_DIR -o ./dist; RC=$?; rm -rf $TEMP_DIR; npm run docs:post-build; exit $RC",
+    "docs:build-api": "rm -rf ./docs/diplodoc/pages/api && typedoc",
+    "docs:pre-build": "node ./scripts/docs-pre-build.js",
+    "docs:post-build": "node ./scripts/docs-post-build.js"
+  },
+  "devDependencies": {
+    "@diplodoc/cli": "^4.53.11",
+    "browser-sync": "^3.0.3",
+    "gulp": "^5.0.0",
+    "lodash": "^4.17.21",
+    "typedoc": "^0.27.6",
+    "typedoc-plugin-markdown": "^4.4.1",
+    "yaml": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=18.0"
+  }
+}
