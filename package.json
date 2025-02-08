@@ -53,7 +53,7 @@
     "prepublishOnly": "npm run build",
     "docs:deps": "cd ./docs && npm ci",
     "docs:dev": "cd ./docs && npm run docs:dev",
-    "docs:build": "cd ./docs npm run docs:build"
+    "docs:build": "cd ./docs && npm run docs:build"
   },
   "dependencies": {
     "@bem-react/classname": "^1.6.0",
