@@ -25,7 +25,7 @@ function reload(cb) {
 }
 
 function watchFiles() {
-    watch(['./docs/diplodoc/**/*', './docs/src/**/*'], series(build, reload));
+    watch(['./docs/diplodoc/**/*', './docs/src/**/*', '../src/**/*'], series(build, reload));
 }
 
 exports.default = series(build, parallel(serve, watchFiles));

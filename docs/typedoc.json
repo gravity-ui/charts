@@ -5,6 +5,8 @@
   "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",
   "tableColumnSettings": {
+    "hideInherited": true,
+    "hideOverrides": true,
     "hideSources": true
   },
   "hidePageTitle": true,

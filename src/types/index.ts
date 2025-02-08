@@ -27,7 +27,7 @@ export * from './chart/halo';
 export * from './chart/treemap';
 export * from './chart/waterfall';
 
-export type ChartData<T = MeaningfulAny> = {
+export interface ChartData<T = MeaningfulAny> {
     chart?: ChartOptions;
     legend?: ChartLegend;
     series: {
@@ -41,4 +41,4 @@ export type ChartData<T = MeaningfulAny> = {
     /** Setting for displaying charts on different plots.
      * It can be used to visualize related information on multiple charts. */
     split?: ChartSplit;
-};
+}

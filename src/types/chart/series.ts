@@ -34,11 +34,11 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | TreemapSeriesData<T>
     | WaterfallSeriesData<T>;
 
-export type DataLabelRendererData<T = MeaningfulAny> = {
+export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
-};
+}
 
-export type BasicHoverState = {
+export interface BasicHoverState {
     /**
      * Enable separate styles for the hovered series.
      *
@@ -54,9 +54,9 @@ export type BasicHoverState = {
      * @default 0.3
      */
     brightness?: number;
-};
+}
 
-export type BasicInactiveState = {
+export interface BasicInactiveState {
     /**
      * Enable separate styles for the inactive series.
      *
@@ -69,9 +69,9 @@ export type BasicInactiveState = {
      * @default 0.5
      * */
     opacity?: number;
-};
+}
 
-export type ChartSeriesOptions = {
+export interface ChartSeriesOptions {
     /** Individual data label for each point. */
     dataLabels?: {
         /** Enable or disable the data labels */
@@ -248,4 +248,4 @@ export type ChartSeriesOptions = {
             inactive?: BasicInactiveState;
         };
     };
-};
+}

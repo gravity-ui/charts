@@ -5,7 +5,7 @@ import type {BaseTextStyle} from './base';
 export type ChartAxisType = 'category' | 'datetime' | 'linear' | 'logarithmic';
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 
-export type ChartAxisLabels = {
+export interface ChartAxisLabels {
     /** Enable or disable the axis labels. */
     enabled?: boolean;
     /** The label's pixel distance from the perimeter of the plot area.
@@ -30,9 +30,9 @@ export type ChartAxisLabels = {
      * @default: 0
      */
     rotation?: number;
-};
+}
 
-export type ChartAxis = {
+export interface ChartAxis {
     categories?: string[];
     timestamps?: number[];
     type?: ChartAxisType;
@@ -76,11 +76,11 @@ export type ChartAxis = {
      * Defaults to 0.05 for Y axis and to 0.01 for X axis.
      * */
     maxPadding?: number;
-};
+}
 
-export type ChartXAxis = ChartAxis;
+export interface ChartXAxis extends ChartAxis {}
 
-export type ChartYAxis = ChartAxis & {
+export interface ChartYAxis extends ChartAxis {
     /** Axis location.
      * Possible values - 'left' and 'right'.
      * */
@@ -88,4 +88,4 @@ export type ChartYAxis = ChartAxis & {
     /** Property for splitting charts. Determines which area the axis is located in.
      * */
     plotIndex?: number;
-};
+}

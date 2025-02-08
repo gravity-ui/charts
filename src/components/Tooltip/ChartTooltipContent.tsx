@@ -6,12 +6,12 @@ import type {ChartTooltip, ChartXAxis, ChartYAxis, TooltipDataChunk} from '../..
 
 import {DefaultContent} from './DefaultContent';
 
-export type ChartTooltipContentProps = {
+export interface ChartTooltipContentProps {
     hovered?: TooltipDataChunk[];
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis;
     renderer?: ChartTooltip['renderer'];
-};
+}
 
 export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
     const {hovered, xAxis, yAxis, renderer} = props;
