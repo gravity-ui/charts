@@ -1,12 +1,12 @@
-## Get started
+# Get started
 
-### Install
+## Install
 
 ```shell
 npm install @gravity-ui/uikit @gravity-ui/charts
 ```
 
-### Development
+## Development
 
 To start the development server with storybook run the following:
 
