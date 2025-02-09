@@ -1,6 +1,6 @@
 import type {SymbolType} from '../../constants';
 
-export type PointMarkerOptions = {
+export interface PointMarkerOptions {
     /** Enable or disable the point marker */
     enabled?: boolean;
     /** The radius of the point marker */
@@ -10,4 +10,4 @@ export type PointMarkerOptions = {
     /** The width of the point marker's border */
     borderWidth?: number;
     symbol?: `${SymbolType}`;
-};
+}

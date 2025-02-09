@@ -4,7 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type ScatterSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
+export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the point. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -29,9 +29,9 @@ export type ScatterSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     radius?: number;
     /** Individual opacity for the point. */
     opacity?: number;
-};
+}
 
-export type ScatterSeries<T = MeaningfulAny> = BaseSeries & {
+export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Scatter;
     data: ScatterSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -46,4 +46,4 @@ export type ScatterSeries<T = MeaningfulAny> = BaseSeries & {
     };
     /** Y-axis index (when using two axes) */
     yAxis?: number;
-};
+}

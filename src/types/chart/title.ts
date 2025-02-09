@@ -1,6 +1,6 @@
 import type {BaseTextStyle} from './base';
 
-export type ChartTitle = {
+export interface ChartTitle {
     text: string;
     style?: Partial<BaseTextStyle>;
-};
+}

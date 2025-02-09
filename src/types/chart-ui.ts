@@ -1,6 +1,6 @@
 import type {BaseTextStyle} from './chart/base';
 
-export type LabelData = {
+export interface LabelData {
     text: string;
     x: number;
     y: number;
@@ -9,15 +9,15 @@ export type LabelData = {
     textAnchor: 'start' | 'end' | 'middle';
     series: {id: string};
     active?: boolean;
-};
+}
 
-export type HtmlItem = {
+export interface HtmlItem {
     x: number;
     y: number;
     content: string;
     size: {width: number; height: number};
-};
+}
 
-export type ShapeDataWithHtmlItems = {
+export interface ShapeDataWithHtmlItems {
     htmlElements: HtmlItem[];
-};
+}

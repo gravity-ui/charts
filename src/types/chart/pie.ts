@@ -6,7 +6,7 @@ import type {MeaningfulAny} from '../misc';
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type PieSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
+export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The value of the pie segment. */
     value: number;
     /** The name of the pie segment (used in legend, tooltip etc). */
@@ -17,12 +17,12 @@ export type PieSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     label?: string;
     /** Individual opacity for the pie segment. */
     opacity?: number;
-};
+}
 
 export type ConnectorShape = 'straight-line' | 'polyline';
 export type ConnectorCurve = 'linear' | 'basic';
 
-export type PieSeries<T = MeaningfulAny> = BaseSeries & {
+export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Pie;
     data: PieSeriesData<T>[];
     /**
@@ -86,4 +86,4 @@ export type PieSeries<T = MeaningfulAny> = BaseSeries & {
      * @return BaseType
      * */
     renderCustomShape?: (args: {series: {innerRadius: number}}) => BaseType;
-};
+}

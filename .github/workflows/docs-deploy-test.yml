@@ -1,0 +1,23 @@
+name: Test documentation deployment
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-docs-deploy:
+    name: Test documentation deployment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install tsconfig
+        run: npm i @gravity-ui/tsconfig
+      - name: Install dependencies
+        run: npm run docs:deps
+      - name: Build
+        run: npm run docs:build

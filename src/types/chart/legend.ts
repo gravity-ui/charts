@@ -1,6 +1,6 @@
 import type {BaseTextStyle} from './base';
 
-export type ChartLegend = {
+export interface ChartLegend {
     enabled?: boolean;
     /**
      * Different types for different color schemes.
@@ -60,18 +60,18 @@ export type ChartLegend = {
     };
     /* Width of the legend */
     width?: number;
-};
+}
 
-export type BaseLegendSymbol = {
+export interface BaseLegendSymbol {
     /**
      * The pixel padding between the legend item symbol and the legend item text.
      *
      * @default 5
      * */
     padding?: number;
-};
+}
 
-export type RectLegendSymbolOptions = BaseLegendSymbol & {
+export interface RectLegendSymbolOptions extends BaseLegendSymbol {
     /**
      * The pixel width of the symbol for series types that use a rectangle in the legend
      *
@@ -92,22 +92,22 @@ export type RectLegendSymbolOptions = BaseLegendSymbol & {
      * Defaults to half the symbolHeight, effectively creating a circle.
      */
     radius?: number;
-};
+}
 
-export type PathLegendSymbolOptions = BaseLegendSymbol & {
+export interface PathLegendSymbolOptions extends BaseLegendSymbol {
     /**
      * The pixel width of the symbol for series types that use a path in the legend
      *
      * @default 16
      * */
     width?: number;
-};
+}
 
-export type SymbolLegendSymbolOptions = BaseLegendSymbol & {
+export interface SymbolLegendSymbolOptions extends BaseLegendSymbol {
     /**
      * The pixel width of the symbol for series types that use a symbol in the legend
      *
      * @default 8
      * */
     width?: number;
-};
+}

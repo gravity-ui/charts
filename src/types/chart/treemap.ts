@@ -4,7 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type TreemapSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
+export interface TreemapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The name of the node (used in legend, tooltip etc). */
     name: string | string[];
     /** The value of the node. All nodes should have this property except nodes that have children. */
@@ -16,9 +16,9 @@ export type TreemapSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
      * If no nodes has a matching id, or this option is undefined, then the parent will be set to the root.
      */
     parentId?: string;
-};
+}
 
-export type TreemapSeries<T = MeaningfulAny> = BaseSeries & {
+export interface TreemapSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Treemap;
     data: TreemapSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
@@ -46,4 +46,4 @@ export type TreemapSeries<T = MeaningfulAny> = BaseSeries & {
         /** Horizontal alignment of the data label inside the tile. */
         align?: 'left' | 'center' | 'right';
     };
-};
+}

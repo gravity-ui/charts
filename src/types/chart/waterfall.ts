@@ -4,7 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
-export type WaterfallSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
+export interface WaterfallSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -23,9 +23,9 @@ export type WaterfallSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     opacity?: number;
     /** When this property is true, the point display the total sum across the entire series. */
     total?: boolean;
-};
+}
 
-export type WaterfallSeries<T = MeaningfulAny> = BaseSeries & {
+export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Waterfall;
     data: WaterfallSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
@@ -40,4 +40,4 @@ export type WaterfallSeries<T = MeaningfulAny> = BaseSeries & {
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
-};
+}
