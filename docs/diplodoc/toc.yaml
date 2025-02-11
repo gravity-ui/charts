@@ -15,8 +15,8 @@ navigation:
         type: link
         url: https://github.com/gravity-ui/charts
     rightItems:
-      - type: controls
       - type: search
+      - type: controls
 items:
   - name: Overview
     href: ./pages/overview.md
