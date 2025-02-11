@@ -1,6 +1,6 @@
 import type {MeaningfulAny} from '../misc';
 
-export type BaseSeries = {
+export interface BaseSeries {
     /** Initial visibility of the series */
     visible?: boolean;
     /**
@@ -31,9 +31,9 @@ export type BaseSeries = {
     };
     /** You can set the cursor to "pointer" if you have click events attached to the series, to signal to the user that the points and lines can be clicked. */
     cursor?: string;
-};
+}
 
-export type BaseSeriesData<T = MeaningfulAny> = {
+export interface BaseSeriesData<T = MeaningfulAny> {
     /**
      * A reserved subspace to store options and values for customized functionality
      *
@@ -42,10 +42,10 @@ export type BaseSeriesData<T = MeaningfulAny> = {
     custom?: T;
     /** Individual color for the data chunk (point in scatter, segment in pie, bar etc) */
     color?: string;
-};
+}
 
-export type BaseTextStyle = {
+export interface BaseTextStyle {
     fontSize: string;
     fontWeight?: string;
     fontColor?: string;
-};
+}

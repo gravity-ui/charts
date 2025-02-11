@@ -1,15 +1,15 @@
 import type {BaseTextStyle} from './base';
 
-export type SplitPlotOptions = {
+export interface SplitPlotOptions {
     title?: {
         text: string;
         style?: Partial<BaseTextStyle>;
     };
-};
+}
 
-export type ChartSplit = {
+export interface ChartSplit {
     enable: boolean;
     layout?: 'vertical';
     gap?: string | number;
     plots?: SplitPlotOptions[];
-};
+}

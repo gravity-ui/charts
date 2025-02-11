@@ -1,0 +1,22 @@
+{
+  "entryPoints": ["./src/**/*.ts"],
+  "entryFileName": "overview.md",
+  "out": "./diplodoc/pages/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "tableColumnSettings": {
+    "hideInherited": true,
+    "hideOverrides": true,
+    "hideSources": true
+  },
+  "hidePageTitle": true,
+  "hidePageHeader": true,
+  "parametersFormat": "table",
+  "interfacePropertiesFormat": "table",
+  "classPropertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "propertyMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "tsconfig": "tsconfig.typedoc.json",
+  "name": "API"
+}

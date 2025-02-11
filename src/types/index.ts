@@ -27,18 +27,48 @@ export * from './chart/halo';
 export * from './chart/treemap';
 export * from './chart/waterfall';
 
-export type ChartData<T = MeaningfulAny> = {
+export interface ChartData<T = MeaningfulAny> {
+    /**
+     * General options for the chart.
+     */
     chart?: ChartOptions;
+    /**
+     * The legend displays a labeled box for each data element in the chart.
+     * It shows a distinctive symbol paired with a name for every series.
+     */
     legend?: ChartLegend;
+    /**
+     * Represents the series data and series options.
+     */
     series: {
+        /**
+         * Contains data points to be plotted.
+         */
         data: ChartSeries<T>[];
+        /**
+         * Allows for customizing the appearance and behavior of the series.
+         */
         options?: ChartSeriesOptions;
     };
+    /**
+     * The main title of the chart.
+     */
     title?: ChartTitle;
+    /**
+     * Options for the tooltip that appears when the user hovers over a series or point.
+     */
     tooltip?: ChartTooltip<T>;
+    /**
+     * Options for the the X axis.
+     */
     xAxis?: ChartXAxis;
+    /**
+     * Options for the the Y axis or multiple Y axes.
+     */
     yAxis?: ChartYAxis[];
-    /** Setting for displaying charts on different plots.
-     * It can be used to visualize related information on multiple charts. */
+    /**
+     * Setting for displaying charts on different plots.
+     * It can be used to visualize related information on multiple charts.
+     */
     split?: ChartSplit;
-};
+}

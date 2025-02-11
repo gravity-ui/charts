@@ -5,7 +5,7 @@ import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 
-export type AreaSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
+export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the point. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -37,15 +37,15 @@ export type AreaSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
             };
         };
     };
-};
+}
 
 export type AreaMarkerSymbol = 'circle' | 'square';
 
-export type AreaMarkerOptions = PointMarkerOptions & {
+export interface AreaMarkerOptions extends PointMarkerOptions {
     symbol?: AreaMarkerSymbol;
-};
+}
 
-export type AreaSeries<T = MeaningfulAny> = BaseSeries & {
+export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Area;
     data: AreaSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -78,4 +78,4 @@ export type AreaSeries<T = MeaningfulAny> = BaseSeries & {
     marker?: AreaMarkerOptions;
     /** Y-axis index (when using two axes) */
     yAxis?: number;
-};
+}

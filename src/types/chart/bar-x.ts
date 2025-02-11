@@ -5,7 +5,7 @@ import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 import type {ChartSeriesOptions} from './series';
 
-export type BarXSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
+export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
      * - numeric value (for `linear` x axis)
@@ -30,9 +30,9 @@ export type BarXSeriesData<T = MeaningfulAny> = BaseSeriesData<T> & {
     label?: string | number;
     /** Individual opacity for the bar-x column. */
     opacity?: number;
-};
+}
 
-export type BarXSeries<T = MeaningfulAny> = BaseSeries & {
+export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.BarX;
     data: BarXSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -68,4 +68,4 @@ export type BarXSeries<T = MeaningfulAny> = BaseSeries & {
     };
     /** Y-axis index (when using two axes) */
     yAxis?: number;
-};
+}

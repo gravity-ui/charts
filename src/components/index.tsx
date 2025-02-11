@@ -13,20 +13,22 @@ import {ChartInner} from './ChartInner';
 
 export * from './Tooltip/ChartTooltipContent';
 
-export type ChartRef = {
+export interface ChartRef {
     reflow: () => void;
-};
+}
 
-type ChartDimentions = {
+export interface ChartDimentions {
     height: number;
     width: number;
-};
+}
 
-export type ChartProps = {
+export type ChartOnResize = (args: {dimensions?: ChartDimentions}) => void;
+
+export interface ChartProps {
     data: ChartData;
     lang?: string;
-    onResize?: (args: {dimensions?: ChartDimentions}) => void;
-};
+    onResize?: ChartOnResize;
+}
 
 export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props, forwardedRef) {
     const {data, lang, onResize} = props;
