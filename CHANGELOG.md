@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/gravity-ui/charts/compare/v0.6.1...v0.7.0) (2025-02-18)
+
+
+### Features
+
+* update uikit to v7 ([#37](https://github.com/gravity-ui/charts/issues/37)) ([4548824](https://github.com/gravity-ui/charts/commit/45488248a74621020daa157ab2c1c9eadafee4be))
+
 ## [0.6.1](https://github.com/gravity-ui/charts/compare/v0.6.0...v0.6.1) (2025-01-09)
 
 
