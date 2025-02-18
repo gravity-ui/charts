@@ -1,22 +1,5 @@
 .gcharts-tooltip {
-    &[class] {
-        --g-popup-border-width: 0;
-        pointer-events: none;
-
-        > div {
-            animation-duration: unset;
-            animation-timing-function: unset;
-            animation-fill-mode: unset;
-        }
-    }
-
-    &[class]#{&}_pinned {
-        pointer-events: inherit;
-    }
-
-    &__popup-content {
-        box-shadow: none;
-    }
+    box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
 
     &__content {
         padding: 8px 14px;
@@ -25,7 +8,6 @@
 
         border-radius: 4px;
         background-color: var(--g-color-infographics-tooltip-bg);
-        box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
     }
 
     &__content-row {

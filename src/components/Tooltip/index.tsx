@@ -1,6 +1,7 @@
 import React from 'react';
 
-import {Popup, useVirtualElementRef} from '@gravity-ui/uikit';
+import {Popup, useVirtualElement} from '@gravity-ui/uikit';
+import type {PopupProps} from '@gravity-ui/uikit';
 import type {Dispatch} from 'd3';
 
 import type {PreparedAxis, PreparedTooltip} from '../../hooks';
@@ -30,10 +31,10 @@ export const Tooltip = (props: TooltipProps) => {
     const containerRect = svgContainer?.getBoundingClientRect() || {left: 0, top: 0};
     const left = (pointerPosition?.[0] || 0) + containerRect.left;
     const top = (pointerPosition?.[1] || 0) + containerRect.top;
-    const anchorRef = useVirtualElementRef({rect: {left, top}});
+    const {anchor} = useVirtualElement({left, top});
 
-    const handleOutsideClick = (e: MouseEvent) => {
-        if (svgContainer?.contains(e.target as HTMLElement)) {
+    const handleOnOpenChange: PopupProps['onOpenChange'] = (_open: boolean, e) => {
+        if (svgContainer?.contains(e?.target as HTMLElement)) {
             return;
         }
 
@@ -43,17 +44,16 @@ export const Tooltip = (props: TooltipProps) => {
     React.useEffect(() => {
         window.dispatchEvent(new CustomEvent('scroll'));
     }, [left, top]);
-
     return hovered?.length ? (
         <Popup
+            anchorElement={anchor}
             className={b({pinned: tooltipPinned})}
-            contentClassName={b('popup-content')}
+            disableTransition={true}
+            floatingStyles={tooltipPinned ? undefined : {pointerEvents: 'none'}}
+            offset={{mainAxis: 20}}
+            onOpenChange={tooltipPinned ? handleOnOpenChange : undefined}
             open={true}
-            anchorRef={anchorRef}
-            offset={[0, 20]}
             placement={['right', 'left', 'top', 'bottom']}
-            modifiers={[{name: 'preventOverflow', options: {padding: 10, altAxis: true}}]}
-            onOutsideClick={tooltipPinned ? handleOutsideClick : undefined}
         >
             <div className={b('content')}>
                 <ChartTooltipContent
