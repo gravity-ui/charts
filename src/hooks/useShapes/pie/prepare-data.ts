@@ -251,8 +251,8 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
                 if (shouldUseHtml) {
                     htmlLabels.push({
-                        x: boundsWidth / 2 + label.x,
-                        y: boundsHeight / 2 + label.y,
+                        x: data.center[0] + label.x,
+                        y: Math.max(0, data.center[1] + label.y),
                         content: label.text,
                         size: label.size,
                     });
@@ -281,15 +281,16 @@ export function preparePieData(args: Args): PreparedPieData[] {
             data,
             series: items,
         });
-        const allPreparedLabels = [...preparedLabels.labels, ...preparedLabels.htmlLabels];
 
         const top = Math.min(
             data.center[1] - data.radius,
-            ...allPreparedLabels.map((l) => l.y + data.center[1]),
+            ...preparedLabels.labels.map((l) => l.y + data.center[1]),
+            ...preparedLabels.htmlLabels.map((l) => l.y),
         );
         const bottom = Math.max(
             data.center[1] + data.radius,
-            ...allPreparedLabels.map((l) => data.center[1] + l.y + l.size.height),
+            ...preparedLabels.labels.map((l) => l.y + data.center[1] + l.size.height),
+            ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
         );
 
         const topAdjustment = Math.floor(top - data.halo.size);
