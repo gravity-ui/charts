@@ -5,7 +5,7 @@ import {block} from '../../utils';
 
 import './styles.scss';
 
-const b = block('d3-plot-title');
+const b = block('plot-title');
 
 type Props = {
     title?: PreparedPlotTitle;
