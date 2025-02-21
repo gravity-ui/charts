@@ -11,6 +11,7 @@ export type SegmentData = {
     hovered: boolean;
     active: boolean;
     pie: PreparedPieData;
+    radius: number;
 };
 
 export type PieLabelData = LabelData & {
@@ -30,7 +31,6 @@ export type PreparedPieData = {
     labels: PieLabelData[];
     connectors: PieConnectorData[];
     center: [number, number];
-    radius: number;
     innerRadius: number;
     borderRadius: number;
     borderWidth: number;
