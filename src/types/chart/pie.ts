@@ -17,6 +17,8 @@ export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     label?: string;
     /** Individual opacity for the pie segment. */
     opacity?: number;
+    /** The individual radius of the pie segment. The default value is series.radius */
+    radius?: string | number;
 }
 
 export type ConnectorShape = 'straight-line' | 'polyline';

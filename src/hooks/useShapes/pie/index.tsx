@@ -51,7 +51,6 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
                 const [x, y] = pieData.center;
                 return `translate(${x}, ${y})`;
             })
-            .style('stroke', (pieData) => pieData.borderColor)
             .style('stroke-width', (pieData) => pieData.borderWidth)
             .attr('cursor', (pieData) => pieData.series.cursor);
 
@@ -68,7 +67,7 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
             .attr('d', (d) => {
                 const arcGenerator = arc<PieArcDatum<SegmentData>>()
                     .innerRadius(d.data.pie.innerRadius)
-                    .outerRadius(d.data.pie.radius + d.data.pie.halo.size)
+                    .outerRadius(d.data.radius + d.data.pie.halo.size)
                     .cornerRadius(d.data.pie.borderRadius);
                 return arcGenerator(d);
             })
@@ -86,11 +85,12 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
             .attr('d', (d) => {
                 const arcGenerator = arc<PieArcDatum<SegmentData>>()
                     .innerRadius(d.data.pie.innerRadius)
-                    .outerRadius(d.data.pie.radius)
+                    .outerRadius(d.data.radius)
                     .cornerRadius(d.data.pie.borderRadius);
                 return arcGenerator(d);
             })
             .attr('class', b('segment'))
+            .style('stroke', (d) => d.data.series.borderColor)
             .attr('fill', (d) => d.data.color)
             .attr('opacity', (d) => d.data.opacity);
 

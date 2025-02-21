@@ -52,18 +52,14 @@ export function preparePieData(args: Args): PreparedPieData[] {
             borderWidth,
             borderColor,
             borderRadius,
-            radius: seriesRadius,
             innerRadius: seriesInnerRadius,
             dataLabels,
         } = series;
-        const radius =
-            calculateNumericProperty({value: seriesRadius, base: maxRadius}) ?? maxRadius;
 
         const data: PreparedPieData = {
             id: stackId,
             center: getCenter(boundsWidth, boundsHeight, center),
-            innerRadius: calculateNumericProperty({value: seriesInnerRadius, base: radius}) ?? 0,
-            radius,
+            innerRadius: 0,
             segments: [],
             labels: [],
             htmlLabels: [],
@@ -80,7 +76,21 @@ export function preparePieData(args: Args): PreparedPieData[] {
             },
         };
 
+        const {maxHeight: labelHeight} = getLabelsSize({
+            labels: ['Some Label'],
+            style: dataLabels.style,
+        });
+        let segmentMaxRadius = 0;
         const segments = items.map<SegmentData>((item) => {
+            let maxSegmentRadius = maxRadius;
+            if (dataLabels.enabled) {
+                maxSegmentRadius -= dataLabels.distance + dataLabels.connectorPadding + labelHeight;
+            }
+
+            const segmentRadius =
+                calculateNumericProperty({value: item.radius, base: maxSegmentRadius}) ??
+                maxSegmentRadius;
+            segmentMaxRadius = Math.max(segmentMaxRadius, segmentRadius);
             return {
                 value: item.value,
                 color: item.color,
@@ -89,20 +99,13 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 hovered: false,
                 active: true,
                 pie: data,
+                radius: segmentRadius,
             };
         });
-        data.segments = pieGenerator(segments);
 
-        if (dataLabels.enabled) {
-            const {style, connectorPadding, distance} = dataLabels;
-            const {maxHeight: labelHeight} = getLabelsSize({labels: ['Some Label'], style});
-            const minSegmentRadius = maxRadius - distance - connectorPadding - labelHeight;
-            if (data.radius > minSegmentRadius) {
-                data.radius = minSegmentRadius;
-                data.innerRadius =
-                    calculateNumericProperty({value: seriesInnerRadius, base: data.radius}) ?? 0;
-            }
-        }
+        data.segments = pieGenerator(segments);
+        data.innerRadius =
+            calculateNumericProperty({value: seriesInnerRadius, base: segmentMaxRadius}) ?? 0;
 
         return data;
     };
@@ -131,20 +134,17 @@ export function preparePieData(args: Args): PreparedPieData[] {
         const {style, connectorPadding, distance} = dataLabels;
         const {maxHeight: labelHeight} = getLabelsSize({labels: ['Some Label'], style});
         const connectorStartPointGenerator = arc<PieArcDatum<SegmentData>>()
-            .innerRadius(data.radius)
-            .outerRadius(data.radius);
-        const connectorMidPointRadius = data.radius + distance / 2;
+            .innerRadius((d) => d.data.radius)
+            .outerRadius((d) => d.data.radius);
         const connectorMidPointGenerator = arc<PieArcDatum<SegmentData>>()
-            .innerRadius(connectorMidPointRadius)
-            .outerRadius(connectorMidPointRadius);
-        const connectorArcRadius = data.radius + distance;
+            .innerRadius((d) => d.data.radius + distance / 2)
+            .outerRadius((d) => d.data.radius + distance / 2);
         const connectorEndPointGenerator = arc<PieArcDatum<SegmentData>>()
-            .innerRadius(connectorArcRadius)
-            .outerRadius(connectorArcRadius);
-        const labelArcRadius = connectorArcRadius + connectorPadding;
+            .innerRadius((d) => d.data.radius + distance)
+            .outerRadius((d) => d.data.radius + distance);
         const labelArcGenerator = arc<PieArcDatum<SegmentData>>()
-            .innerRadius(labelArcRadius)
-            .outerRadius(labelArcRadius);
+            .innerRadius((d) => d.data.radius + distance + connectorPadding)
+            .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
@@ -282,28 +282,31 @@ export function preparePieData(args: Args): PreparedPieData[] {
             series: items,
         });
 
+        const segmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
         const top = Math.min(
-            data.center[1] - data.radius,
+            data.center[1] - segmentMaxRadius,
             ...preparedLabels.labels.map((l) => l.y + data.center[1]),
             ...preparedLabels.htmlLabels.map((l) => l.y),
         );
         const bottom = Math.max(
-            data.center[1] + data.radius,
+            data.center[1] + segmentMaxRadius,
             ...preparedLabels.labels.map((l) => l.y + data.center[1] + l.size.height),
             ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
         );
 
         const topAdjustment = Math.floor(top - data.halo.size);
         if (topAdjustment > 0) {
-            // should adjust top position and height
-            data.radius += topAdjustment / 2;
+            data.segments.forEach((s) => {
+                s.data.radius += topAdjustment / 2;
+            });
             data.center[1] -= topAdjustment / 2;
         }
 
         const bottomAdjustment = Math.floor(boundsHeight - bottom - data.halo.size);
         if (bottomAdjustment > 0) {
-            // should adjust position and radius
-            data.radius += bottomAdjustment / 2;
+            data.segments.forEach((s) => {
+                s.data.radius += bottomAdjustment / 2;
+            });
             data.center[1] += bottomAdjustment / 2;
         }
 
