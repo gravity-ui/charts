@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/gravity-ui/charts/compare/v0.7.0...v0.8.0) (2025-02-21)
+
+
+### Features
+
+* segment radius for pie series ([#41](https://github.com/gravity-ui/charts/issues/41)) ([b9cf354](https://github.com/gravity-ui/charts/commit/b9cf3543e9d284978fcddaaf041815e1917c9297))
+
+
+### Bug Fixes
+
+* plot title color ([#39](https://github.com/gravity-ui/charts/issues/39)) ([cd2325d](https://github.com/gravity-ui/charts/commit/cd2325dacdc8418a1bb8b9d8a0ece2791e2d4c21))
+
 ## [0.7.0](https://github.com/gravity-ui/charts/compare/v0.6.1...v0.7.0) (2025-02-18)
 
 
