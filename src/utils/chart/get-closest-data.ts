@@ -207,14 +207,16 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             case 'pie': {
                 const points = (list as PreparedPieData[]).map((d) => d.segments).flat();
                 const closestPoint = points.find((p) => {
-                    const {center, radius} = p.data.pie;
+                    const {center} = p.data.pie;
                     const x = pointerX - center[0];
                     const y = pointerY - center[1];
                     let angle = Math.atan2(y, x) + 0.5 * Math.PI;
                     angle = angle < 0 ? Math.PI * 2 + angle : angle;
                     const polarRadius = Math.sqrt(x * x + y * y);
 
-                    return angle >= p.startAngle && angle <= p.endAngle && polarRadius < radius;
+                    return (
+                        angle >= p.startAngle && angle <= p.endAngle && polarRadius < p.data.radius
+                    );
                 });
 
                 if (closestPoint) {
