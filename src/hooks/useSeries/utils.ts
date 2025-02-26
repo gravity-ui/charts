@@ -2,7 +2,7 @@ import memoize from 'lodash/memoize';
 
 import {SymbolType} from '../../constants';
 import type {ChartSeries} from '../../types';
-import {getUniqId} from '../../utils';
+import {getUniqId} from '../../utils/misc';
 
 import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './constants';
 import type {PreparedLegendSymbol, PreparedSeries, StackedSeries} from './types';
