@@ -12,6 +12,7 @@ import {
     getAxisHeight,
     getAxisTitleRows,
     getClosestPointsRange,
+    getLineDashArray,
     getScaleTicks,
     getTicksCount,
     handleOverflowingText,
@@ -165,11 +166,9 @@ export const AxisY = (props: Props) => {
                 BaseType,
                 unknown
             >;
+            const axisScale = seriesScale as AxisScale<AxisDomain>;
             const yAxisGenerator = getAxisGenerator({
-                axisGenerator:
-                    d.position === 'left'
-                        ? axisLeft(seriesScale as AxisScale<AxisDomain>)
-                        : axisRight(seriesScale as AxisScale<AxisDomain>),
+                axisGenerator: d.position === 'left' ? axisLeft(axisScale) : axisRight(axisScale),
                 preparedAxis: d,
                 height,
                 width,
@@ -213,6 +212,29 @@ export const AxisY = (props: Props) => {
                         return false;
                     })
                     .remove();
+            }
+
+            console.log('d.plotLines', d.plotLines);
+            if (d.plotLines.length > 0) {
+                const plotLineClassName = b('plotLine');
+                axisSelection
+                    .selectAll(`.${plotLineClassName}`)
+                    .data(d.plotLines)
+                    .join('path')
+                    .attr('class', plotLineClassName)
+                    .attr('d', (d) => {
+                        const plotLineValue = Number(axisScale(d.value));
+                        const points: [number, number][] = [
+                            [0, plotLineValue],
+                            [width, plotLineValue],
+                        ];
+
+                        return line()(points);
+                    })
+                    .attr('stroke', (d) => d.color)
+                    .attr('stroke-width', (d) => d.width)
+                    .attr('stroke-dasharray', (d) => getLineDashArray(d.dashStyle, d.width))
+                    .attr('opacity', (d) => d.opacity);
             }
 
             return axisItem;

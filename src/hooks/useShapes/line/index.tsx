@@ -5,7 +5,7 @@ import {color, line as lineGenerator, select} from 'd3';
 import get from 'lodash/get';
 
 import type {LabelData, TooltipDataChunkLine} from '../../../types';
-import {block, filterOverlappingLabels} from '../../../utils';
+import {block, filterOverlappingLabels, getLineDashArray} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {
@@ -16,7 +16,7 @@ import {
     selectMarkerSymbol,
     setMarker,
 } from '../marker';
-import {getLineDashArray, setActiveState} from '../utils';
+import {setActiveState} from '../utils';
 
 import type {MarkerData, PointData, PreparedLineData} from './types';
 
