@@ -22,7 +22,7 @@ export * from './symbol';
 export * from './series';
 export * from './color';
 
-const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap'];
+const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey'];
 export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
     'bar-x',
     'area',
