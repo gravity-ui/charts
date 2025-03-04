@@ -214,7 +214,6 @@ export const AxisY = (props: Props) => {
                     .remove();
             }
 
-            console.log('d.plotLines', d.plotLines);
             if (d.plotLines.length > 0) {
                 const plotLineClassName = b('plotLine');
                 axisSelection
