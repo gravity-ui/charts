@@ -146,6 +146,7 @@ export type PreparedBarXSeries = {
         padding: number;
         html: boolean;
     };
+    borderRadius: number;
     yAxis: number;
 } & BasePreparedSeries;
 
