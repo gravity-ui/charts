@@ -2,6 +2,7 @@ import type {SeriesType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
+import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
 export interface SankeySeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     name: string;
@@ -17,4 +18,8 @@ export interface SankeySeries<T = MeaningfulAny> extends BaseSeries {
     /** The name of the series (used in legend, tooltip etc). */
     name: string;
     data: SankeySeriesData<T>[];
+    /** Individual series legend options. Has higher priority than legend options in widget data. */
+    legend?: ChartLegend & {
+        symbol?: RectLegendSymbolOptions;
+    };
 }
