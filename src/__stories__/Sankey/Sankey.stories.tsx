@@ -12,7 +12,7 @@ export default meta;
 
 type Story = StoryObj<typeof ChartStory>;
 
-export const WaterfallPlayground = {
+export const SankeyPlayground = {
     name: 'Playground',
     args: {
         data: sankeyPlaygroundData,
