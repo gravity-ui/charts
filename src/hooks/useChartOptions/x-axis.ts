@@ -153,6 +153,7 @@ export const getPreparedXAxis = ({
         },
         position: 'bottom',
         plotIndex: 0,
+        plotLines: [],
     };
 
     const {height, rotation} = getLabelSettings({
