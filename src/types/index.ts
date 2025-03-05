@@ -26,6 +26,7 @@ export * from './chart/tooltip';
 export * from './chart/halo';
 export * from './chart/treemap';
 export * from './chart/waterfall';
+export * from './chart/sankey';
 
 export interface ChartData<T = MeaningfulAny> {
     /**

@@ -10,6 +10,7 @@ export const SeriesType = {
     Scatter: 'scatter',
     Treemap: 'treemap',
     Waterfall: 'waterfall',
+    Sankey: 'sankey',
 } as const;
 
 export enum DashStyle {

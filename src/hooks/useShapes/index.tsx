@@ -9,6 +9,7 @@ import type {
     PreparedBarYSeries,
     PreparedLineSeries,
     PreparedPieSeries,
+    PreparedSankeySeries,
     PreparedScatterSeries,
     PreparedSeries,
     PreparedSeriesOptions,
@@ -16,6 +17,7 @@ import type {
     PreparedTreemapSeries,
     PreparedWaterfallSeries,
 } from '../';
+import {ChartError} from '../../libs';
 import {getOnlyVisibleSeries} from '../../utils';
 import type {ChartScale} from '../useAxisScales';
 import type {PreparedAxis} from '../useChartOptions/types';
@@ -33,6 +35,9 @@ import type {PreparedLineData} from './line/types';
 import {PieSeriesShapes} from './pie';
 import {preparePieData} from './pie/prepare-data';
 import type {PreparedPieData} from './pie/types';
+import {SankeySeriesShape} from './sankey';
+import {prepareSankeyData} from './sankey/prepare-data';
+import type {PreparedSankeyData} from './sankey/types';
 import {ScatterSeriesShape, prepareScatterData} from './scatter';
 import type {PreparedScatterData} from './scatter/types';
 export type {PreparedBarXData} from './bar-x';
@@ -51,7 +56,8 @@ export type ShapeData =
     | PreparedLineData
     | PreparedPieData
     | PreparedAreaData
-    | PreparedWaterfallData;
+    | PreparedWaterfallData
+    | PreparedSankeyData;
 
 type Args = {
     boundsWidth: number;
@@ -264,6 +270,30 @@ export const useShapes = (args: Args) => {
                         />,
                     );
                     shapesData.push(preparedData as unknown as ShapeData);
+                    break;
+                }
+                case 'sankey': {
+                    const preparedData = prepareSankeyData({
+                        series: chartSeries[0] as PreparedSankeySeries,
+                        width: boundsWidth,
+                        height: boundsHeight,
+                    });
+                    acc.push(
+                        <SankeySeriesShape
+                            key="sankey"
+                            dispatcher={dispatcher}
+                            preparedData={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />,
+                    );
+                    shapesData.push(preparedData);
+                    break;
+                }
+                default: {
+                    throw new ChartError({
+                        message: `The display method is not defined for a series with type "${seriesType}"`,
+                    });
                 }
             }
             return acc;
