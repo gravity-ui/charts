@@ -20,6 +20,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
+    const plotRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getD3Dispatcher(), []);
     const {
         boundsHeight,
@@ -112,6 +113,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     width={boundsWidth}
                     height={boundsHeight}
                     transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
+                    ref={plotRef}
                 >
                     {xScale && yScale?.length && (
                         <React.Fragment>
@@ -121,6 +123,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                                 height={boundsHeight}
                                 scale={yScale}
                                 split={preparedSplit}
+                                plotRef={plotRef}
                             />
                             <g transform={`translate(0, ${boundsHeight})`}>
                                 <AxisX

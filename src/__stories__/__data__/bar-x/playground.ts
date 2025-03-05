@@ -43,6 +43,20 @@ function prepareData(): ChartData {
                 ticks: {
                     pixelInterval: 120,
                 },
+                plotLines: [
+                    {
+                        value: 100,
+                        width: 2,
+                        color: 'red',
+                        dashStyle: 'Dash',
+                        layerPlacement: 'after',
+                    },
+                    {
+                        value: 200,
+                        width: 1,
+                        layerPlacement: 'before',
+                    },
+                ],
             },
         ],
         chart: {

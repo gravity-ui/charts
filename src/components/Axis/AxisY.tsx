@@ -3,7 +3,7 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
 import {
     block,
     calculateCos,
@@ -12,6 +12,7 @@ import {
     getAxisHeight,
     getAxisTitleRows,
     getClosestPointsRange,
+    getLineDashArray,
     getScaleTicks,
     getTicksCount,
     handleOverflowingText,
@@ -30,6 +31,7 @@ type Props = {
     width: number;
     height: number;
     split: PreparedSplit;
+    plotRef?: React.MutableRefObject<SVGGElement | null>;
 };
 
 function transformLabel(args: {node: Element; axis: PreparedAxis}) {
@@ -130,8 +132,12 @@ function getTitlePosition(args: {axis: PreparedAxis; axisHeight: number; rowCoun
     return {x, y};
 }
 
+type PlotLineData = {
+    transform: string;
+} & PreparedAxisPlotLine;
+
 export const AxisY = (props: Props) => {
-    const {axes, width, height: totalHeight, scale, split} = props;
+    const {axes, width, height: totalHeight, scale, split, plotRef} = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
 
@@ -143,19 +149,36 @@ export const AxisY = (props: Props) => {
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
 
+        const getAxisPosition = (axis: PreparedAxis) => {
+            const top = split.plots[axis.plotIndex]?.top || 0;
+            if (axis.position === 'left') {
+                return `translate(0, ${top}px)`;
+            }
+
+            return `translate(${width}px, 0)`;
+        };
+
+        const plotLines = axes.reduce<PlotLineData[]>((acc, axis) => {
+            if (axis.plotLines.length) {
+                acc.push(
+                    ...axis.plotLines.map((plotLine) => {
+                        return {
+                            ...plotLine,
+                            transform: getAxisPosition(axis),
+                        };
+                    }),
+                );
+            }
+
+            return acc;
+        }, []);
+
         const axisSelection = svgElement
             .selectAll('axis')
             .data(axes)
             .join('g')
             .attr('class', b())
-            .style('transform', (d) => {
-                const top = split.plots[d.plotIndex]?.top || 0;
-                if (d.position === 'left') {
-                    return `translate(0, ${top}px)`;
-                }
-
-                return `translate(${width}px, 0)`;
-            });
+            .style('transform', (d) => getAxisPosition(d));
 
         axisSelection.each((d, index, node) => {
             const seriesScale = scale[index];
@@ -165,11 +188,9 @@ export const AxisY = (props: Props) => {
                 BaseType,
                 unknown
             >;
+            const axisScale = seriesScale as AxisScale<AxisDomain>;
             const yAxisGenerator = getAxisGenerator({
-                axisGenerator:
-                    d.position === 'left'
-                        ? axisLeft(seriesScale as AxisScale<AxisDomain>)
-                        : axisRight(seriesScale as AxisScale<AxisDomain>),
+                axisGenerator: d.position === 'left' ? axisLeft(axisScale) : axisRight(axisScale),
                 preparedAxis: d,
                 height,
                 width,
@@ -213,6 +234,47 @@ export const AxisY = (props: Props) => {
                         return false;
                     })
                     .remove();
+            }
+
+            if (plotRef && d.plotLines.length > 0) {
+                const plotLineClassName = b('plotLine');
+                const plotLineContainer = select(plotRef.current);
+                plotLineContainer.selectAll(`.${plotLineClassName}`).remove();
+
+                const plotLinesSelection = plotLineContainer
+                    .selectAll(`.${plotLineClassName}`)
+                    .data(plotLines)
+                    .join('g')
+                    .attr('class', plotLineClassName)
+                    .style('transform', (plotLine) => plotLine.transform);
+
+                plotLinesSelection
+                    .append('path')
+                    .attr('d', (plotLine) => {
+                        const plotLineValue = Number(axisScale(plotLine.value));
+                        const points: [number, number][] = [
+                            [0, plotLineValue],
+                            [width, plotLineValue],
+                        ];
+
+                        return line()(points);
+                    })
+                    .attr('stroke', (plotLine) => plotLine.color)
+                    .attr('stroke-width', (plotLine) => plotLine.width)
+                    .attr('stroke-dasharray', (plotLine) =>
+                        getLineDashArray(plotLine.dashStyle, plotLine.width),
+                    )
+                    .attr('opacity', (plotLine) => plotLine.opacity);
+
+                plotLinesSelection.each((plotLineData, i, nodes) => {
+                    const plotLineSelection = select(nodes[i]);
+
+                    if (plotLineData.layerPlacement === 'before') {
+                        plotLineSelection.lower();
+                    } else {
+                        plotLineSelection.raise();
+                    }
+                });
             }
 
             return axisItem;
