@@ -1,6 +1,7 @@
 import type {DashStyle} from 'src/constants';
 
 import type {
+    AxisPlotLine,
     BaseTextStyle,
     ChartAxis,
     ChartAxisLabels,
@@ -30,6 +31,7 @@ export type PreparedAxisPlotLine = {
     width: number;
     dashStyle: DashStyle;
     opacity: number;
+    layerPlacement: AxisPlotLine['layerPlacement'];
 };
 
 export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels'> & {

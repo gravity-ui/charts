@@ -48,6 +48,12 @@ function prepareData(): ChartData {
                         width: 2,
                         color: 'red',
                         dashStyle: 'Dash',
+                        layerPlacement: 'after',
+                    },
+                    {
+                        value: 200,
+                        width: 1,
+                        layerPlacement: 'before',
                     },
                 ],
             },

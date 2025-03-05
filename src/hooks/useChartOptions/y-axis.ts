@@ -173,6 +173,7 @@ export const getPreparedYAxis = ({
                 width: get(d, 'width', 1),
                 dashStyle: get(d, 'dashStyle', DashStyle.Solid) as DashStyle,
                 opacity: get(d, 'opacity', 1),
+                layerPlacement: get(d, 'layerPlacement', 'before'),
             })),
         };
 

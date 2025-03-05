@@ -100,6 +100,8 @@ export interface AxisPlotLine {
      * @default 1
      * */
     opacity?: number;
+    /** Place the line behind or above the chart. */
+    layerPlacement?: 'before' | 'after';
 }
 
 export interface ChartYAxis extends ChartAxis {
