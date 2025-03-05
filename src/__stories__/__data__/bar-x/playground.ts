@@ -18,6 +18,7 @@ function prepareData(): ChartData {
                     type: 'bar-x',
                     data,
                     name: 'Games released',
+                    borderRadius: 8,
                 },
             ],
         },

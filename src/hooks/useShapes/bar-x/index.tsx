@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {color, select} from 'd3';
+import {color, path, select} from 'd3';
 import type {Dispatch} from 'd3';
 import get from 'lodash/get';
 
@@ -40,7 +40,30 @@ export const BarXSeriesShapes = (args: Args) => {
         const rectSelection = svgElement
             .selectAll('allRects')
             .data(preparedData)
-            .join('rect')
+            .join('path')
+            .attr('d', (d) => {
+                const borderRadius = d.isTopItem
+                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
+                    : 0;
+                const p = path();
+                p.moveTo(d.x + borderRadius, d.y);
+                p.lineTo(d.x + d.width - borderRadius, d.y);
+                p.arc(
+                    d.x + d.width - borderRadius,
+                    d.y + borderRadius,
+                    borderRadius,
+                    -Math.PI / 2,
+                    0,
+                    false,
+                );
+                p.lineTo(d.x + d.width, d.y + d.height);
+                p.lineTo(d.x, d.y + d.height);
+                p.lineTo(d.x, d.y + borderRadius);
+                p.arc(d.x + borderRadius, d.y + borderRadius, borderRadius, Math.PI, -Math.PI / 2);
+                p.moveTo(d.x + borderRadius, d.y);
+                p.closePath();
+                return p.toString();
+            })
             .attr('class', b('segment'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)

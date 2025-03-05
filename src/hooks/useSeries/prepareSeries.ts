@@ -43,7 +43,12 @@ export function prepareSeries(args: {
             }, []);
         }
         case 'bar-x': {
-            return prepareBarXSeries({series: series as BarXSeries[], legend, colorScale});
+            return prepareBarXSeries({
+                series: series as BarXSeries[],
+                legend,
+                colorScale,
+                seriesOptions,
+            });
         }
         case 'bar-y': {
             return prepareBarYSeries({series: series as BarYSeries[], legend, colorScale});
