@@ -18,6 +18,7 @@ export * from './chart/scatter';
 export * from './chart/bar-x';
 export * from './chart/bar-y';
 export * from './chart/area';
+export * from './chart/boxplot';
 export * from './chart/line';
 export * from './chart/series';
 export * from './chart/split';

@@ -13,6 +13,8 @@ import type {
     BarYSeries,
     BarYSeriesData,
     BaseTextStyle,
+    BoxplotSeries,
+    BoxplotSeriesData,
     ChartLegend,
     ConnectorCurve,
     ConnectorShape,
@@ -296,6 +298,16 @@ export type PreparedWaterfallSeries = {
     negativeColor: string;
 } & BasePreparedSeries;
 
+export type PreparedBoxplotSeries = {
+    type: BoxplotSeries['type'];
+    data: BoxplotSeriesData[];
+    boxWidth: number;
+    whiskerWidth: number;
+    showOutliers: boolean;
+    outlierRadius: number;
+    yAxis: number;
+} & BasePreparedSeries;
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
@@ -304,7 +316,8 @@ export type PreparedSeries =
     | PreparedLineSeries
     | PreparedAreaSeries
     | PreparedTreemapSeries
-    | PreparedWaterfallSeries;
+    | PreparedWaterfallSeries
+    | PreparedBoxplotSeries;
 
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 

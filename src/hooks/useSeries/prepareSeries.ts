@@ -5,6 +5,7 @@ import type {
     AreaSeries,
     BarXSeries,
     BarYSeries,
+    BoxplotSeries,
     ChartSeries,
     ChartSeriesOptions,
     LineSeries,
@@ -17,6 +18,7 @@ import type {
 import {prepareArea} from './prepare-area';
 import {prepareBarXSeries} from './prepare-bar-x';
 import {prepareBarYSeries} from './prepare-bar-y';
+import {prepareBoxplotSeries} from './prepare-boxplot';
 import {prepareLineSeries} from './prepare-line';
 import {preparePieSeries} from './prepare-pie';
 import {prepareScatterSeries} from './prepare-scatter';
@@ -85,6 +87,14 @@ export function prepareSeries(args: {
                 series: series as WaterfallSeries[],
                 legend,
                 colorScale,
+            });
+        }
+        case 'boxplot': {
+            return prepareBoxplotSeries({
+                series: series as BoxplotSeries[],
+                legend,
+                colorScale,
+                seriesOptions,
             });
         }
         default: {

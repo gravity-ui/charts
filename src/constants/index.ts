@@ -5,6 +5,7 @@ export const SeriesType = {
     Area: 'area',
     BarX: 'bar-x',
     BarY: 'bar-y',
+    Boxplot: 'boxplot',
     Line: 'line',
     Pie: 'pie',
     Scatter: 'scatter',

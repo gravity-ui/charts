@@ -23,10 +23,21 @@ export * from './series';
 export * from './color';
 
 const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap'];
+// Explicitly define charts that require axes
+const CHARTS_WITH_AXIS: ChartSeries['type'][] = [
+    'bar-x',
+    'bar-y',
+    'line',
+    'scatter',
+    'area',
+    'waterfall',
+    'boxplot',
+];
 export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
     'bar-x',
     'area',
     'waterfall',
+    'boxplot',
 ];
 
 export const CHART_SERIES_WITH_VOLUME_ON_X_AXIS: ChartSeries['type'][] = ['bar-y'];
@@ -42,6 +53,9 @@ type UnknownSeries = {type: ChartSeries['type']; data: unknown};
  * @returns `true` if the series should be drawn with axes, `false` otherwise.
  */
 export function isAxisRelatedSeries(series: UnknownSeries) {
+    if (CHARTS_WITH_AXIS.includes(series.type)) {
+        return true;
+    }
     return !CHARTS_WITHOUT_AXIS.includes(series.type);
 }
 
@@ -61,7 +75,7 @@ export function isSeriesWithNumericalYValues(series: UnknownSeries): series is {
 
 export function isSeriesWithCategoryValues(series: UnknownSeries): series is {
     type: ChartSeries['type'];
-    data: {category: string}[];
+    data: {category: string}[] | {x: string}[];
 } {
     return isAxisRelatedSeries(series);
 }
@@ -113,6 +127,14 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
                 acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[], 'y', 'x'));
                 break;
             }
+            case 'boxplot': {
+                // For boxplot, we just need the x values for positioning
+                seriesList.forEach((s) => {
+                    const boxplotSeries = s as {data: {x: string | number}[]};
+                    acc.push(...boxplotSeries.data.map((d) => d.x));
+                });
+                break;
+            }
             default: {
                 seriesList.filter(isSeriesWithNumericalXValues).forEach((s) => {
                     acc.push(...s.data.map((d) => d.x));
@@ -149,6 +171,31 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
                     s.data.forEach((d) => {
                         yValue += Number(d.y) || 0;
                         acc.push(yValue);
+                    });
+                });
+                break;
+            }
+            case 'boxplot': {
+                // For boxplot, we need all the box values: low, q1, median, q3, high, and outliers
+                seriesList.forEach((s) => {
+                    const boxplotSeries = s as {
+                        data: {
+                            low: number;
+                            q1: number;
+                            median: number;
+                            q3: number;
+                            high: number;
+                            outliers?: number[];
+                        }[];
+                    };
+
+                    boxplotSeries.data.forEach((d) => {
+                        acc.push(d.low, d.q1, d.median, d.q3, d.high);
+
+                        // Add outliers if they exist
+                        if (d.outliers && d.outliers.length > 0) {
+                            acc.push(...d.outliers);
+                        }
                     });
                 });
                 break;
@@ -266,6 +313,11 @@ const extractCategoryValue = (args: {
 
     if (typeof dataCategory === 'number') {
         categoryValue = categories[dataCategory];
+    }
+
+    // For boxplot, we use the x value as the category
+    if (isNil(categoryValue) && 'x' in data && typeof data.x === 'string') {
+        categoryValue = data.x;
     }
 
     if (isNil(categoryValue)) {

@@ -6,6 +6,7 @@ import type {MeaningfulAny} from '../misc';
 import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
+import type {BoxplotSeries, BoxplotSeriesData} from './boxplot';
 import type {Halo} from './halo';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PointMarkerOptions} from './marker';
@@ -22,7 +23,8 @@ export type ChartSeries<T = MeaningfulAny> =
     | LineSeries<T>
     | AreaSeries<T>
     | TreemapSeries<T>
-    | WaterfallSeries<T>;
+    | WaterfallSeries<T>
+    | BoxplotSeries<T>;
 
 export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
@@ -32,7 +34,8 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | LineSeriesData<T>
     | AreaSeriesData<T>
     | TreemapSeriesData<T>
-    | WaterfallSeriesData<T>;
+    | WaterfallSeriesData<T>
+    | BoxplotSeriesData<T>;
 
 export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
@@ -247,6 +250,44 @@ export interface ChartSeriesOptions {
          * @default 0.1
          * */
         barPadding?: number;
+        /** Options for the series states that provide additional styling information to the series. */
+        states?: {
+            hover?: BasicHoverState;
+            inactive?: BasicInactiveState;
+        };
+    };
+    boxplot?: {
+        /** The maximum allowed pixel width for a box.
+         * This prevents the boxes from becoming too wide when there is a small number of points in the chart.
+         *
+         * @default 50
+         */
+        boxMaxWidth?: number;
+        /** Padding between each box, in x axis units.
+         *
+         * @default 0.1
+         * */
+        boxPadding?: number;
+        /** Width of the box as a percentage of the available width
+         *
+         * @default 0.5
+         */
+        boxWidth?: number;
+        /** Width of the whisker caps as a percentage of the box width
+         *
+         * @default 0.5
+         */
+        whiskerWidth?: number;
+        /** Whether to show outliers
+         *
+         * @default true
+         */
+        showOutliers?: boolean;
+        /** Radius of outlier points
+         *
+         * @default 3
+         */
+        outlierRadius?: number;
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;

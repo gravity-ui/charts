@@ -7,6 +7,7 @@ import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
     PreparedBarYSeries,
+    PreparedBoxplotSeries,
     PreparedLineSeries,
     PreparedPieSeries,
     PreparedScatterSeries,
@@ -27,6 +28,8 @@ import {BarXSeriesShapes, prepareBarXData} from './bar-x';
 import type {PreparedBarXData} from './bar-x';
 import {BarYSeriesShapes, prepareBarYData} from './bar-y';
 import type {PreparedBarYData} from './bar-y/types';
+import {BoxplotSeriesShape, prepareBoxplotData} from './boxplot';
+import type {PreparedBoxplotData} from './boxplot/types';
 import {LineSeriesShapes} from './line';
 import {prepareLineData} from './line/prepare-data';
 import type {PreparedLineData} from './line/types';
@@ -51,7 +54,8 @@ export type ShapeData =
     | PreparedLineData
     | PreparedPieData
     | PreparedAreaData
-    | PreparedWaterfallData;
+    | PreparedWaterfallData
+    | PreparedBoxplotData;
 
 type Args = {
     boundsWidth: number;
@@ -264,6 +268,30 @@ export const useShapes = (args: Args) => {
                         />,
                     );
                     shapesData.push(preparedData as unknown as ShapeData);
+                    break;
+                }
+                case 'boxplot': {
+                    if (xScale && yScale) {
+                        const preparedData = prepareBoxplotData({
+                            series: chartSeries as PreparedBoxplotSeries[],
+                            seriesOptions,
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                        });
+                        acc.push(
+                            <BoxplotSeriesShape
+                                key="boxplot"
+                                dispatcher={dispatcher}
+                                preparedData={preparedData}
+                                seriesOptions={seriesOptions}
+                                htmlLayout={htmlLayout}
+                            />,
+                        );
+                        shapesData.push(...preparedData);
+                    }
+                    break;
                 }
             }
             return acc;
