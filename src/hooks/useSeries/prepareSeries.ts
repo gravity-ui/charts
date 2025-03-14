@@ -9,6 +9,7 @@ import type {
     ChartSeriesOptions,
     LineSeries,
     PieSeries,
+    SankeySeries,
     ScatterSeries,
     TreemapSeries,
     WaterfallSeries,
@@ -19,6 +20,7 @@ import {prepareBarXSeries} from './prepare-bar-x';
 import {prepareBarYSeries} from './prepare-bar-y';
 import {prepareLineSeries} from './prepare-line';
 import {preparePieSeries} from './prepare-pie';
+import {prepareSankeySeries} from './prepare-sankey';
 import {prepareScatterSeries} from './prepare-scatter';
 import {prepareTreemap} from './prepare-treemap';
 import {prepareWaterfallSeries} from './prepare-waterfall';
@@ -85,6 +87,14 @@ export function prepareSeries(args: {
                 series: series as WaterfallSeries[],
                 legend,
                 colorScale,
+            });
+        }
+        case 'sankey': {
+            return prepareSankeySeries({
+                series: series as SankeySeries[],
+                seriesOptions,
+                colorScale,
+                legend,
             });
         }
         default: {
