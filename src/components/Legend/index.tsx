@@ -12,13 +12,13 @@ import type {
     PreparedSeries,
     SymbolLegendSymbol,
 } from '../../hooks';
-import {getLineDashArray} from '../../hooks/useShapes/utils';
 import {formatNumber} from '../../libs';
 import {
     block,
     createGradientRect,
     getContinuesColorFn,
     getLabelsSize,
+    getLineDashArray,
     getSymbol,
 } from '../../utils';
 import {axisBottom} from '../../utils/chart/axis-generators';
