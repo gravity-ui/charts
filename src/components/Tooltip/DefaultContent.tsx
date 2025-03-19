@@ -151,11 +151,13 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     case 'sankey': {
                         const {target, data: source} = seriesItem as TooltipDataChunkSankey;
                         const value = source.links.find((d) => d.name === target?.name)?.value;
-                        const color = source.color;
 
                         return (
                             <div key={id} className={b('content-row')}>
-                                <div className={b('color')} style={{backgroundColor: color}} />
+                                <div
+                                    className={b('color')}
+                                    style={{backgroundColor: source.color}}
+                                />
                                 <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
                                     {source.name} <span>→</span> {target?.name}: {value}
                                 </div>
