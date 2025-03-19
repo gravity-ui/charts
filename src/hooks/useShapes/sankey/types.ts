@@ -1,4 +1,4 @@
-import type {HtmlItem} from '../../../types';
+import type {HtmlItem, SankeySeriesData} from '../../../types';
 import type {PreparedSankeySeries} from '../../useSeries/types';
 
 export type SankeyDataLabel = {
@@ -8,10 +8,29 @@ export type SankeyDataLabel = {
     textAnchor: 'start' | 'end';
 };
 
+export type SankeyNode = {
+    x0: number;
+    x1: number;
+    y0: number;
+    y1: number;
+    color: string;
+    data: SankeySeriesData;
+};
+
+export type SankeyLink = {
+    opacity: number;
+    color: string;
+    path: string | null;
+    strokeWidth: number;
+    source: SankeySeriesData;
+    target: SankeySeriesData;
+    value: number;
+};
+
 export type PreparedSankeyData = {
     series: PreparedSankeySeries;
     htmlElements: HtmlItem[];
-    nodes: any[];
-    links: any[];
+    nodes: SankeyNode[];
+    links: SankeyLink[];
     labels: SankeyDataLabel[];
 };

@@ -64,6 +64,7 @@ export interface TooltipDataChunkTreemap<T = MeaningfulAny> {
 
 export interface TooltipDataChunkSankey<T = MeaningfulAny> {
     data: SankeySeriesData<T>;
+    target?: SankeySeriesData<T>;
     series: SankeySeries<T>;
 }
 

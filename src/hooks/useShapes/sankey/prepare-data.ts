@@ -1,4 +1,4 @@
-import {sankey} from 'd3-sankey';
+import {sankey, sankeyLinkHorizontal} from 'd3-sankey';
 
 import type {HtmlItem, SankeySeriesData} from '../../../types';
 import type {PreparedSankeySeries} from '../../useSeries/types';
@@ -6,8 +6,8 @@ import type {PreparedSankeySeries} from '../../useSeries/types';
 import type {PreparedSankeyData, SankeyDataLabel} from './types';
 
 type SankeyItemLink = {
-    source: string;
-    target: string;
+    source: SankeySeriesData;
+    target: SankeySeriesData;
     value: number;
 };
 
@@ -21,6 +21,7 @@ export function prepareSankeyData(args: {
 
     const sankeyGenerator = sankey<SankeySeriesData, SankeyItemLink>()
         .nodeId((d) => d.name)
+        .nodeSort((d) => d.index)
         .nodeWidth(15)
         .nodePadding(10)
         .extent([
@@ -31,14 +32,41 @@ export function prepareSankeyData(args: {
     const {nodes, links} = sankeyGenerator({
         nodes: series.data,
         links: series.data.reduce<SankeyItemLink[]>((acc, item) => {
-            const links = item.links.map((l) => ({
-                source: item.name,
-                target: l.name,
-                value: l.value,
-            }));
-            acc.push(...links);
+            item.links.forEach((l) => {
+                const target = series.data.find((d) => d.name === l.name);
+                if (target) {
+                    acc.push({
+                        source: item,
+                        target,
+                        value: l.value,
+                    });
+                }
+            });
+
             return acc;
         }, []),
+    });
+    const sankeyNodes = nodes.map((node) => {
+        return {
+            x0: node.x0 ?? 0,
+            x1: node.x1 ?? 0,
+            y0: node.y0 ?? 0,
+            y1: node.y1 ?? 0,
+            color: node.color ?? '',
+            data: series.data[node.index ?? 0],
+        };
+    });
+
+    const sankeyLinks = links.map((d) => {
+        return {
+            opacity: 0.75,
+            color: d.source.color ?? '',
+            path: sankeyLinkHorizontal()(d),
+            strokeWidth: Math.max(1, d.width ?? 0),
+            source: d.source,
+            target: d.target,
+            value: d.value,
+        };
     });
 
     const dataLabels: SankeyDataLabel[] = [];
@@ -59,5 +87,5 @@ export function prepareSankeyData(args: {
         dataLabels.push(...labels);
     }
 
-    return {series, nodes, links, htmlElements, labels: dataLabels};
+    return {series, nodes: sankeyNodes, links: sankeyLinks, htmlElements, labels: dataLabels};
 }

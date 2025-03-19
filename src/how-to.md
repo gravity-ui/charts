@@ -1,3 +1,5 @@
+// ToDo: This is a draft to describe a way to add a new series/visualization. It should not be taken as a guide to action. But it's worth adding/editing if you see any errors or inaccuracies.
+
 How to add new series type?
 
 1. Start by adding a new story to Storybook. This will be an indicator of the health of your series.

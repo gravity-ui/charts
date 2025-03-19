@@ -2,7 +2,6 @@ import React from 'react';
 
 import {select} from 'd3';
 import type {Dispatch} from 'd3';
-import {sankeyLinkHorizontal} from 'd3-sankey';
 
 import type {TooltipDataChunkTreemap} from '../../../types';
 import {block} from '../../../utils';
@@ -49,14 +48,14 @@ export const SankeySeriesShape = (props: ShapeProps) => {
         svgElement
             .append('g')
             .attr('fill', 'none')
-            .attr('stroke-opacity', 0.75)
             .selectAll()
             .data(preparedData.links)
             .join('g')
             .append('path')
-            .attr('d', sankeyLinkHorizontal())
-            .attr('stroke', (d) => d.source.color)
-            .attr('stroke-width', (d) => Math.max(1, d.width));
+            .attr('stroke-opacity', (d) => d.opacity)
+            .attr('d', (d) => d.path)
+            .attr('stroke', (d) => d.color)
+            .attr('stroke-width', (d) => d.strokeWidth);
 
         // dataLabels
         svgElement
@@ -71,14 +70,9 @@ export const SankeySeriesShape = (props: ShapeProps) => {
             .text((d) => d.text);
 
         const eventName = `hover-shape.sankey`;
-        // const hoverOptions = get(seriesOptions, 'treemap.states.hover');
-        // const inactiveOptions = get(seriesOptions, 'treemap.states.inactive');
 
         function handleShapeHover(data?: TooltipDataChunkTreemap[]) {
             hoveredDataRef.current = data;
-            // const hoverEnabled = hoverOptions?.enabled;
-            // const inactiveEnabled = inactiveOptions?.enabled;
-            // const hoveredData = data?.[0]?.data;
         }
 
         if (hoveredDataRef.current !== null) {

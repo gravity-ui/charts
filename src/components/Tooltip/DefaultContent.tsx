@@ -10,12 +10,13 @@ import type {
     ChartXAxis,
     ChartYAxis,
     TooltipDataChunk,
+    TooltipDataChunkSankey,
     TreemapSeriesData,
     WaterfallSeriesData,
 } from '../../types';
 import {block, getDataCategoryValue, getWaterfallPointSubtotal} from '../../utils';
 
-const b = block('d3-tooltip');
+const b = block('tooltip');
 
 type Props = {
     hovered: TooltipDataChunk[];
@@ -55,7 +56,9 @@ const getXRowData = (data: ChartSeriesData, xAxis?: ChartXAxis) => getRowData('x
 const getYRowData = (data: ChartSeriesData, yAxis?: ChartYAxis) => getRowData('y', data, yAxis);
 
 const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: ChartYAxis) => {
-    if (data.every((item) => ['pie', 'treemap', 'waterfall'].includes(item.series.type))) {
+    if (
+        data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
+    ) {
         return null;
     }
 
@@ -72,7 +75,8 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
     return (
         <React.Fragment>
             {measureValue && <div>{measureValue}</div>}
-            {hovered.map(({data, series, closest}, i) => {
+            {hovered.map((seriesItem, i) => {
+                const {data, series, closest} = seriesItem;
                 const id = `${get(series, 'id')}_${i}`;
                 const color = get(series, 'color');
 
@@ -141,6 +145,20 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                                 <div className={b('color')} style={{backgroundColor: color}} />
                                 <span>{seriesData.name || seriesData.id}&nbsp;</span>
                                 <span>{seriesData.value}</span>
+                            </div>
+                        );
+                    }
+                    case 'sankey': {
+                        const {target, data: source} = seriesItem as TooltipDataChunkSankey;
+                        const value = source.links.find((d) => d.name === target?.name)?.value;
+                        const color = source.color;
+
+                        return (
+                            <div key={id} className={b('content-row')}>
+                                <div className={b('color')} style={{backgroundColor: color}} />
+                                <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
+                                    {source.name} <span>→</span> {target?.name}: {value}
+                                </div>
                             </div>
                         );
                     }

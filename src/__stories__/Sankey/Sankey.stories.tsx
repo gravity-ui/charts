@@ -16,6 +16,11 @@ export const SankeyPlayground = {
     name: 'Playground',
     args: {
         data: sankeyPlaygroundData,
+        wrapperProps: {
+            styles: {
+                height: 560,
+            },
+        },
     },
     argTypes: {
         data: {
