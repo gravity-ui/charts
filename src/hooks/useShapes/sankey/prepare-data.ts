@@ -70,7 +70,7 @@ export function prepareSankeyData(args: {
     });
 
     const dataLabels: SankeyDataLabel[] = [];
-    if (series.dataLabels?.enabled) {
+    if (series.dataLabels.enabled) {
         const labels = nodes.map<SankeyDataLabel>((d) => {
             const x0 = d.x0 ?? 0;
             const x1 = d.x1 ?? 0;
@@ -82,6 +82,7 @@ export function prepareSankeyData(args: {
                 x: x0 < width / 2 ? x1 + 6 : x0 - 6,
                 y: (y1 + y0) / 2,
                 textAnchor: x0 < width / 2 ? 'start' : 'end',
+                style: series.dataLabels.style,
             };
         });
         dataLabels.push(...labels);

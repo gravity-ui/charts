@@ -63,11 +63,13 @@ export const SankeySeriesShape = (props: ShapeProps) => {
             .selectAll()
             .data(preparedData.labels)
             .join('text')
+            .text((d) => d.text)
+            .attr('class', b('label'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)
             .attr('dy', '0.35em')
             .attr('text-anchor', (d) => d.textAnchor)
-            .text((d) => d.text);
+            .attr('fill', (d) => d.style.fontColor ?? null);
 
         const eventName = `hover-shape.sankey`;
 

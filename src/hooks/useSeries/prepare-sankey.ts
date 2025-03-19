@@ -4,6 +4,7 @@ import get from 'lodash/get';
 import type {ChartSeriesOptions, SankeySeries} from '../../types';
 import {getUniqId} from '../../utils';
 
+import {DEFAULT_DATALABELS_STYLE} from './constants';
 import type {PreparedLegend, PreparedSankeySeries} from './types';
 import {prepareLegendSymbol} from './utils';
 
@@ -31,6 +32,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
             })),
             dataLabels: {
                 enabled: get(s, 'dataLabels.enabled', true),
+                style: Object.assign({}, DEFAULT_DATALABELS_STYLE, s.dataLabels?.style),
             },
             id,
             type: s.type,

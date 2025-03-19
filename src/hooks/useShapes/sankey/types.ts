@@ -1,4 +1,4 @@
-import type {HtmlItem, SankeySeriesData} from '../../../types';
+import type {BaseTextStyle, HtmlItem, SankeySeriesData} from '../../../types';
 import type {PreparedSankeySeries} from '../../useSeries/types';
 
 export type SankeyDataLabel = {
@@ -6,6 +6,7 @@ export type SankeyDataLabel = {
     x: number;
     y: number;
     textAnchor: 'start' | 'end';
+    style: BaseTextStyle;
 };
 
 export type SankeyNode = {

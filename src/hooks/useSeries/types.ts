@@ -301,6 +301,10 @@ export type PreparedWaterfallSeries = {
 export type PreparedSankeySeries = {
     type: SankeySeries['type'];
     data: SankeySeriesData[];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+    };
 } & BasePreparedSeries &
     Omit<SankeySeries, keyof BasePreparedSeries>;
 
