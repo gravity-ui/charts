@@ -29,8 +29,10 @@ import {
     lineTwoYAxisData,
     pieBasicData,
     pieDonutData,
+    sankeyPlaygroundData,
     scatterBasicData,
     scatterTwoYAxisData,
+    treemapPlaygroundData,
 } from './__data__';
 
 const ShowcaseStory = () => {
@@ -171,15 +173,19 @@ const ShowcaseStory = () => {
                         <ChartStory data={scatterTwoYAxisData} />
                     </Col>
                 </Row>
-                {/* <Row space={1}>
-                    <Text variant="header-2">Combined charts</Text>
+                <Row space={1}>
+                    <Text variant="header-2">Other</Text>
                 </Row>
-                <Row space={3} style={{minHeight: 280}}>
-                    <Col s={12}>
-                        <Text variant="subheader-1">Line + Bar-X</Text>
-                        <LineAndBarXCombinedChart />
+                <Row space={3}>
+                    <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">Treemap</Text>
+                        <ChartStory data={treemapPlaygroundData} />
                     </Col>
-                </Row> */}
+                    <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">Sankey</Text>
+                        <ChartStory data={sankeyPlaygroundData} />
+                    </Col>
+                </Row>
             </Container>
         </div>
     );

@@ -6,6 +6,7 @@ import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
+import type {SankeySeries, SankeySeriesData} from './sankey';
 import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
@@ -61,6 +62,12 @@ export interface TooltipDataChunkTreemap<T = MeaningfulAny> {
     series: TreemapSeries<T>;
 }
 
+export interface TooltipDataChunkSankey<T = MeaningfulAny> {
+    data: SankeySeriesData<T>;
+    target?: SankeySeriesData<T>;
+    series: SankeySeries<T>;
+}
+
 export interface TooltipDataChunkWaterfall<T = MeaningfulAny> {
     data: WaterfallSeriesData<T>;
     series: WaterfallSeries<T>;
@@ -74,6 +81,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkLine<T>
     | TooltipDataChunkArea<T>
     | TooltipDataChunkTreemap<T>
+    | TooltipDataChunkSankey<T>
     | TooltipDataChunkWaterfall<T>
 ) & {closest?: boolean};
 
