@@ -22,6 +22,8 @@ import type {
     PieSeries,
     PieSeriesData,
     RectLegendSymbolOptions,
+    SankeySeries,
+    SankeySeriesData,
     ScatterSeries,
     ScatterSeriesData,
     SymbolLegendSymbolOptions,
@@ -296,6 +298,16 @@ export type PreparedWaterfallSeries = {
     negativeColor: string;
 } & BasePreparedSeries;
 
+export type PreparedSankeySeries = {
+    type: SankeySeries['type'];
+    data: SankeySeriesData[];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+    };
+} & BasePreparedSeries &
+    Omit<SankeySeries, keyof BasePreparedSeries>;
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
@@ -304,7 +316,8 @@ export type PreparedSeries =
     | PreparedLineSeries
     | PreparedAreaSeries
     | PreparedTreemapSeries
-    | PreparedWaterfallSeries;
+    | PreparedWaterfallSeries
+    | PreparedSankeySeries;
 
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 
