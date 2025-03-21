@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.0](https://github.com/gravity-ui/charts/compare/v0.7.0...v0.8.0) (2025-03-21)
+
+
+### Features
+
+* add borderRadius option to bar-x series ([#44](https://github.com/gravity-ui/charts/issues/44)) ([c602e65](https://github.com/gravity-ui/charts/commit/c602e657c095085136a25877facf36338bf8b343))
+* add borderRadius option to bar-y series ([#47](https://github.com/gravity-ui/charts/issues/47)) ([f4ac52d](https://github.com/gravity-ui/charts/commit/f4ac52d813b11c85085b05d232c51bb025ddb6b7))
+* add sankey series type ([#46](https://github.com/gravity-ui/charts/issues/46)) ([8791f30](https://github.com/gravity-ui/charts/commit/8791f30e7eecf6130b70705bc37114b61285748e))
+* segment radius for pie series ([#41](https://github.com/gravity-ui/charts/issues/41)) ([b9cf354](https://github.com/gravity-ui/charts/commit/b9cf3543e9d284978fcddaaf041815e1917c9297))
+* yAxis plotLines ([#45](https://github.com/gravity-ui/charts/issues/45)) ([6aea3bc](https://github.com/gravity-ui/charts/commit/6aea3bcf86facdd4a019a7e612d7ac7e27006c35))
+
+
+### Bug Fixes
+
+* circular dependency in useSeries ([#42](https://github.com/gravity-ui/charts/issues/42)) ([caa6a97](https://github.com/gravity-ui/charts/commit/caa6a9791013428d3cb215f5558373b01e88f3f3))
+* plot title color ([#39](https://github.com/gravity-ui/charts/issues/39)) ([cd2325d](https://github.com/gravity-ui/charts/commit/cd2325dacdc8418a1bb8b9d8a0ece2791e2d4c21))
+
 ## [0.7.0](https://github.com/gravity-ui/charts/compare/v0.6.1...v0.7.0) (2025-02-18)
 
 
