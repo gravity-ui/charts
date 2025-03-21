@@ -21,6 +21,7 @@ function prepareData(): ChartData {
                     dataLabels: {
                         enabled: true,
                     },
+                    borderRadius: 4,
                 },
             ],
         },

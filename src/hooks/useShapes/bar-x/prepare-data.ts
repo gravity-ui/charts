@@ -171,7 +171,7 @@ export const prepareBarXData = (args: {
                     data: yValue.data,
                     series: yValue.series,
                     htmlElements: [],
-                    isTopItem: yValueIndex === sortedData.length - 1,
+                    isLastStackItem: yValueIndex === sortedData.length - 1,
                 };
 
                 const label = getLabelData(barData);

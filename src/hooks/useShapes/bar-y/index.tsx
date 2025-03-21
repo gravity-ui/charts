@@ -8,11 +8,12 @@ import type {LabelData} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {getRectPath} from '../utils';
 
 import type {PreparedBarYData} from './types';
 export {prepareBarYData} from './prepare-data';
 
-const b = block('d3-bar-y');
+const b = block('bar-y');
 
 type Args = {
     dispatcher: Dispatch<object>;
@@ -36,7 +37,22 @@ export const BarYSeriesShapes = (args: Args) => {
         const rectSelection = svgElement
             .selectAll('rect')
             .data(preparedData)
-            .join('rect')
+            .join('path')
+            .attr('d', (d) => {
+                const borderRadius = d.isLastStackItem
+                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
+                    : 0;
+
+                const p = getRectPath({
+                    x: d.x,
+                    y: d.y,
+                    width: d.width,
+                    height: d.height,
+                    borderRadius: [0, borderRadius, borderRadius, 0],
+                });
+
+                return p.toString();
+            })
             .attr('class', b('segment'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)

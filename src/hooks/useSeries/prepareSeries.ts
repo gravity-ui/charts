@@ -53,7 +53,12 @@ export function prepareSeries(args: {
             });
         }
         case 'bar-y': {
-            return prepareBarYSeries({series: series as BarYSeries[], legend, colorScale});
+            return prepareBarYSeries({
+                series: series as BarYSeries[],
+                legend,
+                colorScale,
+                seriesOptions,
+            });
         }
         case 'scatter': {
             return prepareScatterSeries({series: series as ScatterSeries[], legend, colorScale});
