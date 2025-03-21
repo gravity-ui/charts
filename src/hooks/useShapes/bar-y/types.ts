@@ -11,4 +11,5 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarX, 'series'> & {
     series: PreparedBarYSeries;
     label?: LabelData;
     htmlElements: HtmlItem[];
+    isLastStackItem: boolean;
 };
