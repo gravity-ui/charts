@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {color, path, select} from 'd3';
+import {color, select} from 'd3';
 import type {Dispatch} from 'd3';
 import get from 'lodash/get';
 
@@ -8,13 +8,14 @@ import type {LabelData} from '../../../types';
 import {block, filterOverlappingLabels} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
 
 export {prepareBarXData} from './prepare-data';
 export * from './types';
 
-const b = block('d3-bar-x');
+const b = block('bar-x');
 
 type Args = {
     dispatcher: Dispatch<object>;
@@ -42,26 +43,18 @@ export const BarXSeriesShapes = (args: Args) => {
             .data(preparedData)
             .join('path')
             .attr('d', (d) => {
-                const borderRadius = d.isTopItem
+                const borderRadius = d.isLastStackItem
                     ? Math.min(d.height, d.width / 2, d.series.borderRadius)
                     : 0;
-                const p = path();
-                p.moveTo(d.x + borderRadius, d.y);
-                p.lineTo(d.x + d.width - borderRadius, d.y);
-                p.arc(
-                    d.x + d.width - borderRadius,
-                    d.y + borderRadius,
-                    borderRadius,
-                    -Math.PI / 2,
-                    0,
-                    false,
-                );
-                p.lineTo(d.x + d.width, d.y + d.height);
-                p.lineTo(d.x, d.y + d.height);
-                p.lineTo(d.x, d.y + borderRadius);
-                p.arc(d.x + borderRadius, d.y + borderRadius, borderRadius, Math.PI, -Math.PI / 2);
-                p.moveTo(d.x + borderRadius, d.y);
-                p.closePath();
+
+                const p = getRectPath({
+                    x: d.x,
+                    y: d.y,
+                    width: d.width,
+                    height: d.height,
+                    borderRadius: [borderRadius, borderRadius, 0, 0],
+                });
+
                 return p.toString();
             })
             .attr('class', b('segment'))

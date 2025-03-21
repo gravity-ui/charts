@@ -1,5 +1,5 @@
 import type {BaseType, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
-import {select} from 'd3';
+import {path, select} from 'd3';
 import get from 'lodash/get';
 
 import type {BasicInactiveState} from '../../types';
@@ -65,4 +65,71 @@ export function setActiveState<T extends {active?: boolean}>(args: {
     }
 
     return datum;
+}
+
+export function getRectPath(args: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    borderRadius?: number | number[];
+}) {
+    const {x, y, width, height, borderRadius = 0} = args;
+    const borderRadiuses =
+        typeof borderRadius === 'number' ? new Array(4).fill(borderRadius) : borderRadius;
+    const [
+        borderRadiusTopLeft = 0,
+        borderRadiusTopRight = 0,
+        borderRadiusBottomRight = 0,
+        borderRadiusBottomLeft = 0,
+    ] = borderRadiuses ?? [];
+
+    const p = path();
+
+    let startAngle = -Math.PI / 2;
+    const angle = Math.PI / 2;
+
+    p.moveTo(x + borderRadiusTopLeft, y);
+    p.lineTo(x + width - borderRadiusTopRight, y);
+    p.arc(
+        x + width - borderRadiusTopRight,
+        y + borderRadiusTopRight,
+        borderRadiusTopRight,
+        startAngle,
+        startAngle + angle,
+    );
+    startAngle += angle;
+
+    p.lineTo(x + width, y + height - borderRadiusBottomRight);
+    p.arc(
+        x + width - borderRadiusBottomRight,
+        y + height - borderRadiusBottomRight,
+        borderRadiusBottomRight,
+        startAngle,
+        startAngle + angle,
+    );
+    startAngle += angle;
+
+    p.lineTo(x + borderRadiusBottomLeft, y + height);
+    p.arc(
+        x + borderRadiusBottomLeft,
+        y + height - borderRadiusBottomLeft,
+        borderRadiusBottomLeft,
+        startAngle,
+        startAngle + angle,
+    );
+    startAngle += angle;
+
+    p.lineTo(x, y + borderRadiusTopLeft);
+    p.arc(
+        x + borderRadiusTopLeft,
+        y + borderRadiusTopLeft,
+        borderRadiusTopLeft,
+        startAngle,
+        startAngle + angle,
+    );
+
+    p.closePath();
+
+    return p;
 }

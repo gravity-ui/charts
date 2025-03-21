@@ -165,6 +165,7 @@ export type PreparedBarYSeries = {
         maxWidth: number;
         html: boolean;
     };
+    borderRadius: number;
 } & BasePreparedSeries;
 
 export type PreparedPieSeries = {
