@@ -7,6 +7,7 @@ import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
 import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
 import type {PreparedLineData} from '../../hooks/useShapes/line/types';
 import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
+import type {PreparedSankeyData} from '../../hooks/useShapes/sankey/types';
 import type {PreparedTreemapData} from '../../hooks/useShapes/treemap/types';
 import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
 import type {
@@ -15,6 +16,8 @@ import type {
     ChartSeries,
     ChartSeriesData,
     LineSeries,
+    SankeySeries,
+    SankeySeriesData,
     TooltipDataChunk,
     TreemapSeries,
     WaterfallSeries,
@@ -24,6 +27,8 @@ import type {
 type GetClosestPointsArgs = {
     position: [number, number];
     shapesData: ShapeData[];
+    boundsHeight: number;
+    boundsWidth: number;
 };
 
 export type ShapePoint = {
@@ -76,7 +81,7 @@ function getSeriesType(shapeData: ShapeData) {
 }
 
 export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[] {
-    const {position, shapesData} = args;
+    const {position, shapesData, boundsHeight, boundsWidth} = args;
     const [pointerX, pointerY] = position;
 
     const result: TooltipDataChunk[] = [];
@@ -207,14 +212,16 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             case 'pie': {
                 const points = (list as PreparedPieData[]).map((d) => d.segments).flat();
                 const closestPoint = points.find((p) => {
-                    const {center, radius} = p.data.pie;
+                    const {center} = p.data.pie;
                     const x = pointerX - center[0];
                     const y = pointerY - center[1];
                     let angle = Math.atan2(y, x) + 0.5 * Math.PI;
                     angle = angle < 0 ? Math.PI * 2 + angle : angle;
                     const polarRadius = Math.sqrt(x * x + y * y);
 
-                    return angle >= p.startAngle && angle <= p.endAngle && polarRadius < radius;
+                    return (
+                        angle >= p.startAngle && angle <= p.endAngle && polarRadius < p.data.radius
+                    );
                 });
 
                 if (closestPoint) {
@@ -244,8 +251,53 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
                 break;
             }
+            case 'sankey': {
+                const [data] = list as unknown as PreparedSankeyData[];
+                const closestLink = data.links.find((d) => {
+                    return isInsidePath({
+                        path: d.path ?? '',
+                        strokeWidth: d.strokeWidth,
+                        point: [pointerX, pointerY],
+                        width: boundsWidth,
+                        height: boundsHeight,
+                    });
+                });
+                if (closestLink) {
+                    result.push({
+                        data: closestLink.source as SankeySeriesData,
+                        target: closestLink.target,
+                        series: data.series as SankeySeries,
+                        closest: true,
+                    });
+                }
+
+                break;
+            }
         }
     });
 
     return result;
+}
+
+function isInsidePath(args: {
+    path: string;
+    point: [number, number];
+    width: number;
+    height: number;
+    strokeWidth: number;
+}) {
+    const {path, point, width, height, strokeWidth} = args;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+        ctx.lineWidth = strokeWidth;
+        const path2D = new Path2D(path);
+        ctx.stroke(path2D);
+        return ctx.isPointInPath(path2D, ...point) || ctx.isPointInStroke(path2D, ...point);
+    }
+
+    return null;
 }

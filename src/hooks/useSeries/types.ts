@@ -22,6 +22,8 @@ import type {
     PieSeries,
     PieSeriesData,
     RectLegendSymbolOptions,
+    SankeySeries,
+    SankeySeriesData,
     ScatterSeries,
     ScatterSeriesData,
     SymbolLegendSymbolOptions,
@@ -146,6 +148,7 @@ export type PreparedBarXSeries = {
         padding: number;
         html: boolean;
     };
+    borderRadius: number;
     yAxis: number;
 } & BasePreparedSeries;
 
@@ -162,6 +165,7 @@ export type PreparedBarYSeries = {
         maxWidth: number;
         html: boolean;
     };
+    borderRadius: number;
 } & BasePreparedSeries;
 
 export type PreparedPieSeries = {
@@ -295,6 +299,16 @@ export type PreparedWaterfallSeries = {
     negativeColor: string;
 } & BasePreparedSeries;
 
+export type PreparedSankeySeries = {
+    type: SankeySeries['type'];
+    data: SankeySeriesData[];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+    };
+} & BasePreparedSeries &
+    Omit<SankeySeries, keyof BasePreparedSeries>;
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
@@ -303,7 +317,8 @@ export type PreparedSeries =
     | PreparedLineSeries
     | PreparedAreaSeries
     | PreparedTreemapSeries
-    | PreparedWaterfallSeries;
+    | PreparedWaterfallSeries
+    | PreparedSankeySeries;
 
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 

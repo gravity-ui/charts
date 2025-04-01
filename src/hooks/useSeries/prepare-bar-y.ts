@@ -1,7 +1,7 @@
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import type {BarYSeries} from '../../types';
+import type {BarYSeries, ChartSeriesOptions} from '../../types';
 import {getLabelsSize, getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_STYLE} from './constants';
@@ -12,6 +12,7 @@ type PrepareBarYSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
     series: BarYSeries[];
     legend: PreparedLegend;
+    seriesOptions?: ChartSeriesOptions;
 };
 
 function prepareDataLabels(series: BarYSeries) {
@@ -37,7 +38,7 @@ function prepareDataLabels(series: BarYSeries) {
 }
 
 export function prepareBarYSeries(args: PrepareBarYSeriesArgs): PreparedSeries[] {
-    const {colorScale, series: seriesList, legend} = args;
+    const {colorScale, series: seriesList, seriesOptions, legend} = args;
 
     return seriesList.map<PreparedBarYSeries>((series) => {
         const name = series.name || '';
@@ -58,6 +59,7 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs): PreparedSeries[]
             stackId: getSeriesStackId(series),
             dataLabels: prepareDataLabels(series),
             cursor: get(series, 'cursor', null),
+            borderRadius: series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
         };
     }, []);
 }

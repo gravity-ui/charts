@@ -170,7 +170,7 @@ export const prepareBarYData = (args: {
             const sortedData = sortKey
                 ? sort(measureValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : measureValues;
-            sortedData.forEach(({data, series: s}) => {
+            sortedData.forEach(({data, series: s}, xValueIndex) => {
                 let center;
 
                 if (yAxis[0].type === 'category') {
@@ -196,6 +196,7 @@ export const prepareBarYData = (args: {
                     data,
                     series: s,
                     htmlElements: [],
+                    isLastStackItem: xValueIndex === sortedData.length - 1,
                 };
 
                 stackItems.push(item);

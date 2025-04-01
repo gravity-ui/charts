@@ -6,10 +6,14 @@ import get from 'lodash/get';
 
 import {DashStyle} from '../../../constants';
 import type {LabelData} from '../../../types';
-import {block, filterOverlappingLabels, getWaterfallPointColor} from '../../../utils';
+import {
+    block,
+    filterOverlappingLabels,
+    getLineDashArray,
+    getWaterfallPointColor,
+} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
-import {getLineDashArray} from '../utils';
 
 import type {PreparedWaterfallData} from './types';
 

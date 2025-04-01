@@ -142,7 +142,7 @@ export const prepareBarXData = (args: {
             const sortedData = sortKey
                 ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : yValues;
-            sortedData.forEach((yValue) => {
+            sortedData.forEach((yValue, yValueIndex) => {
                 const yAxisIndex = yValue.series.yAxis;
                 const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number>;
                 let xCenter;
@@ -171,6 +171,7 @@ export const prepareBarXData = (args: {
                     data: yValue.data,
                     series: yValue.series,
                     htmlElements: [],
+                    isLastStackItem: yValueIndex === sortedData.length - 1,
                 };
 
                 const label = getLabelData(barData);

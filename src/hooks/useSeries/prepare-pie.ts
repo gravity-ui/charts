@@ -51,7 +51,7 @@ export function preparePieSeries(args: PreparePieSeriesArgs) {
             borderColor: series.borderColor || '',
             borderRadius: series.borderRadius ?? 0,
             borderWidth: series.borderWidth ?? 1,
-            radius: series.radius || '100%',
+            radius: dataItem.radius ?? series.radius ?? '100%',
             innerRadius: series.innerRadius || 0,
             stackId,
             states: {

@@ -10,6 +10,7 @@ import type {Halo} from './halo';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PointMarkerOptions} from './marker';
 import type {PieSeries, PieSeriesData} from './pie';
+import type {SankeySeries, SankeySeriesData} from './sankey';
 import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
@@ -22,7 +23,8 @@ export type ChartSeries<T = MeaningfulAny> =
     | LineSeries<T>
     | AreaSeries<T>
     | TreemapSeries<T>
-    | WaterfallSeries<T>;
+    | WaterfallSeries<T>
+    | SankeySeries<T>;
 
 export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
@@ -32,7 +34,8 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | LineSeriesData<T>
     | AreaSeriesData<T>
     | TreemapSeriesData<T>
-    | WaterfallSeriesData<T>;
+    | WaterfallSeriesData<T>
+    | SankeySeriesData<T>;
 
 export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
@@ -96,6 +99,11 @@ export interface ChartSeriesOptions {
          * @default 0.2
          */
         groupPadding?: number;
+        /**
+         * The corner radius of the border surrounding each bar.
+         * @default 0
+         */
+        borderRadius?: number;
         dataSorting?: {
             /** Determines what data value should be used to sort by.
              * Possible values are undefined to disable, "name" to sort by series name or "y"
@@ -132,6 +140,11 @@ export interface ChartSeriesOptions {
          * @default 0.2
          */
         groupPadding?: number;
+        /**
+         * The corner radius of the border surrounding each bar.
+         * @default 0
+         */
+        borderRadius?: number;
         dataSorting?: {
             /** Determines what data value should be used to sort by.
              * Possible values are undefined to disable, "name" to sort by series name or "x"

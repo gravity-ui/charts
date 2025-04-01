@@ -1,3 +1,5 @@
+import type {DashStyle} from 'src/constants';
+
 import type {FormatNumberOptions} from '../formatter';
 
 import type {BaseTextStyle} from './base';
@@ -80,6 +82,28 @@ export interface ChartAxis {
 
 export interface ChartXAxis extends ChartAxis {}
 
+export interface AxisPlotLine {
+    /** The position of the line in axis units. */
+    value?: number;
+    /** The color of the plot line (hex, rgba). */
+    color?: string;
+    /** Pixel width of the plot line.
+     *
+     * @default 1
+     * */
+    width?: number;
+    /** Option for line stroke style. */
+    dashStyle?: `${DashStyle}`;
+    /**
+     * Individual opacity for the line.
+     *
+     * @default 1
+     * */
+    opacity?: number;
+    /** Place the line behind or above the chart. */
+    layerPlacement?: 'before' | 'after';
+}
+
 export interface ChartYAxis extends ChartAxis {
     /** Axis location.
      * Possible values - 'left' and 'right'.
@@ -88,4 +112,6 @@ export interface ChartYAxis extends ChartAxis {
     /** Property for splitting charts. Determines which area the axis is located in.
      * */
     plotIndex?: number;
+    /** An array of lines stretching across the plot area, marking a specific value */
+    plotLines?: AxisPlotLine[];
 }

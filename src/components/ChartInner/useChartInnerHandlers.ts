@@ -73,6 +73,8 @@ export function useChartInnerHandlers(props: Props) {
         const closest = getClosestPoints({
             position: [x, y],
             shapesData,
+            boundsHeight,
+            boundsWidth,
         });
         dispatcher.call(EventType.HOVER_SHAPE, event.target, closest, [pointerX, pointerY]);
         dispatcher.call(
@@ -128,6 +130,8 @@ export function useChartInnerHandlers(props: Props) {
         const items = getClosestPoints({
             position: [x, y],
             shapesData,
+            boundsHeight,
+            boundsWidth,
         });
         const selected = items?.find((item) => item.closest);
         if (!selected) {

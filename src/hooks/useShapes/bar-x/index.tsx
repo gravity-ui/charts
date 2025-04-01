@@ -8,13 +8,14 @@ import type {LabelData} from '../../../types';
 import {block, filterOverlappingLabels} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
 
 export {prepareBarXData} from './prepare-data';
 export * from './types';
 
-const b = block('d3-bar-x');
+const b = block('bar-x');
 
 type Args = {
     dispatcher: Dispatch<object>;
@@ -40,7 +41,22 @@ export const BarXSeriesShapes = (args: Args) => {
         const rectSelection = svgElement
             .selectAll('allRects')
             .data(preparedData)
-            .join('rect')
+            .join('path')
+            .attr('d', (d) => {
+                const borderRadius = d.isLastStackItem
+                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
+                    : 0;
+
+                const p = getRectPath({
+                    x: d.x,
+                    y: d.y,
+                    width: d.width,
+                    height: d.height,
+                    borderRadius: [borderRadius, borderRadius, 0, 0],
+                });
+
+                return p.toString();
+            })
             .attr('class', b('segment'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)

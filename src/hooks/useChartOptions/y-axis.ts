@@ -4,6 +4,7 @@ import get from 'lodash/get';
 import {
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
+    DashStyle,
     axisLabelsDefaults,
     yAxisTitleDefaults,
 } from '../../constants';
@@ -166,6 +167,14 @@ export const getPreparedYAxis = ({
             },
             position: get(axisItem, 'position', defaultAxisPosition),
             plotIndex: get(axisItem, 'plotIndex', 0),
+            plotLines: get(axisItem, 'plotLines', []).map((d) => ({
+                value: get(d, 'value', 0),
+                color: get(d, 'color', 'var(--g-color-base-brand)'),
+                width: get(d, 'width', 1),
+                dashStyle: get(d, 'dashStyle', DashStyle.Solid) as DashStyle,
+                opacity: get(d, 'opacity', 1),
+                layerPlacement: get(d, 'layerPlacement', 'before'),
+            })),
         };
 
         if (labelsEnabled) {
