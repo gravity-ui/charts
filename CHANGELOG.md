@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/gravity-ui/charts/compare/v0.8.0...v0.8.1) (2025-04-04)
+
+
+### Bug Fixes
+
+* add all types export ([#49](https://github.com/gravity-ui/charts/issues/49)) ([7d1f711](https://github.com/gravity-ui/charts/commit/7d1f7117320483a932946623d6c97475f78a0af0))
+
 ## [0.8.0](https://github.com/gravity-ui/charts/compare/v0.7.0...v0.8.0) (2025-03-21)
 
 
