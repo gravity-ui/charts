@@ -12,8 +12,6 @@ import {getClosestPoints} from '../../utils/chart/get-closest-data';
 
 import type {useChartInnerState} from './useChartInnerState';
 
-const THROTTLE_DELAY = 50;
-
 type ChartInnerState = ReturnType<typeof useChartInnerState>;
 
 type Props = {
@@ -29,6 +27,7 @@ type Props = {
     unpinTooltip: ChartInnerState['unpinTooltip'];
     xAxis: PreparedAxis;
     yAxis: PreparedAxis[];
+    tooltipThrottle: number;
 };
 
 export function useChartInnerHandlers(props: Props) {
@@ -45,6 +44,7 @@ export function useChartInnerHandlers(props: Props) {
         unpinTooltip,
         xAxis,
         yAxis,
+        tooltipThrottle,
     } = props;
 
     const isOutsideBounds = React.useCallback(
@@ -96,7 +96,7 @@ export function useChartInnerHandlers(props: Props) {
 
     const throttledHandleMouseMove = IS_TOUCH_ENABLED
         ? undefined
-        : throttle(handleMouseMove, THROTTLE_DELAY);
+        : throttle(handleMouseMove, tooltipThrottle);
 
     const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
         if (tooltipPinned) {
@@ -115,7 +115,7 @@ export function useChartInnerHandlers(props: Props) {
     };
 
     const throttledHandleTouchMove = IS_TOUCH_ENABLED
-        ? throttle(handleTouchMove, THROTTLE_DELAY)
+        ? throttle(handleTouchMove, tooltipThrottle)
         : undefined;
 
     const handleChartClick = (event: React.MouseEvent<SVGSVGElement>) => {

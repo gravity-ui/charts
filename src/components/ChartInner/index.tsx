@@ -62,6 +62,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             unpinTooltip,
             xAxis,
             yAxis,
+            tooltipThrottle: tooltip.throttle,
         });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
