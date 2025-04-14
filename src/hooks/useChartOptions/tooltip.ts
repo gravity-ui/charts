@@ -10,5 +10,6 @@ export const getPreparedTooltip = (args: {tooltip: ChartData['tooltip']}): Prepa
     return {
         ...tooltip,
         enabled: get(tooltip, 'enabled', true),
+        throttle: tooltip?.throttle ?? 0,
     };
 };

@@ -65,6 +65,7 @@ export type PreparedTitle = ChartData['title'] & {
 
 export type PreparedTooltip = ChartData['tooltip'] & {
     enabled: boolean;
+    throttle: number;
 };
 
 export type ChartOptions = {

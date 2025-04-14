@@ -99,4 +99,6 @@ export interface ChartTooltip<T = MeaningfulAny> {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';
     };
+    /** Show tooltip at most once per every ```throttle``` milliseconds */
+    throttle?: number;
 }
