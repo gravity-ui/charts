@@ -63,16 +63,6 @@ const config: PlaywrightTestConfig = {
                 deviceScaleFactor: 2,
             },
         },
-<<<<<<< HEAD
-=======
-        // {
-        //     name: 'webkit',
-        //     use: {
-        //         ...devices['Desktop Safari'],
-        //         deviceScaleFactor: 2,
-        //     },
-        // },
->>>>>>> eddd0f3 (chore: add e2e test)
     ],
 };
 
