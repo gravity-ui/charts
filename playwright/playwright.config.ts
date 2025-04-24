@@ -63,13 +63,6 @@ const config: PlaywrightTestConfig = {
                 deviceScaleFactor: 2,
             },
         },
-        // {
-        //     name: 'webkit',
-        //     use: {
-        //         ...devices['Desktop Safari'],
-        //         deviceScaleFactor: 2,
-        //     },
-        // },
     ],
 };
 
