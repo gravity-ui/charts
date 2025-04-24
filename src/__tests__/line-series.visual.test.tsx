@@ -2,16 +2,25 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
+import {lineBasicData} from 'src/__stories__/__data__';
 import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
-test.describe('Line series with logarithmic Y axis', () => {
-    test('Basic', async ({page, mount}) => {
+test.describe('Line series', () => {
+    test.beforeEach(async ({page}) => {
+        // Cancel test with error when an uncaught exception happens within the page
         page.on('pageerror', (exception) => {
             throw exception;
         });
+    });
 
+    test('Basic', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={lineBasicData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Logarithmic Y axis', async ({mount}) => {
         const data = {
             yAxis: [
                 {
@@ -34,7 +43,6 @@ test.describe('Line series with logarithmic Y axis', () => {
         } as ChartData;
 
         const component = await mount(<ChartTestStory data={data} />);
-
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
