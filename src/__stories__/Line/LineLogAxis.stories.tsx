@@ -7,7 +7,7 @@ import {randomNormal} from 'd3';
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
 
-const LineWithLogarithmicAxis = () => {
+export const LineWithLogarithmicAxis = () => {
     const randomY = randomNormal(0, 100);
     const widgetData: ChartData = {
         series: {
@@ -48,7 +48,7 @@ const LineWithLogarithmicAxis = () => {
     );
 };
 
-export const PerformanceIssueScatter: StoryObj<typeof LineWithLogarithmicAxis> = {
+export const LineWithLogarithmicAxisStoty: StoryObj<typeof LineWithLogarithmicAxis> = {
     name: 'Linear & Logarithmic Y axis',
 };
 

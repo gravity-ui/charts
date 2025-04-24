@@ -9,23 +9,11 @@ const esModules = [
 ].join('|');
 
 module.exports = {
-    // verbose: true,
-    // preset: 'ts-jest',
-    // testEnvironment: 'jsdom',
-    // transform: {
-    //     '^.+\\.(js|ts)?$': 'ts-jest',
-    // },
-    // modulePathIgnorePatterns: ['<rootDir>/build/'],
-    // transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
-    // moduleNameMapper: {
-    //     '^.+\\.(css|scss)$': '<rootDir>/test-utils/style.mock.ts',
-    // },
-    // setupFiles: ['<rootDir>/test-utils/globals.mock.ts'],
-    // testPathIgnorePatterns: ['.visual.'],
     ...createJsWithTsPreset(),
     transform: {
         '^.+\\.(js|ts)?$': ['ts-jest', {useESM: true}],
     },
     transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
     testMatch: ['**/*.test.[jt]s?(x)'],
+    testPathIgnorePatterns: ['.visual.'],
 };

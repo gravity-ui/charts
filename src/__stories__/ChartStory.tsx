@@ -4,7 +4,6 @@ import {Chart} from '../components';
 import type {ChartData} from '../types';
 
 type WrapperProps = {
-    children?: React.ReactNode;
     styles?: React.CSSProperties;
 };
 
