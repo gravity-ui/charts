@@ -40,4 +40,8 @@ if [[ ! -d "$NODE_MODULES_CACHE_DIR" ]]; then
   run_command 'npm ci'
 fi
 
+<<<<<<< HEAD
 run_command "$*"
+=======
+run_command "$*"
+>>>>>>> 0b266ba (chore: add ChartTestStory)
