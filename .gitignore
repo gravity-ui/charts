@@ -13,4 +13,6 @@ storybook-static
 .cache
 .tmp
 playwright-report
+playwright-report-docker
+playwright/.cache-docker
 test-results
