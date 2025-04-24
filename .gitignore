@@ -12,3 +12,5 @@ docs/diplodoc/pages/api
 storybook-static
 .cache
 .tmp
+playwright-report
+test-results

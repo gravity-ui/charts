@@ -53,7 +53,14 @@
     "prepublishOnly": "npm run build",
     "docs:deps": "cd ./docs && npm ci",
     "docs:dev": "cd ./docs && npm run docs:dev",
-    "docs:build": "cd ./docs && npm run docs:build"
+    "docs:build": "cd ./docs && npm run docs:build",
+    "playwright:install": "playwright install chromium webkit --with-deps",
+    "playwright": "playwright test --config=playwright/playwright.config.ts",
+    "playwright:update": "npm run playwright -- -u",
+    "playwright:clear-cache": "rm -rf ./playwright/.cache",
+    "playwright:docker": "./scripts/playwright-docker.sh 'npm run playwright'",
+    "playwright:docker:update": "./scripts/playwright-docker.sh 'npm run playwright:update'",
+    "playwright:docker:clear-cache": "./scripts/playwright-docker.sh clear-cache"
   },
   "dependencies": {
     "@bem-react/classname": "^1.6.0",
@@ -75,6 +82,8 @@
     "@gravity-ui/stylelint-config": "^4.0.1",
     "@gravity-ui/tsconfig": "^1.0.0",
     "@gravity-ui/uikit": "^7.4.0",
+    "@playwright/experimental-ct-react": "^1.49.0",
+    "@playwright/test": "^1.49.0",
     "@storybook/addon-a11y": "^8.2.9",
     "@storybook/addon-actions": "^8.2.9",
     "@storybook/addon-essentials": "^8.2.9",

@@ -8,7 +8,10 @@
     "baseUrl": ".",
     "importHelpers": true,
     "moduleResolution": "node",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "~playwright/*": ["playwright/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/*"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "playwright/*"]
 }
