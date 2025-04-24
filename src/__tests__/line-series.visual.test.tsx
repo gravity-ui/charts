@@ -38,6 +38,6 @@ test.describe('Line series with logarithmic Y axis', () => {
             </div>,
         );
 
-        await expect(await component.locator('svg').screenshot()).toMatchSnapshot();
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
