@@ -2,8 +2,9 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {Chart} from 'src/components';
 import type {ChartData} from 'src/types';
+
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
 test.describe('Line series with logarithmic Y axis', () => {
     test('Basic', async ({page, mount}) => {
@@ -32,11 +33,7 @@ test.describe('Line series with logarithmic Y axis', () => {
             },
         } as ChartData;
 
-        const component = await mount(
-            <div style={{display: 'inline-block', width: 200, height: 200}}>
-                <Chart data={data} />
-            </div>,
-        );
+        const component = await mount(<ChartTestStory data={data} />);
 
         await expect(component.locator('svg')).toHaveScreenshot();
     });
