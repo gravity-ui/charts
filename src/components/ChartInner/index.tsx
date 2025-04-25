@@ -14,7 +14,7 @@ import {useChartInnerState} from './useChartInnerState';
 
 import './styles.scss';
 
-const b = block('d3');
+const b = block('chart');
 
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
