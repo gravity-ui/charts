@@ -23,7 +23,7 @@ import {
 
 import './styles.scss';
 
-const b = block('d3-axis');
+const b = block('axis');
 
 type Props = {
     axes: PreparedAxis[];

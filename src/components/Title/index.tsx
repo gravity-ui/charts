@@ -5,7 +5,7 @@ import {block} from '../../utils';
 
 import './styles.scss';
 
-const b = block('d3-title');
+const b = block('title');
 
 type Props = PreparedTitle & {
     chartWidth: number;

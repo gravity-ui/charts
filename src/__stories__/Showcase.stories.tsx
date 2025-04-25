@@ -191,7 +191,7 @@ const ShowcaseStory = () => {
     );
 };
 
-export const D3ShowcaseStory: StoryObj<typeof ShowcaseStory> = {
+export const GChartsShowcaseStory: StoryObj<typeof ShowcaseStory> = {
     name: 'Showcase',
 };
 

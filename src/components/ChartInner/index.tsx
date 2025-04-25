@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {EventType, block, getD3Dispatcher} from '../../utils';
+import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX, AxisY} from '../Axis';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
@@ -21,7 +21,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
-    const dispatcher = React.useMemo(() => getD3Dispatcher(), []);
+    const dispatcher = React.useMemo(() => getDispatcher(), []);
     const {
         boundsHeight,
         boundsOffsetLeft,

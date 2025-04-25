@@ -20,7 +20,7 @@ import {setActiveState} from '../utils';
 
 import type {MarkerData, PointData, PreparedAreaData} from './types';
 
-const b = block('d3-area');
+const b = block('area');
 
 type Args = {
     dispatcher: Dispatch<object>;

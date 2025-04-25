@@ -18,7 +18,7 @@ import {axisBottom} from '../../utils/chart/axis-generators';
 
 import './styles.scss';
 
-const b = block('d3-axis');
+const b = block('axis');
 
 type Props = {
     axis: PreparedAxis;

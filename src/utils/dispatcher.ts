@@ -6,6 +6,6 @@ export const EventType = {
     POINTERMOVE_CHART: 'pointermove-chart',
 };
 
-export const getD3Dispatcher = () => {
+export const getDispatcher = () => {
     return dispatch(EventType.CLICK_CHART, EventType.HOVER_SHAPE, EventType.POINTERMOVE_CHART);
 };
