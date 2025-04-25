@@ -20,7 +20,7 @@ import type {PreparedWaterfallData} from './types';
 export {prepareWaterfallData} from './prepare-data';
 export * from './types';
 
-const b = block('d3-waterfall');
+const b = block('waterfall');
 
 type Args = {
     dispatcher: Dispatch<object>;

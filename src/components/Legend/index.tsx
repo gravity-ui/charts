@@ -25,7 +25,7 @@ import {axisBottom} from '../../utils/chart/axis-generators';
 
 import './styles.scss';
 
-const b = block('d3-legend');
+const b = block('legend');
 
 type Props = {
     boundsWidth: number;

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {EventType, block, getD3Dispatcher} from '../../utils';
+import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX, AxisY} from '../Axis';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
@@ -14,14 +14,14 @@ import {useChartInnerState} from './useChartInnerState';
 
 import './styles.scss';
 
-const b = block('d3');
+const b = block('chart');
 
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
-    const dispatcher = React.useMemo(() => getD3Dispatcher(), []);
+    const dispatcher = React.useMemo(() => getDispatcher(), []);
     const {
         boundsHeight,
         boundsOffsetLeft,

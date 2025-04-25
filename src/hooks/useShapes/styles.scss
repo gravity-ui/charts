@@ -1,10 +1,10 @@
-.gcharts-d3-scatter {
+.gcharts-scatter {
     &__point {
         stroke-width: 1px;
     }
 }
 
-.gcharts-d3-pie {
+.gcharts-pie {
     &__segment {
         stroke: var(--g-color-base-background);
     }
@@ -35,7 +35,7 @@
     }
 }
 
-.gcharts-d3-treemap {
+.gcharts-treemap {
     &__label {
         user-select: none;
         pointer-events: none;
@@ -45,7 +45,7 @@
     }
 }
 
-.gcharts-d3-waterfall {
+.gcharts-waterfall {
     &__connector {
         stroke: var(--g-color-line-generic-active);
     }

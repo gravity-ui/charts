@@ -27,7 +27,7 @@ type ScatterSeriesShapeProps = {
     htmlLayout: HTMLElement | null;
 };
 
-const b = block('d3-scatter');
+const b = block('scatter');
 
 export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = props;

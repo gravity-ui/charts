@@ -9,7 +9,7 @@ import type {MarkerData as AreaMarkerData} from './area/types';
 import type {MarkerData as LineMarkerData} from './line/types';
 import type {MarkerData as ScatterMarkerData} from './scatter/types';
 
-const b = block('d3-marker');
+const b = block('marker');
 const haloClassName = b('halo');
 const symbolClassName = b('symbol');
 

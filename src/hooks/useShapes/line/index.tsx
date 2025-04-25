@@ -20,7 +20,7 @@ import {setActiveState} from '../utils';
 
 import type {MarkerData, PointData, PreparedLineData} from './types';
 
-const b = block('d3-line');
+const b = block('line');
 
 type Args = {
     dispatcher: Dispatch<object>;

@@ -11,7 +11,7 @@ import {HtmlLayer} from '../HtmlLayer';
 
 import type {PreparedTreemapData, TreemapLabelData} from './types';
 
-const b = block('d3-treemap');
+const b = block('treemap');
 
 type ShapeProps = {
     dispatcher: Dispatch<object>;

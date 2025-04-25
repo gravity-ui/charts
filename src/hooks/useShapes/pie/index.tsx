@@ -13,7 +13,7 @@ import {setActiveState} from '../utils';
 
 import type {PieLabelData, PreparedPieData, SegmentData} from './types';
 
-const b = block('d3-pie');
+const b = block('pie');
 
 type PreparePieSeriesArgs = {
     dispatcher: Dispatch<object>;
