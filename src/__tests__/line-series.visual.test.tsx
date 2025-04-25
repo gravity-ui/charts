@@ -2,7 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {lineBasicData} from 'src/__stories__/__data__';
+import {lineBasicData, lineTwoYAxisData} from 'src/__stories__/__data__';
 import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -43,6 +43,11 @@ test.describe('Line series', () => {
         } as ChartData;
 
         const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('The second Y-axis', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={lineTwoYAxisData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

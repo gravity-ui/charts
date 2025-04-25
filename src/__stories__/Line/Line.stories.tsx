@@ -1,7 +1,13 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
 import {ChartStory} from '../ChartStory';
-import {lineBasicData, lineHtmlLabelsData, linePlaygroundData, lineSplitData} from '../__data__';
+import {
+    lineBasicData,
+    lineHtmlLabelsData,
+    linePlaygroundData,
+    lineSplitData,
+    lineTwoYAxisData,
+} from '../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Line',
@@ -16,6 +22,13 @@ export const LineBasic = {
     name: 'Basic',
     args: {
         data: lineBasicData,
+    },
+} satisfies Story;
+
+export const LineTwoYAxis = {
+    name: 'Line with two Y axes',
+    args: {
+        data: lineTwoYAxisData,
     },
 } satisfies Story;
 

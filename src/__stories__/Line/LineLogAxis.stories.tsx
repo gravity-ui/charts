@@ -7,7 +7,7 @@ import {randomNormal} from 'd3';
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
 
-export const LineWithLogarithmicAxis = () => {
+const LineWithLogarithmicAxis = () => {
     const randomY = randomNormal(0, 100);
     const widgetData: ChartData = {
         series: {
