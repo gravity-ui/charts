@@ -105,13 +105,17 @@ function getTitlePosition(args: {axis: PreparedAxis; axisHeight: number; rowCoun
         return {x: 0, y: 0};
     }
 
-    const x = -(
+    let x =
         axis.title.height -
         axis.title.height / rowCount +
         axis.title.margin +
         axis.labels.margin +
-        axis.labels.width
-    );
+        axis.labels.width;
+
+    if (axis.position === 'left') {
+        x = x * -1;
+    }
+
     let y;
 
     switch (axis.title.align) {
