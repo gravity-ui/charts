@@ -20,7 +20,7 @@ We have already implemented support for the main chart types:
 {% cut "Examples from Storybook" %}
 
 <iframe
-    src="https://preview.gravity-ui.com/charts/iframe.html?args=&globals=&id=showcase--d-3-showcase-story&viewMode=story"
+    src="https://preview.gravity-ui.com/charts/iframe.html?args=&globals=&id=showcase--g-charts-showcase-story&viewMode=story"
     width="100%"
     height="400"
     ></iframe>
