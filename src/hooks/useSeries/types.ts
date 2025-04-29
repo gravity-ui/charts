@@ -21,6 +21,8 @@ import type {
     PathLegendSymbolOptions,
     PieSeries,
     PieSeriesData,
+    RadarSeries,
+    RadarSeriesData,
     RectLegendSymbolOptions,
     SankeySeries,
     SankeySeriesData,
@@ -309,6 +311,23 @@ export type PreparedSankeySeries = {
 } & BasePreparedSeries &
     Omit<SankeySeries, keyof BasePreparedSeries>;
 
+export type PreparedRadarSeries = {
+    type: RadarSeries['type'];
+    data: RadarSeriesData[];
+    categories?: string[];
+    borderColor: string;
+    borderWidth: number;
+    fillOpacity: number;
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        padding: number;
+        allowOverlap: boolean;
+        html: boolean;
+    };
+    renderCustomShape?: RadarSeries['renderCustomShape'];
+} & BasePreparedSeries;
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
@@ -318,7 +337,8 @@ export type PreparedSeries =
     | PreparedAreaSeries
     | PreparedTreemapSeries
     | PreparedWaterfallSeries
-    | PreparedSankeySeries;
+    | PreparedSankeySeries
+    | PreparedRadarSeries;
 
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 
