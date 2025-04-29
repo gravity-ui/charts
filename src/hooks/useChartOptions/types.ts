@@ -34,7 +34,7 @@ export type PreparedAxisPlotLine = {
     layerPlacement: AxisPlotLine['layerPlacement'];
 };
 
-export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels'> & {
+export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines'> & {
     type: ChartAxisType;
     labels: PreparedAxisLabels;
     title: {

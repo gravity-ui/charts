@@ -3,6 +3,7 @@ import get from 'lodash/get';
 
 import {
     DEFAULT_AXIS_LABEL_FONT_SIZE,
+    DashStyle,
     axisLabelsDefaults,
     xAxisTitleDefaults,
 } from '../../constants';
@@ -153,7 +154,14 @@ export const getPreparedXAxis = ({
         },
         position: 'bottom',
         plotIndex: 0,
-        plotLines: [],
+        plotLines: get(xAxis, 'plotLines', []).map((d) => ({
+            value: get(d, 'value', 0),
+            color: get(d, 'color', 'var(--g-color-base-brand)'),
+            width: get(d, 'width', 1),
+            dashStyle: get(d, 'dashStyle', DashStyle.Solid) as DashStyle,
+            opacity: get(d, 'opacity', 1),
+            layerPlacement: get(d, 'layerPlacement', 'before'),
+        })),
     };
 
     const {height, rotation} = getLabelSettings({

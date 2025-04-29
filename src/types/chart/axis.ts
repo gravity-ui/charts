@@ -78,6 +78,8 @@ export interface ChartAxis {
      * Defaults to 0.05 for Y axis and to 0.01 for X axis.
      * */
     maxPadding?: number;
+    /** An array of lines stretching across the plot area, marking a specific value */
+    plotLines?: AxisPlotLine[];
 }
 
 export interface ChartXAxis extends ChartAxis {}
@@ -112,6 +114,4 @@ export interface ChartYAxis extends ChartAxis {
     /** Property for splitting charts. Determines which area the axis is located in.
      * */
     plotIndex?: number;
-    /** An array of lines stretching across the plot area, marking a specific value */
-    plotLines?: AxisPlotLine[];
 }

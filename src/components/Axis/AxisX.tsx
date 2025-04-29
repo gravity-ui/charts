@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {select} from 'd3';
+import {line, select} from 'd3';
 import type {AxisDomain, AxisScale} from 'd3';
 
 import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
@@ -9,6 +9,7 @@ import {
     formatAxisTickLabel,
     getAxisTitleRows,
     getClosestPointsRange,
+    getLineDashArray,
     getMaxTickCount,
     getScaleTicks,
     getTicksCount,
@@ -26,6 +27,7 @@ type Props = {
     height: number;
     scale: ChartScale;
     split: PreparedSplit;
+    plotRef?: React.MutableRefObject<SVGGElement | null>;
 };
 
 function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
@@ -74,7 +76,7 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 }
 
 export const AxisX = React.memo(function AxisX(props: Props) {
-    const {axis, width, height: totalHeight, scale, split} = props;
+    const {axis, width, height: totalHeight, scale, split, plotRef} = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
@@ -92,8 +94,9 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             });
         }
 
+        const axisScale = scale as AxisScale<AxisDomain>;
         const xAxisGenerator = axisBottom({
-            scale: scale as AxisScale<AxisDomain>,
+            scale: axisScale,
             ticks: {
                 items: tickItems,
                 labelFormat: getLabelFormatter({axis, scale}),
@@ -141,7 +144,50 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                     }
                 });
         }
-    }, [axis, width, totalHeight, scale, split]);
+
+        // add plot lines
+        if (plotRef && axis.plotLines.length > 0) {
+            const plotLineClassName = b('plotLine');
+            const plotLineContainer = select(plotRef.current);
+            plotLineContainer.selectAll(`.${plotLineClassName}-x`).remove();
+
+            const plotLinesSelection = plotLineContainer
+                .selectAll(`.${plotLineClassName}-x`)
+                .data(axis.plotLines)
+                .join('g')
+                .attr('class', `${plotLineClassName}-x`);
+
+            const lineGenerator = line();
+            plotLinesSelection
+                .append('path')
+                .attr('d', (plotLine) => {
+                    const plotLineValue = Number(axisScale(plotLine.value));
+                    const points: [number, number][] = [
+                        [plotLineValue, 0],
+                        [plotLineValue, totalHeight],
+                    ];
+
+                    return lineGenerator(points);
+                })
+                .attr('stroke', (plotLine) => plotLine.color)
+                .attr('stroke-width', (plotLine) => plotLine.width)
+                .attr('stroke-dasharray', (plotLine) =>
+                    getLineDashArray(plotLine.dashStyle, plotLine.width),
+                )
+                .attr('opacity', (plotLine) => plotLine.opacity);
+
+            // set layer placement
+            plotLinesSelection.each((plotLineData, i, nodes) => {
+                const plotLineSelection = select(nodes[i]);
+
+                if (plotLineData.layerPlacement === 'before') {
+                    plotLineSelection.lower();
+                } else {
+                    plotLineSelection.raise();
+                }
+            });
+        }
+    }, [axis, width, totalHeight, scale, split, plotRef]);
 
     return <g ref={ref} />;
 });
