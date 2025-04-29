@@ -157,6 +157,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 .join('g')
                 .attr('class', `${plotLineClassName}-x`);
 
+            const lineGenerator = line();
             plotLinesSelection
                 .append('path')
                 .attr('d', (plotLine) => {
@@ -166,7 +167,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                         [plotLineValue, totalHeight],
                     ];
 
-                    return line()(points);
+                    return lineGenerator(points);
                 })
                 .attr('stroke', (plotLine) => plotLine.color)
                 .attr('stroke-width', (plotLine) => plotLine.width)

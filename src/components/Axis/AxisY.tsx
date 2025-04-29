@@ -144,6 +144,7 @@ export const AxisY = (props: Props) => {
     const {axes, width, height: totalHeight, scale, split, plotRef} = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
+    const lineGenerator = line();
 
     React.useEffect(() => {
         if (!ref.current) {
@@ -261,7 +262,7 @@ export const AxisY = (props: Props) => {
                             [width, plotLineValue],
                         ];
 
-                        return line()(points);
+                        return lineGenerator(points);
                     })
                     .attr('stroke', (plotLine) => plotLine.color)
                     .attr('stroke-width', (plotLine) => plotLine.width)
@@ -292,7 +293,7 @@ export const AxisY = (props: Props) => {
                     [0, height],
                 ];
 
-                return line()(points);
+                return lineGenerator(points);
             })
             .style('stroke', (d) => d.lineColor || '');
 
