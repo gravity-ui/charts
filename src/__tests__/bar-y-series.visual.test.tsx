@@ -12,7 +12,7 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('With X-axis plot lines', async ({mount}) => {
+    test('With X-axis plot lines', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barYPlotLinesData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
