@@ -94,8 +94,9 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             });
         }
 
+        const axisScale = scale as AxisScale<AxisDomain>;
         const xAxisGenerator = axisBottom({
-            scale: scale as AxisScale<AxisDomain>,
+            scale: axisScale,
             ticks: {
                 items: tickItems,
                 labelFormat: getLabelFormatter({axis, scale}),
@@ -159,7 +160,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             plotLinesSelection
                 .append('path')
                 .attr('d', (plotLine) => {
-                    const plotLineValue = Number((scale as any)(plotLine.value));
+                    const plotLineValue = Number(axisScale(plotLine.value));
                     const points: [number, number][] = [
                         [plotLineValue, 0],
                         [plotLineValue, totalHeight],
