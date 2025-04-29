@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/gravity-ui/charts/compare/v0.8.0...v0.9.0) (2025-04-29)
+
+
+### Features
+
+* add tooltip throttle option ([#52](https://github.com/gravity-ui/charts/issues/52)) ([96d3ca4](https://github.com/gravity-ui/charts/commit/96d3ca439b2bc6f0f2b86884061b62cc20ee7400))
+* x-axis plot lines options ([#58](https://github.com/gravity-ui/charts/issues/58)) ([168d5ea](https://github.com/gravity-ui/charts/commit/168d5ea9395b0f39c032611c285dc8f4a256f3a5))
+
+
+### Bug Fixes
+
+* add all types export ([#49](https://github.com/gravity-ui/charts/issues/49)) ([7d1f711](https://github.com/gravity-ui/charts/commit/7d1f7117320483a932946623d6c97475f78a0af0))
+* second y axis position ([#57](https://github.com/gravity-ui/charts/issues/57)) ([0113eb0](https://github.com/gravity-ui/charts/commit/0113eb0e622aa69ad85e7233fe130b2073de6fc8))
+
 ## [0.8.0](https://github.com/gravity-ui/charts/compare/v0.7.0...v0.8.0) (2025-03-21)
 
 
