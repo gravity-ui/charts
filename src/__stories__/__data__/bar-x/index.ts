@@ -8,3 +8,4 @@ export * from './playground';
 export * from './staking-normal';
 export * from './staking-percent';
 export * from './two-y-axis';
+export * from './y-axis-plot-lines';
