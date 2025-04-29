@@ -133,6 +133,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                                     height={boundsHeight}
                                     scale={xScale}
                                     split={preparedSplit}
+                                    plotRef={plotRef}
                                 />
                             </g>
                         </React.Fragment>
