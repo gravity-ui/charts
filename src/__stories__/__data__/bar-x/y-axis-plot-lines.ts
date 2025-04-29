@@ -29,10 +29,6 @@ function prepareData(): ChartData {
         },
         yAxis: [
             {
-                title: {text: 'Number of games released'},
-                ticks: {
-                    pixelInterval: 120,
-                },
                 plotLines: [
                     {
                         value: 100,
