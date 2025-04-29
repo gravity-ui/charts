@@ -82,15 +82,25 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
         // Create labels if enabled
         if (dataLabels.enabled) {
             const {style} = dataLabels;
+            const shouldUseHtml = dataLabels.html;
             data.labels = data.points.map((point, index) => {
-                const text = String(point.value);
+                const text = categories[point.index];
                 const labelSize = getLabelsSize({labels: [text], style});
                 const angle = index * angleStep - Math.PI / 2;
 
                 // Position label slightly outside the point
-                const labelRadius = valueScale(point.value) + 10;
-                const x = center[0] + Math.cos(angle) * labelRadius;
-                const y = center[1] + Math.sin(angle) * labelRadius;
+                const labelRadius = data.radius + 10;
+                let x = center[0] + Math.cos(angle) * labelRadius;
+                let y = center[1] + Math.sin(angle) * labelRadius;
+
+                if (shouldUseHtml) {
+                    x = x < center[0] ? x - labelSize.maxWidth : x;
+                    y = y - labelSize.maxHeight;
+                } else {
+                    y = y < center[1] ? y - labelSize.maxHeight : y;
+                }
+
+                x = Math.max(-boundsWidth / 2, x);
 
                 return {
                     text,

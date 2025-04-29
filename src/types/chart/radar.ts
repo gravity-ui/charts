@@ -19,9 +19,9 @@ export interface RadarSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 
 export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Radar;
-    data: RadarSeriesData<T>[];
     /** The categories for the radar chart. */
     categories?: string[];
+    data: RadarSeriesData<T>[];
     /** The name of the radar series. */
     name?: string;
     /** The color of the radar series. */

@@ -18,8 +18,6 @@ type PrepareRadarSeriesArgs = {
     dispatcher: Dispatch<object>;
     series: PreparedRadarData[];
     seriesOptions: PreparedSeriesOptions;
-    boundsWidth: number;
-    boundsHeight: number;
     htmlLayout: HTMLElement | null;
 };
 
@@ -78,7 +76,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
                 .attr('stroke-width', radarData.borderWidth);
         });
 
-        // Render points
+        // Render markers
         shapesSelection
             .selectAll(pointSelector)
             .data((radarData) => radarData.points)
@@ -86,7 +84,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .attr('class', b('point'))
             .attr('cx', (d) => d.x)
             .attr('cy', (d) => d.y)
-            .attr('r', 4)
+            .attr('r', 2)
             .attr('fill', (d) => d.color)
             .attr('opacity', (d) => d.opacity);
 
