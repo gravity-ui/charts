@@ -1,26 +1,23 @@
 import type {HtmlItem, LabelData} from '../../../types';
 import type {PreparedRadarSeries} from '../../useSeries/types';
 
-export type RadarPointData = {
-    value: number;
+export type RadarShapeData = {
+    points: [number, number][];
+    path: string | null;
     color: string;
-    opacity: number | null;
     series: PreparedRadarSeries;
     hovered: boolean;
     active: boolean;
-    radar: PreparedRadarData;
-    x: number;
-    y: number;
-    index: number;
+    borderColor: string;
+    borderWidth: number;
+    fillOpacity: number;
 };
 
 export type RadarLabelData = LabelData & {
-    point: RadarPointData;
     maxWidth: number;
 };
 
 export type RadarAxisData = {
-    name: string;
     angle: number;
     x1: number;
     y1: number;
@@ -28,16 +25,30 @@ export type RadarAxisData = {
     y2: number;
 };
 
+export type RadarGridData = {
+    path: [number, number][];
+    strokeColor: string;
+    strokeWidth: number;
+};
+
+export type RadarMarkerData = {
+    radius: number;
+    x: number;
+    y: number;
+    color: string;
+    opacity: number;
+};
+
 export type PreparedRadarData = {
     id: string;
-    points: RadarPointData[];
+    shapes: RadarShapeData[];
+    markers: RadarMarkerData[];
     labels: RadarLabelData[];
     axes: RadarAxisData[];
+    grid: RadarGridData[];
     center: [number, number];
     radius: number;
-    borderColor: string;
-    borderWidth: number;
-    fillOpacity: number;
-    series: PreparedRadarSeries;
     htmlLabels: HtmlItem[];
+    cursor: string | null;
+    series: PreparedRadarSeries;
 };

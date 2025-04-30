@@ -3,7 +3,7 @@ import React from 'react';
 import {dateTime} from '@gravity-ui/date-utils';
 import get from 'lodash/get';
 
-import type {PreparedPieSeries, PreparedWaterfallSeries} from '../../hooks';
+import type {PreparedPieSeries, PreparedRadarSeries, PreparedWaterfallSeries} from '../../hooks';
 import {formatNumber} from '../../libs';
 import type {
     ChartSeriesData,
@@ -57,7 +57,9 @@ const getYRowData = (data: ChartSeriesData, yAxis?: ChartYAxis) => getRowData('y
 
 const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: ChartYAxis) => {
     if (
-        data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
+        data.every((item) =>
+            ['pie', 'treemap', 'waterfall', 'sankey', 'radar'].includes(item.series.type),
+        )
     ) {
         return null;
     }
@@ -161,6 +163,16 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                                 <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
                                     {source.name} <span>→</span> {target?.name}: {value}
                                 </div>
+                            </div>
+                        );
+                    }
+                    case 'radar': {
+                        const seriesData = data as PreparedRadarSeries;
+
+                        return (
+                            <div key={id} className={b('content-row')}>
+                                <div className={b('color')} style={{backgroundColor: color}} />
+                                <span>{seriesData.name || seriesData.id}&nbsp;</span>
                             </div>
                         );
                     }

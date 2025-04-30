@@ -106,7 +106,7 @@ export function prepareSeries(args: {
         }
         case 'radar': {
             return prepareRadarSeries({
-                series: series[0] as RadarSeries,
+                series: series as RadarSeries[],
                 seriesOptions,
                 legend,
             });

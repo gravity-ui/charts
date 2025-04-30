@@ -1,36 +1,36 @@
-import {groups, median} from 'd3';
+import {max} from 'd3';
+import get from 'lodash/get';
 
-import type {ChartData} from '../../../types';
-import nintendoGames from '../nintendoGames';
+import type {ChartData, RadarSeriesCategory, RadarSeriesData} from '../../../types';
+
+import h3Units from '../h3-units.json';
 
 function prepareData(): ChartData {
-    const gamesByPlatform = groups(nintendoGames, (item) => item.platform);
-    const platforms: string[] = [];
-    const data: {value: number}[] = [];
-    gamesByPlatform.forEach(([platform, games]) => {
-        platforms.push(platform);
-        const medianUserScore =
-            median(
-                games.filter((g) => g.user_score),
-                (g) => g.user_score,
-            ) ?? 0;
-        data.push({value: medianUserScore});
-    });
+    const units = h3Units.filter((d) => d.Special_abilities.split(',').includes('Dragon'));
+    const categories: RadarSeriesCategory[] = [
+        'Attack',
+        'Defence',
+        'Health',
+        'Speed',
+        'AI_Value',
+    ].map((key) => ({
+        key,
+        maxValue: max(h3Units, (d) => get(d, key)),
+    }));
 
     return {
         series: {
-            data: [
-                {
-                    type: 'radar',
-                    data: data,
-                    categories: platforms,
-                },
-            ],
+            data: units.map((unit) => ({
+                type: 'radar',
+                categories,
+                name: unit.Unit_name,
+                data: categories.map<RadarSeriesData>((category) => ({
+                    value: Number(get(unit, category.key)),
+                })),
+            })),
         },
-        legend: {enabled: true},
         title: {
-            text: 'Platforms',
-            style: {fontSize: '12px', fontWeight: 'normal'},
+            text: 'Heroes of Might and Magic 3 Units (dragons)',
         },
     };
 }

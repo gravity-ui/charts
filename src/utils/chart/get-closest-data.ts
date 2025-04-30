@@ -7,6 +7,7 @@ import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
 import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
 import type {PreparedLineData} from '../../hooks/useShapes/line/types';
 import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
+import type {PreparedRadarData} from '../../hooks/useShapes/radar/types';
 import type {PreparedSankeyData} from '../../hooks/useShapes/sankey/types';
 import type {PreparedTreemapData} from '../../hooks/useShapes/treemap/types';
 import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
@@ -267,6 +268,28 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                         data: closestLink.source as SankeySeriesData,
                         target: closestLink.target,
                         series: data.series as SankeySeries,
+                        closest: true,
+                    });
+                }
+
+                break;
+            }
+            case 'radar': {
+                const [data] = list as unknown as PreparedRadarData[];
+                const closestLink = data.shapes.find((d) => {
+                    return isInsidePath({
+                        path: d.path ?? '',
+                        strokeWidth: d.borderWidth,
+                        point: [pointerX, pointerY],
+                        width: boundsWidth,
+                        height: boundsHeight,
+                    });
+                });
+
+                if (closestLink) {
+                    result.push({
+                        data: closestLink.series as any,
+                        series: closestLink.series as any,
                         closest: true,
                     });
                 }

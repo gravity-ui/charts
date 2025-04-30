@@ -22,6 +22,7 @@ import type {
     PieSeries,
     PieSeriesData,
     RadarSeries,
+    RadarSeriesCategory,
     RadarSeriesData,
     RectLegendSymbolOptions,
     SankeySeries,
@@ -314,7 +315,7 @@ export type PreparedSankeySeries = {
 export type PreparedRadarSeries = {
     type: RadarSeries['type'];
     data: RadarSeriesData[];
-    categories?: string[];
+    categories: RadarSeriesCategory[];
     borderColor: string;
     borderWidth: number;
     fillOpacity: number;
@@ -325,7 +326,6 @@ export type PreparedRadarSeries = {
         allowOverlap: boolean;
         html: boolean;
     };
-    renderCustomShape?: RadarSeries['renderCustomShape'];
 } & BasePreparedSeries;
 
 export type PreparedSeries =

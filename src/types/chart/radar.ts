@@ -17,10 +17,17 @@ export interface RadarSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     opacity?: number;
 }
 
+export interface RadarSeriesCategory {
+    /** The categories for the radar chart. */
+    key: string;
+    /** Maximum value for current key. */
+    maxValue?: number;
+}
+
 export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SeriesType.Radar;
     /** The categories for the radar chart. */
-    categories?: string[];
+    categories?: RadarSeriesCategory[];
     data: RadarSeriesData<T>[];
     /** The name of the radar series. */
     name?: string;

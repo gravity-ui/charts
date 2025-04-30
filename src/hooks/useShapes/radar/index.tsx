@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {color, curveLinearClosed, line, select} from 'd3';
+import {color, line, select} from 'd3';
 import type {BaseType, Dispatch} from 'd3';
 import get from 'lodash/get';
 
@@ -10,7 +10,7 @@ import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {setActiveState} from '../utils';
 
-import type {PreparedRadarData, RadarPointData} from './types';
+import type {PreparedRadarData, RadarShapeData} from './types';
 
 const b = block('radar');
 
@@ -33,7 +33,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
         const pointSelector = `.${b('point')}`;
-        const axisSelector = `.${b('axis')}`;
+        const areaSelector = `.${b('area')}`;
 
         const shapesSelection = svgElement
             .selectAll('radar')
@@ -41,11 +41,11 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .join('g')
             .attr('id', (radarData) => radarData.id)
             .attr('class', b('item'))
-            .attr('cursor', (radarData) => radarData.series.cursor);
+            .attr('cursor', (radarData) => radarData.cursor);
 
-        // Render axes
+        // render axes
         shapesSelection
-            .selectAll(axisSelector)
+            .selectAll(`.${b('axis')}`)
             .data((radarData) => radarData.axes)
             .join('line')
             .attr('class', b('axis'))
@@ -56,35 +56,38 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .attr('stroke', '#ccc')
             .attr('stroke-width', 1);
 
-        // Render radar area
-        shapesSelection.each(function (radarData) {
-            const radarPoints = radarData.points;
-            if (radarPoints.length < 3) return; // Need at least 3 points for an area
+        // render grid lines
+        shapesSelection
+            .selectAll(`.${b('grid')}`)
+            .data((radarData) => radarData.grid)
+            .join('path')
+            .attr('class', b('grid'))
+            .attr('d', (d) => `${line()(d.path)} Z`)
+            .attr('fill', 'none')
+            .attr('stroke', (d) => d.strokeColor)
+            .attr('stroke-width', (d) => d.strokeWidth);
 
-            const radarLine = line<RadarPointData>()
-                .x((d) => d.x)
-                .y((d) => d.y)
-                .curve(curveLinearClosed);
+        // render radar area
+        shapesSelection
+            .selectAll(areaSelector)
+            .data((radarData) => radarData.shapes)
+            .join('path')
+            .attr('class', b('area'))
+            .attr('d', (d) => d.path)
+            .attr('fill', (d) => d.color)
+            .attr('fill-opacity', (d) => d.fillOpacity)
+            .attr('stroke', (d) => d.borderColor)
+            .attr('stroke-width', (d) => d.borderWidth);
 
-            select(this)
-                .append('path')
-                .attr('class', b('area'))
-                .attr('d', radarLine(radarPoints))
-                .attr('fill', radarData.series.color)
-                .attr('fill-opacity', radarData.fillOpacity)
-                .attr('stroke', radarData.borderColor || radarData.series.color)
-                .attr('stroke-width', radarData.borderWidth);
-        });
-
-        // Render markers
+        // render markers
         shapesSelection
             .selectAll(pointSelector)
-            .data((radarData) => radarData.points)
+            .data((radarData) => radarData.markers)
             .join('circle')
             .attr('class', b('point'))
             .attr('cx', (d) => d.x)
             .attr('cy', (d) => d.y)
-            .attr('r', 2)
+            .attr('r', (d) => d.radius)
             .attr('fill', (d) => d.color)
             .attr('opacity', (d) => d.opacity);
 
@@ -122,9 +125,9 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
                 const radarSelection = select<BaseType, PreparedRadarData>(list[index]);
 
                 radarSelection
-                    .selectAll<BaseType, RadarPointData>(pointSelector)
+                    .selectAll<BaseType, RadarShapeData>(areaSelector)
                     .datum((d, i, elements) => {
-                        const hovered = Boolean(hoverEnabled && d.series.id === selectedSeriesId);
+                        const hovered = Boolean(hoverEnabled && d.series?.id === selectedSeriesId);
                         if (d.hovered !== hovered) {
                             d.hovered = hovered;
                             select(elements[i]).attr('fill', () => {
@@ -140,7 +143,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
                             });
                         }
 
-                        setActiveState<RadarPointData>({
+                        setActiveState<RadarShapeData>({
                             element: elements[i],
                             state: inactiveOptions,
                             active: Boolean(

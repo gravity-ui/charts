@@ -1,10 +1,10 @@
-import {scaleLinear} from 'd3';
+import {curveLinearClosed, line, range, scaleLinear} from 'd3';
 
 import type {HtmlItem} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import type {PreparedRadarSeries} from '../../useSeries/types';
 
-import type {PreparedRadarData} from './types';
+import type {PreparedRadarData, RadarGridData, RadarMarkerData} from './types';
 
 type Args = {
     series: PreparedRadarSeries[];
@@ -17,74 +17,113 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2;
     const center: [number, number] = [boundsWidth / 2, boundsHeight / 2];
 
-    const prepareItem = (series: PreparedRadarSeries): PreparedRadarData => {
-        const {borderWidth, borderColor, fillOpacity, dataLabels, categories = []} = series;
+    const result: PreparedRadarData[] = [];
 
-        const data: PreparedRadarData = {
-            id: `radar-${series.id}`,
-            center,
-            radius: maxRadius * 0.8, // Leave some space for labels
-            points: [],
-            labels: [],
-            axes: [],
-            htmlLabels: [],
-            borderColor,
-            borderWidth,
-            fillOpacity,
-            series,
+    const gridStepsCount = 5;
+    const radius = maxRadius * 0.8; // Leave some space for labels
+    // Create scale for values
+    const valueScale = scaleLinear()
+        .domain([0, Math.max(...preparedSeries.map((s) => s.data.map((d) => d.value)).flat())])
+        .range([0, radius]);
+
+    const [, finalRadius] = valueScale.range();
+
+    const data: PreparedRadarData = {
+        id: preparedSeries[0].id,
+        center,
+        radius: finalRadius,
+        shapes: [],
+        markers: [],
+        labels: [],
+        axes: [],
+        htmlLabels: [],
+        grid: [],
+        cursor: preparedSeries[0].cursor,
+        series: preparedSeries[0],
+    };
+
+    const categories = preparedSeries[0].categories;
+
+    // Create axes based on categories
+    const axesCount = categories.length;
+    const angleStep = (2 * Math.PI) / axesCount;
+    data.axes = categories.map((_category, index) => {
+        const angle = index * angleStep - Math.PI / 2; // Start from top (negative PI/2)
+        return {
+            angle,
+            x1: center[0],
+            y1: center[1],
+            x2: center[0] + Math.cos(angle) * data.radius,
+            y2: center[1] + Math.sin(angle) * data.radius,
         };
+    });
 
-        // Create axes based on categories
-        const axesCount = categories.length;
-        const angleStep = (2 * Math.PI) / axesCount;
+    const gridStepInc = data.radius / gridStepsCount;
+    const gridSteps = range(gridStepInc, data.radius + gridStepInc, gridStepInc);
 
-        data.axes = categories.map((category, index) => {
+    gridSteps.forEach((gridStep) => {
+        const gridLines: RadarGridData = {path: [], strokeColor: '#ccc', strokeWidth: 1};
+        categories.forEach((_category, index) => {
             const angle = index * angleStep - Math.PI / 2; // Start from top (negative PI/2)
-            // Categories are strings
-            const categoryName = category || `Category ${index}`;
-
-            return {
-                name: categoryName,
-                angle,
-                x1: center[0],
-                y1: center[1],
-                x2: center[0] + Math.cos(angle) * data.radius,
-                y2: center[1] + Math.sin(angle) * data.radius,
-            };
+            gridLines.path.push([
+                center[0] + Math.cos(angle) * gridStep,
+                center[1] + Math.sin(angle) * gridStep,
+            ]);
         });
+        data.grid.push(gridLines);
+    });
 
-        // Create scale for values
-        const valueScale = scaleLinear()
-            .domain([0, Math.max(...series.data.map((d) => d.value))])
-            .range([0, data.radius]);
+    const radarAreaLine = line().curve(curveLinearClosed);
+    preparedSeries.forEach((series) => {
+        const {dataLabels} = series;
 
-        // Create points
-        data.points = series.data.map((dataItem, index) => {
+        const points: [number, number][] = [];
+        const markers: RadarMarkerData[] = [];
+        categories.forEach((category, index) => {
+            const dataItem = series.data[index];
             const angle = index * angleStep - Math.PI / 2; // Start from top (negative PI/2)
-            const radius = valueScale(dataItem.value);
-            const x = center[0] + Math.cos(angle) * radius;
-            const y = center[1] + Math.sin(angle) * radius;
+            const pointValueScale = scaleLinear()
+                .domain([
+                    0,
+                    category.maxValue ??
+                        Math.max(...preparedSeries.map((s) => s.data[index].value)),
+                ])
+                .range([0, radius]);
 
-            return {
-                value: dataItem.value,
-                color: series.color,
-                opacity: dataItem.opacity ?? null,
-                series,
-                hovered: false,
-                active: true,
-                radar: data,
+            const pointRadius = pointValueScale(dataItem.value);
+            const x = center[0] + Math.cos(angle) * pointRadius;
+            const y = center[1] + Math.sin(angle) * pointRadius;
+            points.push([x, y]);
+            markers.push({
                 x,
                 y,
-                index,
-            };
+                color: series.color,
+                opacity: 1,
+                radius: 2,
+            });
         });
+
+        // Create points
+        data.shapes.push({
+            borderWidth: series.borderWidth,
+            borderColor: series.borderColor,
+            fillOpacity: series.fillOpacity,
+            points: points,
+            path: radarAreaLine(points),
+            series: series,
+            color: series.color,
+            hovered: false,
+            active: true,
+        });
+
+        data.markers = markers;
 
         // Create labels if enabled
         if (dataLabels.enabled) {
             const {style} = dataLabels;
             const shouldUseHtml = dataLabels.html;
-            data.labels = data.points.map((point, index) => {
-                const text = categories[point.index];
+            data.labels = categories.map((category, index) => {
+                const text = category.key;
                 const labelSize = getLabelsSize({labels: [text], style});
                 const angle = index * angleStep - Math.PI / 2;
 
@@ -111,8 +150,6 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
                     maxWidth: labelSize.maxWidth,
                     textAnchor: angle > Math.PI / 2 && angle < (3 * Math.PI) / 2 ? 'end' : 'start',
                     series: {id: series.id},
-                    active: true,
-                    point,
                 };
             });
 
@@ -128,7 +165,9 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
         }
 
         return data;
-    };
+    });
 
-    return preparedSeries.map(prepareItem);
+    result.push(data);
+
+    return result;
 }
