@@ -308,8 +308,6 @@ export const useShapes = (args: Args) => {
                             dispatcher={dispatcher}
                             series={preparedData}
                             seriesOptions={seriesOptions}
-                            boundsWidth={boundsWidth}
-                            boundsHeight={boundsHeight}
                             htmlLayout={htmlLayout}
                         />,
                     );
