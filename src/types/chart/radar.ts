@@ -1,5 +1,3 @@
-import type {BaseType} from 'd3';
-
 import type {SeriesType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
@@ -9,12 +7,6 @@ import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 export interface RadarSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The value of the radar point. */
     value: number;
-    /** The name of the radar category (used in legend, tooltip etc). */
-    name?: string;
-    /** Initial visibility of the radar point. */
-    visible?: boolean;
-    /** Individual opacity for the radar point. */
-    opacity?: number;
 }
 
 export interface RadarSeriesCategory {
@@ -52,10 +44,4 @@ export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
-    /**
-     * Function for adding custom svg nodes for a series
-     *
-     * @return BaseType
-     * */
-    renderCustomShape?: (args: {series: RadarSeries<T>}) => BaseType;
 }

@@ -170,10 +170,27 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                         const seriesData = data as PreparedRadarSeries;
 
                         return (
-                            <div key={id} className={b('content-row')}>
-                                <div className={b('color')} style={{backgroundColor: color}} />
-                                <span>{seriesData.name || seriesData.id}&nbsp;</span>
-                            </div>
+                            <React.Fragment>
+                                <div key={id} className={b('content-row')}>
+                                    <div className={b('color')} style={{backgroundColor: color}} />
+                                    <b>{seriesData.name || seriesData.id}&nbsp;</b>
+                                </div>
+                                <div
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, auto)',
+                                        gridColumnGap: '8px',
+                                        marginTop: '4px',
+                                    }}
+                                >
+                                    {seriesData.data.map((d, index) => (
+                                        <React.Fragment key={`${id}-data-${index}`}>
+                                            <div>{seriesData.categories[index].key}</div>
+                                            <div style={{textAlign: 'right'}}>{d.value}</div>
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                            </React.Fragment>
                         );
                     }
                     default: {

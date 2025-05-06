@@ -296,7 +296,6 @@ export const useShapes = (args: Args) => {
                     break;
                 }
                 case 'radar': {
-                    // Radar charts don't use x and y scales, so we don't need to check for them
                     const preparedData = prepareRadarData({
                         series: chartSeries as PreparedRadarSeries[],
                         boundsWidth,
