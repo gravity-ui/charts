@@ -4,9 +4,9 @@ import {color, line, select} from 'd3';
 import type {BaseType, Dispatch} from 'd3';
 import get from 'lodash/get';
 
-import type {TooltipDataChunkPie} from '../../../types';
+import type {TooltipDataChunkRadar} from '../../../types';
 import {block} from '../../../utils';
-import type {PreparedSeriesOptions} from '../../useSeries/types';
+import type {PreparedRadarSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {setActiveState} from '../utils';
 
@@ -49,12 +49,12 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .data((radarData) => radarData.axes)
             .join('line')
             .attr('class', b('axis'))
-            .attr('x1', (d) => d.x1)
-            .attr('y1', (d) => d.y1)
-            .attr('x2', (d) => d.x2)
-            .attr('y2', (d) => d.y2)
-            .attr('stroke', '#ccc')
-            .attr('stroke-width', 1);
+            .attr('x1', (d) => d.radar.center[0])
+            .attr('y1', (d) => d.radar.center[1])
+            .attr('x2', (d) => d.point[0])
+            .attr('y2', (d) => d.point[1])
+            .attr('stroke', (d) => d.strokeColor)
+            .attr('stroke-width', (d) => d.strokeWidth);
 
         // render grid lines
         shapesSelection
@@ -116,8 +116,9 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             opacity: 0.5,
         });
 
-        dispatcher.on(eventName, (data?: TooltipDataChunkPie[]) => {
-            const selectedSeriesId = data?.[0]?.series?.id;
+        dispatcher.on(eventName, (data?: TooltipDataChunkRadar[]) => {
+            const selectedSeriesId = (data?.find((d) => d.closest)?.series as PreparedRadarSeries)
+                ?.id;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
 
@@ -128,6 +129,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
                     .selectAll<BaseType, RadarShapeData>(areaSelector)
                     .datum((d, i, elements) => {
                         const hovered = Boolean(hoverEnabled && d.series?.id === selectedSeriesId);
+
                         if (d.hovered !== hovered) {
                             d.hovered = hovered;
                             select(elements[i]).attr('fill', () => {

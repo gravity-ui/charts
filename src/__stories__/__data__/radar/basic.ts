@@ -20,9 +20,9 @@ function prepareData(): ChartData {
 
     return {
         series: {
-            data: units.map((unit) => ({
+            data: units.map((unit, index) => ({
                 type: 'radar',
-                categories,
+                categories: index === 0 ? categories : [],
                 name: unit.Unit_name,
                 data: categories.map<RadarSeriesData>((category) => ({
                     value: Number(get(unit, category.key)),

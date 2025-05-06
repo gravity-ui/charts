@@ -6,7 +6,7 @@ import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
-import type {RadarSeries, RadarSeriesData} from './radar';
+import type {RadarSeries, RadarSeriesCategory, RadarSeriesData} from './radar';
 import type {SankeySeries, SankeySeriesData} from './sankey';
 import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
@@ -77,6 +77,8 @@ export interface TooltipDataChunkWaterfall<T = MeaningfulAny> {
 export interface TooltipDataChunkRadar<T = MeaningfulAny> {
     data: RadarSeriesData<T>;
     series: RadarSeries<T>;
+    category?: RadarSeriesCategory;
+    closest: boolean;
 }
 
 export type TooltipDataChunk<T = MeaningfulAny> = (

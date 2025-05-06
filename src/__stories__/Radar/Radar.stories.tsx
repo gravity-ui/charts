@@ -20,4 +20,14 @@ export const RadarBasic = {
     args: {
         data: radarBasicData,
     },
+    parameters: {
+        docs: {
+            description: {
+                component: `Radar chart (also known as spider chart or star chart) is a type of data visualization in the form of a diagram with two dimensions, on the radial axes of which one or more groups of values are displayed, for which several variables are used.  
+2 sources
+
+Radar chart is often used to compare multiple items by multiple parameters at the same time.`,
+            },
+        },
+    },
 } satisfies Story;

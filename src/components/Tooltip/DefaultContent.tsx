@@ -9,7 +9,9 @@ import type {
     ChartSeriesData,
     ChartXAxis,
     ChartYAxis,
+    RadarSeriesData,
     TooltipDataChunk,
+    TooltipDataChunkRadar,
     TooltipDataChunkSankey,
     TreemapSeriesData,
     WaterfallSeriesData,
@@ -57,11 +59,13 @@ const getYRowData = (data: ChartSeriesData, yAxis?: ChartYAxis) => getRowData('y
 
 const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: ChartYAxis) => {
     if (
-        data.every((item) =>
-            ['pie', 'treemap', 'waterfall', 'sankey', 'radar'].includes(item.series.type),
-        )
+        data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
     ) {
         return null;
+    }
+
+    if (data.some((item) => item.series.type === 'radar')) {
+        return (data[0] as TooltipDataChunkRadar).category?.key ?? null;
     }
 
     if (data.some((item) => item.series.type === 'bar-y')) {
@@ -167,30 +171,21 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                         );
                     }
                     case 'radar': {
-                        const seriesData = data as PreparedRadarSeries;
+                        const radarSeries = series as PreparedRadarSeries;
+                        const seriesData = data as RadarSeriesData;
+
+                        const value = (
+                            <React.Fragment>
+                                <span>{radarSeries.name || radarSeries.id}&nbsp;</span>
+                                <span>{seriesData.value}</span>
+                            </React.Fragment>
+                        );
 
                         return (
-                            <React.Fragment>
-                                <div key={id} className={b('content-row')}>
-                                    <div className={b('color')} style={{backgroundColor: color}} />
-                                    <b>{seriesData.name || seriesData.id}&nbsp;</b>
-                                </div>
-                                <div
-                                    style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(2, auto)',
-                                        gridColumnGap: '8px',
-                                        marginTop: '4px',
-                                    }}
-                                >
-                                    {seriesData.data.map((d, index) => (
-                                        <React.Fragment key={`${id}-data-${index}`}>
-                                            <div>{seriesData.categories[index].key}</div>
-                                            <div style={{textAlign: 'right'}}>{d.value}</div>
-                                        </React.Fragment>
-                                    ))}
-                                </div>
-                            </React.Fragment>
+                            <div key={id} className={b('content-row')}>
+                                <div className={b('color')} style={{backgroundColor: color}} />
+                                <div>{closest ? <b>{value}</b> : <span>{value}</span>}</div>
+                            </div>
                         );
                     }
                     default: {

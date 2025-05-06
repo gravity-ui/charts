@@ -4,7 +4,7 @@ import type {HtmlItem} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import type {PreparedRadarSeries} from '../../useSeries/types';
 
-import type {PreparedRadarData, RadarGridData, RadarMarkerData} from './types';
+import type {PreparedRadarData, RadarGridData, RadarMarkerData, RadarShapeData} from './types';
 
 type Args = {
     series: PreparedRadarSeries[];
@@ -29,6 +29,7 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
     const [, finalRadius] = valueScale.range();
 
     const data: PreparedRadarData = {
+        type: 'radar',
         id: preparedSeries[0].id,
         center,
         radius: finalRadius,
@@ -39,10 +40,11 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
         htmlLabels: [],
         grid: [],
         cursor: preparedSeries[0].cursor,
-        series: preparedSeries[0],
     };
 
     const categories = preparedSeries[0].categories;
+    const axisStrokeColor = 'var(--g-color-line-generic)';
+    const axisStrokeWidth = 1;
 
     // Create axes based on categories
     const axesCount = categories.length;
@@ -50,11 +52,14 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
     data.axes = categories.map((_category, index) => {
         const angle = index * angleStep - Math.PI / 2; // Start from top (negative PI/2)
         return {
+            point: [
+                center[0] + Math.cos(angle) * data.radius,
+                center[1] + Math.sin(angle) * data.radius,
+            ],
+            radar: data,
+            strokeColor: axisStrokeColor,
+            strokeWidth: axisStrokeWidth,
             angle,
-            x1: center[0],
-            y1: center[1],
-            x2: center[0] + Math.cos(angle) * data.radius,
-            y2: center[1] + Math.sin(angle) * data.radius,
         };
     });
 
@@ -62,7 +67,11 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
     const gridSteps = range(gridStepInc, data.radius + gridStepInc, gridStepInc);
 
     gridSteps.forEach((gridStep) => {
-        const gridLines: RadarGridData = {path: [], strokeColor: '#ccc', strokeWidth: 1};
+        const gridLines: RadarGridData = {
+            path: [],
+            strokeColor: axisStrokeColor,
+            strokeWidth: axisStrokeWidth,
+        };
         categories.forEach((_category, index) => {
             const angle = index * angleStep - Math.PI / 2; // Start from top (negative PI/2)
             gridLines.path.push([
@@ -77,7 +86,7 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
     preparedSeries.forEach((series) => {
         const {dataLabels} = series;
 
-        const points: [number, number][] = [];
+        const points: RadarShapeData['points'] = [];
         const markers: RadarMarkerData[] = [];
         categories.forEach((category, index) => {
             const dataItem = series.data[index];
@@ -93,7 +102,12 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
             const pointRadius = pointValueScale(dataItem.value);
             const x = center[0] + Math.cos(angle) * pointRadius;
             const y = center[1] + Math.sin(angle) * pointRadius;
-            points.push([x, y]);
+            points.push({
+                index,
+                position: [x, y],
+                data: dataItem,
+                series: series,
+            });
             markers.push({
                 x,
                 y,
@@ -109,7 +123,7 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
             borderColor: series.borderColor,
             fillOpacity: series.fillOpacity,
             points: points,
-            path: radarAreaLine(points),
+            path: radarAreaLine(points.map((p) => p.position)),
             series: series,
             color: series.color,
             hovered: false,
