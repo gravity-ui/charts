@@ -9,6 +9,13 @@ const meta: Meta<typeof ChartStory> = {
     render: ChartStory,
     component: Chart,
     tags: ['autodocs'],
+    parameters: {
+        docs: {
+            description: {
+                component: `A radar chart (also known as spider chart or star chart) is a graphical method of displaying multivariate data in the form of a two-dimensional chart of three or more quantitative variables represented on axes starting from the same point.`,
+            },
+        },
+    },
 };
 
 export default meta;
@@ -19,15 +26,5 @@ export const RadarBasic = {
     name: 'Basic',
     args: {
         data: radarBasicData,
-    },
-    parameters: {
-        docs: {
-            description: {
-                component: `Radar chart (also known as spider chart or star chart) is a type of data visualization in the form of a diagram with two dimensions, on the radial axes of which one or more groups of values are displayed, for which several variables are used.  
-2 sources
-
-Radar chart is often used to compare multiple items by multiple parameters at the same time.`,
-            },
-        },
     },
 } satisfies Story;
