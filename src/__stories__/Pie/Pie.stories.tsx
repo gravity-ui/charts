@@ -1,6 +1,9 @@
-import type {Meta, StoryObj} from '@storybook/react';
+import React from 'react';
 
-import {ChartStory} from '../ChartStory';
+import type {Meta, StoryFn} from '@storybook/react';
+
+import type {ChartProps} from '../../components';
+import {Chart} from '../../components';
 import {
     pieBasicData,
     pieContinuousLegendData,
@@ -11,65 +14,62 @@ import {
     pieUserStylesData,
 } from '../__data__';
 
-const meta: Meta<typeof ChartStory> = {
+const ChartWrapper: StoryFn<ChartProps> = (args) => (
+    <div style={{height: 280}}>
+        <Chart {...args} />
+    </div>
+);
+
+const meta: Meta<typeof ChartWrapper> = {
     title: 'Pie',
-    component: ChartStory,
+    component: ChartWrapper,
 };
 
 export default meta;
 
-type Story = StoryObj<typeof ChartStory>;
+export const PieBasic = ChartWrapper.bind({});
+PieBasic.storyName = 'Basic';
+PieBasic.args = {
+    data: pieBasicData,
+};
 
-export const PieBasic = {
-    name: 'Basic',
-    args: {
-        data: pieBasicData,
-    },
-} satisfies Story;
+export const PieDonut = ChartWrapper.bind({});
+PieDonut.storyName = 'Donut';
+PieDonut.args = {
+    data: pieDonutData,
+};
 
-export const PieDonut = {
-    name: 'Donut',
-    args: {
-        data: pieDonutData,
-    },
-} satisfies Story;
+export const PieDonutTotals = ChartWrapper.bind({});
+PieDonutTotals.storyName = 'Donut with totals';
+PieDonutTotals.args = {
+    data: pieDonutTotalsData,
+};
 
-export const PieDonutTotals = {
-    name: 'Donut with totals',
-    args: {
-        data: pieDonutTotalsData,
-    },
-} satisfies Story;
+export const PieHtmlLabels = ChartWrapper.bind({});
+PieHtmlLabels.storyName = 'Html in labels';
+PieHtmlLabels.args = {
+    data: pieHtmlLabelsData,
+};
 
-export const PieHtmlLabels = {
-    name: 'Html in labels',
-    args: {
-        data: pieHtmlLabelsData,
-    },
-} satisfies Story;
+export const PieContinuousLegend = ChartWrapper.bind({});
+PieContinuousLegend.storyName = 'Continuous legend';
+PieContinuousLegend.args = {
+    data: pieContinuousLegendData,
+};
 
-export const PieContinuousLegend = {
-    name: 'Continuous legend',
-    args: {
-        data: pieContinuousLegendData,
-    },
-} satisfies Story;
+export const PieUserStyles = ChartWrapper.bind({});
+PieUserStyles.storyName = 'User styles';
+PieUserStyles.args = {
+    data: pieUserStylesData,
+};
 
-export const PieUserStyles = {
-    name: 'User styles',
-    args: {
-        data: pieUserStylesData,
+export const PiePlayground = ChartWrapper.bind({});
+PiePlayground.storyName = 'Playground';
+PiePlayground.args = {
+    data: piePlaygroundData,
+};
+PiePlayground.argTypes = {
+    data: {
+        control: 'object',
     },
-} satisfies Story;
-
-export const PiePlayground = {
-    name: 'Playground',
-    args: {
-        data: piePlaygroundData,
-    },
-    argTypes: {
-        data: {
-            control: 'object',
-        },
-    },
-} satisfies Story;
+};
