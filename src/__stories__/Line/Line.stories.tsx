@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     lineBasicData,
@@ -11,7 +12,9 @@ import {
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Line',
-    component: ChartStory,
+    render: ChartStory,
+    component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;
@@ -43,11 +46,7 @@ export const LineSplit = {
     name: 'Split',
     args: {
         data: lineSplitData,
-        wrapperProps: {
-            styles: {
-                height: 560,
-            },
-        },
+        style: {height: 560},
     },
 } satisfies Story;
 

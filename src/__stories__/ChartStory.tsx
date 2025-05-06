@@ -1,21 +1,19 @@
 import React from 'react';
 
+import type {StoryFn} from '@storybook/react';
+
 import {Chart} from '../components';
 import type {ChartData} from '../types';
 
-type WrapperProps = {
-    styles?: React.CSSProperties;
-};
-
 type ChartStoryProps = {
     data: ChartData;
-    wrapperProps?: WrapperProps;
+    style?: React.CSSProperties;
 };
 
-export const ChartStory = ({data, wrapperProps}: ChartStoryProps) => {
+export const ChartStory: StoryFn<ChartStoryProps> = ({data, style}: ChartStoryProps) => {
     const styles: React.CSSProperties = {
         height: 280,
-        ...wrapperProps?.styles,
+        ...style,
     };
 
     return (

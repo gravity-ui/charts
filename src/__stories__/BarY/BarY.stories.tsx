@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     barYBasicData,
@@ -13,7 +14,9 @@ import {
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Bar-Y',
-    component: ChartStory,
+    render: ChartStory,
+    component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;

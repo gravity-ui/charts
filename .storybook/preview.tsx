@@ -5,6 +5,7 @@ import React from 'react';
 
 import {Lang, MobileProvider, ThemeProvider, configure} from '@gravity-ui/uikit';
 import {MINIMAL_VIEWPORTS} from '@storybook/addon-viewport';
+import {Controls, Description, Primary, Subtitle, Title} from '@storybook/blocks';
 import type {Decorator, Preview} from '@storybook/react';
 
 import {WithLang} from './decorators/withLang';
@@ -27,6 +28,17 @@ const WithContextProvider: Decorator = (Story, context) => {
 
 const preview: Preview = {
     parameters: {
+        docs: {
+            page: () => (
+                <React.Fragment>
+                    <Title />
+                    <Subtitle />
+                    <Description />
+                    <Primary />
+                    <Controls />
+                </React.Fragment>
+            ),
+        },
         jsx: {showFunctions: false}, // Do not show functions in sources
         viewport: {
             viewports: MINIMAL_VIEWPORTS,
@@ -35,7 +47,6 @@ const preview: Preview = {
             storySort: {
                 order: ['Showcase'],
                 method: 'alphabetical',
-                includeNames: true,
             },
         },
     },
