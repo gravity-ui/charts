@@ -1,11 +1,14 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {scatterBasicData, scatterPlaygroundData, scatterTimestampData} from '../__data__';
 
-const meta: Meta<typeof ChartStory> = {
+const meta: Meta<typeof Chart> = {
     title: 'Scatter',
-    component: ChartStory,
+    render: ChartStory,
+    component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;

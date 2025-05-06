@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     barXBasicData,
@@ -14,9 +15,11 @@ import {
 } from '../__data__';
 import {barXWithYAxisPlotLinesData} from '../__data__/bar-x/y-axis-plot-lines';
 
-const meta: Meta<typeof ChartStory> = {
+const meta: Meta<typeof Chart> = {
     title: 'Bar-X',
-    component: ChartStory,
+    render: ChartStory,
+    component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;

@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     pieBasicData,
@@ -11,9 +12,19 @@ import {
     pieUserStylesData,
 } from '../__data__';
 
-const meta: Meta<typeof ChartStory> = {
+const meta: Meta<typeof Chart> = {
     title: 'Pie',
-    component: ChartStory,
+    render: ChartStory,
+    component: Chart,
+    tags: ['autodocs'],
+    parameters: {
+        docs: {
+            description: {
+                component: `Pie chart is a circular chart divided into segments, each of which represents a part of the whole (100%). 
+                    The size of each segment corresponds to its percentage of the total.`,
+            },
+        },
+    },
 };
 
 export default meta;

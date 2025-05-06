@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     areaBasicData,
@@ -9,9 +10,11 @@ import {
     areaStakingPercentData,
 } from '../__data__';
 
-const meta: Meta<typeof ChartStory> = {
+const meta: Meta<typeof Chart> = {
     title: 'Area',
-    component: ChartStory,
+    render: ChartStory,
+    component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;
