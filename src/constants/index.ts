@@ -11,6 +11,7 @@ export const SeriesType = {
     Treemap: 'treemap',
     Waterfall: 'waterfall',
     Sankey: 'sankey',
+    Radar: 'radar',
 } as const;
 
 export enum DashStyle {

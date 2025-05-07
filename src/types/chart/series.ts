@@ -10,6 +10,7 @@ import type {Halo} from './halo';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PointMarkerOptions} from './marker';
 import type {PieSeries, PieSeriesData} from './pie';
+import type {RadarSeries, RadarSeriesData} from './radar';
 import type {SankeySeries, SankeySeriesData} from './sankey';
 import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
@@ -24,7 +25,8 @@ export type ChartSeries<T = MeaningfulAny> =
     | AreaSeries<T>
     | TreemapSeries<T>
     | WaterfallSeries<T>
-    | SankeySeries<T>;
+    | SankeySeries<T>
+    | RadarSeries<T>;
 
 export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
@@ -35,7 +37,8 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | AreaSeriesData<T>
     | TreemapSeriesData<T>
     | WaterfallSeriesData<T>
-    | SankeySeriesData<T>;
+    | SankeySeriesData<T>
+    | RadarSeriesData<T>;
 
 export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
@@ -260,5 +263,19 @@ export interface ChartSeriesOptions {
             hover?: BasicHoverState;
             inactive?: BasicInactiveState;
         };
+    };
+    radar?: {
+        /** Options for the series states that provide additional styling information to the series. */
+        states?: {
+            hover?: BasicHoverState & {
+                marker?: PointMarkerOptions & {
+                    /** Options for the halo appearing around the hovered point */
+                    halo?: Halo;
+                };
+            };
+            inactive?: BasicInactiveState;
+        };
+        /** Options for the point markers of radar series */
+        marker?: PointMarkerOptions;
     };
 }

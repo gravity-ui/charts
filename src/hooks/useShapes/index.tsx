@@ -9,6 +9,7 @@ import type {
     PreparedBarYSeries,
     PreparedLineSeries,
     PreparedPieSeries,
+    PreparedRadarSeries,
     PreparedSankeySeries,
     PreparedScatterSeries,
     PreparedSeries,
@@ -35,6 +36,9 @@ import type {PreparedLineData} from './line/types';
 import {PieSeriesShapes} from './pie';
 import {preparePieData} from './pie/prepare-data';
 import type {PreparedPieData} from './pie/types';
+import {RadarSeriesShapes} from './radar';
+import {prepareRadarData} from './radar/prepare-data';
+import type {PreparedRadarData} from './radar/types';
 import {SankeySeriesShape} from './sankey';
 import {prepareSankeyData} from './sankey/prepare-data';
 import type {PreparedSankeyData} from './sankey/types';
@@ -57,7 +61,8 @@ export type ShapeData =
     | PreparedPieData
     | PreparedAreaData
     | PreparedWaterfallData
-    | PreparedSankeyData;
+    | PreparedSankeyData
+    | PreparedRadarData;
 
 type Args = {
     boundsWidth: number;
@@ -288,6 +293,24 @@ export const useShapes = (args: Args) => {
                         />,
                     );
                     shapesData.push(preparedData);
+                    break;
+                }
+                case 'radar': {
+                    const preparedData = prepareRadarData({
+                        series: chartSeries as PreparedRadarSeries[],
+                        boundsWidth,
+                        boundsHeight,
+                    });
+                    acc.push(
+                        <RadarSeriesShapes
+                            key="radar"
+                            dispatcher={dispatcher}
+                            series={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />,
+                    );
+                    shapesData.push(...preparedData);
                     break;
                 }
                 default: {

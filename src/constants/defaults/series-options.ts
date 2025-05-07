@@ -108,6 +108,18 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
             },
         },
     },
+    radar: {
+        states: {
+            hover: {
+                enabled: true,
+                brightness: 0.3,
+            },
+            inactive: {
+                enabled: true,
+                opacity: 0.5,
+            },
+        },
+    },
     waterfall: {
         barMaxWidth: 50,
         barPadding: 0.1,

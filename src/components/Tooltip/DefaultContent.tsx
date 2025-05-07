@@ -3,13 +3,15 @@ import React from 'react';
 import {dateTime} from '@gravity-ui/date-utils';
 import get from 'lodash/get';
 
-import type {PreparedPieSeries, PreparedWaterfallSeries} from '../../hooks';
+import type {PreparedPieSeries, PreparedRadarSeries, PreparedWaterfallSeries} from '../../hooks';
 import {formatNumber} from '../../libs';
 import type {
     ChartSeriesData,
     ChartXAxis,
     ChartYAxis,
+    RadarSeriesData,
     TooltipDataChunk,
+    TooltipDataChunkRadar,
     TooltipDataChunkSankey,
     TreemapSeriesData,
     WaterfallSeriesData,
@@ -60,6 +62,10 @@ const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: C
         data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
     ) {
         return null;
+    }
+
+    if (data.some((item) => item.series.type === 'radar')) {
+        return (data[0] as TooltipDataChunkRadar).category?.key ?? null;
     }
 
     if (data.some((item) => item.series.type === 'bar-y')) {
@@ -161,6 +167,24 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                                 <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
                                     {source.name} <span>→</span> {target?.name}: {value}
                                 </div>
+                            </div>
+                        );
+                    }
+                    case 'radar': {
+                        const radarSeries = series as PreparedRadarSeries;
+                        const seriesData = data as RadarSeriesData;
+
+                        const value = (
+                            <React.Fragment>
+                                <span>{radarSeries.name || radarSeries.id}&nbsp;</span>
+                                <span>{seriesData.value}</span>
+                            </React.Fragment>
+                        );
+
+                        return (
+                            <div key={id} className={b('content-row')}>
+                                <div className={b('color')} style={{backgroundColor: color}} />
+                                <div>{closest ? <b>{value}</b> : <span>{value}</span>}</div>
                             </div>
                         );
                     }

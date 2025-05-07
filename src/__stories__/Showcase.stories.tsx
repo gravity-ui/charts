@@ -29,6 +29,7 @@ import {
     lineTwoYAxisData,
     pieBasicData,
     pieDonutData,
+    radarBasicData,
     sankeyPlaygroundData,
     scatterBasicData,
     scatterTwoYAxisData,
@@ -184,6 +185,10 @@ const ShowcaseStory = () => {
                     <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Sankey</Text>
                         <ChartStory data={sankeyPlaygroundData} />
+                    </Col>
+                    <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">Radar</Text>
+                        <ChartStory data={radarBasicData} />
                     </Col>
                 </Row>
             </Container>

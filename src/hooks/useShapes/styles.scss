@@ -18,6 +18,12 @@
     }
 }
 
+.gcharts-radar {
+    &__label {
+        alignment-baseline: before-edge;
+    }
+}
+
 .gcharts-bar-x {
     &__label {
         user-select: none;

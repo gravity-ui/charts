@@ -7,6 +7,7 @@ import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
 import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
 import type {PreparedLineData} from '../../hooks/useShapes/line/types';
 import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
+import type {PreparedRadarData} from '../../hooks/useShapes/radar/types';
 import type {PreparedSankeyData} from '../../hooks/useShapes/sankey/types';
 import type {PreparedTreemapData} from '../../hooks/useShapes/treemap/types';
 import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
@@ -16,6 +17,7 @@ import type {
     ChartSeries,
     ChartSeriesData,
     LineSeries,
+    RadarSeries,
     SankeySeries,
     SankeySeriesData,
     TooltipDataChunk,
@@ -77,7 +79,11 @@ function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
 }
 
 function getSeriesType(shapeData: ShapeData) {
-    return get(shapeData, 'series.type') || get(shapeData, 'point.series.type');
+    return (
+        get(shapeData, 'series.type') ||
+        get(shapeData, 'point.series.type') ||
+        get(shapeData, 'type')
+    );
 }
 
 export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[] {
@@ -86,6 +92,8 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
     const result: TooltipDataChunk[] = [];
     const groups = groupBy(shapesData, getSeriesType);
+
+    // eslint-disable-next-line complexity
     Object.entries(groups).forEach(([seriesType, list]) => {
         switch (seriesType) {
             case 'bar-x': {
@@ -217,7 +225,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     const y = pointerY - center[1];
                     let angle = Math.atan2(y, x) + 0.5 * Math.PI;
                     angle = angle < 0 ? Math.PI * 2 + angle : angle;
-                    const polarRadius = Math.sqrt(x * x + y * y);
+                    const polarRadius = getRadius({center, pointer: [pointerX, pointerY]});
 
                     return (
                         angle >= p.startAngle && angle <= p.endAngle && polarRadius < p.data.radius
@@ -273,6 +281,41 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
                 break;
             }
+            case 'radar': {
+                const [radarData] = list as unknown as PreparedRadarData[];
+
+                const radius = getRadius({center: radarData.center, pointer: [pointerX, pointerY]});
+                if (radius <= radarData.radius) {
+                    const radarShapes = radarData.shapes.filter((shape) =>
+                        isInsidePath({
+                            path: shape.path,
+                            point: [pointerX, pointerY],
+                            width: boundsWidth,
+                            height: boundsHeight,
+                            strokeWidth: shape.borderWidth,
+                        }),
+                    );
+                    const points = radarShapes.map((shape) => shape.points).flat();
+                    const delaunayX = Delaunay.from(
+                        points,
+                        (d) => d.position[0],
+                        (d) => d.position[1],
+                    );
+                    const closestPoint = points[delaunayX.find(pointerX, pointerY)];
+                    if (closestPoint) {
+                        radarData.shapes.forEach((shape) => {
+                            result.push({
+                                data: shape.points[closestPoint.index].data,
+                                series: shape.series as RadarSeries,
+                                category: shape.series.categories[closestPoint.index],
+                                closest: shape.series === closestPoint.series,
+                            });
+                        });
+                    }
+                }
+
+                break;
+            }
         }
     });
 
@@ -300,4 +343,13 @@ function isInsidePath(args: {
     }
 
     return null;
+}
+
+function getRadius(args: {pointer: [number, number]; center: [number, number]}) {
+    const {pointer, center} = args;
+    const x = pointer[0] - center[0];
+    const y = pointer[1] - center[1];
+    const polarRadius = Math.sqrt(x * x + y * y);
+
+    return polarRadius;
 }
