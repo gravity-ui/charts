@@ -224,7 +224,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     const y = pointerY - center[1];
                     let angle = Math.atan2(y, x) + 0.5 * Math.PI;
                     angle = angle < 0 ? Math.PI * 2 + angle : angle;
-                    const polarRadius = Math.sqrt(x * x + y * y);
+                    const polarRadius = getRadius({center, pointer: [pointerX, pointerY]});
 
                     return (
                         angle >= p.startAngle && angle <= p.endAngle && polarRadius < p.data.radius
@@ -283,22 +283,26 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             case 'radar': {
                 const [radarData] = list as unknown as PreparedRadarData[];
 
-                const points = radarData.shapes.map((shape) => shape.points).flat();
-                const delaunayX = Delaunay.from(
-                    points,
-                    (d) => d.position[0],
-                    (d) => d.position[1],
-                );
-                const closestPoint = points[delaunayX.find(pointerX, pointerY)];
+                const radius = getRadius({center: radarData.center, pointer: [pointerX, pointerY]});
+                if (radius <= radarData.radius) {
+                    const points = radarData.shapes.map((shape) => shape.points).flat();
+                    const delaunayX = Delaunay.from(
+                        points,
+                        (d) => d.position[0],
+                        (d) => d.position[1],
+                    );
+                    const closestPoint = points[delaunayX.find(pointerX, pointerY)];
 
-                radarData.shapes.forEach((shape) => {
-                    result.push({
-                        data: shape.points[closestPoint.index].data,
-                        series: shape.series as RadarSeries,
-                        category: shape.series.categories[closestPoint.index],
-                        closest: shape.series === closestPoint.series,
+                    radarData.shapes.forEach((shape) => {
+                        result.push({
+                            data: shape.points[closestPoint.index].data,
+                            series: shape.series as RadarSeries,
+                            category: shape.series.categories[closestPoint.index],
+                            closest: shape.series === closestPoint.series,
+                        });
                     });
-                });
+                }
+
                 break;
             }
         }
@@ -328,4 +332,13 @@ function isInsidePath(args: {
     }
 
     return null;
+}
+
+function getRadius(args: {pointer: [number, number]; center: [number, number]}) {
+    const {pointer, center} = args;
+    const x = pointer[0] - center[0];
+    const y = pointer[1] - center[1];
+    const polarRadius = Math.sqrt(x * x + y * y);
+
+    return polarRadius;
 }
