@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/gravity-ui/charts/compare/v0.9.0...v0.10.0) (2025-05-07)
+
+
+### Features
+
+* add radar series ([#59](https://github.com/gravity-ui/charts/issues/59)) ([b894714](https://github.com/gravity-ui/charts/commit/b894714497d6e7a2b4a1a913947a8ce8ec17f3ab))
+
 ## [0.9.0](https://github.com/gravity-ui/charts/compare/v0.8.0...v0.9.0) (2025-04-29)
 
 
