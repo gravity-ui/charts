@@ -124,7 +124,7 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
             borderColor: series.borderColor,
             fillOpacity: series.fillOpacity,
             points: markers,
-            path: radarAreaLine(markers.map((p) => p.position)),
+            path: radarAreaLine(markers.map((p) => p.position)) ?? '',
             series: series,
             color: series.color,
             hovered: false,
