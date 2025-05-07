@@ -93,6 +93,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const result: TooltipDataChunk[] = [];
     const groups = groupBy(shapesData, getSeriesType);
 
+    // eslint-disable-next-line complexity
     Object.entries(groups).forEach(([seriesType, list]) => {
         switch (seriesType) {
             case 'bar-x': {
@@ -285,22 +286,32 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
                 const radius = getRadius({center: radarData.center, pointer: [pointerX, pointerY]});
                 if (radius <= radarData.radius) {
-                    const points = radarData.shapes.map((shape) => shape.points).flat();
+                    const radarShapes = radarData.shapes.filter((shape) =>
+                        isInsidePath({
+                            path: shape.path,
+                            point: [pointerX, pointerY],
+                            width: boundsWidth,
+                            height: boundsHeight,
+                            strokeWidth: shape.borderWidth,
+                        }),
+                    );
+                    const points = radarShapes.map((shape) => shape.points).flat();
                     const delaunayX = Delaunay.from(
                         points,
                         (d) => d.position[0],
                         (d) => d.position[1],
                     );
                     const closestPoint = points[delaunayX.find(pointerX, pointerY)];
-
-                    radarData.shapes.forEach((shape) => {
-                        result.push({
-                            data: shape.points[closestPoint.index].data,
-                            series: shape.series as RadarSeries,
-                            category: shape.series.categories[closestPoint.index],
-                            closest: shape.series === closestPoint.series,
+                    if (closestPoint) {
+                        radarData.shapes.forEach((shape) => {
+                            result.push({
+                                data: shape.points[closestPoint.index].data,
+                                series: shape.series as RadarSeries,
+                                category: shape.series.categories[closestPoint.index],
+                                closest: shape.series === closestPoint.series,
+                            });
                         });
-                    });
+                    }
                 }
 
                 break;

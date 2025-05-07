@@ -38,7 +38,7 @@ function prepareMarker(series: RadarSeries, seriesOptions?: ChartSeriesOptions) 
     );
     const hoveredMarkerDefaultOptions = {
         enabled: true,
-        radius: markerNormalState.radius + 2,
+        radius: markerNormalState.radius + 1,
         borderWidth: 1,
         borderColor: '#ffffff',
         halo: DEFAULT_HALO_OPTIONS,

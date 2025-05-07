@@ -41,7 +41,7 @@ export type RadarMarkerData = {
 
 export type RadarShapeData = {
     points: RadarMarkerData[];
-    path: string | null;
+    path: string;
     color: string;
     series: PreparedRadarSeries;
     hovered: boolean;

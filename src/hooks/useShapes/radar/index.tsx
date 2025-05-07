@@ -190,7 +190,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
 
     return (
         <React.Fragment>
-            <g ref={ref} className={b()} style={{zIndex: 9}} />
+            <g ref={ref} className={b()} />
             <HtmlLayer preparedData={{htmlElements}} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
