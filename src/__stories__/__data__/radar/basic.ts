@@ -27,6 +27,7 @@ function prepareData(): ChartData {
                 data: categories.map<RadarSeriesData>((category) => ({
                     value: Number(get(unit, category.key)),
                 })),
+                visible: ['BlackDragon', 'FaerieDragon'].includes(unit.Unit_name),
             })),
         },
         title: {
