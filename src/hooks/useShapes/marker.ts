@@ -7,16 +7,17 @@ import {block, getSymbol} from '../../utils';
 
 import type {MarkerData as AreaMarkerData} from './area/types';
 import type {MarkerData as LineMarkerData} from './line/types';
+import type {RadarMarkerData} from './radar/types';
 import type {MarkerData as ScatterMarkerData} from './scatter/types';
 
 const b = block('marker');
 const haloClassName = b('halo');
 const symbolClassName = b('symbol');
 
-type MarkerData = LineMarkerData | AreaMarkerData | ScatterMarkerData;
+type MarkerData = LineMarkerData | AreaMarkerData | ScatterMarkerData | RadarMarkerData;
 
 export function renderMarker<T extends MarkerData>(
-    selection: Selection<BaseType | SVGGElement, T, SVGGElement, unknown>,
+    selection: Selection<BaseType, T, BaseType, unknown>,
 ) {
     const markerSelection = selection
         .attr('class', b('wrapper'))

@@ -8,9 +8,17 @@ import type {TooltipDataChunkRadar} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedRadarSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {
+    getMarkerHaloVisibility,
+    getMarkerVisibility,
+    renderMarker,
+    selectMarkerHalo,
+    selectMarkerSymbol,
+    setMarker,
+} from '../marker';
 import {setActiveState} from '../utils';
 
-import type {PreparedRadarData, RadarShapeData} from './types';
+import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from './types';
 
 const b = block('radar');
 
@@ -32,10 +40,9 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
 
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
-        const pointSelector = `.${b('point')}`;
         const areaSelector = `.${b('area')}`;
 
-        const shapesSelection = svgElement
+        const radarSelection = svgElement
             .selectAll('radar')
             .data(preparedData)
             .join('g')
@@ -44,7 +51,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .attr('cursor', (radarData) => radarData.cursor);
 
         // render axes
-        shapesSelection
+        radarSelection
             .selectAll(`.${b('axis')}`)
             .data((radarData) => radarData.axes)
             .join('line')
@@ -57,7 +64,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .attr('stroke-width', (d) => d.strokeWidth);
 
         // render grid lines
-        shapesSelection
+        radarSelection
             .selectAll(`.${b('grid')}`)
             .data((radarData) => radarData.grid)
             .join('path')
@@ -68,11 +75,14 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .attr('stroke-width', (d) => d.strokeWidth);
 
         // render radar area
-        shapesSelection
+        const shapesSelection = radarSelection
             .selectAll(areaSelector)
             .data((radarData) => radarData.shapes)
-            .join('path')
-            .attr('class', b('area'))
+            .join('g')
+            .attr('class', b('area'));
+
+        shapesSelection
+            .append('path')
             .attr('d', (d) => d.path)
             .attr('fill', (d) => d.color)
             .attr('fill-opacity', (d) => d.fillOpacity)
@@ -80,19 +90,14 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .attr('stroke-width', (d) => d.borderWidth);
 
         // render markers
-        shapesSelection
-            .selectAll(pointSelector)
-            .data((radarData) => radarData.markers)
-            .join('circle')
-            .attr('class', b('point'))
-            .attr('cx', (d) => d.x)
-            .attr('cy', (d) => d.y)
-            .attr('r', (d) => d.radius)
-            .attr('fill', (d) => d.color)
-            .attr('opacity', (d) => d.opacity);
+        const markerSelection = shapesSelection
+            .selectAll('marker')
+            .data((radarData) => radarData.points)
+            .join('g')
+            .call(renderMarker);
 
         // Render labels
-        shapesSelection
+        radarSelection
             .selectAll('text')
             .data((radarData) => radarData.labels)
             .join('text')
@@ -107,57 +112,72 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
 
         // Handle hover events
         const eventName = `hover-shape.radar`;
-        const hoverOptions = get(seriesOptions, 'radar.states.hover', {
-            enabled: true,
-            brightness: 0.3,
-        });
-        const inactiveOptions = get(seriesOptions, 'radar.states.inactive', {
-            enabled: true,
-            opacity: 0.5,
-        });
+        const hoverOptions = get(seriesOptions, 'radar.states.hover');
+        const inactiveOptions = get(seriesOptions, 'radar.states.inactive');
 
         dispatcher.on(eventName, (data?: TooltipDataChunkRadar[]) => {
-            const selectedSeriesId = (data?.find((d) => d.closest)?.series as PreparedRadarSeries)
-                ?.id;
+            const closest = data?.find((d) => d.closest);
+            const selectedSeries = closest?.series as PreparedRadarSeries;
+            const selectedSeriesData = closest?.data;
+            const selectedSeriesId = selectedSeries?.id;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
 
-            shapesSelection.datum((_d, index, list) => {
-                const radarSelection = select<BaseType, PreparedRadarData>(list[index]);
+            shapesSelection.datum((d, i, elements) => {
+                const hovered = Boolean(hoverEnabled && d.series?.id === selectedSeriesId);
 
-                radarSelection
-                    .selectAll<BaseType, RadarShapeData>(areaSelector)
-                    .datum((d, i, elements) => {
-                        const hovered = Boolean(hoverEnabled && d.series?.id === selectedSeriesId);
-
-                        if (d.hovered !== hovered) {
-                            d.hovered = hovered;
-                            select(elements[i]).attr('fill', () => {
-                                const initialColor = d.color;
-                                if (d.hovered) {
-                                    return (
-                                        color(initialColor)
-                                            ?.brighter(hoverOptions.brightness)
-                                            .toString() || initialColor
-                                    );
-                                }
-                                return initialColor;
-                            });
+                if (d.hovered !== hovered) {
+                    d.hovered = hovered;
+                    select(elements[i]).attr('fill', () => {
+                        const initialColor = d.color;
+                        if (d.hovered) {
+                            return (
+                                color(initialColor)
+                                    ?.brighter(hoverOptions?.brightness)
+                                    .toString() || initialColor
+                            );
                         }
-
-                        setActiveState<RadarShapeData>({
-                            element: elements[i],
-                            state: inactiveOptions,
-                            active: Boolean(
-                                !inactiveEnabled ||
-                                    !selectedSeriesId ||
-                                    selectedSeriesId === d.series.id,
-                            ),
-                            datum: d,
-                        });
-
-                        return d;
+                        return initialColor;
                     });
+
+                    if (hovered) {
+                        select(elements[i]).raise();
+                    }
+                }
+
+                setActiveState<RadarShapeData>({
+                    element: elements[i],
+                    state: inactiveOptions,
+                    active: Boolean(
+                        !inactiveEnabled || !selectedSeriesId || selectedSeriesId === d.series.id,
+                    ),
+                    datum: d,
+                });
+
+                markerSelection.datum((markerData, index, markers) => {
+                    const hoveredState = Boolean(
+                        hoverEnabled && markerData.data === selectedSeriesData,
+                    );
+
+                    if (markerData.hovered !== hoveredState) {
+                        markerData.hovered = hoveredState;
+                        const elementSelection = select<BaseType, RadarMarkerData>(markers[index]);
+
+                        elementSelection.attr('visibility', getMarkerVisibility(markerData));
+                        selectMarkerHalo(elementSelection).attr(
+                            'visibility',
+                            getMarkerHaloVisibility,
+                        );
+                        selectMarkerSymbol(elementSelection).call(
+                            setMarker,
+                            hoveredState ? 'hover' : 'normal',
+                        );
+                    }
+
+                    return markerData;
+                });
+
+                return d;
             });
         });
 

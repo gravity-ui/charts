@@ -3,6 +3,7 @@ import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {PointMarkerOptions} from './marker';
 
 export interface RadarSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The value of the radar point. */
@@ -14,6 +15,12 @@ export interface RadarSeriesCategory {
     key: string;
     /** Maximum value for current key. */
     maxValue?: number;
+}
+
+export type RadarMarkerSymbol = 'circle' | 'square';
+
+export interface RadarMarkerOptions extends PointMarkerOptions {
+    symbol?: RadarMarkerSymbol;
 }
 
 export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
@@ -44,4 +51,6 @@ export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
+    /** Options for the point markers of line in radar series */
+    marker?: RadarMarkerOptions;
 }

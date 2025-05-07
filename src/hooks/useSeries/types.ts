@@ -326,6 +326,24 @@ export type PreparedRadarSeries = {
         allowOverlap: boolean;
         html: boolean;
     };
+    marker: {
+        states: {
+            normal: {
+                symbol: `${SymbolType}`;
+                enabled: boolean;
+                radius: number;
+                borderWidth: number;
+                borderColor: string;
+            };
+            hover: {
+                enabled: boolean;
+                radius: number;
+                borderWidth: number;
+                borderColor: string;
+                halo: PreparedHaloOptions;
+            };
+        };
+    };
 } & BasePreparedSeries;
 
 export type PreparedSeries =

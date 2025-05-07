@@ -4,7 +4,7 @@ import type {HtmlItem} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import type {PreparedRadarSeries} from '../../useSeries/types';
 
-import type {PreparedRadarData, RadarGridData, RadarMarkerData, RadarShapeData} from './types';
+import type {PreparedRadarData, RadarGridData, RadarMarkerData} from './types';
 
 type Args = {
     series: PreparedRadarSeries[];
@@ -34,7 +34,6 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
         center,
         radius: finalRadius,
         shapes: [],
-        markers: [],
         labels: [],
         axes: [],
         htmlLabels: [],
@@ -86,7 +85,6 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
     preparedSeries.forEach((series) => {
         const {dataLabels} = series;
 
-        const points: RadarShapeData['points'] = [];
         const markers: RadarMarkerData[] = [];
         categories.forEach((category, index) => {
             const dataItem = series.data[index];
@@ -102,35 +100,36 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
             const pointRadius = pointValueScale(dataItem.value);
             const x = center[0] + Math.cos(angle) * pointRadius;
             const y = center[1] + Math.sin(angle) * pointRadius;
-            points.push({
+            markers.push({
+                point: {
+                    x,
+                    y,
+                    series,
+                    data: dataItem,
+                },
                 index,
                 position: [x, y],
-                data: dataItem,
-                series: series,
-            });
-            markers.push({
-                x,
-                y,
                 color: series.color,
                 opacity: 1,
                 radius: 2,
+                data: dataItem,
+                series: series,
+                hovered: false,
+                active: false,
             });
         });
 
-        // Create points
         data.shapes.push({
             borderWidth: series.borderWidth,
             borderColor: series.borderColor,
             fillOpacity: series.fillOpacity,
-            points: points,
-            path: radarAreaLine(points.map((p) => p.position)),
+            points: markers,
+            path: radarAreaLine(markers.map((p) => p.position)),
             series: series,
             color: series.color,
             hovered: false,
             active: true,
         });
-
-        data.markers = markers;
 
         // Create labels if enabled
         if (dataLabels.enabled) {

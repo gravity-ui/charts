@@ -19,21 +19,28 @@ export type RadarGridData = {
     strokeWidth: number;
 };
 
-export type RadarMarkerData = {
-    radius: number;
+export type PointData = {
     x: number;
     y: number;
+    data: RadarSeriesData;
+    series: PreparedRadarSeries;
+};
+
+export type RadarMarkerData = {
+    point: PointData;
+    radius: number;
+    position: [number, number];
+    index: number;
     color: string;
     opacity: number;
+    data: RadarSeriesData;
+    series: PreparedRadarSeries;
+    hovered: boolean;
+    active: boolean;
 };
 
 export type RadarShapeData = {
-    points: {
-        position: [number, number];
-        index: number;
-        data: RadarSeriesData;
-        series: PreparedRadarSeries;
-    }[];
+    points: RadarMarkerData[];
     path: string | null;
     color: string;
     series: PreparedRadarSeries;
@@ -48,7 +55,6 @@ export type PreparedRadarData = {
     type: 'radar';
     id: string;
     shapes: RadarShapeData[];
-    markers: RadarMarkerData[];
     labels: RadarLabelData[];
     axes: RadarAxisData[];
     grid: RadarGridData[];

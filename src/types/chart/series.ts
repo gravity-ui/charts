@@ -267,8 +267,15 @@ export interface ChartSeriesOptions {
     radar?: {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
-            hover?: BasicHoverState;
+            hover?: BasicHoverState & {
+                marker?: PointMarkerOptions & {
+                    /** Options for the halo appearing around the hovered point */
+                    halo?: Halo;
+                };
+            };
             inactive?: BasicInactiveState;
         };
+        /** Options for the point markers of radar series */
+        marker?: PointMarkerOptions;
     };
 }
