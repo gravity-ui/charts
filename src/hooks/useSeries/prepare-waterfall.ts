@@ -42,8 +42,7 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
                 allowOverlap: series.dataLabels?.allowOverlap || false,
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
                 html: get(series, 'dataLabels.html', false),
-                numberFormat: series.dataLabels?.numberFormat,
-                dateFormat: series.dataLabels?.dateFormat,
+                format: series.dataLabels?.format,
             },
             cursor: get(series, 'cursor', null),
         };

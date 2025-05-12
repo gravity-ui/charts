@@ -4,6 +4,7 @@ import type {AreaSeries, AreaSeriesData} from './area';
 import type {ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
+import type {ValueFormat} from './base';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
 import type {RadarSeries, RadarSeriesCategory, RadarSeriesData} from './radar';
@@ -110,4 +111,6 @@ export interface ChartTooltip<T = MeaningfulAny> {
     };
     /** Show tooltip at most once per every ```throttle``` milliseconds */
     throttle?: number;
+    /** Formatting settings for tooltip value. */
+    valueFormat?: ValueFormat;
 }

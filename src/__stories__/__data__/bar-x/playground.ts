@@ -21,7 +21,7 @@ function prepareData(): ChartData {
                     borderRadius: 8,
                     dataLabels: {
                         enabled: true,
-                        numberFormat: {precision: 1},
+                        format: {type: 'number', precision: 1},
                     },
                 },
             ],

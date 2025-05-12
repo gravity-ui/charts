@@ -14,9 +14,11 @@ import type {
     TooltipDataChunkRadar,
     TooltipDataChunkSankey,
     TreemapSeriesData,
+    ValueFormat,
     WaterfallSeriesData,
 } from '../../types';
 import {block, getDataCategoryValue, getWaterfallPointSubtotal} from '../../utils';
+import {getFormattedValue} from '../../utils/chart/format';
 
 const b = block('tooltip');
 
@@ -24,6 +26,7 @@ type Props = {
     hovered: TooltipDataChunk[];
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis;
+    valueFormat?: ValueFormat;
 };
 
 const DEFAULT_DATE_FORMAT = 'DD.MM.YY';
@@ -75,7 +78,7 @@ const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: C
     return getXRowData(data[0]?.data, xAxis);
 };
 
-export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
+export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
     const measureValue = getMeasureValue(hovered, xAxis, yAxis);
 
     return (
@@ -91,9 +94,13 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     case 'line':
                     case 'area':
                     case 'bar-x': {
+                        const formattedValue = getFormattedValue({
+                            value: getYRowData(data, yAxis),
+                            format: valueFormat,
+                        });
                         const value = (
                             <React.Fragment>
-                                {series.name}: {getYRowData(data, yAxis)}
+                                {series.name}: {formattedValue}
                             </React.Fragment>
                         );
                         return (
@@ -105,10 +112,18 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     }
                     case 'waterfall': {
                         const isTotal = get(data, 'total', false);
-                        const subTotal = getWaterfallPointSubtotal(
+                        const subTotalValue = getWaterfallPointSubtotal(
                             data as WaterfallSeriesData,
                             series as PreparedWaterfallSeries,
                         );
+                        const subTotal = getFormattedValue({
+                            value: subTotalValue,
+                            format: valueFormat,
+                        });
+                        const formattedValue = getFormattedValue({
+                            value: getYRowData(data, yAxis),
+                            format: valueFormat,
+                        });
 
                         return (
                             <div key={`${id}_${get(data, 'x')}`}>
@@ -119,7 +134,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                                         </div>
                                         <div className={b('content-row')}>
                                             <span>{series.name}&nbsp;</span>
-                                            <span>{getYRowData(data, yAxis)}</span>
+                                            <span>{formattedValue}</span>
                                         </div>
                                     </React.Fragment>
                                 )}
@@ -130,9 +145,13 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                         );
                     }
                     case 'bar-y': {
+                        const formattedValue = getFormattedValue({
+                            value: getXRowData(data, xAxis),
+                            format: valueFormat,
+                        });
                         const value = (
                             <React.Fragment>
-                                {series.name}: {getXRowData(data, xAxis)}
+                                {series.name}: {formattedValue}
                             </React.Fragment>
                         );
                         return (
@@ -145,18 +164,26 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     case 'pie':
                     case 'treemap': {
                         const seriesData = data as PreparedPieSeries | TreemapSeriesData;
+                        const formattedValue = getFormattedValue({
+                            value: seriesData.value,
+                            format: valueFormat,
+                        });
 
                         return (
                             <div key={id} className={b('content-row')}>
                                 <div className={b('color')} style={{backgroundColor: color}} />
                                 <span>{seriesData.name || seriesData.id}&nbsp;</span>
-                                <span>{seriesData.value}</span>
+                                <span>{formattedValue}</span>
                             </div>
                         );
                     }
                     case 'sankey': {
                         const {target, data: source} = seriesItem as TooltipDataChunkSankey;
                         const value = source.links.find((d) => d.name === target?.name)?.value;
+                        const formattedValue = getFormattedValue({
+                            value,
+                            format: valueFormat,
+                        });
 
                         return (
                             <div key={id} className={b('content-row')}>
@@ -165,7 +192,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                                     style={{backgroundColor: source.color}}
                                 />
                                 <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
-                                    {source.name} <span>→</span> {target?.name}: {value}
+                                    {source.name} <span>→</span> {target?.name}: {formattedValue}
                                 </div>
                             </div>
                         );
@@ -173,11 +200,15 @@ export const DefaultContent = ({hovered, xAxis, yAxis}: Props) => {
                     case 'radar': {
                         const radarSeries = series as PreparedRadarSeries;
                         const seriesData = data as RadarSeriesData;
+                        const formattedValue = getFormattedValue({
+                            value: seriesData.value,
+                            format: valueFormat,
+                        });
 
                         const value = (
                             <React.Fragment>
                                 <span>{radarSeries.name || radarSeries.id}&nbsp;</span>
-                                <span>{seriesData.value}</span>
+                                <span>{formattedValue}</span>
                             </React.Fragment>
                         );
 

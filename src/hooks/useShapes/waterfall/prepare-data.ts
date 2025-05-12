@@ -4,11 +4,11 @@ import sortBy from 'lodash/sortBy';
 
 import type {LabelData, WaterfallSeriesData} from '../../../types';
 import {getLabelsSize} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedSeriesOptions, PreparedWaterfallSeries} from '../../useSeries/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../constants';
-import {getFormattedDataLabel} from '../data-labels';
 import {getXValue, getYValue} from '../utils';
 
 import type {PreparedWaterfallData} from './types';
@@ -18,7 +18,7 @@ function getLabelData(d: PreparedWaterfallData, plotHeight: number): LabelData |
         return undefined;
     }
 
-    const text = getFormattedDataLabel({value: d.data.label || d.subTotal, ...d.series.dataLabels});
+    const text = getFormattedValue({value: d.data.label || d.subTotal, ...d.series.dataLabels});
     const style = d.series.dataLabels.style;
     const {maxHeight: height, maxWidth: width} = getLabelsSize({labels: [text], style});
 

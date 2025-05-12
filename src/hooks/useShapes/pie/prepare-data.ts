@@ -8,8 +8,8 @@ import {
     getLeftPosition,
     isLabelsOverlapping,
 } from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedPieSeries} from '../../useSeries/types';
-import {getFormattedDataLabel} from '../data-labels';
 
 import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';
 import {getCurveFactory, pieGenerator} from './utils';
@@ -149,7 +149,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
-            const text = getFormattedDataLabel({
+            const text = getFormattedValue({
                 value: d.data.label || d.data.value,
                 ...d.dataLabels,
             });

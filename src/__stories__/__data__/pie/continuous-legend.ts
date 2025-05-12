@@ -22,7 +22,7 @@ function prepareData(): ChartData {
                     type: 'pie',
                     data,
                     dataLabels: {
-                        numberFormat: {unit: 'auto'},
+                        format: {type: 'number', unit: 'auto'},
                     },
                 },
             ],
@@ -35,6 +35,12 @@ function prepareData(): ChartData {
             colorScale: {
                 colors: colors,
                 stops,
+            },
+        },
+        tooltip: {
+            valueFormat: {
+                type: 'number',
+                unit: 'k',
             },
         },
     };

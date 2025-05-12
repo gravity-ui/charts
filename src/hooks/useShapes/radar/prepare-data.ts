@@ -2,8 +2,8 @@ import {curveLinearClosed, line, range, scaleLinear} from 'd3';
 
 import type {HtmlItem} from '../../../types';
 import {getLabelsSize} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedRadarSeries} from '../../useSeries/types';
-import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedRadarData, RadarGridData, RadarMarkerData} from './types';
 
@@ -137,7 +137,7 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
             const {style} = dataLabels;
             const shouldUseHtml = dataLabels.html;
             data.labels = categories.map((category, index) => {
-                const text = getFormattedDataLabel({
+                const text = getFormattedValue({
                     value: category.key,
                     ...dataLabels,
                 });
