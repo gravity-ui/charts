@@ -3,6 +3,7 @@ import {curveLinearClosed, line, range, scaleLinear} from 'd3';
 import type {HtmlItem} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import type {PreparedRadarSeries} from '../../useSeries/types';
+import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedRadarData, RadarGridData, RadarMarkerData} from './types';
 
@@ -136,7 +137,10 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
             const {style} = dataLabels;
             const shouldUseHtml = dataLabels.html;
             data.labels = categories.map((category, index) => {
-                const text = category.key;
+                const text = getFormattedDataLabel({
+                    value: category.key,
+                    ...dataLabels,
+                });
                 const labelSize = getLabelsSize({labels: [text], style});
                 const angle = index * angleStep - Math.PI / 2;
 

@@ -35,6 +35,7 @@ import type {
     WaterfallSeries,
     WaterfallSeriesData,
 } from '../../types';
+import type {FormatNumberOptions} from '../../types/formatter';
 
 export type RectLegendSymbol = {
     shape: 'rect';
@@ -150,6 +151,8 @@ export type PreparedBarXSeries = {
         allowOverlap: boolean;
         padding: number;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     borderRadius: number;
     yAxis: number;
@@ -167,6 +170,8 @@ export type PreparedBarYSeries = {
         maxHeight: number;
         maxWidth: number;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     borderRadius: number;
 } & BasePreparedSeries;
@@ -193,6 +198,8 @@ export type PreparedPieSeries = {
         distance: number;
         connectorCurve: ConnectorCurve;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     states: {
         hover: {
@@ -213,6 +220,8 @@ export type PreparedLineSeries = {
         padding: number;
         allowOverlap: boolean;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     marker: {
         states: {
@@ -251,6 +260,8 @@ export type PreparedAreaSeries = {
         padding: number;
         allowOverlap: boolean;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     marker: {
         states: {
@@ -283,6 +294,8 @@ export type PreparedTreemapSeries = {
         allowOverlap: boolean;
         html: boolean;
         align: Required<Required<TreemapSeries>['dataLabels']>['align'];
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     layoutAlgorithm: `${LayoutAlgorithm}`;
 } & BasePreparedSeries &
@@ -297,6 +310,8 @@ export type PreparedWaterfallSeries = {
         allowOverlap: boolean;
         padding: number;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     positiveColor: string;
     negativeColor: string;
@@ -308,6 +323,8 @@ export type PreparedSankeySeries = {
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
 } & BasePreparedSeries &
     Omit<SankeySeries, keyof BasePreparedSeries>;
@@ -325,6 +342,8 @@ export type PreparedRadarSeries = {
         padding: number;
         allowOverlap: boolean;
         html: boolean;
+        dateFormat?: string;
+        numberFormat?: FormatNumberOptions;
     };
     marker: {
         states: {

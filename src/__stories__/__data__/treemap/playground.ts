@@ -8,6 +8,7 @@ const prepareData = (): ChartData => {
         name: 'Example',
         dataLabels: {
             enabled: true,
+            numberFormat: {precision: 1},
         },
         layoutAlgorithm: 'binary',
         levels: [

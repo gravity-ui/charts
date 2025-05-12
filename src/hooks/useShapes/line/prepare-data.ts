@@ -4,12 +4,16 @@ import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
+import {getFormattedDataLabel} from '../data-labels';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, PointData, PreparedLineData} from './types';
 
 function getLabelData(point: PointData, series: PreparedLineSeries, xMax: number) {
-    const text = String(point.data.label || point.data.y);
+    const text = getFormattedDataLabel({
+        value: point.data.label || point.data.y,
+        ...series.dataLabels,
+    });
     const style = series.dataLabels.style;
     const size = getLabelsSize({labels: [text], style});
 

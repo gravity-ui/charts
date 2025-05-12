@@ -13,6 +13,7 @@ import {LayoutAlgorithm} from '../../../constants';
 import type {HtmlItem, TreemapSeriesData} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import type {PreparedTreemapSeries} from '../../useSeries/types';
+import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedTreemapData, TreemapLabelData} from './types';
 
@@ -22,18 +23,20 @@ type LabelItem = HtmlItem | TreemapLabelData;
 
 function getLabels(args: {
     data: HierarchyRectangularNode<TreemapSeriesData>[];
-    html: boolean;
-    padding: number;
-    align: PreparedTreemapSeries['dataLabels']['align'];
+    options: PreparedTreemapSeries['dataLabels'];
 }) {
-    const {data, html, padding, align} = args;
+    const {
+        data,
+        options: {html, padding, align},
+    } = args;
 
     return data.reduce<LabelItem[]>((acc, d) => {
         const texts = Array.isArray(d.data.name) ? d.data.name : [d.data.name];
 
         texts.forEach((text, index) => {
+            const label = getFormattedDataLabel({value: text, ...args.options});
             const {maxHeight: lineHeight, maxWidth: labelWidth} =
-                getLabelsSize({labels: [text], html}) ?? {};
+                getLabelsSize({labels: [label], html}) ?? {};
             const left = d.x0 + padding;
             const right = d.x1 - padding;
             const width = Math.max(0, right - left);
@@ -57,13 +60,13 @@ function getLabels(args: {
 
             const item: LabelItem = html
                 ? {
-                      content: text,
+                      content: label,
                       x,
                       y,
                       size: {width, height: lineHeight},
                   }
                 : {
-                      text,
+                      text: label,
                       x,
                       y,
                       width,
@@ -128,8 +131,8 @@ export function prepareTreemapData(args: {
     const htmlElements: HtmlItem[] = [];
 
     if (series.dataLabels?.enabled) {
-        const {html, padding, align} = series.dataLabels;
-        const labels = getLabels({html, padding, align, data: leaves});
+        const {html} = series.dataLabels;
+        const labels = getLabels({data: leaves, options: series.dataLabels});
         if (html) {
             htmlElements.push(...(labels as HtmlItem[]));
         } else {

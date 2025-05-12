@@ -9,6 +9,7 @@ import {
     isLabelsOverlapping,
 } from '../../../utils';
 import type {PreparedPieSeries} from '../../useSeries/types';
+import {getFormattedDataLabel} from '../data-labels';
 
 import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';
 import {getCurveFactory, pieGenerator} from './utils';
@@ -148,7 +149,10 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
-            const text = String(d.data.label || d.data.value);
+            const text = getFormattedDataLabel({
+                value: d.data.label || d.data.value,
+                ...d.dataLabels,
+            });
             const shouldUseHtml = dataLabels.html;
             const labelSize = getLabelsSize({labels: [text], style, html: shouldUseHtml});
             const labelWidth = labelSize.maxWidth;

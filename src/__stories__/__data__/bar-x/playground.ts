@@ -19,6 +19,10 @@ function prepareData(): ChartData {
                     data,
                     name: 'Games released',
                     borderRadius: 8,
+                    dataLabels: {
+                        enabled: true,
+                        numberFormat: {precision: 1},
+                    },
                 },
             ],
         },

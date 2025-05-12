@@ -34,6 +34,8 @@ export function prepareTreemap(args: PrepareTreemapSeriesArgs) {
                 allowOverlap: get(s, 'dataLabels.allowOverlap', false),
                 html: get(s, 'dataLabels.html', false),
                 align: get(s, 'dataLabels.align', 'left'),
+                numberFormat: s.dataLabels?.numberFormat,
+                dateFormat: s.dataLabels?.dateFormat,
             },
             id,
             type: s.type,

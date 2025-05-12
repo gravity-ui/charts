@@ -24,7 +24,7 @@ function prepareData(): ChartData {
                         {total: true, x: 12},
                     ],
                     name: 'Profit',
-                    dataLabels: {enabled: true},
+                    dataLabels: {enabled: true, numberFormat: {precision: 2}},
                 },
             ],
         },

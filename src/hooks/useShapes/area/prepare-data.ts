@@ -5,12 +5,16 @@ import {getDataCategoryValue, getLabelsSize, getLeftPosition} from '../../../uti
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
+import {getFormattedDataLabel} from '../data-labels';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, PointData, PreparedAreaData} from './types';
 
 function getLabelData(point: PointData, series: PreparedAreaSeries, xMax: number) {
-    const text = String(point.data.label || point.data.y);
+    const text = getFormattedDataLabel({
+        value: point.data.label || point.data.y,
+        ...series.dataLabels,
+    });
     const style = series.dataLabels.style;
     const size = getLabelsSize({labels: [text], style, html: series.dataLabels.html});
 
