@@ -22,7 +22,8 @@ function prepareData(): ChartData {
                     stacking: 'normal',
                     dataLabels: {
                         enabled: true,
-                        numberFormat: {
+                        format: {
+                            type: 'number',
                             precision: 2,
                         },
                     },

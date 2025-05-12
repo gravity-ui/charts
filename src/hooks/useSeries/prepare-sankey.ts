@@ -33,8 +33,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
             dataLabels: {
                 enabled: get(s, 'dataLabels.enabled', true),
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, s.dataLabels?.style),
-                numberFormat: s.dataLabels?.numberFormat,
-                dateFormat: s.dataLabels?.dateFormat,
+                format: s.dataLabels?.format,
             },
             id,
             type: s.type,

@@ -1,8 +1,8 @@
 import {sankey, sankeyLinkHorizontal} from 'd3-sankey';
 
 import type {HtmlItem, SankeySeriesData} from '../../../types';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedSankeySeries} from '../../useSeries/types';
-import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedSankeyData, SankeyDataLabel} from './types';
 
@@ -77,7 +77,7 @@ export function prepareSankeyData(args: {
             const x1 = d.x1 ?? 0;
             const y0 = d.y0 ?? 0;
             const y1 = d.y1 ?? 0;
-            const text = getFormattedDataLabel({value: d.name, ...dataLabels});
+            const text = getFormattedValue({value: d.name, ...dataLabels});
 
             return {
                 text,

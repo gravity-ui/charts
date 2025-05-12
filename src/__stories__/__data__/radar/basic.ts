@@ -33,6 +33,9 @@ function prepareData(): ChartData {
         title: {
             text: 'Heroes of Might and Magic 3 Units (dragons)',
         },
+        tooltip: {
+            valueFormat: {type: 'number'},
+        },
     };
 }
 

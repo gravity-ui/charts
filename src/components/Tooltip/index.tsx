@@ -61,6 +61,7 @@ export const Tooltip = (props: TooltipProps) => {
                     xAxis={xAxis}
                     yAxis={yAxis as ChartYAxis}
                     renderer={tooltip.renderer}
+                    valueFormat={tooltip.valueFormat}
                 />
             </div>
         </Popup>

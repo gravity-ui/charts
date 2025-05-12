@@ -3,7 +3,7 @@ import get from 'lodash/get';
 
 import type {BarYSeries, ChartSeriesOptions} from '../../types';
 import {getLabelsSize, getUniqId} from '../../utils';
-import {getFormattedDataLabel} from '../useShapes/data-labels';
+import {getFormattedValue} from '../../utils/chart/format';
 
 import {DEFAULT_DATALABELS_STYLE} from './constants';
 import type {PreparedBarYSeries, PreparedLegend, PreparedSeries} from './types';
@@ -21,9 +21,7 @@ function prepareDataLabels(series: BarYSeries) {
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
     const labels = enabled
-        ? series.data.map((d) =>
-              getFormattedDataLabel({value: d.x || d.label, ...series.dataLabels}),
-          )
+        ? series.data.map((d) => getFormattedValue({value: d.x || d.label, ...series.dataLabels}))
         : [];
     const {maxHeight = 0, maxWidth = 0} = getLabelsSize({
         labels,
@@ -39,8 +37,7 @@ function prepareDataLabels(series: BarYSeries) {
         maxHeight,
         maxWidth,
         html,
-        numberFormat: series.dataLabels?.numberFormat,
-        dateFormat: series.dataLabels?.dateFormat,
+        format: series.dataLabels?.format,
     };
 }
 

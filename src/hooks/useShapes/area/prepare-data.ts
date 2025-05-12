@@ -2,16 +2,16 @@ import {group, sort} from 'd3';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getLeftPosition} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
-import {getFormattedDataLabel} from '../data-labels';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, PointData, PreparedAreaData} from './types';
 
 function getLabelData(point: PointData, series: PreparedAreaSeries, xMax: number) {
-    const text = getFormattedDataLabel({
+    const text = getFormattedValue({
         value: point.data.label || point.data.y,
         ...series.dataLabels,
     });

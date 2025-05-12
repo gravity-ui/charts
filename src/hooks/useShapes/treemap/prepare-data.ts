@@ -12,8 +12,8 @@ import type {HierarchyRectangularNode} from 'd3';
 import {LayoutAlgorithm} from '../../../constants';
 import type {HtmlItem, TreemapSeriesData} from '../../../types';
 import {getLabelsSize} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedTreemapSeries} from '../../useSeries/types';
-import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedTreemapData, TreemapLabelData} from './types';
 
@@ -34,7 +34,7 @@ function getLabels(args: {
         const texts = Array.isArray(d.data.name) ? d.data.name : [d.data.name];
 
         texts.forEach((text, index) => {
-            const label = getFormattedDataLabel({value: text, ...args.options});
+            const label = getFormattedValue({value: text, ...args.options});
             const {maxHeight: lineHeight, maxWidth: labelWidth} =
                 getLabelsSize({labels: [label], html}) ?? {};
             const left = d.x0 + padding;

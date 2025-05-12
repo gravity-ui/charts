@@ -4,11 +4,11 @@ import get from 'lodash/get';
 
 import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
-import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedBarXData} from './types';
 
@@ -17,7 +17,7 @@ function getLabelData(d: PreparedBarXData): LabelData | undefined {
         return undefined;
     }
 
-    const text = getFormattedDataLabel({
+    const text = getFormattedValue({
         value: d.data.label || d.data.y,
         ...d.series.dataLabels,
     });

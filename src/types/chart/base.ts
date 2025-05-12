@@ -1,6 +1,15 @@
 import type {FormatNumberOptions} from '../formatter';
 import type {MeaningfulAny} from '../misc';
 
+type NumberFormat = {
+    type: 'number';
+} & FormatNumberOptions;
+type DateFormat = {
+    type: 'date';
+    format?: string;
+};
+export type ValueFormat = NumberFormat | DateFormat;
+
 export interface BaseSeries {
     /** Initial visibility of the series */
     visible?: boolean;
@@ -29,10 +38,8 @@ export interface BaseSeries {
          * @default false
          * */
         html?: boolean;
-        /** If specified, label formatting is applied with the selected date format. */
-        dateFormat?: string;
-        /** Formatting settings for numeric values */
-        numberFormat?: FormatNumberOptions;
+        /** Formatting settings for labels. */
+        format?: ValueFormat;
     };
     /** You can set the cursor to "pointer" if you have click events attached to the series, to signal to the user that the points and lines can be clicked. */
     cursor?: string;
