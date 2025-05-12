@@ -8,6 +8,7 @@ import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
+import {getFormattedDataLabel} from '../data-labels';
 
 import type {PreparedBarXData} from './types';
 
@@ -16,7 +17,10 @@ function getLabelData(d: PreparedBarXData): LabelData | undefined {
         return undefined;
     }
 
-    const text = String(d.data.label || d.data.y);
+    const text = getFormattedDataLabel({
+        value: d.data.label || d.data.y,
+        ...d.series.dataLabels,
+    });
     const style = d.series.dataLabels.style;
     const html = d.series.dataLabels.html;
     const {maxHeight: height, maxWidth: width} = getLabelsSize({

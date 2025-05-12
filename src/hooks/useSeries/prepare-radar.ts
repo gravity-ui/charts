@@ -84,6 +84,8 @@ export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
                 allowOverlap: get(series, 'dataLabels.allowOverlap', false),
                 html: get(series, 'dataLabels.html', false),
+                numberFormat: series.dataLabels?.numberFormat,
+                dateFormat: series.dataLabels?.dateFormat,
             },
             cursor: get(series, 'cursor', null),
             marker: prepareMarker(series, seriesOptions),

@@ -122,16 +122,17 @@ export function axisBottom(args: AxisBottomArgs) {
                 return tick;
             })
             .attr('transform', function (d) {
-                return `translate(${position(d as AxisDomain) + offset}, ${top})`;
+                const left = position(d as AxisDomain) + offset;
+                return `translate(${left}, ${top})`;
             });
 
         // Remove tick that has the same x coordinate like domain
         selection
-            .select('.tick')
+            .selectAll('.tick')
             .filter((d) => {
                 return position(d as AxisDomain) === 0;
             })
-            .select('line')
+            .select('path')
             .remove();
 
         const labels = selection.selectAll<SVGTextElement, unknown>('.tick text');

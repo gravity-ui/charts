@@ -1,4 +1,3 @@
-import {formatNumber} from '../../../libs';
 import type {ChartData, PieSeriesData} from '../../../types';
 import {getContinuesColorFn} from '../../../utils';
 
@@ -14,7 +13,6 @@ function prepareData(): ChartData {
     const getColor = getContinuesColorFn({colors, stops, values: data.map((d) => d.value)});
     data.forEach((d) => {
         d.color = getColor(d.value);
-        d.label = formatNumber(d.value, {unit: 'auto'});
     });
 
     return {
@@ -23,6 +21,9 @@ function prepareData(): ChartData {
                 {
                     type: 'pie',
                     data,
+                    dataLabels: {
+                        numberFormat: {unit: 'auto'},
+                    },
                 },
             ],
         },

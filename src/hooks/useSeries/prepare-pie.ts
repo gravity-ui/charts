@@ -36,6 +36,8 @@ export function preparePieSeries(args: PreparePieSeriesArgs) {
                 distance: get(series, 'dataLabels.distance', 25),
                 connectorCurve: get(series, 'dataLabels.connectorCurve', 'basic'),
                 html: get(series, 'dataLabels.html', false),
+                numberFormat: series.dataLabels?.numberFormat,
+                dateFormat: series.dataLabels?.dateFormat,
             },
             label: dataItem.label,
             value: dataItem.value,
