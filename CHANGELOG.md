@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0](https://github.com/gravity-ui/charts/compare/v0.10.0...v0.11.0) (2025-05-12)
+
+
+### Features
+
+* add dataLabels format options ([#62](https://github.com/gravity-ui/charts/issues/62)) ([4fd8078](https://github.com/gravity-ui/charts/commit/4fd8078544be594b81d3672493e8494834945e11))
+* tooltip value format settings ([#64](https://github.com/gravity-ui/charts/issues/64)) ([45096da](https://github.com/gravity-ui/charts/commit/45096da82dd30dea8537767fa30e7c026cd0f545))
+
 ## [0.10.0](https://github.com/gravity-ui/charts/compare/v0.9.0...v0.10.0) (2025-05-07)
 
 
