@@ -58,7 +58,7 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs): PreparedSeries[]
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
             },
-            data: series.data,
+            data: series.data.filter((d) => d.x !== null),
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
             dataLabels: prepareDataLabels(series),
