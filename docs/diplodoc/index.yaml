@@ -1,7 +1,7 @@
-title: Gravity Charts
+title: Gravity UI Charts
 base: ./
 meta:
-  title: Gravity Charts
+  title: Gravity UI Charts
   noIndex: true
 links:
   - title: Overview
