@@ -1,6 +1,6 @@
 {
   "name": "@gravity-ui/charts",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "React component used to render charts",
   "license": "MIT",
   "main": "dist/cjs/index.js",

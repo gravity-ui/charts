@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/gravity-ui/charts/compare/v0.11.1...v0.12.0) (2025-05-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* release stable version ([#68](https://github.com/gravity-ui/charts/issues/68))
+
+### Features
+
+* release stable version ([#68](https://github.com/gravity-ui/charts/issues/68)) ([2160b8b](https://github.com/gravity-ui/charts/commit/2160b8bf8a200503f62962bc9bcc53ce5a9e27ef))
+* release version 1.0.0 ([#70](https://github.com/gravity-ui/charts/issues/70)) ([e2d8103](https://github.com/gravity-ui/charts/commit/e2d8103f641aa7120033bd112793f0e24bac77cd))
+
 ## [0.11.1](https://github.com/gravity-ui/charts/compare/v0.11.0...v0.11.1) (2025-05-15)
 
 
