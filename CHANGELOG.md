@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/gravity-ui/charts/compare/v0.11.0...v0.11.1) (2025-05-15)
+
+
+### Bug Fixes
+
+* ignore nulls for bar-y series ([#65](https://github.com/gravity-ui/charts/issues/65)) ([fdbcc3c](https://github.com/gravity-ui/charts/commit/fdbcc3c7a73ea35cb1f4c27d905ac1bc682afd34))
+
 ## [0.11.0](https://github.com/gravity-ui/charts/compare/v0.10.0...v0.11.0) (2025-05-12)
 
 
