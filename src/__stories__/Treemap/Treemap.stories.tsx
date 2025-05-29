@@ -2,7 +2,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {treemapHtmlLabelsData, treemapPlaygroundData} from '../__data__';
+import {treemapBasicData, treemapHtmlLabelsData, treemapPlaygroundData} from '../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Treemap',
@@ -16,6 +16,13 @@ export default meta;
 type Story = StoryObj<typeof ChartStory>;
 
 export const TreemapBasic = {
+    name: 'Basic',
+    args: {
+        data: treemapBasicData,
+    },
+} satisfies Story;
+
+export const TreemapWithHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: treemapHtmlLabelsData,
