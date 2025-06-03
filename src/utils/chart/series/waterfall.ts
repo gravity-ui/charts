@@ -9,15 +9,7 @@ export function getWaterfallPointColor(
         return point.color;
     }
 
-    if (point.total) {
-        return series.color;
-    }
-
-    if (Number(point.y) > 0) {
-        return series.positiveColor;
-    }
-
-    return series.negativeColor;
+    return series.color;
 }
 
 export function getWaterfallPointSubtotal(

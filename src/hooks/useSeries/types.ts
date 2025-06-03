@@ -295,9 +295,11 @@ export type PreparedTreemapSeries = {
 } & BasePreparedSeries &
     Omit<TreemapSeries, keyof BasePreparedSeries>;
 
+export type PreparedWaterfallSeriesData = WaterfallSeriesData & {index: number};
+
 export type PreparedWaterfallSeries = {
     type: WaterfallSeries['type'];
-    data: WaterfallSeriesData[];
+    data: PreparedWaterfallSeriesData[];
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;
@@ -306,8 +308,6 @@ export type PreparedWaterfallSeries = {
         html: boolean;
         format?: ValueFormat;
     };
-    positiveColor: string;
-    negativeColor: string;
 } & BasePreparedSeries;
 
 export type PreparedSankeySeries = {
