@@ -5,7 +5,7 @@ function prepareData(): ChartData {
         {y: 97, x: '2024'},
         {y: 10, x: 'revenue'},
         {y: -20, x: 'fixed costs'},
-        {y: -15, x: 'variable expenses'},
+        {y: -15, x: 'cost price'},
         {total: true, x: '2025'},
     ];
 
@@ -29,6 +29,7 @@ function prepareData(): ChartData {
         xAxis: {
             type: 'category',
             categories: data.map((d) => d.x),
+            labels: {autoRotation: false},
         },
         legend: {enabled: true},
     };
