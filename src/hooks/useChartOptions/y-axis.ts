@@ -20,7 +20,11 @@ import {
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
-import type {PreparedSeries, PreparedWaterfallSeries} from '../useSeries/types';
+import type {
+    PreparedSeries,
+    PreparedWaterfallSeries,
+    PreparedWaterfallSeriesData,
+} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
@@ -66,7 +70,10 @@ function getAxisMin(axis?: ChartYAxis, series?: ChartSeries[]) {
                         (res, d) =>
                             Math.min(
                                 res,
-                                getWaterfallPointSubtotal(d, s as PreparedWaterfallSeries) || 0,
+                                getWaterfallPointSubtotal(
+                                    d as PreparedWaterfallSeriesData,
+                                    s as PreparedWaterfallSeries,
+                                ) || 0,
                             ),
                         0,
                     );
