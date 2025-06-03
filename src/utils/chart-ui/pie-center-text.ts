@@ -5,12 +5,13 @@ import {getLabelsSize} from '../chart/text';
 
 const MAX_FONT_SIZE = 64;
 
-export function pieCenterText(text: string, options?: {padding?: number}) {
+export function pieCenterText(text: string, options?: {padding?: number; color?: string}) {
     if (!text) {
         return undefined;
     }
 
     const padding = get(options, 'padding', 12);
+    const color = get(options, 'color', 'currentColor');
 
     return function (args: {series: {innerRadius: number}}) {
         let fontSize = MAX_FONT_SIZE;
@@ -24,7 +25,8 @@ export function pieCenterText(text: string, options?: {padding?: number}) {
             .text(text)
             .attr('text-anchor', 'middle')
             .attr('alignment-baseline', 'middle')
-            .style('font-size', `${fontSize}px`);
+            .style('font-size', `${fontSize}px`)
+            .style('fill', color);
 
         return container.node();
     };
