@@ -41,6 +41,27 @@ export type ShapePoint = {
     series: ChartSeries;
 };
 
+function getClosestYIndex(items: ShapePoint[], y: number) {
+    let closestYIndex = -1;
+    if (y < items[0]?.y0) {
+        closestYIndex = 0;
+    } else if (y > items[items.length - 1]?.y1) {
+        closestYIndex = items.length - 1;
+    } else {
+        closestYIndex = items.findIndex((p) => y > p.y0 && y < p.y1);
+        if (closestYIndex === -1) {
+            const sortedY = sort(
+                items.map((p, index) => ({index, y: p.y1 + (p.y0 - p.y1) / 2})),
+                (p) => p.y,
+            );
+            const sortedYIndex = bisector<{y: number}, number>((p) => p.y).center(sortedY, y);
+            closestYIndex = sortedY[sortedYIndex]?.index ?? -1;
+        }
+    }
+
+    return closestYIndex;
+}
+
 function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     const sorted = sort(points, (p) => p.x);
     const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
@@ -49,28 +70,18 @@ function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     }
 
     const closestX = sorted[closestXIndex].x;
-    const closestPoints = sort(
-        points.filter((p) => p.x === closestX),
-        (p) => p.y0,
+    const filtered = points.filter((p) => p.x === closestX);
+
+    const groupedBySeries = Object.values(groupBy(filtered, (p) => get(p.series, 'id'))).map(
+        (items) => {
+            const sortedByY = sort(items, (p) => p.y0);
+            const index = getClosestYIndex(sortedByY, y);
+            return sortedByY[index === -1 ? 0 : index];
+        },
     );
 
-    let closestYIndex = -1;
-    if (y < closestPoints[0]?.y0) {
-        closestYIndex = 0;
-    } else if (y > closestPoints[closestPoints.length - 1]?.y1) {
-        closestYIndex = closestPoints.length - 1;
-    } else {
-        closestYIndex = closestPoints.findIndex((p) => y > p.y0 && y < p.y1);
-        if (closestYIndex === -1) {
-            const sortedY = sort(
-                closestPoints.map((p, index) => ({index, y: p.y1 + (p.y0 - p.y1) / 2})),
-                (p) => p.y,
-            );
-            const sortedYIndex = bisector<{y: number}, number>((p) => p.y).center(sortedY, y);
-            closestYIndex = sortedY[sortedYIndex]?.index ?? -1;
-        }
-    }
-
+    const closestPoints = sort(groupedBySeries, (p) => p.y0);
+    const closestYIndex = getClosestYIndex(closestPoints, y);
     return closestPoints.map((p, i) => ({
         data: p.data,
         series: p.series,

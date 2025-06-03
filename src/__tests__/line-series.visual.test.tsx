@@ -50,4 +50,26 @@ test.describe('Line series', () => {
         const component = await mount(<ChartTestStory data={lineTwoYAxisData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    // TODO: take a screenshot and unskip the test
+    test.skip('Vertical line tooltip', async ({mount}) => {
+        const data = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Line series',
+                        data: [
+                            {x: 10, y: 10},
+                            {x: 10, y: 50},
+                        ],
+                    },
+                ],
+            },
+        } as ChartData;
+
+        const component = await mount(<ChartTestStory data={data} />);
+        component.hover();
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
