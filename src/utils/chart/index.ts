@@ -3,6 +3,7 @@ import type {AxisDomain} from 'd3';
 import {group, select} from 'd3';
 import get from 'lodash/get';
 import isNil from 'lodash/isNil';
+import sortBy from 'lodash/sortBy';
 
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../../constants';
 import type {PreparedAxis, PreparedWaterfallSeries, StackedSeries} from '../../hooks';
@@ -145,12 +146,12 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
             }
             case 'waterfall': {
                 let yValue = 0;
-                (seriesList as PreparedWaterfallSeries[]).forEach((s) => {
-                    s.data.forEach((d) => {
-                        yValue += Number(d.y) || 0;
-                        acc.push(yValue);
-                    });
+                const points = (seriesList as PreparedWaterfallSeries[]).map((s) => s.data).flat();
+                sortBy(points, (p) => p.index).forEach((d) => {
+                    yValue += Number(d.y) || 0;
+                    acc.push(yValue);
                 });
+
                 break;
             }
             default: {

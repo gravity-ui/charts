@@ -39,5 +39,14 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
     /** Individual series legend options. Has higher priority than legend options in widget data. */
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
+        /** The legend item text for positive, negative values and totals. */
+        itemText?: {
+            /** The legend item text for positive values. */
+            positive?: string;
+            /** The legend item text for negative values. */
+            negative?: string;
+            /** The legend item text for totals. */
+            totals?: string;
+        };
     };
 }

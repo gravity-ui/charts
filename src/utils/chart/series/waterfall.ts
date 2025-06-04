@@ -1,4 +1,4 @@
-import type {PreparedWaterfallSeries} from '../../../hooks';
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from '../../../hooks';
 import type {WaterfallSeriesData} from '../../../types';
 
 export function getWaterfallPointColor(
@@ -9,19 +9,11 @@ export function getWaterfallPointColor(
         return point.color;
     }
 
-    if (point.total) {
-        return series.color;
-    }
-
-    if (Number(point.y) > 0) {
-        return series.positiveColor;
-    }
-
-    return series.negativeColor;
+    return series.color;
 }
 
 export function getWaterfallPointSubtotal(
-    point: WaterfallSeriesData,
+    point: PreparedWaterfallSeriesData,
     series: PreparedWaterfallSeries,
 ) {
     const pointIndex = series.data.indexOf(point);

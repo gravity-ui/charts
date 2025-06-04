@@ -3,7 +3,12 @@ import React from 'react';
 import {dateTime} from '@gravity-ui/date-utils';
 import get from 'lodash/get';
 
-import type {PreparedPieSeries, PreparedRadarSeries, PreparedWaterfallSeries} from '../../hooks';
+import type {
+    PreparedPieSeries,
+    PreparedRadarSeries,
+    PreparedWaterfallSeries,
+    PreparedWaterfallSeriesData,
+} from '../../hooks';
 import {formatNumber} from '../../libs';
 import type {
     ChartSeriesData,
@@ -15,7 +20,6 @@ import type {
     TooltipDataChunkSankey,
     TreemapSeriesData,
     ValueFormat,
-    WaterfallSeriesData,
 } from '../../types';
 import {block, getDataCategoryValue, getWaterfallPointSubtotal} from '../../utils';
 import {getFormattedValue} from '../../utils/chart/format';
@@ -113,7 +117,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                     case 'waterfall': {
                         const isTotal = get(data, 'total', false);
                         const subTotalValue = getWaterfallPointSubtotal(
-                            data as WaterfallSeriesData,
+                            data as PreparedWaterfallSeriesData,
                             series as PreparedWaterfallSeries,
                         );
                         const subTotal = getFormattedValue({

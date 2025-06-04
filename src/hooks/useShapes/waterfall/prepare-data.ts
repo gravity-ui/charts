@@ -2,12 +2,16 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 import sortBy from 'lodash/sortBy';
 
-import type {LabelData, WaterfallSeriesData} from '../../../types';
+import type {LabelData} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
-import type {PreparedSeriesOptions, PreparedWaterfallSeries} from '../../useSeries/types';
+import type {
+    PreparedSeriesOptions,
+    PreparedWaterfallSeries,
+    PreparedWaterfallSeriesData,
+} from '../../useSeries/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../constants';
 import {getXValue, getYValue} from '../utils';
 
@@ -18,7 +22,8 @@ function getLabelData(d: PreparedWaterfallData, plotHeight: number): LabelData |
         return undefined;
     }
 
-    const text = getFormattedValue({value: d.data.label || d.subTotal, ...d.series.dataLabels});
+    const labelValue = d.data.label ?? d.data.y ?? d.subTotal;
+    const text = getFormattedValue({value: labelValue, ...d.series.dataLabels});
     const style = d.series.dataLabels.style;
     const {maxHeight: height, maxWidth: width} = getLabelsSize({labels: [text], style});
 
@@ -74,7 +79,7 @@ function getBandWidth(args: {
     return bandWidth;
 }
 
-type DataItem = {data: WaterfallSeriesData; series: PreparedWaterfallSeries};
+type DataItem = {data: PreparedWaterfallSeriesData; series: PreparedWaterfallSeries};
 
 export const prepareWaterfallData = (args: {
     series: PreparedWaterfallSeries[];
@@ -101,7 +106,7 @@ export const prepareWaterfallData = (args: {
         acc.push(...s.data.map((d) => ({data: d, series: s})));
         return acc;
     }, []);
-    const data: DataItem[] = sortBy<DataItem>(flattenData, (d) => d.data.x);
+    const data: DataItem[] = sortBy<DataItem>(flattenData, (d) => d.data.index);
 
     const bandWidth = getBandWidth({
         series,

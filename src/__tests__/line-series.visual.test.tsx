@@ -51,8 +51,7 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    // TODO: take a screenshot and unskip the test
-    test.skip('Vertical line tooltip', async ({mount}) => {
+    test('Vertical line tooltip', async ({mount}) => {
         const data = {
             series: {
                 data: [
@@ -69,7 +68,7 @@ test.describe('Line series', () => {
         } as ChartData;
 
         const component = await mount(<ChartTestStory data={data} />);
-        component.hover();
+        await component.locator('.gcharts-line').hover();
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
