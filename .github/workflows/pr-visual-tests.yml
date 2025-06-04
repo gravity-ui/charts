@@ -6,15 +6,11 @@ on:
 jobs:
   visual_tests:
     name: Visual Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.51.1-jammy
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
       - name: Install Packages
         run: npm ci
       - name: Run Visual Tests
