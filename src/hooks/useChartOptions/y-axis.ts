@@ -182,7 +182,7 @@ export const getPreparedYAxis = ({
                 opacity: get(d, 'opacity', 1),
                 layerPlacement: get(d, 'layerPlacement', 'before'),
             })),
-            visible: get(axisItem, 'visible', true)
+            visible: get(axisItem, 'visible', true),
         };
 
         if (labelsEnabled) {

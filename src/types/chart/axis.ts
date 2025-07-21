@@ -80,7 +80,7 @@ export interface ChartAxis {
     maxPadding?: number;
     /** An array of lines stretching across the plot area, marking a specific value */
     plotLines?: AxisPlotLine[];
-    visible?: boolean
+    visible?: boolean;
 }
 
 export interface ChartXAxis extends ChartAxis {}
