@@ -118,7 +118,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
 
-        svgElement.call(xAxisGenerator).attr('class', b());
+        svgElement.call(xAxisGenerator).attr('class', b({hidden: !axis.visible}));
 
         // add an axis header if necessary
         if (axis.title.text) {

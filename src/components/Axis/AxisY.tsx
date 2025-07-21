@@ -182,7 +182,7 @@ export const AxisY = (props: Props) => {
             .selectAll('axis')
             .data(axes)
             .join('g')
-            .attr('class', b())
+            .attr('class', (d) => b({hidden: !d.visible}))
             .style('transform', (d) => getAxisPosition(d));
 
         axisSelection.each((d, index, node) => {

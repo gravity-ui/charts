@@ -3,6 +3,10 @@
         stroke: var(--g-color-line-generic-active);
     }
 
+    &_hidden {
+        display: none;
+    }
+
     & .tick text {
         color: var(--g-color-text-secondary);
         alignment-baseline: after-edge;
