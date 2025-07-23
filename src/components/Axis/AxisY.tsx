@@ -141,7 +141,7 @@ type PlotLineData = {
 } & PreparedAxisPlotLine;
 
 export const AxisY = (props: Props) => {
-    const {axes, width, height: totalHeight, scale, split, plotRef} = props;
+    const {axes: allAxes, width, height: totalHeight, scale, split, plotRef} = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
@@ -151,8 +151,18 @@ export const AxisY = (props: Props) => {
             return;
         }
 
+        const axes = allAxes.filter((a) => a.visible);
+
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
+
+        let plotContainer = null;
+        const plotClassName = b('plot-y');
+
+        if (plotRef?.current) {
+            plotContainer = select(plotRef.current);
+            plotContainer.selectAll(`.${plotClassName}`).remove();
+        }
 
         const getAxisPosition = (axis: PreparedAxis) => {
             const top = split.plots[axis.plotIndex]?.top || 0;
@@ -182,7 +192,7 @@ export const AxisY = (props: Props) => {
             .selectAll('axis')
             .data(axes)
             .join('g')
-            .attr('class', (d) => b({hidden: !d.visible}))
+            .attr('class', b())
             .style('transform', (d) => getAxisPosition(d));
 
         axisSelection.each((d, index, node) => {
@@ -241,16 +251,14 @@ export const AxisY = (props: Props) => {
                     .remove();
             }
 
-            if (plotRef && d.plotLines.length > 0) {
+            if (plotContainer && d.plotLines.length > 0) {
                 const plotLineClassName = b('plotLine');
-                const plotLineContainer = select(plotRef.current);
-                plotLineContainer.selectAll(`.${plotLineClassName}`).remove();
 
-                const plotLinesSelection = plotLineContainer
+                const plotLinesSelection = plotContainer
                     .selectAll(`.${plotLineClassName}`)
                     .data(plotLines)
                     .join('g')
-                    .attr('class', plotLineClassName)
+                    .attr('class', `${plotClassName} ${plotLineClassName}`)
                     .style('transform', (plotLine) => plotLine.transform);
 
                 plotLinesSelection
@@ -332,7 +340,7 @@ export const AxisY = (props: Props) => {
                     handleOverflowingText(nodes[index] as SVGTSpanElement, height);
                 }
             });
-    }, [axes, width, height, scale, split]);
+    }, [allAxes, width, height, scale, split]);
 
     return <g ref={ref} className={b('container')} />;
 };

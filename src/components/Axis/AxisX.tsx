@@ -84,6 +84,21 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             return;
         }
 
+        const svgElement = select(ref.current);
+        svgElement.selectAll('*').remove();
+
+        const plotClassName = b('plot-x');
+        let plotContainer = null;
+
+        if (plotRef?.current) {
+            plotContainer = select(plotRef.current);
+            plotContainer.selectAll(`.${plotClassName}`).remove();
+        }
+
+        if (!axis.visible) {
+            return;
+        }
+
         let tickItems: [number, number][] = [];
         if (axis.grid.enabled) {
             tickItems = new Array(split.plots.length || 1).fill(null).map((_, index) => {
@@ -115,10 +130,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             },
         });
 
-        const svgElement = select(ref.current);
-        svgElement.selectAll('*').remove();
-
-        svgElement.call(xAxisGenerator).attr('class', b({hidden: !axis.visible}));
+        svgElement.call(xAxisGenerator).attr('class', b());
 
         // add an axis header if necessary
         if (axis.title.text) {
@@ -146,16 +158,14 @@ export const AxisX = React.memo(function AxisX(props: Props) {
         }
 
         // add plot lines
-        if (plotRef && axis.plotLines.length > 0) {
+        if (plotContainer && axis.plotLines.length > 0) {
             const plotLineClassName = b('plotLine');
-            const plotLineContainer = select(plotRef.current);
-            plotLineContainer.selectAll(`.${plotLineClassName}-x`).remove();
 
-            const plotLinesSelection = plotLineContainer
+            const plotLinesSelection = plotContainer
                 .selectAll(`.${plotLineClassName}-x`)
                 .data(axis.plotLines)
                 .join('g')
-                .attr('class', `${plotLineClassName}-x`);
+                .attr('class', `${plotClassName} ${plotLineClassName}-x`);
 
             const lineGenerator = line();
             plotLinesSelection
