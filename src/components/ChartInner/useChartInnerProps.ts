@@ -20,10 +20,11 @@ import type {ChartInnerProps} from './types';
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
+    svgContainer: SVGGElement | null;
 };
 
 export function useChartInnerProps(props: Props) {
-    const {width, height, data, dispatcher, htmlLayout} = props;
+    const {width, height, data, dispatcher, htmlLayout, svgContainer} = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
     const {chart, title, tooltip} = useChartOptions({data});
@@ -97,8 +98,10 @@ export function useChartInnerProps(props: Props) {
             }
             return acc;
         }, 0);
-
+    const {x, bottom} = svgContainer?.getBoundingClientRect() ?? {};
     return {
+        svgBottomPos: bottom,
+        svgXPos: x,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,

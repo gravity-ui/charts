@@ -28,7 +28,7 @@ type Props = {
     scale: ChartScale;
     split: PreparedSplit;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
-    svgRef?: React.MutableRefObject<SVGGElement | null>;
+    leftmostLimit?: number;
 };
 
 function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
@@ -77,7 +77,7 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 }
 
 export const AxisX = React.memo(function AxisX(props: Props) {
-    const {axis, width, height: totalHeight, scale, split, plotRef, svgRef} = props;
+    const {axis, width, height: totalHeight, scale, split, plotRef, leftmostLimit} = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
@@ -112,7 +112,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         const axisScale = scale as AxisScale<AxisDomain>;
         const xAxisGenerator = axisBottom({
-            svgRef,
+            leftmostLimit,
             scale: axisScale,
             ticks: {
                 items: tickItems,

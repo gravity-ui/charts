@@ -31,8 +31,8 @@ type Props = {
     width: number;
     height: number;
     split: PreparedSplit;
-    svgRef?: React.MutableRefObject<SVGGElement | null>;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
+    lowerLimit?: number;
 };
 
 function transformLabel(args: {node: Element; axis: PreparedAxis; isTopOffsetOverload?: boolean}) {
@@ -145,7 +145,15 @@ type PlotLineData = {
 } & PreparedAxisPlotLine;
 
 export const AxisY = (props: Props) => {
-    const {axes: allAxes, width, height: totalHeight, scale, split, plotRef, svgRef} = props;
+    const {
+        axes: allAxes,
+        width,
+        height: totalHeight,
+        scale,
+        split,
+        plotRef,
+        lowerLimit = 0,
+    } = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
@@ -231,15 +239,12 @@ export const AxisY = (props: Props) => {
                     });
 
                 labels.each(function (_d, i) {
-                    if (i === 0 && svgRef?.current) {
+                    if (i === 0) {
                         const currentElement = this as SVGTextElement;
                         const currentElementPosition = currentElement.getBoundingClientRect();
                         const text = select(currentElement);
 
-                        if (
-                            currentElementPosition.bottom >
-                            svgRef?.current.getBoundingClientRect().bottom
-                        ) {
+                        if (currentElementPosition.bottom > lowerLimit) {
                             const transform = transformLabel({
                                 node: this,
                                 axis: d,

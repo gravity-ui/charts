@@ -43,7 +43,14 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         yAxis,
         yScale,
-    } = useChartInnerProps({...props, dispatcher, htmlLayout: htmlLayerRef.current});
+        svgXPos,
+        svgBottomPos,
+    } = useChartInnerProps({
+        ...props,
+        dispatcher,
+        htmlLayout: htmlLayerRef.current,
+        svgContainer: svgRef.current,
+    });
     const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
         dispatcher,
         tooltip,
@@ -119,7 +126,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     {xScale && yScale?.length && (
                         <React.Fragment>
                             <AxisY
-                                svgRef={svgRef}
+                                lowerLimit={svgBottomPos}
                                 axes={yAxis}
                                 width={boundsWidth}
                                 height={boundsHeight}
@@ -129,7 +136,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                             />
                             <g transform={`translate(0, ${boundsHeight})`}>
                                 <AxisX
-                                    svgRef={svgRef}
+                                    leftmostLimit={svgXPos}
                                     axis={xAxis}
                                     width={boundsWidth}
                                     height={boundsHeight}
