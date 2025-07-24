@@ -80,11 +80,28 @@ export interface ChartAxis {
     maxPadding?: number;
     /** An array of lines stretching across the plot area, marking a specific value */
     plotLines?: AxisPlotLine[];
+    /** An array of colored bands stretching across the plot area marking an interval on the axis. */
+    plotBands?: AxisPlotBand[];
 }
 
 export interface ChartXAxis extends ChartAxis {}
 
-export interface AxisPlotLine {
+export type PlotLayerPlacement = 'before' | 'after';
+
+export interface AxisPlot {
+    /** Place the line behind or above the chart. */
+    layerPlacement?: PlotLayerPlacement;
+    /** The color of the plot line (hex, rgba). */
+    color?: string;
+    /**
+     * Individual opacity for the line.
+     *
+     * @default 1
+     * */
+    opacity?: number;
+}
+
+export interface AxisPlotLine extends AxisPlot {
     /** The position of the line in axis units. */
     value?: number;
     /** The color of the plot line (hex, rgba). */
@@ -96,14 +113,13 @@ export interface AxisPlotLine {
     width?: number;
     /** Option for line stroke style. */
     dashStyle?: `${DashStyle}`;
-    /**
-     * Individual opacity for the line.
-     *
-     * @default 1
-     * */
-    opacity?: number;
-    /** Place the line behind or above the chart. */
-    layerPlacement?: 'before' | 'after';
+}
+
+export interface AxisPlotBand extends AxisPlot {
+    /** The start position of the plot band in axis units. */
+    from: string | number;
+    /** The end position of the plot band in axis units. */
+    to: string | number;
 }
 
 export interface ChartYAxis extends ChartAxis {

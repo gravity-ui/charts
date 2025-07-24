@@ -1,6 +1,7 @@
 import type {AxisDomain, AxisScale, ScaleBand} from 'd3';
+import clamp from 'lodash/clamp';
 
-import type {PreparedAxis, PreparedSplit} from '../../hooks';
+import type {PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hooks';
 
 import type {TextRow} from './text';
 import {wrapText} from './text';
@@ -99,4 +100,51 @@ export function getAxisTitleRows(args: {axis: PreparedAxis; textMaxWidth: number
         }
         return acc;
     }, []);
+}
+
+interface IProps {
+    band: PreparedAxisPlotBand;
+    axisScale: AxisScale<AxisDomain>;
+    axis: 'x' | 'y';
+}
+
+export function getBandsPosition(args: IProps): {from: number; to: number} {
+    const {band, axisScale} = args;
+    const scalePosTo = axisScale(band.to);
+    const scalePosFrom = axisScale(band.from);
+    const isX = args.axis === 'x';
+
+    if (scalePosTo !== undefined && scalePosFrom !== undefined) {
+        return {
+            from: Math.max(scalePosFrom, 0),
+            to: Math.max(scalePosTo, 0),
+        };
+    }
+
+    if (typeof band.from !== 'number' || typeof band.to !== 'number') {
+        throw new Error('Filed to create plot band');
+    }
+
+    const category = axisScale.domain();
+    const bandwidth = axisScale.bandwidth?.() ?? 1;
+    const halfBandwidth = bandwidth / 2;
+
+    const calcPosition = (value: number) => {
+        if (value >= category.length) {
+            return (axisScale(category[category.length - 1]) ?? 0) + halfBandwidth * (isX ? 1 : -1);
+        }
+        return (
+            (axisScale(category[clamp(Math.floor(value), 0, category.length - 1)]) ?? 0) +
+            bandwidth * (value - Math.floor(Math.abs(value))) * (isX ? 1 : -1)
+        );
+    };
+
+    const to = calcPosition(band.to);
+    const from = calcPosition(band.from);
+    const maxPos = (axisScale(category[isX ? category.length - 1 : 0]) ?? 0) + halfBandwidth;
+
+    return {
+        from: clamp(from, -halfBandwidth, maxPos),
+        to: clamp(to, -halfBandwidth, maxPos),
+    };
 }

@@ -3,7 +3,13 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
+import type {
+    ChartScale,
+    PreparedAxis,
+    PreparedAxisPlotBand,
+    PreparedAxisPlotLine,
+    PreparedSplit,
+} from '../../hooks';
 import {
     block,
     calculateCos,
@@ -11,6 +17,7 @@ import {
     formatAxisTickLabel,
     getAxisHeight,
     getAxisTitleRows,
+    getBandsPosition,
     getClosestPointsRange,
     getLineDashArray,
     getScaleTicks,
@@ -140,6 +147,10 @@ type PlotLineData = {
     transform: string;
 } & PreparedAxisPlotLine;
 
+type PlotBandData = {
+    transform: string;
+} & PreparedAxisPlotBand;
+
 export const AxisY = (props: Props) => {
     const {axes, width, height: totalHeight, scale, split, plotRef} = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
@@ -172,6 +183,19 @@ export const AxisY = (props: Props) => {
                             transform: getAxisPosition(axis),
                         };
                     }),
+                );
+            }
+
+            return acc;
+        }, []);
+
+        const plotBands = axes.reduce<PlotBandData[]>((acc, axis) => {
+            if (axis.plotBands.length) {
+                acc.push(
+                    ...axis.plotBands.map((plotBand) => ({
+                        ...plotBand,
+                        transform: getAxisPosition(axis),
+                    })),
                 );
             }
 
@@ -239,6 +263,50 @@ export const AxisY = (props: Props) => {
                         return false;
                     })
                     .remove();
+            }
+
+            if (plotRef && d.plotBands.length > 0) {
+                const plotBandClassName = b('plotBand');
+                const plotBandContainer = select(plotRef.current);
+                plotBandContainer.selectAll(`.${plotBandClassName}`).remove();
+
+                const plotBandsSelection = plotBandContainer
+                    .selectAll(`.${plotBandClassName}`)
+                    .data(plotBands)
+                    .join('g')
+                    .attr('class', plotBandClassName)
+                    .style('transform', (plotBand) => plotBand.transform);
+
+                plotBandsSelection
+                    .append('rect')
+                    .attr('x', 0)
+                    .attr('width', width)
+                    .attr('y', (band) => {
+                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                        const startPos = halfBandwidth + Math.min(from, to);
+
+                        return Math.max(0, startPos);
+                    })
+                    .attr('height', (band) => {
+                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                        const startPos = height - Math.min(from, to);
+                        const endPos = Math.min(Math.abs(to - from), startPos);
+
+                        return Math.min(endPos, height);
+                    })
+                    .attr('fill', (band) => band.color)
+                    .attr('opacity', (band) => band.opacity);
+
+                plotBandsSelection.each((plotBandData, i, nodes) => {
+                    const plotLineSelection = select(nodes[i]);
+
+                    if (plotBandData.layerPlacement === 'before') {
+                        plotLineSelection.lower();
+                    } else {
+                        plotLineSelection.raise();
+                    }
+                });
             }
 
             if (plotRef && d.plotLines.length > 0) {

@@ -8,6 +8,7 @@ import {
     block,
     formatAxisTickLabel,
     getAxisTitleRows,
+    getBandsPosition,
     getClosestPointsRange,
     getLineDashArray,
     getMaxTickCount,
@@ -143,6 +144,50 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                         handleOverflowingText(nodes[index] as SVGTSpanElement, width);
                     }
                 });
+        }
+
+        // add plot bands
+        if (plotRef && axis.plotBands.length > 0) {
+            const plotBandClassName = b('plotBand');
+            const plotBandContainer = select(plotRef.current);
+            plotBandContainer.selectAll(`.${plotBandClassName}-x`).remove();
+
+            const plotBandsSelection = plotBandContainer
+                .selectAll(`.${plotBandClassName}-x`)
+                .data(axis.plotBands)
+                .join('g')
+                .attr('class', `${plotBandClassName}-x`);
+
+            plotBandsSelection
+                .append('rect')
+                .attr('x', (band) => {
+                    const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                    const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                    const startPos = halfBandwidth + Math.min(from, to);
+
+                    return Math.max(0, startPos);
+                })
+                .attr('width', (band) => {
+                    const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                    const startPos = width - Math.min(from, to);
+                    const endPos = Math.min(Math.abs(to - from), startPos);
+
+                    return Math.min(endPos, width);
+                })
+                .attr('y', 0)
+                .attr('height', totalHeight)
+                .attr('fill', (band) => band.color)
+                .attr('opacity', (band) => band.opacity);
+
+            plotBandsSelection.each((plotBandData, i, nodes) => {
+                const plotLineSelection = select(nodes[i]);
+
+                if (plotBandData.layerPlacement === 'before') {
+                    plotLineSelection.lower();
+                } else {
+                    plotLineSelection.raise();
+                }
+            });
         }
 
         // add plot lines

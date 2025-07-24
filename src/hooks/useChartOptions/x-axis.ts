@@ -162,6 +162,13 @@ export const getPreparedXAxis = ({
             opacity: get(d, 'opacity', 1),
             layerPlacement: get(d, 'layerPlacement', 'before'),
         })),
+        plotBands: get(xAxis, 'plotBands', []).map((d) => ({
+            color: get(d, 'color', 'var(--g-color-base-brand)'),
+            opacity: get(d, 'opacity', 1),
+            from: get(d, 'from', 0),
+            to: get(d, 'to', 0),
+            layerPlacement: get(d, 'layerPlacement', 'before'),
+        })),
     };
 
     const {height, rotation} = getLabelSettings({
