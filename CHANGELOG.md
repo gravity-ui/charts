@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/gravity-ui/charts/compare/v1.0.1...v1.1.0) (2025-07-24)
+
+
+### Features
+
+* waterfall legend options ([#79](https://github.com/gravity-ui/charts/issues/79)) ([489326a](https://github.com/gravity-ui/charts/commit/489326a6a7697832e17634c5aeac0639586d095b))
+
+
+### Bug Fixes
+
+* pie center text color ([#80](https://github.com/gravity-ui/charts/issues/80)) ([37f5480](https://github.com/gravity-ui/charts/commit/37f548053017d276d004b6fafcda0244b777dfa1))
+* tooltip closest data for line series ([#77](https://github.com/gravity-ui/charts/issues/77)) ([3321456](https://github.com/gravity-ui/charts/commit/33214568f0690a0ec9ec4d83a4ded243e967ac77))
+* tooltip value format ([#84](https://github.com/gravity-ui/charts/issues/84)) ([385605a](https://github.com/gravity-ui/charts/commit/385605aebb25cc9496970c92a176f2827b339bac))
+
 ## [1.0.1](https://github.com/gravity-ui/charts/compare/v1.0.0...v1.0.1) (2025-05-28)
 
 * The library has been stabilized and is fully compatible with the latest `0.x` release
