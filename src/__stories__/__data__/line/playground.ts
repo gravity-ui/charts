@@ -84,6 +84,12 @@ function prepareData(): ChartData {
                 click: action('chart.events.click'),
             },
         },
+        tooltip: {
+            valueFormat: {
+                type: 'number',
+                precision: 3,
+            },
+        },
     };
 }
 
