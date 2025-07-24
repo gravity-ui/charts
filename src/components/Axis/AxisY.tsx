@@ -31,12 +31,16 @@ type Props = {
     width: number;
     height: number;
     split: PreparedSplit;
+    svgRef?: React.MutableRefObject<SVGGElement | null>;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
 };
 
-function transformLabel(args: {node: Element; axis: PreparedAxis}) {
-    const {node, axis} = args;
+function transformLabel(args: {node: Element; axis: PreparedAxis; isTopOffsetOverload?: boolean}) {
+    const {node, axis, isTopOffsetOverload = false} = args;
     let topOffset = axis.labels.lineHeight / 2;
+    if (isTopOffsetOverload) {
+        topOffset = 0;
+    }
     let leftOffset = axis.labels.margin;
 
     if (axis.position === 'left') {
@@ -141,7 +145,7 @@ type PlotLineData = {
 } & PreparedAxisPlotLine;
 
 export const AxisY = (props: Props) => {
-    const {axes: allAxes, width, height: totalHeight, scale, split, plotRef} = props;
+    const {axes: allAxes, width, height: totalHeight, scale, split, plotRef, svgRef} = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
@@ -214,8 +218,8 @@ export const AxisY = (props: Props) => {
             yAxisGenerator(axisItem);
 
             if (d.labels.enabled) {
-                const tickTexts = axisItem
-                    .selectAll<SVGTextElement, string>('.tick text')
+                const labels = axisItem.selectAll<SVGTextElement, string>('.tick text');
+                const tickTexts = labels
                     // The offset must be applied before the labels are rotated.
                     // Therefore, we reset the values and make an offset in transform  attribute.
                     // FIXME: give up axisLeft(d3) and switch to our own generation method
@@ -225,6 +229,32 @@ export const AxisY = (props: Props) => {
                     .style('transform', function () {
                         return transformLabel({node: this, axis: d});
                     });
+
+                labels.each(function (_d, i) {
+                    if (i === 0 && svgRef?.current) {
+                        const currentElement = this as SVGTextElement;
+                        const currentElementPosition = currentElement.getBoundingClientRect();
+                        const text = select(currentElement);
+
+                        if (
+                            currentElementPosition.bottom >
+                            svgRef?.current.getBoundingClientRect().bottom
+                        ) {
+                            const transform = transformLabel({
+                                node: this,
+                                axis: d,
+                                isTopOffsetOverload: true,
+                            });
+                            text.style('transform', transform);
+                            if (d.labels.rotation) {
+                                text.attr('text-anchor', () => {
+                                    return d.labels.rotation < 0 ? 'start' : 'end';
+                                });
+                            }
+                        }
+                    }
+                });
+
                 const textMaxWidth =
                     !d.labels.rotation || Math.abs(d.labels.rotation) % 360 !== 90
                         ? d.labels.maxWidth

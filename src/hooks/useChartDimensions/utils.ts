@@ -17,7 +17,7 @@ export const getBoundsWidth = (args: {
 
 export function getYAxisWidth(axis: PreparedAxis | undefined) {
     if (!axis?.visible) {
-        return axis?.labels.margin || 0;
+        return 0;
     }
     let result = 0;
     if (axis?.title.text) {

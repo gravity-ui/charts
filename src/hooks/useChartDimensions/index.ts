@@ -31,7 +31,7 @@ const getBottomOffset = (args: {
     }
 
     if (!preparedXAxis.visible) {
-        return result + preparedXAxis.labels.margin;
+        return result;
     }
 
     if (hasAxisRelatedSeries) {

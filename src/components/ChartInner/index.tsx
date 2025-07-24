@@ -119,6 +119,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     {xScale && yScale?.length && (
                         <React.Fragment>
                             <AxisY
+                                svgRef={svgRef}
                                 axes={yAxis}
                                 width={boundsWidth}
                                 height={boundsHeight}
@@ -128,6 +129,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                             />
                             <g transform={`translate(0, ${boundsHeight})`}>
                                 <AxisX
+                                    svgRef={svgRef}
                                     axis={xAxis}
                                     width={boundsWidth}
                                     height={boundsHeight}
