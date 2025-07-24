@@ -169,6 +169,7 @@ export const getPreparedXAxis = ({
             to: get(d, 'to', 0),
             layerPlacement: get(d, 'layerPlacement', 'before'),
         })),
+        visible: get(xAxis, 'visible', true),
     };
 
     const {height, rotation} = getLabelSettings({

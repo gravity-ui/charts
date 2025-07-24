@@ -82,6 +82,8 @@ export interface ChartAxis {
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */
     plotBands?: AxisPlotBand[];
+    /** Whether axis, including axis title, line, ticks and labels, should be visible. */
+    visible?: boolean;
 }
 
 export interface ChartXAxis extends ChartAxis {}

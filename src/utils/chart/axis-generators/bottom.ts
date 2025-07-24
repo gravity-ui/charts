@@ -25,6 +25,7 @@ type AxisBottomArgs = {
         size: number;
         color?: string;
     };
+    leftmostLimit?: number;
 };
 
 function addDomain(
@@ -51,6 +52,7 @@ function addDomain(
 
 export function axisBottom(args: AxisBottomArgs) {
     const {
+        leftmostLimit = 0,
         scale,
         ticks: {
             labelFormat = (value: unknown) => String(value),
@@ -163,6 +165,24 @@ export function axisBottom(args: AxisBottomArgs) {
 
             // add an ellipsis to the labels that go beyond the boundaries of the chart
             labels.each(function (_d, i, nodes) {
+                if (i === 0) {
+                    const currentElement = this as SVGTextElement;
+                    const text = select(currentElement);
+                    const currentElementPosition = currentElement.getBoundingClientRect();
+                    const nextElement = nodes[i + 1] as SVGTextElement;
+                    const nextElementPosition = nextElement?.getBoundingClientRect();
+
+                    if (currentElementPosition.left < leftmostLimit) {
+                        const remainSpace =
+                            nextElementPosition.left -
+                            currentElementPosition.right +
+                            x -
+                            labelsMargin;
+
+                        text.attr('text-anchor', 'start');
+                        setEllipsisForOverflowText(text, remainSpace);
+                    }
+                }
                 if (i === nodes.length - 1) {
                     const currentElement = this as SVGTextElement;
                     const prevElement = nodes[i - 1] as SVGTextElement;

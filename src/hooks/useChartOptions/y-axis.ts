@@ -189,6 +189,7 @@ export const getPreparedYAxis = ({
                 to: get(d, 'to', 0),
                 layerPlacement: get(d, 'layerPlacement', 'before'),
             })),
+            visible: get(axisItem, 'visible', true),
         };
 
         if (labelsEnabled) {

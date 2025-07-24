@@ -29,6 +29,7 @@ type Props = {
     scale: ChartScale;
     split: PreparedSplit;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
+    leftmostLimit?: number;
 };
 
 function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
@@ -77,11 +78,26 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 }
 
 export const AxisX = React.memo(function AxisX(props: Props) {
-    const {axis, width, height: totalHeight, scale, split, plotRef} = props;
+    const {axis, width, height: totalHeight, scale, split, plotRef, leftmostLimit} = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
         if (!ref.current) {
+            return;
+        }
+
+        const svgElement = select(ref.current);
+        svgElement.selectAll('*').remove();
+
+        const plotClassName = b('plot-x');
+        let plotContainer = null;
+
+        if (plotRef?.current) {
+            plotContainer = select(plotRef.current);
+            plotContainer.selectAll(`.${plotClassName}`).remove();
+        }
+
+        if (!axis.visible) {
             return;
         }
 
@@ -97,6 +113,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         const axisScale = scale as AxisScale<AxisDomain>;
         const xAxisGenerator = axisBottom({
+            leftmostLimit,
             scale: axisScale,
             ticks: {
                 items: tickItems,
@@ -115,9 +132,6 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 color: axis.lineColor,
             },
         });
-
-        const svgElement = select(ref.current);
-        svgElement.selectAll('*').remove();
 
         svgElement.call(xAxisGenerator).attr('class', b());
 
@@ -147,16 +161,14 @@ export const AxisX = React.memo(function AxisX(props: Props) {
         }
 
         // add plot bands
-        if (plotRef && axis.plotBands.length > 0) {
+        if (plotContainer && axis.plotBands.length > 0) {
             const plotBandClassName = b('plotBand');
-            const plotBandContainer = select(plotRef.current);
-            plotBandContainer.selectAll(`.${plotBandClassName}-x`).remove();
 
-            const plotBandsSelection = plotBandContainer
+            const plotBandsSelection = plotContainer
                 .selectAll(`.${plotBandClassName}-x`)
                 .data(axis.plotBands)
                 .join('g')
-                .attr('class', `${plotBandClassName}-x`);
+                .attr('class', `${plotClassName} ${plotBandClassName}-x`);
 
             plotBandsSelection
                 .append('rect')
@@ -191,16 +203,14 @@ export const AxisX = React.memo(function AxisX(props: Props) {
         }
 
         // add plot lines
-        if (plotRef && axis.plotLines.length > 0) {
+        if (plotContainer && axis.plotLines.length > 0) {
             const plotLineClassName = b('plotLine');
-            const plotLineContainer = select(plotRef.current);
-            plotLineContainer.selectAll(`.${plotLineClassName}-x`).remove();
 
-            const plotLinesSelection = plotLineContainer
+            const plotLinesSelection = plotContainer
                 .selectAll(`.${plotLineClassName}-x`)
                 .data(axis.plotLines)
                 .join('g')
-                .attr('class', `${plotLineClassName}-x`);
+                .attr('class', `${plotClassName} ${plotLineClassName}-x`);
 
             const lineGenerator = line();
             plotLinesSelection
