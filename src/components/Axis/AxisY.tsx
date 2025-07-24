@@ -441,7 +441,7 @@ export const AxisY = (props: Props) => {
                     handleOverflowingText(nodes[index] as SVGTSpanElement, height);
                 }
             });
-    }, [allAxes, width, height, scale, split]);
+    }, [allAxes, width, height, scale, split, lowerLimit]);
 
     return <g ref={ref} className={b('container')} />;
 };

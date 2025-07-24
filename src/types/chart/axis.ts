@@ -119,9 +119,9 @@ export interface AxisPlotLine extends AxisPlot {
 
 export interface AxisPlotBand extends AxisPlot {
     /** The start position of the plot band in axis units. */
-    from: string | number;
+    from: string | number | Date;
     /** The end position of the plot band in axis units. */
-    to: string | number;
+    to: string | number | Date;
 }
 
 export interface ChartYAxis extends ChartAxis {

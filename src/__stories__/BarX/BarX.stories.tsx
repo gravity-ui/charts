@@ -5,6 +5,7 @@ import {ChartStory} from '../ChartStory';
 import {
     barXBasicData,
     barXContinuousLegendData,
+    barXDatePlotBandsData,
     barXDateTimeData,
     barXGroupedColumnsData,
     barXHtmlLabelsData,
@@ -86,6 +87,13 @@ export const BarXPlotLines = {
     name: 'With Y-axis plot lines',
     args: {
         data: barXWithYAxisPlotLinesData,
+    },
+} satisfies Story;
+
+export const BarXDateTimePlotBands = {
+    name: 'Datetime X Plot Bands',
+    args: {
+        data: barXDatePlotBandsData,
     },
 } satisfies Story;
 

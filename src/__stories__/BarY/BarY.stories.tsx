@@ -3,10 +3,12 @@ import type {Meta, StoryObj} from '@storybook/react';
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
+    barXPlotBandsData,
     barYBasicData,
     barYGroupedColumnsData,
     barYHtmlLabelsData,
     barYPlaygroundData,
+    barYPlotBandsData,
     barYPlotLinesData,
     barYStakingNormalData,
     barYStakingPercentData,
@@ -55,6 +57,20 @@ export const BarYHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: barYHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const BarYPlotBands = {
+    name: 'With Y-axis plot bands',
+    args: {
+        data: barYPlotBandsData,
+    },
+} satisfies Story;
+
+export const BarXPlotBands = {
+    name: 'With X-axis plot bands',
+    args: {
+        data: barXPlotBandsData,
     },
 } satisfies Story;
 

@@ -6,3 +6,5 @@ export * from './playground';
 export * from './plot-lines';
 export * from './staking-normal';
 export * from './staking-percent';
+export * from './plot-bands-y';
+export * from './plot-bands-x';

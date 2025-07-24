@@ -242,7 +242,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 }
             });
         }
-    }, [axis, width, totalHeight, scale, split, plotRef]);
+    }, [axis, width, totalHeight, scale, split, plotRef, leftmostLimit]);
 
     return <g ref={ref} />;
 });

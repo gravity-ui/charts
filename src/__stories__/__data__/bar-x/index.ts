@@ -9,3 +9,4 @@ export * from './staking-normal';
 export * from './staking-percent';
 export * from './two-y-axis';
 export * from './y-axis-plot-lines';
+export * from './plot-bands-date-time';
