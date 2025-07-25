@@ -29,6 +29,12 @@ const LineWithLogarithmicAxis = () => {
         title: {text: 'logarithmic'},
         yAxis: [
             {
+                plotBands: [
+                    {
+                        from: '10',
+                        to: '20',
+                    },
+                ],
                 type: 'logarithmic',
             },
         ],

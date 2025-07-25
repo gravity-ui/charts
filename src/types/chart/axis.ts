@@ -80,13 +80,30 @@ export interface ChartAxis {
     maxPadding?: number;
     /** An array of lines stretching across the plot area, marking a specific value */
     plotLines?: AxisPlotLine[];
+    /** An array of colored bands stretching across the plot area marking an interval on the axis. */
+    plotBands?: AxisPlotBand[];
     /** Whether axis, including axis title, line, ticks and labels, should be visible. */
     visible?: boolean;
 }
 
 export interface ChartXAxis extends ChartAxis {}
 
-export interface AxisPlotLine {
+export type PlotLayerPlacement = 'before' | 'after';
+
+export interface AxisPlot {
+    /** Place the line behind or above the chart. */
+    layerPlacement?: PlotLayerPlacement;
+    /** The color of the plot line (hex, rgba). */
+    color?: string;
+    /**
+     * Individual opacity for the line.
+     *
+     * @default 1
+     * */
+    opacity?: number;
+}
+
+export interface AxisPlotLine extends AxisPlot {
     /** The position of the line in axis units. */
     value?: number;
     /** The color of the plot line (hex, rgba). */
@@ -98,14 +115,23 @@ export interface AxisPlotLine {
     width?: number;
     /** Option for line stroke style. */
     dashStyle?: `${DashStyle}`;
+}
+
+export interface AxisPlotBand extends AxisPlot {
     /**
-     * Individual opacity for the line.
+     * The start position of the plot band in axis units.
      *
-     * @default 1
-     * */
-    opacity?: number;
-    /** Place the line behind or above the chart. */
-    layerPlacement?: 'before' | 'after';
+     * Can be a number, a string (e.g., a category), or a timestamp if representing a date.
+     * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
+     */
+    from: number | string;
+    /**
+     * The end position of the plot band in axis units.
+     *
+     * Can be a number, a string (e.g., a category), or a timestamp if representing a date.
+     * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
+     */
+    to: number | string;
 }
 
 export interface ChartYAxis extends ChartAxis {

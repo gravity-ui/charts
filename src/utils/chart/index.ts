@@ -12,6 +12,7 @@ import {formatNumber, getNumberUnitRate} from '../../libs/format-number';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 
 import {getDefaultDateFormat} from './time';
+import type {AxisDirection} from './types';
 
 export * from './math';
 export * from './text';
@@ -31,8 +32,6 @@ export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
 ];
 
 export const CHART_SERIES_WITH_VOLUME_ON_X_AXIS: ChartSeries['type'][] = ['bar-y'];
-
-export type AxisDirection = 'x' | 'y';
 
 type UnknownSeries = {type: ChartSeries['type']; data: unknown};
 
@@ -294,3 +293,5 @@ export function getClosestPointsRange(axis: PreparedAxis, points: AxisDomain[]) 
 
     return (points[1] as number) - (points[0] as number);
 }
+
+export {AxisDirection};

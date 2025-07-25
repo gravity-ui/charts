@@ -8,6 +8,7 @@ import {
     block,
     formatAxisTickLabel,
     getAxisTitleRows,
+    getBandsPosition,
     getClosestPointsRange,
     getLineDashArray,
     getMaxTickCount,
@@ -159,15 +160,57 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 });
         }
 
+        // add plot bands
+        if (plotContainer && axis.plotBands.length > 0) {
+            const plotBandClassName = b('plot-x-band');
+
+            const plotBandsSelection = plotContainer
+                .selectAll(`.${plotBandClassName}-x`)
+                .data(axis.plotBands)
+                .join('g')
+                .attr('class', `${plotClassName} ${plotBandClassName}-x`);
+
+            plotBandsSelection
+                .append('rect')
+                .attr('x', (band) => {
+                    const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                    const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                    const startPos = halfBandwidth + Math.min(from, to);
+
+                    return Math.max(0, startPos);
+                })
+                .attr('width', (band) => {
+                    const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                    const startPos = width - Math.min(from, to);
+                    const endPos = Math.min(Math.abs(to - from), startPos);
+
+                    return Math.min(endPos, width);
+                })
+                .attr('y', 0)
+                .attr('height', totalHeight)
+                .attr('fill', (band) => band.color)
+                .attr('opacity', (band) => band.opacity);
+
+            plotBandsSelection.each((plotBandData, i, nodes) => {
+                const plotLineSelection = select(nodes[i]);
+
+                if (plotBandData.layerPlacement === 'before') {
+                    plotLineSelection.lower();
+                } else {
+                    plotLineSelection.raise();
+                }
+            });
+        }
+
         // add plot lines
         if (plotContainer && axis.plotLines.length > 0) {
-            const plotLineClassName = b('plotLine');
+            const plotLineClassName = b('plot-x-line');
 
             const plotLinesSelection = plotContainer
-                .selectAll(`.${plotLineClassName}-x`)
+                .selectAll(`.${plotLineClassName}`)
                 .data(axis.plotLines)
                 .join('g')
-                .attr('class', `${plotClassName} ${plotLineClassName}-x`);
+                .attr('class', `${plotClassName} ${plotLineClassName}`);
 
             const lineGenerator = line();
             plotLinesSelection
@@ -199,7 +242,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 }
             });
         }
-    }, [axis, width, totalHeight, scale, split, plotRef]);
+    }, [axis, width, totalHeight, scale, split, plotRef, leftmostLimit]);
 
     return <g ref={ref} />;
 });

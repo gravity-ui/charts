@@ -92,9 +92,9 @@ export function useChartInnerProps(props: Props) {
     const boundsOffsetLeft =
         chart.margin.left +
         yAxis.reduce((acc, axis) => {
-            const width = getYAxisWidth(axis);
-            if (acc < width) {
-                acc = width;
+            const axisWidth = getYAxisWidth(axis);
+            if (acc < axisWidth) {
+                acc = axisWidth;
             }
             return acc;
         }, 0);

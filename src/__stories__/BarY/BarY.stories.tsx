@@ -7,7 +7,6 @@ import {
     barYGroupedColumnsData,
     barYHtmlLabelsData,
     barYPlaygroundData,
-    barYPlotLinesData,
     barYStakingNormalData,
     barYStakingPercentData,
 } from '../__data__';
@@ -55,13 +54,6 @@ export const BarYHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: barYHtmlLabelsData,
-    },
-} satisfies Story;
-
-export const BarYPlotLines = {
-    name: 'With X-axis plot lines',
-    args: {
-        data: barYPlotLinesData,
     },
 } satisfies Story;
 

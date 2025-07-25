@@ -1,7 +1,7 @@
 import {groups} from 'd3';
 
-import type {ChartData} from '../../../types';
-import nintendoGames from '../nintendoGames';
+import type {ChartData} from '../../../../types';
+import nintendoGames from '../../nintendoGames';
 
 function prepareData(): ChartData {
     const gamesByPlatform = groups(nintendoGames, (item) => item['platform']);
