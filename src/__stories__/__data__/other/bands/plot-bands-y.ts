@@ -1,7 +1,7 @@
 import {groups} from 'd3';
 
-import type {BarYSeries, BarYSeriesData, ChartData} from '../../../types';
-import nintendoGames from '../nintendoGames';
+import type {BarYSeries, BarYSeriesData, ChartData} from '../../../../types';
+import nintendoGames from '../../nintendoGames';
 
 function prepareData(): ChartData {
     const gamesByPlatform = groups(nintendoGames, (item) => item.platform);
@@ -21,23 +21,23 @@ function prepareData(): ChartData {
             })),
         },
         xAxis: {
-            plotBands: [
-                {
-                    from: 100,
-                    to: 20,
-                    color: '#0fd17a',
-                    opacity: 0.5,
-                    layerPlacement: 'after',
-                },
-                {
-                    from: 150,
-                    to: 210,
-                },
-            ],
             title: {text: 'Number of games released'},
         },
         yAxis: [
             {
+                plotBands: [
+                    {
+                        from: 'Switch',
+                        to: 'WIIU',
+                        color: '#0fd17a',
+                        opacity: 0.5,
+                        layerPlacement: 'after',
+                    },
+                    {
+                        from: 5,
+                        to: 8,
+                    },
+                ],
                 type: 'category',
                 categories: categories.map(String),
                 title: {
@@ -48,4 +48,4 @@ function prepareData(): ChartData {
     };
 }
 
-export const barXPlotBandsData = prepareData();
+export const barYPlotBandsData = prepareData();

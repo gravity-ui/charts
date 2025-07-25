@@ -5,6 +5,7 @@ import type {PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hook
 
 import type {TextRow} from './text';
 import {wrapText} from './text';
+import type {AxisDirection} from './types';
 
 export function getTicksCount({axis, range}: {axis: PreparedAxis; range: number}) {
     let ticksCount: number | undefined;
@@ -102,13 +103,13 @@ export function getAxisTitleRows(args: {axis: PreparedAxis; textMaxWidth: number
     }, []);
 }
 
-interface IProps {
+interface GetBandsPositionArgs {
     band: PreparedAxisPlotBand;
     axisScale: AxisScale<AxisDomain>;
-    axis: 'x' | 'y';
+    axis: AxisDirection;
 }
 
-export function getBandsPosition(args: IProps): {from: number; to: number} {
+export function getBandsPosition(args: GetBandsPositionArgs): {from: number; to: number} {
     const {band, axisScale} = args;
     const scalePosTo = axisScale(band.to);
     const scalePosFrom = axisScale(band.from);

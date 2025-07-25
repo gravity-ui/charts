@@ -8,6 +8,7 @@ export const CHART_ERROR_CODE = {
     NO_DATA: 'ERR.CK.NO_DATA',
     INVALID_DATA: 'ERR.CK.INVALID_DATA',
     UNKNOWN: 'ERR.CK.UNKNOWN_ERROR',
+    INVALID_OPTION_TYPE: 'ERR.CK.INVALID_OPTION_TYPE',
 };
 
 export class ChartError extends Error {

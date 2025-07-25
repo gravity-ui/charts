@@ -1,5 +1,5 @@
-import type {ChartData, LineSeries, LineSeriesData} from '../../../types';
-import nintendoGames from '../nintendoGames';
+import type {ChartData, LineSeries, LineSeriesData} from '../../../../types';
+import nintendoGames from '../../nintendoGames';
 
 function prepareData(): ChartData {
     const games = nintendoGames.filter((d) => {
@@ -56,8 +56,8 @@ function prepareData(): ChartData {
         xAxis: {
             plotBands: [
                 {
-                    from: new Date('2000'),
-                    to: new Date('2005-06-17T03:24:00'),
+                    from: 978307200000,
+                    to: 1278307200000,
                     color: '#0fd17a',
                     opacity: 0.5,
                     layerPlacement: 'after',

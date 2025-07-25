@@ -118,10 +118,20 @@ export interface AxisPlotLine extends AxisPlot {
 }
 
 export interface AxisPlotBand extends AxisPlot {
-    /** The start position of the plot band in axis units. */
-    from: string | number | Date;
-    /** The end position of the plot band in axis units. */
-    to: string | number | Date;
+    /**
+     * The start position of the plot band in axis units.
+     *
+     * Can be a number, a string (e.g., a category), or a timestamp if representing a date.
+     * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
+     */
+    from: number | string;
+    /**
+     * The end position of the plot band in axis units.
+     *
+     * Can be a number, a string (e.g., a category), or a timestamp if representing a date.
+     * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
+     */
+    to: number | string;
 }
 
 export interface ChartYAxis extends ChartAxis {

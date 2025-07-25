@@ -5,7 +5,6 @@ import {ChartStory} from '../ChartStory';
 import {
     barXBasicData,
     barXContinuousLegendData,
-    barXDatePlotBandsData,
     barXDateTimeData,
     barXGroupedColumnsData,
     barXHtmlLabelsData,
@@ -14,7 +13,6 @@ import {
     barXStakingNormalData,
     barXStakingPercentData,
 } from '../__data__';
-import {barXWithYAxisPlotLinesData} from '../__data__/bar-x/y-axis-plot-lines';
 
 const meta: Meta<typeof Chart> = {
     title: 'Bar-X',
@@ -80,20 +78,6 @@ export const BarXHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: barXHtmlLabelsData,
-    },
-} satisfies Story;
-
-export const BarXPlotLines = {
-    name: 'With Y-axis plot lines',
-    args: {
-        data: barXWithYAxisPlotLinesData,
-    },
-} satisfies Story;
-
-export const BarXDateTimePlotBands = {
-    name: 'Datetime X Plot Bands',
-    args: {
-        data: barXDatePlotBandsData,
     },
 } satisfies Story;
 

@@ -39,7 +39,7 @@ type Props = {
     height: number;
     split: PreparedSplit;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
-    lowerLimit?: number;
+    bottomLimit?: number;
 };
 
 function transformLabel(args: {node: Element; axis: PreparedAxis; isTopOffsetOverload?: boolean}) {
@@ -163,7 +163,7 @@ export const AxisY = (props: Props) => {
         scale,
         split,
         plotRef,
-        lowerLimit = 0,
+        bottomLimit = 0,
     } = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
@@ -268,7 +268,7 @@ export const AxisY = (props: Props) => {
                         const currentElementPosition = currentElement.getBoundingClientRect();
                         const text = select(currentElement);
 
-                        if (currentElementPosition.bottom > lowerLimit) {
+                        if (currentElementPosition.bottom > bottomLimit) {
                             const transform = transformLabel({
                                 node: this,
                                 axis: d,
@@ -311,7 +311,7 @@ export const AxisY = (props: Props) => {
             }
 
             if (plotContainer && d.plotBands.length > 0) {
-                const plotBandClassName = b('plotBand');
+                const plotBandClassName = b('plot-y-band');
 
                 const plotBandsSelection = plotContainer
                     .selectAll(`.${plotBandClassName}`)
@@ -353,7 +353,7 @@ export const AxisY = (props: Props) => {
             }
 
             if (plotContainer && d.plotLines.length > 0) {
-                const plotLineClassName = b('plotLine');
+                const plotLineClassName = b('plot-y-line');
 
                 const plotLinesSelection = plotContainer
                     .selectAll(`.${plotLineClassName}`)
@@ -441,7 +441,7 @@ export const AxisY = (props: Props) => {
                     handleOverflowingText(nodes[index] as SVGTSpanElement, height);
                 }
             });
-    }, [allAxes, width, height, scale, split, lowerLimit]);
+    }, [allAxes, width, height, scale, split, bottomLimit]);
 
     return <g ref={ref} className={b('container')} />;
 };

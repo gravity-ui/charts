@@ -120,6 +120,171 @@ const validateXYSeries = (args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
     });
 };
 
+const validateAxisPlotValues = (args: {
+    series: XYSeries;
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis[];
+}) => {
+    const {series, xAxis, yAxis = []} = args;
+
+    const yAxisIndex = get(series, 'yAxis', 0);
+    const seriesYAxis = yAxis[yAxisIndex];
+    if (yAxisIndex !== 0 && typeof seriesYAxis === 'undefined') {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-y-axis-index', {
+                index: yAxisIndex,
+            }),
+        });
+    }
+
+    const xPlotBands = get(xAxis, 'plotBands', []);
+    const yPlotBands = get(yAxis, 'plotBands', []);
+
+    if (!xPlotBands.length && !yPlotBands.length) {
+        return;
+    }
+
+    const xType = get(xAxis, 'type', DEFAULT_AXIS_TYPE);
+    const yType = get(seriesYAxis, 'type', DEFAULT_AXIS_TYPE);
+
+    xPlotBands.forEach(({from = 0, to = 0}) => {
+        const fromNotEqualTo = typeof to !== typeof from;
+
+        if (fromNotEqualTo) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                message: i18n('error', 'label_axis-plot-band-options-not-equal', {
+                    axis: 'x',
+                    option: 'from',
+                }),
+            });
+        }
+
+        switch (xType) {
+            case 'category': {
+                const invalidFrom = typeof from !== 'string' && typeof from !== 'number';
+                const invalidTo = typeof to !== 'string' && typeof to !== 'number';
+                if (invalidFrom) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'x',
+                            option: 'from',
+                        }),
+                    });
+                }
+
+                if (invalidTo) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'x',
+                            option: 'to',
+                        }),
+                    });
+                }
+
+                break;
+            }
+            case 'linear':
+            case 'datetime': {
+                const invalidFrom = typeof from !== 'number';
+                const invalidTo = typeof to !== 'number';
+                if (invalidFrom) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'x',
+                            option: 'from',
+                        }),
+                    });
+                }
+
+                if (invalidTo) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'x',
+                            option: 'to',
+                        }),
+                    });
+                }
+
+                break;
+            }
+        }
+    });
+
+    yPlotBands.forEach(({from = 0, to = 0}) => {
+        const fromNotEqualTo = typeof to !== typeof from;
+
+        if (fromNotEqualTo) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                message: i18n('error', 'label_axis-plot-band-options-not-equal', {
+                    axis: 'x',
+                    option: 'from',
+                }),
+            });
+        }
+
+        switch (yType) {
+            case 'category': {
+                const invalidFrom = typeof from !== 'string' && typeof from !== 'number';
+                const invalidTo = typeof to !== 'string' && typeof to !== 'number';
+                if (invalidFrom) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'y',
+                            option: 'from',
+                        }),
+                    });
+                }
+
+                if (invalidTo) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'y',
+                            option: 'to',
+                        }),
+                    });
+                }
+
+                break;
+            }
+            case 'linear':
+            case 'datetime': {
+                const invalidFrom = typeof from !== 'number';
+                const invalidTo = typeof to !== 'number';
+                if (invalidFrom) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'y',
+                            option: 'from',
+                        }),
+                    });
+                }
+
+                if (invalidTo) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
+                        message: i18n('error', 'label_invalid-axis-plot-band-option', {
+                            axis: 'y',
+                            option: 'to',
+                        }),
+                    });
+                }
+
+                break;
+            }
+        }
+    });
+};
+
 const validatePieSeries = ({series}: {series: PieSeries}) => {
     series.data.forEach(({value}) => {
         if (typeof value !== 'number') {
@@ -196,12 +361,14 @@ const validateSeries = (args: {series: ChartSeries; xAxis?: ChartXAxis; yAxis?: 
         case 'area':
         case 'bar-y':
         case 'bar-x': {
+            validateAxisPlotValues({series, xAxis, yAxis});
             validateXYSeries({series, xAxis, yAxis});
             validateStacking({series});
             break;
         }
         case 'line':
         case 'scatter': {
+            validateAxisPlotValues({series, xAxis, yAxis});
             validateXYSeries({series, xAxis, yAxis});
             break;
         }

@@ -162,7 +162,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         // add plot bands
         if (plotContainer && axis.plotBands.length > 0) {
-            const plotBandClassName = b('plotBand');
+            const plotBandClassName = b('plot-x-band');
 
             const plotBandsSelection = plotContainer
                 .selectAll(`.${plotBandClassName}-x`)
@@ -204,13 +204,13 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         // add plot lines
         if (plotContainer && axis.plotLines.length > 0) {
-            const plotLineClassName = b('plotLine');
+            const plotLineClassName = b('plot-x-line');
 
             const plotLinesSelection = plotContainer
-                .selectAll(`.${plotLineClassName}-x`)
+                .selectAll(`.${plotLineClassName}`)
                 .data(axis.plotLines)
                 .join('g')
-                .attr('class', `${plotClassName} ${plotLineClassName}-x`);
+                .attr('class', `${plotClassName} ${plotLineClassName}`);
 
             const lineGenerator = line();
             plotLinesSelection

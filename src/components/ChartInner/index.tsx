@@ -126,7 +126,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     {xScale && yScale?.length && (
                         <React.Fragment>
                             <AxisY
-                                lowerLimit={svgBottomPos}
+                                bottomLimit={svgBottomPos}
                                 axes={yAxis}
                                 width={boundsWidth}
                                 height={boundsHeight}
