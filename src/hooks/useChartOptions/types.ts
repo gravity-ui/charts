@@ -1,7 +1,7 @@
 import type {DashStyle} from 'src/constants';
 
 import type {
-    AxisPlotLine,
+    AxisPlotBand,
     BaseTextStyle,
     ChartAxis,
     ChartAxisLabels,
@@ -9,6 +9,7 @@ import type {
     ChartAxisType,
     ChartData,
     ChartMargin,
+    PlotLayerPlacement,
 } from '../../types';
 
 type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' | 'autoRotation'> &
@@ -25,16 +26,18 @@ export type PreparedChart = {
     margin: ChartMargin;
 };
 
+export type PreparedAxisPlotBand = Required<AxisPlotBand>;
+
 export type PreparedAxisPlotLine = {
     value: number;
     color: string;
     width: number;
     dashStyle: DashStyle;
     opacity: number;
-    layerPlacement: AxisPlotLine['layerPlacement'];
+    layerPlacement: PlotLayerPlacement;
 };
 
-export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines'> & {
+export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotBands'> & {
     type: ChartAxisType;
     labels: PreparedAxisLabels;
     title: {
@@ -57,6 +60,7 @@ export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines'> & {
     position: 'left' | 'right' | 'top' | 'bottom';
     plotIndex: number;
     plotLines: PreparedAxisPlotLine[];
+    plotBands: PreparedAxisPlotBand[];
 };
 
 export type PreparedTitle = ChartData['title'] & {

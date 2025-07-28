@@ -3,7 +3,13 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
+import type {
+    ChartScale,
+    PreparedAxis,
+    PreparedAxisPlotBand,
+    PreparedAxisPlotLine,
+    PreparedSplit,
+} from '../../hooks';
 import {
     block,
     calculateCos,
@@ -11,6 +17,7 @@ import {
     formatAxisTickLabel,
     getAxisHeight,
     getAxisTitleRows,
+    getBandsPosition,
     getClosestPointsRange,
     getLineDashArray,
     getScaleTicks,
@@ -32,7 +39,7 @@ type Props = {
     height: number;
     split: PreparedSplit;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
-    lowerLimit?: number;
+    bottomLimit?: number;
 };
 
 function transformLabel(args: {node: Element; axis: PreparedAxis; isTopOffsetOverload?: boolean}) {
@@ -144,6 +151,10 @@ type PlotLineData = {
     transform: string;
 } & PreparedAxisPlotLine;
 
+type PlotBandData = {
+    transform: string;
+} & PreparedAxisPlotBand;
+
 export const AxisY = (props: Props) => {
     const {
         axes: allAxes,
@@ -152,7 +163,7 @@ export const AxisY = (props: Props) => {
         scale,
         split,
         plotRef,
-        lowerLimit = 0,
+        bottomLimit = 0,
     } = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
@@ -194,6 +205,19 @@ export const AxisY = (props: Props) => {
                             transform: getAxisPosition(axis),
                         };
                     }),
+                );
+            }
+
+            return acc;
+        }, []);
+
+        const plotBands = axes.reduce<PlotBandData[]>((acc, axis) => {
+            if (axis.plotBands.length) {
+                acc.push(
+                    ...axis.plotBands.map((plotBand) => ({
+                        ...plotBand,
+                        transform: getAxisPosition(axis),
+                    })),
                 );
             }
 
@@ -244,7 +268,7 @@ export const AxisY = (props: Props) => {
                         const currentElementPosition = currentElement.getBoundingClientRect();
                         const text = select(currentElement);
 
-                        if (currentElementPosition.bottom > lowerLimit) {
+                        if (currentElementPosition.bottom > bottomLimit) {
                             const transform = transformLabel({
                                 node: this,
                                 axis: d,
@@ -286,8 +310,50 @@ export const AxisY = (props: Props) => {
                     .remove();
             }
 
+            if (plotContainer && d.plotBands.length > 0) {
+                const plotBandClassName = b('plot-y-band');
+
+                const plotBandsSelection = plotContainer
+                    .selectAll(`.${plotBandClassName}`)
+                    .data(plotBands)
+                    .join('g')
+                    .attr('class', `${plotClassName} ${plotBandClassName}`)
+                    .style('transform', (plotBand) => plotBand.transform);
+
+                plotBandsSelection
+                    .append('rect')
+                    .attr('x', 0)
+                    .attr('width', width)
+                    .attr('y', (band) => {
+                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                        const startPos = halfBandwidth + Math.min(from, to);
+
+                        return Math.max(0, startPos);
+                    })
+                    .attr('height', (band) => {
+                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                        const startPos = height - Math.min(from, to);
+                        const endPos = Math.min(Math.abs(to - from), startPos);
+
+                        return Math.min(endPos, height);
+                    })
+                    .attr('fill', (band) => band.color)
+                    .attr('opacity', (band) => band.opacity);
+
+                plotBandsSelection.each((plotBandData, i, nodes) => {
+                    const plotLineSelection = select(nodes[i]);
+
+                    if (plotBandData.layerPlacement === 'before') {
+                        plotLineSelection.lower();
+                    } else {
+                        plotLineSelection.raise();
+                    }
+                });
+            }
+
             if (plotContainer && d.plotLines.length > 0) {
-                const plotLineClassName = b('plotLine');
+                const plotLineClassName = b('plot-y-line');
 
                 const plotLinesSelection = plotContainer
                     .selectAll(`.${plotLineClassName}`)
@@ -375,7 +441,7 @@ export const AxisY = (props: Props) => {
                     handleOverflowingText(nodes[index] as SVGTSpanElement, height);
                 }
             });
-    }, [allAxes, width, height, scale, split]);
+    }, [allAxes, width, height, scale, split, bottomLimit]);
 
     return <g ref={ref} className={b('container')} />;
 };
