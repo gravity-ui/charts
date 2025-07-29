@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/gravity-ui/charts/compare/v1.1.0...v1.2.0) (2025-07-29)
+
+
+### Features
+
+* add plot bands ([#85](https://github.com/gravity-ui/charts/issues/85)) ([4be9835](https://github.com/gravity-ui/charts/commit/4be98354cfda55efcd921c0af5a594e92112b4cb))
+
+
+### Bug Fixes
+
+* chart position ([#92](https://github.com/gravity-ui/charts/issues/92)) ([b16654c](https://github.com/gravity-ui/charts/commit/b16654c4c8c5bd16008e7593e06f10200a449b6d))
+* should use style options for html labels ([#91](https://github.com/gravity-ui/charts/issues/91)) ([979e619](https://github.com/gravity-ui/charts/commit/979e61920edfeb60aae0e4876b967696c3275b3a))
+* special symbols in dataLabels, title and legend ([#90](https://github.com/gravity-ui/charts/issues/90)) ([c477eec](https://github.com/gravity-ui/charts/commit/c477eecea3c2bff90cbd13b2e48f7c59a95c62a0))
+
 ## [1.1.0](https://github.com/gravity-ui/charts/compare/v1.0.1...v1.1.0) (2025-07-24)
 
 
