@@ -266,7 +266,7 @@ export const Legend = (props: Props) => {
                         const mods = {selected: d.visible, unselected: !d.visible};
                         return b('item-text', mods);
                     })
-                    .text(function (d) {
+                    .html(function (d) {
                         return ('name' in d && d.name) as string;
                     })
                     .style('font-size', legend.itemStyle.fontSize);
@@ -369,7 +369,7 @@ export const Legend = (props: Props) => {
                 .attr('font-size', legend.title.style.fontSize ?? null)
                 .attr('fill', legend.title.style.fontColor ?? null)
                 .style('alignment-baseline', 'before-edge')
-                .text(legend.title.text);
+                .html(legend.title.text);
         }
 
         const {left} = getLegendPosition({
