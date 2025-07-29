@@ -259,6 +259,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
                         y: Math.max(0, data.center[1] + label.y),
                         content: label.text,
                         size: label.size,
+                        style: label.style,
                     });
                 } else {
                     labels.push(label);

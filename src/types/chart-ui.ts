@@ -16,6 +16,7 @@ export interface HtmlItem {
     y: number;
     content: string;
     size: {width: number; height: number};
+    style?: BaseTextStyle;
 }
 
 export interface ShapeDataWithHtmlItems {

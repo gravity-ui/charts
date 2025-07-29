@@ -35,4 +35,26 @@ test.describe('Treemap series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Html labels with style', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: '',
+                        data: [{name: 'Text', value: 1}],
+                        dataLabels: {
+                            html: true,
+                            style: {
+                                fontSize: '20px',
+                            },
+                        },
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

@@ -50,6 +50,7 @@ function getHtmlLabel(point: PointData, series: PreparedLineSeries, xMax: number
         y: Math.max(0, point.y - series.dataLabels.padding - size.maxHeight),
         content,
         size: {width: size.maxWidth, height: size.maxHeight},
+        style: series.dataLabels.style,
     };
 }
 
