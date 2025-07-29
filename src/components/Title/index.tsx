@@ -26,7 +26,7 @@ export const Title = (props: Props) => {
                 ...style,
             }}
         >
-            <tspan>{text}</tspan>
+            <tspan dangerouslySetInnerHTML={{__html: text}}></tspan>
         </text>
     );
 };
