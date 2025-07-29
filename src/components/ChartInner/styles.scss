@@ -2,6 +2,8 @@
     --gcharts-data-labels: var(--g-color-text-secondary);
 
     position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
 
     &__html-layer {
         display: contents;
