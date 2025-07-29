@@ -149,6 +149,7 @@ export const prepareAreaData = (args: {
                                 y: l.y,
                                 content: l.text,
                                 size: {width: labelSize.maxWidth, height: labelSize.maxHeight},
+                                style,
                             };
                         });
                         htmlElements.push(...htmlLabels);

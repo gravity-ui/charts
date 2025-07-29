@@ -185,6 +185,7 @@ export const prepareBarXData = (args: {
                         y: label.y,
                         content: label.text,
                         size: label.size,
+                        style: label.style,
                     });
                 } else {
                     barData.label = getLabelData(barData);

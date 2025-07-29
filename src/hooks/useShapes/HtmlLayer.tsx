@@ -30,11 +30,18 @@ export const HtmlLayer = (props: Props) => {
     return (
         <Portal container={htmlLayout}>
             {items.map((item, index) => {
+                const style: React.CSSProperties = {
+                    ...item.style,
+                    position: 'absolute',
+                    left: item.x,
+                    top: item.y,
+                };
+
                 return (
                     <div
                         key={index}
                         dangerouslySetInnerHTML={{__html: item.content}}
-                        style={{position: 'absolute', left: item.x, top: item.y}}
+                        style={style}
                     />
                 );
             })}

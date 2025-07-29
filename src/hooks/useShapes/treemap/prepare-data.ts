@@ -131,10 +131,11 @@ export function prepareTreemapData(args: {
     const htmlElements: HtmlItem[] = [];
 
     if (series.dataLabels?.enabled) {
-        const {html} = series.dataLabels;
+        const {html, style: dataLabelsStyle} = series.dataLabels;
         const labels = getLabels({data: leaves, options: series.dataLabels});
         if (html) {
-            htmlElements.push(...(labels as HtmlItem[]));
+            const htmlItems = labels.map((l) => ({style: dataLabelsStyle, ...l}) as HtmlItem);
+            htmlElements.push(...htmlItems);
         } else {
             labelData = labels as TreemapLabelData[];
         }
