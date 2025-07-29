@@ -13,7 +13,7 @@ test.describe('Treemap series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('With special symbols', async ({mount}) => {
+    test('With special symbols', async ({mount}) => {
         const data: ChartData = {
             series: {
                 data: [

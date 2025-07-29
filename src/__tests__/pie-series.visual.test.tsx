@@ -7,7 +7,7 @@ import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
-test.describe.only('Pie series', () => {
+test.describe('Pie series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={pieBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
