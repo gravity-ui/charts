@@ -17,6 +17,7 @@ import {
     getLabelsSize,
     getScaleTicks,
     getWaterfallPointSubtotal,
+    isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
@@ -102,6 +103,12 @@ export const getPreparedYAxis = ({
 }): PreparedAxis[] => {
     const axisByPlot: ChartYAxis[][] = [];
     const axisItems = yAxis || [{} as ChartYAxis];
+
+    const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
+    if (!hasAxisRelatedSeries) {
+        return [];
+    }
+
     return axisItems.map((axisItem) => {
         const plotIndex = get(axisItem, 'plotIndex', 0);
         const firstPlotAxis = !axisByPlot[plotIndex];

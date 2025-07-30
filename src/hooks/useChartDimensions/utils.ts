@@ -19,6 +19,7 @@ export function getYAxisWidth(axis: PreparedAxis | undefined) {
     if (!axis?.visible) {
         return 0;
     }
+
     let result = 0;
     if (axis?.title.text) {
         result += axis.title.height + axis.title.margin;
