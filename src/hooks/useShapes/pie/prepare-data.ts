@@ -43,7 +43,13 @@ const getCenter = (
 
 export function preparePieData(args: Args): PreparedPieData[] {
     const {series: preparedSeries, boundsWidth, boundsHeight} = args;
-    const maxRadius = Math.min(boundsWidth, boundsHeight) / 2;
+    const isWidthLessThanHeight = boundsWidth < boundsHeight;
+    let maxRadius = Math.min(boundsWidth, boundsHeight) / 2;
+
+    if (isWidthLessThanHeight) {
+        maxRadius -= preparedSeries[0].states.hover.halo.size;
+    }
+
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
@@ -302,7 +308,12 @@ export function preparePieData(args: Args): PreparedPieData[] {
         const topAdjustment = Math.floor(top - data.halo.size);
         if (topAdjustment > 0) {
             data.segments.forEach((s) => {
-                s.data.radius += topAdjustment / 2;
+                const nextPossibleRadius = s.data.radius + topAdjustment / 2;
+                if (nextPossibleRadius > maxRadius) {
+                    s.data.radius = maxRadius;
+                } else {
+                    s.data.radius += topAdjustment / 2;
+                }
             });
             data.center[1] -= topAdjustment / 2;
         }
@@ -310,7 +321,12 @@ export function preparePieData(args: Args): PreparedPieData[] {
         const bottomAdjustment = Math.floor(boundsHeight - bottom - data.halo.size);
         if (bottomAdjustment > 0) {
             data.segments.forEach((s) => {
-                s.data.radius += bottomAdjustment / 2;
+                const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
+                if (nextPossibleRadius > maxRadius) {
+                    s.data.radius = maxRadius;
+                } else {
+                    s.data.radius += bottomAdjustment / 2;
+                }
             });
             data.center[1] += bottomAdjustment / 2;
         }

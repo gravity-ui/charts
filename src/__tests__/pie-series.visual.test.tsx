@@ -35,4 +35,11 @@ test.describe('Pie series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('With a limited width', async ({mount}) => {
+        const data: ChartData = {...pieBasicData};
+        data.series.data[0].dataLabels = {enabled: false};
+        const component = await mount(<ChartTestStory data={data} styles={{width: '100px'}} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
