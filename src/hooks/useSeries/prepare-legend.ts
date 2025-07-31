@@ -77,6 +77,7 @@ export const getPreparedLegend = (args: {
 
     return {
         align: get(legend, 'align', legendDefaults.align),
+        justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
         height,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),

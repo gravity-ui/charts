@@ -16,7 +16,12 @@ export interface ChartLegend {
      * @default center
      * */
     align?: 'left' | 'center' | 'right';
-
+    /**
+     * Defines how items should be positioned in the legend when overflowing (moving to the next line).
+     *
+     * @default center
+     * */
+    justifyContent?: 'start' | 'center';
     /**
      * Defines the pixel distance between each legend item
      *

@@ -273,9 +273,27 @@ export const Legend = (props: Props) => {
                     .style('font-size', legend.itemStyle.fontSize);
 
                 const contentWidth = legendLine.node()?.getBoundingClientRect().width || 0;
-                const left = 0;
+
+                let left = 0;
+                switch (legend.justifyContent) {
+                    case 'center': {
+                        const legendLinePostion = getLegendPosition({
+                            align: legend.align,
+                            width: boundsWidth,
+                            offsetWidth: 0,
+                            contentWidth,
+                        });
+                        left = legendLinePostion.left;
+                        legendWidth = boundsWidth;
+                        break;
+                    }
+                    case 'start': {
+                        legendWidth = Math.max(legendWidth, contentWidth);
+                        break;
+                    }
+                }
+
                 const top = legend.lineHeight * lineIndex;
-                legendWidth = Math.max(legendWidth, contentWidth);
 
                 legendLine.attr('transform', `translate(${[left, top].join(',')})`);
             });

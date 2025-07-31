@@ -1,6 +1,8 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
 import {pieBasicData} from 'src/__stories__/__data__';
 import type {ChartData} from 'src/types';
@@ -10,6 +12,13 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 test.describe('Pie series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={pieBasicData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('legend.justifyContent = start', async ({mount}) => {
+        const data = cloneDeep(pieBasicData);
+        set(data, 'legend.justifyContent', 'start');
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
