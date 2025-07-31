@@ -43,13 +43,10 @@ const getCenter = (
 
 export function preparePieData(args: Args): PreparedPieData[] {
     const {series: preparedSeries, boundsWidth, boundsHeight} = args;
-    const isWidthLessThanHeight = boundsWidth < boundsHeight;
-    let maxRadius = Math.min(boundsWidth, boundsHeight) / 2;
-
-    if (isWidthLessThanHeight) {
-        maxRadius -= preparedSeries[0].states.hover.halo.size;
-    }
-
+    const haloSize = preparedSeries[0].states.hover.halo.enabled
+        ? preparedSeries[0].states.hover.halo.size
+        : 0;
+    const maxRadius = Math.min(boundsWidth, boundsHeight) / 2 - haloSize;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
@@ -294,7 +291,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
         });
 
         const segmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
-        const top = Math.min(
+        const topAdjustment = Math.min(
             data.center[1] - segmentMaxRadius,
             ...preparedLabels.labels.map((l) => l.y + data.center[1]),
             ...preparedLabels.htmlLabels.map((l) => l.y),
@@ -305,28 +302,19 @@ export function preparePieData(args: Args): PreparedPieData[] {
             ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
         );
 
-        const topAdjustment = Math.floor(top - data.halo.size);
         if (topAdjustment > 0) {
             data.segments.forEach((s) => {
                 const nextPossibleRadius = s.data.radius + topAdjustment / 2;
-                if (nextPossibleRadius > maxRadius) {
-                    s.data.radius = maxRadius;
-                } else {
-                    s.data.radius += topAdjustment / 2;
-                }
+                s.data.radius = Math.min(nextPossibleRadius, maxRadius);
             });
             data.center[1] -= topAdjustment / 2;
         }
 
-        const bottomAdjustment = Math.floor(boundsHeight - bottom - data.halo.size);
+        const bottomAdjustment = Math.floor(boundsHeight - bottom - 0);
         if (bottomAdjustment > 0) {
             data.segments.forEach((s) => {
                 const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
-                if (nextPossibleRadius > maxRadius) {
-                    s.data.radius = maxRadius;
-                } else {
-                    s.data.radius += bottomAdjustment / 2;
-                }
+                s.data.radius = Math.min(nextPossibleRadius, maxRadius);
             });
             data.center[1] += bottomAdjustment / 2;
         }
