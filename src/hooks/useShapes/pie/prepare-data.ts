@@ -310,7 +310,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             data.center[1] -= topAdjustment / 2;
         }
 
-        const bottomAdjustment = Math.floor(boundsHeight - bottom - 0);
+        const bottomAdjustment = Math.floor(boundsHeight - bottom);
         if (bottomAdjustment > 0) {
             data.segments.forEach((s) => {
                 const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
