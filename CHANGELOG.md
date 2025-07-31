@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/gravity-ui/charts/compare/v1.2.0...v1.3.0) (2025-07-31)
+
+
+### Features
+
+* legend justifyContent option ([#98](https://github.com/gravity-ui/charts/issues/98)) ([7e48f9a](https://github.com/gravity-ui/charts/commit/7e48f9a129ca30954ce1f9d4719506098317e518))
+
+
+### Bug Fixes
+
+* fix pie chart horizontal cropping in case of limited container width ([#95](https://github.com/gravity-ui/charts/issues/95)) ([a9742c3](https://github.com/gravity-ui/charts/commit/a9742c377035e02ec14c9c8dc7ea956182f322dc))
+* labels go beyond the boundaries of the areas on the treemap ([#97](https://github.com/gravity-ui/charts/issues/97)) ([5f7feda](https://github.com/gravity-ui/charts/commit/5f7fedab5c00a59d6b45b1f495b4ecde377db209))
+* remove the extra space on the left in the series without axes ([#93](https://github.com/gravity-ui/charts/issues/93)) ([e641e9b](https://github.com/gravity-ui/charts/commit/e641e9b5cc764f634cdb663776e844c6b6c6e7cf))
+
 ## [1.2.0](https://github.com/gravity-ui/charts/compare/v1.1.0...v1.2.0) (2025-07-29)
 
 
