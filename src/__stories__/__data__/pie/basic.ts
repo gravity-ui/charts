@@ -12,13 +12,7 @@ function prepareData(): ChartData {
 
     return {
         series: {
-            data: [
-                {
-                    type: 'pie',
-                    data,
-                    // dataLabels: {enabled: false},
-                },
-            ],
+            data: [{type: 'pie', data}],
         },
         legend: {enabled: true},
         title: {
