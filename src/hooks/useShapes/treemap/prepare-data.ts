@@ -35,13 +35,19 @@ function getLabels(args: {
 
         texts.forEach((text, index) => {
             const label = getFormattedValue({value: text, ...args.options});
-            const {maxHeight: lineHeight, maxWidth: labelWidth} =
+            const {maxHeight: lineHeight, maxWidth: labelMaxWidth} =
                 getLabelsSize({labels: [label], html}) ?? {};
             const left = d.x0 + padding;
             const right = d.x1 - padding;
-            const width = Math.max(0, right - left);
+            const spaceWidth = Math.max(0, right - left);
+            const spaceHeight = Math.max(0, d.y1 - d.y0 - padding);
             let x = left;
             const y = index * lineHeight + d.y0 + padding;
+            const labelWidth = Math.min(labelMaxWidth, spaceWidth);
+
+            if (!labelWidth || lineHeight > spaceHeight) {
+                return;
+            }
 
             switch (align) {
                 case 'left': {
@@ -49,11 +55,11 @@ function getLabels(args: {
                     break;
                 }
                 case 'center': {
-                    x = Math.max(left, left + (width - labelWidth) / 2);
+                    x = Math.max(left, left + (spaceWidth - labelMaxWidth) / 2);
                     break;
                 }
                 case 'right': {
-                    x = Math.max(left, right - labelWidth);
+                    x = Math.max(left, right - labelMaxWidth);
                     break;
                 }
             }
@@ -63,13 +69,13 @@ function getLabels(args: {
                       content: label,
                       x,
                       y,
-                      size: {width, height: lineHeight},
+                      size: {width: labelWidth, height: lineHeight},
                   }
                 : {
                       text: label,
                       x,
                       y,
-                      width,
+                      width: labelWidth,
                       nodeData: d.data,
                   };
 

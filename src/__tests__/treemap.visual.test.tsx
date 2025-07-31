@@ -57,4 +57,25 @@ test.describe('Treemap series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Not enough space to display the labels', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: '',
+                        layoutAlgorithm: 'dice',
+                        data: [
+                            {name: 'Value 1', value: 1},
+                            {name: 'Value 10', value: 10},
+                            {name: 'Value 100', value: 100},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
