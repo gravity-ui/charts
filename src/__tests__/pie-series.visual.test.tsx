@@ -35,4 +35,34 @@ test.describe('Pie series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('With limited dimensions', () => {
+        const testCases = [
+            {
+                dimension: 'width',
+                styles: {width: '100px'},
+                testName: 'With a limited width',
+            },
+            {
+                dimension: 'height',
+                styles: {height: '100px'},
+                testName: 'With a limited height',
+            },
+        ] as const;
+
+        for (const testCase of testCases) {
+            test(testCase.testName, async ({mount}) => {
+                const data: ChartData = {...pieBasicData};
+                data.series.data[0].dataLabels = {enabled: false};
+                data.legend = {enabled: false};
+                data.tooltip = {enabled: false};
+                data.title = undefined;
+                const component = await mount(
+                    <ChartTestStory data={data} styles={testCase.styles} />,
+                );
+                await component.locator('.gcharts-pie__segment').first().hover();
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        }
+    });
 });
