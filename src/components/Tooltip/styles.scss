@@ -2,7 +2,7 @@
     box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
 
     &__content {
-        padding: 8px 14px;
+        padding: 8px 0;
 
         text-wrap: nowrap;
 
@@ -10,9 +10,29 @@
         background-color: var(--g-color-infographics-tooltip-bg);
     }
 
+    &__series-name {
+        padding: 2px 14px 6px;
+
+        font-size: 13px;
+        font-weight: 600;
+    }
+
     &__content-row {
         display: flex;
         align-items: center;
+
+        padding: 2px 14px;
+
+        font-size: 12px;
+
+        &_active {
+            font-weight: 600;
+            // color: var(--g-color-text-primary);
+            background-color: var(--g-color-base-info-medium);
+            // border-radius: 2px;
+            // padding: 2px 4px;
+            // margin: -2px -4px;
+        }
     }
 
     &__color {

@@ -87,7 +87,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
 
     return (
         <React.Fragment>
-            {measureValue && <div>{measureValue}</div>}
+            {measureValue && <div className={b('series-name')}>{measureValue}</div>}
             {hovered.map((seriesItem, i) => {
                 const {data, series, closest} = seriesItem;
                 const id = `${get(series, 'id')}_${i}`;
@@ -107,10 +107,11 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                                 {series.name}: {formattedValue}
                             </React.Fragment>
                         );
+                        const active = closest && hovered.length > 1;
                         return (
-                            <div key={id} className={b('content-row')}>
+                            <div key={id} className={b('content-row', {active})}>
                                 <div className={b('color')} style={{backgroundColor: color}} />
-                                <div>{closest ? <b>{value}</b> : <span>{value}</span>}</div>
+                                <div>{value}</div>
                             </div>
                         );
                     }
@@ -158,10 +159,11 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                                 {series.name}: {formattedValue}
                             </React.Fragment>
                         );
+                        const active = closest && hovered.length > 1;
                         return (
-                            <div key={id} className={b('content-row')}>
+                            <div key={id} className={b('content-row', {active})}>
                                 <div className={b('color')} style={{backgroundColor: color}} />
-                                <div>{closest ? <b>{value}</b> : <span>{value}</span>}</div>
+                                <div>{value}</div>
                             </div>
                         );
                     }
@@ -215,11 +217,11 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                                 <span>{formattedValue}</span>
                             </React.Fragment>
                         );
-
+                        const active = closest && hovered.length > 1;
                         return (
-                            <div key={id} className={b('content-row')}>
+                            <div key={id} className={b('content-row', {active})}>
                                 <div className={b('color')} style={{backgroundColor: color}} />
-                                <div>{closest ? <b>{value}</b> : <span>{value}</span>}</div>
+                                <div>{value}</div>
                             </div>
                         );
                     }
