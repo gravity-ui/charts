@@ -56,7 +56,7 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
             .selectAll<SVGTextElement, typeof labelData>('tspan')
             .data(labelData)
             .join('text')
-            .text((d) => d.text)
+            .html((d) => d.text)
             .attr('class', b('label'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)

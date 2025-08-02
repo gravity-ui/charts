@@ -17,6 +17,7 @@ import {
     getLabelsSize,
     getScaleTicks,
     getWaterfallPointSubtotal,
+    isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
@@ -102,6 +103,12 @@ export const getPreparedYAxis = ({
 }): PreparedAxis[] => {
     const axisByPlot: ChartYAxis[][] = [];
     const axisItems = yAxis || [{} as ChartYAxis];
+
+    const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
+    if (!hasAxisRelatedSeries) {
+        return [];
+    }
+
     return axisItems.map((axisItem) => {
         const plotIndex = get(axisItem, 'plotIndex', 0);
         const firstPlotAxis = !axisByPlot[plotIndex];
@@ -182,6 +189,14 @@ export const getPreparedYAxis = ({
                 opacity: get(d, 'opacity', 1),
                 layerPlacement: get(d, 'layerPlacement', 'before'),
             })),
+            plotBands: get(axisItem, 'plotBands', []).map((d) => ({
+                color: get(d, 'color', 'var(--g-color-base-brand)'),
+                opacity: get(d, 'opacity', 1),
+                from: get(d, 'from', 0),
+                to: get(d, 'to', 0),
+                layerPlacement: get(d, 'layerPlacement', 'before'),
+            })),
+            visible: get(axisItem, 'visible', true),
         };
 
         if (labelsEnabled) {

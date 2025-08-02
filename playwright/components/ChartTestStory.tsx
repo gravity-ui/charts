@@ -18,7 +18,10 @@ export const ChartTestStory = ({data, styles}: Props) => {
 
     return (
         <div style={storyStyles}>
-            <ChartStory data={data} />
+            <ChartStory
+                data={data}
+                style={{height: storyStyles.height, width: storyStyles.width}}
+            />
         </div>
     );
 };

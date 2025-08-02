@@ -99,7 +99,7 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
             .selectAll<SVGTextElement, PieLabelData>('text')
             .data((pieData) => pieData.labels)
             .join('text')
-            .text((d) => d.text)
+            .html((d) => d.text)
             .attr('class', b('label'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)

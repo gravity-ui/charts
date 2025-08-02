@@ -30,6 +30,10 @@ const getBottomOffset = (args: {
         result += preparedLegend.height + preparedLegend.margin;
     }
 
+    if (!preparedXAxis.visible) {
+        return result;
+    }
+
     if (hasAxisRelatedSeries) {
         if (preparedXAxis.title.text) {
             result += preparedXAxis.title.height + preparedXAxis.title.margin;

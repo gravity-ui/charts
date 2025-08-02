@@ -20,10 +20,11 @@ import type {ChartInnerProps} from './types';
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
+    svgContainer: SVGGElement | null;
 };
 
 export function useChartInnerProps(props: Props) {
-    const {width, height, data, dispatcher, htmlLayout} = props;
+    const {width, height, data, dispatcher, htmlLayout, svgContainer} = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
     const {chart, title, tooltip} = useChartOptions({data});
@@ -87,10 +88,20 @@ export function useChartInnerProps(props: Props) {
         htmlLayout,
     });
     const boundsOffsetTop = chart.margin.top;
-    // We only need to consider the width of the first left axis
-    const boundsOffsetLeft = chart.margin.left + getYAxisWidth(yAxis[0]);
-
+    // We need to calculate the width of each axis because the first axis can be hidden
+    const boundsOffsetLeft =
+        chart.margin.left +
+        yAxis.reduce((acc, axis) => {
+            const axisWidth = getYAxisWidth(axis);
+            if (acc < axisWidth) {
+                acc = axisWidth;
+            }
+            return acc;
+        }, 0);
+    const {x, bottom} = svgContainer?.getBoundingClientRect() ?? {};
     return {
+        svgBottomPos: bottom,
+        svgXPos: x,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,

@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.3.0](https://github.com/gravity-ui/charts/compare/v1.2.0...v1.3.0) (2025-07-31)
+
+
+### Features
+
+* legend justifyContent option ([#98](https://github.com/gravity-ui/charts/issues/98)) ([7e48f9a](https://github.com/gravity-ui/charts/commit/7e48f9a129ca30954ce1f9d4719506098317e518))
+
+
+### Bug Fixes
+
+* fix pie chart horizontal cropping in case of limited container width ([#95](https://github.com/gravity-ui/charts/issues/95)) ([a9742c3](https://github.com/gravity-ui/charts/commit/a9742c377035e02ec14c9c8dc7ea956182f322dc))
+* labels go beyond the boundaries of the areas on the treemap ([#97](https://github.com/gravity-ui/charts/issues/97)) ([5f7feda](https://github.com/gravity-ui/charts/commit/5f7fedab5c00a59d6b45b1f495b4ecde377db209))
+* remove the extra space on the left in the series without axes ([#93](https://github.com/gravity-ui/charts/issues/93)) ([e641e9b](https://github.com/gravity-ui/charts/commit/e641e9b5cc764f634cdb663776e844c6b6c6e7cf))
+
+## [1.2.0](https://github.com/gravity-ui/charts/compare/v1.1.0...v1.2.0) (2025-07-29)
+
+
+### Features
+
+* add plot bands ([#85](https://github.com/gravity-ui/charts/issues/85)) ([4be9835](https://github.com/gravity-ui/charts/commit/4be98354cfda55efcd921c0af5a594e92112b4cb))
+
+
+### Bug Fixes
+
+* chart position ([#92](https://github.com/gravity-ui/charts/issues/92)) ([b16654c](https://github.com/gravity-ui/charts/commit/b16654c4c8c5bd16008e7593e06f10200a449b6d))
+* should use style options for html labels ([#91](https://github.com/gravity-ui/charts/issues/91)) ([979e619](https://github.com/gravity-ui/charts/commit/979e61920edfeb60aae0e4876b967696c3275b3a))
+* special symbols in dataLabels, title and legend ([#90](https://github.com/gravity-ui/charts/issues/90)) ([c477eec](https://github.com/gravity-ui/charts/commit/c477eecea3c2bff90cbd13b2e48f7c59a95c62a0))
+
+## [1.1.0](https://github.com/gravity-ui/charts/compare/v1.0.1...v1.1.0) (2025-07-24)
+
+
+### Features
+
+* waterfall legend options ([#79](https://github.com/gravity-ui/charts/issues/79)) ([489326a](https://github.com/gravity-ui/charts/commit/489326a6a7697832e17634c5aeac0639586d095b))
+
+
+### Bug Fixes
+
+* pie center text color ([#80](https://github.com/gravity-ui/charts/issues/80)) ([37f5480](https://github.com/gravity-ui/charts/commit/37f548053017d276d004b6fafcda0244b777dfa1))
+* tooltip closest data for line series ([#77](https://github.com/gravity-ui/charts/issues/77)) ([3321456](https://github.com/gravity-ui/charts/commit/33214568f0690a0ec9ec4d83a4ded243e967ac77))
+* tooltip value format ([#84](https://github.com/gravity-ui/charts/issues/84)) ([385605a](https://github.com/gravity-ui/charts/commit/385605aebb25cc9496970c92a176f2827b339bac))
+
 ## [1.0.1](https://github.com/gravity-ui/charts/compare/v1.0.0...v1.0.1) (2025-05-28)
 
 * The library has been stabilized and is fully compatible with the latest `0.x` release

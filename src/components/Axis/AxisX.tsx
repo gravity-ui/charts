@@ -8,6 +8,7 @@ import {
     block,
     formatAxisTickLabel,
     getAxisTitleRows,
+    getBandsPosition,
     getClosestPointsRange,
     getLineDashArray,
     getMaxTickCount,
@@ -28,6 +29,7 @@ type Props = {
     scale: ChartScale;
     split: PreparedSplit;
     plotRef?: React.MutableRefObject<SVGGElement | null>;
+    leftmostLimit?: number;
 };
 
 function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
@@ -76,11 +78,26 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 }
 
 export const AxisX = React.memo(function AxisX(props: Props) {
-    const {axis, width, height: totalHeight, scale, split, plotRef} = props;
+    const {axis, width, height: totalHeight, scale, split, plotRef, leftmostLimit} = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
         if (!ref.current) {
+            return;
+        }
+
+        const svgElement = select(ref.current);
+        svgElement.selectAll('*').remove();
+
+        const plotClassName = b('plot-x');
+        let plotContainer = null;
+
+        if (plotRef?.current) {
+            plotContainer = select(plotRef.current);
+            plotContainer.selectAll(`.${plotClassName}`).remove();
+        }
+
+        if (!axis.visible) {
             return;
         }
 
@@ -96,6 +113,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         const axisScale = scale as AxisScale<AxisDomain>;
         const xAxisGenerator = axisBottom({
+            leftmostLimit,
             scale: axisScale,
             ticks: {
                 items: tickItems,
@@ -114,9 +132,6 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 color: axis.lineColor,
             },
         });
-
-        const svgElement = select(ref.current);
-        svgElement.selectAll('*').remove();
 
         svgElement.call(xAxisGenerator).attr('class', b());
 
@@ -145,17 +160,57 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 });
         }
 
-        // add plot lines
-        if (plotRef && axis.plotLines.length > 0) {
-            const plotLineClassName = b('plotLine');
-            const plotLineContainer = select(plotRef.current);
-            plotLineContainer.selectAll(`.${plotLineClassName}-x`).remove();
+        // add plot bands
+        if (plotContainer && axis.plotBands.length > 0) {
+            const plotBandClassName = b('plot-x-band');
 
-            const plotLinesSelection = plotLineContainer
-                .selectAll(`.${plotLineClassName}-x`)
+            const plotBandsSelection = plotContainer
+                .selectAll(`.${plotBandClassName}-x`)
+                .data(axis.plotBands)
+                .join('g')
+                .attr('class', `${plotClassName} ${plotBandClassName}-x`);
+
+            plotBandsSelection
+                .append('rect')
+                .attr('x', (band) => {
+                    const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                    const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                    const startPos = halfBandwidth + Math.min(from, to);
+
+                    return Math.max(0, startPos);
+                })
+                .attr('width', (band) => {
+                    const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                    const startPos = width - Math.min(from, to);
+                    const endPos = Math.min(Math.abs(to - from), startPos);
+
+                    return Math.min(endPos, width);
+                })
+                .attr('y', 0)
+                .attr('height', totalHeight)
+                .attr('fill', (band) => band.color)
+                .attr('opacity', (band) => band.opacity);
+
+            plotBandsSelection.each((plotBandData, i, nodes) => {
+                const plotLineSelection = select(nodes[i]);
+
+                if (plotBandData.layerPlacement === 'before') {
+                    plotLineSelection.lower();
+                } else {
+                    plotLineSelection.raise();
+                }
+            });
+        }
+
+        // add plot lines
+        if (plotContainer && axis.plotLines.length > 0) {
+            const plotLineClassName = b('plot-x-line');
+
+            const plotLinesSelection = plotContainer
+                .selectAll(`.${plotLineClassName}`)
                 .data(axis.plotLines)
                 .join('g')
-                .attr('class', `${plotLineClassName}-x`);
+                .attr('class', `${plotClassName} ${plotLineClassName}`);
 
             const lineGenerator = line();
             plotLinesSelection
@@ -187,7 +242,7 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 }
             });
         }
-    }, [axis, width, totalHeight, scale, split, plotRef]);
+    }, [axis, width, totalHeight, scale, split, plotRef, leftmostLimit]);
 
     return <g ref={ref} />;
 });

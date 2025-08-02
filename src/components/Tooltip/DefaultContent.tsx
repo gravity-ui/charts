@@ -1,6 +1,5 @@
 import React from 'react';
 
-import {dateTime} from '@gravity-ui/date-utils';
 import get from 'lodash/get';
 
 import type {
@@ -9,7 +8,6 @@ import type {
     PreparedWaterfallSeries,
     PreparedWaterfallSeriesData,
 } from '../../hooks';
-import {formatNumber} from '../../libs';
 import type {
     ChartSeriesData,
     ChartXAxis,
@@ -45,17 +43,8 @@ const getRowData = (
             const categories = get(axis, 'categories', [] as string[]);
             return getDataCategoryValue({axisDirection: fieldName, categories, data});
         }
-        case 'datetime': {
-            const value = get(data, fieldName);
-            if (!value) {
-                return undefined;
-            }
-            return dateTime({input: value}).format(DEFAULT_DATE_FORMAT);
-        }
-        case 'linear':
         default: {
-            const value = get(data, fieldName) as unknown as number;
-            return formatNumber(value);
+            return get(data, fieldName);
         }
     }
 };
@@ -64,7 +53,17 @@ const getXRowData = (data: ChartSeriesData, xAxis?: ChartXAxis) => getRowData('x
 
 const getYRowData = (data: ChartSeriesData, yAxis?: ChartYAxis) => getRowData('y', data, yAxis);
 
-const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: ChartYAxis) => {
+const getMeasureValue = ({
+    data,
+    xAxis,
+    yAxis,
+    valueFormat,
+}: {
+    data: TooltipDataChunk[];
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis;
+    valueFormat?: ValueFormat;
+}) => {
     if (
         data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
     ) {
@@ -76,14 +75,41 @@ const getMeasureValue = (data: TooltipDataChunk[], xAxis?: ChartXAxis, yAxis?: C
     }
 
     if (data.some((item) => item.series.type === 'bar-y')) {
-        return getYRowData(data[0]?.data, yAxis);
+        const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
+        return getFormattedValue({
+            value: getYRowData(data[0]?.data, yAxis),
+            format,
+        });
     }
 
-    return getXRowData(data[0]?.data, xAxis);
+    const format = valueFormat ?? getDefaultValueFormat({axis: xAxis});
+    return getFormattedValue({
+        value: getXRowData(data[0]?.data, xAxis),
+        format,
+    });
 };
 
+function getDefaultValueFormat({axis}: {axis?: ChartXAxis | ChartYAxis}): ValueFormat | undefined {
+    switch (axis?.type) {
+        case 'linear':
+        case 'logarithmic': {
+            return {
+                type: 'number',
+            };
+        }
+        case 'datetime': {
+            return {
+                type: 'date',
+                format: DEFAULT_DATE_FORMAT,
+            };
+        }
+        default:
+            return undefined;
+    }
+}
+
 export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
-    const measureValue = getMeasureValue(hovered, xAxis, yAxis);
+    const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
 
     return (
         <React.Fragment>
@@ -98,9 +124,10 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                     case 'line':
                     case 'area':
                     case 'bar-x': {
+                        const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
                         const formattedValue = getFormattedValue({
                             value: getYRowData(data, yAxis),
-                            format: valueFormat,
+                            format,
                         });
                         const value = (
                             <React.Fragment>
@@ -121,13 +148,14 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                             data as PreparedWaterfallSeriesData,
                             series as PreparedWaterfallSeries,
                         );
+                        const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
                         const subTotal = getFormattedValue({
                             value: subTotalValue,
-                            format: valueFormat,
+                            format,
                         });
                         const formattedValue = getFormattedValue({
                             value: getYRowData(data, yAxis),
-                            format: valueFormat,
+                            format,
                         });
 
                         return (
@@ -150,9 +178,10 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                         );
                     }
                     case 'bar-y': {
+                        const format = valueFormat ?? getDefaultValueFormat({axis: xAxis});
                         const formattedValue = getFormattedValue({
                             value: getXRowData(data, xAxis),
-                            format: valueFormat,
+                            format,
                         });
                         const value = (
                             <React.Fragment>
@@ -172,7 +201,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                         const seriesData = data as PreparedPieSeries | TreemapSeriesData;
                         const formattedValue = getFormattedValue({
                             value: seriesData.value,
-                            format: valueFormat,
+                            format: valueFormat ?? {type: 'number'},
                         });
 
                         return (
@@ -188,7 +217,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                         const value = source.links.find((d) => d.name === target?.name)?.value;
                         const formattedValue = getFormattedValue({
                             value,
-                            format: valueFormat,
+                            format: valueFormat ?? {type: 'number'},
                         });
 
                         return (
@@ -208,7 +237,7 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                         const seriesData = data as RadarSeriesData;
                         const formattedValue = getFormattedValue({
                             value: seriesData.value,
-                            format: valueFormat,
+                            format: valueFormat ?? {type: 'number'},
                         });
 
                         const value = (

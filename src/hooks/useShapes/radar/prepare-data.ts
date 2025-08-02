@@ -177,6 +177,7 @@ export function prepareRadarData(args: Args): PreparedRadarData[] {
                     y: label.y,
                     content: label.text,
                     size: label.size,
+                    style: label.style,
                 }));
             }
         }

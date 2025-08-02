@@ -179,6 +179,7 @@ function renderLegendSymbol(args: {
             }
             case 'symbol': {
                 const y = legend.lineHeight / 2;
+                const translateX = x + d.symbol.width / 2;
 
                 element
                     .append('svg:path')
@@ -192,7 +193,7 @@ function renderLegendSymbol(args: {
                         return symbol(scatterSymbol, d.symbol.width * d.symbol.width)();
                     })
                     .attr('transform', () => {
-                        return 'translate(' + x + ',' + y + ')';
+                        return 'translate(' + translateX + ',' + y + ')';
                     })
                     .attr('class', className)
                     .style('fill', color);
@@ -266,23 +267,36 @@ export const Legend = (props: Props) => {
                         const mods = {selected: d.visible, unselected: !d.visible};
                         return b('item-text', mods);
                     })
-                    .text(function (d) {
+                    .html(function (d) {
                         return ('name' in d && d.name) as string;
                     })
                     .style('font-size', legend.itemStyle.fontSize);
 
                 const contentWidth = legendLine.node()?.getBoundingClientRect().width || 0;
-                const {left} = getLegendPosition({
-                    align: legend.align,
-                    width: boundsWidth,
-                    offsetWidth: 0,
-                    contentWidth,
-                });
+
+                let left = 0;
+                switch (legend.justifyContent) {
+                    case 'center': {
+                        const legendLinePostion = getLegendPosition({
+                            align: legend.align,
+                            width: boundsWidth,
+                            offsetWidth: 0,
+                            contentWidth,
+                        });
+                        left = legendLinePostion.left;
+                        legendWidth = boundsWidth;
+                        break;
+                    }
+                    case 'start': {
+                        legendWidth = Math.max(legendWidth, contentWidth);
+                        break;
+                    }
+                }
+
                 const top = legend.lineHeight * lineIndex;
 
                 legendLine.attr('transform', `translate(${[left, top].join(',')})`);
             });
-            legendWidth = boundsWidth;
 
             if (config.pagination) {
                 const transform = `translate(${[
@@ -369,7 +383,7 @@ export const Legend = (props: Props) => {
                 .attr('font-size', legend.title.style.fontSize ?? null)
                 .attr('fill', legend.title.style.fontColor ?? null)
                 .style('alignment-baseline', 'before-edge')
-                .text(legend.title.text);
+                .html(legend.title.text);
         }
 
         const {left} = getLegendPosition({
