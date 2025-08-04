@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/gravity-ui/charts/compare/v1.3.0...v1.3.1) (2025-08-04)
+
+
+### Bug Fixes
+
+* **Pie:** include label width when calculating radius ([#101](https://github.com/gravity-ui/charts/issues/101)) ([6b937ee](https://github.com/gravity-ui/charts/commit/6b937ee77a6723d909c8e87f3559b01dc1e11cb5))
+
 ## [1.3.0](https://github.com/gravity-ui/charts/compare/v1.2.0...v1.3.0) (2025-07-31)
 
 
