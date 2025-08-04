@@ -47,7 +47,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
         ? preparedSeries[0].states.hover.halo.size
         : 0;
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2 - haloSize;
+    const minRadius = maxRadius * 0.3;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
+
+    // Отслеживаем максимальную недостающую ширину
+    let maxMissingWidth = 0;
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
         const series = items[0];
@@ -248,11 +252,15 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 const left = getLeftPosition(label);
 
                 if (Math.abs(left) > boundsWidth / 2) {
-                    label.maxWidth = label.size.width - (Math.abs(left) - boundsWidth / 2);
+                    const overflow = Math.abs(left) - boundsWidth / 2;
+                    label.maxWidth = label.size.width - overflow;
+                    maxMissingWidth = Math.max(maxMissingWidth, overflow);
                 } else {
                     const right = left + label.size.width;
                     if (right > boundsWidth / 2) {
-                        label.maxWidth = label.size.width - (right - boundsWidth / 2);
+                        const overflow = right - boundsWidth / 2;
+                        label.maxWidth = label.size.width - overflow;
+                        maxMissingWidth = Math.max(maxMissingWidth, overflow);
                     }
                 }
 
@@ -327,6 +335,53 @@ export function preparePieData(args: Args): PreparedPieData[] {
         data.labels = labels;
         data.htmlLabels = htmlLabels;
         data.connectors = connectors;
+
+        if (maxMissingWidth > 0) {
+            const {dataLabels} = items[0];
+
+            if (dataLabels.enabled) {
+                let currentRadius = Math.max(...data.segments.map((s) => s.data.radius));
+                let attempts = 0;
+                const maxAttempts = 20;
+
+                while (attempts < maxAttempts && currentRadius > minRadius) {
+                    const ratio =
+                        currentRadius / Math.max(...data.segments.map((s) => s.data.radius));
+                    data.segments.forEach((s) => {
+                        s.data.radius = Math.max(minRadius, s.data.radius * ratio);
+                    });
+                    const testLabels = prepareLabels({data, series: items});
+                    let testMaxMissingWidth = 0;
+                    testLabels.labels.forEach((label) => {
+                        const left = getLeftPosition(label);
+
+                        if (Math.abs(left) > boundsWidth / 2) {
+                            const overflow = Math.abs(left) - boundsWidth / 2;
+                            testMaxMissingWidth = Math.max(testMaxMissingWidth, overflow);
+                        } else {
+                            const right = left + label.size.width;
+
+                            if (right > boundsWidth / 2) {
+                                const overflow = right - boundsWidth / 2;
+                                testMaxMissingWidth = Math.max(testMaxMissingWidth, overflow);
+                            }
+                        }
+                    });
+
+                    if (testMaxMissingWidth === 0) {
+                        break;
+                    }
+
+                    currentRadius *= 0.95;
+                    attempts++;
+                }
+
+                const finalLabels = prepareLabels({data, series: items});
+                data.labels = finalLabels.labels;
+                data.htmlLabels = finalLabels.htmlLabels;
+                data.connectors = finalLabels.connectors;
+            }
+        }
 
         return data;
     });
