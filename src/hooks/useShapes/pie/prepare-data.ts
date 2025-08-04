@@ -50,7 +50,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
     const minRadius = maxRadius * 0.3;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
 
-    // Отслеживаем максимальную недостающую ширину
     let maxMissingWidth = 0;
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {

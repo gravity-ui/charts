@@ -75,7 +75,7 @@ test.describe('Pie series', () => {
         }
     });
 
-    test('Basic 1', async ({mount}) => {
+    test('Should properly handle labels in case of limited width', async ({mount}) => {
         const data: ChartData = {...piePlaygroundData};
         data.legend = {enabled: false};
         const component = await mount(<ChartTestStory data={data} styles={{width: '200px'}} />);

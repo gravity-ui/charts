@@ -1,5 +1,6 @@
 import type {Selection} from 'd3';
 import {select} from 'd3-selection';
+import unescape from 'lodash/unescape';
 
 import type {BaseTextStyle, MeaningfulAny} from '../../types';
 
@@ -127,6 +128,7 @@ export function getLabelsSize({
         return {maxHeight: 0, maxWidth: 0};
     }
 
+    const unescapedLabels = labels.map((l) => unescape(l));
     const container = select(document.body).append('div');
     // TODO: Why do we need this styles?
     // .attr('class', 'chartkit chartkit-theme_common');
@@ -135,7 +137,7 @@ export function getLabelsSize({
     let labelWrapper: HTMLElement | null;
     if (html) {
         labelWrapper = container.append('div').style('position', 'absolute').node();
-        const {height, width} = labels.reduce(
+        const {height, width} = unescapedLabels.reduce(
             (acc, l) => {
                 if (labelWrapper) {
                     labelWrapper.innerHTML = l;
@@ -153,7 +155,7 @@ export function getLabelsSize({
         result.maxHeight = height;
     } else {
         const svg = container.append('svg');
-        const textSelection = renderLabels(svg, {labels, style});
+        const textSelection = renderLabels(svg, {labels: unescapedLabels, style});
         if (rotation) {
             textSelection
                 .attr('text-anchor', rotation > 0 ? 'start' : 'end')
