@@ -107,7 +107,7 @@ function renderLabels(
         .append('tspan')
         .attr('x', 0)
         .attr('dy', 0)
-        .text((d) => d);
+        .html((d) => d);
 
     return text;
 }
