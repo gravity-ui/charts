@@ -339,41 +339,9 @@ export function preparePieData(args: Args): PreparedPieData[] {
             const {dataLabels} = items[0];
 
             if (dataLabels.enabled) {
-                let currentRadius = Math.max(...data.segments.map((s) => s.data.radius));
-                let attempts = 0;
-                const maxAttempts = 20;
-
-                while (attempts < maxAttempts && currentRadius > minRadius) {
-                    const ratio =
-                        currentRadius / Math.max(...data.segments.map((s) => s.data.radius));
-                    data.segments.forEach((s) => {
-                        s.data.radius = Math.max(minRadius, s.data.radius * ratio);
-                    });
-                    const testLabels = prepareLabels({data, series: items});
-                    let testMaxMissingWidth = 0;
-                    testLabels.labels.forEach((label) => {
-                        const left = getLeftPosition(label);
-
-                        if (Math.abs(left) > boundsWidth / 2) {
-                            const overflow = Math.abs(left) - boundsWidth / 2;
-                            testMaxMissingWidth = Math.max(testMaxMissingWidth, overflow);
-                        } else {
-                            const right = left + label.size.width;
-
-                            if (right > boundsWidth / 2) {
-                                const overflow = right - boundsWidth / 2;
-                                testMaxMissingWidth = Math.max(testMaxMissingWidth, overflow);
-                            }
-                        }
-                    });
-
-                    if (testMaxMissingWidth === 0) {
-                        break;
-                    }
-
-                    currentRadius *= 0.95;
-                    attempts++;
-                }
+                data.segments.forEach((s) => {
+                    s.data.radius = Math.max(minRadius, s.data.radius - maxMissingWidth);
+                });
 
                 const finalLabels = prepareLabels({data, series: items});
                 data.labels = finalLabels.labels;
