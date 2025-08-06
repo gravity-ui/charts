@@ -112,153 +112,157 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
 
     return (
-        <React.Fragment>
+        <div className={b('content')}>
             {measureValue && <div className={b('series-name')}>{measureValue}</div>}
-            {hovered.map((seriesItem, i) => {
-                const {data, series, closest} = seriesItem;
-                const id = `${get(series, 'id')}_${i}`;
-                const color = get(series, 'color');
+            {
+                // eslint-disable-next-line complexity
+                hovered.map((seriesItem, i) => {
+                    const {data, series, closest} = seriesItem;
+                    const id = `${get(series, 'id')}_${i}`;
+                    const color = get(series, 'color');
 
-                switch (series.type) {
-                    case 'scatter':
-                    case 'line':
-                    case 'area':
-                    case 'bar-x': {
-                        const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
-                        const formattedValue = getFormattedValue({
-                            value: getYRowData(data, yAxis),
-                            format,
-                        });
-                        const value = (
-                            <React.Fragment>
-                                {series.name}: {formattedValue}
-                            </React.Fragment>
-                        );
-                        const active = closest && hovered.length > 1;
-                        return (
-                            <div key={id} className={b('content-row', {active})}>
-                                <div className={b('color')} style={{backgroundColor: color}} />
-                                <div>{value}</div>
-                            </div>
-                        );
-                    }
-                    case 'waterfall': {
-                        const isTotal = get(data, 'total', false);
-                        const subTotalValue = getWaterfallPointSubtotal(
-                            data as PreparedWaterfallSeriesData,
-                            series as PreparedWaterfallSeries,
-                        );
-                        const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
-                        const subTotal = getFormattedValue({
-                            value: subTotalValue,
-                            format,
-                        });
-                        const formattedValue = getFormattedValue({
-                            value: getYRowData(data, yAxis),
-                            format,
-                        });
+                    switch (series.type) {
+                        case 'scatter':
+                        case 'line':
+                        case 'area':
+                        case 'bar-x': {
+                            const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
+                            const formattedValue = getFormattedValue({
+                                value: getYRowData(data, yAxis),
+                                format,
+                            });
+                            const value = (
+                                <React.Fragment>
+                                    {series.name}: {formattedValue}
+                                </React.Fragment>
+                            );
+                            const active = closest && hovered.length > 1;
+                            return (
+                                <div key={id} className={b('content-row', {active})}>
+                                    <div className={b('color')} style={{backgroundColor: color}} />
+                                    <div>{value}</div>
+                                </div>
+                            );
+                        }
+                        case 'waterfall': {
+                            const isTotal = get(data, 'total', false);
+                            const subTotalValue = getWaterfallPointSubtotal(
+                                data as PreparedWaterfallSeriesData,
+                                series as PreparedWaterfallSeries,
+                            );
+                            const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
+                            const subTotal = getFormattedValue({
+                                value: subTotalValue,
+                                format,
+                            });
+                            const formattedValue = getFormattedValue({
+                                value: getYRowData(data, yAxis),
+                                format,
+                            });
 
-                        return (
-                            <div key={`${id}_${get(data, 'x')}`}>
-                                {!isTotal && (
-                                    <React.Fragment>
-                                        <div key={id} className={b('content-row')}>
-                                            <b>{getXRowData(data, xAxis)}</b>
-                                        </div>
-                                        <div className={b('content-row')}>
-                                            <span>{series.name}&nbsp;</span>
-                                            <span>{formattedValue}</span>
-                                        </div>
-                                    </React.Fragment>
-                                )}
+                            return (
+                                <div key={`${id}_${get(data, 'x')}`}>
+                                    {!isTotal && (
+                                        <React.Fragment>
+                                            <div key={id} className={b('content-row')}>
+                                                <b>{getXRowData(data, xAxis)}</b>
+                                            </div>
+                                            <div className={b('content-row')}>
+                                                <span>{series.name}&nbsp;</span>
+                                                <span>{formattedValue}</span>
+                                            </div>
+                                        </React.Fragment>
+                                    )}
+                                    <div key={id} className={b('content-row')}>
+                                        {isTotal ? 'Total' : 'Subtotal'}: {subTotal}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        case 'bar-y': {
+                            const format = valueFormat ?? getDefaultValueFormat({axis: xAxis});
+                            const formattedValue = getFormattedValue({
+                                value: getXRowData(data, xAxis),
+                                format,
+                            });
+                            const value = (
+                                <React.Fragment>
+                                    {series.name}: {formattedValue}
+                                </React.Fragment>
+                            );
+                            const active = closest && hovered.length > 1;
+                            return (
+                                <div key={id} className={b('content-row', {active})}>
+                                    <div className={b('color')} style={{backgroundColor: color}} />
+                                    <div>{value}</div>
+                                </div>
+                            );
+                        }
+                        case 'pie':
+                        case 'treemap': {
+                            const seriesData = data as PreparedPieSeries | TreemapSeriesData;
+                            const formattedValue = getFormattedValue({
+                                value: seriesData.value,
+                                format: valueFormat ?? {type: 'number'},
+                            });
+
+                            return (
                                 <div key={id} className={b('content-row')}>
-                                    {isTotal ? 'Total' : 'Subtotal'}: {subTotal}
+                                    <div className={b('color')} style={{backgroundColor: color}} />
+                                    <span>{seriesData.name || seriesData.id}&nbsp;</span>
+                                    <span>{formattedValue}</span>
                                 </div>
-                            </div>
-                        );
-                    }
-                    case 'bar-y': {
-                        const format = valueFormat ?? getDefaultValueFormat({axis: xAxis});
-                        const formattedValue = getFormattedValue({
-                            value: getXRowData(data, xAxis),
-                            format,
-                        });
-                        const value = (
-                            <React.Fragment>
-                                {series.name}: {formattedValue}
-                            </React.Fragment>
-                        );
-                        const active = closest && hovered.length > 1;
-                        return (
-                            <div key={id} className={b('content-row', {active})}>
-                                <div className={b('color')} style={{backgroundColor: color}} />
-                                <div>{value}</div>
-                            </div>
-                        );
-                    }
-                    case 'pie':
-                    case 'treemap': {
-                        const seriesData = data as PreparedPieSeries | TreemapSeriesData;
-                        const formattedValue = getFormattedValue({
-                            value: seriesData.value,
-                            format: valueFormat ?? {type: 'number'},
-                        });
+                            );
+                        }
+                        case 'sankey': {
+                            const {target, data: source} = seriesItem as TooltipDataChunkSankey;
+                            const value = source.links.find((d) => d.name === target?.name)?.value;
+                            const formattedValue = getFormattedValue({
+                                value,
+                                format: valueFormat ?? {type: 'number'},
+                            });
 
-                        return (
-                            <div key={id} className={b('content-row')}>
-                                <div className={b('color')} style={{backgroundColor: color}} />
-                                <span>{seriesData.name || seriesData.id}&nbsp;</span>
-                                <span>{formattedValue}</span>
-                            </div>
-                        );
-                    }
-                    case 'sankey': {
-                        const {target, data: source} = seriesItem as TooltipDataChunkSankey;
-                        const value = source.links.find((d) => d.name === target?.name)?.value;
-                        const formattedValue = getFormattedValue({
-                            value,
-                            format: valueFormat ?? {type: 'number'},
-                        });
-
-                        return (
-                            <div key={id} className={b('content-row')}>
-                                <div
-                                    className={b('color')}
-                                    style={{backgroundColor: source.color}}
-                                />
-                                <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
-                                    {source.name} <span>→</span> {target?.name}: {formattedValue}
+                            return (
+                                <div key={id} className={b('content-row')}>
+                                    <div
+                                        className={b('color')}
+                                        style={{backgroundColor: source.color}}
+                                    />
+                                    <div style={{display: 'flex', gap: 8, verticalAlign: 'center'}}>
+                                        {source.name} <span>→</span> {target?.name}:{' '}
+                                        {formattedValue}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    }
-                    case 'radar': {
-                        const radarSeries = series as PreparedRadarSeries;
-                        const seriesData = data as RadarSeriesData;
-                        const formattedValue = getFormattedValue({
-                            value: seriesData.value,
-                            format: valueFormat ?? {type: 'number'},
-                        });
+                            );
+                        }
+                        case 'radar': {
+                            const radarSeries = series as PreparedRadarSeries;
+                            const seriesData = data as RadarSeriesData;
+                            const formattedValue = getFormattedValue({
+                                value: seriesData.value,
+                                format: valueFormat ?? {type: 'number'},
+                            });
 
-                        const value = (
-                            <React.Fragment>
-                                <span>{radarSeries.name || radarSeries.id}&nbsp;</span>
-                                <span>{formattedValue}</span>
-                            </React.Fragment>
-                        );
-                        const active = closest && hovered.length > 1;
-                        return (
-                            <div key={id} className={b('content-row', {active})}>
-                                <div className={b('color')} style={{backgroundColor: color}} />
-                                <div>{value}</div>
-                            </div>
-                        );
+                            const value = (
+                                <React.Fragment>
+                                    <span>{radarSeries.name || radarSeries.id}&nbsp;</span>
+                                    <span>{formattedValue}</span>
+                                </React.Fragment>
+                            );
+                            const active = closest && hovered.length > 1;
+                            return (
+                                <div key={id} className={b('content-row', {active})}>
+                                    <div className={b('color')} style={{backgroundColor: color}} />
+                                    <div>{value}</div>
+                                </div>
+                            );
+                        }
+                        default: {
+                            return null;
+                        }
                     }
-                    default: {
-                        return null;
-                    }
-                }
-            })}
-        </React.Fragment>
+                })
+            }
+        </div>
     );
 };

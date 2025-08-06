@@ -55,7 +55,7 @@ export const Tooltip = (props: TooltipProps) => {
             open={true}
             placement={['right', 'left', 'top', 'bottom']}
         >
-            <div className={b('content')}>
+            <div className={b('popup-content')}>
                 <ChartTooltipContent
                     hovered={hovered}
                     xAxis={xAxis}

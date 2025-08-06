@@ -1,13 +1,15 @@
 .gcharts-tooltip {
     box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
 
-    &__content {
-        padding: 8px 0;
-
+    &__popup-content {
         text-wrap: nowrap;
 
         border-radius: 4px;
         background-color: var(--g-color-infographics-tooltip-bg);
+    }
+
+    &__content {
+        padding: var(--gcharts-tooltip-content-padding, 8px 0);
     }
 
     &__series-name {
