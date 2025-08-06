@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/gravity-ui/charts/compare/v1.3.1...v1.4.0) (2025-08-06)
+
+
+### Features
+
+* **tooltip:** add bg to active lines in default tooltip ([#99](https://github.com/gravity-ui/charts/issues/99)) ([1f6b691](https://github.com/gravity-ui/charts/commit/1f6b691257ef89c1da374cce133a85db26aebe9a))
+
+
+### Bug Fixes
+
+* tooltip content padding ([#104](https://github.com/gravity-ui/charts/issues/104)) ([73aabff](https://github.com/gravity-ui/charts/commit/73aabff01fbbabfb3fad53534ad4bc90e0355582))
+
 ## [1.3.1](https://github.com/gravity-ui/charts/compare/v1.3.0...v1.3.1) (2025-08-04)
 
 
