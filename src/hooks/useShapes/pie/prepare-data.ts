@@ -315,7 +315,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             });
         } else {
             const topAdjustment = Math.min(
-                data.center[1] - segmentMaxRadius,
+                data.center[1] - segmentMaxRadius - haloSize,
                 ...preparedLabels.labels.map((l) => l.y + data.center[1]),
                 ...preparedLabels.htmlLabels.map((l) => l.y),
                 maxLeftRightFreeSpace,
@@ -324,7 +324,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 data.center[1] + segmentMaxRadius,
                 ...preparedLabels.labels.map((l) => l.y + data.center[1] + l.size.height),
                 ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
-                maxLeftRightFreeSpace,
             );
 
             if (topAdjustment > 0) {
@@ -335,7 +334,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 data.center[1] -= topAdjustment / 2;
             }
 
-            const bottomAdjustment = Math.floor(boundsHeight - bottom);
+            const bottomAdjustment = boundsHeight - bottom;
             if (bottomAdjustment > 0) {
                 data.segments.forEach((s) => {
                     const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
