@@ -314,33 +314,51 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 s.data.radius = neeSegmentRadius;
             });
         } else {
-            const topAdjustment = Math.min(
-                data.center[1] - segmentMaxRadius - haloSize,
-                ...preparedLabels.labels.map((l) => l.y + data.center[1]),
-                ...preparedLabels.htmlLabels.map((l) => l.y),
-                maxLeftRightFreeSpace,
-            );
-            const bottom = Math.max(
-                data.center[1] + segmentMaxRadius,
-                ...preparedLabels.labels.map((l) => l.y + data.center[1] + l.size.height),
-                ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
-            );
-
-            if (topAdjustment > 0) {
-                data.segments.forEach((s) => {
-                    const nextPossibleRadius = s.data.radius + topAdjustment / 2;
-                    s.data.radius = Math.min(nextPossibleRadius, maxRadius);
-                });
-                data.center[1] -= topAdjustment / 2;
+            let topFreeSpace = data.center[1] - segmentMaxRadius - haloSize;
+            if (preparedLabels.labels.length) {
+                const topSvgLabel = Math.max(0, ...preparedLabels.labels.map((l) => -l.y));
+                topFreeSpace = Math.min(topFreeSpace, data.center[1] - topSvgLabel);
             }
 
-            const bottomAdjustment = boundsHeight - bottom;
-            if (bottomAdjustment > 0) {
+            if (preparedLabels.htmlLabels.length) {
+                const topHtmlLabel = Math.max(0, ...preparedLabels.htmlLabels.map((l) => l.y));
+                topFreeSpace = Math.min(topFreeSpace, topHtmlLabel);
+            }
+
+            let bottomFreeSpace = data.center[1] - segmentMaxRadius - haloSize;
+            if (preparedLabels.labels.length) {
+                const bottomSvgLabel = Math.max(
+                    0,
+                    ...preparedLabels.labels.map((l) => l.y + l.size.height),
+                );
+                bottomFreeSpace = Math.min(bottomFreeSpace, data.center[1] - bottomSvgLabel);
+            }
+
+            if (preparedLabels.htmlLabels.length) {
+                const bottomHtmlLabel = Math.max(
+                    0,
+                    ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
+                );
+                bottomFreeSpace = Math.min(bottomFreeSpace, data.center[1] * 2 - bottomHtmlLabel);
+            }
+
+            const topAdjustment = Math.max(0, Math.min(topFreeSpace, maxLeftRightFreeSpace));
+            const bottomAdjustment = Math.max(0, Math.min(bottomFreeSpace, maxLeftRightFreeSpace));
+
+            if (topAdjustment && topAdjustment >= bottomAdjustment) {
                 data.segments.forEach((s) => {
-                    const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
+                    const nextPossibleRadius =
+                        s.data.radius + (topAdjustment + bottomAdjustment) / 2;
                     s.data.radius = Math.min(nextPossibleRadius, maxRadius);
                 });
-                data.center[1] += bottomAdjustment / 2;
+                data.center[1] -= (topAdjustment - bottomAdjustment) / 2;
+            } else if (bottomAdjustment) {
+                data.segments.forEach((s) => {
+                    const nextPossibleRadius =
+                        s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                    s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                });
+                data.center[1] += (bottomAdjustment - topAdjustment) / 2;
             }
         }
 
