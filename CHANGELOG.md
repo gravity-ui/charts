@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/gravity-ui/charts/compare/v1.4.0...v1.4.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* pie dataLabels collapse into three dots (with enough space) ([#105](https://github.com/gravity-ui/charts/issues/105)) ([819828d](https://github.com/gravity-ui/charts/commit/819828d879147651df68ec3d5537a52dc06f36f1))
+
 ## [1.4.0](https://github.com/gravity-ui/charts/compare/v1.3.1...v1.4.0) (2025-08-06)
 
 
