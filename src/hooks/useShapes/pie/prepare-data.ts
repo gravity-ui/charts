@@ -50,8 +50,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
     const minRadius = maxRadius * 0.3;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
 
-    let maxMissingWidth = 0;
-
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
         const series = items[0];
         const {
@@ -120,8 +118,9 @@ export function preparePieData(args: Args): PreparedPieData[] {
     const prepareLabels = (prepareLabelsArgs: {
         data: PreparedPieData;
         series: PreparedPieSeries[];
+        allowOverlow?: boolean;
     }) => {
-        const {data, series} = prepareLabelsArgs;
+        const {data, series, allowOverlow = true} = prepareLabelsArgs;
         const {dataLabels} = series[0];
 
         const labels: PieLabelData[] = [];
@@ -178,8 +177,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
                     y = y < 0 ? y - labelHeight : y;
                 }
 
-                x = Math.max(-boundsWidth / 2, x);
-
                 return [x, y];
             };
 
@@ -219,6 +216,17 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 angle: midAngle,
             };
 
+            if (!allowOverlow) {
+                const labelLeftPosition = getLeftPosition(label);
+                const newMaxWidth =
+                    labelLeftPosition > 0
+                        ? Math.min(boundsWidth / 2 - labelLeftPosition, labelWidth)
+                        : Math.min(labelWidth - (-labelLeftPosition - boundsWidth / 2), labelWidth);
+                if (newMaxWidth !== label.maxWidth) {
+                    label.maxWidth = Math.max(0, newMaxWidth);
+                }
+            }
+
             let overlap = false;
             if (prevLabel) {
                 overlap = isLabelsOverlapping(prevLabel, label, dataLabels.padding);
@@ -247,22 +255,8 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 }
             }
 
-            if (dataLabels.allowOverlap || !overlap) {
-                const left = getLeftPosition(label);
-
-                if (Math.abs(left) > boundsWidth / 2) {
-                    const overflow = Math.abs(left) - boundsWidth / 2;
-                    label.maxWidth = label.size.width - overflow;
-                    maxMissingWidth = Math.max(maxMissingWidth, overflow);
-                } else {
-                    const right = left + label.size.width;
-                    if (right > boundsWidth / 2) {
-                        const overflow = right - boundsWidth / 2;
-                        label.maxWidth = label.size.width - overflow;
-                        maxMissingWidth = Math.max(maxMissingWidth, overflow);
-                    }
-                }
-
+            const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
+            if (!isLabelOverlapped && label.maxWidth > 0) {
                 if (shouldUseHtml) {
                     htmlLabels.push({
                         x: data.center[0] + label.x,
@@ -297,58 +291,69 @@ export function preparePieData(args: Args): PreparedPieData[] {
             series: items,
         });
 
+        let maxLeftRightFreeSpace = Infinity;
+        let labelsOverflow = 0;
+        preparedLabels.labels.forEach((label) => {
+            const left = getLeftPosition(label);
+
+            let freeSpace = 0;
+            if (left < 0) {
+                freeSpace = boundsWidth / 2 - Math.abs(left);
+            } else {
+                freeSpace = boundsWidth / 2 - (left + label.size.width);
+            }
+
+            maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
+            labelsOverflow = freeSpace < 0 ? Math.max(labelsOverflow, -freeSpace) : labelsOverflow;
+        });
+
         const segmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
-        const topAdjustment = Math.min(
-            data.center[1] - segmentMaxRadius,
-            ...preparedLabels.labels.map((l) => l.y + data.center[1]),
-            ...preparedLabels.htmlLabels.map((l) => l.y),
-        );
-        const bottom = Math.max(
-            data.center[1] + segmentMaxRadius,
-            ...preparedLabels.labels.map((l) => l.y + data.center[1] + l.size.height),
-            ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
-        );
-
-        if (topAdjustment > 0) {
+        if (labelsOverflow) {
             data.segments.forEach((s) => {
-                const nextPossibleRadius = s.data.radius + topAdjustment / 2;
-                s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                const neeSegmentRadius = Math.max(minRadius, s.data.radius - labelsOverflow);
+                s.data.radius = neeSegmentRadius;
             });
-            data.center[1] -= topAdjustment / 2;
-        }
+        } else {
+            const topAdjustment = Math.min(
+                data.center[1] - segmentMaxRadius,
+                ...preparedLabels.labels.map((l) => l.y + data.center[1]),
+                ...preparedLabels.htmlLabels.map((l) => l.y),
+                maxLeftRightFreeSpace,
+            );
+            const bottom = Math.max(
+                data.center[1] + segmentMaxRadius,
+                ...preparedLabels.labels.map((l) => l.y + data.center[1] + l.size.height),
+                ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
+                maxLeftRightFreeSpace,
+            );
 
-        const bottomAdjustment = Math.floor(boundsHeight - bottom);
-        if (bottomAdjustment > 0) {
-            data.segments.forEach((s) => {
-                const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
-                s.data.radius = Math.min(nextPossibleRadius, maxRadius);
-            });
-            data.center[1] += bottomAdjustment / 2;
+            if (topAdjustment > 0) {
+                data.segments.forEach((s) => {
+                    const nextPossibleRadius = s.data.radius + topAdjustment / 2;
+                    s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                });
+                data.center[1] -= topAdjustment / 2;
+            }
+
+            const bottomAdjustment = Math.floor(boundsHeight - bottom);
+            if (bottomAdjustment > 0) {
+                data.segments.forEach((s) => {
+                    const nextPossibleRadius = s.data.radius + bottomAdjustment / 2;
+                    s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                });
+                data.center[1] += bottomAdjustment / 2;
+            }
         }
 
         const {labels, htmlLabels, connectors} = prepareLabels({
             data,
             series: items,
+            allowOverlow: false,
         });
 
         data.labels = labels;
         data.htmlLabels = htmlLabels;
         data.connectors = connectors;
-
-        if (maxMissingWidth > 0) {
-            const {dataLabels} = items[0];
-
-            if (dataLabels.enabled) {
-                data.segments.forEach((s) => {
-                    s.data.radius = Math.max(minRadius, s.data.radius - maxMissingWidth);
-                });
-
-                const finalLabels = prepareLabels({data, series: items});
-                data.labels = finalLabels.labels;
-                data.htmlLabels = finalLabels.htmlLabels;
-                data.connectors = finalLabels.connectors;
-            }
-        }
 
         return data;
     });
