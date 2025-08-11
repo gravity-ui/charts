@@ -46,4 +46,15 @@ export interface TreemapSeries<T = MeaningfulAny> extends BaseSeries {
         /** Horizontal alignment of the data label inside the tile. */
         align?: 'left' | 'center' | 'right';
     };
+    /** Data sorting settings (affects the order in which blocks are displayed inside the chart). */
+    sorting?: {
+        /** When this option is enabled, the data will be additionally sorted.
+         * When turned off, they are displayed as is. */
+        enabled?: boolean;
+        /** The sorting direction.
+         *
+         * @default: 'desc'
+         */
+        direction?: 'asc' | 'desc';
+    };
 }

@@ -292,8 +292,9 @@ export type PreparedTreemapSeries = {
         format?: ValueFormat;
     };
     layoutAlgorithm: `${LayoutAlgorithm}`;
+    sorting: Required<TreemapSeries['sorting']>;
 } & BasePreparedSeries &
-    Omit<TreemapSeries, keyof BasePreparedSeries>;
+    Required<Omit<TreemapSeries, keyof BasePreparedSeries>>;
 
 export type PreparedWaterfallSeriesData = WaterfallSeriesData & {index: number};
 

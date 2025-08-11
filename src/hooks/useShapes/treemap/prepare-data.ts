@@ -1,4 +1,7 @@
 import {
+    ascending,
+    descending,
+    sort,
     stratify,
     treemap,
     treemapBinary,
@@ -92,7 +95,36 @@ export function prepareTreemapData(args: {
     height: number;
 }): PreparedTreemapData {
     const {series, width, height} = args;
-    const dataWithRootNode = getSeriesDataWithRootNode(series);
+
+    const parentNodeValues: Record<string, number> = {};
+    let dataWithRootNode = series.data.reduce<TreemapSeriesData[]>(
+        (acc, d) => {
+            const dataChunk = Object.assign({}, d);
+
+            if (!dataChunk.parentId) {
+                dataChunk.parentId = series.id;
+            }
+
+            if (dataChunk.parentId) {
+                parentNodeValues[dataChunk.parentId] =
+                    (parentNodeValues[dataChunk.parentId] ?? 0) + (dataChunk.value ?? 0);
+            }
+
+            acc.push(dataChunk);
+
+            return acc;
+        },
+        [{name: series.name, id: series.id}],
+    );
+
+    if (series.sorting.enabled) {
+        const getSortingValue = (d: TreemapSeriesData) => d.value ?? parentNodeValues[d.id ?? ''];
+        const comparator = series.sorting.direction === 'desc' ? ascending : descending;
+        dataWithRootNode = sort(dataWithRootNode, (a, b) =>
+            comparator(getSortingValue(a), getSortingValue(b)),
+        );
+    }
+
     const hierarchy = stratify<TreemapSeriesData>()
         .id((d) => {
             if (d.id) {
@@ -148,21 +180,4 @@ export function prepareTreemapData(args: {
     }
 
     return {labelData, leaves, series, htmlElements};
-}
-
-function getSeriesDataWithRootNode(series: PreparedTreemapSeries) {
-    return series.data.reduce<TreemapSeriesData[]>(
-        (acc, d) => {
-            const dataChunk = Object.assign({}, d);
-
-            if (!dataChunk.parentId) {
-                dataChunk.parentId = series.id;
-            }
-
-            acc.push(dataChunk);
-
-            return acc;
-        },
-        [{name: series.name, id: series.id}],
-    );
 }

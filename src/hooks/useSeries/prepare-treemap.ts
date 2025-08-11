@@ -44,9 +44,14 @@ export function prepareTreemap(args: PrepareTreemapSeriesArgs) {
                 enabled: get(s, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(s),
             },
-            levels: s.levels,
+            levels: s.levels ?? [],
             layoutAlgorithm: get(s, 'layoutAlgorithm', LayoutAlgorithm.Binary),
             cursor: get(s, 'cursor', null),
+            sorting: {
+                enabled: false,
+                direction: 'desc',
+                ...s.sorting,
+            },
         };
 
         return preparedSeries;
