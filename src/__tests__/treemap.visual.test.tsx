@@ -3,7 +3,7 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 
 import {treemapBasicData} from 'src/__stories__/__data__';
-import type {ChartData} from 'src/types';
+import type {ChartData, TreemapSeries} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -77,5 +77,53 @@ test.describe('Treemap series', () => {
         };
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('With and without sorting', async ({mount}) => {
+        const series: TreemapSeries = {
+            type: 'treemap',
+            name: 'With and without sorting',
+            layoutAlgorithm: 'slice',
+            levels: [
+                {index: 1, padding: 3},
+                {index: 2, padding: 1},
+            ],
+            data: [
+                {name: '1. value = 10', value: 10},
+                {name: '2. value = 30', value: 30},
+                {name: '2. value(sum) = 20', id: '2'},
+                {name: '2.1. value = 15', value: 15, parentId: '2'},
+                {name: '2.2. value = 5', value: 5, parentId: '2'},
+            ],
+        };
+
+        const chart = await mount(
+            <ChartTestStory
+                data={{
+                    series: {
+                        data: [series],
+                    },
+                }}
+            />,
+        );
+        await expect(chart.locator('svg')).toHaveScreenshot();
+
+        await chart.update(
+            <ChartTestStory
+                data={{
+                    series: {
+                        data: [
+                            {
+                                ...series,
+                                sorting: {
+                                    enabled: true,
+                                },
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+        await expect(chart.locator('svg')).toHaveScreenshot();
     });
 });
