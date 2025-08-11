@@ -119,7 +119,7 @@ export function prepareTreemapData(args: {
 
     if (series.sorting.enabled) {
         const getSortingValue = (d: TreemapSeriesData) => d.value ?? parentNodeValues[d.id ?? ''];
-        const comparator = series.sorting.direction === 'desc' ? ascending : descending;
+        const comparator = series.sorting.direction === 'desc' ? descending : ascending;
         dataWithRootNode = sort(dataWithRootNode, (a, b) =>
             comparator(getSortingValue(a), getSortingValue(b)),
         );
