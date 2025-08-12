@@ -1,7 +1,9 @@
 import type {CurveFactory} from 'd3';
 import {curveBasis, curveLinear, pie} from 'd3';
 
-import type {PreparedPieData, SegmentData} from './types';
+import {getLeftPosition} from '../../../utils';
+
+import type {PieLabelData, PreparedPieData, SegmentData} from './types';
 
 export const pieGenerator = pie<SegmentData>()
     .value((d) => d.value)
@@ -32,7 +34,7 @@ export function getIntersectionCheckSegment(
     return [startPoint, endPoint];
 }
 
-export function lineIntersectsCircleCentered(
+export function isLineIntersectingCircle(
     p1: [number, number],
     p2: [number, number],
     radius: number,
@@ -98,8 +100,24 @@ export function lineIntersectsCircleCentered(
         closestY = y1 + t * dy;
     }
 
-    // Finally, check if this closest point is inside the circle
     const distanceSq = closestX ** 2 + closestY ** 2;
 
     return distanceSq <= r2;
+}
+
+export function isLabelIntersectingCircle(label: PieLabelData, radius: number) {
+    const r2 = radius ** 2;
+    const lw = label.size.width;
+    const lh = label.size.height;
+    const lx = getLeftPosition(label);
+    const ly = label.y;
+    const xMin = lx;
+    const xMax = lx + lw;
+    const yMin = ly;
+    const yMax = ly + lh;
+    const closestX = Math.max(xMin, Math.min(0, xMax));
+    const closestY = Math.max(yMin, Math.min(0, yMax));
+    const distanceSquared = closestX * closestX + closestY * closestY;
+
+    return distanceSquared < r2;
 }

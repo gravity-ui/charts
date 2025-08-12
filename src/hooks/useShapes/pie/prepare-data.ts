@@ -15,7 +15,8 @@ import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from 
 import {
     getCurveFactory,
     getIntersectionCheckSegment,
-    lineIntersectsCircleCentered,
+    isLabelIntersectingCircle,
+    isLineIntersectingCircle,
     pieGenerator,
 } from './utils';
 
@@ -252,7 +253,17 @@ export function preparePieData(args: Args): PreparedPieData[] {
                             label.x = newX;
                             label.y = newY;
 
-                            if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
+                            const isLabelOverlapped = isLabelsOverlapping(
+                                prevLabel,
+                                label,
+                                dataLabels.padding,
+                            );
+                            const isCircleInterceted = isLabelIntersectingCircle(
+                                label,
+                                relatedSegment.data.radius,
+                            );
+
+                            if (!isLabelOverlapped && !isCircleInterceted) {
                                 shouldAdjustAngle = false;
                                 overlap = false;
                             }
@@ -265,7 +276,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             if (!isLabelOverlapped && label.maxWidth > 0 && !isConnectorIntersectingSegment) {
                 const connectorsPoints = getConnectorPoints(midAngle);
                 const [p1, p2] = getIntersectionCheckSegment(connectorsPoints);
-                isConnectorIntersectingSegment = lineIntersectsCircleCentered(
+                isConnectorIntersectingSegment = isLineIntersectingCircle(
                     p1,
                     p2,
                     relatedSegment.data.radius,
