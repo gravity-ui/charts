@@ -2,6 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
+import range from 'lodash/range';
 import set from 'lodash/set';
 
 import {pieBasicData, piePlaygroundData} from 'src/__stories__/__data__';
@@ -79,6 +80,64 @@ test.describe('Pie series', () => {
         const data: ChartData = {...piePlaygroundData};
         data.legend = {enabled: false};
         const component = await mount(<ChartTestStory data={data} styles={{width: '200px'}} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Connectors should not intersect with circle', async ({mount}) => {
+        const data: any = {
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {
+                            format: {
+                                type: 'number',
+                                precision: 2,
+                            },
+                        },
+                        data: range(1, 70).map((i) => {
+                            return {
+                                name: `Name ${i}`,
+                                value: Math.floor(1000 / i),
+                            };
+                        }),
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Labels should not intersect with circle', async ({mount}) => {
+        const data: any = {
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {
+                            format: {
+                                type: 'number',
+                                precision: 8,
+                            },
+                        },
+                        data: range(1, 15).map((i) => {
+                            return {
+                                name: `Name ${i}`,
+                                value: Math.floor(1000 / i),
+                            };
+                        }),
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
