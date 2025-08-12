@@ -12,7 +12,12 @@ import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedPieSeries} from '../../useSeries/types';
 
 import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';
-import {getCurveFactory, pieGenerator} from './utils';
+import {
+    getCurveFactory,
+    getIntersectionCheckSegment,
+    lineIntersectsCircleCentered,
+    pieGenerator,
+} from './utils';
 
 const FULL_CIRCLE = Math.PI * 2;
 
@@ -152,6 +157,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             .innerRadius((d) => d.data.radius + distance + connectorPadding)
             .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
+        let isConnectorIntersectingSegment = false;
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
             const text = getFormattedValue({
@@ -256,24 +262,33 @@ export function preparePieData(args: Args): PreparedPieData[] {
             }
 
             const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
-            if (!isLabelOverlapped && label.maxWidth > 0) {
-                if (shouldUseHtml) {
-                    htmlLabels.push({
-                        x: data.center[0] + label.x,
-                        y: Math.max(0, data.center[1] + label.y),
-                        content: label.text,
-                        size: label.size,
-                        style: label.style,
-                    });
-                } else {
-                    labels.push(label);
-                }
+            if (!isLabelOverlapped && label.maxWidth > 0 && !isConnectorIntersectingSegment) {
+                const connectorsPoints = getConnectorPoints(midAngle);
+                const [p1, p2] = getIntersectionCheckSegment(connectorsPoints);
+                isConnectorIntersectingSegment = lineIntersectsCircleCentered(
+                    p1,
+                    p2,
+                    relatedSegment.data.radius,
+                );
 
-                const connector = {
-                    path: line(getConnectorPoints(midAngle)),
-                    color: relatedSegment.data.color,
-                };
-                connectors.push(connector);
+                if (!isConnectorIntersectingSegment) {
+                    if (shouldUseHtml) {
+                        htmlLabels.push({
+                            x: data.center[0] + label.x,
+                            y: Math.max(0, data.center[1] + label.y),
+                            content: label.text,
+                            size: label.size,
+                            style: label.style,
+                        });
+                    } else {
+                        labels.push(label);
+                    }
+
+                    connectors.push({
+                        path: line(connectorsPoints),
+                        color: relatedSegment.data.color,
+                    });
+                }
             }
         });
 
