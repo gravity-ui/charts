@@ -12,7 +12,7 @@ import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedPieSeries} from '../../useSeries/types';
 
 import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';
-import {getCurveFactory, pieGenerator} from './utils';
+import {getCurveFactory, getInscribedAngle, pieGenerator} from './utils';
 
 const FULL_CIRCLE = Math.PI * 2;
 
@@ -152,6 +152,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             .innerRadius((d) => d.data.radius + distance + connectorPadding)
             .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
+        let shouldStopLabelPlacement = false;
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
             const text = getFormattedValue({
@@ -230,9 +231,15 @@ export function preparePieData(args: Args): PreparedPieData[] {
             let overlap = false;
             if (prevLabel) {
                 overlap = isLabelsOverlapping(prevLabel, label, dataLabels.padding);
+                const startAngle =
+                    relatedSegment.startAngle +
+                    (relatedSegment.endAngle - relatedSegment.startAngle) / 2;
 
                 if (overlap) {
-                    let shouldAdjustAngle = true;
+                    let shouldAdjustAngle = !shouldStopLabelPlacement;
+                    const connectorPoints = getConnectorPoints(startAngle);
+                    const pointA = connectorPoints[0];
+                    const pointB = connectorPoints[connectorPoints.length - 1];
 
                     const step = Math.PI / 180;
                     while (shouldAdjustAngle) {
@@ -245,6 +252,12 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
                             label.x = newX;
                             label.y = newY;
+                            const inscribedAngle = getInscribedAngle(pointA, pointB, [newX, newY]);
+
+                            if (inscribedAngle > 90) {
+                                shouldAdjustAngle = false;
+                                shouldStopLabelPlacement = true;
+                            }
 
                             if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
                                 shouldAdjustAngle = false;
@@ -256,7 +269,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             }
 
             const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
-            if (!isLabelOverlapped && label.maxWidth > 0) {
+            if (!isLabelOverlapped && label.maxWidth > 0 && !shouldStopLabelPlacement) {
                 if (shouldUseHtml) {
                     htmlLabels.push({
                         x: data.center[0] + label.x,
@@ -270,7 +283,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 }
 
                 const connector = {
-                    path: line(getConnectorPoints(midAngle)),
+                    path: line(getConnectorPoints(label.angle)),
                     color: relatedSegment.data.color,
                 };
                 connectors.push(connector);
