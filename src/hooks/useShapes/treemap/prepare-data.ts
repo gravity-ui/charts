@@ -30,7 +30,7 @@ function getLabels(args: {
 }) {
     const {
         data,
-        options: {html, padding, align},
+        options: {html, padding, align, style},
     } = args;
 
     return data.reduce<LabelItem[]>((acc, d) => {
@@ -39,7 +39,7 @@ function getLabels(args: {
         texts.forEach((text, index) => {
             const label = getFormattedValue({value: text, ...args.options});
             const {maxHeight: lineHeight, maxWidth: labelMaxWidth} =
-                getLabelsSize({labels: [label], html}) ?? {};
+                getLabelsSize({labels: [label], style, html}) ?? {};
             const left = d.x0 + padding;
             const right = d.x1 - padding;
             const spaceWidth = Math.max(0, right - left);

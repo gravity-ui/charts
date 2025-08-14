@@ -134,7 +134,12 @@ export function getLabelsSize({
     const result = {maxHeight: 0, maxWidth: 0};
     let labelWrapper: HTMLElement | null;
     if (html) {
-        labelWrapper = container.append('div').style('position', 'absolute').node();
+        labelWrapper = container
+            .append('div')
+            .style('position', 'absolute')
+            .style('font-size', style?.fontSize ?? '')
+            .style('font-weight', style?.fontWeight ?? '')
+            .node();
         const {height, width} = labels.reduce(
             (acc, l) => {
                 if (labelWrapper) {
