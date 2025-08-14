@@ -79,6 +79,55 @@ test.describe('Treemap series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Labels go beyond the boundaries of the chart(html: false)', async ({mount}) => {
+        const data: ChartData = {
+            chart: {margin: {bottom: 20, right: 20}},
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: '',
+                        data: [{name: ['Long name', 'With', 'Few', 'Rows'], value: 10}],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 80, width: 80}} />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Labels go beyond the boundaries of the chart(html: true)', async ({mount}) => {
+        const data: ChartData = {
+            chart: {margin: {bottom: 20, right: 20}},
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: '',
+                        dataLabels: {html: true},
+                        data: [
+                            {
+                                name: [
+                                    '<span style="white-space: nowrap;">Long name</span>',
+                                    'With',
+                                    'Few',
+                                    'Rows',
+                                ],
+                                value: 10,
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 80, width: 80}} />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('With and without sorting', async ({mount}) => {
         const series: TreemapSeries = {
             type: 'treemap',

@@ -67,6 +67,11 @@ function getLabels(args: {
                 }
             }
 
+            const bottom = y + lineHeight;
+            if (bottom > d.y1) {
+                return;
+            }
+
             const item: LabelItem = html
                 ? {
                       content: label,
@@ -172,7 +177,18 @@ export function prepareTreemapData(args: {
         const {html, style: dataLabelsStyle} = series.dataLabels;
         const labels = getLabels({data: leaves, options: series.dataLabels});
         if (html) {
-            const htmlItems = labels.map((l) => ({style: dataLabelsStyle, ...l}) as HtmlItem);
+            const htmlItems = labels.map(
+                (l) =>
+                    ({
+                        style: {
+                            ...dataLabelsStyle,
+                            maxWidth: (l as HtmlItem).size.width,
+                            maxHeight: (l as HtmlItem).size.height,
+                            overflow: 'hidden',
+                        },
+                        ...l,
+                    }) as HtmlItem,
+            );
             htmlElements.push(...htmlItems);
         } else {
             labelData = labels as TreemapLabelData[];
