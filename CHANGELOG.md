@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.1](https://github.com/gravity-ui/charts/compare/v1.5.0...v1.5.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* **Pie:** fix possible chart intersection by connectors ([#109](https://github.com/gravity-ui/charts/issues/109)) ([fcecf02](https://github.com/gravity-ui/charts/commit/fcecf02fa5945b686b7c7488ca81837493ac87c2))
+* **Treemap:** labels go beyond the boundaries of the chart ([#111](https://github.com/gravity-ui/charts/issues/111)) ([b416104](https://github.com/gravity-ui/charts/commit/b4161047688c8a0a931191cf86558b7999723c21))
+
 ## [1.5.0](https://github.com/gravity-ui/charts/compare/v1.4.0...v1.5.0) (2025-08-11)
 
 
