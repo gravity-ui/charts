@@ -2,14 +2,13 @@ import {scaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {DEFAULT_PALETTE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, DEFAULT_PALETTE} from '../../constants';
 import type {ChartSeriesOptions, RadarSeries} from '../../types';
 import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getUniqId} from '../../utils';
 
 import {
     DEFAULT_DATALABELS_PADDING,
-    DEFAULT_DATALABELS_STYLE,
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
 } from './constants';

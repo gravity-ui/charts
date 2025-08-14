@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {DashStyle, LineCap} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, DashStyle, LineCap} from '../../constants';
 import type {
     ChartSeries,
     ChartSeriesOptions,
@@ -13,7 +13,6 @@ import {getUniqId} from '../../utils';
 
 import {
     DEFAULT_DATALABELS_PADDING,
-    DEFAULT_DATALABELS_STYLE,
     DEFAULT_HALO_OPTIONS,
     DEFAULT_LEGEND_SYMBOL_PADDING,
     DEFAULT_POINT_MARKER_OPTIONS,

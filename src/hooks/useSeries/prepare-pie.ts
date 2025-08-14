@@ -1,11 +1,11 @@
 import {scaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_PALETTE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, DEFAULT_PALETTE} from '../../constants';
 import type {ChartSeriesOptions, PieSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
-import {DEFAULT_DATALABELS_PADDING, DEFAULT_DATALABELS_STYLE} from './constants';
+import {DEFAULT_DATALABELS_PADDING} from './constants';
 import type {PreparedLegend, PreparedPieSeries, PreparedSeries} from './types';
 import {prepareLegendSymbol} from './utils';
 
