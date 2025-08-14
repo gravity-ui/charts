@@ -30,7 +30,7 @@ function getLabels(args: {
 }) {
     const {
         data,
-        options: {html, padding, align},
+        options: {html, padding, align, style},
     } = args;
 
     return data.reduce<LabelItem[]>((acc, d) => {
@@ -39,7 +39,7 @@ function getLabels(args: {
         texts.forEach((text, index) => {
             const label = getFormattedValue({value: text, ...args.options});
             const {maxHeight: lineHeight, maxWidth: labelMaxWidth} =
-                getLabelsSize({labels: [label], html}) ?? {};
+                getLabelsSize({labels: [label], style, html}) ?? {};
             const left = d.x0 + padding;
             const right = d.x1 - padding;
             const spaceWidth = Math.max(0, right - left);
@@ -65,6 +65,11 @@ function getLabels(args: {
                     x = Math.max(left, right - labelMaxWidth);
                     break;
                 }
+            }
+
+            const bottom = y + lineHeight;
+            if (bottom > d.y1) {
+                return;
             }
 
             const item: LabelItem = html
@@ -172,7 +177,18 @@ export function prepareTreemapData(args: {
         const {html, style: dataLabelsStyle} = series.dataLabels;
         const labels = getLabels({data: leaves, options: series.dataLabels});
         if (html) {
-            const htmlItems = labels.map((l) => ({style: dataLabelsStyle, ...l}) as HtmlItem);
+            const htmlItems = labels.map(
+                (l) =>
+                    ({
+                        style: {
+                            ...dataLabelsStyle,
+                            maxWidth: (l as HtmlItem).size.width,
+                            maxHeight: (l as HtmlItem).size.height,
+                            overflow: 'hidden',
+                        },
+                        ...l,
+                    }) as HtmlItem,
+            );
             htmlElements.push(...htmlItems);
         } else {
             labelData = labels as TreemapLabelData[];
