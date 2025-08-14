@@ -191,7 +191,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
                     x = x < 0 ? x - labelWidth : x;
                 }
 
-                y = y < 0 ? y - labelHeight / 2 : y;
+                y = y < 0 ? y - labelHeight : y;
 
                 return [x, y];
             };
