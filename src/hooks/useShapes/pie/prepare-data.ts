@@ -1,7 +1,9 @@
 import type {PieArcDatum} from 'd3';
 import {arc, group, line as lineGenerator} from 'd3';
+import merge from 'lodash/merge';
 
-import type {HtmlItem, PieSeries} from '../../../types';
+import {DEFAULT_DATALABELS_STYLE} from '../../../constants';
+import type {HtmlItem, PieSeries, PointPosition} from '../../../types';
 import {
     calculateNumericProperty,
     getLabelsSize,
@@ -49,6 +51,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2 - haloSize;
     const minRadius = maxRadius * 0.3;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
+    const dataLabelsStyle = merge(
+        {},
+        DEFAULT_DATALABELS_STYLE,
+        preparedSeries[0]?.dataLabels?.style,
+    );
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
         const series = items[0];
@@ -83,7 +90,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
         const {maxHeight: labelHeight} = getLabelsSize({
             labels: ['Some Label'],
-            style: dataLabels.style,
+            style: dataLabelsStyle,
         });
         let segmentMaxRadius = 0;
         const segments = items.map<SegmentData>((item) => {
@@ -131,6 +138,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             return {labels, htmlLabels, connectors};
         }
 
+        const shouldUseHtml = dataLabels.html;
         let line = lineGenerator();
         const curveFactory = getCurveFactory(data);
         if (curveFactory) {
@@ -138,7 +146,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
         }
 
         const {style, connectorPadding, distance} = dataLabels;
-        const {maxHeight: labelHeight} = getLabelsSize({labels: ['Some Label'], style});
+        const {maxHeight: labelHeight} = getLabelsSize({
+            labels: ['Some Label'],
+            style: dataLabelsStyle,
+            html: shouldUseHtml,
+        });
         const connectorStartPointGenerator = arc<PieArcDatum<SegmentData>>()
             .innerRadius((d) => d.data.radius)
             .outerRadius((d) => d.data.radius);
@@ -159,11 +171,26 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 value: d.data.label || d.data.value,
                 ...d.dataLabels,
             });
-            const shouldUseHtml = dataLabels.html;
-            const labelSize = getLabelsSize({labels: [text], style, html: shouldUseHtml});
+            const labelSize = getLabelsSize({
+                labels: [text],
+                style: dataLabelsStyle,
+                html: shouldUseHtml,
+            });
             const labelWidth = labelSize.maxWidth;
             const relatedSegment = data.segments[index];
 
+            /**
+             * Compute the label coordinates on the label arc for a given angle.
+             *
+             * For HTML labels, the function returns the top-left corner to account for
+             * element box positioning. It shifts left by the label width when the point is
+             * on the left side (x < 0) and shifts up by the label height when above the
+             * horizontal center (y < 0). For SVG text, only the vertical shift is applied
+             * to compensate for text baseline.
+             *
+             * @param {number} angle - Angle in radians at which the label should be placed.
+             * @returns {[number, number]} A tuple [x, y] relative to the pie center.
+             */
             const getLabelPosition = (angle: number) => {
                 let [x, y] = labelArcGenerator.centroid({
                     ...relatedSegment,
@@ -173,10 +200,9 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
                 if (shouldUseHtml) {
                     x = x < 0 ? x - labelWidth : x;
-                    y = y - labelSize.maxHeight;
-                } else {
-                    y = y < 0 ? y - labelHeight : y;
                 }
+
+                y = y < 0 ? y - labelHeight : y;
 
                 return [x, y];
             };
@@ -240,19 +266,27 @@ export function preparePieData(args: Args): PreparedPieData[] {
                     const connectorPoints = getConnectorPoints(startAngle);
                     const pointA = connectorPoints[0];
                     const pointB = connectorPoints[connectorPoints.length - 1];
-
                     const step = Math.PI / 180;
+
                     while (shouldAdjustAngle) {
                         const newAngle = label.angle + step;
                         if (newAngle > FULL_CIRCLE && newAngle % FULL_CIRCLE > labels[0].angle) {
                             shouldAdjustAngle = false;
                         } else {
-                            label.angle = newAngle;
                             const [newX, newY] = getLabelPosition(newAngle);
 
+                            label.angle = newAngle;
+                            label.textAnchor = newAngle < Math.PI ? 'start' : 'end';
                             label.x = newX;
                             label.y = newY;
-                            const inscribedAngle = getInscribedAngle(pointA, pointB, [newX, newY]);
+
+                            // See `getLabelPosition`: for HTML labels we return top-left,
+                            // so shift x by labelWidth when textAnchor is 'end'.
+                            const pointC: PointPosition =
+                                shouldUseHtml && label.textAnchor === 'end'
+                                    ? [newX + labelWidth, newY]
+                                    : [newX, newY];
+                            const inscribedAngle = getInscribedAngle(pointA, pointB, pointC);
 
                             if (inscribedAngle > 90) {
                                 shouldAdjustAngle = false;
@@ -270,6 +304,8 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
             const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
             if (!isLabelOverlapped && label.maxWidth > 0 && !shouldStopLabelPlacement) {
+                labels.push(label);
+
                 if (shouldUseHtml) {
                     htmlLabels.push({
                         x: data.center[0] + label.x,
@@ -278,8 +314,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
                         size: label.size,
                         style: label.style,
                     });
-                } else {
-                    labels.push(label);
                 }
 
                 const connector = {
@@ -291,7 +325,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
         });
 
         return {
-            labels,
+            labels: shouldUseHtml ? [] : labels,
             htmlLabels,
             connectors,
         };

@@ -5,10 +5,9 @@ import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
 
-import {pieBasicData, piePlaygroundData} from 'src/__stories__/__data__';
-import type {ChartData} from 'src/types';
-
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {pieBasicData, piePlaygroundData} from '../__stories__/__data__';
+import type {ChartData, PieSeries} from '../types';
 
 test.describe('Pie series', () => {
     test('Basic', async ({mount}) => {
@@ -83,32 +82,59 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Connectors should not intersect with circle', async ({mount}) => {
-        const data: ChartData = {
-            legend: {
-                enabled: false,
-            },
-            series: {
-                data: [
-                    {
-                        type: 'pie',
-                        dataLabels: {
-                            format: {
-                                type: 'number',
-                                precision: 2,
+    test.describe('Connectors should not intersect with circle', () => {
+        const getData = (options?: Partial<PieSeries>) => {
+            const data: ChartData = {
+                legend: {
+                    enabled: false,
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            dataLabels: {
+                                format: {
+                                    type: 'number',
+                                    precision: 2,
+                                },
+                                ...options?.dataLabels,
                             },
+                            data: range(1, 70).map((i) => {
+                                return {
+                                    name: `Name ${i}`,
+                                    value: Math.floor(1000 / i),
+                                };
+                            }),
                         },
-                        data: range(1, 70).map((i) => {
-                            return {
-                                name: `Name ${i}`,
-                                value: Math.floor(1000 / i),
-                            };
-                        }),
-                    },
-                ],
-            },
+                    ],
+                },
+            };
+
+            return data;
         };
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+
+        test('onnectorShape=polyline, html=false', async ({mount}) => {
+            const data = getData({dataLabels: {connectorShape: 'polyline', html: false}});
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('connectorShape=straight-line, html=false', async ({mount}) => {
+            const data = getData({dataLabels: {connectorShape: 'straight-line', html: false}});
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('connectorShape=polyline, html=true', async ({mount}) => {
+            const data = getData({dataLabels: {connectorShape: 'polyline', html: true}});
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('connectorShape=straight-line, html=true', async ({mount}) => {
+            const data = getData({dataLabels: {connectorShape: 'straight-line', html: true}});
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

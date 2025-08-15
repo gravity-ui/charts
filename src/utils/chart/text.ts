@@ -128,11 +128,9 @@ export function getLabelsSize({
     }
 
     const container = select(document.body).append('div');
-    // TODO: Why do we need this styles?
-    // .attr('class', 'chartkit chartkit-theme_common');
-
     const result = {maxHeight: 0, maxWidth: 0};
     let labelWrapper: HTMLElement | null;
+
     if (html) {
         labelWrapper = container
             .append('div')
@@ -145,7 +143,9 @@ export function getLabelsSize({
                 if (labelWrapper) {
                     labelWrapper.innerHTML = l;
                 }
+
                 const rect = labelWrapper?.getBoundingClientRect();
+
                 return {
                     width: Math.max(acc.width, rect?.width ?? 0),
                     height: Math.max(acc.height, rect?.height ?? 0),

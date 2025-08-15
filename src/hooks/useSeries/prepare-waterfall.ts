@@ -1,11 +1,11 @@
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_PALETTE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, DEFAULT_PALETTE} from '../../constants';
 import type {WaterfallSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
-import {DEFAULT_DATALABELS_PADDING, DEFAULT_DATALABELS_STYLE} from './constants';
+import {DEFAULT_DATALABELS_PADDING} from './constants';
 import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from './types';
 import {prepareLegendSymbol} from './utils';
 
