@@ -2,12 +2,20 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
+import merge from 'lodash/merge';
 import range from 'lodash/range';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {pieBasicData, piePlaygroundData} from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
+
+function getModifiedData(data: ChartData, pieSeries: Partial<PieSeries>) {
+    const resultData = merge({}, data);
+    merge(resultData.series.data[0], pieSeries);
+
+    return resultData;
+}
 
 test.describe('Pie series', () => {
     test('Basic', async ({mount}) => {
@@ -83,57 +91,123 @@ test.describe('Pie series', () => {
     });
 
     test.describe('Connectors should not intersect with circle', () => {
-        const getData = (options?: Partial<PieSeries>) => {
-            const data: ChartData = {
-                legend: {
-                    enabled: false,
-                },
-                series: {
-                    data: [
-                        {
-                            type: 'pie',
-                            dataLabels: {
-                                format: {
-                                    type: 'number',
-                                    precision: 2,
-                                },
-                                ...options?.dataLabels,
+        const baseData: ChartData = {
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {
+                            format: {
+                                type: 'number',
+                                precision: 2,
                             },
-                            data: range(1, 70).map((i) => {
-                                return {
-                                    name: `Name ${i}`,
-                                    value: Math.floor(1000 / i),
-                                };
-                            }),
                         },
-                    ],
-                },
-            };
-
-            return data;
+                        data: range(1, 70).map((i) => {
+                            return {
+                                name: `Name ${i}`,
+                                value: Math.floor(1000 / i),
+                            };
+                        }),
+                    },
+                ],
+            },
         };
 
         test('onnectorShape=polyline, html=false', async ({mount}) => {
-            const data = getData({dataLabels: {connectorShape: 'polyline', html: false}});
+            const data = getModifiedData(baseData, {
+                dataLabels: {connectorShape: 'polyline', html: false},
+            });
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
         test('connectorShape=straight-line, html=false', async ({mount}) => {
-            const data = getData({dataLabels: {connectorShape: 'straight-line', html: false}});
+            const data = getModifiedData(baseData, {
+                dataLabels: {connectorShape: 'straight-line', html: false},
+            });
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
         test('connectorShape=polyline, html=true', async ({mount}) => {
-            const data = getData({dataLabels: {connectorShape: 'polyline', html: true}});
+            const data = getModifiedData(baseData, {
+                dataLabels: {connectorShape: 'polyline', html: true},
+            });
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
         test('connectorShape=straight-line, html=true', async ({mount}) => {
-            const data = getData({dataLabels: {connectorShape: 'straight-line', html: true}});
+            const data = getModifiedData(baseData, {
+                dataLabels: {connectorShape: 'straight-line', html: true},
+            });
             const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
+    test.describe('Min radius', () => {
+        const baseData: ChartData = {
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {
+                            format: {
+                                type: 'number',
+                                precision: 2,
+                            },
+                        },
+                        data: range(1, 5).map((i) => {
+                            return {
+                                name: `Name ${i}`,
+                                value: Math.floor(1000 / i),
+                            };
+                        }),
+                    },
+                ],
+            },
+        };
+        const style: React.CSSProperties = {width: '130px'};
+
+        test('Without minRadius', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} styles={style} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Numeric minRadius', async ({mount}) => {
+            const data = getModifiedData(baseData, {minRadius: 40});
+            const component = await mount(<ChartTestStory data={data} styles={style} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Pixel minRadius', async ({mount}) => {
+            const data = getModifiedData(baseData, {minRadius: '40px'});
+            const component = await mount(<ChartTestStory data={data} styles={style} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Percent minRadius', async ({mount}) => {
+            const data = getModifiedData(baseData, {minRadius: '70%'});
+            const component = await mount(<ChartTestStory data={data} styles={style} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Pixel minRadius, pixel innerRadius', async ({mount}) => {
+            const data = getModifiedData(baseData, {minRadius: '40px', innerRadius: '10px'});
+            const component = await mount(<ChartTestStory data={data} styles={style} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Pixel minRadius, percent innerRadius', async ({mount}) => {
+            const data = getModifiedData(baseData, {minRadius: '40px', innerRadius: '50%'});
+            const component = await mount(<ChartTestStory data={data} styles={style} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });

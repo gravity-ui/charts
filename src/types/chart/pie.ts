@@ -51,6 +51,12 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     innerRadius?: string | number;
     /** The radius of the pie relative to the chart area. The default behaviour is to scale to the chart area. */
     radius?: string | number;
+    /**
+     * The minimum allowable radius of the pie.
+     *
+     * If specified as a percentage, the base for calculation is the height or width of the chart (the minimum value is taken) minus the halo effect.
+     */
+    minRadius?: string | number;
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;

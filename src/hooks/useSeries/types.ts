@@ -184,6 +184,7 @@ export type PreparedPieSeries = {
     center?: [string | number | null, string | number | null];
     radius?: string | number;
     innerRadius?: string | number;
+    minRadius?: string | number;
     stackId: string;
     label?: PieSeriesData['label'];
     dataLabels: {
