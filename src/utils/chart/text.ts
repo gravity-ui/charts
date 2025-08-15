@@ -1,7 +1,6 @@
 import type {Selection} from 'd3';
 import {select} from 'd3-selection';
 
-import {DEFAULT_DATALABELS_STYLE} from '../../constants';
 import type {BaseTextStyle, MeaningfulAny} from '../../types';
 
 export function handleOverflowingText(tSpan: SVGTSpanElement | null, maxWidth: number) {
