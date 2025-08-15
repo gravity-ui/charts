@@ -1,6 +1,8 @@
 import type {PieArcDatum} from 'd3';
 import {arc, group, line as lineGenerator} from 'd3';
+import merge from 'lodash/merge';
 
+import {DEFAULT_DATALABELS_STYLE} from '../../../constants';
 import type {HtmlItem, PieSeries, PointPosition} from '../../../types';
 import {
     calculateNumericProperty,
@@ -49,6 +51,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2 - haloSize;
     const minRadius = maxRadius * 0.3;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
+    const dataLabelsStyle = merge(
+        {},
+        DEFAULT_DATALABELS_STYLE,
+        preparedSeries[0]?.dataLabels?.style,
+    );
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
         const series = items[0];
@@ -83,7 +90,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
         const {maxHeight: labelHeight} = getLabelsSize({
             labels: ['Some Label'],
-            style: dataLabels.style,
+            style: dataLabelsStyle,
         });
         let segmentMaxRadius = 0;
         const segments = items.map<SegmentData>((item) => {
@@ -141,7 +148,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
         const {style, connectorPadding, distance} = dataLabels;
         const {maxHeight: labelHeight} = getLabelsSize({
             labels: ['Some Label'],
-            style,
+            style: dataLabelsStyle,
             html: shouldUseHtml,
         });
         const connectorStartPointGenerator = arc<PieArcDatum<SegmentData>>()
@@ -164,7 +171,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 value: d.data.label || d.data.value,
                 ...d.dataLabels,
             });
-            const labelSize = getLabelsSize({labels: [text], style, html: shouldUseHtml});
+            const labelSize = getLabelsSize({
+                labels: [text],
+                style: dataLabelsStyle,
+                html: shouldUseHtml,
+            });
             const labelWidth = labelSize.maxWidth;
             const relatedSegment = data.segments[index];
 
