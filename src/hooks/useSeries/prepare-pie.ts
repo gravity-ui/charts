@@ -54,6 +54,7 @@ export function preparePieSeries(args: PreparePieSeriesArgs) {
             borderWidth: series.borderWidth ?? 1,
             radius: dataItem.radius ?? series.radius ?? '100%',
             innerRadius: series.innerRadius || 0,
+            minRadius: series.minRadius || 0,
             stackId,
             states: {
                 hover: {

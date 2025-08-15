@@ -49,7 +49,12 @@ export function preparePieData(args: Args): PreparedPieData[] {
         ? preparedSeries[0].states.hover.halo.size
         : 0;
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2 - haloSize;
-    const minRadius = maxRadius * 0.3;
+    const propsMinRadius =
+        calculateNumericProperty({
+            value: preparedSeries[0].minRadius,
+            base: maxRadius,
+        }) || 0;
+    const minRadius = Math.max(propsMinRadius, maxRadius * 0.3);
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
     const dataLabelsStyle = merge(
         {},
@@ -59,15 +64,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
     const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
         const series = items[0];
-        const {
-            center,
-            borderWidth,
-            borderColor,
-            borderRadius,
-            innerRadius: seriesInnerRadius,
-            dataLabels,
-        } = series;
-
+        const {center, borderWidth, borderColor, borderRadius, dataLabels} = series;
         const data: PreparedPieData = {
             id: stackId,
             center: getCenter(boundsWidth, boundsHeight, center),
@@ -92,9 +89,9 @@ export function preparePieData(args: Args): PreparedPieData[] {
             labels: ['Some Label'],
             style: dataLabelsStyle,
         });
-        let segmentMaxRadius = 0;
         const segments = items.map<SegmentData>((item) => {
             let maxSegmentRadius = maxRadius;
+
             if (dataLabels.enabled) {
                 maxSegmentRadius -= dataLabels.distance + dataLabels.connectorPadding + labelHeight;
             }
@@ -102,7 +99,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             const segmentRadius =
                 calculateNumericProperty({value: item.radius, base: maxSegmentRadius}) ??
                 maxSegmentRadius;
-            segmentMaxRadius = Math.max(segmentMaxRadius, segmentRadius);
+
             return {
                 value: item.value,
                 color: item.color,
@@ -116,8 +113,6 @@ export function preparePieData(args: Args): PreparedPieData[] {
         });
 
         data.segments = pieGenerator(segments);
-        data.innerRadius =
-            calculateNumericProperty({value: seriesInnerRadius, base: segmentMaxRadius}) ?? 0;
 
         return data;
     };
@@ -414,6 +409,16 @@ export function preparePieData(args: Args): PreparedPieData[] {
             series: items,
             allowOverlow: false,
         });
+
+        if (typeof items[0]?.innerRadius !== 'undefined') {
+            const resultSegmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
+            const resultInnerRadius =
+                calculateNumericProperty({
+                    value: items[0].innerRadius,
+                    base: resultSegmentMaxRadius,
+                }) || 0;
+            data.innerRadius = resultInnerRadius;
+        }
 
         data.labels = labels;
         data.htmlLabels = htmlLabels;
