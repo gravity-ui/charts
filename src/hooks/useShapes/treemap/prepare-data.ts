@@ -37,18 +37,25 @@ function getLabels(args: {
         const texts = Array.isArray(d.data.name) ? d.data.name : [d.data.name];
 
         texts.forEach((text, index) => {
-            const label = getFormattedValue({value: text, ...args.options});
-            const {maxHeight: lineHeight, maxWidth: labelMaxWidth} =
-                getLabelsSize({labels: [label], style, html}) ?? {};
             const left = d.x0 + padding;
             const right = d.x1 - padding;
             const spaceWidth = Math.max(0, right - left);
             const spaceHeight = Math.max(0, d.y1 - d.y0 - padding);
+
+            const label = getFormattedValue({value: text, ...args.options});
+            const {maxHeight: lineHeight, maxWidth: labelMaxWidth} =
+                getLabelsSize({
+                    labels: [label],
+                    style: {...style, maxWidth: `${spaceWidth}px`, maxHeight: `${spaceHeight}px`},
+                    html,
+                }) ?? {};
+
             let x = left;
             const y = index * lineHeight + d.y0 + padding;
             const labelWidth = Math.min(labelMaxWidth, spaceWidth);
+            const labelHeight = Math.min(lineHeight, spaceHeight);
 
-            if (!labelWidth || lineHeight > spaceHeight) {
+            if (!labelWidth) {
                 return;
             }
 
@@ -68,7 +75,7 @@ function getLabels(args: {
             }
 
             const bottom = y + lineHeight;
-            if (bottom > d.y1) {
+            if (!html && bottom > d.y1) {
                 return;
             }
 
@@ -77,7 +84,7 @@ function getLabels(args: {
                       content: label,
                       x,
                       y,
-                      size: {width: labelWidth, height: lineHeight},
+                      size: {width: labelWidth, height: labelHeight},
                   }
                 : {
                       text: label,
