@@ -1,0 +1,33 @@
+import type {ChartData} from '../../types';
+
+export const tmpData = {
+    legend: {
+        enabled: true,
+    },
+    series: {
+        data: [
+            {
+                type: 'pie',
+                dataLabels: {
+                    html: true,
+                    style: {
+                        fontSize: '12px',
+                        fontWeight: '500',
+                    },
+                },
+                data: [
+                    {
+                        name: '<span style="border-bottom: 1px solid blue;">Наличные</span>',
+                        label: '<div style="height: 20px; margin-bottom: 2px; border-bottom: 1px solid red;">Наличные</div>',
+                        value: 38897911,
+                    },
+                    {
+                        name: '<span style="border-bottom: 1px solid blue;">Банковская карта</span>',
+                        label: '<div style="height: 20px; margin-bottom: 2px; border-bottom: 1px solid red;">Банковская карта</div>',
+                        value: 22639029,
+                    },
+                ],
+            },
+        ],
+    },
+} satisfies ChartData;

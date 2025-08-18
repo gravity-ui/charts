@@ -12,6 +12,8 @@ import {
     pieUserStylesData,
 } from '../__data__';
 
+import {tmpData} from './tmp-data';
+
 const meta: Meta<typeof Chart> = {
     title: 'Pie',
     render: ChartStory,
@@ -82,5 +84,12 @@ export const PiePlayground = {
         data: {
             control: 'object',
         },
+    },
+} satisfies Story;
+
+export const PieTmp = {
+    name: 'Tmp',
+    args: {
+        data: tmpData,
     },
 } satisfies Story;
