@@ -22,12 +22,18 @@ export function handleOverflowingText(tSpan: SVGTSpanElement | null, maxWidth: n
     textNode?.transform.baseVal.appendItem(revertRotation);
 
     let text = tSpan.textContent || '';
-    let textLength = tSpan.getBoundingClientRect()?.width || 0;
+    // We believe that if the text goes beyond the boundaries of less than a pixel, it's not a big deal.
+    // Math.floor helps to solve the problem with the difference in rounding when comparing textLength with maxWidth.
+    let textLength = Math.floor(tSpan.getBoundingClientRect()?.width || 0);
 
     while (textLength > maxWidth && text.length > 1) {
         text = text.slice(0, -1);
         tSpan.textContent = text + '…';
         textLength = tSpan.getBoundingClientRect()?.width || 0;
+    }
+
+    if (textLength > maxWidth) {
+        tSpan.textContent = '';
     }
 
     textNode?.transform.baseVal.removeItem(textNode?.transform.baseVal.length - 1);
@@ -119,7 +125,7 @@ export function getLabelsSize({
     html,
 }: {
     labels: string[];
-    style?: BaseTextStyle;
+    style?: BaseTextStyle & React.CSSProperties;
     rotation?: number;
     html?: boolean;
 }) {
@@ -135,8 +141,11 @@ export function getLabelsSize({
         labelWrapper = container
             .append('div')
             .style('position', 'absolute')
+            .style('display', 'inline-block')
             .style('font-size', style?.fontSize ?? '')
             .style('font-weight', style?.fontWeight ?? '')
+            .style('max-width', style?.maxWidth ?? '')
+            .style('max-height', style?.maxHeight ?? '')
             .node();
         const {height, width} = labels.reduce(
             (acc, l) => {
