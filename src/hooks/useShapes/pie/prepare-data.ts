@@ -49,12 +49,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
         ? preparedSeries[0].states.hover.halo.size
         : 0;
     const maxRadius = Math.min(boundsWidth, boundsHeight) / 2 - haloSize;
-    const propsMinRadius =
-        calculateNumericProperty({
-            value: preparedSeries[0].minRadius,
-            base: maxRadius,
-        }) || 0;
-    const minRadius = Math.max(propsMinRadius, maxRadius * 0.3);
+    const propsMinRadius = calculateNumericProperty({
+        value: preparedSeries[0].minRadius,
+        base: maxRadius,
+    });
+    const minRadius = typeof propsMinRadius === 'number' ? propsMinRadius : maxRadius * 0.3;
     const groupedPieSeries = group(preparedSeries, (pieSeries) => pieSeries.stackId);
     const dataLabelsStyle = merge(
         {},
@@ -389,15 +388,15 @@ export function preparePieData(args: Args): PreparedPieData[] {
 
             if (topAdjustment && topAdjustment >= bottomAdjustment) {
                 data.segments.forEach((s) => {
-                    const nextPossibleRadius =
-                        s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                    let nextPossibleRadius = s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                    nextPossibleRadius = Math.max(nextPossibleRadius, minRadius);
                     s.data.radius = Math.min(nextPossibleRadius, maxRadius);
                 });
                 data.center[1] -= (topAdjustment - bottomAdjustment) / 2;
             } else if (bottomAdjustment) {
                 data.segments.forEach((s) => {
-                    const nextPossibleRadius =
-                        s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                    let nextPossibleRadius = s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                    nextPossibleRadius = Math.max(nextPossibleRadius, minRadius);
                     s.data.radius = Math.min(nextPossibleRadius, maxRadius);
                 });
                 data.center[1] += (bottomAdjustment - topAdjustment) / 2;

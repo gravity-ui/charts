@@ -55,6 +55,8 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
      * The minimum allowable radius of the pie.
      *
      * If specified as a percentage, the base for calculation is the height or width of the chart (the minimum value is taken) minus the halo effect.
+     *
+     * If not specified, the minimum radius is calculated as 30% of the height or width of the chart (the minimum value is taken) minus the halo effect.
      */
     minRadius?: string | number;
     /** Individual series legend options. Has higher priority than legend options in widget data */
