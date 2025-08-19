@@ -1,6 +1,9 @@
 import type {ChartData} from '../../types';
 
 export const tmpData = {
+    tooltip: {
+        html: true,
+    },
     legend: {
         enabled: true,
         html: true,

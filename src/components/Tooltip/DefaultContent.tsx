@@ -29,6 +29,7 @@ type Props = {
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis;
     valueFormat?: ValueFormat;
+    html?: boolean;
 };
 
 const DEFAULT_DATE_FORMAT = 'DD.MM.YY';
@@ -108,7 +109,7 @@ function getDefaultValueFormat({axis}: {axis?: ChartXAxis | ChartYAxis}): ValueF
     }
 }
 
-export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
+export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat, html}: Props) => {
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
 
     return (
@@ -209,7 +210,19 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                             return (
                                 <div key={id} className={b('content-row')}>
                                     <div className={b('color')} style={{backgroundColor: color}} />
-                                    <span>{seriesData.name || seriesData.id}&nbsp;</span>
+                                    {html ? (
+                                        <span
+                                            // TODO: sanitize
+                                            dangerouslySetInnerHTML={{
+                                                __html: [seriesData.name || seriesData.id]
+                                                    .flat()
+                                                    .join('\n'),
+                                            }}
+                                        />
+                                    ) : (
+                                        <span>{seriesData.name || seriesData.id}</span>
+                                    )}
+                                    &nbsp;
                                     <span>{formattedValue}</span>
                                 </div>
                             );

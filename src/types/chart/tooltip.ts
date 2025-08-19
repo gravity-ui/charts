@@ -113,4 +113,10 @@ export interface ChartTooltip<T = MeaningfulAny> {
     throttle?: number;
     /** Formatting settings for tooltip value. */
     valueFormat?: ValueFormat;
+    /**
+     * Allows to use any html-tags to display the content.
+     *
+     * @default false
+     * */
+    html?: boolean;
 }
