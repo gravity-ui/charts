@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0](https://github.com/gravity-ui/charts/compare/v1.5.1...v1.6.0) (2025-08-19)
+
+
+### Features
+
+* **Pie:** add minRadius option ([#115](https://github.com/gravity-ui/charts/issues/115)) ([f554efd](https://github.com/gravity-ui/charts/commit/f554efd38e8fb4eb5e9a37877c53454b5ca2b742))
+
+
+### Bug Fixes
+
+* **Pie:** fix html labels overflow ([#112](https://github.com/gravity-ui/charts/issues/112)) ([bd41383](https://github.com/gravity-ui/charts/commit/bd4138339aa9cfe53dc60448f56701dd03da1cf6))
+* **Pie:** positioning of html labels ([#118](https://github.com/gravity-ui/charts/issues/118)) ([bb563ad](https://github.com/gravity-ui/charts/commit/bb563ad6a819df9a69b8b81676b70d0aa773c83d))
+* treemap labels are being cut off even though there is enough space ([#116](https://github.com/gravity-ui/charts/issues/116)) ([aa13e17](https://github.com/gravity-ui/charts/commit/aa13e17c96c91a9a5d6d3e92135047123c2be2f4))
+
 ## [1.5.1](https://github.com/gravity-ui/charts/compare/v1.5.0...v1.5.1) (2025-08-14)
 
 
