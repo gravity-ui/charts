@@ -10,9 +10,14 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {pieBasicData, piePlaygroundData} from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
 
-function getModifiedData(data: ChartData, pieSeries: Partial<PieSeries>) {
+function getModifiedData(
+    data: ChartData,
+    pieSeries: Partial<PieSeries>,
+    chartData?: Partial<Omit<ChartData, 'series'>>,
+) {
     const resultData = merge({}, data);
     merge(resultData.series.data[0], pieSeries);
+    merge(resultData, chartData);
 
     return resultData;
 }
@@ -30,31 +35,30 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Html dataLabels', async ({mount}) => {
-        const data: ChartData = {
+    test.describe('Handle html', () => {
+        const baseData: ChartData = {
             series: {
                 data: [
                     {
                         type: 'pie',
                         dataLabels: {
                             enabled: true,
-                            html: true,
                         },
                         data: [
                             {
-                                name: 'One',
+                                name: '<span style="background: #4fc4b7;color: #fff;padding: 4px;border-radius: 4px;">One</span>',
                                 value: 2.007719752191679,
                                 label: '<span style="background: #4fc4b7;color: #fff;padding: 4px;border-radius: 4px;">One</span>',
                                 color: '#4fc4b7',
                             },
                             {
-                                name: 'Two',
+                                name: '<span style="background: #59abc9;color: #fff;padding: 4px;border-radius: 4px;">Two</span>',
                                 value: 7.213946843338091,
                                 label: '<span style="background: #59abc9;color: #fff;padding: 4px;border-radius: 4px;">Two</span>',
                                 color: '#59abc9',
                             },
                             {
-                                name: 'Three',
+                                name: '<span style="background: #8ccce3;color: #fff;padding: 4px;border-radius: 4px;">Three</span>',
                                 value: 6.672973787005758,
                                 label: '<span style="background: #8ccce3;color: #fff;padding: 4px;border-radius: 4px;">Three</span>',
                                 color: '#8ccce3',
@@ -64,8 +68,50 @@ test.describe('Pie series', () => {
                 ],
             },
         };
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+
+        test('dataLabels.html = true', async ({mount}) => {
+            const data = getModifiedData(baseData, {
+                dataLabels: {html: true},
+            });
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('legend.html = true', async ({mount}) => {
+            const data = getModifiedData(
+                baseData,
+                {dataLabels: {enabled: false}},
+                {legend: {enabled: true, html: true}},
+            );
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        // TODO: add case for `legend.html = false`
+
+        test('tooltip.html = true', async ({mount}) => {
+            const data = getModifiedData(
+                baseData,
+                {dataLabels: {enabled: false}},
+                {tooltip: {html: true, valueFormat: {type: 'number', precision: 2}}},
+            );
+            const component = await mount(<ChartTestStory data={data} styles={{width: '400px'}} />);
+            await component.locator('.gcharts-pie__segment').first().hover();
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('tooltip.html = false', async ({mount}) => {
+            const data = getModifiedData(
+                baseData,
+                {dataLabels: {enabled: false}},
+                {tooltip: {valueFormat: {type: 'number', precision: 2}}},
+            );
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: '1200px'}} />,
+            );
+            await component.locator('.gcharts-pie__segment').nth(2).hover();
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('With special symbols', async ({mount}) => {
