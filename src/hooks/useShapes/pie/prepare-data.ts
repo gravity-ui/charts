@@ -159,6 +159,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
         let shouldStopLabelPlacement = false;
+        // eslint-disable-next-line complexity
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
             const text = getFormattedValue({
@@ -362,7 +363,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             }
 
             if (preparedLabels.htmlLabels.length) {
-                const topHtmlLabel = Math.max(0, ...preparedLabels.htmlLabels.map((l) => l.y));
+                const topHtmlLabel = Math.min(...preparedLabels.htmlLabels.map((l) => l.y));
                 topFreeSpace = Math.min(topFreeSpace, topHtmlLabel);
             }
 

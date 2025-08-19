@@ -30,6 +30,44 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Html dataLabels', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {
+                            enabled: true,
+                            html: true,
+                        },
+                        data: [
+                            {
+                                name: 'One',
+                                value: 2.007719752191679,
+                                label: '<span style="background: #4fc4b7;color: #fff;padding: 4px;border-radius: 4px;">One</span>',
+                                color: '#4fc4b7',
+                            },
+                            {
+                                name: 'Two',
+                                value: 7.213946843338091,
+                                label: '<span style="background: #59abc9;color: #fff;padding: 4px;border-radius: 4px;">Two</span>',
+                                color: '#59abc9',
+                            },
+                            {
+                                name: 'Three',
+                                value: 6.672973787005758,
+                                label: '<span style="background: #8ccce3;color: #fff;padding: 4px;border-radius: 4px;">Three</span>',
+                                color: '#8ccce3',
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('With special symbols', async ({mount}) => {
         const data: ChartData = {
             series: {
@@ -116,7 +154,7 @@ test.describe('Pie series', () => {
             },
         };
 
-        test('onnectorShape=polyline, html=false', async ({mount}) => {
+        test('connectorShape=polyline, html=false', async ({mount}) => {
             const data = getModifiedData(baseData, {
                 dataLabels: {connectorShape: 'polyline', html: false},
             });
