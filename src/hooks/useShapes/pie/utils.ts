@@ -17,8 +17,9 @@ export function getCurveFactory(data: PreparedPieData): CurveFactory | undefined
         case 'linear': {
             return curveLinear;
         }
+        default:
+            return undefined;
     }
-    return undefined;
 }
 
 /**
