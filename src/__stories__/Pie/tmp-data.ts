@@ -3,6 +3,7 @@ import type {ChartData} from '../../types';
 export const tmpData = {
     legend: {
         enabled: true,
+        html: true,
     },
     series: {
         data: [
@@ -18,11 +19,11 @@ export const tmpData = {
                 data: [
                     {
                         name: '<span style="border-bottom: 1px solid blue;">Наличные</span>',
-                        label: '<div style="height: 20px; margin-bottom: 2px; border-bottom: 1px solid red;">Наличные</div>',
+                        label: '<div style="height: 20px; margin-bottom: 2px; border-bottom: 1px solid blue;">Наличные</div>',
                         value: 38897911,
                     },
                     {
-                        name: '<span style="border-bottom: 1px solid blue;">Банковская карта</span>',
+                        name: '<span style="border-bottom: 1px solid red;">Банковская карта</span>',
                         label: '<div style="height: 20px; margin-bottom: 2px; border-bottom: 1px solid red;">Банковская карта</div>',
                         value: 22639029,
                     },

@@ -96,6 +96,7 @@ export const getPreparedLegend = (args: {
         width: legendWidth,
         ticks,
         colorScale,
+        html: get(legend, 'html', false),
     };
 };
 
@@ -124,35 +125,40 @@ const getGroupedLegendItems = (args: {
     let textWidthsInLine: number[] = [0];
     let lineIndex = 0;
 
+    const container = select(document.body).append('div');
     items.forEach((item) => {
-        select(document.body)
-            .append('text')
-            .text(item.name)
+        const node = container
+            .append('div')
+            .style('position', 'absolute')
+            .style('display', 'inline-block')
             .style('font-size', preparedLegend.itemStyle.fontSize)
-            .each(function () {
-                const resultItem = clone(item) as LegendItem;
-                const textWidth = this.getBoundingClientRect().width;
-                resultItem.textWidth = textWidth;
-                textWidthsInLine.push(textWidth);
-                const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
-                result[lineIndex].push(resultItem);
-                const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
-                    return acc + symbol.width + symbol.padding;
-                }, 0);
-                const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
-                const isOverfilled = maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
+            .node();
+        if (node) {
+            node[preparedLegend.html ? 'innerHTML' : 'innerText'] = item.name;
+            const resultItem = clone(item) as LegendItem;
+            const textWidth = node.getBoundingClientRect().width;
+            resultItem.textWidth = textWidth;
+            textWidthsInLine.push(textWidth);
+            const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
+            result[lineIndex].push(resultItem);
+            const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
+                return acc + symbol.width + symbol.padding;
+            }, 0);
+            const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
+            const isOverfilled = maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
 
-                if (isOverfilled) {
-                    result[lineIndex].pop();
-                    lineIndex += 1;
-                    textWidthsInLine = [textWidth];
-                    const nextLineIndex = lineIndex;
-                    result[nextLineIndex] = [];
-                    result[nextLineIndex].push(resultItem);
-                }
-            })
-            .remove();
+            if (isOverfilled) {
+                result[lineIndex].pop();
+                lineIndex += 1;
+                textWidthsInLine = [textWidth];
+                const nextLineIndex = lineIndex;
+                result[nextLineIndex] = [];
+                result[nextLineIndex].push(resultItem);
+            }
+        }
     });
+
+    container.remove();
 
     return result;
 };

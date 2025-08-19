@@ -18,8 +18,8 @@ const b = block('chart');
 
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
-    const svgRef = React.useRef<SVGSVGElement | null>(null);
-    const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
+    const [svgContainer, setSvgContainer] = React.useState<SVGSVGElement | null>(null);
+    const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const {
@@ -48,8 +48,8 @@ export const ChartInner = (props: ChartInnerProps) => {
     } = useChartInnerProps({
         ...props,
         dispatcher,
-        htmlLayout: htmlLayerRef.current,
-        svgContainer: svgRef.current,
+        htmlLayout,
+        svgContainer,
     });
     const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
         dispatcher,
@@ -63,7 +63,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             boundsWidth,
             dispatcher,
             shapesData,
-            svgContainer: svgRef.current,
+            svgContainer,
             togglePinTooltip,
             tooltipPinned,
             unpinTooltip,
@@ -101,7 +101,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     return (
         <React.Fragment>
             <svg
-                ref={svgRef}
+                ref={setSvgContainer}
                 className={b()}
                 width={width}
                 height={height}
@@ -158,12 +158,13 @@ export const ChartInner = (props: ChartInnerProps) => {
                         config={legendConfig}
                         onItemClick={handleLegendItemClick}
                         onUpdate={unpinTooltip}
+                        htmlLayout={htmlLayout}
                     />
                 )}
             </svg>
             <div
                 className={b('html-layer')}
-                ref={htmlLayerRef}
+                ref={setHtmlLayout}
                 style={{
                     transform: `translate(${boundsOffsetLeft}px, ${boundsOffsetTop}px)`,
                 }}
@@ -171,7 +172,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             <Tooltip
                 dispatcher={dispatcher}
                 tooltip={tooltip}
-                svgContainer={svgRef.current}
+                svgContainer={svgContainer}
                 xAxis={xAxis}
                 yAxis={yAxis[0]}
                 onOutsideClick={unpinTooltip}
