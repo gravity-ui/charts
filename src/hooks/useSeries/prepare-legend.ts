@@ -1,3 +1,4 @@
+import type {Selection} from 'd3';
 import {select} from 'd3';
 import clone from 'lodash/clone';
 import get from 'lodash/get';
@@ -125,18 +126,31 @@ const getGroupedLegendItems = (args: {
     let textWidthsInLine: number[] = [0];
     let lineIndex = 0;
 
-    const container = select(document.body).append('div');
     items.forEach((item) => {
-        const node = container
-            .append('div')
-            .style('position', 'absolute')
-            .style('display', 'inline-block')
-            .style('font-size', preparedLegend.itemStyle.fontSize)
-            .node();
-        if (node) {
-            node[preparedLegend.html ? 'innerHTML' : 'innerText'] = item.name;
+        let text:
+            | Selection<HTMLDivElement, unknown, null, undefined>
+            | Selection<SVGTextElement, unknown, null, undefined>;
+        if (preparedLegend.html) {
+            text = select(document.body)
+                .append('div')
+                .style('position', 'absolute')
+                .style('display', 'inline-block')
+                .style('font-size', preparedLegend.itemStyle.fontSize)
+                [preparedLegend.html ? 'html' : 'text'](item.name) as Selection<
+                HTMLDivElement,
+                unknown,
+                null,
+                undefined
+            >;
+        } else {
+            text = select(document.body)
+                .append('text')
+                .text(item.name)
+                .style('font-size', preparedLegend.itemStyle.fontSize);
+        }
+        text.each(function () {
             const resultItem = clone(item) as LegendItem;
-            const textWidth = node.getBoundingClientRect().width;
+            const textWidth = this.getBoundingClientRect().width;
             resultItem.textWidth = textWidth;
             textWidthsInLine.push(textWidth);
             const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
@@ -155,10 +169,8 @@ const getGroupedLegendItems = (args: {
                 result[nextLineIndex] = [];
                 result[nextLineIndex].push(resultItem);
             }
-        }
+        }).remove();
     });
-
-    container.remove();
 
     return result;
 };
