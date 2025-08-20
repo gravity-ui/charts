@@ -125,33 +125,41 @@ const getGroupedLegendItems = (args: {
     let lineIndex = 0;
 
     items.forEach((item) => {
-        select(document.body)
-            .append('text')
-            .text(item.name)
+        const text = select(document.body)
+            .append('div')
+            .style('position', 'absolute')
+            .style('display', 'inline-block')
             .style('font-size', preparedLegend.itemStyle.fontSize)
-            .each(function () {
-                const resultItem = clone(item) as LegendItem;
-                const textWidth = this.getBoundingClientRect().width;
-                resultItem.textWidth = textWidth;
-                textWidthsInLine.push(textWidth);
-                const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
-                result[lineIndex].push(resultItem);
-                const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
-                    return acc + symbol.width + symbol.padding;
-                }, 0);
-                const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
-                const isOverfilled = maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
+            .html(item.name);
 
-                if (isOverfilled) {
-                    result[lineIndex].pop();
-                    lineIndex += 1;
-                    textWidthsInLine = [textWidth];
-                    const nextLineIndex = lineIndex;
-                    result[nextLineIndex] = [];
-                    result[nextLineIndex].push(resultItem);
-                }
-            })
-            .remove();
+        const node = text.node();
+        if (node) {
+            const content = node.innerText;
+            node.innerText = content;
+            const resultItem = clone(item) as LegendItem;
+            const textWidth = node.getBoundingClientRect().width;
+            resultItem.textWidth = textWidth;
+            resultItem.name = content;
+            textWidthsInLine.push(textWidth);
+            const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
+            result[lineIndex].push(resultItem);
+            const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
+                return acc + symbol.width + symbol.padding;
+            }, 0);
+            const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
+            const isOverfilled = maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
+
+            if (isOverfilled) {
+                result[lineIndex].pop();
+                lineIndex += 1;
+                textWidthsInLine = [textWidth];
+                const nextLineIndex = lineIndex;
+                result[nextLineIndex] = [];
+                result[nextLineIndex].push(resultItem);
+            }
+        }
+
+        text.remove();
     });
 
     return result;

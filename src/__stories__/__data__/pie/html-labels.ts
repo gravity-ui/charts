@@ -3,7 +3,7 @@ import type {ChartData} from '../../../types';
 function getPieSegmentData(name: string, color: string) {
     const labelStyle = `background: ${color};color: #fff;padding: 4px;border-radius: 4px;`;
     return {
-        name: name,
+        name: `<span style="${labelStyle}">${name}</span>`,
         value: Math.random() * 10,
         label: `<span style="${labelStyle}">${name}</span>`,
         color: color,
@@ -31,6 +31,7 @@ function prepareData(): ChartData {
         },
         title: {text: 'Pie with html labels'},
         legend: {enabled: true},
+        tooltip: {html: true},
     };
 }
 
