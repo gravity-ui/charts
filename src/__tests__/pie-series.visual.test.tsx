@@ -87,8 +87,6 @@ test.describe('Pie series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        // TODO: add case for `tooltip.html = false`
-
         test('tooltip.html = true', async ({mount}) => {
             const data = getModifiedData(
                 baseData,
