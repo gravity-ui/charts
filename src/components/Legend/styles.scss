@@ -25,21 +25,14 @@
     }
 
     &__item-text {
-        cursor: pointer;
-        user-select: none;
-        white-space: nowrap;
-
-        color: var(--g-color-text-secondary);
         fill: var(--g-color-text-secondary);
         alignment-baseline: before-edge;
 
         &_unselected {
-            color: var(--g-color-text-hint);
             fill: var(--g-color-text-hint);
         }
 
         &:hover {
-            color: var(--g-color-text-complementary);
             fill: var(--g-color-text-complementary);
         }
     }

@@ -77,17 +77,17 @@ test.describe('Pie series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('legend.html = true', async ({mount}) => {
+        test('legend.enabled = true', async ({mount}) => {
             const data = getModifiedData(
                 baseData,
                 {dataLabels: {enabled: false}},
-                {legend: {enabled: true, html: true}},
+                {legend: {enabled: true}},
             );
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        // TODO: add case for `legend.html = false`
+        // TODO: add case for `tooltip.html = false`
 
         test('tooltip.html = true', async ({mount}) => {
             const data = getModifiedData(

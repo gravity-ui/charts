@@ -1,4 +1,3 @@
-import type {Selection} from 'd3';
 import {select} from 'd3';
 import clone from 'lodash/clone';
 import get from 'lodash/get';
@@ -97,7 +96,6 @@ export const getPreparedLegend = (args: {
         width: legendWidth,
         ticks,
         colorScale,
-        html: get(legend, 'html', false),
     };
 };
 
@@ -127,31 +125,21 @@ const getGroupedLegendItems = (args: {
     let lineIndex = 0;
 
     items.forEach((item) => {
-        let text:
-            | Selection<HTMLDivElement, unknown, null, undefined>
-            | Selection<SVGTextElement, unknown, null, undefined>;
-        if (preparedLegend.html) {
-            text = select(document.body)
-                .append('div')
-                .style('position', 'absolute')
-                .style('display', 'inline-block')
-                .style('font-size', preparedLegend.itemStyle.fontSize)
-                [preparedLegend.html ? 'html' : 'text'](item.name) as Selection<
-                HTMLDivElement,
-                unknown,
-                null,
-                undefined
-            >;
-        } else {
-            text = select(document.body)
-                .append('text')
-                .text(item.name)
-                .style('font-size', preparedLegend.itemStyle.fontSize);
-        }
-        text.each(function () {
+        const text = select(document.body)
+            .append('div')
+            .style('position', 'absolute')
+            .style('display', 'inline-block')
+            .style('font-size', preparedLegend.itemStyle.fontSize)
+            .html(item.name);
+
+        const node = text.node();
+        if (node) {
+            const content = node.innerText;
+            node.innerText = content;
             const resultItem = clone(item) as LegendItem;
-            const textWidth = this.getBoundingClientRect().width;
+            const textWidth = node.getBoundingClientRect().width;
             resultItem.textWidth = textWidth;
+            resultItem.name = content;
             textWidthsInLine.push(textWidth);
             const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
             result[lineIndex].push(resultItem);
@@ -169,7 +157,9 @@ const getGroupedLegendItems = (args: {
                 result[nextLineIndex] = [];
                 result[nextLineIndex].push(resultItem);
             }
-        }).remove();
+        }
+
+        text.remove();
     });
 
     return result;

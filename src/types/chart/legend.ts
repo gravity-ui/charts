@@ -65,12 +65,6 @@ export interface ChartLegend {
     };
     /* Width of the legend */
     width?: number;
-    /**
-     * Allows to use any html-tags to display the content.
-     *
-     * @default false
-     * */
-    html?: boolean;
 }
 
 export interface BaseLegendSymbol {
