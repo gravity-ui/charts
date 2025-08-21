@@ -163,7 +163,11 @@ export const ChartInner = (props: ChartInnerProps) => {
             <div
                 className={b('html-layer')}
                 ref={htmlLayerRef}
-                style={{marginTop: boundsOffsetTop, marginLeft: boundsOffsetLeft}}
+                style={
+                    {
+                        '--g-html-layout-transform': `translate(${boundsOffsetLeft}px, ${boundsOffsetTop}px)`,
+                    } as React.CSSProperties
+                }
             />
             <Tooltip
                 dispatcher={dispatcher}

@@ -483,4 +483,24 @@ test.describe('Pie series', () => {
         );
         await expect(component).toHaveScreenshot();
     });
+
+    test('Transform: scale', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        data: [
+                            {name: '1', value: 1},
+                            {name: '2', value: 2},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{transform: 'scale(0.5)'}} />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
