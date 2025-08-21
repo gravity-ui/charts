@@ -3,6 +3,9 @@ import React from 'react';
 import {Portal} from '@gravity-ui/uikit';
 
 import type {HtmlItem, ShapeDataWithHtmlItems} from '../../types';
+import {block} from '../../utils';
+
+const b = block('chart');
 
 type Props = {
     htmlLayout: HTMLElement | null;
@@ -40,6 +43,7 @@ export const HtmlLayer = (props: Props) => {
 
                 return (
                     <div
+                        className={b('html-layer-item')}
                         key={index}
                         dangerouslySetInnerHTML={{__html: item.content}}
                         style={style}

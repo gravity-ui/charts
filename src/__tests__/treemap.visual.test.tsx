@@ -43,7 +43,10 @@ test.describe('Treemap series', () => {
                     {
                         type: 'treemap',
                         name: '',
-                        data: [{name: 'Text', value: 1}],
+                        data: [
+                            {name: 'Text', value: 1},
+                            {name: 'Two words', value: 2},
+                        ],
                         dataLabels: {
                             html: true,
                             style: {
