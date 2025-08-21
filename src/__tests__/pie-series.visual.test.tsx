@@ -102,6 +102,49 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Html dataLabels with overflow and chart margin', async ({mount}) => {
+        const data: ChartData = {
+            chart: {
+                margin: {
+                    top: 20,
+                    left: 20,
+                    right: 20,
+                    bottom: 20,
+                },
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        minRadius: '50%',
+                        dataLabels: {
+                            enabled: true,
+                            html: true,
+                        },
+                        data: [
+                            {
+                                name: '1',
+                                label: '<span>Long span with text overflow</span>',
+                                value: 3,
+                                color: '#4fc4b7',
+                            },
+                            {
+                                name: '2',
+                                label: '<div>Long div with text overflow</div>',
+                                value: 2,
+                                color: '#59abc9',
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 215, height: 260}} />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('With special symbols', async ({mount}) => {
         const data: ChartData = {
             series: {
