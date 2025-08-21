@@ -5,6 +5,8 @@
     inset-block-start: 0;
     inset-inline-start: 0;
 
+    display: flex;
+
     &__html-layer {
         display: contents;
     }
