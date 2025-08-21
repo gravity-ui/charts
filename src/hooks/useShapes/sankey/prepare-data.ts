@@ -1,16 +1,23 @@
-import {sankey, sankeyLinkHorizontal} from 'd3-sankey';
+import {linkHorizontal} from 'd3';
 
 import type {HtmlItem, SankeySeriesData} from '../../../types';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedSankeySeries} from '../../useSeries/types';
 
 import type {PreparedSankeyData, SankeyDataLabel} from './types';
+import sankey from './utils';
 
 type SankeyItemLink = {
     source: SankeySeriesData;
     target: SankeySeriesData;
     value: number;
 };
+
+export function sankeyLinkHorizontal() {
+    return linkHorizontal<any, unknown>()
+        .source((d) => [d.source.x1, d.y0])
+        .target((d) => [d.target.x0, d.y1]);
+}
 
 export function prepareSankeyData(args: {
     series: PreparedSankeySeries;
@@ -47,6 +54,7 @@ export function prepareSankeyData(args: {
             return acc;
         }, []),
     });
+
     const sankeyNodes = nodes.map((node) => {
         return {
             x0: node.x0 ?? 0,
@@ -58,11 +66,12 @@ export function prepareSankeyData(args: {
         };
     });
 
+    const pathGenerator = sankeyLinkHorizontal();
     const sankeyLinks = links.map((d) => {
         return {
             opacity: 0.75,
             color: d.source.color ?? '',
-            path: sankeyLinkHorizontal()(d),
+            path: pathGenerator(d),
             strokeWidth: Math.max(1, d.width ?? 0),
             source: d.source,
             target: d.target,
