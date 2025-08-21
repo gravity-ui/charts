@@ -186,7 +186,7 @@ export const getLegendComponents = (args: {
             const limit = Math.floor(maxLegendHeight / preparedLegend.lineHeight) - 1;
             const maxPage = Math.ceil(items.length / limit);
             pagination = {limit, maxPage};
-            legendHeight = maxLegendHeight;
+            legendHeight = preparedLegend.lineHeight * (limit + 1);
         }
 
         preparedLegend.height = legendHeight;
