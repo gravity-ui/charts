@@ -160,7 +160,11 @@ export const ChartInner = (props: ChartInnerProps) => {
                     />
                 )}
             </svg>
-            <div className={b('html-layer')} ref={htmlLayerRef} />
+            <div
+                className={b('html-layer')}
+                ref={htmlLayerRef}
+                style={{marginTop: boundsOffsetTop, marginLeft: boundsOffsetLeft}}
+            />
             <Tooltip
                 dispatcher={dispatcher}
                 tooltip={tooltip}
