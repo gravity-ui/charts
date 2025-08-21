@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/gravity-ui/charts/compare/v1.6.1...v1.6.2) (2025-08-21)
+
+
+### Bug Fixes
+
+* html labels position (chart with margin) ([#121](https://github.com/gravity-ui/charts/issues/121)) ([55bb9e0](https://github.com/gravity-ui/charts/commit/55bb9e068393db98691cb36549900e4ab360302d))
+
 ## [1.6.1](https://github.com/gravity-ui/charts/compare/v1.6.0...v1.6.1) (2025-08-21)
 
 
