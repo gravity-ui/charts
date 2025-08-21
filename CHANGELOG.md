@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/gravity-ui/charts/compare/v1.6.0...v1.6.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* pie html dataLabels (color, textOverflow, etc) ([#119](https://github.com/gravity-ui/charts/issues/119)) ([4d60e93](https://github.com/gravity-ui/charts/commit/4d60e93eb81b4e75b2f4e941e160a9d80e943abe))
+
 ## [1.6.0](https://github.com/gravity-ui/charts/compare/v1.5.1...v1.6.0) (2025-08-19)
 
 
