@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.3](https://github.com/gravity-ui/charts/compare/v1.6.2...v1.6.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* chart sizes are calculated incorrectly if the scale is set for t… ([#123](https://github.com/gravity-ui/charts/issues/123)) ([f5236f7](https://github.com/gravity-ui/charts/commit/f5236f7fb0345f12f10bf7d004961f6d0876328f))
+
 ## [1.6.2](https://github.com/gravity-ui/charts/compare/v1.6.1...v1.6.2) (2025-08-21)
 
 
