@@ -485,7 +485,7 @@ test.describe('Pie series', () => {
     });
 
     test('Transform: scale', async ({mount}) => {
-        const chartData = {
+        const chartData: ChartData = {
             series: {
                 data: [
                     {
