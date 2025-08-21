@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.4](https://github.com/gravity-ui/charts/compare/v1.6.3...v1.6.4) (2025-08-21)
+
+
+### Bug Fixes
+
+* chart layout ([#127](https://github.com/gravity-ui/charts/issues/127)) ([ed093b4](https://github.com/gravity-ui/charts/commit/ed093b4987230f3ca35263232d53bbfe50ca9c42))
+
 ## [1.6.3](https://github.com/gravity-ui/charts/compare/v1.6.2...v1.6.3) (2025-08-21)
 
 
