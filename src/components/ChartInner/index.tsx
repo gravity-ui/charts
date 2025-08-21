@@ -99,10 +99,9 @@ export const ChartInner = (props: ChartInnerProps) => {
     }, [prevWidth, width, prevHeight, height, tooltipPinned, unpinTooltip]);
 
     return (
-        <React.Fragment>
+        <div className={b()}>
             <svg
                 ref={svgRef}
-                className={b()}
                 width={width}
                 height={height}
                 onMouseMove={throttledHandleMouseMove}
@@ -161,13 +160,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     />
                 )}
             </svg>
-            <div
-                className={b('html-layer')}
-                ref={htmlLayerRef}
-                style={{
-                    transform: `translate(${boundsOffsetLeft}px, ${boundsOffsetTop}px)`,
-                }}
-            />
+            <div className={b('html-layer')} ref={htmlLayerRef} />
             <Tooltip
                 dispatcher={dispatcher}
                 tooltip={tooltip}
@@ -177,6 +170,6 @@ export const ChartInner = (props: ChartInnerProps) => {
                 onOutsideClick={unpinTooltip}
                 tooltipPinned={tooltipPinned}
             />
-        </React.Fragment>
+        </div>
     );
 };

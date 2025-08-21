@@ -44,19 +44,19 @@ test.describe('Pie series', () => {
                             {
                                 name: 'One',
                                 value: 2.007719752191679,
-                                label: '<span style="background: #4fc4b7;color: #fff;padding: 4px;border-radius: 4px;">One</span>',
+                                label: '<span style="background: #4fc4b7;color: #fff;padding: 4px;border-radius: 4px;display: inline-block;line-height: normal;">One</span>',
                                 color: '#4fc4b7',
                             },
                             {
                                 name: 'Two',
                                 value: 7.213946843338091,
-                                label: '<span style="background: #59abc9;color: #fff;padding: 4px;border-radius: 4px;">Two</span>',
+                                label: '<span style="background: #59abc9;color: #fff;padding: 4px;border-radius: 4px;display: inline-block;line-height: normal;">Two</span>',
                                 color: '#59abc9',
                             },
                             {
                                 name: 'Three',
                                 value: 6.672973787005758,
-                                label: '<span style="background: #8ccce3;color: #fff;padding: 4px;border-radius: 4px;">Three</span>',
+                                label: '<span style="background: #8ccce3;color: #fff;padding: 4px;border-radius: 4px;display: inline-block;line-height: normal;">Three</span>',
                                 color: '#8ccce3',
                             },
                         ],
@@ -65,6 +65,40 @@ test.describe('Pie series', () => {
             },
         };
         const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Html dataLabels with overflow', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {
+                            enabled: true,
+                            html: true,
+                        },
+                        data: [
+                            {
+                                name: '1',
+                                label: '<span>Long span with text overflow</span>',
+                                value: 1,
+                                color: '#4fc4b7',
+                            },
+                            {
+                                name: '2',
+                                label: '<div>Long div with text overflow</div>',
+                                value: 2,
+                                color: '#59abc9',
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 200, height: 200}} />,
+        );
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
@@ -248,5 +282,162 @@ test.describe('Pie series', () => {
             const component = await mount(<ChartTestStory data={data} styles={style} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+    });
+
+    test('Donut with small center text', async ({mount}) => {
+        const chartData: ChartData = {
+            chart: {
+                margin: {
+                    top: 20,
+                    left: 20,
+                    right: 20,
+                    bottom: 20,
+                },
+            },
+            legend: {
+                justifyContent: 'start',
+                itemDistance: 24,
+                itemStyle: {
+                    fontSize: '13px',
+                },
+                enabled: true,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        minRadius: '50%',
+                        dataLabels: {
+                            padding: 10,
+                            enabled: true,
+                            style: {
+                                fontSize: '12px',
+                                fontWeight: '500',
+                            },
+                        },
+                        data: [
+                            {
+                                name: 'Copiers',
+                                label: '2198.941644556382',
+                                color: '#4DA2F1',
+                                value: 2198.941644556382,
+                            },
+                            {
+                                name: 'Machines',
+                                label: '1645.5533119035804',
+                                color: '#FF3D64',
+                                value: 1645.5533119035804,
+                            },
+                            {
+                                name: 'Tables',
+                                label: '648.7947784232496',
+                                color: '#8AD554',
+                                value: 648.7947784232496,
+                            },
+                            {
+                                name: 'Chairs',
+                                label: '532.3324250077505',
+                                color: '#FFC636',
+                                value: 532.3324250077505,
+                            },
+                            {
+                                name: 'Bookcases',
+                                label: '503.85963542001286',
+                                color: '#FFB9DD',
+                                value: 503.85963542001286,
+                            },
+                            {
+                                name: 'Phones',
+                                label: '371.211537086253',
+                                color: '#84D1EE',
+                                value: 371.211537086253,
+                            },
+                            {
+                                name: 'Storage',
+                                label: '264.5905536072192',
+                                color: '#FF91A1',
+                                value: 264.5905536072192,
+                            },
+                            {
+                                name: 'Supplies',
+                                label: '245.6501960766943',
+                                color: '#54A520',
+                                value: 245.6501960766943,
+                            },
+                            {
+                                name: 'Appliances',
+                                label: '230.75571087373683',
+                                color: '#DB9100',
+                                value: 230.75571087373683,
+                            },
+                            {
+                                name: 'Accessories',
+                                label: '215.9746056526707',
+                                color: '#BA74B3',
+                                value: 215.9746056526707,
+                            },
+                            {
+                                name: 'Binders',
+                                label: '133.56056045002634',
+                                color: '#1F68A9',
+                                value: 133.56056045002634,
+                            },
+                            {
+                                name: 'Furnishings',
+                                label: '95.82566774339885',
+                                color: '#ED65A9',
+                                value: 95.82566774339885,
+                            },
+                            {
+                                name: 'Envelopes',
+                                label: '64.86772391176599',
+                                color: '#0FA08D',
+                                value: 64.86772391176599,
+                            },
+                            {
+                                name: 'Paper',
+                                label: '57.28409198757506',
+                                color: '#FF7E00',
+                                value: 57.28409198757506,
+                            },
+                            {
+                                name: 'Labels',
+                                label: '34.30305509580361',
+                                color: '#E8B0A4',
+                                value: 34.30305509580361,
+                            },
+                            {
+                                name: 'Art',
+                                label: '34.068834228282',
+                                color: '#52A6C5',
+                                value: 34.068834228282,
+                            },
+                            {
+                                name: 'Fasteners',
+                                label: '13.936774256042622',
+                                color: '#BE2443',
+                                value: 13.936774256042622,
+                            },
+                        ],
+                        innerRadius: '50%',
+                        legend: {
+                            symbol: {
+                                padding: 8,
+                                width: 10,
+                                height: 10,
+                            },
+                        },
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory
+                data={chartData}
+                styles={{height: 260, width: 250}}
+                customShape={{text: '229,86', padding: 36}}
+            />,
+        );
+        await expect(component).toHaveScreenshot();
     });
 });

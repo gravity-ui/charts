@@ -32,6 +32,7 @@ export const HtmlLayer = (props: Props) => {
             {items.map((item, index) => {
                 const style: React.CSSProperties = {
                     ...item.style,
+                    color: item.style?.color ?? item.style?.fontColor,
                     position: 'absolute',
                     left: item.x,
                     top: item.y,

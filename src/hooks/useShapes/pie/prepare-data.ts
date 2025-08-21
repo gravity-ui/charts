@@ -239,11 +239,21 @@ export function preparePieData(args: Args): PreparedPieData[] {
             };
 
             if (!allowOverlow) {
-                const labelLeftPosition = getLeftPosition(label);
-                const newMaxWidth =
-                    labelLeftPosition > 0
-                        ? Math.min(boundsWidth / 2 - labelLeftPosition, labelWidth)
-                        : Math.min(labelWidth - (-labelLeftPosition - boundsWidth / 2), labelWidth);
+                const labelLeftPosition = shouldUseHtml ? label.x : getLeftPosition(label);
+
+                let newMaxWidth;
+                if (label.x > 0) {
+                    newMaxWidth = Math.min(
+                        boundsWidth - data.center[0] - labelLeftPosition,
+                        labelWidth,
+                    );
+                } else {
+                    newMaxWidth = Math.min(
+                        data.center[0] + labelLeftPosition + label.size.width,
+                        labelWidth,
+                    );
+                }
+
                 if (newMaxWidth !== label.maxWidth) {
                     label.maxWidth = Math.max(0, newMaxWidth);
                 }
@@ -302,13 +312,25 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 labels.push(label);
 
                 if (shouldUseHtml) {
+                    const htmlLabelX = data.center[0] + label.x;
                     htmlLabels.push({
-                        x: data.center[0] + label.x,
+                        x: Math.max(0, htmlLabelX),
                         y: Math.max(0, data.center[1] + label.y),
                         content: label.text,
                         size: label.size,
-                        style: label.style,
-                    });
+                        style: {
+                            ...label.style,
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            textOverflow: 'ellipsis',
+                            maxWidth: Math.min(
+                                label.x > 0
+                                    ? boundsWidth - htmlLabelX
+                                    : htmlLabelX + label.size.width,
+                                label.size.width,
+                            ),
+                        },
+                    } as HtmlItem);
                 }
 
                 const connector = {
@@ -343,6 +365,18 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 freeSpace = boundsWidth / 2 - Math.abs(left);
             } else {
                 freeSpace = boundsWidth / 2 - (left + label.size.width);
+            }
+
+            maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
+            labelsOverflow = freeSpace < 0 ? Math.max(labelsOverflow, -freeSpace) : labelsOverflow;
+        });
+
+        preparedLabels.htmlLabels.forEach((label) => {
+            let freeSpace = 0;
+            if (label.x < data.center[0]) {
+                freeSpace = Math.max(label.x, 0);
+            } else {
+                freeSpace = boundsWidth - label.x - label.size.width;
             }
 
             maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
