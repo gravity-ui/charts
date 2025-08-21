@@ -46,8 +46,7 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         const parentElement = ref.current?.parentElement;
 
         if (parentElement) {
-            const {width, height} = parentElement.getBoundingClientRect();
-            setDimensions({width, height});
+            setDimensions({width: parentElement.clientWidth, height: parentElement.clientHeight});
         }
     }, []);
 
