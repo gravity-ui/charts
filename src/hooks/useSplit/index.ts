@@ -1,3 +1,5 @@
+import React from 'react';
+
 import get from 'lodash/get';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
@@ -59,27 +61,29 @@ export function getPlotHeight(args: {
 
 export const useSplit = (args: UseSplitArgs): PreparedSplit => {
     const {split, boundsHeight, chartWidth} = args;
-    const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
-    const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
 
-    const plots = split?.plots || [];
-    return {
-        plots: plots.map<PreparedPlot>((p, index) => {
-            const title = preparePlotTitle({
-                title: p.title,
-                plotIndex: index,
-                gap: splitGap,
-                plotHeight,
-                chartWidth,
-            });
-            const top = index * (plotHeight + splitGap);
+    return React.useMemo(() => {
+        const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
+        const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
+        const plots = split?.plots || [];
+        return {
+            plots: plots.map<PreparedPlot>((p, index) => {
+                const title = preparePlotTitle({
+                    title: p.title,
+                    plotIndex: index,
+                    gap: splitGap,
+                    plotHeight,
+                    chartWidth,
+                });
+                const top = index * (plotHeight + splitGap);
 
-            return {
-                top: top + title.height,
-                height: plotHeight - title.height,
-                title,
-            };
-        }),
-        gap: splitGap,
-    };
+                return {
+                    top: top + title.height,
+                    height: plotHeight - title.height,
+                    title,
+                };
+            }),
+            gap: splitGap,
+        };
+    }, [split, boundsHeight, chartWidth]);
 };

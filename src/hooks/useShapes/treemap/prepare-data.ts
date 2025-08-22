@@ -94,7 +94,8 @@ function getLabels(args: {
                       text: label,
                       x,
                       y,
-                      width: labelWidth,
+                      width: labelMaxWidth,
+                      maxWidth: labelWidth,
                       nodeData: d.data,
                   };
 

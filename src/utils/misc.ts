@@ -20,3 +20,13 @@ export function getUniqId() {
 export function isMacintosh() {
     return typeof navigator === 'undefined' ? false : /Mac|iP(hone|[oa]d)/.test(navigator.platform);
 }
+
+export function measurePerformance() {
+    const timestamp = performance.now();
+
+    return {
+        end() {
+            return performance.now() - timestamp;
+        },
+    };
+}

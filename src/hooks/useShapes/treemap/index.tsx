@@ -63,7 +63,11 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
             .style('font-size', () => series.dataLabels.style.fontSize)
             .style('font-weight', () => series.dataLabels.style?.fontWeight || null)
             .style('fill', () => series.dataLabels.style?.fontColor || null)
-            .call(setEllipsisForOverflowTexts, (d) => d.width);
+            .call(
+                setEllipsisForOverflowTexts,
+                (d) => d.maxWidth,
+                (d) => d.width,
+            );
 
         const eventName = `hover-shape.treemap`;
         const hoverOptions = get(seriesOptions, 'treemap.states.hover');

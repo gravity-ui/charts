@@ -178,4 +178,40 @@ test.describe('Treemap series', () => {
         );
         await expect(chart.locator('svg')).toHaveScreenshot();
     });
+
+    test('Perfomance', async ({mount}) => {
+        const items = new Array(1000)
+            .fill(null)
+            .map((_, index) => ({name: String(index), value: 10}));
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: '',
+                        data: items,
+                        dataLabels: {enabled: true},
+                        sorting: {
+                            enabled: true,
+                        },
+                    },
+                ],
+            },
+        };
+
+        let widgetRenderTime: number | undefined;
+        const handleRender = (renderTime?: number) => {
+            widgetRenderTime = renderTime;
+        };
+
+        const component = await mount(
+            <ChartTestStory
+                data={data}
+                styles={{height: 1000, width: 1000}}
+                onRender={handleRender}
+            />,
+        );
+        await component.locator('svg').waitFor({state: 'visible'});
+        await expect.poll(() => widgetRenderTime).toBeLessThan(500);
+    });
 });
