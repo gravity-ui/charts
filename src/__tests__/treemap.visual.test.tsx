@@ -6,6 +6,7 @@ import {treemapBasicData} from 'src/__stories__/__data__';
 import type {ChartData, TreemapSeries} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {randomString} from '../utils';
 
 test.describe('Treemap series', () => {
     test('Basic', async ({mount}) => {
@@ -180,9 +181,10 @@ test.describe('Treemap series', () => {
     });
 
     test('Perfomance', async ({mount}) => {
-        const items = new Array(1000)
-            .fill(null)
-            .map((_, index) => ({name: String(index), value: 10}));
+        const items = new Array(1000).fill(null).map(() => ({
+            name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
+            value: 10,
+        }));
         const data: ChartData = {
             series: {
                 data: [
@@ -212,6 +214,6 @@ test.describe('Treemap series', () => {
             />,
         );
         await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(500);
+        await expect.poll(() => widgetRenderTime).toBeLessThan(400);
     });
 });

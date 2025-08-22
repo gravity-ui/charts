@@ -5,7 +5,7 @@ import type {BaseType, Dispatch, HierarchyRectangularNode} from 'd3';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkTreemap, TreemapSeriesData} from '../../../types';
-import {block, setEllipsisForOverflowTexts} from '../../../utils';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 
@@ -62,12 +62,7 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
             .attr('y', (d) => d.y)
             .style('font-size', () => series.dataLabels.style.fontSize)
             .style('font-weight', () => series.dataLabels.style?.fontWeight || null)
-            .style('fill', () => series.dataLabels.style?.fontColor || null)
-            .call(
-                setEllipsisForOverflowTexts,
-                (d) => d.maxWidth,
-                (d) => d.width,
-            );
+            .style('fill', () => series.dataLabels.style?.fontColor || null);
 
         const eventName = `hover-shape.treemap`;
         const hoverOptions = get(seriesOptions, 'treemap.states.hover');

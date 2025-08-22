@@ -7,8 +7,6 @@ export type TreemapLabelData = {
     text: string;
     x: number;
     y: number;
-    width: number;
-    maxWidth: number;
     nodeData: TreemapSeriesData;
 };
 

@@ -251,3 +251,53 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
         return acc;
     }, []);
 }
+
+export function getTextSizeFn({style}: {style: BaseTextStyle}) {
+    const map: Record<string, {width: number; height: number}> = {};
+    const setSymbolSize = (s: string) => {
+        const size = getLabelsSize({
+            labels: [s],
+            style,
+        });
+        map[s] = {width: size.maxWidth, height: size.maxHeight};
+    };
+
+    return (str: string) => {
+        let width = 0;
+        let height = 0;
+        [...str].forEach((s) => {
+            if (!map[s]) {
+                setSymbolSize(s);
+            }
+
+            width += map[s].width;
+            height = Math.max(height, map[s].height);
+        });
+
+        return {width, height};
+    };
+}
+
+export function getTextWithElipsis({
+    text: originalText,
+    getTextWidth,
+    maxWidth,
+}: {
+    text: string;
+    getTextWidth: (s: string) => number;
+    maxWidth: number;
+}) {
+    let text = originalText;
+
+    let textLength = getTextWidth(text);
+    while (textLength > maxWidth && text.length > 1) {
+        text = text.slice(0, -2) + '…';
+        textLength = getTextWidth(text);
+    }
+
+    if (textLength > maxWidth) {
+        text = '';
+    }
+
+    return text;
+}
