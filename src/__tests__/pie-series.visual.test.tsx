@@ -504,7 +504,7 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('The shape in the center of the donut should take into account the height of the text', async ({
+    test('The shape in the center of the donut should take into account the height of the text', async ({
         mount,
     }) => {
         const chartData: ChartData = {

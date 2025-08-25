@@ -21,7 +21,7 @@ export function pieCenterText(text: string, options?: {padding?: number; color?:
         if (padding < args.series.innerRadius) {
             availableSpace -= padding * 2;
         }
-        fontSize = (fontSize * availableSpace) / textSize.maxWidth;
+        fontSize = (fontSize * availableSpace) / Math.max(textSize.maxWidth, textSize.maxHeight);
 
         const container = create('svg:g');
         container
