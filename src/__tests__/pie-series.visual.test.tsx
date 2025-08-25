@@ -9,6 +9,7 @@ import set from 'lodash/set';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {pieBasicData, piePlaygroundData} from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
+import {randomString} from '../utils';
 
 function getModifiedData(data: ChartData, pieSeries: Partial<PieSeries>) {
     const resultData = merge({}, data);
@@ -502,6 +503,40 @@ test.describe('Pie series', () => {
             <ChartTestStory data={chartData} styles={{transform: 'scale(0.5)'}} />,
         );
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    // todo: unskip after fixing the performance
+    test.skip('Performance', async ({mount}) => {
+        const items = new Array(1000).fill(null).map(() => ({
+            name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
+            value: 10,
+        }));
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        data: items,
+                        dataLabels: {enabled: true},
+                    },
+                ],
+            },
+        };
+
+        let widgetRenderTime: number | undefined;
+        const handleRender = (renderTime?: number) => {
+            widgetRenderTime = renderTime;
+        };
+
+        const component = await mount(
+            <ChartTestStory
+                data={data}
+                styles={{height: 1000, width: 1000}}
+                onRender={handleRender}
+            />,
+        );
+        await component.locator('svg').waitFor({state: 'visible'});
+        await expect.poll(() => widgetRenderTime).toBeLessThan(400);
     });
 
     test('The shape in the center of the donut should take into account the height of the text', async ({

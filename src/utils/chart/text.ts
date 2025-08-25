@@ -3,7 +3,11 @@ import {select} from 'd3-selection';
 
 import type {BaseTextStyle, MeaningfulAny} from '../../types';
 
-export function handleOverflowingText(tSpan: SVGTSpanElement | null, maxWidth: number) {
+export function handleOverflowingText(
+    tSpan: SVGTSpanElement | null,
+    maxWidth: number,
+    textWidth?: number,
+) {
     if (!tSpan) {
         return;
     }
@@ -13,18 +17,24 @@ export function handleOverflowingText(tSpan: SVGTSpanElement | null, maxWidth: n
         return;
     }
 
+    let text = tSpan.textContent || '';
+    // We believe that if the text goes beyond the boundaries of less than a pixel, it's not a big deal.
+    // Math.floor helps to solve the problem with the difference in rounding when comparing textLength with maxWidth.
+    let textLength = textWidth ?? Math.floor(tSpan.getBoundingClientRect()?.width || 0);
+
+    if (textLength < maxWidth) {
+        return;
+    }
+
     const textNode = tSpan.closest('text');
     const angle =
         Array.from(textNode?.transform.baseVal || []).find((item) => item.angle)?.angle || 0;
 
-    const revertRotation = svg.createSVGTransform();
-    revertRotation.setRotate(-angle, 0, 0);
-    textNode?.transform.baseVal.appendItem(revertRotation);
-
-    let text = tSpan.textContent || '';
-    // We believe that if the text goes beyond the boundaries of less than a pixel, it's not a big deal.
-    // Math.floor helps to solve the problem with the difference in rounding when comparing textLength with maxWidth.
-    let textLength = Math.floor(tSpan.getBoundingClientRect()?.width || 0);
+    if (angle) {
+        const revertRotation = svg.createSVGTransform();
+        revertRotation.setRotate(-angle, 0, 0);
+        textNode?.transform.baseVal.appendItem(revertRotation);
+    }
 
     while (textLength > maxWidth && text.length > 1) {
         text = text.slice(0, -1);
@@ -36,26 +46,40 @@ export function handleOverflowingText(tSpan: SVGTSpanElement | null, maxWidth: n
         tSpan.textContent = '';
     }
 
-    textNode?.transform.baseVal.removeItem(textNode?.transform.baseVal.length - 1);
+    if (angle) {
+        textNode?.transform.baseVal.removeItem(textNode?.transform.baseVal.length - 1);
+    }
 }
 
 export function setEllipsisForOverflowText<T>(
     selection: Selection<SVGTextElement, T, null, unknown>,
     maxWidth: number,
+    textWidth?: number,
 ) {
+    const originalTextWidth =
+        textWidth ?? Math.floor(selection.node()?.getBoundingClientRect()?.width || 0);
+    if (originalTextWidth <= maxWidth) {
+        return;
+    }
+
     const text = selection.text();
     selection.text(null).append('title').text(text);
     const tSpan = selection.append('tspan').text(text).style('dominant-baseline', 'inherit');
-    handleOverflowingText(tSpan.node(), maxWidth);
+    handleOverflowingText(tSpan.node(), maxWidth, originalTextWidth);
 }
 
 export function setEllipsisForOverflowTexts<T>(
     selection: Selection<SVGTextElement, T, MeaningfulAny, unknown>,
     maxWidth: ((datum: T) => number) | number,
+    currentWidth?: (datum: T) => number,
 ) {
     selection.each(function (datum) {
+        const textSelection = select(this);
         const textMaxWidth = typeof maxWidth === 'function' ? maxWidth(datum) : maxWidth;
-        setEllipsisForOverflowText(select(this), textMaxWidth);
+        const textWidth = currentWidth
+            ? currentWidth(datum)
+            : Math.floor(textSelection.node()?.getBoundingClientRect()?.width || 0);
+        setEllipsisForOverflowText(textSelection, textMaxWidth, textWidth);
     });
 }
 
@@ -226,4 +250,54 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
 
         return acc;
     }, []);
+}
+
+export function getTextSizeFn({style}: {style: BaseTextStyle}) {
+    const map: Record<string, {width: number; height: number}> = {};
+    const setSymbolSize = (s: string) => {
+        const size = getLabelsSize({
+            labels: [s],
+            style,
+        });
+        map[s] = {width: size.maxWidth, height: size.maxHeight};
+    };
+
+    return (str: string) => {
+        let width = 0;
+        let height = 0;
+        [...str].forEach((s) => {
+            if (!map[s]) {
+                setSymbolSize(s);
+            }
+
+            width += map[s].width;
+            height = Math.max(height, map[s].height);
+        });
+
+        return {width, height};
+    };
+}
+
+export function getTextWithElipsis({
+    text: originalText,
+    getTextWidth,
+    maxWidth,
+}: {
+    text: string;
+    getTextWidth: (s: string) => number;
+    maxWidth: number;
+}) {
+    let text = originalText;
+
+    let textLength = getTextWidth(text);
+    while (textLength > maxWidth && text.length > 1) {
+        text = text.slice(0, -2) + '…';
+        textLength = getTextWidth(text);
+    }
+
+    if (textLength > maxWidth) {
+        text = '';
+    }
+
+    return text;
 }

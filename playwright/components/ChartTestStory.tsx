@@ -9,10 +9,11 @@ import {CustomShapeRenderer} from '../../src/utils';
 type Props = {
     data: ChartData;
     styles?: React.CSSProperties;
+    onRender?: (renderTime?: number) => void;
     customShape?: {text: string; padding?: number; minFontSize?: number};
 };
 
-export const ChartTestStory = ({data, styles, customShape}: Props) => {
+export const ChartTestStory = ({data, styles, customShape, onRender}: Props) => {
     const storyStyles: React.CSSProperties = {
         height: 280,
         width: 400,
@@ -36,6 +37,7 @@ export const ChartTestStory = ({data, styles, customShape}: Props) => {
             <ChartStory
                 data={data}
                 style={{height: storyStyles.height, width: storyStyles.width}}
+                onRender={onRender}
             />
         </div>
     );

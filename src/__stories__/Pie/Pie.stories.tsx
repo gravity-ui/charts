@@ -1,6 +1,8 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
+import type {ChartData} from '../../types';
+import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 import {
     pieBasicData,
@@ -70,6 +72,37 @@ export const PieUserStyles = {
     name: 'User styles',
     args: {
         data: pieUserStylesData,
+    },
+} satisfies Story;
+
+export const PiePerformance = {
+    name: 'Performance',
+    args: {
+        data: (() => {
+            const items = new Array(1000).fill(null).map(() => ({
+                name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
+                value: 10,
+            }));
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            data: items,
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+
+            return data;
+        })(),
+        style: {width: 1000, height: 1000},
+    },
+    argTypes: {
+        data: {
+            control: 'object',
+        },
     },
 } satisfies Story;
 

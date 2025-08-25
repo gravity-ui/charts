@@ -14,7 +14,7 @@ import type {HierarchyRectangularNode} from 'd3';
 
 import {LayoutAlgorithm} from '../../../constants';
 import type {HtmlItem, TreemapSeriesData} from '../../../types';
-import {getLabelsSize} from '../../../utils';
+import {getLabelsSize, getTextSizeFn, getTextWithElipsis} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedTreemapSeries} from '../../useSeries/types';
 
@@ -33,6 +33,7 @@ function getLabels(args: {
         options: {html, padding, align, style},
     } = args;
 
+    const getTextSize = getTextSizeFn({style});
     return data.reduce<LabelItem[]>((acc, d) => {
         const texts = Array.isArray(d.data.name) ? d.data.name : [d.data.name];
         const left = d.x0 + padding;
@@ -43,16 +44,26 @@ function getLabels(args: {
         let prevLabelsHeight = 0;
         texts.forEach((text) => {
             const label = getFormattedValue({value: text, ...args.options});
-            const {maxHeight: labelMaxHeight, maxWidth: labelMaxWidth} =
-                getLabelsSize({
-                    labels: [label],
-                    style: {
-                        ...style,
-                        maxWidth: `${spaceWidth}px`,
-                        maxHeight: `${availableSpaceHeight}px`,
-                    },
-                    html,
-                }) ?? {};
+            let labelMaxHeight = 0;
+            let labelMaxWidth = 0;
+            if (html) {
+                const size =
+                    getLabelsSize({
+                        labels: [label],
+                        style: {
+                            ...style,
+                            maxWidth: `${spaceWidth}px`,
+                            maxHeight: `${availableSpaceHeight}px`,
+                        },
+                        html,
+                    }) ?? {};
+                labelMaxHeight = size.maxHeight;
+                labelMaxWidth = size.maxWidth;
+            } else {
+                const size = getTextSize(label);
+                labelMaxHeight = size.height;
+                labelMaxWidth = size.width;
+            }
 
             let x = left;
             const y = prevLabelsHeight + d.y0 + padding;
@@ -91,10 +102,13 @@ function getLabels(args: {
                       size: {width: labelWidth, height: labelHeight},
                   }
                 : {
-                      text: label,
+                      text: getTextWithElipsis({
+                          text: label,
+                          getTextWidth: (s) => getTextSize(s).width,
+                          maxWidth: labelWidth,
+                      }),
                       x,
                       y,
-                      width: labelWidth,
                       nodeData: d.data,
                   };
 
