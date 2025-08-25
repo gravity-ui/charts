@@ -73,7 +73,7 @@ export function axisBottom(args: AxisBottomArgs) {
     const position = getXTickPosition({scale, offset});
     const values = getXAxisItems({scale, count: ticksCount, maxCount: maxTickCount});
     const labelHeight = getLabelsSize({
-        labels: values,
+        labels: values.map(labelFormat),
         style: labelsStyle,
     }).maxHeight;
 

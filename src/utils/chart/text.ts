@@ -255,8 +255,9 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
 export function getTextSizeFn({style}: {style: BaseTextStyle}) {
     const map: Record<string, {width: number; height: number}> = {};
     const setSymbolSize = (s: string) => {
+        const labels = [s === ' ' ? '&nbsp;' : s];
         const size = getLabelsSize({
-            labels: [s],
+            labels,
             style,
         });
         map[s] = {width: size.maxWidth, height: size.maxHeight};
@@ -278,6 +279,8 @@ export function getTextSizeFn({style}: {style: BaseTextStyle}) {
     };
 }
 
+// We ignore an inaccuracy of less than a pixel.
+// To do this, we round the font size down when comparing it, and the size of the allowed space up.
 export function getTextWithElipsis({
     text: originalText,
     getTextWidth,
@@ -287,15 +290,20 @@ export function getTextWithElipsis({
     getTextWidth: (s: string) => number;
     maxWidth: number;
 }) {
-    let text = originalText;
+    let textWidth = Math.floor(getTextWidth(originalText));
+    const textMaxWidth = Math.ceil(maxWidth);
 
-    let textLength = getTextWidth(text);
-    while (textLength > maxWidth && text.length > 1) {
-        text = text.slice(0, -2) + '…';
-        textLength = getTextWidth(text);
+    if (textWidth <= textMaxWidth) {
+        return originalText;
     }
 
-    if (textLength > maxWidth) {
+    let text = originalText + '…';
+    while (textWidth > textMaxWidth && text.length > 2) {
+        text = text.slice(0, -2) + '…';
+        textWidth = Math.floor(getTextWidth(text));
+    }
+
+    if (textWidth > maxWidth) {
         text = '';
     }
 
