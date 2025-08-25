@@ -119,7 +119,7 @@ export function axisBottom(args: AxisBottomArgs) {
                         return 'middle';
                     })
                     .style('transform', transform)
-                    .style('alignment-baseline', 'after-edge');
+                    .style('dominant-baseline', 'text-after-edge');
 
                 return tick;
             })

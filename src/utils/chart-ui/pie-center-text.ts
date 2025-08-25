@@ -48,7 +48,7 @@ export function pieCenterText(
         const tspan = textSelection
             .append('tspan')
             .attr('text-anchor', 'middle')
-            .attr('alignment-baseline', 'middle')
+            .attr('dominant-baseline', 'middle')
             .text(text);
         handleOverflowingText(tspan.node(), availableSpace);
 
