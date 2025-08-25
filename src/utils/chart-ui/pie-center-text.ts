@@ -51,7 +51,7 @@ export function pieCenterText(
         const tspan = textSelection
             .append('tspan')
             .attr('text-anchor', 'middle')
-            .attr('dominant-baseline', 'central')
+            .attr('dominant-baseline', 'middle')
             .text(text);
 
         if (fontSize <= minFontSize) {
