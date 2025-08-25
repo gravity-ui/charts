@@ -506,7 +506,7 @@ test.describe('Pie series', () => {
     });
 
     // todo: unskip after fixing the performance
-    test.skip('Perfomance', async ({mount}) => {
+    test.skip('Performance', async ({mount}) => {
         const items = new Array(1000).fill(null).map(() => ({
             name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
             value: 10,

@@ -31,8 +31,8 @@ export const TreemapWithHtmlLabels = {
     },
 } satisfies Story;
 
-export const TreemapPerfomance = {
-    name: 'Perfomance',
+export const TreemapPerformance = {
+    name: 'Performance',
     args: {
         data: (() => {
             const items = new Array(1000).fill(null).map(() => ({

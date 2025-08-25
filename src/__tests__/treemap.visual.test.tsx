@@ -180,7 +180,7 @@ test.describe('Treemap series', () => {
         await expect(chart.locator('svg')).toHaveScreenshot();
     });
 
-    test('Perfomance', async ({mount}) => {
+    test('Performance', async ({mount}) => {
         const items = new Array(1000).fill(null).map(() => ({
             name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
             value: 10,

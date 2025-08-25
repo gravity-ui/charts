@@ -75,8 +75,8 @@ export const PieUserStyles = {
     },
 } satisfies Story;
 
-export const PiePerfomance = {
-    name: 'Perfomance',
+export const PiePerformance = {
+    name: 'Performance',
     args: {
         data: (() => {
             const items = new Array(1000).fill(null).map(() => ({
