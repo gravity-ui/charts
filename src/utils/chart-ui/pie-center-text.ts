@@ -32,9 +32,12 @@ export function pieCenterText(
             availableSpace -= padding * 2;
         }
 
+        const minFontSize = options?.minFontSize ?? MIN_FONT_SIZE;
         fontSize = Math.max(
-            options?.minFontSize ?? MIN_FONT_SIZE,
-            (fontSize * availableSpace) / Math.max(textSize.maxWidth, textSize.maxHeight),
+            minFontSize,
+            Math.ceil(
+                (fontSize * availableSpace) / Math.max(textSize.maxWidth, textSize.maxHeight),
+            ),
         );
 
         const tempWrapper = select(document.body).append('svg');
@@ -48,9 +51,12 @@ export function pieCenterText(
         const tspan = textSelection
             .append('tspan')
             .attr('text-anchor', 'middle')
-            .attr('dominant-baseline', 'middle')
+            .attr('dominant-baseline', 'central')
             .text(text);
-        handleOverflowingText(tspan.node(), availableSpace);
+
+        if (fontSize <= minFontSize) {
+            handleOverflowingText(tspan.node(), availableSpace);
+        }
 
         const result = container.node();
         tempWrapper.remove();
