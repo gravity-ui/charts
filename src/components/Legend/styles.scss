@@ -26,7 +26,7 @@
 
     &__item-text {
         fill: var(--g-color-text-secondary);
-        alignment-baseline: before-edge;
+        dominant-baseline: text-before-edge;
 
         &_unselected {
             fill: var(--g-color-text-hint);
@@ -45,7 +45,7 @@
 
     &__pagination-counter,
     &__pagination-arrow {
-        alignment-baseline: middle;
+        dominant-baseline: middle;
     }
 
     &__pagination-arrow {

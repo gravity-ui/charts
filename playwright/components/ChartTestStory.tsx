@@ -9,8 +9,8 @@ import {CustomShapeRenderer} from '../../src/utils';
 type Props = {
     data: ChartData;
     styles?: React.CSSProperties;
-    customShape?: {text: string; padding?: number};
     onRender?: (renderTime?: number) => void;
+    customShape?: {text: string; padding?: number; minFontSize?: number};
 };
 
 export const ChartTestStory = ({data, styles, customShape, onRender}: Props) => {
@@ -27,6 +27,7 @@ export const ChartTestStory = ({data, styles, customShape, onRender}: Props) => 
             'renderCustomShape',
             CustomShapeRenderer.pieCenterText(customShape.text, {
                 padding: customShape.padding,
+                minFontSize: customShape.minFontSize,
             }),
         );
     }
