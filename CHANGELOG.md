@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.7](https://github.com/gravity-ui/charts/compare/v1.6.6...v1.6.7) (2025-08-25)
+
+
+### Bug Fixes
+
+* **Pie:** pieCenterText ([#133](https://github.com/gravity-ui/charts/issues/133)) ([8e962d4](https://github.com/gravity-ui/charts/commit/8e962d478519ad08db69cba6e036112d5c51b51c))
+
 ## [1.6.6](https://github.com/gravity-ui/charts/compare/v1.6.5...v1.6.6) (2025-08-25)
 
 
