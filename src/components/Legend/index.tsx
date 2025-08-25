@@ -382,7 +382,7 @@ export const Legend = (props: Props) => {
                 .attr('font-weight', legend.title.style.fontWeight ?? null)
                 .attr('font-size', legend.title.style.fontSize ?? null)
                 .attr('fill', legend.title.style.fontColor ?? null)
-                .style('alignment-baseline', 'before-edge')
+                .style('dominant-baseline', 'text-before-edge')
                 .html(legend.title.text);
         }
 

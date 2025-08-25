@@ -45,7 +45,7 @@ export function setEllipsisForOverflowText<T>(
 ) {
     const text = selection.text();
     selection.text(null).append('title').text(text);
-    const tSpan = selection.append('tspan').text(text).style('alignment-baseline', 'inherit');
+    const tSpan = selection.append('tspan').text(text).style('dominant-baseline', 'inherit');
     handleOverflowingText(tSpan.node(), maxWidth);
 }
 

@@ -193,7 +193,9 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
 
                         return d;
                     });
-                const labelSelection = pieSelection.selectAll<BaseType, PieLabelData>('tspan');
+                const labelSelection = pieSelection.selectAll<BaseType, PieLabelData>(
+                    `.${b('label')} tspan`,
+                );
                 const connectorSelection = pieSelection.selectAll<BaseType, PieLabelData>(
                     connectorSelector,
                 );

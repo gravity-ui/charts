@@ -14,13 +14,13 @@
         font-weight: bold;
 
         fill: var(--g-color-text-complementary);
-        alignment-baseline: before-edge;
+        dominant-baseline: text-before-edge;
     }
 }
 
 .gcharts-radar {
     &__label {
-        alignment-baseline: before-edge;
+        dominant-baseline: text-before-edge;
     }
 }
 
@@ -37,7 +37,7 @@
         user-select: none;
 
         fill: var(--g-color-text-complementary);
-        alignment-baseline: after-edge;
+        dominant-baseline: text-after-edge;
     }
 }
 
@@ -47,7 +47,7 @@
         pointer-events: none;
 
         fill: var(--g-color-text-complementary);
-        alignment-baseline: text-before-edge;
+        dominant-baseline: text-before-edge;
     }
 }
 

@@ -5,7 +5,7 @@
 
     & .tick text {
         color: var(--g-color-text-secondary);
-        alignment-baseline: after-edge;
+        dominant-baseline: text-after-edge;
     }
 
     & .tick line,
@@ -14,12 +14,12 @@
     }
 
     &__title {
-        alignment-baseline: after-edge;
+        dominant-baseline: text-after-edge;
 
         fill: var(--g-color-text-secondary);
     }
 
     &__title tspan {
-        alignment-baseline: after-edge;
+        dominant-baseline: text-after-edge;
     }
 }
