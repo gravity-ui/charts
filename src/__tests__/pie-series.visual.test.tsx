@@ -526,4 +526,28 @@ test.describe('Pie series', () => {
         );
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('The long text inside the donut should collapse into three dots', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        innerRadius: '50%',
+                        data: [
+                            {name: '1', value: 1},
+                            {name: '2', value: 2},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory
+                data={chartData}
+                customShape={{text: 'On seashore far a green oak towers', minFontSize: 20}}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
