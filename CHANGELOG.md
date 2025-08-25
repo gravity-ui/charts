@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.6](https://github.com/gravity-ui/charts/compare/v1.6.5...v1.6.6) (2025-08-25)
+
+
+### Bug Fixes
+
+* **Treemap:** processing overflowing treemap labels ([#129](https://github.com/gravity-ui/charts/issues/129)) ([1bf3205](https://github.com/gravity-ui/charts/commit/1bf3205e744ae63244a008f5679d40c129284faf))
+
 ## [1.6.5](https://github.com/gravity-ui/charts/compare/v1.6.4...v1.6.5) (2025-08-25)
 
 
