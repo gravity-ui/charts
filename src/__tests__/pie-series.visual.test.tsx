@@ -592,10 +592,10 @@ test.describe('Pie series', () => {
                 data: [
                     {
                         type: 'pie',
-                        data: [
-                            {name: '1', value: 1},
-                            {name: '2', value: 2},
-                        ],
+                        data: new Array(5)
+                            .fill(null)
+                            .map((_, index) => ({name: String(index), value: index + 1})),
+                        dataLabels: {enabled: false},
                     },
                 ],
             },
