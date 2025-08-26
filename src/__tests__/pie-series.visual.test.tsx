@@ -585,4 +585,33 @@ test.describe('Pie series', () => {
         );
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Custom color palette', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        data: new Array(5)
+                            .fill(null)
+                            .map((_, index) => ({name: String(index), value: index + 1})),
+                        dataLabels: {enabled: false},
+                    },
+                ],
+            },
+            // d3.schemePastel2
+            colors: [
+                '#b3e2cd',
+                '#fdcdac',
+                '#cbd5e8',
+                '#f4cae4',
+                '#e6f5c9',
+                '#fff2ae',
+                '#f1e2cc',
+                '#cccccc',
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component).toHaveScreenshot();
+    });
 });

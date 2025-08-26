@@ -33,15 +33,21 @@ export function prepareSeries(args: {
     series: ChartSeries[];
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
+    colors: string[];
     colorScale: ScaleOrdinal<string, string>;
 }): PreparedSeries[] {
-    const {type, series, seriesOptions, legend, colorScale} = args;
+    const {type, series, seriesOptions, legend, colors, colorScale} = args;
 
     switch (type) {
         case 'pie': {
             return series.reduce<PreparedSeries[]>((acc, singleSeries) => {
                 acc.push(
-                    ...preparePieSeries({series: singleSeries as PieSeries, seriesOptions, legend}),
+                    ...preparePieSeries({
+                        series: singleSeries as PieSeries,
+                        seriesOptions,
+                        legend,
+                        colors,
+                    }),
                 );
                 return acc;
             }, []);
@@ -94,6 +100,7 @@ export function prepareSeries(args: {
                 series: series as WaterfallSeries[],
                 legend,
                 colorScale,
+                colors,
             });
         }
         case 'sankey': {
@@ -109,6 +116,7 @@ export function prepareSeries(args: {
                 series: series as RadarSeries[],
                 seriesOptions,
                 legend,
+                colors,
             });
         }
         default: {

@@ -27,7 +27,7 @@ export function useChartInnerProps(props: Props) {
     const {width, height, data, dispatcher, htmlLayout, svgContainer} = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
-    const {chart, title, tooltip} = useChartOptions({data});
+    const {chart, title, tooltip, colors} = useChartOptions({data});
     const xAxis = React.useMemo(
         () => getPreparedXAxis({xAxis: data.xAxis, width, series: data.series.data}),
         [data, width],
@@ -55,6 +55,7 @@ export function useChartInnerProps(props: Props) {
         series: data.series,
         legend: data.legend,
         preparedYAxis: yAxis,
+        colors,
     });
     const {boundsWidth, boundsHeight} = useChartDimensions({
         width,

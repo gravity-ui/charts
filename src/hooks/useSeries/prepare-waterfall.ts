@@ -1,7 +1,7 @@
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE, DEFAULT_PALETTE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE} from '../../constants';
 import type {WaterfallSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
@@ -13,11 +13,12 @@ type PrepareWaterfallSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
     series: WaterfallSeries[];
     legend: PreparedLegend;
+    colors: string[];
 };
 
 export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): PreparedSeries[] {
-    const {colorScale, series: seriesList, legend} = args;
-    const [, negativeColor, positiveColor] = DEFAULT_PALETTE;
+    const {colorScale, series: seriesList, legend, colors} = args;
+    const [, negativeColor, positiveColor] = colors;
     const series = seriesList[0];
 
     const common: PreparedWaterfallSeries = {

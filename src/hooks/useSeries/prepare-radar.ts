@@ -2,7 +2,7 @@ import {scaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {DEFAULT_DATALABELS_STYLE, DEFAULT_PALETTE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE} from '../../constants';
 import type {ChartSeriesOptions, RadarSeries} from '../../types';
 import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getUniqId} from '../../utils';
@@ -19,6 +19,7 @@ type PrepareRadarSeriesArgs = {
     series: RadarSeries[];
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
+    colors: string[];
 };
 
 export const DEFAULT_MARKER = {
@@ -52,10 +53,10 @@ function prepareMarker(series: RadarSeries, seriesOptions?: ChartSeriesOptions) 
 }
 
 export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
-    const {series: radarSeries, seriesOptions, legend} = args;
+    const {series: radarSeries, seriesOptions, legend, colors} = args;
     const colorScale = scaleOrdinal(
         radarSeries.map((s, index) => s.name ?? `Series ${index + 1}`),
-        DEFAULT_PALETTE,
+        colors,
     );
     const categories = radarSeries.find((s) => s.categories)?.categories ?? [];
 
