@@ -1,5 +1,6 @@
 import React from 'react';
 
+import {DEFAULT_PALETTE} from '../../constants';
 import type {ChartData} from '../../types';
 
 import {getPreparedChart} from './chart';
@@ -13,7 +14,7 @@ type Args = {
 
 export const useChartOptions = (args: Args): ChartOptions => {
     const {
-        data: {chart, title, tooltip},
+        data: {chart, title, tooltip, colors},
     } = args;
     const options: ChartOptions = React.useMemo(() => {
         const preparedTitle = getPreparedTitle({title});
@@ -27,8 +28,9 @@ export const useChartOptions = (args: Args): ChartOptions => {
             chart: preparedChart,
             title: preparedTitle,
             tooltip: preparedTooltip,
+            colors: colors ?? DEFAULT_PALETTE,
         };
-    }, [chart, title, tooltip]);
+    }, [chart, colors, title, tooltip]);
 
     return options;
 };
