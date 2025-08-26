@@ -252,18 +252,18 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
     }, []);
 }
 
-function unescapeHtml(str: string) {
-    const entityMap = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-        '/': '&#x2F;',
-        '`': '&#x60;',
-        '=': '&#x3D;',
-    };
+const entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;',
+};
 
+function unescapeHtml(str: string) {
     return Object.entries(entityMap).reduce((result, [key, value]) => {
         return result.replace(value, key);
     }, str);
