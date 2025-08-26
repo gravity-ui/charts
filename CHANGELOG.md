@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/gravity-ui/charts/compare/v1.6.7...v1.7.0) (2025-08-26)
+
+
+### Features
+
+* settings to use your own set of colors ([#138](https://github.com/gravity-ui/charts/issues/138)) ([0160417](https://github.com/gravity-ui/charts/commit/0160417cee2d566c971bba2da6b3789a380b5c23))
+
+
+### Bug Fixes
+
+* **Pie:** performance of the label rendering ([#137](https://github.com/gravity-ui/charts/issues/137)) ([a20d2b2](https://github.com/gravity-ui/charts/commit/a20d2b28f9cea0c61f9cbf38c6eb5128098ac74f))
+* **Treemap:** labels take up less space than they could ([#135](https://github.com/gravity-ui/charts/issues/135)) ([73a4c7c](https://github.com/gravity-ui/charts/commit/73a4c7c072f7fe67f383b680e75d31fb12bd2857))
+
 ## [1.6.7](https://github.com/gravity-ui/charts/compare/v1.6.6...v1.6.7) (2025-08-25)
 
 
