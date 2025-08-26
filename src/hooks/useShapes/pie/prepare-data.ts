@@ -1,5 +1,5 @@
 import type {PieArcDatum} from 'd3';
-import {arc, group, line as lineGenerator} from 'd3';
+import {arc, group, line as lineGenerator, max} from 'd3';
 import merge from 'lodash/merge';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../../constants';
@@ -8,6 +8,7 @@ import {
     calculateNumericProperty,
     getLabelsSize,
     getLeftPosition,
+    getTextSizeFn,
     isLabelsOverlapping,
 } from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
@@ -61,7 +62,15 @@ export function preparePieData(args: Args): PreparedPieData[] {
         preparedSeries[0]?.dataLabels?.style,
     );
 
-    const prepareItem = (stackId: string, items: PreparedPieSeries[]) => {
+    const prepareItem = ({
+        stackId,
+        items,
+        labels,
+    }: {
+        stackId: string;
+        items: PreparedPieSeries[];
+        labels: Record<string, Partial<PieLabelData>>;
+    }) => {
         const series = items[0];
         const {center, borderWidth, borderColor, borderRadius, dataLabels} = series;
         const data: PreparedPieData = {
@@ -84,15 +93,13 @@ export function preparePieData(args: Args): PreparedPieData[] {
             },
         };
 
-        const {maxHeight: labelHeight} = getLabelsSize({
-            labels: ['Some Label'],
-            style: dataLabelsStyle,
-        });
+        const labelMaxHeight = max(Object.values(labels).map((l) => l.size?.height ?? 0)) ?? 0;
         const segments = items.map<SegmentData>((item) => {
             let maxSegmentRadius = maxRadius;
 
             if (dataLabels.enabled) {
-                maxSegmentRadius -= dataLabels.distance + dataLabels.connectorPadding + labelHeight;
+                maxSegmentRadius -=
+                    dataLabels.distance + dataLabels.connectorPadding + labelMaxHeight;
             }
 
             const segmentRadius =
@@ -116,12 +123,57 @@ export function preparePieData(args: Args): PreparedPieData[] {
         return data;
     };
 
+    const getLabels = ({series}: {series: PreparedPieSeries[]}) => {
+        const {dataLabels} = series[0];
+
+        if (!dataLabels.enabled) {
+            return {};
+        }
+
+        const getTextSize = getTextSizeFn({style: dataLabelsStyle});
+        return series.reduce(
+            (acc, d) => {
+                const text = getFormattedValue({
+                    value: d.data.label || d.data.value,
+                    ...d.dataLabels,
+                });
+
+                let labelWidth = 0;
+                let labelHeight = 0;
+                if (dataLabels.html) {
+                    const size = getLabelsSize({
+                        labels: [text],
+                        style: dataLabelsStyle,
+                        html: true,
+                    });
+                    labelWidth = size.maxWidth;
+                    labelHeight = size.maxHeight;
+                } else {
+                    const size = getTextSize(text);
+                    labelWidth = size.width;
+                    labelHeight = size.height;
+                }
+
+                const label: Partial<PieLabelData> = {
+                    text,
+                    size: {width: labelWidth, height: labelHeight},
+                };
+
+                acc[d.id] = label;
+
+                return acc;
+            },
+            {} as Record<string, Partial<PieLabelData>>,
+        );
+    };
+
     const prepareLabels = (prepareLabelsArgs: {
         data: PreparedPieData;
         series: PreparedPieSeries[];
+        labels: Record<string, Partial<PieLabelData>>;
         allowOverlow?: boolean;
     }) => {
-        const {data, series, allowOverlow = true} = prepareLabelsArgs;
+        const {data, series, labels: labelsData, allowOverlow = true} = prepareLabelsArgs;
         const {dataLabels} = series[0];
 
         const labels: PieLabelData[] = [];
@@ -139,12 +191,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
             line = line.curve(curveFactory);
         }
 
-        const {style, connectorPadding, distance} = dataLabels;
-        const {maxHeight: labelHeight} = getLabelsSize({
-            labels: ['Some Label'],
-            style: dataLabelsStyle,
-            html: shouldUseHtml,
-        });
+        const {connectorPadding, distance} = dataLabels;
         const connectorStartPointGenerator = arc<PieArcDatum<SegmentData>>()
             .innerRadius((d) => d.data.radius)
             .outerRadius((d) => d.data.radius);
@@ -162,16 +209,10 @@ export function preparePieData(args: Args): PreparedPieData[] {
         // eslint-disable-next-line complexity
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
-            const text = getFormattedValue({
-                value: d.data.label || d.data.value,
-                ...d.dataLabels,
-            });
-            const labelSize = getLabelsSize({
-                labels: [text],
-                style: dataLabelsStyle,
-                html: shouldUseHtml,
-            });
-            const labelWidth = labelSize.maxWidth;
+            const {text = '', size: labelSize} = labelsData[d.id];
+            const labelWidth = labelSize?.width ?? 0;
+            const labelHeight = labelSize?.height ?? 0;
+
             const relatedSegment = data.segments[index];
 
             /**
@@ -228,7 +269,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
                 text,
                 x,
                 y,
-                style,
+                style: dataLabelsStyle,
                 size: {width: labelWidth, height: labelHeight},
                 maxWidth: labelWidth,
                 textAnchor: midAngle < Math.PI ? 'start' : 'end',
@@ -349,9 +390,11 @@ export function preparePieData(args: Args): PreparedPieData[] {
     };
 
     return Array.from(groupedPieSeries).map<PreparedPieData>(([stackId, items]) => {
-        const data = prepareItem(stackId, items);
+        const seriesLabels = getLabels({series: items});
+        const data = prepareItem({stackId, items, labels: seriesLabels});
         const preparedLabels = prepareLabels({
             data,
+            labels: seriesLabels,
             series: items,
         });
 
@@ -441,6 +484,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
         const {labels, htmlLabels, connectors} = prepareLabels({
             data,
             series: items,
+            labels: seriesLabels,
             allowOverlow: false,
         });
 

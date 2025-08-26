@@ -252,6 +252,23 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
     }, []);
 }
 
+const entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;',
+};
+
+function unescapeHtml(str: string) {
+    return Object.entries(entityMap).reduce((result, [key, value]) => {
+        return result.replace(value, key);
+    }, str);
+}
+
 export function getTextSizeFn({style}: {style: BaseTextStyle}) {
     const map: Record<string, {width: number; height: number}> = {};
     const setSymbolSize = (s: string) => {
@@ -266,7 +283,7 @@ export function getTextSizeFn({style}: {style: BaseTextStyle}) {
     return (str: string) => {
         let width = 0;
         let height = 0;
-        [...str].forEach((s) => {
+        [...unescapeHtml(str)].forEach((s) => {
             if (!map[s]) {
                 setSymbolSize(s);
             }
