@@ -1,7 +1,7 @@
 import {scaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE, DEFAULT_PALETTE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE} from '../../constants';
 import type {ChartSeriesOptions, PieSeries} from '../../types';
 import {getUniqId} from '../../utils';
 
@@ -13,12 +13,13 @@ type PreparePieSeriesArgs = {
     series: PieSeries;
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
+    colors: string[];
 };
 
 export function preparePieSeries(args: PreparePieSeriesArgs) {
-    const {series, seriesOptions, legend} = args;
+    const {series, seriesOptions, legend, colors} = args;
     const dataNames = series.data.map((d) => d.name);
-    const colorScale = scaleOrdinal(dataNames, DEFAULT_PALETTE);
+    const colorScale = scaleOrdinal(dataNames, colors);
     const stackId = getUniqId();
     const seriesHoverState = get(seriesOptions, 'pie.states.hover');
 

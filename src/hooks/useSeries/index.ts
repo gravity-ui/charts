@@ -2,7 +2,6 @@ import React from 'react';
 
 import {group, scaleOrdinal} from 'd3';
 
-import {DEFAULT_PALETTE} from '../../constants';
 import type {ChartData} from '../../types';
 import {getSeriesNames} from '../../utils';
 import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
@@ -20,6 +19,7 @@ type Args = {
     legend: ChartData['legend'];
     series: ChartData['series'];
     preparedYAxis: PreparedAxis[];
+    colors: string[];
 };
 
 export const useSeries = (args: Args) => {
@@ -30,6 +30,7 @@ export const useSeries = (args: Args) => {
         legend,
         preparedYAxis,
         series: {data: series, options: seriesOptions},
+        colors,
     } = args;
     const preparedLegend = React.useMemo(
         () => getPreparedLegend({legend, series}),
@@ -37,7 +38,7 @@ export const useSeries = (args: Args) => {
     );
     const preparedSeries = React.useMemo<PreparedSeries[]>(() => {
         const seriesNames = getSeriesNames(series);
-        const colorScale = scaleOrdinal(seriesNames, DEFAULT_PALETTE);
+        const colorScale = scaleOrdinal(seriesNames, colors);
         const groupedSeries = group(series, (item) => item.type);
 
         return Array.from(groupedSeries).reduce<PreparedSeries[]>(
@@ -49,6 +50,7 @@ export const useSeries = (args: Args) => {
                         seriesOptions,
                         legend: preparedLegend,
                         colorScale,
+                        colors,
                     }),
                 );
                 return acc;

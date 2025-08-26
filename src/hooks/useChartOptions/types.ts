@@ -76,4 +76,5 @@ export type ChartOptions = {
     chart: PreparedChart;
     tooltip: PreparedTooltip;
     title?: PreparedTitle;
+    colors: string[];
 };
