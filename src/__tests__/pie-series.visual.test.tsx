@@ -505,8 +505,7 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    // todo: unskip after fixing the performance
-    test.skip('Performance', async ({mount}) => {
+    test('Performance', async ({mount}) => {
         const items = new Array(1000).fill(null).map(() => ({
             name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
             value: 10,
@@ -536,7 +535,7 @@ test.describe('Pie series', () => {
             />,
         );
         await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(400);
+        await expect.poll(() => widgetRenderTime).toBeLessThan(350);
     });
 
     test('The shape in the center of the donut should take into account the height of the text', async ({
