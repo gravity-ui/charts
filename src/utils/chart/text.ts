@@ -320,7 +320,7 @@ export function getTextWithElipsis({
         textWidth = Math.floor(getTextWidth(text));
     }
 
-    if (textWidth > maxWidth) {
+    if (textWidth > textMaxWidth) {
         text = '';
     }
 
