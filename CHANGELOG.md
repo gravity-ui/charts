@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/gravity-ui/charts/compare/v1.7.0...v1.7.1) (2025-08-27)
+
+
+### Bug Fixes
+
+* fix getTextWithElipsis ([#139](https://github.com/gravity-ui/charts/issues/139)) ([cfa2a73](https://github.com/gravity-ui/charts/commit/cfa2a735b7140bf6432759fc1729389bad38192a))
+
 ## [1.7.0](https://github.com/gravity-ui/charts/compare/v1.6.7...v1.7.0) (2025-08-26)
 
 
