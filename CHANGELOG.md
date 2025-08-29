@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/gravity-ui/charts/compare/v1.7.1...v1.8.0) (2025-08-29)
+
+
+### Features
+
+* add `legend.html` option ([#141](https://github.com/gravity-ui/charts/issues/141)) ([4abb18a](https://github.com/gravity-ui/charts/commit/4abb18a0654352f91649a58b593d3728534e584e))
+
 ## [1.7.1](https://github.com/gravity-ui/charts/compare/v1.7.0...v1.7.1) (2025-08-27)
 
 
