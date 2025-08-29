@@ -157,6 +157,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                         config={legendConfig}
                         onItemClick={handleLegendItemClick}
                         onUpdate={unpinTooltip}
+                        htmlLayout={htmlLayerRef.current}
                     />
                 )}
             </svg>

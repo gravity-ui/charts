@@ -19,10 +19,10 @@ import type {LegendConfig, LegendItem, PreparedLegend, PreparedSeries} from './t
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
-export const getPreparedLegend = (args: {
+export function getPreparedLegend(args: {
     legend: ChartData['legend'];
     series: ChartData['series']['data'];
-}): PreparedLegend => {
+}): PreparedLegend {
     const {legend, series} = args;
     const enabled = Boolean(
         typeof legend?.enabled === 'boolean' ? legend?.enabled : series.length > 1,
@@ -96,42 +96,51 @@ export const getPreparedLegend = (args: {
         width: legendWidth,
         ticks,
         colorScale,
+        html: get(legend, 'html', false),
     };
-};
+}
 
-const getFlattenLegendItems = (series: PreparedSeries[]) => {
+function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegend) {
     return series.reduce<LegendItemWithoutTextWidth[]>((acc, s) => {
         const legendEnabled = get(s, 'legend.enabled', true);
 
         if (legendEnabled) {
             acc.push({
                 ...s,
+                height: preparedLegend.lineHeight,
                 symbol: s.legend.symbol,
             });
         }
 
         return acc;
     }, []);
-};
+}
 
-const getGroupedLegendItems = (args: {
+function getGroupedLegendItems(args: {
     maxLegendWidth: number;
     items: LegendItemWithoutTextWidth[];
     preparedLegend: PreparedLegend;
-}) => {
+}) {
     const {maxLegendWidth, items, preparedLegend} = args;
     const result: LegendItem[][] = [[]];
+    const bodySelection = select(document.body);
     let textWidthsInLine: number[] = [0];
     let lineIndex = 0;
 
     items.forEach((item) => {
-        select(document.body)
-            .append('text')
-            .text(item.name)
+        const itemSelection = preparedLegend.html
+            ? bodySelection
+                  .append('div')
+                  .html(item.name)
+                  .style('position', 'absolute')
+                  .style('display', 'inline-block')
+            : bodySelection.append('text').text(item.name);
+        itemSelection
             .style('font-size', preparedLegend.itemStyle.fontSize)
             .each(function () {
                 const resultItem = clone(item) as LegendItem;
-                const textWidth = this.getBoundingClientRect().width;
+                const {height, width: textWidth} = this.getBoundingClientRect();
+                resultItem.height = height;
                 resultItem.textWidth = textWidth;
                 textWidthsInLine.push(textWidth);
                 const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
@@ -155,21 +164,51 @@ const getGroupedLegendItems = (args: {
     });
 
     return result;
-};
+}
 
-export const getLegendComponents = (args: {
+function getPagination(args: {
+    items: LegendItem[][];
+    maxLegendHeight: number;
+    paginatorHeight: number;
+}) {
+    const {items, maxLegendHeight, paginatorHeight} = args;
+    const pages: NonNullable<LegendConfig['pagination']>['pages'] = [];
+    let currentPageIndex = 0;
+    let currentHeight = 0;
+    items.forEach((item, i) => {
+        if (!pages[currentPageIndex]) {
+            pages[currentPageIndex] = {start: i, end: i};
+        }
+
+        const legendLineHeight = Math.max(...item.map((item) => item.height));
+        currentHeight += legendLineHeight;
+
+        if (currentHeight > maxLegendHeight - paginatorHeight) {
+            pages[currentPageIndex].end = i;
+            currentPageIndex += 1;
+            currentHeight = legendLineHeight;
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice#end
+            pages[currentPageIndex] = {start: i, end: i + (i === items.length - 1 ? 1 : 0)};
+        } else if (i === items.length - 1) {
+            pages[currentPageIndex].end = i + 1;
+        }
+    });
+    return {pages};
+}
+
+export function getLegendComponents(args: {
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
     series: PreparedSeries[];
     preparedLegend: PreparedLegend;
     preparedYAxis: PreparedAxis[];
-}) => {
+}) {
     const {chartWidth, chartHeight, chartMargin, series, preparedLegend, preparedYAxis} = args;
     const maxLegendWidth = getBoundsWidth({chartWidth, chartMargin, preparedYAxis});
     const maxLegendHeight =
         (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
-    const flattenLegendItems = getFlattenLegendItems(series);
+    const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
     const items = getGroupedLegendItems({
         maxLegendWidth,
         items: flattenLegendItems,
@@ -179,14 +218,20 @@ export const getLegendComponents = (args: {
     let pagination: LegendConfig['pagination'] | undefined;
 
     if (preparedLegend.type === 'discrete') {
-        let legendHeight = preparedLegend.lineHeight * items.length;
+        const lineHeights = items.reduce<number[]>((acc, item) => {
+            acc.push(Math.max(...item.map((item) => item.height)));
+            return acc;
+        }, []);
+        let legendHeight = lineHeights.reduce((acc, height) => acc + height, 0);
 
         if (maxLegendHeight < legendHeight) {
-            // extra line for paginator
-            const limit = Math.floor(maxLegendHeight / preparedLegend.lineHeight) - 1;
-            const maxPage = Math.ceil(items.length / limit);
-            pagination = {limit, maxPage};
-            legendHeight = preparedLegend.lineHeight * (limit + 1);
+            const lines = Math.floor(maxLegendHeight / preparedLegend.lineHeight);
+            legendHeight = preparedLegend.lineHeight * lines;
+            pagination = getPagination({
+                items,
+                maxLegendHeight: legendHeight,
+                paginatorHeight: preparedLegend.lineHeight,
+            });
         }
 
         preparedLegend.height = legendHeight;
@@ -199,4 +244,4 @@ export const getLegendComponents = (args: {
     };
 
     return {legendConfig: {offset, pagination}, legendItems: items};
-};
+}

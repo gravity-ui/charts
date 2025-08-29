@@ -33,6 +33,7 @@ type Props = {
     legend: PreparedLegend;
     items: LegendItem[][];
     config: LegendConfig;
+    htmlLayout: HTMLElement | null;
     onItemClick: OnLegendItemClick;
     onUpdate?: () => void;
 };
@@ -59,34 +60,35 @@ const getLegendPosition = (args: {
 
 const appendPaginator = (args: {
     container: Selection<SVGGElement, unknown, null, undefined>;
-    offset: number;
-    maxPage: number;
+    pageIndex: number;
     legend: PreparedLegend;
     transform: string;
-    onArrowClick: (offset: number) => void;
+    pages: NonNullable<LegendConfig['pagination']>['pages'];
+    onArrowClick: (nextPageIndex: number) => void;
 }) => {
-    const {container, offset, maxPage, legend, transform, onArrowClick} = args;
+    const {container, pageIndex, legend, transform, pages, onArrowClick} = args;
     const paginationLine = container.append('g').attr('class', b('pagination'));
+    const maxPage = pages.length;
     let computedWidth = 0;
 
     paginationLine
         .append('text')
         .text('▲')
         .attr('class', function () {
-            return b('pagination-arrow', {inactive: offset === 0});
+            return b('pagination-arrow', {inactive: pageIndex === 0});
         })
         .style('font-size', legend.itemStyle.fontSize)
         .each(function () {
             computedWidth += this.getComputedTextLength();
         })
         .on('click', function () {
-            if (offset - 1 >= 0) {
-                onArrowClick(offset - 1);
+            if (pageIndex - 1 >= 0) {
+                onArrowClick(pageIndex - 1);
             }
         });
     paginationLine
         .append('text')
-        .text(`${offset + 1}/${maxPage}`)
+        .text(`${pageIndex + 1}/${maxPage}`)
         .attr('class', b('pagination-counter'))
         .attr('x', computedWidth)
         .style('font-size', legend.itemStyle.fontSize)
@@ -97,13 +99,13 @@ const appendPaginator = (args: {
         .append('text')
         .text('▼')
         .attr('class', function () {
-            return b('pagination-arrow', {inactive: offset === maxPage - 1});
+            return b('pagination-arrow', {inactive: pageIndex === maxPage - 1});
         })
         .attr('x', computedWidth)
         .style('font-size', legend.itemStyle.fontSize)
         .on('click', function () {
-            if (offset + 1 < maxPage) {
-                onArrowClick(offset + 1);
+            if (pageIndex + 1 < maxPage) {
+                onArrowClick(pageIndex + 1);
             }
         });
     paginationLine.attr('transform', transform);
@@ -116,8 +118,9 @@ const legendSymbolGenerator = lineGenerator<{x: number; y: number}>()
 function renderLegendSymbol(args: {
     selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
     legend: PreparedLegend;
+    legendLineHeight: number;
 }) {
-    const {selection, legend} = args;
+    const {selection, legend, legendLineHeight} = args;
     const line = selection.data();
 
     const getXPosition = (i: number) => {
@@ -140,7 +143,7 @@ function renderLegendSymbol(args: {
 
         switch (d.symbol.shape) {
             case 'path': {
-                const y = legend.lineHeight / 2;
+                const y = legendLineHeight / 2;
                 const points = [
                     {x: x, y},
                     {x: x + d.symbol.width, y},
@@ -164,7 +167,7 @@ function renderLegendSymbol(args: {
                 break;
             }
             case 'rect': {
-                const y = (legend.lineHeight - d.symbol.height) / 2;
+                const y = (legendLineHeight - d.symbol.height) / 2;
                 element
                     .append('rect')
                     .attr('x', x)
@@ -178,7 +181,7 @@ function renderLegendSymbol(args: {
                 break;
             }
             case 'symbol': {
-                const y = legend.lineHeight / 2;
+                const y = legendLineHeight / 2;
                 const translateX = x + d.symbol.width / 2;
 
                 element
@@ -205,31 +208,40 @@ function renderLegendSymbol(args: {
 }
 
 export const Legend = (props: Props) => {
-    const {boundsWidth, chartSeries, legend, items, config, onItemClick, onUpdate} = props;
+    const {boundsWidth, chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} =
+        props;
     const ref = React.useRef<SVGGElement>(null);
-    const [paginationOffset, setPaginationOffset] = React.useState(0);
+    const [pageIndex, setPageIndex] = React.useState(0);
 
     React.useEffect(() => {
-        setPaginationOffset(0);
+        setPageIndex(0);
     }, [boundsWidth]);
 
     React.useEffect(() => {
-        if (!ref.current) {
+        if (!ref.current || !htmlLayout) {
             return;
         }
 
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
+        const htmlElement = select(htmlLayout);
+        htmlElement.selectAll('[data-legend]').remove();
+        const htmlContainer = legend.html
+            ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
+            : null;
 
         let legendWidth = 0;
         if (legend.type === 'discrete') {
-            const limit = config.pagination?.limit;
+            const start = config.pagination?.pages[pageIndex]?.start;
+            const end = config.pagination?.pages[pageIndex]?.end;
             const pageItems =
-                typeof limit === 'number'
-                    ? items.slice(paginationOffset * limit, paginationOffset * limit + limit)
+                typeof start === 'number' && typeof end === 'number'
+                    ? items.slice(start, end)
                     : items;
-            pageItems.forEach((line, lineIndex) => {
+            const legendLineHeights: number[] = [];
+            pageItems.forEach((line) => {
                 const legendLine = svgElement.append('g').attr('class', b('line'));
+                const htmlLegendLine = htmlContainer?.append('div').style('position', 'absolute');
                 const legendItemTemplate = legendLine
                     .selectAll('legend-history')
                     .data(line)
@@ -253,26 +265,62 @@ export const Legend = (props: Props) => {
                     }, 0);
                 };
 
-                renderLegendSymbol({selection: legendItemTemplate, legend});
+                const legendLineHeight = Math.max(...line.map((l) => l.height));
+                renderLegendSymbol({selection: legendItemTemplate, legend, legendLineHeight});
 
-                legendItemTemplate
-                    .append('text')
-                    .attr('x', function (legendItem, i) {
-                        return (
-                            getXPosition(i) + legendItem.symbol.width + legendItem.symbol.padding
-                        );
-                    })
-                    .attr('height', legend.lineHeight)
-                    .attr('class', function (d) {
-                        const mods = {selected: d.visible, unselected: !d.visible};
-                        return b('item-text', mods);
-                    })
-                    .html(function (d) {
-                        return ('name' in d && d.name) as string;
-                    })
-                    .style('font-size', legend.itemStyle.fontSize);
+                if (htmlLegendLine) {
+                    htmlLegendLine
+                        .selectAll('legend-item')
+                        .data(line)
+                        .enter()
+                        .append('div')
+                        .attr('class', function (d) {
+                            const mods = {selected: d.visible, unselected: !d.visible};
+                            return b('item-text-html', mods);
+                        })
+                        .style('font-size', legend.itemStyle.fontSize)
+                        .style('position', 'absolute')
+                        .style('left', function (d, i) {
+                            return `${getXPosition(i) + d.symbol.width + d.symbol.padding}px`;
+                        })
+                        .style('top', function (d) {
+                            if (d.height < legendLineHeight) {
+                                return `${(legendLineHeight - d.height) / 2}px`;
+                            }
+                            return '0px';
+                        })
+                        .on('click', function (e, d) {
+                            onItemClick({name: d.name, metaKey: e.metaKey});
+                            onUpdate?.();
+                        })
+                        [legend.html ? 'html' : 'text'](function (d) {
+                            return d.name;
+                        });
+                } else {
+                    legendItemTemplate
+                        .append('text')
+                        .attr('x', function (legendItem, i) {
+                            return (
+                                getXPosition(i) +
+                                legendItem.symbol.width +
+                                legendItem.symbol.padding
+                            );
+                        })
+                        .attr('height', legend.height)
+                        .attr('class', function (d) {
+                            const mods = {selected: d.visible, unselected: !d.visible};
+                            return b('item-text', mods);
+                        })
+                        .html(function (d) {
+                            return ('name' in d && d.name) as string;
+                        })
+                        .style('font-size', legend.itemStyle.fontSize);
+                }
 
-                const contentWidth = legendLine.node()?.getBoundingClientRect().width || 0;
+                const contentWidth =
+                    (legend.html
+                        ? getXPosition(line.length) - legend.itemDistance
+                        : legendLine.node()?.getBoundingClientRect().width) || 0;
 
                 let left = 0;
                 switch (legend.justifyContent) {
@@ -293,23 +341,23 @@ export const Legend = (props: Props) => {
                     }
                 }
 
-                const top = legend.lineHeight * lineIndex;
-
+                const top = legendLineHeights.reduce((acc, h) => acc + h, 0);
+                legendLineHeights.push(legendLineHeight);
                 legendLine.attr('transform', `translate(${[left, top].join(',')})`);
+                htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
             });
 
             if (config.pagination) {
-                const transform = `translate(${[
-                    0,
-                    legend.lineHeight * config.pagination.limit + legend.lineHeight / 2,
-                ].join(',')})`;
+                const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
+                    ',',
+                )})`;
                 appendPaginator({
                     container: svgElement,
-                    offset: paginationOffset,
-                    maxPage: config.pagination.maxPage,
+                    pageIndex: pageIndex,
                     legend,
                     transform,
-                    onArrowClick: setPaginationOffset,
+                    pages: config.pagination.pages,
+                    onArrowClick: setPageIndex,
                 });
             }
         } else {
@@ -392,8 +440,20 @@ export const Legend = (props: Props) => {
             offsetWidth: config.offset.left,
             contentWidth: legendWidth,
         });
+
         svgElement.attr('transform', `translate(${[left, config.offset.top].join(',')})`);
-    }, [boundsWidth, chartSeries, onItemClick, onUpdate, legend, items, config, paginationOffset]);
+        htmlContainer?.style('transform', `translate(${left}px, ${config.offset.top}px)`);
+    }, [
+        boundsWidth,
+        chartSeries,
+        onItemClick,
+        onUpdate,
+        legend,
+        items,
+        config,
+        pageIndex,
+        htmlLayout,
+    ]);
 
     return <g className={b()} ref={ref} width={boundsWidth} height={legend.height} />;
 };

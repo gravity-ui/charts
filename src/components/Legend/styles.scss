@@ -37,6 +37,20 @@
         }
     }
 
+    &__item-text-html {
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+
+        &_unselected {
+            color: var(--g-color-text-hint);
+        }
+
+        &:hover {
+            color: var(--g-color-text-complementary);
+        }
+    }
+
     &__pagination {
         user-select: none;
 

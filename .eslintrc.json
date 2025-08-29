@@ -52,6 +52,12 @@
       }
     },
     {
+      "files": ["**/*.visual.test.[jt]s?(x)"],
+      "rules": {
+        "testing-library/prefer-screen-queries": "off"
+      }
+    },
+    {
       "files": ["**/*.js", "!src/**/*"],
       "env": {
         "node": true

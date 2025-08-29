@@ -79,6 +79,7 @@ export type OnLegendItemClick = (data: {name: string; metaKey: boolean}) => void
 
 export type LegendItem = {
     color: string;
+    height: number;
     name: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
@@ -92,8 +93,10 @@ export type LegendConfig = {
         top: number;
     };
     pagination?: {
-        limit: number;
-        maxPage: number;
+        pages: {
+            start: number;
+            end: number;
+        }[];
     };
 };
 

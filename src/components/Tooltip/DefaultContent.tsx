@@ -209,7 +209,14 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                             return (
                                 <div key={id} className={b('content-row')}>
                                     <div className={b('color')} style={{backgroundColor: color}} />
-                                    <span>{seriesData.name || seriesData.id}&nbsp;</span>
+                                    <span
+                                        dangerouslySetInnerHTML={{
+                                            __html: [seriesData.name || seriesData.id]
+                                                .flat()
+                                                .join('\n'),
+                                        }}
+                                    />
+                                    &nbsp;
                                     <span>{formattedValue}</span>
                                 </div>
                             );
