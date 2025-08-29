@@ -10,6 +10,7 @@ import {
     pieDonutData,
     pieDonutTotalsData,
     pieHtmlLabelsData,
+    pieHtmlLegendData,
     piePlaygroundData,
     pieUserStylesData,
 } from '../__data__';
@@ -58,6 +59,13 @@ export const PieHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: pieHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const PieHtmlLegend = {
+    name: 'Html in legend',
+    args: {
+        data: pieHtmlLegendData,
     },
 } satisfies Story;
 
