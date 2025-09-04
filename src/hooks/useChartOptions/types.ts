@@ -9,6 +9,8 @@ import type {
     ChartAxisType,
     ChartData,
     ChartMargin,
+    ChartZoom,
+    DeepRequired,
     PlotLayerPlacement,
 } from '../../types';
 
@@ -22,8 +24,11 @@ type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' 
         maxWidth: number;
     };
 
+export type PreparedZoom = DeepRequired<ChartZoom>;
+
 export type PreparedChart = {
     margin: ChartMargin;
+    zoom: PreparedZoom;
 };
 
 export type PreparedAxisPlotBand = Required<AxisPlotBand>;

@@ -1,0 +1,9 @@
+.gcharts-brush {
+    &:not([data-gc-brush-pressed='true']) .overlay {
+        cursor: default;
+    }
+
+    & .selection {
+        stroke: none;
+    }
+}

@@ -1,5 +1,8 @@
 import React from 'react';
 
+import {ArrowRotateLeft} from '@gravity-ui/icons';
+import {Button, ButtonIcon} from '@gravity-ui/uikit';
+
 import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX, AxisY} from '../Axis';
 import {Legend} from '../Legend';
@@ -19,8 +22,8 @@ const b = block('chart');
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
-    const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
+    const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const {
         boundsHeight,
@@ -28,6 +31,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         boundsOffsetTop,
         boundsWidth,
         handleLegendItemClick,
+        handleZoomReset,
         legendConfig,
         legendItems,
         preparedSeries,
@@ -48,8 +52,9 @@ export const ChartInner = (props: ChartInnerProps) => {
     } = useChartInnerProps({
         ...props,
         dispatcher,
-        htmlLayout: htmlLayerRef.current,
+        htmlLayout,
         svgContainer: svgRef.current,
+        plotNode: plotRef.current,
     });
     const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
         dispatcher,
@@ -104,7 +109,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                 ref={svgRef}
                 width={width}
                 height={height}
-                onMouseMove={throttledHandleMouseMove}
+                // onMouseMove={throttledHandleMouseMove}
+                onPointerMove={throttledHandleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 onTouchStart={throttledHandleTouchMove}
                 onTouchMove={throttledHandleTouchMove}
@@ -157,19 +163,26 @@ export const ChartInner = (props: ChartInnerProps) => {
                         config={legendConfig}
                         onItemClick={handleLegendItemClick}
                         onUpdate={unpinTooltip}
-                        htmlLayout={htmlLayerRef.current}
+                        htmlLayout={htmlLayout}
                     />
                 )}
             </svg>
             <div
                 className={b('html-layer')}
-                ref={htmlLayerRef}
+                ref={setHtmlLayout}
                 style={
                     {
                         '--g-html-layout-transform': `translate(${boundsOffsetLeft}px, ${boundsOffsetTop}px)`,
                     } as React.CSSProperties
                 }
             />
+            {handleZoomReset && (
+                <Button style={{position: 'absolute', top: 0, right: 0}} onClick={handleZoomReset}>
+                    <ButtonIcon>
+                        <ArrowRotateLeft />
+                    </ButtonIcon>
+                </Button>
+            )}
             <Tooltip
                 dispatcher={dispatcher}
                 tooltip={tooltip}

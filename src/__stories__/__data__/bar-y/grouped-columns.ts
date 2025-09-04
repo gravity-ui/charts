@@ -18,10 +18,14 @@ function prepareData(): ChartData {
         return {
             name: platform,
             data: years.map(([year, list]) => {
-                categories.push(String(year));
+                const strYear = String(year);
+
+                if (!categories.includes(strYear)) {
+                    categories.push(strYear);
+                }
 
                 return {
-                    y: String(year),
+                    y: strYear,
                     x: list.length,
                 };
             }),

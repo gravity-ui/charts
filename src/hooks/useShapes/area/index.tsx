@@ -4,8 +4,8 @@ import type {BaseType, Dispatch} from 'd3';
 import {area as areaGenerator, color, line as lineGenerator, select} from 'd3';
 import get from 'lodash/get';
 
-import {block, filterOverlappingLabels} from '../../..//utils';
 import type {LabelData, TooltipDataChunkArea} from '../../../types';
+import {block, filterOverlappingLabels} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {
