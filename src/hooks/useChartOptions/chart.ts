@@ -1,8 +1,8 @@
 import get from 'lodash/get';
 
-import type {ChartData} from '../../types';
+import type {ChartData, ChartZoom} from '../../types';
 
-import type {PreparedChart, PreparedTitle} from './types';
+import type {PreparedChart, PreparedTitle, PreparedZoom} from './types';
 
 const getMarginTop = (args: {chart: ChartData['chart']; preparedTitle?: PreparedTitle}) => {
     const {chart, preparedTitle} = args;
@@ -21,6 +21,23 @@ const getMarginRight = (args: {chart: ChartData['chart']}) => {
     return get(chart, 'margin.right', 0);
 };
 
+function getPreparedZoom(zoom?: ChartZoom): PreparedZoom | null {
+    if (!zoom) {
+        return null;
+    }
+
+    return {
+        type: zoom.type,
+        brush: {
+            style: {
+                fill: 'rgba(51, 92, 173, 0.25)',
+                fillOpacity: 1,
+                ...zoom?.brush?.style,
+            },
+        },
+    };
+}
+
 export const getPreparedChart = (args: {
     chart: ChartData['chart'];
     preparedTitle?: PreparedTitle;
@@ -30,6 +47,7 @@ export const getPreparedChart = (args: {
     const marginBottom = get(chart, 'margin.bottom', 0);
     const marginLeft = get(chart, 'margin.left', 0);
     const marginRight = getMarginRight({chart});
+    const zoom = getPreparedZoom(chart?.zoom);
 
     return {
         margin: {
@@ -38,5 +56,6 @@ export const getPreparedChart = (args: {
             bottom: marginBottom,
             left: marginLeft,
         },
+        zoom,
     };
 };

@@ -19,11 +19,11 @@ export const useChartOptions = (args: Args): ChartOptions => {
     const options: ChartOptions = React.useMemo(() => {
         const preparedTitle = getPreparedTitle({title});
         const preparedTooltip = getPreparedTooltip({tooltip});
-
         const preparedChart = getPreparedChart({
             chart,
             preparedTitle,
         });
+
         return {
             chart: preparedChart,
             title: preparedTitle,
