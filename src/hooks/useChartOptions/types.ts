@@ -28,7 +28,7 @@ export type PreparedZoom = DeepRequired<ChartZoom>;
 
 export type PreparedChart = {
     margin: ChartMargin;
-    zoom: PreparedZoom;
+    zoom: PreparedZoom | null;
 };
 
 export type PreparedAxisPlotBand = Required<AxisPlotBand>;

@@ -13,11 +13,12 @@ import {
 } from '../../hooks';
 import {getZoomedSeriesData} from '../../hooks/hooks-utils';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
+import type {PreparedAxis} from '../../hooks/useChartOptions/types';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
-import type {ChartSeries, ChartYAxis} from '../../types';
+import type {ChartSeries} from '../../types';
 
 import type {ChartInnerProps} from './types';
 
@@ -28,7 +29,7 @@ type Props = ChartInnerProps & {
     plotNode: SVGGElement | null;
 };
 
-function hasAtLeastOneSeriesDataPerPlot(seriesData: ChartSeries[], yAxises: ChartYAxis[] = []) {
+function hasAtLeastOneSeriesDataPerPlot(seriesData: ChartSeries[], yAxises: PreparedAxis[] = []) {
     const hasDataMap = new Map<number, boolean>();
     yAxises.forEach((yAxis) => {
         const plotIndex = yAxis.plotIndex ?? 0;
@@ -150,13 +151,13 @@ export function useChartInnerProps(props: Props) {
                 zoomState: nextZoomState,
             });
 
-            const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, data.yAxis);
+            const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, yAxis);
 
             if (hasData) {
                 setZoomState(nextZoomState);
             }
         },
-        [data.xAxis, data.yAxis, zoomedSeriesData],
+        [data.xAxis, data.yAxis, yAxis, zoomedSeriesData],
     );
 
     useZoom({

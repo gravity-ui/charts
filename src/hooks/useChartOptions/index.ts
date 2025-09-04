@@ -14,24 +14,23 @@ type Args = {
 
 export const useChartOptions = (args: Args): ChartOptions => {
     const {
-        data: {chart, series, title, tooltip, colors},
+        data: {chart, title, tooltip, colors},
     } = args;
     const options: ChartOptions = React.useMemo(() => {
         const preparedTitle = getPreparedTitle({title});
         const preparedTooltip = getPreparedTooltip({tooltip});
-
         const preparedChart = getPreparedChart({
             chart,
-            series: series.data,
             preparedTitle,
         });
+
         return {
             chart: preparedChart,
             title: preparedTitle,
             tooltip: preparedTooltip,
             colors: colors ?? DEFAULT_PALETTE,
         };
-    }, [chart, series, colors, title, tooltip]);
+    }, [chart, colors, title, tooltip]);
 
     return options;
 };

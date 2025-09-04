@@ -17,16 +17,12 @@ interface UseZoomProps {
     plotContainerHeight: number;
     plotContainerWidth: number;
     preparedSplit: PreparedSplit;
-    preparedZoom: PreparedZoom;
+    preparedZoom: PreparedZoom | null;
     xAxis: PreparedAxis;
     xScale?: ChartScale;
     yAxis: PreparedAxis[];
     yScale?: ChartScale[];
 }
-
-// selection x  -> [x0, x1]
-// selection y  -> [y0, y1]
-// selection xy -> [[x0, y0], [x1, y1]]
 
 function selectionToZoomBounds(args: {
     selection: BrushSelection;
@@ -205,13 +201,11 @@ export function useZoom(props: UseZoomProps) {
         yAxis,
         yScale,
     } = props;
-    // TODO: remove after debugging
-    preparedZoom.type = 'x';
 
     const areas: BrushArea[] = React.useMemo(() => {
         const result: BrushArea[] = [];
 
-        if (!preparedZoom.enabled) {
+        if (!preparedZoom) {
             return result;
         }
 
@@ -234,11 +228,11 @@ export function useZoom(props: UseZoomProps) {
         }
 
         return result;
-    }, [plotContainerHeight, plotContainerWidth, preparedSplit.plots, preparedZoom.enabled]);
+    }, [plotContainerHeight, plotContainerWidth, preparedSplit.plots, preparedZoom]);
 
     const handleChartBrushEnd = React.useCallback<NonNullable<UseBrushProps['onBrushEnd']>>(
         function (brushInstance, selection) {
-            if (selection && yScale && xAxis && yAxis && xScale) {
+            if (selection && yScale && xAxis && yAxis && xScale && preparedZoom?.type) {
                 const nextZoomState = selectionToZoomBounds({
                     selection,
                     xAxis,
@@ -251,15 +245,15 @@ export function useZoom(props: UseZoomProps) {
                 brushInstance.clear(select(this));
             }
         },
-        [onUpdate, preparedZoom.type, xAxis, xScale, yAxis, yScale],
+        [onUpdate, preparedZoom?.type, xAxis, xScale, yAxis, yScale],
     );
 
     // Chart brush for manual zoom handling
     useBrush({
         areas,
-        brushOptions: preparedZoom.brush,
+        brushOptions: preparedZoom?.brush,
         node,
-        type: preparedZoom.type,
+        type: preparedZoom?.type,
         onBrushEnd: handleChartBrushEnd,
     });
 }
