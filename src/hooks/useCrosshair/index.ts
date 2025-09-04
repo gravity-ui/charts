@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {line, select} from 'd3';
-import type {type AxisDomain, type AxisScale, Dispatch} from 'd3';
+import type {AxisDomain, AxisScale, Dispatch} from 'd3';
 
 import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
 import type {CrosshairDataChunk} from '../../types';
