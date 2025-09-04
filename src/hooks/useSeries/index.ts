@@ -5,6 +5,7 @@ import {group, scaleOrdinal} from 'd3';
 import type {ChartData} from '../../types';
 import {getSeriesNames} from '../../utils';
 import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
+import {usePrevious} from '../usePrevious';
 
 import {getLegendComponents, getPreparedLegend} from './prepare-legend';
 import {getPreparedOptions} from './prepare-options';
@@ -16,10 +17,12 @@ type Args = {
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
-    legend: ChartData['legend'];
-    series: ChartData['series'];
-    preparedYAxis: PreparedAxis[];
     colors: string[];
+    legend: ChartData['legend'];
+    originalSeriesData: ChartData['series']['data'];
+    seriesData: ChartData['series']['data'];
+    seriesOptions: ChartData['series']['options'];
+    preparedYAxis: PreparedAxis[];
 };
 
 export const useSeries = (args: Args) => {
@@ -28,18 +31,20 @@ export const useSeries = (args: Args) => {
         chartHeight,
         chartMargin,
         legend,
+        originalSeriesData,
         preparedYAxis,
-        series: {data: series, options: seriesOptions},
+        seriesData,
+        seriesOptions,
         colors,
     } = args;
     const preparedLegend = React.useMemo(
-        () => getPreparedLegend({legend, series}),
-        [legend, series],
+        () => getPreparedLegend({legend, series: seriesData}),
+        [legend, seriesData],
     );
     const preparedSeries = React.useMemo<PreparedSeries[]>(() => {
-        const seriesNames = getSeriesNames(series);
+        const seriesNames = getSeriesNames(seriesData);
         const colorScale = scaleOrdinal(seriesNames, colors);
-        const groupedSeries = group(series, (item) => item.type);
+        const groupedSeries = group(seriesData, (item) => item.type);
 
         return Array.from(groupedSeries).reduce<PreparedSeries[]>(
             (acc, [seriesType, seriesList]) => {
@@ -57,13 +62,14 @@ export const useSeries = (args: Args) => {
             },
             [],
         );
-    }, [series, seriesOptions, preparedLegend]);
+    }, [seriesData, seriesOptions, preparedLegend, colors]);
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(seriesOptions);
     }, [seriesOptions]);
     const [activeLegendItems, setActiveLegendItems] = React.useState(
         getActiveLegendItems(preparedSeries),
     );
+    const prevOriginalSeriesData = usePrevious(originalSeriesData);
     const chartSeries = React.useMemo<PreparedSeries[]>(() => {
         return preparedSeries.map((singleSeries) => {
             if (singleSeries.legend.enabled) {
@@ -111,10 +117,11 @@ export const useSeries = (args: Args) => {
         [preparedSeries, activeLegendItems],
     );
 
-    // FIXME: remove effect. It initiates extra rerender
     React.useEffect(() => {
-        setActiveLegendItems(getActiveLegendItems(preparedSeries));
-    }, [preparedSeries]);
+        if (prevOriginalSeriesData !== originalSeriesData) {
+            setActiveLegendItems(getActiveLegendItems(preparedSeries));
+        }
+    }, [originalSeriesData, prevOriginalSeriesData, preparedSeries]);
 
     return {
         legendItems,

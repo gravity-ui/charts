@@ -5,3 +5,11 @@
 export type MeaningfulAny = any;
 
 export type PointPosition = [number, number];
+
+/**
+ * Makes all properties in T required, including nested objects.
+ * Inspired by: https://stackoverflow.com/a/76927120
+ */
+export type DeepRequired<T> = Required<{
+    [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
+}>;
