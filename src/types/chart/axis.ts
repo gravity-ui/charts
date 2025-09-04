@@ -1,4 +1,4 @@
-import type {DashStyle} from 'src/constants';
+import type {TDashStyle} from 'src/constants';
 
 import type {FormatNumberOptions} from '../formatter';
 
@@ -36,6 +36,8 @@ export interface ChartAxisLabels {
 
 export interface ChartAxis {
     categories?: string[];
+    /** Configure a crosshair that follows either the mouse pointer or the hovered point. */
+    crosshair?: AxisCrosshair;
     timestamps?: number[];
     type?: ChartAxisType;
     /** The axis labels show the number or category for each tick. */
@@ -114,7 +116,7 @@ export interface AxisPlotLine extends AxisPlot {
      * */
     width?: number;
     /** Option for line stroke style. */
-    dashStyle?: `${DashStyle}`;
+    dashStyle?: TDashStyle;
 }
 
 export interface AxisPlotBand extends AxisPlot {
@@ -132,6 +134,19 @@ export interface AxisPlotBand extends AxisPlot {
      * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
      */
     to: number | string;
+}
+
+export interface AxisCrosshair extends Omit<AxisPlotLine, 'value'> {
+    /** Whether the crosshair should snap to the point or follow the pointer independent of points.
+     *
+     * Defaults to true.
+     * */
+    snap?: boolean;
+    /** Enable or disable the axis crosshair.
+     *
+     * Defaults to false.
+     * */
+    enabled?: boolean;
 }
 
 export interface ChartYAxis extends ChartAxis {

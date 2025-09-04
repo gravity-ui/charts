@@ -3,19 +3,14 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {
-    ChartScale,
-    PreparedAxis,
-    PreparedAxisPlotBand,
-    PreparedAxisPlotLine,
-    PreparedSplit,
-} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
 import {
     block,
     calculateCos,
     calculateSin,
     formatAxisTickLabel,
     getAxisHeight,
+    getAxisPlotsPosition,
     getAxisTitleRows,
     getBandsPosition,
     getClosestPointsRange,
@@ -147,14 +142,6 @@ function getTitlePosition(args: {axis: PreparedAxis; axisHeight: number; rowCoun
     return {x, y};
 }
 
-type PlotLineData = {
-    transform: string;
-} & PreparedAxisPlotLine;
-
-type PlotBandData = {
-    transform: string;
-} & PreparedAxisPlotBand;
-
 export const AxisY = (props: Props) => {
     const {
         axes: allAxes,
@@ -195,34 +182,6 @@ export const AxisY = (props: Props) => {
 
             return `translate(${width}px, 0)`;
         };
-
-        const plotLines = axes.reduce<PlotLineData[]>((acc, axis) => {
-            if (axis.plotLines.length) {
-                acc.push(
-                    ...axis.plotLines.map((plotLine) => {
-                        return {
-                            ...plotLine,
-                            transform: getAxisPosition(axis),
-                        };
-                    }),
-                );
-            }
-
-            return acc;
-        }, []);
-
-        const plotBands = axes.reduce<PlotBandData[]>((acc, axis) => {
-            if (axis.plotBands.length) {
-                acc.push(
-                    ...axis.plotBands.map((plotBand) => ({
-                        ...plotBand,
-                        transform: getAxisPosition(axis),
-                    })),
-                );
-            }
-
-            return acc;
-        }, []);
 
         const axisSelection = svgElement
             .selectAll('axis')
@@ -311,14 +270,14 @@ export const AxisY = (props: Props) => {
             }
 
             if (plotContainer && d.plotBands.length > 0) {
-                const plotBandClassName = b('plot-y-band');
+                const plotBandClassName = b(`plot-y-band-${index}`);
 
                 const plotBandsSelection = plotContainer
                     .selectAll(`.${plotBandClassName}`)
-                    .data(plotBands)
+                    .data(d.plotBands)
                     .join('g')
                     .attr('class', `${plotClassName} ${plotBandClassName}`)
-                    .style('transform', (plotBand) => plotBand.transform);
+                    .style('transform', getAxisPlotsPosition(d, split));
 
                 plotBandsSelection
                     .append('rect')
@@ -353,14 +312,14 @@ export const AxisY = (props: Props) => {
             }
 
             if (plotContainer && d.plotLines.length > 0) {
-                const plotLineClassName = b('plot-y-line');
+                const plotLineClassName = b(`plot-y-line-${index}`);
 
                 const plotLinesSelection = plotContainer
                     .selectAll(`.${plotLineClassName}`)
-                    .data(plotLines)
+                    .data(d.plotLines)
                     .join('g')
                     .attr('class', `${plotClassName} ${plotLineClassName}`)
-                    .style('transform', (plotLine) => plotLine.transform);
+                    .style('transform', getAxisPlotsPosition(d, split));
 
                 plotLinesSelection
                     .append('path')

@@ -1,12 +1,8 @@
 import type {AxisDomain, AxisScale} from 'd3';
 import get from 'lodash/get';
 
-import {
-    DEFAULT_AXIS_LABEL_FONT_SIZE,
-    DashStyle,
-    axisLabelsDefaults,
-    xAxisTitleDefaults,
-} from '../../constants';
+import {axisCrosshairDefaults, axisLabelsDefaults, xAxisTitleDefaults} from '../../constants';
+import {DEFAULT_AXIS_LABEL_FONT_SIZE, DashStyle} from '../../constants/constants';
 import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_X_AXIS,
@@ -158,7 +154,7 @@ export const getPreparedXAxis = ({
             value: get(d, 'value', 0),
             color: get(d, 'color', 'var(--g-color-base-brand)'),
             width: get(d, 'width', 1),
-            dashStyle: get(d, 'dashStyle', DashStyle.Solid) as DashStyle,
+            dashStyle: get(d, 'dashStyle', DashStyle.Solid),
             opacity: get(d, 'opacity', 1),
             layerPlacement: get(d, 'layerPlacement', 'before'),
         })),
@@ -169,6 +165,19 @@ export const getPreparedXAxis = ({
             to: get(d, 'to', 0),
             layerPlacement: get(d, 'layerPlacement', 'before'),
         })),
+        crosshair: {
+            enabled: get(xAxis, 'crosshair.enabled', axisCrosshairDefaults.enabled),
+            color: get(xAxis, 'crosshair.color', axisCrosshairDefaults.color),
+            layerPlacement: get(
+                xAxis,
+                'crosshair.layerPlacement',
+                axisCrosshairDefaults.layerPlacement,
+            ),
+            snap: get(xAxis, 'crosshair.snap', axisCrosshairDefaults.snap),
+            dashStyle: get(xAxis, 'crosshair.dashStyle', axisCrosshairDefaults.dashStyle),
+            width: get(xAxis, 'crosshair.width', axisCrosshairDefaults.width),
+            opacity: get(xAxis, 'crosshair.opacity', axisCrosshairDefaults.opacity),
+        },
         visible: get(xAxis, 'visible', true),
     };
 

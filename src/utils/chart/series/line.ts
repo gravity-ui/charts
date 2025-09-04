@@ -1,6 +1,6 @@
-import type {DashStyle} from 'src/constants';
+import type {TDashStyle} from 'src/constants';
 
-export function getLineDashArray(dashStyle: DashStyle, strokeWidth = 2) {
+export function getLineDashArray(dashStyle: TDashStyle, strokeWidth = 2) {
     const value = dashStyle.toLowerCase();
 
     const arrayValue = value

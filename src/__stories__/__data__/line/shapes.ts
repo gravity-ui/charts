@@ -1,3 +1,4 @@
+import type {TDashStyle} from '../../../constants';
 import {DashStyle} from '../../../constants';
 import type {ChartData, LineSeries, LineSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
@@ -16,7 +17,7 @@ const SHAPES = {
     [DashStyle.ShortDashDotDot]: 11,
 };
 
-const selectShapes = (): DashStyle[] => Object.values(DashStyle);
+const selectShapes = (): TDashStyle[] => Object.values(DashStyle);
 const getShapesOrder = () => selectShapes().sort((a, b) => SHAPES[a] - SHAPES[b]);
 
 const SHAPES_IN_ORDER = getShapesOrder();

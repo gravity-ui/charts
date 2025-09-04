@@ -1,4 +1,4 @@
-import type {DashStyle, LineCap, SeriesType} from '../../constants';
+import type {LineCap, SeriesType, TDashStyle} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -50,7 +50,7 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
     /** Options for the point markers of line series */
     marker?: PointMarkerOptions;
     /** Option for line stroke style */
-    dashStyle?: `${DashStyle}`;
+    dashStyle?: TDashStyle;
     /** Option for line cap style */
     linecap?: `${LineCap}`;
     /** Individual opacity for the line. */

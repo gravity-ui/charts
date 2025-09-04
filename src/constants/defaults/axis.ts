@@ -1,4 +1,5 @@
-import type {BaseTextStyle, ChartAxis, ChartAxisType} from '../../types';
+import type {AxisCrosshair, BaseTextStyle, ChartAxis, ChartAxisType} from '../../types';
+import {DashStyle} from '../constants';
 
 export const axisLabelsDefaults = {
     margin: 10,
@@ -11,6 +12,8 @@ type AxisTitleDefaults = Required<ChartAxis['title']> & {
     style: BaseTextStyle;
 };
 
+type AxisCrosshairDefaults = Required<AxisCrosshair>;
+
 const axisTitleDefaults: AxisTitleDefaults = {
     text: '',
     margin: 0,
@@ -19,6 +22,16 @@ const axisTitleDefaults: AxisTitleDefaults = {
     },
     align: 'center',
     maxRowCount: 1,
+};
+
+export const axisCrosshairDefaults: AxisCrosshairDefaults = {
+    enabled: false,
+    color: 'var(--g-color-base-brand)',
+    width: 1,
+    snap: true,
+    dashStyle: DashStyle.Solid,
+    opacity: 1,
+    layerPlacement: 'after',
 };
 
 export const xAxisTitleDefaults: AxisTitleDefaults = {

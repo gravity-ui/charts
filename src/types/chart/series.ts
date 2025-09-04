@@ -1,6 +1,6 @@
 import type React from 'react';
 
-import type {DashStyle, LineCap} from '../../constants';
+import type {LineCap, TDashStyle} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -212,7 +212,7 @@ export interface ChartSeriesOptions {
          *
          * @default 'Solid'
          * */
-        dashStyle?: `${DashStyle}`;
+        dashStyle?: TDashStyle;
 
         /** Options for line cap style
          *

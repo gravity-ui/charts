@@ -2,6 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
+import type {TDashStyle} from '../../constants';
 import {DEFAULT_DATALABELS_STYLE, DashStyle, LineCap} from '../../constants';
 import type {
     ChartSeries,
@@ -36,7 +37,7 @@ type PrepareLineSeriesArgs = {
 };
 
 function prepareLinecap(
-    dashStyle: DashStyle,
+    dashStyle: TDashStyle,
     series: LineSeries,
     seriesOptions?: ChartSeriesOptions,
 ) {
@@ -118,8 +119,8 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
                 format: series.dataLabels?.format,
             },
             marker: prepareMarker(series, seriesOptions),
-            dashStyle: dashStyle as DashStyle,
-            linecap: prepareLinecap(dashStyle as DashStyle, series, seriesOptions) as LineCap,
+            dashStyle: dashStyle,
+            linecap: prepareLinecap(dashStyle, series, seriesOptions) as LineCap,
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
