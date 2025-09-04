@@ -66,10 +66,13 @@ export function useBrush(props: UseBrushProps) {
                     this.removeAttribute('data-gc-brush-pressed');
                 });
             brushGroupSelection.call(brushInstance);
-            brushGroupSelection
-                .selectAll('.selection')
-                .attr('fill', brushOptions.style.fill)
-                .attr('fill-opacity', brushOptions.style.fillOpacity);
+
+            if (brushOptions) {
+                brushGroupSelection
+                    .selectAll('.selection')
+                    .attr('fill', brushOptions.style.fill)
+                    .attr('fill-opacity', brushOptions.style.fillOpacity);
+            }
 
             brushGroupSelections.push(brushGroupSelection);
         });

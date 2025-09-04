@@ -1,7 +1,6 @@
 import get from 'lodash/get';
 
-import type {ChartData, ChartSeries, ChartZoom} from '../../types';
-import {isAxisRelatedSeries} from '../../utils/chart';
+import type {ChartData, ChartZoom} from '../../types';
 
 import type {PreparedChart, PreparedTitle, PreparedZoom} from './types';
 
@@ -22,20 +21,13 @@ const getMarginRight = (args: {chart: ChartData['chart']}) => {
     return get(chart, 'margin.right', 0);
 };
 
-function getPreparedZoom(args: {series: ChartSeries[]; zoom?: ChartZoom}): PreparedZoom {
-    const {series, zoom} = args;
-    const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
-    let enabled: boolean;
-
-    if (hasAxisRelatedSeries) {
-        enabled = zoom?.enabled ?? true;
-    } else {
-        enabled = false;
+function getPreparedZoom(zoom?: ChartZoom): PreparedZoom | null {
+    if (!zoom) {
+        return null;
     }
 
     return {
-        enabled,
-        type: zoom?.type ?? 'x',
+        type: zoom.type ?? 'x',
         brush: {
             style: {
                 fill: 'rgba(51, 92, 173, 0.25)',
@@ -48,15 +40,14 @@ function getPreparedZoom(args: {series: ChartSeries[]; zoom?: ChartZoom}): Prepa
 
 export const getPreparedChart = (args: {
     chart: ChartData['chart'];
-    series: ChartSeries[];
     preparedTitle?: PreparedTitle;
 }): PreparedChart => {
-    const {chart, preparedTitle, series} = args;
+    const {chart, preparedTitle} = args;
     const marginTop = getMarginTop({chart, preparedTitle});
     const marginBottom = get(chart, 'margin.bottom', 0);
     const marginLeft = get(chart, 'margin.left', 0);
     const marginRight = getMarginRight({chart});
-    const zoom = getPreparedZoom({series, zoom: chart?.zoom});
+    const zoom = getPreparedZoom(chart?.zoom);
 
     return {
         margin: {

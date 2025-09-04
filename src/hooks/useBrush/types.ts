@@ -18,9 +18,9 @@ export interface BrushArea {
 
 export interface UseBrushProps {
     areas: BrushArea[];
-    brushOptions: PreparedZoom['brush'];
     node: SVGGElement | null;
-    type: BrushType;
+    type?: BrushType;
+    brushOptions?: PreparedZoom['brush'];
     onBrushStart?: (this: SVGGElement, brushInstance: BrushBehavior<unknown>) => void;
     onBrush?: (
         this: SVGGElement,
