@@ -121,8 +121,9 @@ export const useCrosshair = (props: Props) => {
                         hovered.filter((node) => {
                             const n = node as CrosshairDataChunk & {series: {yAxis?: number}};
                             const yAxisIndex = n.series.yAxis ?? 0;
-                            const needFilter = yAxis.crosshair.snap && split.plots.length > 1;
-                            return needFilter ? yAxisIndex === yAxis.plotIndex : true;
+                            return yAxis.crosshair.snap
+                                ? yAxisIndex === index && node.closest
+                                : true;
                         }),
                     )
                     .join('g')

@@ -23,7 +23,7 @@ function prepareData(): ChartData {
                 crosshair: {
                     enabled: true,
                     color: '#9b33b8',
-                    opacity: 0.8,
+                    opacity: 0.5,
                     layerPlacement: 'before',
                     dashStyle: 'LongDashDot',
                     width: 2,
@@ -37,9 +37,9 @@ function prepareData(): ChartData {
             crosshair: {
                 enabled: true,
                 color: '#32e31e',
-                opacity: 0.5,
+                opacity: 1,
                 layerPlacement: 'after',
-                dashStyle: 'LongDashDot',
+                dashStyle: 'ShortDot',
                 width: 2,
             },
             type: 'datetime',

@@ -43,7 +43,7 @@ export const barXBasicCrosshairData = (function (): ChartData {
             })),
         },
         xAxis: {
-            crosshair: {enabled: true, color: 'green'},
+            crosshair: {enabled: true},
             type: 'category',
             categories: categories.map(String),
             title: {
@@ -53,7 +53,6 @@ export const barXBasicCrosshairData = (function (): ChartData {
         yAxis: [
             {
                 title: {text: 'Number of games released'},
-                crosshair: {enabled: true, color: 'blue'},
             },
         ],
     };

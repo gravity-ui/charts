@@ -32,7 +32,7 @@ export const BarXBasicCrosshair = {
 } satisfies Story;
 
 export const ScatterBasicCrosshair = {
-    name: 'Scatter Basic Crosshair',
+    name: 'Custom Crosshair',
     args: {
         data: scatterBasicCrosshairData,
     },

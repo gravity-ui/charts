@@ -14,7 +14,7 @@ function prepareData(isSnap = true): ChartData {
             .map((d) => {
                 const releaseDate = new Date(d.date as number);
                 return {
-                    x: releaseDate.getFullYear(),
+                    x: releaseDate.getTime(),
                     y: d.user_score,
                     label: `${d.title} (${d.user_score})`,
                     custom: d,
@@ -66,7 +66,7 @@ function prepareData(isSnap = true): ChartData {
         ],
         xAxis: {
             crosshair: {enabled: true, color: 'green', snap: isSnap},
-            type: 'linear',
+            type: 'datetime',
             labels: {
                 numberFormat: {
                     showRankDelimiter: false,
