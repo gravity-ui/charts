@@ -27,7 +27,7 @@ function getPreparedZoom(zoom?: ChartZoom): PreparedZoom | null {
     }
 
     return {
-        type: zoom.type ?? 'x',
+        type: zoom.type,
         brush: {
             style: {
                 fill: 'rgba(51, 92, 173, 0.25)',
