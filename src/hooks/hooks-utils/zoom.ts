@@ -84,8 +84,7 @@ export function getZoomedSeriesData(args: {
 
             if (zoomState.x) {
                 const [xMin, xMax] = zoomState.x;
-                // @ts-expect-error
-                const x = point.x;
+                const x = 'x' in point ? point.x : undefined;
                 inXRange = isValueInRange({
                     axis: xAxis,
                     value: x,
@@ -100,8 +99,7 @@ export function getZoomedSeriesData(args: {
                         ? seriesItem.yAxis
                         : 0;
                 const [yMin, yMax] = zoomState.y[yAxisIndex];
-                // @ts-expect-error
-                const y = point.y;
+                const y = 'y' in point ? point.y : undefined;
                 inYRange = isValueInRange({
                     axis: yAxises?.[yAxisIndex],
                     value: y,

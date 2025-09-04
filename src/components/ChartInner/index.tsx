@@ -124,7 +124,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                 ref={svgRef}
                 width={width}
                 height={height}
-                // onMouseMove={throttledHandleMouseMove}
+                // We use onPointerMove here because onMouseMove works incorrectly when the zoom setting is enabled:
+                // when starting to select an area, the tooltip remains in the position where the selection began
                 onPointerMove={throttledHandleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 onTouchStart={throttledHandleTouchMove}
