@@ -13,14 +13,13 @@ import {
 } from '../../hooks';
 import {getZoomedSeriesData} from '../../hooks/hooks-utils';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
-import type {PreparedAxis} from '../../hooks/useChartOptions/types';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
-import type {ChartSeries} from '../../types';
 
 import type {ChartInnerProps} from './types';
+import {hasAtLeastOneSeriesDataPerPlot} from './utils';
 
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
@@ -28,39 +27,6 @@ type Props = ChartInnerProps & {
     svgContainer: SVGGElement | null;
     plotNode: SVGGElement | null;
 };
-
-function hasAtLeastOneSeriesDataPerPlot(seriesData: ChartSeries[], yAxises: PreparedAxis[] = []) {
-    const hasDataMap = new Map<number, boolean>();
-    yAxises.forEach((yAxis) => {
-        const plotIndex = yAxis.plotIndex ?? 0;
-        if (!hasDataMap.has(plotIndex)) {
-            hasDataMap.set(plotIndex, false);
-        }
-    });
-
-    if (hasDataMap.size === 0) {
-        return false;
-    }
-
-    seriesData.forEach((seriesDataChunk) => {
-        let yAxisIndex = 0;
-
-        if ('yAxis' in seriesDataChunk && typeof seriesDataChunk.yAxis === 'number') {
-            yAxisIndex = seriesDataChunk.yAxis;
-        }
-
-        const yAxis = yAxises[yAxisIndex];
-        const plotIndex = yAxis?.plotIndex ?? 0;
-
-        if (!hasDataMap.get(plotIndex)) {
-            if (seriesDataChunk.data.length > 0) {
-                hasDataMap.set(plotIndex, true);
-            }
-        }
-    });
-
-    return [...hasDataMap.values()].every((hasData) => hasData);
-}
 
 export function useChartInnerProps(props: Props) {
     const {width, height, data, dispatcher, htmlLayout, svgContainer, plotNode} = props;
@@ -76,7 +42,6 @@ export function useChartInnerProps(props: Props) {
             zoomState,
         });
     }, [data.series.data, data.xAxis, data.yAxis, zoomState]);
-
     const xAxis = React.useMemo(
         () => getPreparedXAxis({xAxis: data.xAxis, width, seriesData: zoomedSeriesData}),
         [data.xAxis, zoomedSeriesData, width],
