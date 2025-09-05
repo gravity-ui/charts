@@ -26,9 +26,6 @@ export const useCrosshairHover = ({dispatcher, enabled}: Args) => {
                     setCrosshairState({hovered: nextHovered, pointerPosition: nextPointerPosition});
                 },
             );
-            dispatcher.on(`${EventType.POINTERMOVE_CHART}.ff`, (...props) => {
-                console.log('fsdf', props);
-            });
         }
 
         return () => {

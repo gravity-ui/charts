@@ -10,14 +10,12 @@ export interface ChartAxisLabels {
     /** Enable or disable the axis labels. */
     enabled?: boolean;
     /** The label's pixel distance from the perimeter of the plot area.
-     *
-     * @default: 10
+     * @default 10
      */
     margin?: number;
     /** The pixel padding for axis labels, to ensure white space between them.
-     *
-     * @defaults: 5
-     * */
+     * @default 5
+     */
     padding?: number;
     dateFormat?: string;
     numberFormat?: FormatNumberOptions;
@@ -27,8 +25,7 @@ export interface ChartAxisLabels {
      * As the chart gets narrower, it will start rotating the labels -45 degrees. */
     autoRotation?: boolean;
     /** Rotation of the labels in degrees.
-     *
-     * @default: 0
+     * @default 0
      */
     rotation?: number;
 }
@@ -48,14 +45,14 @@ export interface ChartAxis {
         /** CSS styles for the title */
         style?: Partial<BaseTextStyle>;
         /** The pixel distance between the axis labels or line and the title.
-         *
-         * Defaults to 4 for horizontal axes, 8 for vertical.
-         * */
+         * @default 4 for horizontal axes, 8 for vertical
+         */
         margin?: number;
         /** Alignment of the title. */
         align?: ChartAxisTitleAlignment;
         /** Allows limiting of the contents of a title block to the specified number of lines.
-         *  Defaults to 1. */
+         * @default 1
+         */
         maxRowCount?: number;
     };
     /** The minimum value of the axis. If undefined the min value is automatically calculate. */
@@ -63,9 +60,8 @@ export interface ChartAxis {
     /** The grid lines settings. */
     grid?: {
         /** Enable or disable the grid lines.
-         *
-         * Defaults to true.
-         * */
+         * @default true
+         */
         enabled?: boolean;
     };
     ticks?: {
@@ -75,9 +71,8 @@ export interface ChartAxis {
     };
     /** Padding of the max value relative to the length of the axis.
      * A padding of 0.05 will make a 100px axis 5px longer.
-     *
-     * Defaults to 0.05 for Y axis and to 0.01 for X axis.
-     * */
+     * @default 0.05 for Y axis, 0.01 for X axis
+     */
     maxPadding?: number;
     /** An array of lines stretching across the plot area, marking a specific value */
     plotLines?: AxisPlotLine[];
@@ -98,7 +93,6 @@ export interface AxisPlot {
     color?: string;
     /**
      * Individual opacity for the line.
-     *
      * @default 1
      * */
     opacity?: number;
@@ -110,7 +104,6 @@ export interface AxisPlotLine extends AxisPlot {
     /** The color of the plot line (hex, rgba). */
     color?: string;
     /** Pixel width of the plot line.
-     *
      * @default 1
      * */
     width?: number;
@@ -137,14 +130,12 @@ export interface AxisPlotBand extends AxisPlot {
 
 export interface AxisCrosshair extends Omit<AxisPlotLine, 'value'> {
     /** Whether the crosshair should snap to the point or follow the pointer independent of points.
-     *
-     * @default true.
-     * */
+     * @default true
+     */
     snap?: boolean;
     /** Enable or disable the axis crosshair.
-     *
-     * Defaults to false.
-     * */
+     * @default false
+     */
     enabled?: boolean;
 }
 
