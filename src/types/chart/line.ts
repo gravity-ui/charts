@@ -50,7 +50,7 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
     /** Options for the point markers of line series */
     marker?: PointMarkerOptions;
     /** Option for line stroke style */
-    dashStyle?: `${DashStyle}`;
+    dashStyle?: DashStyle;
     /** Option for line cap style */
     linecap?: `${LineCap}`;
     /** Individual opacity for the line. */

@@ -1,22 +1,23 @@
-import {DashStyle} from '../../../constants';
+import type {DashStyle} from '../../../constants';
+import {DASH_STYLE} from '../../../constants';
 import type {ChartData, LineSeries, LineSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
 const SHAPES = {
-    [DashStyle.Solid]: 1,
-    [DashStyle.Dash]: 2,
-    [DashStyle.Dot]: 3,
-    [DashStyle.ShortDashDot]: 4,
-    [DashStyle.LongDash]: 5,
-    [DashStyle.LongDashDot]: 6,
-    [DashStyle.ShortDot]: 7,
-    [DashStyle.LongDashDotDot]: 8,
-    [DashStyle.ShortDash]: 9,
-    [DashStyle.DashDot]: 10,
-    [DashStyle.ShortDashDotDot]: 11,
+    [DASH_STYLE.Solid]: 1,
+    [DASH_STYLE.Dash]: 2,
+    [DASH_STYLE.Dot]: 3,
+    [DASH_STYLE.ShortDashDot]: 4,
+    [DASH_STYLE.LongDash]: 5,
+    [DASH_STYLE.LongDashDot]: 6,
+    [DASH_STYLE.ShortDot]: 7,
+    [DASH_STYLE.LongDashDotDot]: 8,
+    [DASH_STYLE.ShortDash]: 9,
+    [DASH_STYLE.DashDot]: 10,
+    [DASH_STYLE.ShortDashDotDot]: 11,
 };
 
-const selectShapes = (): DashStyle[] => Object.values(DashStyle);
+const selectShapes = (): DashStyle[] => Object.values(DASH_STYLE);
 const getShapesOrder = () => selectShapes().sort((a, b) => SHAPES[a] - SHAPES[b]);
 
 const SHAPES_IN_ORDER = getShapesOrder();

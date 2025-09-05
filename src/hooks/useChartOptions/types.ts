@@ -1,6 +1,6 @@
-import type {DashStyle} from 'src/constants';
-
+import type {DashStyle} from '../../constants';
 import type {
+    AxisCrosshair,
     AxisPlotBand,
     BaseTextStyle,
     ChartAxis,
@@ -27,6 +27,7 @@ export type PreparedChart = {
 };
 
 export type PreparedAxisPlotBand = Required<AxisPlotBand>;
+export type PreparedAxisCrosshair = Required<AxisCrosshair>;
 
 export type PreparedAxisPlotLine = {
     value: number;
@@ -61,6 +62,7 @@ export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'pl
     plotIndex: number;
     plotLines: PreparedAxisPlotLine[];
     plotBands: PreparedAxisPlotBand[];
+    crosshair: PreparedAxisCrosshair;
 };
 
 export type PreparedTitle = ChartData['title'] & {

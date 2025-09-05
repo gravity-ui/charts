@@ -2,9 +2,10 @@ import type {AxisDomain, AxisScale} from 'd3';
 import get from 'lodash/get';
 
 import {
+    DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
-    DashStyle,
+    axisCrosshairDefaults,
     axisLabelsDefaults,
     yAxisTitleDefaults,
 } from '../../constants';
@@ -174,7 +175,12 @@ export const getPreparedYAxis = ({
             min: getAxisMin(axisItem, series),
             maxPadding: get(axisItem, 'maxPadding', 0.05),
             grid: {
-                enabled: get(axisItem, 'grid.enabled', firstPlotAxis),
+                enabled: get(
+                    axisItem,
+                    'grid.enabled',
+                    firstPlotAxis ||
+                        (!firstPlotAxis && !(axisByPlot[plotIndex][0].visible ?? true)),
+                ),
             },
             ticks: {
                 pixelInterval: get(axisItem, 'ticks.pixelInterval'),
@@ -185,7 +191,7 @@ export const getPreparedYAxis = ({
                 value: get(d, 'value', 0),
                 color: get(d, 'color', 'var(--g-color-base-brand)'),
                 width: get(d, 'width', 1),
-                dashStyle: get(d, 'dashStyle', DashStyle.Solid) as DashStyle,
+                dashStyle: get(d, 'dashStyle', DASH_STYLE.Solid),
                 opacity: get(d, 'opacity', 1),
                 layerPlacement: get(d, 'layerPlacement', 'before'),
             })),
@@ -196,6 +202,19 @@ export const getPreparedYAxis = ({
                 to: get(d, 'to', 0),
                 layerPlacement: get(d, 'layerPlacement', 'before'),
             })),
+            crosshair: {
+                enabled: get(axisItem, 'crosshair.enabled', axisCrosshairDefaults.enabled),
+                color: get(axisItem, 'crosshair.color', axisCrosshairDefaults.color),
+                layerPlacement: get(
+                    axisItem,
+                    'crosshair.layerPlacement',
+                    axisCrosshairDefaults.layerPlacement,
+                ),
+                snap: get(axisItem, 'crosshair.snap', axisCrosshairDefaults.snap),
+                dashStyle: get(axisItem, 'crosshair.dashStyle', axisCrosshairDefaults.dashStyle),
+                width: get(axisItem, 'crosshair.width', axisCrosshairDefaults.width),
+                opacity: get(axisItem, 'crosshair.opacity', axisCrosshairDefaults.opacity),
+            },
             visible: get(axisItem, 'visible', true),
         };
 

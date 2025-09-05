@@ -89,12 +89,12 @@ export const AxisX = React.memo(function AxisX(props: Props) {
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
 
-        const plotClassName = b('plot-x');
+        const plotDataAttr = 'data-plot-x';
         let plotContainer = null;
 
         if (plotRef?.current) {
             plotContainer = select(plotRef.current);
-            plotContainer.selectAll(`.${plotClassName}`).remove();
+            plotContainer.selectAll(`[${plotDataAttr}]`).remove();
         }
 
         if (!axis.visible) {
@@ -162,13 +162,14 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         // add plot bands
         if (plotContainer && axis.plotBands.length > 0) {
-            const plotBandClassName = b('plot-x-band');
+            const plotBandDataAttr = 'plot-x-band';
 
             const plotBandsSelection = plotContainer
-                .selectAll(`.${plotBandClassName}-x`)
+                .selectAll(`[${plotBandDataAttr}]`)
                 .data(axis.plotBands)
                 .join('g')
-                .attr('class', `${plotClassName} ${plotBandClassName}-x`);
+                .attr(plotDataAttr, 1)
+                .attr(plotBandDataAttr, 1);
 
             plotBandsSelection
                 .append('rect')
@@ -204,13 +205,14 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
         // add plot lines
         if (plotContainer && axis.plotLines.length > 0) {
-            const plotLineClassName = b('plot-x-line');
+            const plotLineDataAttr = 'plot-x-line';
 
             const plotLinesSelection = plotContainer
-                .selectAll(`.${plotLineClassName}`)
+                .selectAll(`[${plotLineDataAttr}]`)
                 .data(axis.plotLines)
                 .join('g')
-                .attr('class', `${plotClassName} ${plotLineClassName}`);
+                .attr(plotDataAttr, 1)
+                .attr(plotLineDataAttr, 1);
 
             const lineGenerator = line();
             plotLinesSelection

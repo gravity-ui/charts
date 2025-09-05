@@ -109,6 +109,15 @@ interface GetBandsPositionArgs {
     axis: AxisDirection;
 }
 
+export const getAxisPlotsPosition = (axis: PreparedAxis, split: PreparedSplit, width = 0) => {
+    const top = split.plots[axis.plotIndex]?.top || 0;
+    if (axis.position === 'left') {
+        return `translate(0, ${top}px)`;
+    }
+
+    return `translate(${width}px, ${top}px)`;
+};
+
 export function getBandsPosition(args: GetBandsPositionArgs): {from: number; to: number} {
     const {band, axisScale} = args;
     const scalePosTo = axisScale(band.to);

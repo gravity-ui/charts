@@ -212,7 +212,7 @@ export interface ChartSeriesOptions {
          *
          * @default 'Solid'
          * */
-        dashStyle?: `${DashStyle}`;
+        dashStyle?: DashStyle;
 
         /** Options for line cap style
          *

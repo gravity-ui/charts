@@ -3,19 +3,14 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {
-    ChartScale,
-    PreparedAxis,
-    PreparedAxisPlotBand,
-    PreparedAxisPlotLine,
-    PreparedSplit,
-} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
 import {
     block,
     calculateCos,
     calculateSin,
     formatAxisTickLabel,
     getAxisHeight,
+    getAxisPlotsPosition,
     getAxisTitleRows,
     getBandsPosition,
     getClosestPointsRange,
@@ -147,14 +142,6 @@ function getTitlePosition(args: {axis: PreparedAxis; axisHeight: number; rowCoun
     return {x, y};
 }
 
-type PlotLineData = {
-    transform: string;
-} & PreparedAxisPlotLine;
-
-type PlotBandData = {
-    transform: string;
-} & PreparedAxisPlotBand;
-
 export const AxisY = (props: Props) => {
     const {
         axes: allAxes,
@@ -180,56 +167,19 @@ export const AxisY = (props: Props) => {
         svgElement.selectAll('*').remove();
 
         let plotContainer = null;
-        const plotClassName = b('plot-y');
+        const plotDataAttr = 'data-plot-y';
 
         if (plotRef?.current) {
             plotContainer = select(plotRef.current);
-            plotContainer.selectAll(`.${plotClassName}`).remove();
+            plotContainer.selectAll(`[${plotDataAttr}]`).remove();
         }
-
-        const getAxisPosition = (axis: PreparedAxis) => {
-            const top = split.plots[axis.plotIndex]?.top || 0;
-            if (axis.position === 'left') {
-                return `translate(0, ${top}px)`;
-            }
-
-            return `translate(${width}px, 0)`;
-        };
-
-        const plotLines = axes.reduce<PlotLineData[]>((acc, axis) => {
-            if (axis.plotLines.length) {
-                acc.push(
-                    ...axis.plotLines.map((plotLine) => {
-                        return {
-                            ...plotLine,
-                            transform: getAxisPosition(axis),
-                        };
-                    }),
-                );
-            }
-
-            return acc;
-        }, []);
-
-        const plotBands = axes.reduce<PlotBandData[]>((acc, axis) => {
-            if (axis.plotBands.length) {
-                acc.push(
-                    ...axis.plotBands.map((plotBand) => ({
-                        ...plotBand,
-                        transform: getAxisPosition(axis),
-                    })),
-                );
-            }
-
-            return acc;
-        }, []);
 
         const axisSelection = svgElement
             .selectAll('axis')
             .data(axes)
             .join('g')
             .attr('class', b())
-            .style('transform', (d) => getAxisPosition(d));
+            .style('transform', (d) => getAxisPlotsPosition(d, split, width));
 
         axisSelection.each((d, index, node) => {
             const seriesScale = scale[index];
@@ -311,14 +261,15 @@ export const AxisY = (props: Props) => {
             }
 
             if (plotContainer && d.plotBands.length > 0) {
-                const plotBandClassName = b('plot-y-band');
+                const plotBandDataAttr = `data-plot-y-band-${index}`;
 
                 const plotBandsSelection = plotContainer
-                    .selectAll(`.${plotBandClassName}`)
-                    .data(plotBands)
+                    .selectAll(`[${plotBandDataAttr}]`)
+                    .data(d.plotBands)
                     .join('g')
-                    .attr('class', `${plotClassName} ${plotBandClassName}`)
-                    .style('transform', (plotBand) => plotBand.transform);
+                    .attr(plotDataAttr, 1)
+                    .attr(plotBandDataAttr, 1)
+                    .style('transform', getAxisPlotsPosition(d, split));
 
                 plotBandsSelection
                     .append('rect')
@@ -353,14 +304,15 @@ export const AxisY = (props: Props) => {
             }
 
             if (plotContainer && d.plotLines.length > 0) {
-                const plotLineClassName = b('plot-y-line');
+                const plotLineDataAttr = `data-plot-y-line-${index}`;
 
                 const plotLinesSelection = plotContainer
-                    .selectAll(`.${plotLineClassName}`)
-                    .data(plotLines)
+                    .selectAll(`[${plotLineDataAttr}]`)
+                    .data(d.plotLines)
                     .join('g')
-                    .attr('class', `${plotClassName} ${plotLineClassName}`)
-                    .style('transform', (plotLine) => plotLine.transform);
+                    .attr(plotDataAttr, 1)
+                    .attr(plotLineDataAttr, 1)
+                    .style('transform', getAxisPlotsPosition(d, split));
 
                 plotLinesSelection
                     .append('path')

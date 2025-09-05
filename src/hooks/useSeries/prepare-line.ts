@@ -2,7 +2,8 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {DEFAULT_DATALABELS_STYLE, DashStyle, LineCap} from '../../constants';
+import type {DashStyle} from '../../constants';
+import {DASH_STYLE, DEFAULT_DATALABELS_STYLE, LineCap} from '../../constants';
 import type {
     ChartSeries,
     ChartSeriesOptions,
@@ -21,7 +22,7 @@ import type {PreparedLegend, PreparedLegendSymbol, PreparedLineSeries} from './t
 
 export const DEFAULT_LEGEND_SYMBOL_SIZE = 16;
 export const DEFAULT_LINE_WIDTH = 1;
-export const DEFAULT_DASH_STYLE = DashStyle.Solid;
+export const DEFAULT_DASH_STYLE = DASH_STYLE.Solid;
 
 export const DEFAULT_MARKER = {
     ...DEFAULT_POINT_MARKER_OPTIONS,
@@ -40,7 +41,7 @@ function prepareLinecap(
     series: LineSeries,
     seriesOptions?: ChartSeriesOptions,
 ) {
-    const defaultLineCap = dashStyle === DashStyle.Solid ? LineCap.Round : LineCap.None;
+    const defaultLineCap = dashStyle === DASH_STYLE.Solid ? LineCap.Round : LineCap.None;
     const lineCapFromSeriesOptions = get(seriesOptions, 'line.linecap', defaultLineCap);
 
     return get(series, 'linecap', lineCapFromSeriesOptions);
@@ -118,8 +119,8 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
                 format: series.dataLabels?.format,
             },
             marker: prepareMarker(series, seriesOptions),
-            dashStyle: dashStyle as DashStyle,
-            linecap: prepareLinecap(dashStyle as DashStyle, series, seriesOptions) as LineCap,
+            dashStyle: dashStyle,
+            linecap: prepareLinecap(dashStyle, series, seriesOptions) as LineCap,
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),

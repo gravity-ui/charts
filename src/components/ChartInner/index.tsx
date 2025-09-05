@@ -1,5 +1,6 @@
 import React from 'react';
 
+import {useCrosshair} from '../../hooks';
 import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX, AxisY} from '../Axis';
 import {Legend} from '../Legend';
@@ -73,6 +74,20 @@ export const ChartInner = (props: ChartInnerProps) => {
         });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
+
+    useCrosshair({
+        split: preparedSplit,
+        plotElement: plotRef.current,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        width: boundsWidth,
+        height: boundsHeight,
+        xAxis,
+        yAxes: yAxis,
+        yScale,
+        xScale,
+        dispatcher,
+    });
 
     React.useEffect(() => {
         if (clickHandler) {
