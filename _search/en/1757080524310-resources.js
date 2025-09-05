@@ -1,0 +1,1 @@
+window.__DATA__.search.resources = {"index":"_search/en/9aeb63ffd5d3-index.js","registry":"_search/en/74878cfb2a14-registry.js"};
