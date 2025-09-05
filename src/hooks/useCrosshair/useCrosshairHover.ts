@@ -2,7 +2,8 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
-import type {CrosshairDataChunk, PointPosition} from '../../types';
+import type {PointPosition, TooltipDataChunk} from '../../types';
+import {EventType} from '../../utils';
 
 type Args = {
     dispatcher: Dispatch<object>;
@@ -10,26 +11,29 @@ type Args = {
 };
 
 type CrosshairState = {
-    hovered?: CrosshairDataChunk[];
+    hovered?: TooltipDataChunk[];
     pointerPosition?: PointPosition;
 };
 
 export const useCrosshairHover = ({dispatcher, enabled}: Args) => {
-    const [{hovered, pointerPosition}, setTooltipState] = React.useState<CrosshairState>({});
+    const [{hovered, pointerPosition}, setCrosshairState] = React.useState<CrosshairState>({});
 
     React.useEffect(() => {
         if (enabled) {
             dispatcher.on(
-                `hover-shape.crosshair`,
-                (nextHovered?: CrosshairDataChunk[], nextPointerPosition?: PointPosition) => {
-                    setTooltipState({hovered: nextHovered, pointerPosition: nextPointerPosition});
+                `${EventType.HOVER_SHAPE}.crosshair`,
+                (nextHovered?: TooltipDataChunk[], nextPointerPosition?: PointPosition) => {
+                    setCrosshairState({hovered: nextHovered, pointerPosition: nextPointerPosition});
                 },
             );
+            dispatcher.on(`${EventType.POINTERMOVE_CHART}.ff`, (...props) => {
+                console.log('fsdf', props);
+            });
         }
 
         return () => {
             if (enabled) {
-                dispatcher.on(`hover-shape.crosshair`, null);
+                dispatcher.on(`${EventType.HOVER_SHAPE}.crosshair`, null);
             }
         };
     }, [dispatcher, enabled]);

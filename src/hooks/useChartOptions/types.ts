@@ -1,5 +1,4 @@
-import type {TDashStyle} from 'src/constants';
-
+import type {DashStyle} from '../../constants';
 import type {
     AxisCrosshair,
     AxisPlotBand,
@@ -34,7 +33,7 @@ export type PreparedAxisPlotLine = {
     value: number;
     color: string;
     width: number;
-    dashStyle: TDashStyle;
+    dashStyle: DashStyle;
     opacity: number;
     layerPlacement: PlotLayerPlacement;
 };

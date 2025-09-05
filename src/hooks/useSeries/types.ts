@@ -1,9 +1,9 @@
 import type {
+    DashStyle,
     LayoutAlgorithm,
     LineCap,
     SeriesOptionsDefaults,
     SymbolType,
-    TDashStyle,
 } from '../../constants';
 import type {
     AreaSeries,
@@ -84,7 +84,7 @@ export type LegendItem = {
     symbol: PreparedLegendSymbol;
     textWidth: number;
     visible?: boolean;
-    dashStyle?: TDashStyle;
+    dashStyle?: DashStyle;
 };
 
 export type LegendConfig = {
@@ -241,7 +241,7 @@ export type PreparedLineSeries = {
             };
         };
     };
-    dashStyle: TDashStyle;
+    dashStyle: DashStyle;
     linecap: LineCap;
     opacity: number | null;
     yAxis: number;

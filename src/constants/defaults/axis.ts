@@ -1,5 +1,5 @@
 import type {AxisCrosshair, BaseTextStyle, ChartAxis, ChartAxisType} from '../../types';
-import {DashStyle} from '../constants';
+import {DASH_STYLE} from '../line-styles';
 
 export const axisLabelsDefaults = {
     margin: 10,
@@ -26,10 +26,10 @@ const axisTitleDefaults: AxisTitleDefaults = {
 
 export const axisCrosshairDefaults: AxisCrosshairDefaults = {
     enabled: false,
-    color: 'var(--g-color-base-brand)',
+    color: 'var(--g-color-line-generic)',
     width: 1,
     snap: true,
-    dashStyle: DashStyle.Solid,
+    dashStyle: DASH_STYLE.Solid,
     opacity: 1,
     layerPlacement: 'after',
 };

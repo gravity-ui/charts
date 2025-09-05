@@ -1,4 +1,4 @@
-import type {LineCap, TDashStyle} from '../../../constants';
+import type {DashStyle, LineCap} from '../../../constants';
 import type {HtmlItem, LabelData, LineSeriesData} from '../../../types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 
@@ -25,7 +25,7 @@ export type PreparedLineData = {
     hovered: boolean;
     active: boolean;
     labels: LabelData[];
-    dashStyle: TDashStyle;
+    dashStyle: DashStyle;
     linecap: LineCap;
     opacity: number | null;
     htmlElements: HtmlItem[];

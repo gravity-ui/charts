@@ -4,8 +4,8 @@ import {line, select} from 'd3';
 import type {AxisDomain, AxisScale, Dispatch} from 'd3';
 
 import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
-import type {CrosshairDataChunk} from '../../types';
-import {block, getAxisPlotsPosition, getLineDashArray} from '../../utils';
+import type {PointPosition, TooltipDataChunk} from '../../types';
+import {getAxisPlotsPosition, getLineDashArray} from '../../utils';
 
 import {useCrosshairHover} from './useCrosshairHover';
 
@@ -17,18 +17,16 @@ type Props = {
     xScale?: ChartScale;
     yScale?: ChartScale[];
     split: PreparedSplit;
-    plotRef?: React.MutableRefObject<SVGGElement | null>;
+    plotElement: SVGGElement | null;
     dispatcher: Dispatch<object>;
     boundsOffsetLeft: number;
     boundsOffsetTop: number;
 };
 
-const b = block('crosshair');
-
 export const useCrosshair = (props: Props) => {
     const {
         xScale,
-        plotRef,
+        plotElement,
         yScale,
         dispatcher,
         xAxis,
@@ -47,38 +45,41 @@ export const useCrosshair = (props: Props) => {
     const pointerYPos = pointerPosition?.[1] ?? 0;
 
     React.useEffect(() => {
-        if (!plotRef?.current || !xScale || !yScale?.length || !crosshairEnabled) {
+        if (!plotElement || !xScale || !yScale?.length || !crosshairEnabled) {
             return;
         }
-        const plotCrosshairClassName = b();
+        const plotCrosshairDataAttr = 'data-crosshair';
 
-        const svgElement = select(plotRef.current);
-        svgElement.selectAll(`.${plotCrosshairClassName}`).remove();
+        const svgElement = select(plotElement);
+        svgElement.selectAll(`[${plotCrosshairDataAttr}]`).remove();
 
         const lineGenerator = line();
 
         if (xAxis.crosshair.enabled && hovered?.length) {
             const xAxisScale = xScale as AxisScale<AxisDomain>;
-            const crosshairClassName = b('x-line');
+            const crosshairDataAttr = 'data-crosshair-x-line';
 
             const crosshairSelection = svgElement
-                .selectAll(`.${crosshairClassName}`)
+                .selectAll(`[${crosshairDataAttr}]`)
                 .data(hovered)
                 .join('g')
-                .attr('class', `${plotCrosshairClassName} ${crosshairClassName}`);
+                .attr(plotCrosshairDataAttr, 1)
+                .attr(crosshairDataAttr, 1);
 
             crosshairSelection
                 .append('path')
                 .attr('d', (hoveredElement) => {
-                    let lineValue;
+                    let lineValue = 0;
                     if (xAxis.crosshair.snap) {
                         const offset = (xAxisScale.bandwidth?.() ?? 0) / 2;
-                        lineValue = Number(xAxisScale(hoveredElement.data.x ?? 0)) + offset;
+                        if (typeof hoveredElement.data === 'object' && 'x' in hoveredElement.data) {
+                            lineValue = Number(xAxisScale(hoveredElement.data.x ?? 0)) + offset;
+                        }
                     } else {
                         lineValue = pointerXPos - boundsOffsetLeft;
                     }
 
-                    const points: [number, number][] = [
+                    const points: PointPosition[] = [
                         [lineValue, 0],
                         [lineValue, totalHeight],
                     ];
@@ -113,13 +114,13 @@ export const useCrosshair = (props: Props) => {
             }
 
             if (yAxis.crosshair.enabled && hovered?.length) {
-                const crosshairClassName = b(`y-line-${index}`);
+                const crosshairDataAttr = `data-crosshair-y-line-${index}`;
 
                 const crosshairSelection = svgElement
-                    .selectAll(`.${crosshairClassName}`)
+                    .selectAll(`[${crosshairDataAttr}]`)
                     .data(
                         hovered.filter((node) => {
-                            const n = node as CrosshairDataChunk & {series: {yAxis?: number}};
+                            const n = node as TooltipDataChunk & {series: {yAxis?: number}};
                             const yAxisIndex = n.series.yAxis ?? 0;
                             return yAxis.crosshair.snap
                                 ? yAxisIndex === index && node.closest
@@ -127,7 +128,8 @@ export const useCrosshair = (props: Props) => {
                         }),
                     )
                     .join('g')
-                    .attr('class', `${plotCrosshairClassName} ${crosshairClassName}`)
+                    .attr(plotCrosshairDataAttr, 1)
+                    .attr(crosshairDataAttr, 1)
                     .style(
                         'transform',
                         yAxis.crosshair.snap
@@ -138,10 +140,15 @@ export const useCrosshair = (props: Props) => {
                 crosshairSelection
                     .append('path')
                     .attr('d', (hoveredElement) => {
-                        let lineValue;
+                        let lineValue = 0;
                         if (yAxis.crosshair.snap) {
                             const offset = (yAxisScale.bandwidth?.() ?? 0) / 2;
-                            lineValue = Number(yAxisScale(hoveredElement.data.y ?? 0)) + offset;
+                            if (
+                                typeof hoveredElement.data === 'object' &&
+                                'y' in hoveredElement.data
+                            ) {
+                                lineValue = Number(yAxisScale(hoveredElement.data.y ?? 0)) + offset;
+                            }
                         } else {
                             lineValue = pointerYPos - boundsOffsetTop;
                         }
@@ -172,6 +179,7 @@ export const useCrosshair = (props: Props) => {
             }
         });
     }, [
+        plotElement,
         hovered,
         crosshairEnabled,
         xAxis,

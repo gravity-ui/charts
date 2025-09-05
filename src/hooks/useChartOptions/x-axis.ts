@@ -1,8 +1,13 @@
 import type {AxisDomain, AxisScale} from 'd3';
 import get from 'lodash/get';
 
-import {axisCrosshairDefaults, axisLabelsDefaults, xAxisTitleDefaults} from '../../constants';
-import {DEFAULT_AXIS_LABEL_FONT_SIZE, DashStyle} from '../../constants/constants';
+import {
+    DASH_STYLE,
+    DEFAULT_AXIS_LABEL_FONT_SIZE,
+    axisCrosshairDefaults,
+    axisLabelsDefaults,
+    xAxisTitleDefaults,
+} from '../../constants';
 import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_X_AXIS,
@@ -154,7 +159,7 @@ export const getPreparedXAxis = ({
             value: get(d, 'value', 0),
             color: get(d, 'color', 'var(--g-color-base-brand)'),
             width: get(d, 'width', 1),
-            dashStyle: get(d, 'dashStyle', DashStyle.Solid),
+            dashStyle: get(d, 'dashStyle', DASH_STYLE.Solid),
             opacity: get(d, 'opacity', 1),
             layerPlacement: get(d, 'layerPlacement', 'before'),
         })),

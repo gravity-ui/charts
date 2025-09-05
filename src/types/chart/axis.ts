@@ -1,5 +1,4 @@
-import type {TDashStyle} from 'src/constants';
-
+import type {DashStyle} from '../../constants';
 import type {FormatNumberOptions} from '../formatter';
 
 import type {BaseTextStyle} from './base';
@@ -116,7 +115,7 @@ export interface AxisPlotLine extends AxisPlot {
      * */
     width?: number;
     /** Option for line stroke style. */
-    dashStyle?: TDashStyle;
+    dashStyle?: DashStyle;
 }
 
 export interface AxisPlotBand extends AxisPlot {
@@ -139,7 +138,7 @@ export interface AxisPlotBand extends AxisPlot {
 export interface AxisCrosshair extends Omit<AxisPlotLine, 'value'> {
     /** Whether the crosshair should snap to the point or follow the pointer independent of points.
      *
-     * Defaults to true.
+     * @default true.
      * */
     snap?: boolean;
     /** Enable or disable the axis crosshair.

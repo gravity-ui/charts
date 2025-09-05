@@ -89,8 +89,19 @@ export function useChartInnerProps(props: Props) {
         htmlLayout,
     });
     const boundsOffsetTop = chart.margin.top;
-    // We only need to consider the width of the first left axis
-    const boundsOffsetLeft = chart.margin.left + getYAxisWidth(yAxis[0]);
+    // We need to calculate the width of each left axis because the first axis can be hidden
+    const boundsOffsetLeft =
+        chart.margin.left +
+        yAxis.reduce((acc, axis) => {
+            if (axis.position !== 'left') {
+                return acc;
+            }
+            const axisWidth = getYAxisWidth(axis);
+            if (acc < axisWidth) {
+                acc = axisWidth;
+            }
+            return acc;
+        }, 0);
 
     const {x, bottom} = svgContainer?.getBoundingClientRect() ?? {};
     return {

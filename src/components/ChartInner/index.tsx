@@ -77,7 +77,7 @@ export const ChartInner = (props: ChartInnerProps) => {
 
     useCrosshair({
         split: preparedSplit,
-        plotRef,
+        plotElement: plotRef.current,
         boundsOffsetLeft,
         boundsOffsetTop,
         width: boundsWidth,

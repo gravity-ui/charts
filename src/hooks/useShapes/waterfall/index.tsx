@@ -4,7 +4,7 @@ import {color, line as lineGenerator, select} from 'd3';
 import type {Dispatch} from 'd3';
 import get from 'lodash/get';
 
-import {DashStyle} from '../../../constants';
+import {DASH_STYLE} from '../../../constants';
 import type {LabelData} from '../../../types';
 import {
     block,
@@ -105,7 +105,7 @@ export const WaterfallSeriesShapes = (args: Args) => {
                 return line(points);
             })
             .attr('stroke-width', 1)
-            .attr('stroke-dasharray', () => getLineDashArray(DashStyle.Dash, 1));
+            .attr('stroke-dasharray', () => getLineDashArray(DASH_STYLE.Dash, 1));
 
         function handleShapeHover(data?: PreparedWaterfallData[]) {
             hoveredDataRef.current = data;
