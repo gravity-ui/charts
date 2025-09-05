@@ -83,8 +83,9 @@ export type LegendItem = {
     name: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
-    visible?: boolean;
     dashStyle?: DashStyle;
+    overflowed?: boolean;
+    visible?: boolean;
 };
 
 export type LegendConfig = {

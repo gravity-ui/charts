@@ -20,6 +20,7 @@ import {
     getLabelsSize,
     getLineDashArray,
     getSymbol,
+    handleOverflowingText,
 } from '../../utils';
 import {axisBottom} from '../../utils/chart/axis-generators';
 
@@ -280,6 +281,9 @@ export const Legend = (props: Props) => {
                         })
                         .style('font-size', legend.itemStyle.fontSize)
                         .style('position', 'absolute')
+                        .style('max-width', function (d) {
+                            return `${d.textWidth}px`;
+                        })
                         .style('left', function (d, i) {
                             return `${getXPosition(i) + d.symbol.width + d.symbol.padding}px`;
                         })
@@ -314,7 +318,12 @@ export const Legend = (props: Props) => {
                         .html(function (d) {
                             return ('name' in d && d.name) as string;
                         })
-                        .style('font-size', legend.itemStyle.fontSize);
+                        .style('font-size', legend.itemStyle.fontSize)
+                        .each((d, index, nodes) => {
+                            if (d.overflowed) {
+                                handleOverflowingText(nodes[index], d.textWidth);
+                            }
+                        });
                 }
 
                 const contentWidth =
