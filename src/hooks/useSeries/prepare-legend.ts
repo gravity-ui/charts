@@ -134,24 +134,47 @@ function getGroupedLegendItems(args: {
                   .html(item.name)
                   .style('position', 'absolute')
                   .style('display', 'inline-block')
-            : bodySelection.append('text').text(item.name);
+                  .style('white-space', 'nowrap')
+            : bodySelection.append('text').text(item.name).style('white-space', 'nowrap');
         itemSelection
             .style('font-size', preparedLegend.itemStyle.fontSize)
             .each(function () {
                 const resultItem = clone(item) as LegendItem;
                 const {height, width: textWidth} = this.getBoundingClientRect();
                 resultItem.height = height;
-                resultItem.textWidth = textWidth;
+
+                if (
+                    textWidth >
+                    maxLegendWidth - resultItem.symbol.width - resultItem.symbol.padding
+                ) {
+                    resultItem.overflowed = true;
+                    resultItem.textWidth =
+                        maxLegendWidth - resultItem.symbol.width - resultItem.symbol.padding;
+                } else {
+                    resultItem.textWidth = textWidth;
+                }
+
                 textWidthsInLine.push(textWidth);
                 const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
+
+                if (!result[lineIndex]) {
+                    result[lineIndex] = [];
+                }
+
                 result[lineIndex].push(resultItem);
                 const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
                     return acc + symbol.width + symbol.padding;
                 }, 0);
                 const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
-                const isOverfilled = maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
+                const isOverflowedAsOnlyItemInLine =
+                    resultItem.overflowed && result[lineIndex].length === 1;
+                const isCurrentLineOverMaxWidth =
+                    maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
 
-                if (isOverfilled) {
+                if (isOverflowedAsOnlyItemInLine) {
+                    lineIndex += 1;
+                    textWidthsInLine = [];
+                } else if (isCurrentLineOverMaxWidth) {
                     result[lineIndex].pop();
                     lineIndex += 1;
                     textWidthsInLine = [textWidth];

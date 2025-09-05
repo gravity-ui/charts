@@ -38,9 +38,12 @@
     }
 
     &__item-text-html {
+        overflow: hidden;
+
         cursor: pointer;
         user-select: none;
         white-space: nowrap;
+        text-overflow: ellipsis;
 
         &_unselected {
             color: var(--g-color-text-hint);
