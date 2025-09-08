@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/gravity-ui/charts/compare/v1.8.0...v1.9.0) (2025-09-08)
+
+
+### Features
+
+* add crosshair ([#144](https://github.com/gravity-ui/charts/issues/144)) ([e3a93db](https://github.com/gravity-ui/charts/commit/e3a93dbd6c6cc8143057681505a4a2945cb00361))
+
+
+### Bug Fixes
+
+* properly handle overflowed legend items ([#147](https://github.com/gravity-ui/charts/issues/147)) ([f2f941a](https://github.com/gravity-ui/charts/commit/f2f941af89a56c1197e99c70d5e6e0455e58de1c))
+
 ## [1.8.0](https://github.com/gravity-ui/charts/compare/v1.7.1...v1.8.0) (2025-08-29)
 
 
