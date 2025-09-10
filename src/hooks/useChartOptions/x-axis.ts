@@ -10,7 +10,6 @@ import {
 } from '../../constants';
 import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
 import {
-    CHART_SERIES_WITH_VOLUME_ON_X_AXIS,
     calculateCos,
     formatAxisTickLabel,
     getClosestPointsRange,
@@ -73,23 +72,6 @@ function getLabelSettings({
     return {height: Math.min(maxHeight, labelsHeight), rotation};
 }
 
-function getAxisMin(axis?: ChartXAxis, series?: ChartSeries[]) {
-    const min = axis?.min;
-
-    if (
-        typeof min === 'undefined' &&
-        series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_X_AXIS.includes(s.type))
-    ) {
-        return series.reduce((minValue, s) => {
-            // @ts-expect-error
-            const minYValue = s.data.reduce((res, d) => Math.min(res, get(d, 'x', 0)), 0);
-            return Math.min(minValue, minYValue);
-        }, 0);
-    }
-
-    return min;
-}
-
 export const getPreparedXAxis = ({
     xAxis,
     series,
@@ -145,7 +127,8 @@ export const getPreparedXAxis = ({
             align: get(xAxis, 'title.align', xAxisTitleDefaults.align),
             maxRowCount: get(xAxis, 'title.maxRowCount', xAxisTitleDefaults.maxRowCount),
         },
-        min: getAxisMin(xAxis, series),
+        min: get(xAxis, 'min'),
+        max: get(xAxis, 'max'),
         maxPadding: get(xAxis, 'maxPadding', 0.01),
         grid: {
             enabled: get(xAxis, 'grid.enabled', true),

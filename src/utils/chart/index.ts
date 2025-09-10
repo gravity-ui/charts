@@ -132,6 +132,18 @@ export function getDefaultMaxXAxisValue(series: UnknownSeries[]) {
     return undefined;
 }
 
+export function getDefaultMinXAxisValue(series: UnknownSeries[]) {
+    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_X_AXIS.includes(s.type))) {
+        return series.reduce((minValue, s) => {
+            // @ts-expect-error
+            const minYValue = s.data.reduce((res, d) => Math.min(res, get(d, 'x', 0)), 0);
+            return Math.min(minValue, minYValue);
+        }, 0);
+    }
+
+    return undefined;
+}
+
 export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
     const groupedSeries = group(series, (item) => item.type);
 
