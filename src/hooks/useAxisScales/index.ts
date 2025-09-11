@@ -67,7 +67,8 @@ const filterCategoriesByVisibleSeries = (args: {
 
 export function createYScale(axis: PreparedAxis, series: PreparedSeries[], boundsHeight: number) {
     const yType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
-    const yMin = get(axis, 'min');
+    const yMinProps = get(axis, 'min');
+    const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
 
@@ -78,15 +79,21 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
             const range = [boundsHeight, boundsHeight * axis.maxPadding];
 
             if (isNumericalArrayData(domain)) {
-                const [domainYMin, domainMax] = extent(domain) as [number, number];
-                const yMinValue = typeof yMin === 'number' ? yMin : domainYMin;
-                let yMaxValue = domainMax;
-                if (series.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
-                    yMaxValue = Math.max(yMaxValue, 0);
+                const [yMinDomain, yMaxDomain] = extent(domain) as [number, number];
+                const yMin = typeof yMinProps === 'number' ? yMinProps : yMinDomain;
+                let yMax: number;
+
+                if (typeof yMaxProps === 'number') {
+                    yMax = yMaxProps;
+                } else {
+                    const hasSeriesWithVolumeOnYAxis = series.some((s) =>
+                        CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
+                    );
+                    yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
                 const scaleFn = yType === 'logarithmic' ? scaleLog : scaleLinear;
-                return scaleFn().domain([yMinValue, yMaxValue]).range(range).nice();
+                return scaleFn().domain([yMin, yMax]).range(range).nice();
             }
 
             break;
@@ -107,13 +114,17 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
             const range = [boundsHeight, boundsHeight * axis.maxPadding];
 
             if (yTimestamps) {
-                const [yMin, yMax] = extent(yTimestamps) as [number, number];
+                const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
+                const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
+                const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
                 return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
 
                 if (isNumericalArrayData(domain)) {
-                    const [yMin, yMax] = extent(domain) as [number, number];
+                    const [yMinTimestamp, yMaxTimestamp] = extent(domain) as [number, number];
+                    const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
+                    const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
                     return scaleUtc().domain([yMin, yMax]).range(range).nice();
                 }
             }

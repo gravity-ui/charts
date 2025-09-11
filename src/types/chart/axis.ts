@@ -142,11 +142,8 @@ export interface AxisCrosshair extends Omit<AxisPlotLine, 'value'> {
 }
 
 export interface ChartYAxis extends ChartAxis {
-    /** Axis location.
-     * Possible values - 'left' and 'right'.
-     * */
+    /** Axis location. Possible values - `'left'` and `'right'`. */
     position?: 'left' | 'right';
-    /** Property for splitting charts. Determines which area the axis is located in.
-     * */
+    /** Property for splitting charts. Determines which area the axis is located in. */
     plotIndex?: number;
 }
