@@ -1,5 +1,7 @@
 import React from 'react';
 
+import {useUniqId} from '@gravity-ui/uikit';
+
 import {useCrosshair} from '../../hooks';
 import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX, AxisY} from '../Axis';
@@ -23,6 +25,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
+    const clipPathId = useUniqId();
     const {
         boundsHeight,
         boundsOffsetLeft,
@@ -125,6 +128,11 @@ export const ChartInner = (props: ChartInnerProps) => {
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
             >
+                <defs>
+                    <clipPath id={clipPathId}>
+                        <rect x={0} y={0} width={boundsWidth} height={boundsHeight} />
+                    </clipPath>
+                </defs>
                 {title && <Title {...title} chartWidth={width} />}
                 <g transform={`translate(0, ${boundsOffsetTop})`}>
                     {preparedSplit.plots.map((plot, index) => {
@@ -161,7 +169,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                             </g>
                         </React.Fragment>
                     )}
-                    {shapes}
+                    <g clipPath={`url(#${clipPathId})`}>{shapes}</g>
                 </g>
                 {preparedLegend.enabled && (
                     <Legend

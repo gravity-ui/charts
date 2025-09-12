@@ -50,7 +50,6 @@ export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'pl
         align: ChartAxisTitleAlignment;
         maxRowCount: number;
     };
-    min?: number;
     grid: {
         enabled: boolean;
     };

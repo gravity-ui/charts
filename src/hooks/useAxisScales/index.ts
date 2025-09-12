@@ -11,6 +11,7 @@ import {
     getAxisHeight,
     getDataCategoryValue,
     getDefaultMaxXAxisValue,
+    getDefaultMinXAxisValue,
     getDomainDataXBySeries,
     getDomainDataYBySeries,
     getOnlyVisibleSeries,
@@ -66,7 +67,8 @@ const filterCategoriesByVisibleSeries = (args: {
 
 export function createYScale(axis: PreparedAxis, series: PreparedSeries[], boundsHeight: number) {
     const yType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
-    const yMin = get(axis, 'min');
+    const yMinProps = get(axis, 'min');
+    const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
 
@@ -77,15 +79,21 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
             const range = [boundsHeight, boundsHeight * axis.maxPadding];
 
             if (isNumericalArrayData(domain)) {
-                const [domainYMin, domainMax] = extent(domain) as [number, number];
-                const yMinValue = typeof yMin === 'number' ? yMin : domainYMin;
-                let yMaxValue = domainMax;
-                if (series.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
-                    yMaxValue = Math.max(yMaxValue, 0);
+                const [yMinDomain, yMaxDomain] = extent(domain) as [number, number];
+                const yMin = typeof yMinProps === 'number' ? yMinProps : yMinDomain;
+                let yMax: number;
+
+                if (typeof yMaxProps === 'number') {
+                    yMax = yMaxProps;
+                } else {
+                    const hasSeriesWithVolumeOnYAxis = series.some((s) =>
+                        CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
+                    );
+                    yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
                 const scaleFn = yType === 'logarithmic' ? scaleLog : scaleLinear;
-                return scaleFn().domain([yMinValue, yMaxValue]).range(range).nice();
+                return scaleFn().domain([yMin, yMax]).range(range).nice();
             }
 
             break;
@@ -106,13 +114,17 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
             const range = [boundsHeight, boundsHeight * axis.maxPadding];
 
             if (yTimestamps) {
-                const [yMin, yMax] = extent(yTimestamps) as [number, number];
+                const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
+                const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
+                const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
                 return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
 
                 if (isNumericalArrayData(domain)) {
-                    const [yMin, yMax] = extent(domain) as [number, number];
+                    const [yMinTimestamp, yMaxTimestamp] = extent(domain) as [number, number];
+                    const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
+                    const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
                     return scaleUtc().domain([yMin, yMax]).range(range).nice();
                 }
             }
@@ -150,13 +162,12 @@ export function createXScale(
     series: (PreparedSeries | ChartSeries)[],
     boundsWidth: number,
 ) {
-    const xMin = get(axis, 'min');
-    const xMax = getDefaultMaxXAxisValue(series);
+    const xMinProps = get(axis, 'min');
+    const xMaxProps = get(axis, 'max');
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const xCategories = get(axis, 'categories');
     const xTimestamps = get(axis, 'timestamps');
     const maxPadding = get(axis, 'maxPadding', 0);
-
     const xAxisMinPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
     const xRange = [0, boundsWidth - xAxisMinPadding];
 
@@ -166,13 +177,29 @@ export function createXScale(
             const domain = getDomainDataXBySeries(series);
 
             if (isNumericalArrayData(domain)) {
-                const [domainXMin, domainXMax] = extent(domain) as [number, number];
-                const xMinValue = typeof xMin === 'number' ? xMin : domainXMin;
-                const xMaxValue =
-                    typeof xMax === 'number' ? Math.max(xMax, domainXMax) : domainXMax;
+                const [xMinDomain, xMaxDomain] = extent(domain) as [number, number];
+                let xMin: number;
+                let xMax: number;
+
+                if (typeof xMinProps === 'number') {
+                    xMin = xMinProps;
+                } else {
+                    const xMinDefault = getDefaultMinXAxisValue(series);
+                    xMin = xMinDefault ?? xMinDomain;
+                }
+
+                if (typeof xMaxProps === 'number') {
+                    xMax = xMaxProps;
+                } else {
+                    const xMaxDefault = getDefaultMaxXAxisValue(series);
+                    xMax =
+                        typeof xMaxDefault === 'number'
+                            ? Math.max(xMaxDefault, xMaxDomain)
+                            : xMaxDomain;
+                }
 
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
-                return scaleFn().domain([xMinValue, xMaxValue]).range(xRange).nice();
+                return scaleFn().domain([xMin, xMax]).range(xRange).nice();
             }
 
             break;
@@ -197,13 +224,17 @@ export function createXScale(
         }
         case 'datetime': {
             if (xTimestamps) {
-                const [xMin, xMax] = extent(xTimestamps) as [number, number];
+                const [xMinTimestamp, xMaxTimestamp] = extent(xTimestamps) as [number, number];
+                const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
+                const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
                 return scaleUtc().domain([xMin, xMax]).range(xRange).nice();
             } else {
                 const domain = getDomainDataXBySeries(series);
 
                 if (isNumericalArrayData(domain)) {
-                    const [xMin, xMax] = extent(domain) as [number, number];
+                    const [xMinTimestamp, xMaxTimestamp] = extent(domain) as [number, number];
+                    const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
+                    const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
                     return scaleUtc().domain([xMin, xMax]).range(xRange).nice();
                 }
             }
