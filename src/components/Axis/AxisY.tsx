@@ -371,8 +371,9 @@ export const AxisY = (props: Props) => {
             .attr('class', b('title'))
             .attr('text-anchor', 'middle')
             .attr('font-size', (d) => d.title.style.fontSize)
-            .attr('transform', (d) => {
-                const titleRows = wrapText({
+            .call(async (selection) => {
+                const d = selection.datum();
+                const titleRows = await wrapText({
                     text: d.title.text,
                     style: d.title.style,
                     width: height,
@@ -380,20 +381,25 @@ export const AxisY = (props: Props) => {
                 const rowCount = Math.min(titleRows.length, d.title.maxRowCount);
                 const {x, y} = getTitlePosition({axis: d, axisHeight: height, rowCount});
                 const angle = d.position === 'left' ? -90 : 90;
-                return `translate(${x}, ${y}) rotate(${angle})`;
-            })
-            .selectAll('tspan')
-            .data((d) => getAxisTitleRows({axis: d, textMaxWidth: height}))
-            .join('tspan')
-            .attr('x', 0)
-            .attr('y', (d) => d.y)
-            .text((d) => d.text)
-            .each((_d, index, nodes) => {
-                if (index === nodes.length - 1) {
-                    handleOverflowingText(nodes[index] as SVGTSpanElement, height);
-                }
+                selection.attr('transform', `translate(${x}, ${y}) rotate(${angle})`);
+
+                const axisTitleRows = await getAxisTitleRows({axis: d, textMaxWidth: height});
+                selection
+                    .selectAll('tspan')
+                    .data(axisTitleRows)
+                    .join('tspan')
+                    .attr('x', 0)
+                    .attr('y', (titleRow) => titleRow.y)
+                    .text((titleRow) => titleRow.text)
+                    .each((_d, index, nodes) => {
+                        if (index === nodes.length - 1) {
+                            handleOverflowingText(nodes[index] as SVGTSpanElement, height);
+                        }
+                    });
+
+                return selection;
             });
-    }, [allAxes, width, height, scale, split, bottomLimit]);
+    }, [allAxes, width, height, scale, split, bottomLimit, plotRef, lineGenerator]);
 
     return <g ref={ref} className={b('container')} />;
 };

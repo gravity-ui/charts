@@ -44,7 +44,7 @@ const getCenter = (
     return [resultX, resultY];
 };
 
-export function preparePieData(args: Args): PreparedPieData[] {
+export function preparePieData(args: Args): Promise<PreparedPieData[]> {
     const {series: preparedSeries, boundsWidth, boundsHeight} = args;
     const haloSize = preparedSeries[0].states.hover.halo.enabled
         ? preparedSeries[0].states.hover.halo.size
@@ -123,7 +123,7 @@ export function preparePieData(args: Args): PreparedPieData[] {
         return data;
     };
 
-    const getLabels = ({series}: {series: PreparedPieSeries[]}) => {
+    const getLabels = async ({series}: {series: PreparedPieSeries[]}) => {
         const {dataLabels} = series[0];
 
         if (!dataLabels.enabled) {
@@ -131,40 +131,40 @@ export function preparePieData(args: Args): PreparedPieData[] {
         }
 
         const getTextSize = getTextSizeFn({style: dataLabelsStyle});
-        return series.reduce(
-            (acc, d) => {
-                const text = getFormattedValue({
-                    value: d.data.label || d.data.value,
-                    ...d.dataLabels,
+        const acc: Record<string, Partial<PieLabelData>> = {};
+        for (let i = 0; i < series.length; i++) {
+            const d = series[i];
+
+            const text = getFormattedValue({
+                value: d.data.label || d.data.value,
+                ...d.dataLabels,
+            });
+
+            let labelWidth = 0;
+            let labelHeight = 0;
+            if (dataLabels.html) {
+                const size = await getLabelsSize({
+                    labels: [text],
+                    style: dataLabelsStyle,
+                    html: true,
                 });
+                labelWidth = size.maxWidth;
+                labelHeight = size.maxHeight;
+            } else {
+                const size = await getTextSize(text);
+                labelWidth = size.width;
+                labelHeight = size.height;
+            }
 
-                let labelWidth = 0;
-                let labelHeight = 0;
-                if (dataLabels.html) {
-                    const size = getLabelsSize({
-                        labels: [text],
-                        style: dataLabelsStyle,
-                        html: true,
-                    });
-                    labelWidth = size.maxWidth;
-                    labelHeight = size.maxHeight;
-                } else {
-                    const size = getTextSize(text);
-                    labelWidth = size.width;
-                    labelHeight = size.height;
-                }
+            const label: Partial<PieLabelData> = {
+                text,
+                size: {width: labelWidth, height: labelHeight},
+            };
 
-                const label: Partial<PieLabelData> = {
-                    text,
-                    size: {width: labelWidth, height: labelHeight},
-                };
+            acc[d.id] = label;
+        }
 
-                acc[d.id] = label;
-
-                return acc;
-            },
-            {} as Record<string, Partial<PieLabelData>>,
-        );
+        return acc;
     };
 
     const prepareLabels = (prepareLabelsArgs: {
@@ -389,119 +389,131 @@ export function preparePieData(args: Args): PreparedPieData[] {
         };
     };
 
-    return Array.from(groupedPieSeries).map<PreparedPieData>(([stackId, items]) => {
-        const seriesLabels = getLabels({series: items});
-        const data = prepareItem({stackId, items, labels: seriesLabels});
-        const preparedLabels = prepareLabels({
-            data,
-            labels: seriesLabels,
-            series: items,
-        });
-
-        let maxLeftRightFreeSpace = Infinity;
-        let labelsOverflow = 0;
-        preparedLabels.labels.forEach((label) => {
-            const left = getLeftPosition(label);
-
-            let freeSpace = 0;
-            if (left < 0) {
-                freeSpace = boundsWidth / 2 - Math.abs(left);
-            } else {
-                freeSpace = boundsWidth / 2 - (left + label.size.width);
-            }
-
-            maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
-            labelsOverflow = freeSpace < 0 ? Math.max(labelsOverflow, -freeSpace) : labelsOverflow;
-        });
-
-        preparedLabels.htmlLabels.forEach((label) => {
-            let freeSpace = 0;
-            if (label.x < data.center[0]) {
-                freeSpace = Math.max(label.x, 0);
-            } else {
-                freeSpace = boundsWidth - label.x - label.size.width;
-            }
-
-            maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
-            labelsOverflow = freeSpace < 0 ? Math.max(labelsOverflow, -freeSpace) : labelsOverflow;
-        });
-
-        const segmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
-        if (labelsOverflow) {
-            data.segments.forEach((s) => {
-                const neeSegmentRadius = Math.max(minRadius, s.data.radius - labelsOverflow);
-                s.data.radius = neeSegmentRadius;
+    return Promise.all(
+        Array.from(groupedPieSeries).map(async ([stackId, items]) => {
+            const seriesLabels = await getLabels({series: items});
+            const data = prepareItem({stackId, items, labels: seriesLabels});
+            const preparedLabels = prepareLabels({
+                data,
+                labels: seriesLabels,
+                series: items,
             });
-        } else {
-            let topFreeSpace = data.center[1] - segmentMaxRadius - haloSize;
-            if (preparedLabels.labels.length) {
-                const topSvgLabel = Math.max(0, ...preparedLabels.labels.map((l) => -l.y));
-                topFreeSpace = Math.min(topFreeSpace, data.center[1] - topSvgLabel);
-            }
 
-            if (preparedLabels.htmlLabels.length) {
-                const topHtmlLabel = Math.min(...preparedLabels.htmlLabels.map((l) => l.y));
-                topFreeSpace = Math.min(topFreeSpace, topHtmlLabel);
-            }
+            let maxLeftRightFreeSpace = Infinity;
+            let labelsOverflow = 0;
+            preparedLabels.labels.forEach((label) => {
+                const left = getLeftPosition(label);
 
-            let bottomFreeSpace = data.center[1] - segmentMaxRadius - haloSize;
-            if (preparedLabels.labels.length) {
-                const bottomSvgLabel = Math.max(
-                    0,
-                    ...preparedLabels.labels.map((l) => l.y + l.size.height),
-                );
-                bottomFreeSpace = Math.min(bottomFreeSpace, data.center[1] - bottomSvgLabel);
-            }
+                let freeSpace = 0;
+                if (left < 0) {
+                    freeSpace = boundsWidth / 2 - Math.abs(left);
+                } else {
+                    freeSpace = boundsWidth / 2 - (left + label.size.width);
+                }
 
-            if (preparedLabels.htmlLabels.length) {
-                const bottomHtmlLabel = Math.max(
-                    0,
-                    ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
-                );
-                bottomFreeSpace = Math.min(bottomFreeSpace, data.center[1] * 2 - bottomHtmlLabel);
-            }
+                maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
+                labelsOverflow =
+                    freeSpace < 0 ? Math.max(labelsOverflow, -freeSpace) : labelsOverflow;
+            });
 
-            const topAdjustment = Math.max(0, Math.min(topFreeSpace, maxLeftRightFreeSpace));
-            const bottomAdjustment = Math.max(0, Math.min(bottomFreeSpace, maxLeftRightFreeSpace));
+            preparedLabels.htmlLabels.forEach((label) => {
+                let freeSpace = 0;
+                if (label.x < data.center[0]) {
+                    freeSpace = Math.max(label.x, 0);
+                } else {
+                    freeSpace = boundsWidth - label.x - label.size.width;
+                }
 
-            if (topAdjustment && topAdjustment >= bottomAdjustment) {
+                maxLeftRightFreeSpace = Math.max(0, Math.min(maxLeftRightFreeSpace, freeSpace));
+                labelsOverflow =
+                    freeSpace < 0 ? Math.max(labelsOverflow, -freeSpace) : labelsOverflow;
+            });
+
+            const segmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
+            if (labelsOverflow) {
                 data.segments.forEach((s) => {
-                    let nextPossibleRadius = s.data.radius + (topAdjustment + bottomAdjustment) / 2;
-                    nextPossibleRadius = Math.max(nextPossibleRadius, minRadius);
-                    s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                    const neeSegmentRadius = Math.max(minRadius, s.data.radius - labelsOverflow);
+                    s.data.radius = neeSegmentRadius;
                 });
-                data.center[1] -= (topAdjustment - bottomAdjustment) / 2;
-            } else if (bottomAdjustment) {
-                data.segments.forEach((s) => {
-                    let nextPossibleRadius = s.data.radius + (topAdjustment + bottomAdjustment) / 2;
-                    nextPossibleRadius = Math.max(nextPossibleRadius, minRadius);
-                    s.data.radius = Math.min(nextPossibleRadius, maxRadius);
-                });
-                data.center[1] += (bottomAdjustment - topAdjustment) / 2;
+            } else {
+                let topFreeSpace = data.center[1] - segmentMaxRadius - haloSize;
+                if (preparedLabels.labels.length) {
+                    const topSvgLabel = Math.max(0, ...preparedLabels.labels.map((l) => -l.y));
+                    topFreeSpace = Math.min(topFreeSpace, data.center[1] - topSvgLabel);
+                }
+
+                if (preparedLabels.htmlLabels.length) {
+                    const topHtmlLabel = Math.min(...preparedLabels.htmlLabels.map((l) => l.y));
+                    topFreeSpace = Math.min(topFreeSpace, topHtmlLabel);
+                }
+
+                let bottomFreeSpace = data.center[1] - segmentMaxRadius - haloSize;
+                if (preparedLabels.labels.length) {
+                    const bottomSvgLabel = Math.max(
+                        0,
+                        ...preparedLabels.labels.map((l) => l.y + l.size.height),
+                    );
+                    bottomFreeSpace = Math.min(bottomFreeSpace, data.center[1] - bottomSvgLabel);
+                }
+
+                if (preparedLabels.htmlLabels.length) {
+                    const bottomHtmlLabel = Math.max(
+                        0,
+                        ...preparedLabels.htmlLabels.map((l) => l.y + l.size.height),
+                    );
+                    bottomFreeSpace = Math.min(
+                        bottomFreeSpace,
+                        data.center[1] * 2 - bottomHtmlLabel,
+                    );
+                }
+
+                const topAdjustment = Math.max(0, Math.min(topFreeSpace, maxLeftRightFreeSpace));
+                const bottomAdjustment = Math.max(
+                    0,
+                    Math.min(bottomFreeSpace, maxLeftRightFreeSpace),
+                );
+
+                if (topAdjustment && topAdjustment >= bottomAdjustment) {
+                    data.segments.forEach((s) => {
+                        let nextPossibleRadius =
+                            s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                        nextPossibleRadius = Math.max(nextPossibleRadius, minRadius);
+                        s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                    });
+                    data.center[1] -= (topAdjustment - bottomAdjustment) / 2;
+                } else if (bottomAdjustment) {
+                    data.segments.forEach((s) => {
+                        let nextPossibleRadius =
+                            s.data.radius + (topAdjustment + bottomAdjustment) / 2;
+                        nextPossibleRadius = Math.max(nextPossibleRadius, minRadius);
+                        s.data.radius = Math.min(nextPossibleRadius, maxRadius);
+                    });
+                    data.center[1] += (bottomAdjustment - topAdjustment) / 2;
+                }
             }
-        }
 
-        const {labels, htmlLabels, connectors} = prepareLabels({
-            data,
-            series: items,
-            labels: seriesLabels,
-            allowOverlow: false,
-        });
+            const {labels, htmlLabels, connectors} = prepareLabels({
+                data,
+                series: items,
+                labels: seriesLabels,
+                allowOverlow: false,
+            });
 
-        if (typeof items[0]?.innerRadius !== 'undefined') {
-            const resultSegmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
-            const resultInnerRadius =
-                calculateNumericProperty({
-                    value: items[0].innerRadius,
-                    base: resultSegmentMaxRadius,
-                }) || 0;
-            data.innerRadius = resultInnerRadius;
-        }
+            if (typeof items[0]?.innerRadius !== 'undefined') {
+                const resultSegmentMaxRadius = Math.max(...data.segments.map((s) => s.data.radius));
+                const resultInnerRadius =
+                    calculateNumericProperty({
+                        value: items[0].innerRadius,
+                        base: resultSegmentMaxRadius,
+                    }) || 0;
+                data.innerRadius = resultInnerRadius;
+            }
 
-        data.labels = labels;
-        data.htmlLabels = htmlLabels;
-        data.connectors = connectors;
+            data.labels = labels;
+            data.htmlLabels = htmlLabels;
+            data.connectors = connectors;
 
-        return data;
-    });
+            return data;
+        }),
+    );
 }

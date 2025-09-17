@@ -10,7 +10,7 @@ import {getAxisPlotsPosition, getLineDashArray} from '../../utils';
 import {useCrosshairHover} from './useCrosshairHover';
 
 type Props = {
-    xAxis: PreparedAxis;
+    xAxis: PreparedAxis | null;
     yAxes: PreparedAxis[];
     width: number;
     height: number;
@@ -38,7 +38,7 @@ export const useCrosshair = (props: Props) => {
         boundsOffsetLeft,
     } = props;
     const crosshairEnabled =
-        xAxis.crosshair.enabled || yAxes.some((axis) => axis.crosshair.enabled);
+        xAxis?.crosshair.enabled || yAxes.some((axis) => axis.crosshair.enabled);
 
     const {hovered, pointerPosition} = useCrosshairHover({dispatcher, enabled: crosshairEnabled});
     const pointerXPos = pointerPosition?.[0] ?? 0;
@@ -55,7 +55,7 @@ export const useCrosshair = (props: Props) => {
 
         const lineGenerator = line();
 
-        if (xAxis.crosshair.enabled && hovered?.length) {
+        if (xAxis?.crosshair.enabled && hovered?.length) {
             const xAxisScale = xScale as AxisScale<AxisDomain>;
             const crosshairDataAttr = 'data-crosshair-x-line';
 

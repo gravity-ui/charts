@@ -19,10 +19,10 @@ import type {LegendConfig, LegendItem, PreparedLegend, PreparedSeries} from './t
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
-export function getPreparedLegend(args: {
+export async function getPreparedLegend(args: {
     legend: ChartData['legend'];
     series: ChartData['series']['data'];
-}): PreparedLegend {
+}): Promise<PreparedLegend> {
     const {legend, series} = args;
     const enabled = Boolean(
         typeof legend?.enabled === 'boolean' ? legend?.enabled : series.length > 1,
@@ -41,9 +41,8 @@ export function getPreparedLegend(args: {
         ...get(legend, 'title.style'),
     };
     const titleText = isTitleEnabled ? get(legend, 'title.text', '') : '';
-    const titleHeight = isTitleEnabled
-        ? getLabelsSize({labels: [titleText], style: titleStyle}).maxHeight
-        : 0;
+    const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
+    const titleHeight = isTitleEnabled ? titleSize.maxHeight : 0;
 
     const ticks = {
         labelsMargin: 4,
@@ -242,7 +241,10 @@ export function getLegendComponents(args: {
 
     if (preparedLegend.type === 'discrete') {
         const lineHeights = items.reduce<number[]>((acc, item) => {
-            acc.push(Math.max(...item.map((item) => item.height)));
+            if (item.length) {
+                acc.push(Math.max(...item.map(({height}) => height)));
+            }
+
             return acc;
         }, []);
         let legendHeight = lineHeights.reduce((acc, height) => acc + height, 0);

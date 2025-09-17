@@ -12,7 +12,7 @@ import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
 
 import type {PreparedBarXData} from './types';
 
-function getLabelData(d: PreparedBarXData): LabelData | undefined {
+async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined> {
     if (!d.series.dataLabels.enabled) {
         return undefined;
     }
@@ -23,7 +23,7 @@ function getLabelData(d: PreparedBarXData): LabelData | undefined {
     });
     const style = d.series.dataLabels.style;
     const html = d.series.dataLabels.html;
-    const {maxHeight: height, maxWidth: width} = getLabelsSize({
+    const {maxHeight: height, maxWidth: width} = await getLabelsSize({
         labels: [text],
         style,
         html,
@@ -46,7 +46,7 @@ function getLabelData(d: PreparedBarXData): LabelData | undefined {
     };
 }
 
-export const prepareBarXData = (args: {
+export const prepareBarXData = async (args: {
     series: PreparedBarXSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis;
@@ -54,7 +54,7 @@ export const prepareBarXData = (args: {
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
     boundsHeight: number;
-}): PreparedBarXData[] => {
+}): Promise<PreparedBarXData[]> => {
     const {series, seriesOptions, xAxis, xScale, yScale, boundsHeight: plotHeight} = args;
     const categories = get(xAxis, 'categories', [] as string[]);
     const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
@@ -136,80 +136,91 @@ export const prepareBarXData = (args: {
 
     const result: PreparedBarXData[] = [];
 
-    Object.entries(data).forEach(([xValue, val]) => {
-        const stacks = Object.values(val);
-        const currentGroupWidth = rectWidth * stacks.length + rectGap * (stacks.length - 1);
-        stacks.forEach((yValues, groupItemIndex) => {
-            let stackHeight = 0;
-            const stackItems: PreparedBarXData[] = [];
+    await Promise.all(
+        Object.entries(data).map(async ([xValue, val]) => {
+            const stacks = Object.values(val);
+            const currentGroupWidth = rectWidth * stacks.length + rectGap * (stacks.length - 1);
+            await Promise.all(
+                stacks.map(async (yValues, groupItemIndex) => {
+                    let stackHeight = 0;
+                    const stackItems: PreparedBarXData[] = [];
 
-            const sortedData = sortKey
-                ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
-                : yValues;
-            sortedData.forEach((yValue, yValueIndex) => {
-                const yAxisIndex = yValue.series.yAxis;
-                const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number>;
-                let xCenter;
+                    const sortedData = sortKey
+                        ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
+                        : yValues;
+                    await Promise.all(
+                        sortedData.map(async (yValue, yValueIndex) => {
+                            const yAxisIndex = yValue.series.yAxis;
+                            const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number>;
+                            let xCenter;
 
-                if (xAxis.type === 'category') {
-                    const xBandScale = xScale as ScaleBand<string>;
-                    xCenter = (xBandScale(xValue as string) || 0) + xBandScale.bandwidth() / 2;
-                } else {
-                    const xLinearScale = xScale as
-                        | ScaleLinear<number, number>
-                        | ScaleTime<number, number>;
-                    xCenter = xLinearScale(Number(xValue));
-                }
+                            if (xAxis.type === 'category') {
+                                const xBandScale = xScale as ScaleBand<string>;
+                                xCenter =
+                                    (xBandScale(xValue as string) || 0) +
+                                    xBandScale.bandwidth() / 2;
+                            } else {
+                                const xLinearScale = xScale as
+                                    | ScaleLinear<number, number>
+                                    | ScaleTime<number, number>;
+                                xCenter = xLinearScale(Number(xValue));
+                            }
 
-                const x = xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * groupItemIndex;
-                const yDataValue = yValue.data.y as number;
-                const y = seriesYScale(yDataValue);
-                const base = seriesYScale(0);
-                const height = yDataValue > 0 ? base - y : y - base;
-                const barData: PreparedBarXData = {
-                    x,
-                    y: yDataValue > 0 ? y - stackHeight : seriesYScale(0),
-                    width: rectWidth,
-                    height,
-                    opacity: get(yValue.data, 'opacity', null),
-                    data: yValue.data,
-                    series: yValue.series,
-                    htmlElements: [],
-                    isLastStackItem: yValueIndex === sortedData.length - 1,
-                };
+                            const x =
+                                xCenter -
+                                currentGroupWidth / 2 +
+                                (rectWidth + rectGap) * groupItemIndex;
+                            const yDataValue = yValue.data.y as number;
+                            const y = seriesYScale(yDataValue);
+                            const base = seriesYScale(0);
+                            const height = yDataValue > 0 ? base - y : y - base;
+                            const barData: PreparedBarXData = {
+                                x,
+                                y: yDataValue > 0 ? y - stackHeight : seriesYScale(0),
+                                width: rectWidth,
+                                height,
+                                opacity: get(yValue.data, 'opacity', null),
+                                data: yValue.data,
+                                series: yValue.series,
+                                htmlElements: [],
+                                isLastStackItem: yValueIndex === sortedData.length - 1,
+                            };
 
-                const label = getLabelData(barData);
-                if (yValue.series.dataLabels.html && label) {
-                    barData.htmlElements.push({
-                        x: label.x,
-                        y: label.y,
-                        content: label.text,
-                        size: label.size,
-                        style: label.style,
-                    });
-                } else {
-                    barData.label = getLabelData(barData);
-                }
+                            const label = await getLabelData(barData);
+                            if (yValue.series.dataLabels.html && label) {
+                                barData.htmlElements.push({
+                                    x: label.x,
+                                    y: label.y,
+                                    content: label.text,
+                                    size: label.size,
+                                    style: label.style,
+                                });
+                            } else {
+                                barData.label = await getLabelData(barData);
+                            }
 
-                stackItems.push(barData);
+                            stackItems.push(barData);
 
-                stackHeight += height + 1;
-            });
+                            stackHeight += height + 1;
+                        }),
+                    );
 
-            if (series.some((s) => s.stacking === 'percent')) {
-                let acc = 0;
-                const ratio = plotHeight / (stackHeight - stackItems.length);
-                stackItems.forEach((item) => {
-                    item.height = item.height * ratio;
-                    item.y = plotHeight - item.height - acc;
+                    if (series.some((s) => s.stacking === 'percent')) {
+                        let acc = 0;
+                        const ratio = plotHeight / (stackHeight - stackItems.length);
+                        stackItems.forEach((item) => {
+                            item.height = item.height * ratio;
+                            item.y = plotHeight - item.height - acc;
 
-                    acc += item.height + 1;
-                });
-            }
+                            acc += item.height + 1;
+                        });
+                    }
 
-            result.push(...stackItems);
-        });
-    });
+                    result.push(...stackItems);
+                }),
+            );
+        }),
+    );
 
     return result;
 };

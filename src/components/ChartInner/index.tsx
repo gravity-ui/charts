@@ -163,7 +163,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     )}
                     {shapes}
                 </g>
-                {preparedLegend.enabled && (
+                {preparedLegend?.enabled && legendConfig && (
                     <Legend
                         chartSeries={preparedSeries}
                         boundsWidth={boundsWidth}

@@ -97,7 +97,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
 
 export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     hovered: TooltipDataChunk<T>[];
-    xAxis?: ChartXAxis;
+    xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 }
 

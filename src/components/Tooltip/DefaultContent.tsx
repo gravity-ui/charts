@@ -26,7 +26,7 @@ const b = block('tooltip');
 
 type Props = {
     hovered: TooltipDataChunk[];
-    xAxis?: ChartXAxis;
+    xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     valueFormat?: ValueFormat;
 };
@@ -36,7 +36,7 @@ const DEFAULT_DATE_FORMAT = 'DD.MM.YY';
 const getRowData = (
     fieldName: 'x' | 'y',
     data: ChartSeriesData,
-    axis?: ChartXAxis | ChartYAxis,
+    axis?: ChartXAxis | ChartYAxis | null,
 ) => {
     switch (axis?.type) {
         case 'category': {
@@ -49,7 +49,8 @@ const getRowData = (
     }
 };
 
-const getXRowData = (data: ChartSeriesData, xAxis?: ChartXAxis) => getRowData('x', data, xAxis);
+const getXRowData = (data: ChartSeriesData, xAxis?: ChartXAxis | null) =>
+    getRowData('x', data, xAxis);
 
 const getYRowData = (data: ChartSeriesData, yAxis?: ChartYAxis) => getRowData('y', data, yAxis);
 
@@ -60,7 +61,7 @@ const getMeasureValue = ({
     valueFormat,
 }: {
     data: TooltipDataChunk[];
-    xAxis?: ChartXAxis;
+    xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     valueFormat?: ValueFormat;
 }) => {
@@ -89,7 +90,11 @@ const getMeasureValue = ({
     });
 };
 
-function getDefaultValueFormat({axis}: {axis?: ChartXAxis | ChartYAxis}): ValueFormat | undefined {
+function getDefaultValueFormat({
+    axis,
+}: {
+    axis?: ChartXAxis | ChartYAxis | null;
+}): ValueFormat | undefined {
     switch (axis?.type) {
         case 'linear':
         case 'logarithmic': {

@@ -2,6 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
+import type {PreparedAxis} from '../../hooks';
 import {
     useAxisScales,
     useChartDimensions,
@@ -28,19 +29,21 @@ export function useChartInnerProps(props: Props) {
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
     const {chart, title, tooltip, colors} = useChartOptions({data});
-    const xAxis = React.useMemo(
-        () => getPreparedXAxis({xAxis: data.xAxis, width, series: data.series.data}),
-        [data, width],
-    );
-    const yAxis = React.useMemo(
-        () =>
-            getPreparedYAxis({
-                series: data.series.data,
-                yAxis: data.yAxis,
-                height,
-            }),
-        [data, height],
-    );
+
+    const [xAxis, setXAxis] = React.useState<PreparedAxis | null>(null);
+    React.useEffect(() => {
+        getPreparedXAxis({xAxis: data.xAxis, width, series: data.series.data}).then((val) =>
+            setXAxis(val),
+        );
+    }, [data, width]);
+
+    const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
+    React.useEffect(() => {
+        getPreparedYAxis({yAxis: data.yAxis, height, series: data.series.data}).then((val) =>
+            setYAxis(val),
+        );
+    }, [data, height]);
+
     const {
         legendItems,
         legendConfig,

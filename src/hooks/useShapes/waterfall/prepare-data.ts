@@ -17,7 +17,10 @@ import {getXValue, getYValue} from '../utils';
 
 import type {PreparedWaterfallData} from './types';
 
-function getLabelData(d: PreparedWaterfallData, plotHeight: number): LabelData | undefined {
+async function getLabelData(
+    d: PreparedWaterfallData,
+    plotHeight: number,
+): Promise<LabelData | undefined> {
     if (!d.series.dataLabels.enabled) {
         return undefined;
     }
@@ -25,7 +28,7 @@ function getLabelData(d: PreparedWaterfallData, plotHeight: number): LabelData |
     const labelValue = d.data.label ?? d.data.y ?? d.subTotal;
     const text = getFormattedValue({value: labelValue, ...d.series.dataLabels});
     const style = d.series.dataLabels.style;
-    const {maxHeight: height, maxWidth: width} = getLabelsSize({labels: [text], style});
+    const {maxHeight: height, maxWidth: width} = await getLabelsSize({labels: [text], style});
 
     let y: number;
     if (Number(d.data.y) > 0 || d.data.total) {
@@ -81,14 +84,14 @@ function getBandWidth(args: {
 
 type DataItem = {data: PreparedWaterfallSeriesData; series: PreparedWaterfallSeries};
 
-export const prepareWaterfallData = (args: {
+export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
-}): PreparedWaterfallData[] => {
+}): Promise<PreparedWaterfallData[]> => {
     const {
         series,
         seriesOptions,
@@ -123,9 +126,11 @@ export const prepareWaterfallData = (args: {
 
     let totalValue = 0;
     const result: PreparedWaterfallData[] = [];
-    data.forEach((item, _index) => {
+    for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+
         if (typeof item.data.y !== 'number' && !item.data.total) {
-            return;
+            continue;
         }
 
         if (!item.data.total) {
@@ -177,10 +182,10 @@ export const prepareWaterfallData = (args: {
             htmlElements: [],
         };
 
-        preparedData.label = getLabelData(preparedData, plotHeight);
+        preparedData.label = await getLabelData(preparedData, plotHeight);
 
         result.push(preparedData);
-    });
+    }
 
     return result;
 };

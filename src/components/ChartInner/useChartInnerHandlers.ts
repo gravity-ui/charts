@@ -25,7 +25,7 @@ type Props = {
     togglePinTooltip: ChartInnerState['togglePinTooltip'];
     tooltipPinned: boolean;
     unpinTooltip: ChartInnerState['unpinTooltip'];
-    xAxis: PreparedAxis;
+    xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     tooltipThrottle: number;
 };

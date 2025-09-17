@@ -50,7 +50,7 @@ function addDomain(
     }
 }
 
-export function axisBottom(args: AxisBottomArgs) {
+export async function axisBottom(args: AxisBottomArgs) {
     const {
         leftmostLimit = 0,
         scale,
@@ -72,10 +72,12 @@ export function axisBottom(args: AxisBottomArgs) {
     const offset = getXAxisOffset();
     const position = getXTickPosition({scale, offset});
     const values = getXAxisItems({scale, count: ticksCount, maxCount: maxTickCount});
-    const labelHeight = getLabelsSize({
-        labels: values.map(labelFormat),
-        style: labelsStyle,
-    }).maxHeight;
+    const labelHeight = (
+        await getLabelsSize({
+            labels: values.map(labelFormat),
+            style: labelsStyle,
+        })
+    ).maxHeight;
 
     return function (selection: Selection<SVGGElement, unknown, null, undefined>) {
         const rect = selection.node()?.getBoundingClientRect();

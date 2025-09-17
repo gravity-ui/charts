@@ -219,239 +219,245 @@ export const Legend = (props: Props) => {
     }, [boundsWidth]);
 
     React.useEffect(() => {
-        if (!ref.current || !htmlLayout) {
-            return;
-        }
+        async function prepareLegend() {
+            if (!ref.current || !htmlLayout) {
+                return;
+            }
 
-        const svgElement = select(ref.current);
-        svgElement.selectAll('*').remove();
-        const htmlElement = select(htmlLayout);
-        htmlElement.selectAll('[data-legend]').remove();
-        const htmlContainer = legend.html
-            ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
-            : null;
+            const svgElement = select(ref.current);
+            svgElement.selectAll('*').remove();
+            const htmlElement = select(htmlLayout);
+            htmlElement.selectAll('[data-legend]').remove();
+            const htmlContainer = legend.html
+                ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
+                : null;
 
-        let legendWidth = 0;
-        if (legend.type === 'discrete') {
-            const start = config.pagination?.pages[pageIndex]?.start;
-            const end = config.pagination?.pages[pageIndex]?.end;
-            const pageItems =
-                typeof start === 'number' && typeof end === 'number'
-                    ? items.slice(start, end)
-                    : items;
-            const legendLineHeights: number[] = [];
-            pageItems.forEach((line) => {
-                const legendLine = svgElement.append('g').attr('class', b('line'));
-                const htmlLegendLine = htmlContainer?.append('div').style('position', 'absolute');
-                const legendItemTemplate = legendLine
-                    .selectAll('legend-history')
-                    .data(line)
-                    .enter()
-                    .append('g')
-                    .attr('class', b('item'))
-                    .on('click', function (e, d) {
-                        onItemClick({name: d.name, metaKey: e.metaKey});
-                        onUpdate?.();
-                    });
-
-                const getXPosition = (i: number) => {
-                    return line.slice(0, i).reduce((acc, legendItem) => {
-                        return (
-                            acc +
-                            legendItem.symbol.width +
-                            legendItem.symbol.padding +
-                            legendItem.textWidth +
-                            legend.itemDistance
-                        );
-                    }, 0);
-                };
-
-                const legendLineHeight = Math.max(...line.map((l) => l.height));
-                renderLegendSymbol({selection: legendItemTemplate, legend, legendLineHeight});
-
-                if (htmlLegendLine) {
-                    htmlLegendLine
-                        .selectAll('legend-item')
+            let legendWidth = 0;
+            if (legend.type === 'discrete') {
+                const start = config.pagination?.pages[pageIndex]?.start;
+                const end = config.pagination?.pages[pageIndex]?.end;
+                const pageItems =
+                    typeof start === 'number' && typeof end === 'number'
+                        ? items.slice(start, end)
+                        : items;
+                const legendLineHeights: number[] = [];
+                pageItems.forEach((line) => {
+                    const legendLine = svgElement.append('g').attr('class', b('line'));
+                    const htmlLegendLine = htmlContainer
+                        ?.append('div')
+                        .style('position', 'absolute');
+                    const legendItemTemplate = legendLine
+                        .selectAll('legend-history')
                         .data(line)
                         .enter()
-                        .append('div')
-                        .attr('class', function (d) {
-                            const mods = {selected: d.visible, unselected: !d.visible};
-                            return b('item-text-html', mods);
-                        })
-                        .style('font-size', legend.itemStyle.fontSize)
-                        .style('position', 'absolute')
-                        .style('max-width', function (d) {
-                            return `${d.textWidth}px`;
-                        })
-                        .style('left', function (d, i) {
-                            return `${getXPosition(i) + d.symbol.width + d.symbol.padding}px`;
-                        })
-                        .style('top', function (d) {
-                            if (d.height < legendLineHeight) {
-                                return `${(legendLineHeight - d.height) / 2}px`;
-                            }
-                            return '0px';
-                        })
+                        .append('g')
+                        .attr('class', b('item'))
                         .on('click', function (e, d) {
                             onItemClick({name: d.name, metaKey: e.metaKey});
                             onUpdate?.();
-                        })
-                        [legend.html ? 'html' : 'text'](function (d) {
-                            return d.name;
                         });
-                } else {
-                    legendItemTemplate
-                        .append('text')
-                        .attr('x', function (legendItem, i) {
+
+                    const getXPosition = (i: number) => {
+                        return line.slice(0, i).reduce((acc, legendItem) => {
                             return (
-                                getXPosition(i) +
+                                acc +
                                 legendItem.symbol.width +
-                                legendItem.symbol.padding
+                                legendItem.symbol.padding +
+                                legendItem.textWidth +
+                                legend.itemDistance
                             );
-                        })
-                        .attr('height', legend.height)
-                        .attr('class', function (d) {
-                            const mods = {selected: d.visible, unselected: !d.visible};
-                            return b('item-text', mods);
-                        })
-                        .html(function (d) {
-                            return ('name' in d && d.name) as string;
-                        })
-                        .style('font-size', legend.itemStyle.fontSize)
-                        .each((d, index, nodes) => {
-                            if (d.overflowed) {
-                                handleOverflowingText(nodes[index], d.textWidth);
-                            }
-                        });
-                }
+                        }, 0);
+                    };
 
-                const contentWidth =
-                    (legend.html
-                        ? getXPosition(line.length) - legend.itemDistance
-                        : legendLine.node()?.getBoundingClientRect().width) || 0;
+                    const legendLineHeight = Math.max(...line.map((l) => l.height));
+                    renderLegendSymbol({selection: legendItemTemplate, legend, legendLineHeight});
 
-                let left = 0;
-                switch (legend.justifyContent) {
-                    case 'center': {
-                        const legendLinePostion = getLegendPosition({
-                            align: legend.align,
-                            width: boundsWidth,
-                            offsetWidth: 0,
-                            contentWidth,
-                        });
-                        left = legendLinePostion.left;
-                        legendWidth = boundsWidth;
-                        break;
+                    if (htmlLegendLine) {
+                        htmlLegendLine
+                            .selectAll('legend-item')
+                            .data(line)
+                            .enter()
+                            .append('div')
+                            .attr('class', function (d) {
+                                const mods = {selected: d.visible, unselected: !d.visible};
+                                return b('item-text-html', mods);
+                            })
+                            .style('font-size', legend.itemStyle.fontSize)
+                            .style('position', 'absolute')
+                            .style('max-width', function (d) {
+                                return `${d.textWidth}px`;
+                            })
+                            .style('left', function (d, i) {
+                                return `${getXPosition(i) + d.symbol.width + d.symbol.padding}px`;
+                            })
+                            .style('top', function (d) {
+                                if (d.height < legendLineHeight) {
+                                    return `${(legendLineHeight - d.height) / 2}px`;
+                                }
+                                return '0px';
+                            })
+                            .on('click', function (e, d) {
+                                onItemClick({name: d.name, metaKey: e.metaKey});
+                                onUpdate?.();
+                            })
+                            [legend.html ? 'html' : 'text'](function (d) {
+                                return d.name;
+                            });
+                    } else {
+                        legendItemTemplate
+                            .append('text')
+                            .attr('x', function (legendItem, i) {
+                                return (
+                                    getXPosition(i) +
+                                    legendItem.symbol.width +
+                                    legendItem.symbol.padding
+                                );
+                            })
+                            .attr('height', legend.height)
+                            .attr('class', function (d) {
+                                const mods = {selected: d.visible, unselected: !d.visible};
+                                return b('item-text', mods);
+                            })
+                            .html(function (d) {
+                                return ('name' in d && d.name) as string;
+                            })
+                            .style('font-size', legend.itemStyle.fontSize)
+                            .each((d, index, nodes) => {
+                                if (d.overflowed) {
+                                    handleOverflowingText(nodes[index], d.textWidth);
+                                }
+                            });
                     }
-                    case 'start': {
-                        legendWidth = Math.max(legendWidth, contentWidth);
-                        break;
+
+                    const contentWidth =
+                        (legend.html
+                            ? getXPosition(line.length) - legend.itemDistance
+                            : legendLine.node()?.getBoundingClientRect().width) || 0;
+
+                    let left = 0;
+                    switch (legend.justifyContent) {
+                        case 'center': {
+                            const legendLinePostion = getLegendPosition({
+                                align: legend.align,
+                                width: boundsWidth,
+                                offsetWidth: 0,
+                                contentWidth,
+                            });
+                            left = legendLinePostion.left;
+                            legendWidth = boundsWidth;
+                            break;
+                        }
+                        case 'start': {
+                            legendWidth = Math.max(legendWidth, contentWidth);
+                            break;
+                        }
                     }
-                }
 
-                const top = legendLineHeights.reduce((acc, h) => acc + h, 0);
-                legendLineHeights.push(legendLineHeight);
-                legendLine.attr('transform', `translate(${[left, top].join(',')})`);
-                htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
-            });
-
-            if (config.pagination) {
-                const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
-                    ',',
-                )})`;
-                appendPaginator({
-                    container: svgElement,
-                    pageIndex: pageIndex,
-                    legend,
-                    transform,
-                    pages: config.pagination.pages,
-                    onArrowClick: setPageIndex,
+                    const top = legendLineHeights.reduce((acc, h) => acc + h, 0);
+                    legendLineHeights.push(legendLineHeight);
+                    legendLine.attr('transform', `translate(${[left, top].join(',')})`);
+                    htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
                 });
-            }
-        } else {
-            // gradient rect
-            const domain = legend.colorScale.domain ?? [];
-            const rectHeight = CONTINUOUS_LEGEND_SIZE.height;
-            svgElement.call(createGradientRect, {
-                y: legend.title.height + legend.title.margin,
-                height: rectHeight,
-                width: legend.width,
-                interpolator: getContinuesColorFn({
-                    values: [0, 1],
-                    colors: legend.colorScale.colors,
-                    stops: legend.colorScale.stops,
-                }),
-            });
 
-            // ticks
-            const scale = scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>;
-            const xAxisGenerator = axisBottom({
-                scale,
-                ticks: {
-                    items: [[0, -rectHeight]],
-                    labelsMargin: legend.ticks.labelsMargin,
-                    labelsLineHeight: legend.ticks.labelsLineHeight,
-                    maxTickCount: 4,
-                    tickColor: '#fff',
-                    labelFormat: (value: number) => formatNumber(value, {unit: 'auto'}),
-                },
-                domain: {
-                    size: legend.width,
-                    color: 'transparent',
-                },
-            });
-            const tickTop = legend.title.height + legend.title.margin + rectHeight;
-            svgElement
-                .append('g')
-                .attr('transform', `translate(0, ${tickTop})`)
-                .call(xAxisGenerator);
-            legendWidth = legend.width;
-        }
+                if (config.pagination) {
+                    const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
+                        ',',
+                    )})`;
+                    appendPaginator({
+                        container: svgElement,
+                        pageIndex: pageIndex,
+                        legend,
+                        transform,
+                        pages: config.pagination.pages,
+                        onArrowClick: setPageIndex,
+                    });
+                }
+            } else {
+                // gradient rect
+                const domain = legend.colorScale.domain ?? [];
+                const rectHeight = CONTINUOUS_LEGEND_SIZE.height;
+                svgElement.call(createGradientRect, {
+                    y: legend.title.height + legend.title.margin,
+                    height: rectHeight,
+                    width: legend.width,
+                    interpolator: getContinuesColorFn({
+                        values: [0, 1],
+                        colors: legend.colorScale.colors,
+                        stops: legend.colorScale.stops,
+                    }),
+                });
 
-        if (legend.title.enable) {
-            const {maxWidth: titleWidth} = getLabelsSize({
-                labels: [legend.title.text],
-                style: legend.title.style,
-            });
-            let dx = 0;
-            switch (legend.title.align) {
-                case 'center': {
-                    dx = legend.width / 2 - titleWidth / 2;
-                    break;
-                }
-                case 'right': {
-                    dx = legend.width - titleWidth;
-                    break;
-                }
-                case 'left':
-                default: {
-                    dx = 0;
-                    break;
-                }
+                // ticks
+                const scale = scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>;
+                const xAxisGenerator = await axisBottom({
+                    scale,
+                    ticks: {
+                        items: [[0, -rectHeight]],
+                        labelsMargin: legend.ticks.labelsMargin,
+                        labelsLineHeight: legend.ticks.labelsLineHeight,
+                        maxTickCount: 4,
+                        tickColor: '#fff',
+                        labelFormat: (value: number) => formatNumber(value, {unit: 'auto'}),
+                    },
+                    domain: {
+                        size: legend.width,
+                        color: 'transparent',
+                    },
+                });
+                const tickTop = legend.title.height + legend.title.margin + rectHeight;
+                svgElement
+                    .append('g')
+                    .attr('transform', `translate(0, ${tickTop})`)
+                    .call(xAxisGenerator);
+                legendWidth = legend.width;
             }
 
-            svgElement
-                .append('g')
-                .attr('class', b('title'))
-                .append('text')
-                .attr('dx', dx)
-                .attr('font-weight', legend.title.style.fontWeight ?? null)
-                .attr('font-size', legend.title.style.fontSize ?? null)
-                .attr('fill', legend.title.style.fontColor ?? null)
-                .style('dominant-baseline', 'text-before-edge')
-                .html(legend.title.text);
+            if (legend.title.enable) {
+                const {maxWidth: titleWidth} = await getLabelsSize({
+                    labels: [legend.title.text],
+                    style: legend.title.style,
+                });
+                let dx = 0;
+                switch (legend.title.align) {
+                    case 'center': {
+                        dx = legend.width / 2 - titleWidth / 2;
+                        break;
+                    }
+                    case 'right': {
+                        dx = legend.width - titleWidth;
+                        break;
+                    }
+                    case 'left':
+                    default: {
+                        dx = 0;
+                        break;
+                    }
+                }
+
+                svgElement
+                    .append('g')
+                    .attr('class', b('title'))
+                    .append('text')
+                    .attr('dx', dx)
+                    .attr('font-weight', legend.title.style.fontWeight ?? null)
+                    .attr('font-size', legend.title.style.fontSize ?? null)
+                    .attr('fill', legend.title.style.fontColor ?? null)
+                    .style('dominant-baseline', 'text-before-edge')
+                    .html(legend.title.text);
+            }
+
+            const {left} = getLegendPosition({
+                align: legend.align,
+                width: boundsWidth,
+                offsetWidth: config.offset.left,
+                contentWidth: legendWidth,
+            });
+
+            svgElement.attr('transform', `translate(${[left, config.offset.top].join(',')})`);
+            htmlContainer?.style('transform', `translate(${left}px, ${config.offset.top}px)`);
         }
 
-        const {left} = getLegendPosition({
-            align: legend.align,
-            width: boundsWidth,
-            offsetWidth: config.offset.left,
-            contentWidth: legendWidth,
-        });
-
-        svgElement.attr('transform', `translate(${[left, config.offset.top].join(',')})`);
-        htmlContainer?.style('transform', `translate(${left}px, ${config.offset.top}px)`);
+        prepareLegend();
     }, [
         boundsWidth,
         chartSeries,

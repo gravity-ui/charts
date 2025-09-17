@@ -12,25 +12,25 @@ type Args = {
     width: number;
     height: number;
     margin: ChartMargin;
-    preparedLegend: PreparedLegend;
-    preparedXAxis: PreparedAxis;
-    preparedYAxis: PreparedAxis[];
+    preparedLegend: PreparedLegend | null;
+    preparedXAxis: PreparedAxis | null;
+    preparedYAxis: PreparedAxis[] | null;
     preparedSeries: PreparedSeries[];
 };
 
 const getBottomOffset = (args: {
     hasAxisRelatedSeries: boolean;
-    preparedLegend: PreparedLegend;
-    preparedXAxis: PreparedAxis;
+    preparedLegend: PreparedLegend | null;
+    preparedXAxis: PreparedAxis | null;
 }) => {
     const {hasAxisRelatedSeries, preparedLegend, preparedXAxis} = args;
     let result = 0;
 
-    if (preparedLegend.enabled) {
+    if (preparedLegend?.enabled) {
         result += preparedLegend.height + preparedLegend.margin;
     }
 
-    if (!preparedXAxis.visible) {
+    if (!preparedXAxis?.visible) {
         return result;
     }
 

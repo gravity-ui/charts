@@ -17,10 +17,10 @@ export function pieCenterText(
 
     const color = get(options, 'color', 'currentColor');
 
-    return function (args: {series: {innerRadius: number}}) {
+    return async function (args: {series: {innerRadius: number}}) {
         let fontSize = MAX_FONT_SIZE;
 
-        const textSize = getLabelsSize({labels: [text], style: {fontSize: `${fontSize}px`}});
+        const textSize = await getLabelsSize({labels: [text], style: {fontSize: `${fontSize}px`}});
         let availableSpace = args.series.innerRadius * 2;
         const padding =
             calculateNumericProperty({

@@ -19,7 +19,7 @@ type TooltipProps = {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
     svgContainer: SVGSVGElement | null;
-    xAxis: PreparedAxis;
+    xAxis: PreparedAxis | null;
     yAxis: PreparedAxis;
     tooltipPinned: boolean;
     onOutsideClick?: () => void;

@@ -26,7 +26,7 @@ import {createXScale} from '../useAxisScales';
 
 import type {PreparedAxis} from './types';
 
-function getLabelSettings({
+async function getLabelSettings({
     axis,
     series,
     width,
@@ -62,11 +62,13 @@ function getLabelSettings({
     const defaultRotation = overlapping && autoRotation ? -45 : 0;
     const rotation = axis.labels.rotation || defaultRotation;
     const labelsHeight = rotation
-        ? getLabelsSize({
-              labels,
-              style: axis.labels.style,
-              rotation,
-          }).maxHeight
+        ? (
+              await getLabelsSize({
+                  labels,
+                  style: axis.labels.style,
+                  rotation,
+              })
+          ).maxHeight
         : axis.labels.lineHeight;
     const maxHeight = rotation ? calculateCos(rotation) * axis.labels.maxWidth : labelsHeight;
 
@@ -90,7 +92,7 @@ function getAxisMin(axis?: ChartXAxis, series?: ChartSeries[]) {
     return min;
 }
 
-export const getPreparedXAxis = ({
+export const getPreparedXAxis = async ({
     xAxis,
     series,
     width,
@@ -98,19 +100,21 @@ export const getPreparedXAxis = ({
     xAxis?: ChartXAxis;
     series: ChartSeries[];
     width: number;
-}): PreparedAxis => {
+}): Promise<PreparedAxis> => {
     const titleText = get(xAxis, 'title.text', '');
     const titleStyle: BaseTextStyle = {
         ...xAxisTitleDefaults.style,
         ...get(xAxis, 'title.style'),
     };
     const titleMaxRowsCount = get(xAxis, 'title.maxRowCount', xAxisTitleDefaults.maxRowCount);
-    const estimatedTitleRows = wrapText({
-        text: titleText,
-        style: titleStyle,
-        width,
-    }).slice(0, titleMaxRowsCount);
-    const titleSize = getLabelsSize({
+    const estimatedTitleRows = (
+        await wrapText({
+            text: titleText,
+            style: titleStyle,
+            width,
+        })
+    ).slice(0, titleMaxRowsCount);
+    const titleSize = await getLabelsSize({
         labels: [titleText],
         style: titleStyle,
     });
@@ -186,7 +190,7 @@ export const getPreparedXAxis = ({
         visible: get(xAxis, 'visible', true),
     };
 
-    const {height, rotation} = getLabelSettings({
+    const {height, rotation} = await getLabelSettings({
         axis: preparedXAxis,
         series,
         width,
