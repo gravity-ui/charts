@@ -148,17 +148,19 @@ export const ChartInner = (props: ChartInnerProps) => {
                                 split={preparedSplit}
                                 plotRef={plotRef}
                             />
-                            <g transform={`translate(0, ${boundsHeight})`}>
-                                <AxisX
-                                    leftmostLimit={svgXPos}
-                                    axis={xAxis}
-                                    width={boundsWidth}
-                                    height={boundsHeight}
-                                    scale={xScale}
-                                    split={preparedSplit}
-                                    plotRef={plotRef}
-                                />
-                            </g>
+                            {xAxis && (
+                                <g transform={`translate(0, ${boundsHeight})`}>
+                                    <AxisX
+                                        leftmostLimit={svgXPos}
+                                        axis={xAxis}
+                                        width={boundsWidth}
+                                        height={boundsHeight}
+                                        scale={xScale}
+                                        split={preparedSplit}
+                                        plotRef={plotRef}
+                                    />
+                                </g>
+                            )}
                         </React.Fragment>
                     )}
                     {shapes}

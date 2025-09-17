@@ -31,7 +31,7 @@ type Args = {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
 };
@@ -223,7 +223,7 @@ const createScales = (args: Args) => {
     visibleSeries = visibleSeries.length === 0 ? series : visibleSeries;
 
     return {
-        xScale: createXScale(xAxis, visibleSeries, boundsWidth),
+        xScale: xAxis ? createXScale(xAxis, visibleSeries, boundsWidth) : undefined,
         yScale: yAxis.map((axis, index) => {
             const axisSeries = series.filter((s) => {
                 const seriesAxisIndex = get(s, 'yAxis', 0);

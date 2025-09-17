@@ -70,7 +70,7 @@ type Args = {
     dispatcher: Dispatch<object>;
     series: PreparedSeries[];
     seriesOptions: PreparedSeriesOptions;
-    xAxis: PreparedAxis;
+    xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     xScale?: ChartScale;
     yScale?: ChartScale[];
@@ -108,7 +108,7 @@ export const useShapes = (args: Args) => {
                 const [seriesType, chartSeries] = item;
                 switch (seriesType) {
                     case 'bar-x': {
-                        if (xScale && yScale) {
+                        if (xAxis && xScale && yScale) {
                             const preparedData = await prepareBarXData({
                                 series: chartSeries as PreparedBarXSeries[],
                                 seriesOptions,
@@ -132,7 +132,7 @@ export const useShapes = (args: Args) => {
                         break;
                     }
                     case 'bar-y': {
-                        if (xScale && yScale) {
+                        if (xAxis && xScale && yScale) {
                             const preparedData = await prepareBarYData({
                                 series: chartSeries as PreparedBarYSeries[],
                                 seriesOptions,
@@ -155,7 +155,7 @@ export const useShapes = (args: Args) => {
                         break;
                     }
                     case 'waterfall': {
-                        if (xScale && yScale) {
+                        if (xAxis && xScale && yScale) {
                             const preparedData = await prepareWaterfallData({
                                 series: chartSeries as PreparedWaterfallSeries[],
                                 seriesOptions,
@@ -178,7 +178,7 @@ export const useShapes = (args: Args) => {
                         break;
                     }
                     case 'line': {
-                        if (xScale && yScale) {
+                        if (xAxis && xScale && yScale) {
                             const preparedData = await prepareLineData({
                                 series: chartSeries as PreparedLineSeries[],
                                 xAxis,
@@ -201,7 +201,7 @@ export const useShapes = (args: Args) => {
                         break;
                     }
                     case 'area': {
-                        if (xScale && yScale) {
+                        if (xAxis && xScale && yScale) {
                             const preparedData = await prepareAreaData({
                                 series: chartSeries as PreparedAreaSeries[],
                                 xAxis,
@@ -224,7 +224,7 @@ export const useShapes = (args: Args) => {
                         break;
                     }
                     case 'scatter': {
-                        if (xScale && yScale) {
+                        if (xAxis && xScale && yScale) {
                             const preparedData = prepareScatterData({
                                 series: chartSeries as PreparedScatterSeries[],
                                 xAxis,
