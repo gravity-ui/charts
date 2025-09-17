@@ -1,9 +1,10 @@
 import React from 'react';
 
 import {line, select} from 'd3';
-import type {AxisDomain, AxisScale} from 'd3';
+import type {AxisDomain, AxisScale, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
+import type {AxisPlotBand} from '../../types';
 import {
     block,
     formatAxisTickLabel,
@@ -28,7 +29,8 @@ type Props = {
     height: number;
     scale: ChartScale;
     split: PreparedSplit;
-    plotRef?: React.MutableRefObject<SVGGElement | null>;
+    plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
+    plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
     leftmostLimit?: number;
 };
 
@@ -78,7 +80,16 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 }
 
 export const AxisX = React.memo(function AxisX(props: Props) {
-    const {axis, width, height: totalHeight, scale, split, plotRef, leftmostLimit} = props;
+    const {
+        axis,
+        width,
+        height: totalHeight,
+        scale,
+        split,
+        plotBeforeRef,
+        plotAfterRef,
+        leftmostLimit,
+    } = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
@@ -91,11 +102,18 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             svgElement.selectAll('*').remove();
 
             const plotDataAttr = 'data-plot-x';
-            let plotContainer = null;
 
-            if (plotRef?.current) {
-                plotContainer = select(plotRef.current);
-                plotContainer.selectAll(`[${plotDataAttr}]`).remove();
+            let plotBeforeContainer = null;
+            let plotAfterContainer = null;
+
+            if (plotBeforeRef?.current) {
+                plotBeforeContainer = select(plotBeforeRef.current);
+                plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
+            }
+
+            if (plotAfterRef?.current) {
+                plotAfterContainer = select(plotAfterRef.current);
+                plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
             }
 
             if (!axis.visible) {
@@ -162,91 +180,107 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             }
 
             // add plot bands
-            if (plotContainer && axis.plotBands.length > 0) {
+            if (axis.plotBands.length > 0) {
                 const plotBandDataAttr = 'plot-x-band';
-
-                const plotBandsSelection = plotContainer
-                    .selectAll(`[${plotBandDataAttr}]`)
-                    .data(axis.plotBands)
-                    .join('g')
-                    .attr(plotDataAttr, 1)
-                    .attr(plotBandDataAttr, 1);
-
-                plotBandsSelection
-                    .append('rect')
-                    .attr('x', (band) => {
-                        const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
-                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
-                        const startPos = halfBandwidth + Math.min(from, to);
-
-                        return Math.max(0, startPos);
-                    })
-                    .attr('width', (band) => {
-                        const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
-                        const startPos = width - Math.min(from, to);
-                        const endPos = Math.min(Math.abs(to - from), startPos);
-
-                        return Math.min(endPos, width);
-                    })
-                    .attr('y', 0)
-                    .attr('height', totalHeight)
-                    .attr('fill', (band) => band.color)
-                    .attr('opacity', (band) => band.opacity);
-
-                plotBandsSelection.each((plotBandData, i, nodes) => {
-                    const plotLineSelection = select(nodes[i]);
-
-                    if (plotBandData.layerPlacement === 'before') {
-                        plotLineSelection.lower();
-                    } else {
-                        plotLineSelection.raise();
+                const setPlotBands = (
+                    plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                    plotBands: Required<AxisPlotBand>[],
+                ) => {
+                    if (!plotContainer || !plotBands.length) {
+                        return;
                     }
-                });
+
+                    const plotBandsSelection = plotContainer
+                        .selectAll(`[${plotBandDataAttr}]`)
+                        .remove()
+                        .data(plotBands)
+                        .join('g')
+                        .attr(plotDataAttr, 1)
+                        .attr(plotBandDataAttr, 1);
+
+                    plotBandsSelection
+                        .append('rect')
+                        .attr('x', (band) => {
+                            const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                            const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                            const startPos = halfBandwidth + Math.min(from, to);
+
+                            return Math.max(0, startPos);
+                        })
+                        .attr('width', (band) => {
+                            const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                            const startPos = width - Math.min(from, to);
+                            const endPos = Math.min(Math.abs(to - from), startPos);
+
+                            return Math.min(endPos, width);
+                        })
+                        .attr('y', 0)
+                        .attr('height', totalHeight)
+                        .attr('fill', (band) => band.color)
+                        .attr('opacity', (band) => band.opacity);
+                };
+
+                setPlotBands(
+                    plotBeforeContainer,
+                    axis.plotBands.filter((d) => d.layerPlacement === 'before'),
+                );
+                setPlotBands(
+                    plotAfterContainer,
+                    axis.plotBands.filter((d) => d.layerPlacement === 'after'),
+                );
             }
 
             // add plot lines
-            if (plotContainer && axis.plotLines.length > 0) {
+            if (axis.plotLines.length > 0) {
                 const plotLineDataAttr = 'plot-x-line';
 
-                const plotLinesSelection = plotContainer
-                    .selectAll(`[${plotLineDataAttr}]`)
-                    .data(axis.plotLines)
-                    .join('g')
-                    .attr(plotDataAttr, 1)
-                    .attr(plotLineDataAttr, 1);
-
-                const lineGenerator = line();
-                plotLinesSelection
-                    .append('path')
-                    .attr('d', (plotLine) => {
-                        const plotLineValue = Number(axisScale(plotLine.value));
-                        const points: [number, number][] = [
-                            [plotLineValue, 0],
-                            [plotLineValue, totalHeight],
-                        ];
-
-                        return lineGenerator(points);
-                    })
-                    .attr('stroke', (plotLine) => plotLine.color)
-                    .attr('stroke-width', (plotLine) => plotLine.width)
-                    .attr('stroke-dasharray', (plotLine) =>
-                        getLineDashArray(plotLine.dashStyle, plotLine.width),
-                    )
-                    .attr('opacity', (plotLine) => plotLine.opacity);
-
-                // set layer placement
-                plotLinesSelection.each((plotLineData, i, nodes) => {
-                    const plotLineSelection = select(nodes[i]);
-
-                    if (plotLineData.layerPlacement === 'before') {
-                        plotLineSelection.lower();
-                    } else {
-                        plotLineSelection.raise();
+                const setPlotLines = (
+                    plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                    plotLines: PreparedAxisPlotLine[],
+                ) => {
+                    if (!plotContainer || !plotLines.length) {
+                        return;
                     }
-                });
+
+                    const plotLinesSelection = plotContainer
+                        .selectAll(`[${plotLineDataAttr}]`)
+                        .remove()
+                        .data(plotLines)
+                        .join('g')
+                        .attr(plotDataAttr, 1)
+                        .attr(plotLineDataAttr, 1);
+
+                    const lineGenerator = line();
+                    plotLinesSelection
+                        .append('path')
+                        .attr('d', (plotLine) => {
+                            const plotLineValue = Number(axisScale(plotLine.value));
+                            const points: [number, number][] = [
+                                [plotLineValue, 0],
+                                [plotLineValue, totalHeight],
+                            ];
+
+                            return lineGenerator(points);
+                        })
+                        .attr('stroke', (plotLine) => plotLine.color)
+                        .attr('stroke-width', (plotLine) => plotLine.width)
+                        .attr('stroke-dasharray', (plotLine) =>
+                            getLineDashArray(plotLine.dashStyle, plotLine.width),
+                        )
+                        .attr('opacity', (plotLine) => plotLine.opacity);
+                };
+
+                setPlotLines(
+                    plotBeforeContainer,
+                    axis.plotLines.filter((d) => d.layerPlacement === 'before'),
+                );
+                setPlotLines(
+                    plotAfterContainer,
+                    axis.plotLines.filter((d) => d.layerPlacement === 'after'),
+                );
             }
         })();
-    }, [axis, width, totalHeight, scale, split, plotRef, leftmostLimit]);
+    }, [axis, width, totalHeight, scale, split, leftmostLimit, plotBeforeRef, plotAfterRef]);
 
     return <g ref={ref} />;
 });

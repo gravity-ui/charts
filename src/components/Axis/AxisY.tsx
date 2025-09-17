@@ -3,7 +3,8 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
+import type {AxisPlotBand} from '../../types';
 import {
     block,
     calculateCos,
@@ -33,7 +34,8 @@ type Props = {
     width: number;
     height: number;
     split: PreparedSplit;
-    plotRef?: React.MutableRefObject<SVGGElement | null>;
+    plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
+    plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
     bottomLimit?: number;
 };
 
@@ -149,7 +151,8 @@ export const AxisY = (props: Props) => {
         height: totalHeight,
         scale,
         split,
-        plotRef,
+        plotBeforeRef,
+        plotAfterRef,
         bottomLimit = 0,
     } = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
@@ -166,12 +169,18 @@ export const AxisY = (props: Props) => {
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
 
-        let plotContainer = null;
+        let plotBeforeContainer = null;
+        let plotAfterContainer = null;
         const plotDataAttr = 'data-plot-y';
 
-        if (plotRef?.current) {
-            plotContainer = select(plotRef.current);
-            plotContainer.selectAll(`[${plotDataAttr}]`).remove();
+        if (plotBeforeRef?.current) {
+            plotBeforeContainer = select(plotBeforeRef.current);
+            plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
+        }
+
+        if (plotAfterRef?.current) {
+            plotAfterContainer = select(plotAfterRef.current);
+            plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
         }
 
         const axisSelection = svgElement
@@ -260,87 +269,105 @@ export const AxisY = (props: Props) => {
                     .remove();
             }
 
-            if (plotContainer && d.plotBands.length > 0) {
+            if (d.plotBands.length > 0) {
                 const plotBandDataAttr = `data-plot-y-band-${index}`;
 
-                const plotBandsSelection = plotContainer
-                    .selectAll(`[${plotBandDataAttr}]`)
-                    .data(d.plotBands)
-                    .join('g')
-                    .attr(plotDataAttr, 1)
-                    .attr(plotBandDataAttr, 1)
-                    .style('transform', getAxisPlotsPosition(d, split));
-
-                plotBandsSelection
-                    .append('rect')
-                    .attr('x', 0)
-                    .attr('width', width)
-                    .attr('y', (band) => {
-                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
-                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
-                        const startPos = halfBandwidth + Math.min(from, to);
-
-                        return Math.max(0, startPos);
-                    })
-                    .attr('height', (band) => {
-                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
-                        const startPos = height - Math.min(from, to);
-                        const endPos = Math.min(Math.abs(to - from), startPos);
-
-                        return Math.min(endPos, height);
-                    })
-                    .attr('fill', (band) => band.color)
-                    .attr('opacity', (band) => band.opacity);
-
-                plotBandsSelection.each((plotBandData, i, nodes) => {
-                    const plotLineSelection = select(nodes[i]);
-
-                    if (plotBandData.layerPlacement === 'before') {
-                        plotLineSelection.lower();
-                    } else {
-                        plotLineSelection.raise();
+                const setPlotBands = (
+                    plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                    plotBands: Required<AxisPlotBand>[],
+                ) => {
+                    if (!plotContainer || !plotBands.length) {
+                        return;
                     }
-                });
+
+                    const plotBandsSelection = plotContainer
+                        .selectAll(`[${plotBandDataAttr}]`)
+                        .remove()
+                        .data(plotBands)
+                        .join('g')
+                        .attr(plotDataAttr, 1)
+                        .attr(plotBandDataAttr, 1)
+                        .style('transform', getAxisPlotsPosition(d, split));
+
+                    plotBandsSelection
+                        .append('rect')
+                        .attr('x', 0)
+                        .attr('width', width)
+                        .attr('y', (band) => {
+                            const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                            const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                            const startPos = halfBandwidth + Math.min(from, to);
+
+                            return Math.max(0, startPos);
+                        })
+                        .attr('height', (band) => {
+                            const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                            const startPos = height - Math.min(from, to);
+                            const endPos = Math.min(Math.abs(to - from), startPos);
+
+                            return Math.min(endPos, height);
+                        })
+                        .attr('fill', (band) => band.color)
+                        .attr('opacity', (band) => band.opacity);
+                };
+
+                setPlotBands(
+                    plotBeforeContainer,
+                    d.plotBands.filter((item) => item.layerPlacement === 'before'),
+                );
+                setPlotBands(
+                    plotAfterContainer,
+                    d.plotBands.filter((item) => item.layerPlacement === 'after'),
+                );
             }
 
-            if (plotContainer && d.plotLines.length > 0) {
+            if (d.plotLines.length > 0) {
                 const plotLineDataAttr = `data-plot-y-line-${index}`;
 
-                const plotLinesSelection = plotContainer
-                    .selectAll(`[${plotLineDataAttr}]`)
-                    .data(d.plotLines)
-                    .join('g')
-                    .attr(plotDataAttr, 1)
-                    .attr(plotLineDataAttr, 1)
-                    .style('transform', getAxisPlotsPosition(d, split));
-
-                plotLinesSelection
-                    .append('path')
-                    .attr('d', (plotLine) => {
-                        const plotLineValue = Number(axisScale(plotLine.value));
-                        const points: [number, number][] = [
-                            [0, plotLineValue],
-                            [width, plotLineValue],
-                        ];
-
-                        return lineGenerator(points);
-                    })
-                    .attr('stroke', (plotLine) => plotLine.color)
-                    .attr('stroke-width', (plotLine) => plotLine.width)
-                    .attr('stroke-dasharray', (plotLine) =>
-                        getLineDashArray(plotLine.dashStyle, plotLine.width),
-                    )
-                    .attr('opacity', (plotLine) => plotLine.opacity);
-
-                plotLinesSelection.each((plotLineData, i, nodes) => {
-                    const plotLineSelection = select(nodes[i]);
-
-                    if (plotLineData.layerPlacement === 'before') {
-                        plotLineSelection.lower();
-                    } else {
-                        plotLineSelection.raise();
+                const setPlotLines = (
+                    plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                    plotLines: PreparedAxisPlotLine[],
+                ) => {
+                    if (!plotContainer || !plotLines.length) {
+                        return;
                     }
-                });
+
+                    const plotLinesSelection = plotContainer
+                        .selectAll(`[${plotLineDataAttr}]`)
+                        .remove()
+                        .data(plotLines)
+                        .join('g')
+                        .attr(plotDataAttr, 1)
+                        .attr(plotLineDataAttr, 1)
+                        .style('transform', getAxisPlotsPosition(d, split));
+
+                    plotLinesSelection
+                        .append('path')
+                        .attr('d', (plotLine) => {
+                            const plotLineValue = Number(axisScale(plotLine.value));
+                            const points: [number, number][] = [
+                                [0, plotLineValue],
+                                [width, plotLineValue],
+                            ];
+
+                            return lineGenerator(points);
+                        })
+                        .attr('stroke', (plotLine) => plotLine.color)
+                        .attr('stroke-width', (plotLine) => plotLine.width)
+                        .attr('stroke-dasharray', (plotLine) =>
+                            getLineDashArray(plotLine.dashStyle, plotLine.width),
+                        )
+                        .attr('opacity', (plotLine) => plotLine.opacity);
+                };
+
+                setPlotLines(
+                    plotBeforeContainer,
+                    d.plotLines.filter((item) => item.layerPlacement === 'before'),
+                );
+                setPlotLines(
+                    plotAfterContainer,
+                    d.plotLines.filter((item) => item.layerPlacement === 'after'),
+                );
             }
 
             return axisItem;
@@ -406,7 +433,17 @@ export const AxisY = (props: Props) => {
 
                 return s;
             });
-    }, [allAxes, width, height, scale, split, bottomLimit, plotRef, lineGenerator]);
+    }, [
+        allAxes,
+        width,
+        height,
+        scale,
+        split,
+        bottomLimit,
+        lineGenerator,
+        plotBeforeRef,
+        plotAfterRef,
+    ]);
 
     return <g ref={ref} className={b('container')} />;
 };

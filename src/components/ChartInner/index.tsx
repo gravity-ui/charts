@@ -21,7 +21,8 @@ export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const htmlLayerRef = React.useRef<HTMLDivElement | null>(null);
-    const plotRef = React.useRef<SVGGElement | null>(null);
+    const plotBeforeRef = React.useRef<SVGGElement | null>(null);
+    const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const {
         boundsHeight,
@@ -77,7 +78,7 @@ export const ChartInner = (props: ChartInnerProps) => {
 
     useCrosshair({
         split: preparedSplit,
-        plotElement: plotRef.current,
+        plotElement: plotAfterRef.current,
         boundsOffsetLeft,
         boundsOffsetTop,
         width: boundsWidth,
@@ -135,7 +136,6 @@ export const ChartInner = (props: ChartInnerProps) => {
                     width={boundsWidth}
                     height={boundsHeight}
                     transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
-                    ref={plotRef}
                 >
                     {xScale && yScale?.length && (
                         <React.Fragment>
@@ -146,7 +146,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                                 height={boundsHeight}
                                 scale={yScale}
                                 split={preparedSplit}
-                                plotRef={plotRef}
+                                plotBeforeRef={plotBeforeRef}
+                                plotAfterRef={plotAfterRef}
                             />
                             {xAxis && (
                                 <g transform={`translate(0, ${boundsHeight})`}>
@@ -157,13 +158,16 @@ export const ChartInner = (props: ChartInnerProps) => {
                                         height={boundsHeight}
                                         scale={xScale}
                                         split={preparedSplit}
-                                        plotRef={plotRef}
+                                        plotBeforeRef={plotBeforeRef}
+                                        plotAfterRef={plotAfterRef}
                                     />
                                 </g>
                             )}
                         </React.Fragment>
                     )}
+                    <g ref={plotBeforeRef} />
                     {shapes}
+                    <g ref={plotAfterRef} />
                 </g>
                 {preparedLegend?.enabled && legendConfig && (
                     <Legend
