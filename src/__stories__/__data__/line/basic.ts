@@ -31,6 +31,11 @@ function prepareData(): ChartData {
                 text: 'Release dates',
             },
         },
+        chart: {
+            zoom: {
+                type: 'x',
+            },
+        },
     };
 }
 
