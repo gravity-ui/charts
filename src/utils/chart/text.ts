@@ -142,6 +142,8 @@ function renderLabels(
     return text;
 }
 
+// since we don't know in advance the font that will be used for the text,
+// we need to wait for it and only then we can count all the sizes.
 export async function getLabelsSize({
     labels,
     style,
