@@ -102,33 +102,36 @@ export async function axisBottom(args: AxisBottomArgs) {
             tickPath.lineTo(0, end);
         });
 
-        selection
+        selection.selectAll('.tick').remove();
+
+        const ticks = selection
             .selectAll('.tick')
             .data(values)
             .order()
-            .join((el) => {
-                const tick = el.append('g').attr('class', 'tick');
-                tick.append('path')
-                    .attr('d', tickPath.toString())
-                    .attr('stroke', tickColor ?? 'currentColor');
-                tick.append('text')
-                    .text(labelFormat)
-                    .attr('fill', 'currentColor')
-                    .attr('text-anchor', () => {
-                        if (rotation) {
-                            return rotation > 0 ? 'start' : 'end';
-                        }
-                        return 'middle';
-                    })
-                    .style('transform', transform)
-                    .style('dominant-baseline', 'text-after-edge');
-
-                return tick;
-            })
+            .join('g')
+            .attr('class', 'tick')
             .attr('transform', function (d) {
                 const left = position(d as AxisDomain) + offset;
                 return `translate(${left}, ${top})`;
             });
+
+        ticks
+            .append('path')
+            .attr('d', tickPath.toString())
+            .attr('stroke', tickColor ?? 'currentColor');
+        ticks
+            .append('text')
+            .text(labelFormat)
+            .style('font-size', labelsStyle?.fontSize || '')
+            .attr('fill', 'currentColor')
+            .attr('text-anchor', () => {
+                if (rotation) {
+                    return rotation > 0 ? 'start' : 'end';
+                }
+                return 'middle';
+            })
+            .style('transform', transform)
+            .style('dominant-baseline', 'text-after-edge');
 
         // Remove tick that has the same x coordinate like domain
         selection
@@ -211,8 +214,6 @@ export async function axisBottom(args: AxisBottomArgs) {
         }
 
         const {size: domainSize, color: domainColor} = domain;
-        selection
-            .call(addDomain, {size: domainSize, color: domainColor})
-            .style('font-size', labelsStyle?.fontSize || '');
+        selection.call(addDomain, {size: domainSize, color: domainColor});
     };
 }
