@@ -3,10 +3,10 @@ import type {ChartSeries} from '../../types';
 
 export function hasAtLeastOneSeriesDataPerPlot(
     seriesData: ChartSeries[],
-    yAxises: PreparedAxis[] = [],
+    yAxes: PreparedAxis[] = [],
 ) {
     const hasDataMap = new Map<number, boolean>();
-    yAxises.forEach((yAxis) => {
+    yAxes.forEach((yAxis) => {
         const plotIndex = yAxis.plotIndex ?? 0;
         if (!hasDataMap.has(plotIndex)) {
             hasDataMap.set(plotIndex, false);
@@ -24,7 +24,7 @@ export function hasAtLeastOneSeriesDataPerPlot(
             yAxisIndex = seriesDataChunk.yAxis;
         }
 
-        const yAxis = yAxises[yAxisIndex];
+        const yAxis = yAxes[yAxisIndex];
         const plotIndex = yAxis?.plotIndex ?? 0;
 
         if (!hasDataMap.get(plotIndex)) {

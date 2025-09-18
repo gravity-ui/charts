@@ -76,6 +76,8 @@ type Args = {
     yScale?: ChartScale[];
     split: PreparedSplit;
     htmlLayout: HTMLElement | null;
+    clipPathId: string;
+    isOutsideBounds: (x: number, y: number) => boolean;
 };
 
 export const useShapes = (args: Args) => {
@@ -91,6 +93,8 @@ export const useShapes = (args: Args) => {
         yScale,
         split,
         htmlLayout,
+        clipPathId,
+        isOutsideBounds,
     } = args;
 
     const [shapesElemens, setShapesElements] = React.useState<React.ReactElement[]>([]);
@@ -125,6 +129,7 @@ export const useShapes = (args: Args) => {
                                     seriesOptions={seriesOptions}
                                     preparedData={preparedData}
                                     htmlLayout={htmlLayout}
+                                    clipPathId={clipPathId}
                                 />,
                             );
                             shapesData.push(...preparedData);
@@ -148,6 +153,7 @@ export const useShapes = (args: Args) => {
                                     seriesOptions={seriesOptions}
                                     preparedData={preparedData}
                                     htmlLayout={htmlLayout}
+                                    clipPathId={clipPathId}
                                 />,
                             );
                             shapesData.push(...preparedData);
@@ -171,6 +177,7 @@ export const useShapes = (args: Args) => {
                                     seriesOptions={seriesOptions}
                                     preparedData={preparedData}
                                     htmlLayout={htmlLayout}
+                                    clipPathId={clipPathId}
                                 />,
                             );
                             shapesData.push(...preparedData);
@@ -186,6 +193,7 @@ export const useShapes = (args: Args) => {
                                 yAxis,
                                 yScale,
                                 split,
+                                isOutsideBounds,
                             });
                             shapes.push(
                                 <LineSeriesShapes
@@ -194,6 +202,7 @@ export const useShapes = (args: Args) => {
                                     seriesOptions={seriesOptions}
                                     preparedData={preparedData}
                                     htmlLayout={htmlLayout}
+                                    clipPathId={clipPathId}
                                 />,
                             );
                             shapesData.push(...preparedData);
@@ -209,6 +218,7 @@ export const useShapes = (args: Args) => {
                                 yAxis,
                                 yScale,
                                 boundsHeight,
+                                isOutsideBounds,
                             });
                             shapes.push(
                                 <AreaSeriesShapes
@@ -217,6 +227,7 @@ export const useShapes = (args: Args) => {
                                     seriesOptions={seriesOptions}
                                     preparedData={preparedData}
                                     htmlLayout={htmlLayout}
+                                    clipPathId={clipPathId}
                                 />,
                             );
                             shapesData.push(...preparedData);
@@ -231,6 +242,7 @@ export const useShapes = (args: Args) => {
                                 xScale,
                                 yAxis,
                                 yScale,
+                                isOutsideBounds,
                             });
                             shapes.push(
                                 <ScatterSeriesShape
@@ -342,6 +354,8 @@ export const useShapes = (args: Args) => {
         xScale,
         yAxis,
         yScale,
+        clipPathId,
+        isOutsideBounds,
     ]);
 
     React.useEffect(() => {

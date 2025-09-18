@@ -29,6 +29,9 @@ export function renderMarker<T extends MarkerData>(
         .append('path')
         .attr('class', haloClassName)
         .attr('d', (d) => {
+            if ('clipped' in d && d.clipped) {
+                return null;
+            }
             const series = d.point.series;
             const type = series.marker.states.normal.symbol;
             const radius = get(d.point.data, 'radius', series.marker.states.hover.radius);
@@ -74,6 +77,9 @@ export function setMarker<T extends BaseType, D extends MarkerData>(
 ) {
     selection
         .attr('d', (d) => {
+            if ('clipped' in d && d.clipped) {
+                return null;
+            }
             const series = d.point.series;
             const type = series.marker.states.normal.symbol;
             const radius = get(d.point.data, 'radius', series.marker.states[state].radius);

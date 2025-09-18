@@ -27,10 +27,11 @@ type Args = {
     preparedData: PreparedWaterfallData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    clipPathId: string;
 };
 
 export const WaterfallSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
+    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
     const hoveredDataRef = React.useRef<PreparedWaterfallData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement | null>(null);
     const connectorSelector = `.${b('connector')}`;
@@ -167,7 +168,7 @@ export const WaterfallSeriesShapes = (args: Args) => {
 
     return (
         <React.Fragment>
-            <g ref={ref} className={b()} />
+            <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
             <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

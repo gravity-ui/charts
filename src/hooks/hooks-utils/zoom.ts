@@ -69,9 +69,9 @@ export function getZoomedSeriesData(args: {
     seriesData: ChartSeries[];
     zoomState: Partial<ZoomState>;
     xAxis?: ChartXAxis;
-    yAxises?: ChartYAxis[];
+    yAxes?: ChartYAxis[];
 }): ChartSeries[] {
-    const {seriesData, xAxis, yAxises, zoomState} = args;
+    const {seriesData, xAxis, yAxes, zoomState} = args;
 
     if (Object.keys(zoomState).length < 0) {
         return seriesData;
@@ -101,7 +101,7 @@ export function getZoomedSeriesData(args: {
                 const [yMin, yMax] = zoomState.y[yAxisIndex];
                 const y = 'y' in point ? point.y : undefined;
                 inYRange = isValueInRange({
-                    axis: yAxises?.[yAxisIndex],
+                    axis: yAxes?.[yAxisIndex],
                     value: y,
                     min: yMin,
                     max: yMax,
