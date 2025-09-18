@@ -159,7 +159,14 @@ export async function getLabelsSize({
         return {maxHeight: 0, maxWidth: 0};
     }
 
-    const container = select(document.body).append('div');
+    const container = select(document.body)
+        .append('div')
+        .style('visibility', 'hidden')
+        .style('position', 'absolute')
+        .style('top', '-200vw')
+        .style('left', '-200vwx')
+        .style('width', '100vw')
+        .style('height', '100vh');
     const result = {maxHeight: 0, maxWidth: 0};
     let labelWrapper: HTMLElement | null;
 

@@ -226,6 +226,8 @@ export const Legend = (props: Props) => {
 
             const svgElement = select(ref.current);
             svgElement.selectAll('*').remove();
+            svgElement.style('opacity', 0);
+
             const htmlElement = select(htmlLayout);
             htmlElement.selectAll('[data-legend]').remove();
             const htmlContainer = legend.html
@@ -434,9 +436,12 @@ export const Legend = (props: Props) => {
                     }
                 }
 
+                const legendTitleClassname = b('title');
+
+                svgElement.selectAll(`.${legendTitleClassname}`).remove();
                 svgElement
                     .append('g')
-                    .attr('class', b('title'))
+                    .attr('class', legendTitleClassname)
                     .append('text')
                     .attr('dx', dx)
                     .attr('font-weight', legend.title.style.fontWeight ?? null)
@@ -453,7 +458,9 @@ export const Legend = (props: Props) => {
                 contentWidth: legendWidth,
             });
 
-            svgElement.attr('transform', `translate(${[left, config.offset.top].join(',')})`);
+            svgElement
+                .attr('transform', `translate(${[left, config.offset.top].join(',')})`)
+                .style('opacity', 1);
             htmlContainer?.style('transform', `translate(${left}px, ${config.offset.top}px)`);
         }
 
