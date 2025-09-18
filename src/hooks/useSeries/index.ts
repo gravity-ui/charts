@@ -44,6 +44,10 @@ export const useSeries = (args: Args) => {
     }, [legend, seriesData]);
 
     const [preparedSeries, setPreparedSeries] = React.useState<PreparedSeries[]>([]);
+    const [activeLegendItems, setActiveLegendItems] = React.useState(
+        getActiveLegendItems(preparedSeries),
+    );
+
     React.useEffect(() => {
         (async () => {
             const seriesNames = getSeriesNames(seriesData);
@@ -72,15 +76,14 @@ export const useSeries = (args: Args) => {
             }
 
             setPreparedSeries(acc);
+            setActiveLegendItems(getActiveLegendItems(acc));
         })();
     }, [seriesData, seriesOptions, preparedLegend, colors]);
 
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(seriesOptions);
     }, [seriesOptions]);
-    const [activeLegendItems, setActiveLegendItems] = React.useState(
-        getActiveLegendItems(preparedSeries),
-    );
+
     const prevOriginalSeriesData = usePrevious(originalSeriesData);
     const chartSeries = React.useMemo<PreparedSeries[]>(() => {
         return preparedSeries.map((singleSeries) => {
