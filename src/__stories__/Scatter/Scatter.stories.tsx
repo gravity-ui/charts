@@ -3,6 +3,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {scatterBasicData, scatterPlaygroundData, scatterTimestampData} from '../__data__';
+import {scatterContinuousLegendData} from '../__data__/scatter/continuous-legend';
 
 const meta: Meta<typeof Chart> = {
     title: 'Scatter',
@@ -26,6 +27,13 @@ export const ScatterTimestamp = {
     name: 'Timestamp',
     args: {
         data: scatterTimestampData,
+    },
+} satisfies Story;
+
+export const ScatterContinuousLegend = {
+    name: 'Continuous legend',
+    args: {
+        data: scatterContinuousLegendData,
     },
 } satisfies Story;
 

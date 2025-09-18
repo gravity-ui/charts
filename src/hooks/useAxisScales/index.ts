@@ -34,6 +34,8 @@ type Args = {
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
+    hasZoomX?: boolean;
+    hasZoomY?: boolean;
 };
 
 type ReturnValue = {
@@ -149,6 +151,7 @@ export function createXScale(
     axis: PreparedAxis | ChartAxis,
     series: (PreparedSeries | ChartSeries)[],
     boundsWidth: number,
+    hasZoomX?: boolean,
 ) {
     const xMin = get(axis, 'min');
     const xMax = getDefaultMaxXAxisValue(series);
@@ -172,7 +175,13 @@ export function createXScale(
                     typeof xMax === 'number' ? Math.max(xMax, domainXMax) : domainXMax;
 
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
-                return scaleFn().domain([xMinValue, xMaxValue]).range(xRange).nice();
+                const scale = scaleFn().domain([xMinValue, xMaxValue]).range(xRange);
+
+                if (!hasZoomX) {
+                    scale.nice();
+                }
+
+                return scale;
             }
 
             break;
@@ -198,13 +207,25 @@ export function createXScale(
         case 'datetime': {
             if (xTimestamps) {
                 const [xMin, xMax] = extent(xTimestamps) as [number, number];
-                return scaleUtc().domain([xMin, xMax]).range(xRange).nice();
+                const scale = scaleUtc().domain([xMin, xMax]).range(xRange);
+
+                if (!hasZoomX) {
+                    scale.nice();
+                }
+
+                return scale;
             } else {
                 const domain = getDomainDataXBySeries(series);
 
                 if (isNumericalArrayData(domain)) {
                     const [xMin, xMax] = extent(domain) as [number, number];
-                    return scaleUtc().domain([xMin, xMax]).range(xRange).nice();
+                    const scale = scaleUtc().domain([xMin, xMax]).range(xRange);
+
+                    if (!hasZoomX) {
+                        scale.nice();
+                    }
+
+                    return scale;
                 }
             }
 
@@ -216,14 +237,14 @@ export function createXScale(
 }
 
 const createScales = (args: Args) => {
-    const {boundsWidth, boundsHeight, series, xAxis, yAxis, split} = args;
+    const {boundsWidth, boundsHeight, series, xAxis, yAxis, split, hasZoomX} = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
     visibleSeries = visibleSeries.length === 0 ? series : visibleSeries;
 
     return {
-        xScale: xAxis ? createXScale(xAxis, visibleSeries, boundsWidth) : undefined,
+        xScale: xAxis ? createXScale(xAxis, visibleSeries, boundsWidth, hasZoomX) : undefined,
         yScale: yAxis.map((axis, index) => {
             const axisSeries = series.filter((s) => {
                 const seriesAxisIndex = get(s, 'yAxis', 0);
@@ -244,7 +265,7 @@ const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {boundsWidth, boundsHeight, series, xAxis, yAxis, split} = args;
+    const {boundsWidth, boundsHeight, series, xAxis, yAxis, split, hasZoomX, hasZoomY} = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: ChartScale[] | undefined;
@@ -258,9 +279,11 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 xAxis,
                 yAxis,
                 split,
+                hasZoomX,
+                hasZoomY,
             }));
         }
 
         return {xScale, yScale};
-    }, [boundsWidth, boundsHeight, series, xAxis, yAxis, split]);
+    }, [boundsWidth, boundsHeight, series, xAxis, yAxis, split, hasZoomX, hasZoomY]);
 };

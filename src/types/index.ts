@@ -23,6 +23,7 @@ export * from './chart/series';
 export * from './chart/split';
 export * from './chart/title';
 export * from './chart/tooltip';
+export * from './chart/zoom';
 export * from './chart/halo';
 export * from './chart/treemap';
 export * from './chart/waterfall';
