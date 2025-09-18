@@ -7,6 +7,7 @@ type PointData = {
     opacity: number | null;
     data: ScatterSeriesData;
     series: PreparedScatterSeries;
+    color: string;
 };
 
 export type MarkerData = {

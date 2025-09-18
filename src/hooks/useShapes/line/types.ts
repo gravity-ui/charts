@@ -7,6 +7,7 @@ export type PointData = {
     y: number;
     data: LineSeriesData;
     series: PreparedLineSeries;
+    color?: string;
 };
 
 export type MarkerData = {

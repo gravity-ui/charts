@@ -24,6 +24,7 @@ export type PointData = {
     y: number;
     data: RadarSeriesData;
     series: PreparedRadarSeries;
+    color?: string;
 };
 
 export type RadarMarkerData = {
