@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0](https://github.com/gravity-ui/charts/compare/v1.9.0...v1.10.0) (2025-09-18)
+
+
+### Features
+
+* add basic zoom feature ([#145](https://github.com/gravity-ui/charts/issues/145)) ([2cf2010](https://github.com/gravity-ui/charts/commit/2cf20103833ef6d8c38516863ea08c11417ab847))
+
+
+### Bug Fixes
+
+* add waiting time for font loading when calculating text size ([#151](https://github.com/gravity-ui/charts/issues/151)) ([a73471a](https://github.com/gravity-ui/charts/commit/a73471a3e16e2f06c428baf4d99095c8371c03df))
+* scatter marker color ([#152](https://github.com/gravity-ui/charts/issues/152)) ([a047bc7](https://github.com/gravity-ui/charts/commit/a047bc7cf7244bfc8b30078428b89e8eb630aceb))
+
 ## [1.9.0](https://github.com/gravity-ui/charts/compare/v1.8.0...v1.9.0) (2025-09-08)
 
 
