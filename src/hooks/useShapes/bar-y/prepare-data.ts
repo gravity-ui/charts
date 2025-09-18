@@ -71,7 +71,7 @@ function getBandWidth(series: PreparedBarYSeries[], yAxis: PreparedAxis[], yScal
     return bandWidth;
 }
 
-function setLabel(prepared: PreparedBarYData) {
+async function setLabel(prepared: PreparedBarYData) {
     const dataLabels = prepared.series.dataLabels;
     if (!dataLabels.enabled) {
         return;
@@ -79,7 +79,7 @@ function setLabel(prepared: PreparedBarYData) {
 
     const data = prepared.data;
     const content = getFormattedValue({value: data.label || data.x, ...dataLabels});
-    const {maxHeight: height, maxWidth: width} = getLabelsSize({
+    const {maxHeight: height, maxWidth: width} = await getLabelsSize({
         labels: [content],
         style: dataLabels.style,
         html: dataLabels.html,
@@ -110,14 +110,14 @@ function setLabel(prepared: PreparedBarYData) {
     }
 }
 
-export const prepareBarYData = (args: {
+export const prepareBarYData = async (args: {
     series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
-}): PreparedBarYData[] => {
+}): Promise<PreparedBarYData[]> => {
     const {
         series,
         seriesOptions,
@@ -220,9 +220,11 @@ export const prepareBarYData = (args: {
         });
     });
 
-    result.forEach((d) => {
-        setLabel(d);
-    });
+    await Promise.all(
+        result.map(async (d) => {
+            await setLabel(d);
+        }),
+    );
 
     return result;
 };

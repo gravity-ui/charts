@@ -18,7 +18,7 @@ interface UseZoomProps {
     plotContainerWidth: number;
     preparedSplit: PreparedSplit;
     preparedZoom: PreparedZoom | null;
-    xAxis: PreparedAxis;
+    xAxis: PreparedAxis | null;
     xScale?: ChartScale;
     yAxis: PreparedAxis[];
     yScale?: ChartScale[];

@@ -6,7 +6,7 @@ import type {BarYSeries, ChartSeriesOptions} from '../../types';
 import {getLabelsSize, getUniqId} from '../../utils';
 import {getFormattedValue} from '../../utils/chart/format';
 
-import type {PreparedBarYSeries, PreparedLegend, PreparedSeries} from './types';
+import type {PreparedBarYSeries, PreparedLegend} from './types';
 import {getSeriesStackId, prepareLegendSymbol} from './utils';
 
 type PrepareBarYSeriesArgs = {
@@ -16,14 +16,14 @@ type PrepareBarYSeriesArgs = {
     seriesOptions?: ChartSeriesOptions;
 };
 
-function prepareDataLabels(series: BarYSeries) {
+async function prepareDataLabels(series: BarYSeries) {
     const enabled = get(series, 'dataLabels.enabled', false);
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
     const labels = enabled
         ? series.data.map((d) => getFormattedValue({value: d.x || d.label, ...series.dataLabels}))
         : [];
-    const {maxHeight = 0, maxWidth = 0} = getLabelsSize({
+    const {maxHeight = 0, maxWidth = 0} = await getLabelsSize({
         labels,
         style,
         html,
@@ -41,29 +41,31 @@ function prepareDataLabels(series: BarYSeries) {
     };
 }
 
-export function prepareBarYSeries(args: PrepareBarYSeriesArgs): PreparedSeries[] {
+export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
 
-    return seriesList.map<PreparedBarYSeries>((series) => {
-        const name = series.name || '';
-        const color = series.color || colorScale(name);
+    return Promise.all(
+        seriesList.map<Promise<PreparedBarYSeries>>(async (series) => {
+            const name = series.name || '';
+            const color = series.color || colorScale(name);
 
-        return {
-            type: series.type,
-            color,
-            name,
-            id: getUniqId(),
-            visible: get(series, 'visible', true),
-            legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
-            },
-            data: series.data.filter((d) => d.x !== null),
-            stacking: series.stacking,
-            stackId: getSeriesStackId(series),
-            dataLabels: prepareDataLabels(series),
-            cursor: get(series, 'cursor', null),
-            borderRadius: series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
-        };
-    }, []);
+            return {
+                type: series.type,
+                color,
+                name,
+                id: getUniqId(),
+                visible: get(series, 'visible', true),
+                legend: {
+                    enabled: get(series, 'legend.enabled', legend.enabled),
+                    symbol: prepareLegendSymbol(series),
+                },
+                data: series.data.filter((d) => d.x !== null),
+                stacking: series.stacking,
+                stackId: getSeriesStackId(series),
+                dataLabels: await prepareDataLabels(series),
+                cursor: get(series, 'cursor', null),
+                borderRadius: series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
+            };
+        }),
+    );
 }

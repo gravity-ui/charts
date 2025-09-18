@@ -9,13 +9,13 @@ import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, PointData, PreparedLineData} from './types';
 
-function getLabelData(point: PointData, series: PreparedLineSeries, xMax: number) {
+async function getLabelData(point: PointData, series: PreparedLineSeries, xMax: number) {
     const text = getFormattedValue({
         value: point.data.label || point.data.y,
         ...series.dataLabels,
     });
     const style = series.dataLabels.style;
-    const size = getLabelsSize({labels: [text], style});
+    const size = await getLabelsSize({labels: [text], style});
 
     const labelData: LabelData = {
         text,
@@ -41,9 +41,13 @@ function getLabelData(point: PointData, series: PreparedLineSeries, xMax: number
     return labelData;
 }
 
-function getHtmlLabel(point: PointData, series: PreparedLineSeries, xMax: number): HtmlItem {
+async function getHtmlLabel(
+    point: PointData,
+    series: PreparedLineSeries,
+    xMax: number,
+): Promise<HtmlItem> {
     const content = String(point.data.label || point.data.y);
-    const size = getLabelsSize({labels: [content], html: true});
+    const size = await getLabelsSize({labels: [content], html: true});
 
     return {
         x: Math.min(xMax - size.maxWidth, Math.max(0, point.x)),
@@ -54,19 +58,21 @@ function getHtmlLabel(point: PointData, series: PreparedLineSeries, xMax: number
     };
 }
 
-export const prepareLineData = (args: {
+export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
     split: PreparedSplit;
-}): PreparedLineData[] => {
+}): Promise<PreparedLineData[]> => {
     const {series, xAxis, yAxis, xScale, yScale, split} = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax / (1 - xAxis.maxPadding);
 
-    return series.reduce<PreparedLineData[]>((acc, s) => {
+    const acc: PreparedLineData[] = [];
+    for (let i = 0; i < series.length; i++) {
+        const s = series[i];
         const yAxisIndex = s.yAxis;
         const seriesYAxis = yAxis[yAxisIndex];
         const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
@@ -83,9 +89,10 @@ export const prepareLineData = (args: {
         let labels: LabelData[] = [];
         if (s.dataLabels.enabled) {
             if (s.dataLabels.html) {
-                htmlElements.push(...points.map((p) => getHtmlLabel(p, s, xMax)));
+                const list = await Promise.all(points.map((p) => getHtmlLabel(p, s, xMax)));
+                htmlElements.push(...list);
             } else {
-                labels = points.map<LabelData>((p) => getLabelData(p, s, xMax));
+                labels = await Promise.all(points.map((p) => getLabelData(p, s, xMax)));
             }
         }
 
@@ -115,7 +122,7 @@ export const prepareLineData = (args: {
         };
 
         acc.push(result);
+    }
 
-        return acc;
-    }, []);
+    return acc;
 };

@@ -28,14 +28,14 @@ import {prepareTreemap} from './prepare-treemap';
 import {prepareWaterfallSeries} from './prepare-waterfall';
 import type {PreparedLegend, PreparedSeries} from './types';
 
-export function prepareSeries(args: {
+export async function prepareSeries(args: {
     type: ChartSeries['type'];
     series: ChartSeries[];
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
     colors: string[];
     colorScale: ScaleOrdinal<string, string>;
-}): PreparedSeries[] {
+}): Promise<PreparedSeries[]> {
     const {type, series, seriesOptions, legend, colors, colorScale} = args;
 
     switch (type) {
@@ -61,7 +61,7 @@ export function prepareSeries(args: {
             });
         }
         case 'bar-y': {
-            return prepareBarYSeries({
+            return await prepareBarYSeries({
                 series: series as BarYSeries[],
                 legend,
                 colorScale,

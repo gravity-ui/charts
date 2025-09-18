@@ -24,7 +24,7 @@ const DEFAULT_PADDING = 1;
 
 type LabelItem = HtmlItem | TreemapLabelData;
 
-function getLabels(args: {
+async function getLabels(args: {
     data: HierarchyRectangularNode<TreemapSeriesData>[];
     options: PreparedTreemapSeries['dataLabels'];
 }) {
@@ -34,7 +34,11 @@ function getLabels(args: {
     } = args;
 
     const getTextSize = getTextSizeFn({style});
-    return data.reduce<LabelItem[]>((acc, d) => {
+    const acc: LabelItem[] = [];
+
+    for (let index = 0; index < data.length; index++) {
+        const d = data[index];
+
         const texts = Array.isArray(d.data.name) ? d.data.name : [d.data.name];
         const left = d.x0 + padding;
         const right = d.x1 - padding;
@@ -42,13 +46,16 @@ function getLabels(args: {
         let availableSpaceHeight = Math.max(0, d.y1 - d.y0 - padding);
 
         let prevLabelsHeight = 0;
-        texts.forEach((text) => {
+
+        for (let i = 0; i < texts.length; i++) {
+            const text = texts[i];
+
             const label = getFormattedValue({value: text, ...args.options});
             let labelMaxHeight = 0;
             let labelMaxWidth = 0;
             if (html) {
                 const size =
-                    getLabelsSize({
+                    (await getLabelsSize({
                         labels: [label],
                         style: {
                             ...style,
@@ -56,11 +63,11 @@ function getLabels(args: {
                             maxHeight: `${availableSpaceHeight}px`,
                         },
                         html,
-                    }) ?? {};
+                    })) ?? {};
                 labelMaxHeight = size.maxHeight;
                 labelMaxWidth = size.maxWidth;
             } else {
-                const size = getTextSize(label);
+                const size = await getTextSize(label);
                 labelMaxHeight = size.height;
                 labelMaxWidth = size.width;
             }
@@ -71,7 +78,7 @@ function getLabels(args: {
             const labelHeight = Math.min(labelMaxHeight, availableSpaceHeight);
 
             if (!labelWidth || y > d.y1) {
-                return;
+                continue;
             }
 
             switch (align) {
@@ -91,7 +98,7 @@ function getLabels(args: {
 
             const bottom = y + labelMaxHeight;
             if (!html && bottom > d.y1) {
-                return;
+                continue;
             }
 
             const item: LabelItem = html
@@ -102,9 +109,9 @@ function getLabels(args: {
                       size: {width: labelWidth, height: labelHeight},
                   }
                 : {
-                      text: getTextWithElipsis({
+                      text: await getTextWithElipsis({
                           text: label,
-                          getTextWidth: (s) => getTextSize(s).width,
+                          getTextWidth: (s) => getTextSize(s).then((value) => value.width),
                           maxWidth: labelWidth,
                       }),
                       x,
@@ -115,17 +122,17 @@ function getLabels(args: {
             acc.push(item);
             prevLabelsHeight += labelHeight;
             availableSpaceHeight = Math.max(0, availableSpaceHeight - labelHeight);
-        });
+        }
+    }
 
-        return acc;
-    }, []);
+    return acc;
 }
 
-export function prepareTreemapData(args: {
+export async function prepareTreemapData(args: {
     series: PreparedTreemapSeries;
     width: number;
     height: number;
-}): PreparedTreemapData {
+}): Promise<PreparedTreemapData> {
     const {series, width, height} = args;
 
     const parentNodeValues: Record<string, number> = {};
@@ -202,7 +209,8 @@ export function prepareTreemapData(args: {
 
     if (series.dataLabels?.enabled) {
         const {html, style: dataLabelsStyle} = series.dataLabels;
-        const labels = getLabels({data: leaves, options: series.dataLabels});
+        const labels = await getLabels({data: leaves, options: series.dataLabels});
+
         if (html) {
             const htmlItems = labels.map(
                 (l) =>

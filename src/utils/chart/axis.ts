@@ -81,13 +81,13 @@ export function getAxisHeight(args: {split: PreparedSplit; boundsHeight: number}
     return boundsHeight;
 }
 
-export function getAxisTitleRows(args: {axis: PreparedAxis; textMaxWidth: number}) {
+export async function getAxisTitleRows(args: {axis: PreparedAxis; textMaxWidth: number}) {
     const {axis, textMaxWidth} = args;
     if (axis.title.maxRowCount < 1) {
         return [];
     }
 
-    const textRows = wrapText({
+    const textRows = await wrapText({
         text: axis.title.text,
         style: axis.title.style,
         width: textMaxWidth,

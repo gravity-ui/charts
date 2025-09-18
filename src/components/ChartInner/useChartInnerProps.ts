@@ -2,6 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
+import type {PreparedAxis} from '../../hooks';
 import {
     useAxisScales,
     useChartDimensions,
@@ -34,6 +35,7 @@ export function useChartInnerProps(props: Props) {
     const prevHeight = usePrevious(height);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const {chart, title, tooltip, colors} = useChartOptions({data});
+
     const zoomedSeriesData = React.useMemo(() => {
         return getZoomedSeriesData({
             seriesData: data.series.data,
@@ -42,19 +44,21 @@ export function useChartInnerProps(props: Props) {
             zoomState,
         });
     }, [data.series.data, data.xAxis, data.yAxis, zoomState]);
-    const xAxis = React.useMemo(
-        () => getPreparedXAxis({xAxis: data.xAxis, width, seriesData: zoomedSeriesData}),
-        [data.xAxis, zoomedSeriesData, width],
-    );
-    const yAxis = React.useMemo(
-        () =>
-            getPreparedYAxis({
-                seriesData: zoomedSeriesData,
-                yAxis: data.yAxis,
-                height,
-            }),
-        [data.yAxis, height, zoomedSeriesData],
-    );
+
+    const [xAxis, setXAxis] = React.useState<PreparedAxis | null>(null);
+    React.useEffect(() => {
+        getPreparedXAxis({xAxis: data.xAxis, width, seriesData: zoomedSeriesData}).then((val) =>
+            setXAxis(val),
+        );
+    }, [data.xAxis, width, zoomedSeriesData]);
+
+    const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
+    React.useEffect(() => {
+        getPreparedYAxis({yAxis: data.yAxis, height, seriesData: zoomedSeriesData}).then((val) =>
+            setYAxis(val),
+        );
+    }, [data.yAxis, height, zoomedSeriesData]);
+
     const {
         legendItems,
         legendConfig,

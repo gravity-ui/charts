@@ -10,7 +10,7 @@ import {usePrevious} from '../usePrevious';
 import {getLegendComponents, getPreparedLegend} from './prepare-legend';
 import {getPreparedOptions} from './prepare-options';
 import {prepareSeries} from './prepareSeries';
-import type {OnLegendItemClick, PreparedSeries} from './types';
+import type {OnLegendItemClick, PreparedLegend, PreparedSeries} from './types';
 import {getActiveLegendItems, getAllLegendItems} from './utils';
 
 type Args = {
@@ -37,38 +37,53 @@ export const useSeries = (args: Args) => {
         seriesOptions,
         colors,
     } = args;
-    const preparedLegend = React.useMemo(
-        () => getPreparedLegend({legend, series: seriesData}),
-        [legend, seriesData],
-    );
-    const preparedSeries = React.useMemo<PreparedSeries[]>(() => {
-        const seriesNames = getSeriesNames(seriesData);
-        const colorScale = scaleOrdinal(seriesNames, colors);
-        const groupedSeries = group(seriesData, (item) => item.type);
 
-        return Array.from(groupedSeries).reduce<PreparedSeries[]>(
-            (acc, [seriesType, seriesList]) => {
+    const [preparedLegend, setPreparedLegend] = React.useState<PreparedLegend | null>(null);
+    React.useEffect(() => {
+        getPreparedLegend({legend, series: seriesData}).then((value) => setPreparedLegend(value));
+    }, [legend, seriesData]);
+
+    const [preparedSeries, setPreparedSeries] = React.useState<PreparedSeries[]>([]);
+    const [activeLegendItems, setActiveLegendItems] = React.useState(
+        getActiveLegendItems(preparedSeries),
+    );
+
+    React.useEffect(() => {
+        (async () => {
+            const seriesNames = getSeriesNames(seriesData);
+            const colorScale = scaleOrdinal(seriesNames, colors);
+            const groupedSeries = group(seriesData, (item) => item.type);
+
+            const acc: PreparedSeries[] = [];
+
+            if (!preparedLegend) {
+                return;
+            }
+
+            const list = Array.from(groupedSeries);
+            for (let i = 0; i < list.length; i++) {
+                const [seriesType, seriesList] = list[i];
                 acc.push(
-                    ...prepareSeries({
+                    ...(await prepareSeries({
                         type: seriesType,
                         series: seriesList,
                         seriesOptions,
                         legend: preparedLegend,
                         colorScale,
                         colors,
-                    }),
+                    })),
                 );
-                return acc;
-            },
-            [],
-        );
+            }
+
+            setPreparedSeries(acc);
+            setActiveLegendItems(getActiveLegendItems(acc));
+        })();
     }, [seriesData, seriesOptions, preparedLegend, colors]);
+
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(seriesOptions);
     }, [seriesOptions]);
-    const [activeLegendItems, setActiveLegendItems] = React.useState(
-        getActiveLegendItems(preparedSeries),
-    );
+
     const prevOriginalSeriesData = usePrevious(originalSeriesData);
     const chartSeries = React.useMemo<PreparedSeries[]>(() => {
         return preparedSeries.map((singleSeries) => {
@@ -83,6 +98,10 @@ export const useSeries = (args: Args) => {
         });
     }, [preparedSeries, activeLegendItems]);
     const {legendConfig, legendItems} = React.useMemo(() => {
+        if (!preparedLegend) {
+            return {legendConfig: undefined, legendItems: []};
+        }
+
         return getLegendComponents({
             chartHeight,
             chartMargin,

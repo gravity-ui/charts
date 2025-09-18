@@ -142,7 +142,9 @@ function renderLabels(
     return text;
 }
 
-export function getLabelsSize({
+// since we don't know in advance the font that will be used for the text,
+// we need to wait for it and only then we can count all the sizes.
+export async function getLabelsSize({
     labels,
     style,
     rotation,
@@ -171,21 +173,23 @@ export function getLabelsSize({
             .style('max-width', style?.maxWidth ?? '')
             .style('max-height', style?.maxHeight ?? '')
             .node();
-        const {height, width} = labels.reduce(
-            (acc, l) => {
-                if (labelWrapper) {
-                    labelWrapper.innerHTML = l;
-                }
 
-                const rect = labelWrapper?.getBoundingClientRect();
+        let height = 0;
+        let width = 0;
 
-                return {
-                    width: Math.max(acc.width, rect?.width ?? 0),
-                    height: Math.max(acc.height, rect?.height ?? 0),
-                };
-            },
-            {height: 0, width: 0},
-        );
+        for (let i = 0; i < labels.length; i++) {
+            const l = labels[i];
+            if (labelWrapper) {
+                labelWrapper.innerHTML = l;
+            }
+
+            await document.fonts.ready;
+
+            const rect = labelWrapper?.getBoundingClientRect();
+
+            width = Math.max(width, rect?.width ?? 0);
+            height = Math.max(height, rect?.height ?? 0);
+        }
 
         result.maxWidth = width;
         result.maxHeight = height;
@@ -198,6 +202,7 @@ export function getLabelsSize({
                 .style('transform', `rotate(${rotation}deg)`);
         }
 
+        await document.fonts.ready;
         const rect = (svg.select('g').node() as Element)?.getBoundingClientRect();
         result.maxWidth = rect?.width ?? 0;
         result.maxHeight = rect?.height ?? 0;
@@ -210,18 +215,26 @@ export function getLabelsSize({
 
 export type TextRow = {text: string; y: number};
 
-export function wrapText(args: {text: string; style?: BaseTextStyle; width: number}): TextRow[] {
+export async function wrapText(args: {
+    text: string;
+    style?: BaseTextStyle;
+    width: number;
+}): Promise<TextRow[]> {
     const {text, style, width} = args;
 
-    const height = getLabelsSize({
-        labels: [text],
-        style: style,
-    }).maxHeight;
+    const height = (
+        await getLabelsSize({
+            labels: [text],
+            style: style,
+        })
+    ).maxHeight;
     // @ts-ignore
     const segmenter = new Intl.Segmenter([], {granularity: 'word'});
     const segments = Array.from(segmenter.segment(text));
 
-    return segments.reduce<TextRow[]>((acc, s) => {
+    const acc: TextRow[] = [];
+    for (let i = 0; i < segments.length; i++) {
+        const s = segments[i];
         const item = s as {isWordLike: boolean; segment: string};
         if (!acc.length) {
             acc.push({
@@ -234,10 +247,12 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
 
         if (
             item.isWordLike &&
-            getLabelsSize({
-                labels: [lastRow.text + item.segment],
-                style,
-            }).maxWidth > width
+            (
+                await getLabelsSize({
+                    labels: [lastRow.text + item.segment],
+                    style,
+                })
+            ).maxWidth > width
         ) {
             lastRow = {
                 text: '',
@@ -247,9 +262,9 @@ export function wrapText(args: {text: string; style?: BaseTextStyle; width: numb
         }
 
         lastRow.text += item.segment;
+    }
 
-        return acc;
-    }, []);
+    return acc;
 }
 
 const entityMap = {
@@ -271,26 +286,29 @@ function unescapeHtml(str: string) {
 
 export function getTextSizeFn({style}: {style: BaseTextStyle}) {
     const map: Record<string, {width: number; height: number}> = {};
-    const setSymbolSize = (s: string) => {
+    const setSymbolSize = async (s: string) => {
         const labels = [s === ' ' ? '&nbsp;' : s];
-        const size = getLabelsSize({
+        const size = await getLabelsSize({
             labels,
             style,
         });
         map[s] = {width: size.maxWidth, height: size.maxHeight};
     };
 
-    return (str: string) => {
+    return async (str: string) => {
         let width = 0;
         let height = 0;
-        [...unescapeHtml(str)].forEach((s) => {
+
+        const symbols = unescapeHtml(str);
+        for (let i = 0; i < symbols.length; i++) {
+            const s = symbols[i];
             if (!map[s]) {
-                setSymbolSize(s);
+                await setSymbolSize(s);
             }
 
             width += map[s].width;
             height = Math.max(height, map[s].height);
-        });
+        }
 
         return {width, height};
     };
@@ -298,16 +316,16 @@ export function getTextSizeFn({style}: {style: BaseTextStyle}) {
 
 // We ignore an inaccuracy of less than a pixel.
 // To do this, we round the font size down when comparing it, and the size of the allowed space up.
-export function getTextWithElipsis({
+export async function getTextWithElipsis({
     text: originalText,
     getTextWidth,
     maxWidth,
 }: {
     text: string;
-    getTextWidth: (s: string) => number;
+    getTextWidth: (s: string) => number | Promise<number>;
     maxWidth: number;
 }) {
-    let textWidth = Math.floor(getTextWidth(originalText));
+    let textWidth = Math.floor(await getTextWidth(originalText));
     const textMaxWidth = Math.ceil(maxWidth);
 
     if (textWidth <= textMaxWidth) {
@@ -317,7 +335,7 @@ export function getTextWithElipsis({
     let text = originalText + '…';
     while (textWidth > textMaxWidth && text.length > 2) {
         text = text.slice(0, -2) + '…';
-        textWidth = Math.floor(getTextWidth(text));
+        textWidth = Math.floor(await getTextWidth(text));
     }
 
     if (textWidth > textMaxWidth) {

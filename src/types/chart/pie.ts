@@ -95,5 +95,5 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
      *
      * @return BaseType
      * */
-    renderCustomShape?: (args: {series: {innerRadius: number}}) => BaseType;
+    renderCustomShape?: (args: {series: {innerRadius: number}}) => BaseType | Promise<BaseType>;
 }

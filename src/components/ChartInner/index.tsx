@@ -23,8 +23,10 @@ const b = block('chart');
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
-    const plotRef = React.useRef<SVGGElement | null>(null);
     const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
+    const plotRef = React.useRef<SVGGElement | null>(null);
+    const plotBeforeRef = React.useRef<SVGGElement | null>(null);
+    const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const {
         boundsHeight,
@@ -82,7 +84,7 @@ export const ChartInner = (props: ChartInnerProps) => {
 
     useCrosshair({
         split: preparedSplit,
-        plotElement: plotRef.current,
+        plotElement: plotAfterRef.current,
         boundsOffsetLeft,
         boundsOffsetTop,
         width: boundsWidth,
@@ -153,24 +155,30 @@ export const ChartInner = (props: ChartInnerProps) => {
                                 height={boundsHeight}
                                 scale={yScale}
                                 split={preparedSplit}
-                                plotRef={plotRef}
+                                plotBeforeRef={plotBeforeRef}
+                                plotAfterRef={plotAfterRef}
                             />
-                            <g transform={`translate(0, ${boundsHeight})`}>
-                                <AxisX
-                                    leftmostLimit={svgXPos}
-                                    axis={xAxis}
-                                    width={boundsWidth}
-                                    height={boundsHeight}
-                                    scale={xScale}
-                                    split={preparedSplit}
-                                    plotRef={plotRef}
-                                />
-                            </g>
+                            {xAxis && (
+                                <g transform={`translate(0, ${boundsHeight})`}>
+                                    <AxisX
+                                        leftmostLimit={svgXPos}
+                                        axis={xAxis}
+                                        width={boundsWidth}
+                                        height={boundsHeight}
+                                        scale={xScale}
+                                        split={preparedSplit}
+                                        plotBeforeRef={plotBeforeRef}
+                                        plotAfterRef={plotAfterRef}
+                                    />
+                                </g>
+                            )}
                         </React.Fragment>
                     )}
+                    <g ref={plotBeforeRef} />
                     {shapes}
+                    <g ref={plotAfterRef} />
                 </g>
-                {preparedLegend.enabled && (
+                {preparedLegend?.enabled && legendConfig && (
                     <Legend
                         chartSeries={preparedSeries}
                         boundsWidth={boundsWidth}

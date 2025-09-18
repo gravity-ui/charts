@@ -8,7 +8,7 @@ import {DefaultContent} from './DefaultContent';
 
 export interface ChartTooltipContentProps {
     hovered?: TooltipDataChunk[];
-    xAxis?: ChartXAxis;
+    xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     renderer?: ChartTooltip['renderer'];
     valueFormat?: ChartTooltip['valueFormat'];
