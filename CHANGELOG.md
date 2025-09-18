@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/gravity-ui/charts/compare/v1.10.0...v1.10.1) (2025-09-18)
+
+
+### Bug Fixes
+
+* correct text calculations for a custom font ([#154](https://github.com/gravity-ui/charts/issues/154)) ([ef0a283](https://github.com/gravity-ui/charts/commit/ef0a2833a246ae40b052883680d80e62c6ce5abd))
+
 ## [1.10.0](https://github.com/gravity-ui/charts/compare/v1.9.0...v1.10.0) (2025-09-18)
 
 

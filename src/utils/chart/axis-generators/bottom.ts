@@ -80,13 +80,16 @@ export async function axisBottom(args: AxisBottomArgs) {
     ).maxHeight;
 
     return function (selection: Selection<SVGGElement, unknown, null, undefined>) {
+        selection.selectAll('.tick, .domain').remove();
+
         const rect = selection.node()?.getBoundingClientRect();
         const x = rect?.x || 0;
 
         const right = x + domain.size;
         const top = -(tickItems?.[0]?.[0] ?? 0);
 
-        let transform = `translate(0, ${labelHeight + labelsMargin - top}px)`;
+        const translateY = labelHeight + labelsMargin - top;
+        let transform = `translate(0, ${translateY}px)`;
         if (rotation) {
             const labelsOffsetTop = labelHeight * calculateCos(rotation) + labelsMargin - top;
             let labelsOffsetLeft = calculateSin(rotation) * labelHeight;
@@ -101,8 +104,6 @@ export async function axisBottom(args: AxisBottomArgs) {
             tickPath.moveTo(0, start);
             tickPath.lineTo(0, end);
         });
-
-        selection.selectAll('.tick').remove();
 
         const ticks = selection
             .selectAll('.tick')
@@ -201,11 +202,8 @@ export async function axisBottom(args: AxisBottomArgs) {
                         const remainSpace =
                             right - (prevElementPosition?.right || 0) - labelsPaddings;
 
-                        const translateX = currentElementPosition.width / 2 - lackingSpace;
-                        text.attr('text-anchor', 'end').attr(
-                            'transform',
-                            `translate(${translateX},0)`,
-                        );
+                        const translateX = -lackingSpace;
+                        text.style('transform', `translate(${translateX}px,${translateY}px)`);
 
                         setEllipsisForOverflowText(text, remainSpace);
                     }

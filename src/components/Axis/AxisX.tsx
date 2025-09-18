@@ -157,9 +157,11 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             // add an axis header if necessary
             if (axis.title.text) {
                 const titleRows = await getAxisTitleRows({axis, textMaxWidth: width});
+                const titleClassName = b('title');
+                svgElement.selectAll(`.${titleClassName}`).remove();
                 svgElement
                     .append('text')
-                    .attr('class', b('title'))
+                    .attr('class', titleClassName)
                     .attr('transform', () => {
                         const {x, y} = getTitlePosition({axis, width, rowCount: titleRows.length});
                         return `translate(${x}, ${y})`;
