@@ -50,7 +50,6 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
             .data(preparedData, shapeKey)
             .join('g')
             .call(renderMarker)
-            .attr('fill', (d) => d.point.data.color || d.point.series.color || '')
             .attr('opacity', (d) => d.point.opacity)
             .attr('cursor', (d) => d.point.series.cursor);
 

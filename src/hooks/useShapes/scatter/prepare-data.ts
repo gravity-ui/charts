@@ -38,6 +38,7 @@ export const prepareScatterData = (args: {
                     x: getXValue({point: d, xAxis, xScale}),
                     y: getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale}),
                     opacity: get(d, 'opacity', null),
+                    color: d.color ?? s.color,
                 },
                 hovered: false,
                 active: true,

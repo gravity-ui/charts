@@ -35,7 +35,7 @@ export function renderMarker<T extends MarkerData>(
             const haloSize = series.marker.states.hover.halo.size;
             return getMarkerSymbol(type, radius + haloSize);
         })
-        .attr('fill', (d) => d.point.series.color)
+        .attr('fill', (d) => d.point.color ?? d.point.series.color)
         .attr('opacity', (d) => d.point.series.marker.states.hover.halo.opacity)
         .attr('z-index', -1)
         .attr('visibility', getMarkerHaloVisibility);
@@ -43,7 +43,7 @@ export function renderMarker<T extends MarkerData>(
         .append('path')
         .attr('class', symbolClassName)
         .call(setMarker, 'normal')
-        .attr('fill', (d) => d.point.series.color);
+        .attr('fill', (d) => d.point.color ?? d.point.series.color);
 
     return markerSelection;
 }
