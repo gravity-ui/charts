@@ -21,7 +21,7 @@ test.describe('Line series', () => {
     });
 
     test('Logarithmic Y axis', async ({mount}) => {
-        const data = {
+        const data: ChartData = {
             yAxis: [
                 {
                     type: 'logarithmic',
@@ -40,7 +40,7 @@ test.describe('Line series', () => {
                     },
                 ],
             },
-        } as ChartData;
+        };
 
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -52,7 +52,7 @@ test.describe('Line series', () => {
     });
 
     test('Vertical line tooltip', async ({mount}) => {
-        const data = {
+        const data: ChartData = {
             series: {
                 data: [
                     {
@@ -65,10 +65,16 @@ test.describe('Line series', () => {
                     },
                 ],
             },
-        } as ChartData;
+        };
 
         const component = await mount(<ChartTestStory data={data} />);
-        await component.locator('.gcharts-line').hover();
+        const line = component.locator('.gcharts-line');
+        await line.hover({force: true, position: {x: 0, y: 0}});
+        await expect(component.locator('svg')).toHaveScreenshot();
+        const boundingBox = await line.boundingBox();
+        // 20 - reserved space for point with marker
+        const y = typeof boundingBox?.height === 'number' ? boundingBox.height - 20 : 0;
+        await line.hover({force: true, position: {x: 0, y}});
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

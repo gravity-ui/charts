@@ -65,7 +65,8 @@ function getClosestYIndex(items: ShapePoint[], y: number) {
 function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     const sorted = sort(points, (p) => p.x);
     const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
-    if (closestXIndex === -1) {
+
+    if (sorted.length === 0 || closestXIndex === -1) {
         return [];
     }
 

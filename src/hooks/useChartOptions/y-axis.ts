@@ -30,14 +30,14 @@ import type {
 
 import type {PreparedAxis} from './types';
 
-const getAxisLabelMaxWidth = (args: {axis: PreparedAxis; series: ChartSeries[]}) => {
-    const {axis, series} = args;
+const getAxisLabelMaxWidth = (args: {axis: PreparedAxis; seriesData: ChartSeries[]}) => {
+    const {axis, seriesData} = args;
 
     if (!axis.labels.enabled) {
         return 0;
     }
 
-    const scale = createYScale(axis, series as PreparedSeries[], 1);
+    const scale = createYScale(axis, seriesData as PreparedSeries[], 1);
     const ticks: AxisDomain[] = getScaleTicks(scale as AxisScale<AxisDomain>);
 
     // FIXME: it is necessary to filter data, since we do not draw overlapping ticks
@@ -58,14 +58,14 @@ const getAxisLabelMaxWidth = (args: {axis: PreparedAxis; series: ChartSeries[]})
     }).maxWidth;
 };
 
-function getAxisMin(axis?: ChartYAxis, series?: ChartSeries[]) {
+function getAxisMin(axis?: ChartYAxis, seriesData?: ChartSeries[]) {
     const min = axis?.min;
 
     if (
         typeof min === 'undefined' &&
-        series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))
+        seriesData?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))
     ) {
-        return series.reduce((minValue, s) => {
+        return seriesData.reduce((minValue, s) => {
             switch (s.type) {
                 case 'waterfall': {
                     const minSubTotal = s.data.reduce(
@@ -94,18 +94,18 @@ function getAxisMin(axis?: ChartYAxis, series?: ChartSeries[]) {
 }
 
 export const getPreparedYAxis = ({
-    series,
+    seriesData,
     yAxis,
     height,
 }: {
-    series: ChartSeries[];
+    seriesData: ChartSeries[];
     yAxis: ChartYAxis[] | undefined;
     height: number;
 }): PreparedAxis[] => {
     const axisByPlot: ChartYAxis[][] = [];
     const axisItems = yAxis || [{} as ChartYAxis];
 
-    const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
+    const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
     if (!hasAxisRelatedSeries) {
         return [];
     }
@@ -172,7 +172,7 @@ export const getPreparedYAxis = ({
                 align: get(axisItem, 'title.align', yAxisTitleDefaults.align),
                 maxRowCount: titleMaxRowsCount,
             },
-            min: getAxisMin(axisItem, series),
+            min: getAxisMin(axisItem, seriesData),
             maxPadding: get(axisItem, 'maxPadding', 0.05),
             grid: {
                 enabled: get(
@@ -219,7 +219,7 @@ export const getPreparedYAxis = ({
         };
 
         if (labelsEnabled) {
-            preparedAxis.labels.width = getAxisLabelMaxWidth({axis: preparedAxis, series});
+            preparedAxis.labels.width = getAxisLabelMaxWidth({axis: preparedAxis, seriesData});
         }
 
         return preparedAxis;

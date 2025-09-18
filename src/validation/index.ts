@@ -22,7 +22,7 @@ type XYSeries = ScatterSeries | BarXSeries | BarYSeries | LineSeries | AreaSerie
 
 const AVAILABLE_SERIES_TYPES = Object.values(SeriesType);
 
-const validateXYSeries = (args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) => {
+function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {series, xAxis, yAxis = []} = args;
 
     const yAxisIndex = get(series, 'yAxis', 0);
@@ -118,13 +118,13 @@ const validateXYSeries = (args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
             }
         }
     });
-};
+}
 
-const validateAxisPlotValues = (args: {
+function validateAxisPlotValues(args: {
     series: XYSeries;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
-}) => {
+}) {
     const {series, xAxis, yAxis = []} = args;
 
     const yAxisIndex = get(series, 'yAxis', 0);
@@ -283,9 +283,9 @@ const validateAxisPlotValues = (args: {
             }
         }
     });
-};
+}
 
-const validatePieSeries = ({series}: {series: PieSeries}) => {
+function validatePieSeries({series}: {series: PieSeries}) {
     series.data.forEach(({value}) => {
         if (typeof value !== 'number') {
             throw new ChartError({
@@ -294,9 +294,9 @@ const validatePieSeries = ({series}: {series: PieSeries}) => {
             });
         }
     });
-};
+}
 
-const validateStacking = ({series}: {series: AreaSeries | BarXSeries | BarYSeries}) => {
+function validateStacking({series}: {series: AreaSeries | BarXSeries | BarYSeries}) {
     const availableStackingValues = ['normal', 'percent'];
 
     if (series.stacking && !availableStackingValues.includes(series.stacking)) {
@@ -308,9 +308,9 @@ const validateStacking = ({series}: {series: AreaSeries | BarXSeries | BarYSerie
             }),
         });
     }
-};
+}
 
-const validateTreemapSeries = ({series}: {series: TreemapSeries}) => {
+function validateTreemapSeries({series}: {series: TreemapSeries}) {
     const parentIds: Record<string, boolean> = {};
     series.data.forEach((d) => {
         if (d.parentId && !parentIds[d.parentId]) {
@@ -343,9 +343,9 @@ const validateTreemapSeries = ({series}: {series: TreemapSeries}) => {
             });
         }
     });
-};
+}
 
-const validateSeries = (args: {series: ChartSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) => {
+function validateSeries(args: {series: ChartSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {series, xAxis, yAxis} = args;
 
     if (!AVAILABLE_SERIES_TYPES.includes(series.type)) {
@@ -380,9 +380,9 @@ const validateSeries = (args: {series: ChartSeries; xAxis?: ChartXAxis; yAxis?: 
             validateTreemapSeries({series});
         }
     }
-};
+}
 
-const countSeriesByType = (args: {series: ChartSeries[]; type: ChartSeries['type']}) => {
+function countSeriesByType(args: {series: ChartSeries[]; type: ChartSeries['type']}) {
     const {series, type} = args;
     let count = 0;
 
@@ -393,9 +393,9 @@ const countSeriesByType = (args: {series: ChartSeries[]; type: ChartSeries['type
     });
 
     return count;
-};
+}
 
-export const validateData = (data?: ChartData) => {
+export function validateData(data?: ChartData) {
     if (isEmpty(data) || isEmpty(data.series) || isEmpty(data.series.data)) {
         throw new ChartError({
             code: CHART_ERROR_CODE.NO_DATA,
@@ -425,4 +425,4 @@ export const validateData = (data?: ChartData) => {
     data.series.data.forEach((series) => {
         validateSeries({series, yAxis: data.yAxis, xAxis: data.xAxis});
     });
-};
+}

@@ -11,35 +11,49 @@ import {
     useShapes,
     useSplit,
 } from '../../hooks';
+import {getZoomedSeriesData} from '../../hooks/hooks-utils';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
+import {useZoom} from '../../hooks/useZoom';
+import type {ZoomState} from '../../hooks/useZoom/types';
 
 import type {ChartInnerProps} from './types';
+import {hasAtLeastOneSeriesDataPerPlot} from './utils';
 
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     svgContainer: SVGGElement | null;
+    plotNode: SVGGElement | null;
 };
 
 export function useChartInnerProps(props: Props) {
-    const {width, height, data, dispatcher, htmlLayout, svgContainer} = props;
+    const {width, height, data, dispatcher, htmlLayout, svgContainer, plotNode} = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
+    const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const {chart, title, tooltip, colors} = useChartOptions({data});
+    const zoomedSeriesData = React.useMemo(() => {
+        return getZoomedSeriesData({
+            seriesData: data.series.data,
+            xAxis: data.xAxis,
+            yAxises: data.yAxis,
+            zoomState,
+        });
+    }, [data.series.data, data.xAxis, data.yAxis, zoomState]);
     const xAxis = React.useMemo(
-        () => getPreparedXAxis({xAxis: data.xAxis, width, series: data.series.data}),
-        [data, width],
+        () => getPreparedXAxis({xAxis: data.xAxis, width, seriesData: zoomedSeriesData}),
+        [data.xAxis, zoomedSeriesData, width],
     );
     const yAxis = React.useMemo(
         () =>
             getPreparedYAxis({
-                series: data.series.data,
+                seriesData: zoomedSeriesData,
                 yAxis: data.yAxis,
                 height,
             }),
-        [data, height],
+        [data.yAxis, height, zoomedSeriesData],
     );
     const {
         legendItems,
@@ -52,10 +66,12 @@ export function useChartInnerProps(props: Props) {
         chartWidth: width,
         chartHeight: height,
         chartMargin: chart.margin,
-        series: data.series,
-        legend: data.legend,
-        preparedYAxis: yAxis,
         colors,
+        legend: data.legend,
+        originalSeriesData: data.series.data,
+        seriesData: zoomedSeriesData,
+        seriesOptions: data.series.options,
+        preparedYAxis: yAxis,
     });
     const {boundsWidth, boundsHeight} = useChartDimensions({
         width,
@@ -70,6 +86,8 @@ export function useChartInnerProps(props: Props) {
     const {xScale, yScale} = useAxisScales({
         boundsWidth,
         boundsHeight,
+        hasZoomX: Boolean(zoomState.x),
+        hasZoomY: Boolean(zoomState.y),
         series: preparedSeries,
         xAxis,
         yAxis,
@@ -88,6 +106,38 @@ export function useChartInnerProps(props: Props) {
         split: preparedSplit,
         htmlLayout,
     });
+
+    const handleAttemptToSetZoomState = React.useCallback(
+        (nextZoomState: Partial<ZoomState>) => {
+            const nextZoomedSeriesData = getZoomedSeriesData({
+                seriesData: zoomedSeriesData,
+                xAxis: data.xAxis,
+                yAxises: data.yAxis,
+                zoomState: nextZoomState,
+            });
+
+            const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, yAxis);
+
+            if (hasData) {
+                setZoomState(nextZoomState);
+            }
+        },
+        [data.xAxis, data.yAxis, yAxis, zoomedSeriesData],
+    );
+
+    useZoom({
+        node: plotNode,
+        onUpdate: handleAttemptToSetZoomState,
+        plotContainerHeight: boundsHeight,
+        plotContainerWidth: boundsWidth,
+        preparedSplit,
+        preparedZoom: chart.zoom,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+    });
+
     const boundsOffsetTop = chart.margin.top;
     // We need to calculate the width of each left axis because the first axis can be hidden
     const boundsOffsetLeft =
@@ -104,6 +154,11 @@ export function useChartInnerProps(props: Props) {
         }, 0);
 
     const {x, bottom} = svgContainer?.getBoundingClientRect() ?? {};
+
+    const handleZoomReset = React.useCallback(() => {
+        setZoomState({});
+    }, []);
+
     return {
         svgBottomPos: bottom,
         svgXPos: x,
@@ -112,6 +167,7 @@ export function useChartInnerProps(props: Props) {
         boundsOffsetTop,
         boundsWidth,
         handleLegendItemClick,
+        handleZoomReset: Object.keys(zoomState).length > 0 ? handleZoomReset : undefined,
         legendConfig,
         legendItems,
         preparedLegend,
