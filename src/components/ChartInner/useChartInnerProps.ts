@@ -34,12 +34,8 @@ export function useChartInnerProps(props: Props) {
     const prevHeight = usePrevious(height);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const {chart, title, tooltip, colors} = useChartOptions({data});
-    // const {preparedSeries, preparedSeriesOptions} = useSeries({colors, seriesData, seriesOptions})
-    // Этот хук будет возвращать preparedZoomedSeries
-    // Переносим сортировку в useSeries (пока только для area)
     const zoomedSeriesData = React.useMemo(() => {
         return getZoomedSeriesData({
-            // Сюда передаем preparedSeries
             seriesData: data.series.data,
             xAxis: data.xAxis,
             yAxises: data.yAxis,
@@ -59,9 +55,6 @@ export function useChartInnerProps(props: Props) {
             }),
         [data.yAxis, height, zoomedSeriesData],
     );
-    // - Убираем отсюда получение legendItems, legendConfig, preparedLegend
-    // - Убираем отсюда аргументы yAxis, chartWidth, chartHeight, chartMargin, legend
-    // - Вызываем сразу после useChartOptions
     const {
         legendItems,
         legendConfig,
@@ -80,7 +73,6 @@ export function useChartInnerProps(props: Props) {
         seriesOptions: data.series.options,
         preparedYAxis: yAxis,
     });
-    // Тут получаем legendItems, legendConfig через новый хук useLegend
     const {boundsWidth, boundsHeight} = useChartDimensions({
         width,
         height,
@@ -101,7 +93,6 @@ export function useChartInnerProps(props: Props) {
         yAxis,
         split: preparedSplit,
     });
-    // в итоге тут имеем preparedSeries и preparedZoomedSeries
     const {shapes, shapesData} = useShapes({
         boundsWidth,
         boundsHeight,

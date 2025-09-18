@@ -15,7 +15,7 @@ export interface ChartZoom {
      * If no type is specified, a default will be chosen based on the series.
      *
      * Supported zoom types by series type:
-     * - `Area`, `Line`, `Scatter`, `Waterfall`: `x`, `y`, `xy`
+     * - `Area`, `Line`, `Scatter`: `x`, `y`, `xy`
      * - `BarX`: `x`
      * - `BarY`: `y`
      *
