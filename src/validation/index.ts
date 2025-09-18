@@ -12,7 +12,6 @@ import type {
     ChartSeries,
     ChartXAxis,
     ChartYAxis,
-    ChartZoom,
     LineSeries,
     PieSeries,
     ScatterSeries,
@@ -22,7 +21,6 @@ import type {
 type XYSeries = ScatterSeries | BarXSeries | BarYSeries | LineSeries | AreaSeries;
 
 const AVAILABLE_SERIES_TYPES = Object.values(SeriesType);
-const AVAILABLE_ZOOM_TYPES: ChartZoom['type'][] = ['x', 'y', 'xy'];
 
 function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {series, xAxis, yAxis = []} = args;
@@ -397,21 +395,6 @@ function countSeriesByType(args: {series: ChartSeries[]; type: ChartSeries['type
     return count;
 }
 
-function validateZoom(zoom?: ChartZoom) {
-    if (!zoom) {
-        return;
-    }
-
-    if (!zoom.type || !AVAILABLE_ZOOM_TYPES.includes(zoom.type)) {
-        throw new ChartError({
-            code: CHART_ERROR_CODE.INVALID_OPTION_TYPE,
-            message: i18n('error', 'label_zoom-type-not-defined', {
-                types: AVAILABLE_ZOOM_TYPES.join(', '),
-            }),
-        });
-    }
-}
-
 export function validateData(data?: ChartData) {
     if (isEmpty(data) || isEmpty(data.series) || isEmpty(data.series.data)) {
         throw new ChartError({
@@ -419,8 +402,6 @@ export function validateData(data?: ChartData) {
             message: i18n('error', 'label_no-data'),
         });
     }
-
-    validateZoom(data.chart?.zoom);
 
     if (data.series.data.some((s) => isEmpty(s.data))) {
         throw new ChartError({

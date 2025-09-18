@@ -24,7 +24,7 @@ type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' 
         maxWidth: number;
     };
 
-export type PreparedZoom = DeepRequired<ChartZoom>;
+export type PreparedZoom = DeepRequired<Omit<ChartZoom, 'enabled'>>;
 
 export type PreparedChart = {
     margin: ChartMargin;

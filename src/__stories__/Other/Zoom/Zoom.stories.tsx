@@ -21,7 +21,7 @@ export const ZoomX = {
             ...lineTwoYAxisData,
             chart: {
                 zoom: {
-                    type: 'x',
+                    enabled: true,
                 },
             },
         },
@@ -35,7 +35,7 @@ export const ZoomY = {
             ...barYStakingNormalData,
             chart: {
                 zoom: {
-                    type: 'y',
+                    enabled: true,
                 },
             },
         },
@@ -49,6 +49,7 @@ export const ZoomXY = {
             ...scatterBasicData,
             chart: {
                 zoom: {
+                    enabled: true,
                     type: 'xy',
                 },
             },

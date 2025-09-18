@@ -1,9 +1,12 @@
 .gcharts-brush {
+    --gcharts-brush-color: rgba(51, 92, 173, 0.25);
+
     &:not([data-gc-brush-pressed='true']) .overlay {
         cursor: default;
     }
 
     & .selection {
+        fill: var(--gcharts-brush-color);
         stroke: none;
     }
 }

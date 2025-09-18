@@ -70,7 +70,6 @@ export function useBrush(props: UseBrushProps) {
             if (brushOptions) {
                 brushGroupSelection
                     .selectAll('.selection')
-                    .attr('fill', brushOptions.style.fill)
                     .attr('fill-opacity', brushOptions.style.fillOpacity);
             }
 

@@ -1,15 +1,19 @@
 /**
- * x - [280.203125, 698.203125] ([x0, x1])
- * y - [28, 160] ([y1, y0])
- * xy - [[0, 14]] [493.203125, 236.5] ([[x0, y1], [x1, y0]])
+ * Defines the zoom state for the chart.
  */
-
-/**
- * [x0, x1] where x0 & x1 are:
- * -
- */
-
 export interface ZoomState {
+    /**
+     * The range for the X-axis.
+     * The first element is the minimum value on the axis (if the axis type is `linear`, `logarithmic`, or `datetime`)
+     * or the category index from the categories array specified in the axis settings (if the axis type is `category`).
+     * The second element is the corresponding maximum value.
+     */
     x: [number, number];
+    /**
+     * An array of ranges for the Y-axes.
+     * For each range, the first element is the minimum value on the axis (if the axis type is `linear`, `logarithmic`, or `datetime`)
+     * or the category index from the categories array specified in the axis settings (if the axis type is `category`).
+     * The second element is the corresponding maximum value.
+     */
     y: [number, number][];
 }
