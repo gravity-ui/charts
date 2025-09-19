@@ -613,4 +613,26 @@ test.describe('Pie series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component).toHaveScreenshot();
     });
+
+    test('Custom font family', async ({mount}) => {
+        const chartData: ChartData = {
+            title: {text: 'Chart title'},
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        data: new Array(5)
+                            .fill(null)
+                            .map((_, index) => ({name: String(index), value: index + 1})),
+                    },
+                ],
+            },
+        };
+
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{fontFamily: '"Dancing Script"'}} />,
+        );
+
+        await expect(component).toHaveScreenshot();
+    });
 });

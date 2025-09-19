@@ -208,6 +208,10 @@ export const AxisY = (props: Props) => {
             });
             yAxisGenerator(axisItem);
 
+            // because the standard generator interrupts the desired font
+            // https://github.com/d3/d3-axis/blob/main/src/axis.js#L110
+            axisItem.attr('font-family', null);
+
             if (d.labels.enabled) {
                 const labels = axisItem.selectAll<SVGTextElement, string>('.tick text');
                 const tickTexts = labels
