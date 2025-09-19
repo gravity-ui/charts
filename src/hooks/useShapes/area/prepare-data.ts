@@ -1,4 +1,4 @@
-import {group, sort} from 'd3';
+import {group} from 'd3';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getLeftPosition} from '../../../utils';
@@ -69,7 +69,7 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedAxis, xScale: C
         }, []);
     }
 
-    return sort(Array.from(xValues), ([_x, xValue]) => xValue);
+    return Array.from(xValues);
 }
 
 export const prepareAreaData = async (args: {
