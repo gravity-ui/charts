@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/gravity-ui/charts/compare/v1.11.0...v1.11.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* custom font issues ([#164](https://github.com/gravity-ui/charts/issues/164)) ([9672214](https://github.com/gravity-ui/charts/commit/9672214cd51bc0403e658d49ab48be3d8f05a481))
+
 ## [1.11.0](https://github.com/gravity-ui/charts/compare/v1.10.2...v1.11.0) (2025-09-19)
 
 
