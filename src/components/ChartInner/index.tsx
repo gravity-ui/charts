@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {ArrowRotateLeft} from '@gravity-ui/icons';
-import {Button, ButtonIcon} from '@gravity-ui/uikit';
+import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
 import {EventType, block, getDispatcher} from '../../utils';
@@ -28,6 +28,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotBeforeRef = React.useRef<SVGGElement | null>(null);
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
+    const clipPathId = useUniqId();
     const {
         boundsHeight,
         boundsOffsetLeft,
@@ -35,6 +36,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         boundsWidth,
         handleLegendItemClick,
         handleZoomReset,
+        isOutsideBounds,
         legendConfig,
         legendItems,
         preparedSeries,
@@ -58,6 +60,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         htmlLayout,
         svgContainer: svgRef.current,
         plotNode: plotRef.current,
+        clipPathId,
     });
     const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
         dispatcher,
@@ -78,6 +81,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             xAxis,
             yAxis,
             tooltipThrottle: tooltip.throttle,
+            isOutsideBounds,
         });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
@@ -134,6 +138,11 @@ export const ChartInner = (props: ChartInnerProps) => {
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
             >
+                <defs>
+                    <clipPath id={clipPathId}>
+                        <rect x={0} y={0} width={boundsWidth} height={boundsHeight} />
+                    </clipPath>
+                </defs>
                 {title && <Title {...title} chartWidth={width} />}
                 <g transform={`translate(0, ${boundsOffsetTop})`}>
                     {preparedSplit.plots.map((plot, index) => {

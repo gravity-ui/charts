@@ -15,6 +15,7 @@ export type MarkerData = {
     active: boolean;
     hovered: boolean;
     htmlElements: HtmlItem[];
+    clipped: boolean;
 };
 
 export type PreparedScatterData = MarkerData;

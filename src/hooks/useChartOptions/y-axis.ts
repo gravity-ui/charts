@@ -11,22 +11,17 @@ import {
 } from '../../constants';
 import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
 import {
-    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
     formatAxisTickLabel,
     getClosestPointsRange,
+    getDefaultMinYAxisValue,
     getHorisontalSvgTextHeight,
     getLabelsSize,
     getScaleTicks,
-    getWaterfallPointSubtotal,
     isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
-import type {
-    PreparedSeries,
-    PreparedWaterfallSeries,
-    PreparedWaterfallSeriesData,
-} from '../useSeries/types';
+import type {PreparedSeries} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
@@ -59,41 +54,6 @@ const getAxisLabelMaxWidth = async (args: {axis: PreparedAxis; seriesData: Chart
 
     return size.maxWidth;
 };
-
-function getAxisMin(axis?: ChartYAxis, seriesData?: ChartSeries[]) {
-    const min = axis?.min;
-
-    if (
-        typeof min === 'undefined' &&
-        seriesData?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))
-    ) {
-        return seriesData.reduce((minValue, s) => {
-            switch (s.type) {
-                case 'waterfall': {
-                    const minSubTotal = s.data.reduce(
-                        (res, d) =>
-                            Math.min(
-                                res,
-                                getWaterfallPointSubtotal(
-                                    d as PreparedWaterfallSeriesData,
-                                    s as PreparedWaterfallSeries,
-                                ) || 0,
-                            ),
-                        0,
-                    );
-                    return Math.min(minValue, minSubTotal);
-                }
-                default: {
-                    // @ts-expect-error
-                    const minYValue = s.data.reduce((res, d) => Math.min(res, get(d, 'y', 0)), 0);
-                    return Math.min(minValue, minYValue);
-                }
-            }
-        }, 0);
-    }
-
-    return min;
-}
 
 export const getPreparedYAxis = ({
     seriesData,
@@ -177,7 +137,8 @@ export const getPreparedYAxis = ({
                     align: get(axisItem, 'title.align', yAxisTitleDefaults.align),
                     maxRowCount: titleMaxRowsCount,
                 },
-                min: getAxisMin(axisItem, seriesData),
+                min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(seriesData),
+                max: get(axisItem, 'max'),
                 maxPadding: get(axisItem, 'maxPadding', 0.05),
                 grid: {
                     enabled: get(

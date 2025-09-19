@@ -27,19 +27,22 @@ type Args = {
     preparedData: PreparedAreaData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    clipPathId: string;
 };
 
 export const AreaSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
+    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
     const hoveredDataRef = React.useRef<TooltipDataChunkArea[] | null | undefined>(null);
-    const ref = React.useRef<SVGGElement | null>(null);
+    const plotRef = React.useRef<SVGGElement | null>(null);
+    const markersRef = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
-        if (!ref.current) {
+        if (!plotRef.current || !markersRef.current) {
             return () => {};
         }
 
-        const svgElement = select(ref.current);
+        const plotSvgElement = select(plotRef.current);
+        const markersSvgElement = select(markersRef.current);
         const hoverOptions = get(seriesOptions, 'area.states.hover');
         const inactiveOptions = get(seriesOptions, 'area.states.inactive');
 
@@ -47,9 +50,10 @@ export const AreaSeriesShapes = (args: Args) => {
             .x((d) => d.x)
             .y((d) => d.y);
 
-        svgElement.selectAll('*').remove();
+        plotSvgElement.selectAll('*').remove();
+        markersSvgElement.selectAll('*').remove();
 
-        const shapeSelection = svgElement
+        const shapeSelection = plotSvgElement
             .selectAll('shape')
             .data(preparedData)
             .join('g')
@@ -85,7 +89,7 @@ export const AreaSeriesShapes = (args: Args) => {
             dataLabels = filterOverlappingLabels(dataLabels);
         }
 
-        const labelsSelection = svgElement
+        const labelsSelection = plotSvgElement
             .selectAll('text')
             .data(dataLabels)
             .join('text')
@@ -99,7 +103,7 @@ export const AreaSeriesShapes = (args: Args) => {
             .style('fill', (d) => d.style.fontColor || null);
 
         const markers = preparedData.reduce<MarkerData[]>((acc, d) => acc.concat(d.markers), []);
-        const markerSelection = svgElement
+        const markerSelection = markersSvgElement
             .selectAll('marker')
             .data(markers)
             .join('g')
@@ -201,7 +205,8 @@ export const AreaSeriesShapes = (args: Args) => {
 
     return (
         <React.Fragment>
-            <g ref={ref} className={b()} />
+            <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
+            <g ref={markersRef} />
             <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

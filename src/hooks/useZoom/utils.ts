@@ -9,11 +9,11 @@ export function selectionToZoomBounds(args: {
     selection: BrushSelection;
     xAxis: PreparedAxis;
     xScale: ChartScale;
-    yAxises: PreparedAxis[];
+    yAxes: PreparedAxis[];
     yScales: ChartScale[];
     zoomType: PreparedZoom['type'];
 }): Partial<ZoomState> {
-    const {selection, xAxis, xScale, yAxises, yScales, zoomType} = args;
+    const {selection, xAxis, xScale, yAxes, yScales, zoomType} = args;
     const zoomState: Partial<ZoomState> = {};
 
     switch (zoomType) {
@@ -24,7 +24,7 @@ export function selectionToZoomBounds(args: {
         }
         case 'y': {
             const [y1, y0] = selection as [number, number];
-            yAxises.forEach((yAxis, index) => {
+            yAxes.forEach((yAxis, index) => {
                 if (!Array.isArray(zoomState.y)) {
                     zoomState.y = [];
                 }
@@ -42,7 +42,7 @@ export function selectionToZoomBounds(args: {
             const [x0, y0] = selection[0] as [number, number];
             const [x1, y1] = selection[1] as [number, number];
             zoomState.x = selectionXToZoomBounds({xAxis, xScale, selection: [x0, x1]});
-            yAxises.forEach((yAxis, index) => {
+            yAxes.forEach((yAxis, index) => {
                 if (!Array.isArray(zoomState.y)) {
                     zoomState.y = [];
                 }

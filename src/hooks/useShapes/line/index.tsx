@@ -27,19 +27,22 @@ type Args = {
     preparedData: PreparedLineData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    clipPathId: string;
 };
 
 export const LineSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
+    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
     const hoveredDataRef = React.useRef<TooltipDataChunkLine[] | null | undefined>(null);
-    const ref = React.useRef<SVGGElement>(null);
+    const plotRef = React.useRef<SVGGElement>(null);
+    const markersRef = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
-        if (!ref.current) {
+        if (!plotRef.current || !markersRef.current) {
             return () => {};
         }
 
-        const svgElement = select(ref.current);
+        const plotSvgElement = select(plotRef.current);
+        const markersSvgElement = select(markersRef.current);
         const hoverOptions = get(seriesOptions, 'line.states.hover');
         const inactiveOptions = get(seriesOptions, 'line.states.inactive');
 
@@ -47,9 +50,10 @@ export const LineSeriesShapes = (args: Args) => {
             .x((d) => d.x)
             .y((d) => d.y);
 
-        svgElement.selectAll('*').remove();
+        plotSvgElement.selectAll('*').remove();
+        markersSvgElement.selectAll('*').remove();
 
-        const lineSelection = svgElement
+        const lineSelection = plotSvgElement
             .selectAll('path')
             .data(preparedData)
             .join('path')
@@ -71,7 +75,7 @@ export const LineSeriesShapes = (args: Args) => {
             dataLabels = filterOverlappingLabels(dataLabels);
         }
 
-        const labelsSelection = svgElement
+        const labelsSelection = plotSvgElement
             .selectAll('text')
             .data(dataLabels)
             .join('text')
@@ -85,7 +89,7 @@ export const LineSeriesShapes = (args: Args) => {
             .style('fill', (d) => d.style.fontColor || null);
 
         const markers = preparedData.reduce<MarkerData[]>((acc, d) => acc.concat(d.markers), []);
-        const markerSelection = svgElement
+        const markerSelection = markersSvgElement
             .selectAll('marker')
             .data(markers)
             .join('g')
@@ -106,9 +110,9 @@ export const LineSeriesShapes = (args: Args) => {
                 const hovered = Boolean(hoverEnabled && selectedSeriesIds.includes(d.id));
                 if (d.hovered !== hovered) {
                     d.hovered = hovered;
-                    elementSelection.attr('stroke', (d) => {
-                        const initialColor = d.color || '';
-                        if (d.hovered) {
+                    elementSelection.attr('stroke', (dSelection) => {
+                        const initialColor = dSelection.color || '';
+                        if (dSelection.hovered) {
                             return (
                                 color(initialColor)
                                     ?.brighter(hoverOptions?.brightness)
@@ -188,7 +192,8 @@ export const LineSeriesShapes = (args: Args) => {
 
     return (
         <React.Fragment>
-            <g ref={ref} className={b()} />
+            <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
+            <g ref={markersRef} />
             <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

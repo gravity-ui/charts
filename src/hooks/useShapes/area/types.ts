@@ -14,6 +14,7 @@ export type MarkerData = {
     point: PointData;
     active: boolean;
     hovered: boolean;
+    clipped: boolean;
 };
 
 export type PreparedAreaData = {

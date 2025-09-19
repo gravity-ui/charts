@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 import {pointer} from 'd3';
 import type {Dispatch} from 'd3';
@@ -28,6 +28,7 @@ type Props = {
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     tooltipThrottle: number;
+    isOutsideBounds: (x: number, y: number) => boolean;
 };
 
 export function useChartInnerHandlers(props: Props) {
@@ -45,14 +46,8 @@ export function useChartInnerHandlers(props: Props) {
         xAxis,
         yAxis,
         tooltipThrottle,
+        isOutsideBounds,
     } = props;
-
-    const isOutsideBounds = React.useCallback(
-        (x: number, y: number) => {
-            return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
-        },
-        [boundsHeight, boundsWidth],
-    );
 
     const handleMove = (
         [pointerX, pointerY]: PointPosition,

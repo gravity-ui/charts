@@ -18,8 +18,9 @@ export const prepareScatterData = (args: {
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
+    isOutsideBounds: (x: number, y: number) => boolean;
 }): PreparedScatterData[] => {
-    const {series, xAxis, xScale, yAxis, yScale} = args;
+    const {series, xAxis, xScale, yAxis, yScale, isOutsideBounds} = args;
 
     return series.reduce<PreparedScatterData[]>((acc, s) => {
         const yAxisIndex = get(s, 'yAxis', 0);
@@ -31,18 +32,21 @@ export const prepareScatterData = (args: {
                 : getFilteredLinearScatterData(s.data);
 
         filteredData.forEach((d) => {
+            const x = getXValue({point: d, xAxis, xScale});
+            const y = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
             acc.push({
                 point: {
                     data: d,
                     series: s,
-                    x: getXValue({point: d, xAxis, xScale}),
-                    y: getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale}),
+                    x,
+                    y,
                     opacity: get(d, 'opacity', null),
                     color: d.color ?? s.color,
                 },
                 hovered: false,
                 active: true,
                 htmlElements: [],
+                clipped: isOutsideBounds(x, y),
             });
         });
 

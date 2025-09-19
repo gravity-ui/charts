@@ -22,10 +22,11 @@ type Args = {
     preparedData: PreparedBarXData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    clipPathId: string;
 };
 
 export const BarXSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
+    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
     const hoveredDataRef = React.useRef<PreparedBarXData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
@@ -146,7 +147,7 @@ export const BarXSeriesShapes = (args: Args) => {
 
     return (
         <React.Fragment>
-            <g ref={ref} className={b()} />
+            <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
             <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

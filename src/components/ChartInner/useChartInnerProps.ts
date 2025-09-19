@@ -27,10 +27,11 @@ type Props = ChartInnerProps & {
     htmlLayout: HTMLElement | null;
     svgContainer: SVGGElement | null;
     plotNode: SVGGElement | null;
+    clipPathId: string;
 };
 
 export function useChartInnerProps(props: Props) {
-    const {width, height, data, dispatcher, htmlLayout, svgContainer, plotNode} = props;
+    const {width, height, data, dispatcher, htmlLayout, svgContainer, plotNode, clipPathId} = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
@@ -40,7 +41,7 @@ export function useChartInnerProps(props: Props) {
         return getZoomedSeriesData({
             seriesData: data.series.data,
             xAxis: data.xAxis,
-            yAxises: data.yAxis,
+            yAxes: data.yAxis,
             zoomState,
         });
     }, [data.series.data, data.xAxis, data.yAxis, zoomState]);
@@ -97,6 +98,14 @@ export function useChartInnerProps(props: Props) {
         yAxis,
         split: preparedSplit,
     });
+
+    const isOutsideBounds = React.useCallback(
+        (x: number, y: number) => {
+            return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
+        },
+        [boundsHeight, boundsWidth],
+    );
+
     const {shapes, shapesData} = useShapes({
         boundsWidth,
         boundsHeight,
@@ -109,6 +118,8 @@ export function useChartInnerProps(props: Props) {
         yScale,
         split: preparedSplit,
         htmlLayout,
+        clipPathId,
+        isOutsideBounds,
     });
 
     const handleAttemptToSetZoomState = React.useCallback(
@@ -116,7 +127,7 @@ export function useChartInnerProps(props: Props) {
             const nextZoomedSeriesData = getZoomedSeriesData({
                 seriesData: zoomedSeriesData,
                 xAxis: data.xAxis,
-                yAxises: data.yAxis,
+                yAxes: data.yAxis,
                 zoomState: nextZoomState,
             });
 
@@ -172,6 +183,7 @@ export function useChartInnerProps(props: Props) {
         boundsWidth,
         handleLegendItemClick,
         handleZoomReset: Object.keys(zoomState).length > 0 ? handleZoomReset : undefined,
+        isOutsideBounds,
         legendConfig,
         legendItems,
         preparedLegend,

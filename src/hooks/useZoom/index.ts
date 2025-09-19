@@ -73,7 +73,7 @@ export function useZoom(props: UseZoomProps) {
                     selection,
                     xAxis,
                     xScale,
-                    yAxises: yAxis,
+                    yAxes: yAxis,
                     yScales: yScale,
                     zoomType: preparedZoom.type,
                 });

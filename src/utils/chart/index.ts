@@ -6,11 +6,17 @@ import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';
 
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../../constants';
-import type {PreparedAxis, PreparedWaterfallSeries, StackedSeries} from '../../hooks';
+import type {
+    PreparedAxis,
+    PreparedWaterfallSeries,
+    PreparedWaterfallSeriesData,
+    StackedSeries,
+} from '../../hooks';
 import {getSeriesStackId} from '../../hooks/useSeries/utils';
 import {formatNumber, getNumberUnitRate} from '../../libs/format-number';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 
+import {getWaterfallPointSubtotal} from './series/waterfall';
 import {getDefaultDateFormat} from './time';
 import type {AxisDirection} from './types';
 
@@ -127,6 +133,47 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
 export function getDefaultMaxXAxisValue(series: UnknownSeries[]) {
     if (series.some((s) => s.type === 'bar-y')) {
         return 0;
+    }
+
+    return undefined;
+}
+
+export function getDefaultMinXAxisValue(series: UnknownSeries[]) {
+    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_X_AXIS.includes(s.type))) {
+        return series.reduce((minValue, s) => {
+            // https://github.com/gravity-ui/charts/issues/160
+            // @ts-expect-error
+            const minXValue = s.data.reduce((res, d) => Math.min(res, get(d, 'x', 0)), 0);
+            return Math.min(minValue, minXValue);
+        }, 0);
+    }
+
+    return undefined;
+}
+
+export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
+    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
+        return series.reduce((minValue, s) => {
+            switch (s.type) {
+                case 'waterfall': {
+                    const minSubTotal = (s.data as PreparedWaterfallSeriesData[]).reduce(
+                        (res, d) =>
+                            Math.min(
+                                res,
+                                getWaterfallPointSubtotal(d, s as PreparedWaterfallSeries) || 0,
+                            ),
+                        0,
+                    );
+                    return Math.min(minValue, minSubTotal);
+                }
+                default: {
+                    // https://github.com/gravity-ui/charts/issues/160
+                    // @ts-expect-error
+                    const minYValue = s.data.reduce((res, d) => Math.min(res, get(d, 'y', 0)), 0);
+                    return Math.min(minValue, minYValue);
+                }
+            }
+        }, 0);
     }
 
     return undefined;

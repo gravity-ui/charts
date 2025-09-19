@@ -79,8 +79,9 @@ export const prepareAreaData = async (args: {
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
     boundsHeight: number;
+    isOutsideBounds: (x: number, y: number) => boolean;
 }): Promise<PreparedAreaData[]> => {
-    const {series, xAxis, xScale, yAxis, yScale, boundsHeight: plotHeight} = args;
+    const {series, xAxis, xScale, yAxis, yScale, boundsHeight: plotHeight, isOutsideBounds} = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax / (1 - xAxis.maxPadding);
 
@@ -182,6 +183,7 @@ export const prepareAreaData = async (args: {
                     point: p,
                     active: true,
                     hovered: false,
+                    clipped: isOutsideBounds(p.x, p.y),
                 }));
             }
 
