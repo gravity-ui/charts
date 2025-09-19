@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/gravity-ui/charts/compare/v1.10.2...v1.11.0) (2025-09-19)
+
+
+### Features
+
+* add `max` property to x-axis & y-axis ([#157](https://github.com/gravity-ui/charts/issues/157)) ([1093042](https://github.com/gravity-ui/charts/commit/10930421349a2368a11ee9ad24753daaa2d5767b))
+
+
+### Bug Fixes
+
+* axis bottom generator for one tick label ([#162](https://github.com/gravity-ui/charts/issues/162)) ([559dac8](https://github.com/gravity-ui/charts/commit/559dac8310c0ce5a5b248cc7c4de3d9d2b5a97c3))
+
 ## [1.10.2](https://github.com/gravity-ui/charts/compare/v1.10.1...v1.10.2) (2025-09-19)
 
 
