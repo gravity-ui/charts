@@ -5,12 +5,7 @@ import merge from 'lodash/merge';
 
 import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../../constants';
 import type {BaseTextStyle, ChartData} from '../../types';
-import {
-    getDefaultColorStops,
-    getDomainForContinuousColorScale,
-    getHorisontalSvgTextHeight,
-    getLabelsSize,
-} from '../../utils';
+import {getDefaultColorStops, getDomainForContinuousColorScale, getLabelsSize} from '../../utils';
 import {getBoundsWidth} from '../useChartDimensions';
 import {getYAxisWidth} from '../useChartDimensions/utils';
 import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
@@ -30,7 +25,7 @@ export async function getPreparedLegend(args: {
     const defaultItemStyle = clone(legendDefaults.itemStyle);
     const itemStyle = get(legend, 'itemStyle');
     const computedItemStyle = merge(defaultItemStyle, itemStyle);
-    const lineHeight = getHorisontalSvgTextHeight({text: 'Tmp', style: computedItemStyle});
+    const lineHeight = (await getLabelsSize({labels: ['Tmp'], style: computedItemStyle})).maxHeight;
 
     const legendType = get(legend, 'type', 'discrete');
     const isTitleEnabled = Boolean(legend?.title?.text);

@@ -100,248 +100,257 @@ export const useShapes = (args: Args) => {
     const [shapesElemens, setShapesElements] = React.useState<React.ReactElement[]>([]);
     const [shapesElemensData, setShapesElemensData] = React.useState<ShapeData[]>([]);
 
-    const setShapes = React.useCallback(async () => {
-        const visibleSeries = getOnlyVisibleSeries(series);
-        const groupedSeries = group(visibleSeries, (item) => item.type);
-        const shapesData: ShapeData[] = [];
-        const shapes: React.ReactElement[] = [];
+    const countedRef = React.useRef(0);
 
-        await Promise.all(
-            // eslint-disable-next-line complexity
-            Array.from(groupedSeries).map(async (item) => {
-                const [seriesType, chartSeries] = item;
-                switch (seriesType) {
-                    case 'bar-x': {
-                        if (xAxis && xScale && yScale) {
-                            const preparedData = await prepareBarXData({
-                                series: chartSeries as PreparedBarXSeries[],
-                                seriesOptions,
-                                xAxis,
-                                xScale,
-                                yAxis,
-                                yScale,
+    React.useEffect(() => {
+        countedRef.current++;
+        (async () => {
+            const currentRun = countedRef.current;
+
+            const visibleSeries = getOnlyVisibleSeries(series);
+            const groupedSeries = group(visibleSeries, (item) => item.type);
+            const shapesData: ShapeData[] = [];
+            const shapes: React.ReactElement[] = [];
+
+            await Promise.all(
+                // eslint-disable-next-line complexity
+                Array.from(groupedSeries).map(async (item) => {
+                    const [seriesType, chartSeries] = item;
+                    switch (seriesType) {
+                        case 'bar-x': {
+                            if (xAxis && xScale && yScale?.length) {
+                                const preparedData = await prepareBarXData({
+                                    series: chartSeries as PreparedBarXSeries[],
+                                    seriesOptions,
+                                    xAxis,
+                                    xScale,
+                                    yAxis,
+                                    yScale,
+                                    boundsHeight,
+                                });
+                                shapes.push(
+                                    <BarXSeriesShapes
+                                        key="bar-x"
+                                        dispatcher={dispatcher}
+                                        seriesOptions={seriesOptions}
+                                        preparedData={preparedData}
+                                        htmlLayout={htmlLayout}
+                                        clipPathId={clipPathId}
+                                    />,
+                                );
+                                shapesData.push(...preparedData);
+                            }
+                            break;
+                        }
+                        case 'bar-y': {
+                            if (xAxis && xScale && yScale?.length) {
+                                const preparedData = await prepareBarYData({
+                                    series: chartSeries as PreparedBarYSeries[],
+                                    seriesOptions,
+                                    xAxis,
+                                    xScale,
+                                    yAxis,
+                                    yScale,
+                                });
+                                shapes.push(
+                                    <BarYSeriesShapes
+                                        key="bar-y"
+                                        dispatcher={dispatcher}
+                                        seriesOptions={seriesOptions}
+                                        preparedData={preparedData}
+                                        htmlLayout={htmlLayout}
+                                        clipPathId={clipPathId}
+                                    />,
+                                );
+                                shapesData.push(...preparedData);
+                            }
+                            break;
+                        }
+                        case 'waterfall': {
+                            if (xAxis && xScale && yScale?.length) {
+                                const preparedData = await prepareWaterfallData({
+                                    series: chartSeries as PreparedWaterfallSeries[],
+                                    seriesOptions,
+                                    xAxis,
+                                    xScale,
+                                    yAxis,
+                                    yScale,
+                                });
+                                shapes.push(
+                                    <WaterfallSeriesShapes
+                                        key="waterfall"
+                                        dispatcher={dispatcher}
+                                        seriesOptions={seriesOptions}
+                                        preparedData={preparedData}
+                                        htmlLayout={htmlLayout}
+                                        clipPathId={clipPathId}
+                                    />,
+                                );
+                                shapesData.push(...preparedData);
+                            }
+                            break;
+                        }
+                        case 'line': {
+                            if (xAxis && xScale && yScale?.length) {
+                                const preparedData = await prepareLineData({
+                                    series: chartSeries as PreparedLineSeries[],
+                                    xAxis,
+                                    xScale,
+                                    yAxis,
+                                    yScale,
+                                    split,
+                                    isOutsideBounds,
+                                });
+                                shapes.push(
+                                    <LineSeriesShapes
+                                        key="line"
+                                        dispatcher={dispatcher}
+                                        seriesOptions={seriesOptions}
+                                        preparedData={preparedData}
+                                        htmlLayout={htmlLayout}
+                                        clipPathId={clipPathId}
+                                    />,
+                                );
+                                shapesData.push(...preparedData);
+                            }
+                            break;
+                        }
+                        case 'area': {
+                            if (xAxis && xScale && yScale?.length) {
+                                const preparedData = await prepareAreaData({
+                                    series: chartSeries as PreparedAreaSeries[],
+                                    xAxis,
+                                    xScale,
+                                    yAxis,
+                                    yScale,
+                                    boundsHeight,
+                                    isOutsideBounds,
+                                });
+                                shapes.push(
+                                    <AreaSeriesShapes
+                                        key="area"
+                                        dispatcher={dispatcher}
+                                        seriesOptions={seriesOptions}
+                                        preparedData={preparedData}
+                                        htmlLayout={htmlLayout}
+                                        clipPathId={clipPathId}
+                                    />,
+                                );
+                                shapesData.push(...preparedData);
+                            }
+                            break;
+                        }
+                        case 'scatter': {
+                            if (xAxis && xScale && yScale?.length) {
+                                const preparedData = prepareScatterData({
+                                    series: chartSeries as PreparedScatterSeries[],
+                                    xAxis,
+                                    xScale,
+                                    yAxis,
+                                    yScale,
+                                    isOutsideBounds,
+                                });
+                                shapes.push(
+                                    <ScatterSeriesShape
+                                        key="scatter"
+                                        dispatcher={dispatcher}
+                                        preparedData={preparedData}
+                                        seriesOptions={seriesOptions}
+                                        htmlLayout={htmlLayout}
+                                    />,
+                                );
+                                shapesData.push(...preparedData);
+                            }
+                            break;
+                        }
+                        case 'pie': {
+                            const preparedData = await preparePieData({
+                                series: chartSeries as PreparedPieSeries[],
+                                boundsWidth,
                                 boundsHeight,
                             });
                             shapes.push(
-                                <BarXSeriesShapes
-                                    key="bar-x"
+                                <PieSeriesShapes
+                                    key="pie"
                                     dispatcher={dispatcher}
-                                    seriesOptions={seriesOptions}
                                     preparedData={preparedData}
+                                    seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                    clipPathId={clipPathId}
                                 />,
                             );
                             shapesData.push(...preparedData);
+                            break;
                         }
-                        break;
-                    }
-                    case 'bar-y': {
-                        if (xAxis && xScale && yScale) {
-                            const preparedData = await prepareBarYData({
-                                series: chartSeries as PreparedBarYSeries[],
-                                seriesOptions,
-                                xAxis,
-                                xScale,
-                                yAxis,
-                                yScale,
+                        case 'treemap': {
+                            const preparedData = await prepareTreemapData({
+                                // We should have exactly one series with "treemap" type
+                                // Otherwise data validation should emit an error
+                                series: chartSeries[0] as PreparedTreemapSeries,
+                                width: boundsWidth,
+                                height: boundsHeight,
                             });
                             shapes.push(
-                                <BarYSeriesShapes
-                                    key="bar-y"
+                                <TreemapSeriesShape
+                                    key="treemap"
                                     dispatcher={dispatcher}
-                                    seriesOptions={seriesOptions}
                                     preparedData={preparedData}
+                                    seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                    clipPathId={clipPathId}
                                 />,
                             );
-                            shapesData.push(...preparedData);
+                            shapesData.push(preparedData as unknown as ShapeData);
+                            break;
                         }
-                        break;
-                    }
-                    case 'waterfall': {
-                        if (xAxis && xScale && yScale) {
-                            const preparedData = await prepareWaterfallData({
-                                series: chartSeries as PreparedWaterfallSeries[],
-                                seriesOptions,
-                                xAxis,
-                                xScale,
-                                yAxis,
-                                yScale,
+                        case 'sankey': {
+                            const preparedData = prepareSankeyData({
+                                series: chartSeries[0] as PreparedSankeySeries,
+                                width: boundsWidth,
+                                height: boundsHeight,
                             });
                             shapes.push(
-                                <WaterfallSeriesShapes
-                                    key="waterfall"
+                                <SankeySeriesShape
+                                    key="sankey"
                                     dispatcher={dispatcher}
-                                    seriesOptions={seriesOptions}
                                     preparedData={preparedData}
+                                    seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                    clipPathId={clipPathId}
                                 />,
                             );
-                            shapesData.push(...preparedData);
+                            shapesData.push(preparedData);
+                            break;
                         }
-                        break;
-                    }
-                    case 'line': {
-                        if (xAxis && xScale && yScale) {
-                            const preparedData = await prepareLineData({
-                                series: chartSeries as PreparedLineSeries[],
-                                xAxis,
-                                xScale,
-                                yAxis,
-                                yScale,
-                                split,
-                                isOutsideBounds,
-                            });
-                            shapes.push(
-                                <LineSeriesShapes
-                                    key="line"
-                                    dispatcher={dispatcher}
-                                    seriesOptions={seriesOptions}
-                                    preparedData={preparedData}
-                                    htmlLayout={htmlLayout}
-                                    clipPathId={clipPathId}
-                                />,
-                            );
-                            shapesData.push(...preparedData);
-                        }
-                        break;
-                    }
-                    case 'area': {
-                        if (xAxis && xScale && yScale) {
-                            const preparedData = await prepareAreaData({
-                                series: chartSeries as PreparedAreaSeries[],
-                                xAxis,
-                                xScale,
-                                yAxis,
-                                yScale,
+                        case 'radar': {
+                            const preparedData = await prepareRadarData({
+                                series: chartSeries as PreparedRadarSeries[],
+                                boundsWidth,
                                 boundsHeight,
-                                isOutsideBounds,
                             });
                             shapes.push(
-                                <AreaSeriesShapes
-                                    key="area"
+                                <RadarSeriesShapes
+                                    key="radar"
                                     dispatcher={dispatcher}
-                                    seriesOptions={seriesOptions}
-                                    preparedData={preparedData}
-                                    htmlLayout={htmlLayout}
-                                    clipPathId={clipPathId}
-                                />,
-                            );
-                            shapesData.push(...preparedData);
-                        }
-                        break;
-                    }
-                    case 'scatter': {
-                        if (xAxis && xScale && yScale) {
-                            const preparedData = prepareScatterData({
-                                series: chartSeries as PreparedScatterSeries[],
-                                xAxis,
-                                xScale,
-                                yAxis,
-                                yScale,
-                                isOutsideBounds,
-                            });
-                            shapes.push(
-                                <ScatterSeriesShape
-                                    key="scatter"
-                                    dispatcher={dispatcher}
-                                    preparedData={preparedData}
+                                    series={preparedData}
                                     seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
                                 />,
                             );
                             shapesData.push(...preparedData);
+                            break;
                         }
-                        break;
+                        default: {
+                            throw new ChartError({
+                                message: `The display method is not defined for a series with type "${seriesType}"`,
+                            });
+                        }
                     }
-                    case 'pie': {
-                        const preparedData = await preparePieData({
-                            series: chartSeries as PreparedPieSeries[],
-                            boundsWidth,
-                            boundsHeight,
-                        });
-                        shapes.push(
-                            <PieSeriesShapes
-                                key="pie"
-                                dispatcher={dispatcher}
-                                preparedData={preparedData}
-                                seriesOptions={seriesOptions}
-                                htmlLayout={htmlLayout}
-                            />,
-                        );
-                        shapesData.push(...preparedData);
-                        break;
-                    }
-                    case 'treemap': {
-                        const preparedData = await prepareTreemapData({
-                            // We should have exactly one series with "treemap" type
-                            // Otherwise data validation should emit an error
-                            series: chartSeries[0] as PreparedTreemapSeries,
-                            width: boundsWidth,
-                            height: boundsHeight,
-                        });
-                        shapes.push(
-                            <TreemapSeriesShape
-                                key="treemap"
-                                dispatcher={dispatcher}
-                                preparedData={preparedData}
-                                seriesOptions={seriesOptions}
-                                htmlLayout={htmlLayout}
-                            />,
-                        );
-                        shapesData.push(preparedData as unknown as ShapeData);
-                        break;
-                    }
-                    case 'sankey': {
-                        const preparedData = prepareSankeyData({
-                            series: chartSeries[0] as PreparedSankeySeries,
-                            width: boundsWidth,
-                            height: boundsHeight,
-                        });
-                        shapes.push(
-                            <SankeySeriesShape
-                                key="sankey"
-                                dispatcher={dispatcher}
-                                preparedData={preparedData}
-                                seriesOptions={seriesOptions}
-                                htmlLayout={htmlLayout}
-                            />,
-                        );
-                        shapesData.push(preparedData);
-                        break;
-                    }
-                    case 'radar': {
-                        const preparedData = await prepareRadarData({
-                            series: chartSeries as PreparedRadarSeries[],
-                            boundsWidth,
-                            boundsHeight,
-                        });
-                        shapes.push(
-                            <RadarSeriesShapes
-                                key="radar"
-                                dispatcher={dispatcher}
-                                series={preparedData}
-                                seriesOptions={seriesOptions}
-                                htmlLayout={htmlLayout}
-                            />,
-                        );
-                        shapesData.push(...preparedData);
-                        break;
-                    }
-                    default: {
-                        throw new ChartError({
-                            message: `The display method is not defined for a series with type "${seriesType}"`,
-                        });
-                    }
-                }
-            }),
-        );
+                }),
+            );
 
-        setShapesElements(shapes);
-        setShapesElemensData(shapesData);
+            if (countedRef.current === currentRun) {
+                setShapesElements(shapes);
+                setShapesElemensData(shapesData);
+            }
+        })();
     }, [
         boundsHeight,
         boundsWidth,
@@ -357,10 +366,6 @@ export const useShapes = (args: Args) => {
         clipPathId,
         isOutsideBounds,
     ]);
-
-    React.useEffect(() => {
-        setShapes();
-    }, [setShapes]);
 
     return {shapes: shapesElemens, shapesData: shapesElemensData};
 };

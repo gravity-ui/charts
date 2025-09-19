@@ -418,6 +418,8 @@ export const Legend = (props: Props) => {
                 legendWidth = legend.width;
             }
 
+            const legendTitleClassname = b('title');
+
             if (legend.title.enable) {
                 const {maxWidth: titleWidth} = await getLabelsSize({
                     labels: [legend.title.text],
@@ -440,8 +442,6 @@ export const Legend = (props: Props) => {
                     }
                 }
 
-                const legendTitleClassname = b('title');
-
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();
                 svgElement
                     .append('g')
@@ -453,6 +453,8 @@ export const Legend = (props: Props) => {
                     .attr('fill', legend.title.style.fontColor ?? null)
                     .style('dominant-baseline', 'text-before-edge')
                     .html(legend.title.text);
+            } else {
+                svgElement.selectAll(`.${legendTitleClassname}`).remove();
             }
 
             const {left} = getLegendPosition({
