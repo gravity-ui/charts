@@ -407,8 +407,12 @@ export const Legend = (props: Props) => {
                     },
                 });
                 const tickTop = legend.title.height + legend.title.margin + rectHeight;
+
+                const legendAxisClassname = b('axis');
+                svgElement.selectAll(`.${legendAxisClassname}`).remove();
                 svgElement
                     .append('g')
+                    .attr('class', legendAxisClassname)
                     .attr('transform', `translate(0, ${tickTop})`)
                     .call(xAxisGenerator);
                 legendWidth = legend.width;
