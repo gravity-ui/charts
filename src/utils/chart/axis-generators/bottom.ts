@@ -179,8 +179,9 @@ export async function axisBottom(args: AxisBottomArgs) {
                     const nextElementPosition = nextElement?.getBoundingClientRect();
 
                     if (currentElementPosition.left < leftmostLimit) {
+                        const rightmostPossiblePoint = nextElementPosition?.left ?? right;
                         const remainSpace =
-                            nextElementPosition.left -
+                            rightmostPossiblePoint -
                             currentElementPosition.right +
                             x -
                             labelsMargin;
