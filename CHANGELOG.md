@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/gravity-ui/charts/compare/v1.10.1...v1.10.2) (2025-09-19)
+
+
+### Bug Fixes
+
+* the legend axis (gradient) is re-added for custom fonts ([#158](https://github.com/gravity-ui/charts/issues/158)) ([9043094](https://github.com/gravity-ui/charts/commit/9043094faae6573d1863e21b20b108da22726736))
+
 ## [1.10.1](https://github.com/gravity-ui/charts/compare/v1.10.0...v1.10.1) (2025-09-18)
 
 
