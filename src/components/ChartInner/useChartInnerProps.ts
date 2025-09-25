@@ -12,10 +12,12 @@ import {
     useShapes,
     useSplit,
 } from '../../hooks';
-import {getZoomedSeriesData} from '../../hooks/hooks-utils';
+import {getSortedSeriesData, getZoomedSeriesData} from '../../hooks/hooks-utils';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
+import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
+import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
 
@@ -36,15 +38,17 @@ export function useChartInnerProps(props: Props) {
     const prevHeight = usePrevious(height);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const {chart, title, tooltip, colors} = useChartOptions({data});
-
-    const zoomedSeriesData = React.useMemo(() => {
+    const sortedSeriesData = React.useMemo(() => {
+        return getSortedSeriesData(data.series.data);
+    }, [data.series.data]);
+    const {zoomedSeriesData, zoomedShapesSeriesData} = React.useMemo(() => {
         return getZoomedSeriesData({
-            seriesData: data.series.data,
+            seriesData: sortedSeriesData,
             xAxis: data.xAxis,
             yAxes: data.yAxis,
             zoomState,
         });
-    }, [data.series.data, data.xAxis, data.yAxis, zoomState]);
+    }, [data.xAxis, data.yAxis, sortedSeriesData, zoomState]);
 
     const [xAxis, setXAxis] = React.useState<PreparedAxis | null>(null);
     React.useEffect(() => {
@@ -61,25 +65,37 @@ export function useChartInnerProps(props: Props) {
             setYAxis(val),
         );
     }, [data.yAxis, height, zoomedSeriesData]);
-
-    const {
-        legendItems,
-        legendConfig,
-        preparedSeries,
-        preparedSeriesOptions,
-        preparedLegend,
-        handleLegendItemClick,
-    } = useSeries({
-        chartWidth: width,
-        chartHeight: height,
-        chartMargin: chart.margin,
+    const preparedSeriesOptions = React.useMemo(() => {
+        return getPreparedOptions(data.series.options);
+    }, [data.series.options]);
+    const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
         colors,
         legend: data.legend,
         originalSeriesData: data.series.data,
         seriesData: zoomedSeriesData,
         seriesOptions: data.series.options,
-        preparedYAxis: yAxis,
     });
+    const {preparedSeries: preparedShapesSeries} = useSeries({
+        colors,
+        legend: data.legend,
+        originalSeriesData: data.series.data,
+        seriesData: zoomedShapesSeriesData,
+        seriesOptions: data.series.options,
+    });
+    const {legendConfig, legendItems} = React.useMemo(() => {
+        if (!preparedLegend) {
+            return {legendConfig: undefined, legendItems: []};
+        }
+
+        return getLegendComponents({
+            chartWidth: width,
+            chartHeight: height,
+            chartMargin: chart.margin,
+            series: preparedSeries,
+            preparedLegend,
+            preparedYAxis: yAxis,
+        });
+    }, [width, height, chart.margin, preparedSeries, preparedLegend, yAxis]);
     const {boundsWidth, boundsHeight} = useChartDimensions({
         width,
         height,
@@ -112,7 +128,7 @@ export function useChartInnerProps(props: Props) {
         boundsWidth,
         boundsHeight,
         dispatcher,
-        series: preparedSeries,
+        series: preparedShapesSeries,
         seriesOptions: preparedSeriesOptions,
         xAxis,
         xScale,
@@ -126,7 +142,7 @@ export function useChartInnerProps(props: Props) {
 
     const handleAttemptToSetZoomState = React.useCallback(
         (nextZoomState: Partial<ZoomState>) => {
-            const nextZoomedSeriesData = getZoomedSeriesData({
+            const {zoomedSeriesData: nextZoomedSeriesData} = getZoomedSeriesData({
                 seriesData: zoomedSeriesData,
                 xAxis: data.xAxis,
                 yAxes: data.yAxis,

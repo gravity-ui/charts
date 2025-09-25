@@ -1,4 +1,3 @@
-import {sort} from 'd3';
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
@@ -76,7 +75,7 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
             },
-            data: sort(series.data, (d) => d.x),
+            data: series.data,
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
             dataLabels: {
