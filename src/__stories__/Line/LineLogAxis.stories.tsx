@@ -22,6 +22,11 @@ const LineWithLogarithmicAxis = () => {
                 },
             ],
         },
+        chart: {
+            zoom: {
+                enabled: true,
+            },
+        },
     };
     const lineWidgetData: ChartData = {...widgetData, title: {text: 'linear'}};
     const logarithmicWidgetData: ChartData = {

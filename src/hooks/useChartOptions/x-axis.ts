@@ -8,7 +8,7 @@ import {
     axisLabelsDefaults,
     xAxisTitleDefaults,
 } from '../../constants';
-import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
+import type {BaseTextStyle, ChartXAxis} from '../../types';
 import {
     calculateCos,
     formatAxisTickLabel,
@@ -22,6 +22,7 @@ import {
     wrapText,
 } from '../../utils';
 import {createXScale} from '../useAxisScales';
+import type {PreparedSeries} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
@@ -32,7 +33,7 @@ async function getLabelSettings({
     autoRotation = true,
 }: {
     axis: PreparedAxis;
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     width: number;
     autoRotation?: boolean;
 }) {
@@ -80,7 +81,7 @@ export const getPreparedXAxis = async ({
     width,
 }: {
     xAxis?: ChartXAxis;
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     width: number;
 }): Promise<PreparedAxis> => {
     const titleText = get(xAxis, 'title.text', '');

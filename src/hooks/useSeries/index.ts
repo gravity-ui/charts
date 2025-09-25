@@ -4,39 +4,24 @@ import {group, scaleOrdinal} from 'd3';
 
 import type {ChartData} from '../../types';
 import {getSeriesNames} from '../../utils';
-import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
 import {usePrevious} from '../usePrevious';
 
-import {getLegendComponents, getPreparedLegend} from './prepare-legend';
+import {getPreparedLegend} from './prepare-legend';
 import {getPreparedOptions} from './prepare-options';
 import {prepareSeries} from './prepareSeries';
 import type {OnLegendItemClick, PreparedLegend, PreparedSeries} from './types';
 import {getActiveLegendItems, getAllLegendItems} from './utils';
 
 type Args = {
-    chartWidth: number;
-    chartHeight: number;
-    chartMargin: PreparedChart['margin'];
     colors: string[];
     legend: ChartData['legend'];
     originalSeriesData: ChartData['series']['data'];
     seriesData: ChartData['series']['data'];
     seriesOptions: ChartData['series']['options'];
-    preparedYAxis: PreparedAxis[];
 };
 
 export const useSeries = (args: Args) => {
-    const {
-        chartWidth,
-        chartHeight,
-        chartMargin,
-        legend,
-        originalSeriesData,
-        preparedYAxis,
-        seriesData,
-        seriesOptions,
-        colors,
-    } = args;
+    const {legend, originalSeriesData, seriesData, seriesOptions, colors} = args;
 
     const [preparedLegend, setPreparedLegend] = React.useState<PreparedLegend | null>(null);
     React.useEffect(() => {
@@ -97,20 +82,6 @@ export const useSeries = (args: Args) => {
             return singleSeries;
         });
     }, [preparedSeries, activeLegendItems]);
-    const {legendConfig, legendItems} = React.useMemo(() => {
-        if (!preparedLegend) {
-            return {legendConfig: undefined, legendItems: []};
-        }
-
-        return getLegendComponents({
-            chartHeight,
-            chartMargin,
-            chartWidth,
-            series: chartSeries,
-            preparedLegend,
-            preparedYAxis,
-        });
-    }, [chartWidth, chartHeight, chartMargin, chartSeries, preparedLegend, preparedYAxis]);
 
     const handleLegendItemClick: OnLegendItemClick = React.useCallback(
         ({name, metaKey}) => {
@@ -143,8 +114,6 @@ export const useSeries = (args: Args) => {
     }, [originalSeriesData, prevOriginalSeriesData, preparedSeries]);
 
     return {
-        legendItems,
-        legendConfig,
         preparedLegend,
         preparedSeries: chartSeries,
         preparedSeriesOptions,

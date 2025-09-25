@@ -23,7 +23,12 @@ export function getXValue(args: {
         return (xBandScale(dataCategory) || 0) + xBandScale.step() / 2;
     }
 
-    const xLinearScale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+    const xLinearScale = (xScale as ScaleLinear<number, number> | ScaleTime<number, number>).copy();
+    // const [xMinDomain, xMaxDomain] = xLinearScale.domain();
+    // if (xMinDomain === xMaxDomain) {
+    //     console.log(xLinearScale.ticks());
+    //     xLinearScale.domain([xMinDomain - 1, xMinDomain + 1]);
+    // }
     return xLinearScale(point.x as number);
 }
 
@@ -41,7 +46,12 @@ export function getYValue(args: {
         return (yBandScale(dataCategory) || 0) + yBandScale.step() / 2;
     }
 
-    const yLinearScale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+    const yLinearScale = (yScale as ScaleLinear<number, number> | ScaleTime<number, number>).copy();
+    // const [yMinDomain, yMaxDomain] = yLinearScale.domain();
+    // if (yMinDomain === yMaxDomain) {
+    //     console.log({yMinDomain});
+    //     yLinearScale.domain([yMinDomain - 0.01, yMinDomain + 0.01]);
+    // }
     return yLinearScale(point.y as number);
 }
 

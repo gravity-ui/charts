@@ -374,6 +374,14 @@ export type PreparedSeries =
     | PreparedSankeySeries
     | PreparedRadarSeries;
 
+export type PreparedSeriesWithAxes =
+    | PreparedScatterSeries
+    | PreparedBarXSeries
+    | PreparedBarYSeries
+    | PreparedLineSeries
+    | PreparedAreaSeries
+    | PreparedWaterfallSeries;
+
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 
 export type StackedSeries = BarXSeries | AreaSeries | BarYSeries;

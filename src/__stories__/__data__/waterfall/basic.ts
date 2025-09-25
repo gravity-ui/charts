@@ -32,6 +32,7 @@ function prepareData(): ChartData {
             labels: {autoRotation: false},
         },
         legend: {enabled: true},
+        yAxis: [{min: 0}],
     };
 }
 

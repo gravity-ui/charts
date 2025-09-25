@@ -1,8 +1,8 @@
 import type {PreparedAxis} from '../../hooks/useChartOptions/types';
-import type {ChartSeries} from '../../types';
+import type {PreparedSeries} from '../../hooks/useSeries/types';
 
 export function hasAtLeastOneSeriesDataPerPlot(
-    seriesData: ChartSeries[],
+    seriesData: PreparedSeries[],
     yAxes: PreparedAxis[] = [],
 ) {
     const hasDataMap = new Map<number, boolean>();
@@ -28,7 +28,7 @@ export function hasAtLeastOneSeriesDataPerPlot(
         const plotIndex = yAxis?.plotIndex ?? 0;
 
         if (!hasDataMap.get(plotIndex)) {
-            if (seriesDataChunk.data.length > 0) {
+            if (Array.isArray(seriesDataChunk.data) && seriesDataChunk.data.length > 0) {
                 hasDataMap.set(plotIndex, true);
             }
         }

@@ -9,7 +9,7 @@ import {
     axisLabelsDefaults,
     yAxisTitleDefaults,
 } from '../../constants';
-import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
+import type {BaseTextStyle, ChartYAxis} from '../../types';
 import {
     formatAxisTickLabel,
     getClosestPointsRange,
@@ -25,7 +25,7 @@ import type {PreparedSeries} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
-const getAxisLabelMaxWidth = async (args: {axis: PreparedAxis; seriesData: ChartSeries[]}) => {
+const getAxisLabelMaxWidth = async (args: {axis: PreparedAxis; seriesData: PreparedSeries[]}) => {
     const {axis, seriesData} = args;
 
     if (!axis.labels.enabled) {
@@ -60,7 +60,7 @@ export const getPreparedYAxis = ({
     yAxis,
     height,
 }: {
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     yAxis: ChartYAxis[] | undefined;
     height: number;
 }): Promise<PreparedAxis[]> => {
