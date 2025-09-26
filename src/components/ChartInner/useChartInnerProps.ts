@@ -12,7 +12,6 @@ import {
     useShapes,
     useSplit,
 } from '../../hooks';
-import {getSortedSeriesData, getZoomedSeriesData} from '../../hooks/hooks-utils';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
@@ -20,6 +19,7 @@ import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
+import {getSortedSeriesData, getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils';

@@ -1,7 +1,7 @@
 import {sort} from 'd3';
 
-import {SeriesType} from '../../constants';
-import type {ChartSeries} from '../../types';
+import {SeriesType} from '../../../constants';
+import type {ChartSeries} from '../../../types';
 
 export function getSortedSeriesData(seriesData: ChartSeries[]) {
     return seriesData.map((s) => {

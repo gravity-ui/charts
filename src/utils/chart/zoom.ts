@@ -1,4 +1,5 @@
 import {SeriesType} from '../../constants';
+import type {ZoomState} from '../../hooks/useZoom/types';
 import type {
     ChartAxisType,
     ChartSeries,
@@ -6,7 +7,6 @@ import type {
     ChartXAxis,
     ChartYAxis,
 } from '../../types';
-import type {ZoomState} from '../useZoom/types';
 
 const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SeriesType.Area, SeriesType.Line];
 

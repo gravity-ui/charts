@@ -29,6 +29,7 @@ export * from './legend';
 export * from './symbol';
 export * from './series';
 export * from './color';
+export * from './zoom';
 
 const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar'];
 export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
