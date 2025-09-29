@@ -260,9 +260,13 @@ export const formatAxisTickLabel = (args: {
         case 'linear':
         default: {
             const numberFormat = {
-                unitRate: value && step ? getNumberUnitRate(step) : undefined,
                 ...axis.labels.numberFormat,
             };
+
+            if (typeof numberFormat.unit === 'undefined') {
+                numberFormat.unitRate = value && step ? getNumberUnitRate(step) : undefined;
+            }
+
             return formatNumber(value as number | string, numberFormat);
         }
     }
