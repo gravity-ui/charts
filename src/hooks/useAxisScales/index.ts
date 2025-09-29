@@ -44,6 +44,8 @@ type ReturnValue = {
     yScale?: ChartScale[];
 };
 
+const X_AXIS_ZOOM_PADDING = 0.02;
+
 const isNumericalArrayData = (data: unknown[]): data is number[] => {
     return data.every((d) => typeof d === 'number' || d === null);
 };
@@ -173,8 +175,10 @@ export function createXScale(
     const xTimestamps = get(axis, 'timestamps');
     const maxPadding = get(axis, 'maxPadding', 0);
 
-    const xAxisMinPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
-    const xRange = [0, boundsWidth - xAxisMinPadding];
+    const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
+    const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
+    const xRange = [0, boundsWidth - xAxisMaxPadding];
+    const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
 
     switch (xType) {
         case 'linear':
@@ -204,7 +208,9 @@ export function createXScale(
                 }
 
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
-                const scale = scaleFn().domain([xMin, xMax]).range(xRange);
+                const scale = scaleFn()
+                    .domain([xMin, xMax])
+                    .range(hasZoomX ? xRangeZoom : xRange);
 
                 if (!hasZoomX) {
                     scale.nice();
@@ -224,7 +230,7 @@ export function createXScale(
                 });
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 
-                if (xScale.step() / 2 < xAxisMinPadding) {
+                if (xScale.step() / 2 < xAxisMaxPadding) {
                     xScale.range(xRange);
                 }
 
@@ -238,7 +244,9 @@ export function createXScale(
                 const [xMinTimestamp, xMaxTimestamp] = extent(xTimestamps) as [number, number];
                 const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
                 const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
-                const scale = scaleUtc().domain([xMin, xMax]).range(xRange);
+                const scale = scaleUtc()
+                    .domain([xMin, xMax])
+                    .range(hasZoomX ? xRangeZoom : xRange);
 
                 if (!hasZoomX) {
                     scale.nice();
@@ -252,7 +260,9 @@ export function createXScale(
                     const [xMinTimestamp, xMaxTimestamp] = extent(domain) as [number, number];
                     const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
                     const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
-                    const scale = scaleUtc().domain([xMin, xMax]).range(xRange);
+                    const scale = scaleUtc()
+                        .domain([xMin, xMax])
+                        .range(hasZoomX ? xRangeZoom : xRange);
 
                     if (!hasZoomX) {
                         scale.nice();

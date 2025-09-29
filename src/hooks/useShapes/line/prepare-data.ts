@@ -79,8 +79,10 @@ export const prepareLineData = async (args: {
         const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
         const seriesYScale = yScale[s.yAxis];
         const points = s.data.map((d) => ({
-            x: getXValue({point: d, xAxis, xScale}),
-            y: yAxisTop + getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale}),
+            x: getXValue({point: d, points: s.data, xAxis, xScale}),
+            y:
+                yAxisTop +
+                getYValue({point: d, points: s.data, yAxis: seriesYAxis, yScale: seriesYScale}),
             active: true,
             data: d,
             series: s,

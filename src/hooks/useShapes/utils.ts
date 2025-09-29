@@ -9,12 +9,15 @@ import type {PreparedAxis} from '../useChartOptions/types';
 
 import type {PreparedLineData} from './line/types';
 
+const ONE_POINT_DOMAIN_DATA_CAPACITY = 3;
+
 export function getXValue(args: {
     point: {x?: number | string};
+    points?: {x?: number | string}[];
     xAxis: PreparedAxis;
     xScale: ChartScale;
 }) {
-    const {point, xAxis, xScale} = args;
+    const {point, points, xAxis, xScale} = args;
 
     if (xAxis.type === 'category') {
         const xBandScale = xScale as ScaleBand<string>;
@@ -23,16 +26,34 @@ export function getXValue(args: {
         return (xBandScale(dataCategory) || 0) + xBandScale.step() / 2;
     }
 
-    const xLinearScale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+    let xLinearScale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+    const [xMinDomain, xMaxDomain] = xLinearScale.domain();
+
+    if (
+        Number(xMinDomain) === Number(xMaxDomain) &&
+        points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
+    ) {
+        const x1 = points[0].x as number;
+        const xTarget = points[1].x as number;
+        const x3 = points[2].x as number;
+        const xMin = Math.min(x1, xTarget, x3);
+        const xMax = Math.max(x1, xTarget, x3);
+        xLinearScale = xLinearScale
+            .copy()
+            .domain([xMin + (xTarget - xMin) / 2, xMax - (xMax - xTarget) / 2]) as
+            | ScaleLinear<number, number>
+            | ScaleTime<number, number>;
+    }
     return xLinearScale(point.x as number);
 }
 
 export function getYValue(args: {
     point: {y?: number | string};
+    points?: {y?: number | string}[];
     yAxis: PreparedAxis;
     yScale: ChartScale;
 }) {
-    const {point, yAxis, yScale} = args;
+    const {point, points, yAxis, yScale} = args;
 
     if (yAxis.type === 'category') {
         const yBandScale = yScale as ScaleBand<string>;
@@ -41,7 +62,25 @@ export function getYValue(args: {
         return (yBandScale(dataCategory) || 0) + yBandScale.step() / 2;
     }
 
-    const yLinearScale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+    let yLinearScale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+    const [yMinDomain, yMaxDomain] = yLinearScale.domain();
+
+    if (
+        Number(yMinDomain) === Number(yMaxDomain) &&
+        points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
+    ) {
+        const y1 = points[0].y as number;
+        const yTarget = points[1].y as number;
+        const y2 = points[2].y as number;
+        const yMin = Math.min(y1, yTarget, y2);
+        const yMax = Math.max(y1, yTarget, y2);
+        yLinearScale = yLinearScale
+            .copy()
+            .domain([yMin + (yTarget - yMin) / 2, yMax - (yMax - yTarget) / 2]) as
+            | ScaleLinear<number, number>
+            | ScaleTime<number, number>;
+    }
+
     return yLinearScale(point.y as number);
 }
 

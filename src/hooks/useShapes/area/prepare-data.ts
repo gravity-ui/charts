@@ -52,7 +52,7 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedAxis, xScale: C
                     : d.x,
             );
             if (!acc.has(key)) {
-                acc.set(key, getXValue({point: d, xAxis, xScale}));
+                acc.set(key, getXValue({point: d, points: s.data, xAxis, xScale}));
             }
         });
         return acc;
@@ -105,6 +105,7 @@ export const prepareAreaData = async (args: {
             const seriesYScale = yScale[yAxisIndex];
             const yMin = getYValue({
                 point: {y: 0},
+                points: s.data,
                 yAxis: seriesYAxis,
                 yScale: seriesYScale,
             });

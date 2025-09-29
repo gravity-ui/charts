@@ -1,3 +1,5 @@
+import {SeriesType} from '../../constants';
+import type {ZoomState} from '../../hooks/useZoom/types';
 import type {
     ChartAxisType,
     ChartSeries,
@@ -5,7 +7,8 @@ import type {
     ChartXAxis,
     ChartYAxis,
 } from '../../types';
-import type {ZoomState} from '../useZoom/types';
+
+const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SeriesType.Area, SeriesType.Line];
 
 // eslint-disable-next-line complexity
 function isValueInRange(args: {
@@ -70,17 +73,32 @@ export function getZoomedSeriesData(args: {
     zoomState: Partial<ZoomState>;
     xAxis?: ChartXAxis;
     yAxes?: ChartYAxis[];
-}): ChartSeries[] {
+}) {
     const {seriesData, xAxis, yAxes, zoomState} = args;
 
-    if (Object.keys(zoomState).length < 0) {
-        return seriesData;
+    if (Object.keys(zoomState).length <= 0) {
+        return {zoomedSeriesData: seriesData, zoomedShapesSeriesData: seriesData};
     }
 
-    return seriesData.map((seriesItem) => {
-        const filteredData = seriesItem.data.reduce<ChartSeriesData[]>((acc, point) => {
+    const zoomedSeriesData: ChartSeries[] = [];
+    const zoomedShapesSeriesData: ChartSeries[] = [];
+    let prevPointInRange = false;
+    let currentPointInRange = false;
+
+    seriesData.forEach((seriesItem) => {
+        const filteredData: ChartSeriesData[] = [];
+        const filteredShapesData: ChartSeriesData[] | undefined =
+            SERIES_TYPE_WITH_HIDDEN_POINTS.includes(seriesItem.type) && xAxis?.type !== 'category'
+                ? []
+                : undefined;
+
+        seriesItem.data.forEach((point, i) => {
+            const prevPoint = seriesItem.data[i - 1];
+            const isFirstPoint = i === 0;
             let inXRange = true;
             let inYRange = true;
+
+            prevPointInRange = currentPointInRange;
 
             if (zoomState.x) {
                 const [xMin, xMax] = zoomState.x;
@@ -108,16 +126,35 @@ export function getZoomedSeriesData(args: {
                 });
             }
 
-            if (inXRange && inYRange) {
-                acc.push(point);
+            currentPointInRange = inXRange && inYRange;
+
+            if (currentPointInRange) {
+                filteredData.push(point);
             }
 
-            return acc;
-        }, []);
+            if (filteredShapesData) {
+                if (prevPointInRange && !currentPointInRange) {
+                    filteredShapesData.push(point);
+                } else if (!isFirstPoint && !prevPointInRange && currentPointInRange) {
+                    filteredShapesData.push(prevPoint, point);
+                } else if (
+                    (isFirstPoint || (!isFirstPoint && prevPointInRange)) &&
+                    currentPointInRange
+                ) {
+                    filteredShapesData.push(point);
+                }
+            }
+        });
 
-        return {
+        zoomedSeriesData.push({
             ...(seriesItem as Omit<ChartSeries, 'data'>),
             data: filteredData,
-        } as ChartSeries;
+        } as ChartSeries);
+        zoomedShapesSeriesData.push({
+            ...(seriesItem as Omit<ChartSeries, 'data'>),
+            data: filteredShapesData || filteredData,
+        } as ChartSeries);
     });
+
+    return {zoomedSeriesData, zoomedShapesSeriesData};
 }
