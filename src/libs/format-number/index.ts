@@ -28,7 +28,7 @@ const unitFormatter = ({
     unitsI18nKeys: string[];
     unitDelimiterI18nKey: string;
 }) => {
-    return function formatUnit(value: number, options: FormatOptions = {}) {
+    return function formatUnit(value: number, options: FormatOptions & {unitRate?: number} = {}) {
         const {precision, unitRate, showRankDelimiter = true, lang} = options;
 
         const i18nLang = i18nInstance.lang as string;
@@ -87,9 +87,6 @@ const baseFormatNumber = unitFormatter({
     unitsI18nKeys: BASE_NUMBER_FORMAT_UNIT_KEYS,
 });
 
-export const getNumberUnitRate = (value: number) =>
-    getUnitRate(value, 1000, BASE_NUMBER_FORMAT_UNIT_KEYS);
-
 const NUMBER_UNIT_RATE_BY_UNIT = {
     default: 0,
     auto: undefined,
@@ -99,20 +96,19 @@ const NUMBER_UNIT_RATE_BY_UNIT = {
     t: 4,
 };
 
+export const getDefaultUnit = (value: number) => {
+    const unitRate = getUnitRate(value, 1000, BASE_NUMBER_FORMAT_UNIT_KEYS);
+    const [unit] =
+        Object.entries(NUMBER_UNIT_RATE_BY_UNIT).find(([_key, val]) => val === unitRate) ?? [];
+    return unit;
+};
+
 export const formatNumber = (value: number | string, options: FormatNumberOptions = {}) => {
     if (Number.isNaN(value) || Number.isNaN(Number(value))) {
         return new Intl.NumberFormat('en').format(Number(value));
     }
 
-    const {
-        format = 'number',
-        multiplier = 1,
-        prefix = '',
-        postfix = '',
-        unit,
-        unitRate,
-        labelMode,
-    } = options;
+    const {format = 'number', multiplier = 1, prefix = '', postfix = '', unit, labelMode} = options;
 
     let changedMultiplier = multiplier;
     let prePostfix = '';
@@ -128,7 +124,7 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
 
     const formattedValue = baseFormatNumber(Number(value) * changedMultiplier, {
         ...options,
-        unitRate: unitRate ?? NUMBER_UNIT_RATE_BY_UNIT[unit ?? 'default'],
+        unitRate: NUMBER_UNIT_RATE_BY_UNIT[unit ?? 'default'],
     });
 
     return `${prefix}${formattedValue}${prePostfix}${postfix}`;

@@ -13,7 +13,8 @@ import type {
     StackedSeries,
 } from '../../hooks';
 import {getSeriesStackId} from '../../hooks/useSeries/utils';
-import {formatNumber, getNumberUnitRate} from '../../libs/format-number';
+import {formatNumber, getDefaultUnit} from '../../libs/format-number';
+import type {FormatOptions} from '../../libs/format-number/types';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 
 import {getWaterfallPointSubtotal} from './series/waterfall';
@@ -259,10 +260,11 @@ export const formatAxisTickLabel = (args: {
         }
         case 'linear':
         default: {
-            const numberFormat = {
-                unitRate: value && step ? getNumberUnitRate(step) : undefined,
+            const numberFormat: FormatOptions = {
+                unit: value && step ? getDefaultUnit(step) : undefined,
                 ...axis.labels.numberFormat,
             };
+
             return formatNumber(value as number | string, numberFormat);
         }
     }
