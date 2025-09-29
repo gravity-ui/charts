@@ -1,6 +1,5 @@
 export interface FormatOptions {
     precision?: number | 'auto';
-    unitRate?: number;
     showRankDelimiter?: boolean;
     lang?: string;
     labelMode?: string;
