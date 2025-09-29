@@ -11,4 +11,15 @@ test.describe('Waterfall series', () => {
         const component = await mount(<ChartTestStory data={waterfallBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Tooltip for the totals column', async ({page, mount}) => {
+        page.setViewportSize({width: 400, height: 280});
+        const component = await mount(<ChartTestStory data={waterfallBasicData} />);
+
+        const totalColumn = component.locator('.gcharts-waterfall__segment').last();
+        await expect(totalColumn).toBeVisible();
+        await totalColumn.hover();
+
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

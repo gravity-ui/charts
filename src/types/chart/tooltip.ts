@@ -73,6 +73,7 @@ export interface TooltipDataChunkSankey<T = MeaningfulAny> {
 export interface TooltipDataChunkWaterfall<T = MeaningfulAny> {
     data: WaterfallSeriesData<T>;
     series: WaterfallSeries<T>;
+    subTotal?: number;
 }
 
 export interface TooltipDataChunkRadar<T = MeaningfulAny> {
