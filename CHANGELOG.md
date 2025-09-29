@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.11.2](https://github.com/gravity-ui/charts/compare/v1.11.1...v1.11.2) (2025-09-29)
+
+
+### Bug Fixes
+
+* formatting settings for axis labels ([#172](https://github.com/gravity-ui/charts/issues/172)) ([91eb0ea](https://github.com/gravity-ui/charts/commit/91eb0ea9866d86e8461e14f5b8753a4a80a9090d))
+* waterfall tooltip total value ([#171](https://github.com/gravity-ui/charts/issues/171)) ([3a00a4b](https://github.com/gravity-ui/charts/commit/3a00a4b9f931c4ab133a2591c16498a2ddd8e221))
+* zoom fixes for area & line charts ([#168](https://github.com/gravity-ui/charts/issues/168)) ([1ae4c3a](https://github.com/gravity-ui/charts/commit/1ae4c3af22dc03ac45b87724a34f7465992fe5ab))
+
 ## [1.11.1](https://github.com/gravity-ui/charts/compare/v1.11.0...v1.11.1) (2025-09-19)
 
 
