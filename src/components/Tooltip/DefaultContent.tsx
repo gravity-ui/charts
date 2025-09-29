@@ -2,12 +2,7 @@ import React from 'react';
 
 import get from 'lodash/get';
 
-import type {
-    PreparedPieSeries,
-    PreparedRadarSeries,
-    PreparedWaterfallSeries,
-    PreparedWaterfallSeriesData,
-} from '../../hooks';
+import type {PreparedPieSeries, PreparedRadarSeries} from '../../hooks';
 import type {
     ChartSeriesData,
     ChartXAxis,
@@ -16,10 +11,11 @@ import type {
     TooltipDataChunk,
     TooltipDataChunkRadar,
     TooltipDataChunkSankey,
+    TooltipDataChunkWaterfall,
     TreemapSeriesData,
     ValueFormat,
 } from '../../types';
-import {block, getDataCategoryValue, getWaterfallPointSubtotal} from '../../utils';
+import {block, getDataCategoryValue} from '../../utils';
 import {getFormattedValue} from '../../utils/chart/format';
 
 const b = block('tooltip');
@@ -151,10 +147,8 @@ export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat}: Props) => {
                         }
                         case 'waterfall': {
                             const isTotal = get(data, 'total', false);
-                            const subTotalValue = getWaterfallPointSubtotal(
-                                data as PreparedWaterfallSeriesData,
-                                series as PreparedWaterfallSeries,
-                            );
+                            const subTotalValue =
+                                (seriesItem as TooltipDataChunkWaterfall).subTotal ?? 0;
                             const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
                             const subTotal = getFormattedValue({
                                 value: subTotalValue,

@@ -164,7 +164,7 @@ export const WaterfallSeriesShapes = (args: Args) => {
         return () => {
             dispatcher.on('hover-shape.waterfall', null);
         };
-    }, [dispatcher, preparedData, seriesOptions]);
+    }, [connectorSelector, dispatcher, preparedData, seriesOptions]);
 
     return (
         <React.Fragment>

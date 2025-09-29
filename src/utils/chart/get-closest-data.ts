@@ -39,6 +39,7 @@ export type ShapePoint = {
     y1: number;
     data: ChartSeriesData;
     series: ChartSeries;
+    subTotal?: number;
 };
 
 function getClosestYIndex(items: ShapePoint[], y: number) {
@@ -84,8 +85,7 @@ function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     const closestPoints = sort(groupedBySeries, (p) => p.y0);
     const closestYIndex = getClosestYIndex(closestPoints, y);
     return closestPoints.map((p, i) => ({
-        data: p.data,
-        series: p.series,
+        ...p,
         closest: i === closestYIndex,
     }));
 }
@@ -129,6 +129,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     x: d.x + d.width / 2,
                     y0: d.y,
                     y1: d.y + d.height,
+                    subTotal: d.subTotal,
                 }));
                 result.push(
                     ...(getClosestPointsByXValue(pointerX, pointerY, points) as TooltipDataChunk[]),
