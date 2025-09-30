@@ -401,6 +401,7 @@ export const Legend = (props: Props) => {
                         maxTickCount: 4,
                         tickColor: '#fff',
                         labelFormat: (value: number) => formatNumber(value, {unit: 'auto'}),
+                        labelsStyle: legend.ticks.style,
                     },
                     domain: {
                         size: legend.width,

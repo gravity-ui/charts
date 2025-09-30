@@ -153,28 +153,17 @@ export async function axisBottom(args: AxisBottomArgs) {
                 setEllipsisForOverflowText(select(this), maxWidth);
             });
         } else {
-            // remove overlapping labels
             let elementX = 0;
-            selection
-                .selectAll('.tick')
-                .filter(function () {
-                    const node = this as unknown as Element;
-                    const r = node.getBoundingClientRect();
-
-                    if (r.left < elementX) {
-                        return true;
-                    }
-                    elementX = r.right + labelsPaddings;
-                    return false;
-                })
-                .remove();
 
             // add an ellipsis to the labels that go beyond the boundaries of the chart
+            // and remove overlapping labels
             labels.each(function (_d, i, nodes) {
+                const currentElement = this as SVGTextElement;
+                const currentElementPosition = currentElement.getBoundingClientRect();
+
                 if (i === 0) {
-                    const currentElement = this as SVGTextElement;
                     const text = select(currentElement);
-                    const currentElementPosition = currentElement.getBoundingClientRect();
+
                     const nextElement = nodes[i + 1] as SVGTextElement;
                     const nextElementPosition = nextElement?.getBoundingClientRect();
 
@@ -189,24 +178,29 @@ export async function axisBottom(args: AxisBottomArgs) {
                         text.attr('text-anchor', 'start');
                         setEllipsisForOverflowText(text, remainSpace);
                     }
-                }
-                if (i === nodes.length - 1) {
-                    const currentElement = this as SVGTextElement;
-                    const prevElement = nodes[i - 1] as SVGTextElement;
-                    const text = select(currentElement);
+                } else {
+                    if (currentElementPosition.left < elementX) {
+                        currentElement.closest('.tick')?.remove();
+                        return;
+                    }
+                    elementX = currentElementPosition.right + labelsPaddings;
 
-                    const currentElementPosition = currentElement.getBoundingClientRect();
-                    const prevElementPosition = prevElement?.getBoundingClientRect();
+                    if (i === nodes.length - 1) {
+                        const prevElement = nodes[i - 1] as SVGTextElement;
+                        const text = select(currentElement);
 
-                    const lackingSpace = Math.max(0, currentElementPosition.right - right);
-                    if (lackingSpace) {
-                        const remainSpace =
-                            right - (prevElementPosition?.right || 0) - labelsPaddings;
+                        const prevElementPosition = prevElement?.getBoundingClientRect();
 
-                        const translateX = -lackingSpace;
-                        text.style('transform', `translate(${translateX}px,${translateY}px)`);
+                        const lackingSpace = Math.max(0, currentElementPosition.right - right);
+                        if (lackingSpace) {
+                            const remainSpace =
+                                right - (prevElementPosition?.right || 0) - labelsPaddings;
 
-                        setEllipsisForOverflowText(text, remainSpace);
+                            const translateX = -lackingSpace;
+                            text.style('transform', `translate(${translateX}px,${translateY}px)`);
+
+                            setEllipsisForOverflowText(text, remainSpace);
+                        }
                     }
                 }
             });
