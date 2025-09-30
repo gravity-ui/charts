@@ -36,8 +36,14 @@ export function useChartInnerProps(props: Props) {
     const {width, height, data, dispatcher, htmlLayout, svgContainer, plotNode, clipPathId} = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
+    const {chart, title, tooltip, colors} = useChartOptions({
+        seriesData: data.series.data,
+        chart: data.chart,
+        colors: data.colors,
+        title: data.title,
+        tooltip: data.tooltip,
+    });
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
-    const {chart, title, tooltip, colors} = useChartOptions({data});
     const sortedSeriesData = React.useMemo(() => {
         return getSortedSeriesData(data.series.data);
     }, [data.series.data]);
@@ -186,7 +192,7 @@ export function useChartInnerProps(props: Props) {
             return acc;
         }, 0);
 
-    const {x, bottom} = svgContainer?.getBoundingClientRect() ?? {};
+    const {bottom, top, x} = svgContainer?.getBoundingClientRect() ?? {};
 
     const handleZoomReset = React.useCallback(() => {
         setZoomState({});
@@ -194,6 +200,7 @@ export function useChartInnerProps(props: Props) {
 
     return {
         svgBottomPos: bottom,
+        svgTopPos: top,
         svgXPos: x,
         boundsHeight,
         boundsOffsetLeft,

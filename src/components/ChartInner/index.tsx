@@ -54,6 +54,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         yScale,
         svgXPos,
         svgBottomPos,
+        svgTopPos,
     } = useChartInnerProps({
         ...props,
         dispatcher,
@@ -159,6 +160,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                         <React.Fragment>
                             <AxisY
                                 bottomLimit={svgBottomPos}
+                                topLimit={svgTopPos}
                                 axes={yAxis}
                                 width={boundsWidth}
                                 height={boundsHeight}
