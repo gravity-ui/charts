@@ -37,14 +37,12 @@ type Props = {
     plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
     plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
     bottomLimit?: number;
+    topLimit?: number;
 };
 
-function transformLabel(args: {node: Element; axis: PreparedAxis; isTopOffsetOverload?: boolean}) {
-    const {node, axis, isTopOffsetOverload = false} = args;
-    let topOffset = axis.labels.lineHeight / 2;
-    if (isTopOffsetOverload) {
-        topOffset = 0;
-    }
+function transformLabel(args: {node: Element; axis: PreparedAxis; startTopOffset?: number}) {
+    const {node, axis, startTopOffset} = args;
+    let topOffset = startTopOffset ?? axis.labels.lineHeight / 2;
     let leftOffset = axis.labels.margin;
 
     if (axis.position === 'left') {
@@ -154,6 +152,7 @@ export const AxisY = (props: Props) => {
         plotBeforeRef,
         plotAfterRef,
         bottomLimit = 0,
+        topLimit = 0,
     } = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
@@ -225,17 +224,23 @@ export const AxisY = (props: Props) => {
                         return transformLabel({node: this, axis: d});
                     });
 
-                labels.each(function (_d, i) {
-                    if (i === 0) {
-                        const currentElement = this as SVGTextElement;
-                        const currentElementPosition = currentElement.getBoundingClientRect();
-                        const text = select(currentElement);
+                labels.each(function (_d, i, nodes) {
+                    const isFirstNode = i === 0;
+                    const isLastNode = i === nodes.length - 1;
 
-                        if (currentElementPosition.bottom > bottomLimit) {
+                    if (isFirstNode || isLastNode) {
+                        const labelNode = this as SVGTextElement;
+                        const labelNodeRect = labelNode.getBoundingClientRect();
+                        const shouldBeTransformed =
+                            (isFirstNode && labelNodeRect.bottom > bottomLimit) ||
+                            (isLastNode && labelNodeRect.top < topLimit);
+
+                        if (shouldBeTransformed) {
+                            const text = select(labelNode);
                             const transform = transformLabel({
                                 node: this,
                                 axis: d,
-                                isTopOffsetOverload: true,
+                                startTopOffset: isLastNode ? labelNodeRect.height : 0,
                             });
                             text.style('transform', transform);
                             if (d.labels.rotation) {
@@ -263,7 +268,6 @@ export const AxisY = (props: Props) => {
                     .filter(function (_d, tickIndex) {
                         const tickNode = this as unknown as Element;
                         const r = tickNode.getBoundingClientRect();
-
                         if (r.bottom > elementY && tickIndex !== 0) {
                             return true;
                         }

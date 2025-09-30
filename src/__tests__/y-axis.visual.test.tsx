@@ -40,4 +40,11 @@ test.describe('Y-axis', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('maxPadding=0', async ({mount}) => {
+        const data = cloneDeep(scatterBasicData);
+        set(data, 'yAxis[0].maxPadding', 0);
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
