@@ -20,6 +20,7 @@ import {
     getLabelsSize,
     getLineDashArray,
     getSymbol,
+    getUniqId,
     handleOverflowingText,
 } from '../../utils';
 import {axisBottom} from '../../utils/chart/axis-generators';
@@ -483,5 +484,9 @@ export const Legend = (props: Props) => {
         htmlLayout,
     ]);
 
-    return <g className={b()} ref={ref} width={boundsWidth} height={legend.height} />;
+    // due to asynchronous processing, we only need to work with the actual element
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const key = React.useMemo(() => getUniqId(), [legend, config]);
+
+    return <g key={key} className={b()} ref={ref} width={boundsWidth} height={legend.height} />;
 };
