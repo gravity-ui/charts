@@ -262,7 +262,6 @@ export const AxisY = (props: Props) => {
             // remove overlapping ticks
             // Note: this method do not prepared for rotated labels
             if (!d.labels.rotation) {
-                // HERE
                 let elementY = 0;
                 axisItem
                     .selectAll('.tick')
