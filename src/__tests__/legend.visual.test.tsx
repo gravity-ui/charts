@@ -92,5 +92,36 @@ test.describe('Legend', () => {
             const component = await mount(<ChartTestStory data={data} styles={{width: '270px'}} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('By clicking on the legend item, a series is selected', async ({mount}) => {
+            const data: ChartData = {
+                legend: {
+                    enabled: true,
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            dataLabels: {enabled: false},
+                            data: new Array(3).fill(null).map((_d, i) => ({
+                                name: `${i + 1}`,
+                                value: 1,
+                            })),
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            const legendItem = component.locator('.gcharts-legend__item text').first();
+            await legendItem.click();
+
+            await expect(component.locator('svg')).toHaveScreenshot();
+
+            // When clicking on the legend again, the chart should return to its original state.
+            await legendItem.click();
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });
