@@ -9,6 +9,7 @@ import {
     useChartOptions,
     usePrevious,
     useSeries,
+    useShapeSeries,
     useShapes,
     useSplit,
 } from '../../hooks';
@@ -17,6 +18,7 @@ import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
 import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
+import {getActiveLegendItems} from '../../hooks/useSeries/utils';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
 import {getSortedSeriesData, getZoomedSeriesData} from '../../utils';
@@ -81,12 +83,16 @@ export function useChartInnerProps(props: Props) {
         seriesData: zoomedSeriesData,
         seriesOptions: data.series.options,
     });
-    const {preparedSeries: preparedShapesSeries} = useSeries({
+    const activeLegendItems = React.useMemo(
+        () => getActiveLegendItems(preparedSeries),
+        [preparedSeries],
+    );
+    const {preparedSeries: preparedShapesSeries} = useShapeSeries({
         colors,
-        legend: data.legend,
-        originalSeriesData: data.series.data,
         seriesData: zoomedShapesSeriesData,
         seriesOptions: data.series.options,
+        activeLegendItems,
+        preparedLegend,
     });
     const {legendConfig, legendItems} = React.useMemo(() => {
         if (!preparedLegend) {
