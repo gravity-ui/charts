@@ -192,7 +192,6 @@ export const ChartInner = (props: ChartInnerProps) => {
                 {preparedLegend?.enabled && legendConfig && (
                     <Legend
                         chartSeries={preparedSeries}
-                        boundsWidth={boundsWidth}
                         legend={preparedLegend}
                         items={legendItems}
                         config={legendConfig}
