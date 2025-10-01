@@ -94,6 +94,7 @@ export type LegendConfig = {
         left: number;
         top: number;
     };
+    maxWidth: number;
     pagination?: {
         pages: {
             start: number;

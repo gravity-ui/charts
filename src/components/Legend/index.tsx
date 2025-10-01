@@ -30,7 +30,6 @@ import './styles.scss';
 const b = block('legend');
 
 type Props = {
-    boundsWidth: number;
     chartSeries: PreparedSeries[];
     legend: PreparedLegend;
     items: LegendItem[][];
@@ -44,20 +43,20 @@ const getLegendPosition = (args: {
     align: PreparedLegend['align'];
     contentWidth: number;
     width: number;
-    offsetWidth?: number;
+    offsetLeft: number;
 }) => {
-    const {align, offsetWidth = 0, width, contentWidth} = args;
+    const {align, offsetLeft = 0, width, contentWidth} = args;
     const top = 0;
 
     if (align === 'left') {
-        return {top, left: offsetWidth};
+        return {top, left: offsetLeft};
     }
 
     if (align === 'right') {
-        return {top, left: offsetWidth + width - contentWidth};
+        return {top, left: offsetLeft + width - contentWidth};
     }
 
-    return {top, left: offsetWidth + width / 2 - contentWidth / 2};
+    return {top, left: offsetLeft + width / 2 - contentWidth / 2};
 };
 
 const appendPaginator = (args: {
@@ -210,14 +209,13 @@ function renderLegendSymbol(args: {
 }
 
 export const Legend = (props: Props) => {
-    const {boundsWidth, chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} =
-        props;
+    const {chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
     const [pageIndex, setPageIndex] = React.useState(0);
 
     React.useEffect(() => {
         setPageIndex(0);
-    }, [boundsWidth]);
+    }, [config.maxWidth]);
 
     React.useEffect(() => {
         async function prepareLegend() {
@@ -342,12 +340,12 @@ export const Legend = (props: Props) => {
                         case 'center': {
                             const legendLinePostion = getLegendPosition({
                                 align: legend.align,
-                                width: boundsWidth,
-                                offsetWidth: 0,
+                                width: config.maxWidth,
                                 contentWidth,
+                                offsetLeft: config.offset.left,
                             });
                             left = legendLinePostion.left;
-                            legendWidth = boundsWidth;
+                            legendWidth = config.maxWidth;
                             break;
                         }
                         case 'start': {
@@ -461,9 +459,9 @@ export const Legend = (props: Props) => {
 
             const {left} = getLegendPosition({
                 align: legend.align,
-                width: boundsWidth,
-                offsetWidth: config.offset.left,
+                width: config.maxWidth,
                 contentWidth: legendWidth,
+                offsetLeft: config.offset.left,
             });
 
             svgElement
@@ -473,21 +471,11 @@ export const Legend = (props: Props) => {
         }
 
         prepareLegend();
-    }, [
-        boundsWidth,
-        chartSeries,
-        onItemClick,
-        onUpdate,
-        legend,
-        items,
-        config,
-        pageIndex,
-        htmlLayout,
-    ]);
+    }, [chartSeries, onItemClick, onUpdate, legend, items, config, pageIndex, htmlLayout]);
 
     // due to asynchronous processing, we only need to work with the actual element
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const key = React.useMemo(() => getUniqId(), [legend, config]);
 
-    return <g key={key} className={b()} ref={ref} width={boundsWidth} height={legend.height} />;
+    return <g key={key} className={b()} ref={ref} width={config.maxWidth} height={legend.height} />;
 };

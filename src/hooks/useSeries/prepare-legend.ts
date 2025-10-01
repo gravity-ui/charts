@@ -6,9 +6,7 @@ import merge from 'lodash/merge';
 import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../../constants';
 import type {BaseTextStyle, ChartData} from '../../types';
 import {getDefaultColorStops, getDomainForContinuousColorScale, getLabelsSize} from '../../utils';
-import {getBoundsWidth} from '../useChartDimensions';
-import {getYAxisWidth} from '../useChartDimensions/utils';
-import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
+import type {PreparedChart} from '../useChartOptions/types';
 
 import type {LegendConfig, LegendItem, PreparedLegend, PreparedSeries} from './types';
 
@@ -224,10 +222,9 @@ export function getLegendComponents(args: {
     chartMargin: PreparedChart['margin'];
     series: PreparedSeries[];
     preparedLegend: PreparedLegend;
-    preparedYAxis: PreparedAxis[];
 }) {
-    const {chartWidth, chartHeight, chartMargin, series, preparedLegend, preparedYAxis} = args;
-    const maxLegendWidth = getBoundsWidth({chartWidth, chartMargin, preparedYAxis});
+    const {chartWidth, chartHeight, chartMargin, series, preparedLegend} = args;
+    const maxLegendWidth = chartWidth - chartMargin.right - chartMargin.left;
     const maxLegendHeight =
         (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
@@ -264,9 +261,9 @@ export function getLegendComponents(args: {
 
     const top = chartHeight - chartMargin.bottom - preparedLegend.height;
     const offset: LegendConfig['offset'] = {
-        left: chartMargin.left + getYAxisWidth(preparedYAxis[0]),
+        left: chartMargin.left,
         top,
     };
 
-    return {legendConfig: {offset, pagination}, legendItems: items};
+    return {legendConfig: {offset, pagination, maxWidth: maxLegendWidth}, legendItems: items};
 }

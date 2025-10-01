@@ -99,9 +99,8 @@ export function useChartInnerProps(props: Props) {
             chartMargin: chart.margin,
             series: preparedSeries,
             preparedLegend,
-            preparedYAxis: yAxis,
         });
-    }, [width, height, chart.margin, preparedSeries, preparedLegend, yAxis]);
+    }, [width, height, chart.margin, preparedSeries, preparedLegend]);
     const {boundsWidth, boundsHeight} = useChartDimensions({
         width,
         height,
