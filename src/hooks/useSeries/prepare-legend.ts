@@ -39,9 +39,14 @@ export async function getPreparedLegend(args: {
     const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
     const titleHeight = isTitleEnabled ? titleSize.maxHeight : 0;
 
+    const tickStyle: BaseTextStyle = {
+        fontSize: '12px',
+    };
+
     const ticks = {
         labelsMargin: 4,
-        labelsLineHeight: 12,
+        labelsLineHeight: (await getLabelsSize({labels: ['Tmp'], style: tickStyle})).maxHeight,
+        style: tickStyle,
     };
 
     const colorScale: PreparedLegend['colorScale'] = {

@@ -67,6 +67,7 @@ export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>>
     ticks: {
         labelsMargin: number;
         labelsLineHeight: number;
+        style: BaseTextStyle;
     };
     colorScale: {
         colors: string[];
