@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.3](https://github.com/gravity-ui/charts/compare/v1.11.2...v1.11.3) (2025-10-01)
+
+
+### Bug Fixes
+
+* fix last y-axis label position ([#173](https://github.com/gravity-ui/charts/issues/173)) ([1e614cb](https://github.com/gravity-ui/charts/commit/1e614cb220ab56c2467e2cd8761c150957ebb5c1))
+* the legend is displayed with the old version of the config when updating the props ([#175](https://github.com/gravity-ui/charts/issues/175)) ([af1d79d](https://github.com/gravity-ui/charts/commit/af1d79d8f498623fedad11d299eb21ad2f36b283))
+
 ## [1.11.2](https://github.com/gravity-ui/charts/compare/v1.11.1...v1.11.2) (2025-09-29)
 
 
