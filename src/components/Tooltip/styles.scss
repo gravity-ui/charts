@@ -22,10 +22,15 @@
     &__content-row {
         display: flex;
         align-items: center;
+        column-gap: 8px;
 
         padding: 2px 14px;
 
         font-size: 12px;
+
+        &_striped {
+            background-color: var(--g-color-base-generic);
+        }
 
         &_active {
             font-weight: 600;
@@ -34,14 +39,25 @@
         }
     }
 
-    &__color {
+    &__content-row-color {
         display: inline-block;
 
         width: 16px;
         height: 8px;
-        margin-inline-end: 8px;
 
         border-radius: 2px;
         background-color: #dddddd;
+    }
+
+    &__content-row-value {
+        margin-inline-start: auto;
+    }
+
+    &__content-row-totals {
+        color: var(--g-color-text-complementary);
+    }
+
+    &__content-row-totals-divider {
+        margin-block: 5px 5px;
     }
 }

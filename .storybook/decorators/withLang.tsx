@@ -5,6 +5,8 @@ import type {Lang} from '@gravity-ui/uikit';
 import {configure} from '@gravity-ui/uikit';
 import type {Decorator} from '@storybook/react';
 
+import {i18nFactory} from '../../src/i18n';
+
 export const WithLang: Decorator = (Story, context) => {
     const lang = context.globals.lang;
     const [key, forceRender] = React.useState(0);
@@ -13,6 +15,7 @@ export const WithLang: Decorator = (Story, context) => {
         configure({
             lang: lang as Lang,
         });
+        i18nFactory.setLang(lang as Lang);
 
         settings.loadLocale(lang).then(() => {
             settings.setLocale(lang);

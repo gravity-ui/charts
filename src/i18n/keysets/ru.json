@@ -13,6 +13,11 @@
     "label_invalid-treemap-missing-value": "Похоже, что вы пытаетесь использовать узел без значения \"value\". Проверьте узел с этими свойствами: { id: \"{{id}}\", name: \"{{name}}\" }",
     "label_invalid-y-axis-index": "Похоже, что вы пытаетесь использовать некорректный индекс для оси Y: \"{{index}}\"",
     "label_invalid-axis-plot-band-option": "Похоже, что вы пытаетесь использовать некорректный тип для параметра полосы: \"{{option}}\" для оси \"{{axis}}\"",
-    "label_axis-plot-band-options-not-equal": "Похоже, что вы пытаетесь использовать разные типы для для параметра полосы для оси \"{{axis}}\""
+    "label_axis-plot-band-options-not-equal": "Похоже, что вы пытаетесь использовать разные типы для для параметра полосы для оси \"{{axis}}\"",
+    "label_invalid-tooltip-totals-aggregation-type": "Похоже, что вы пытаетесь использовать некорректный тип данных для \"tooltip.totals.aggregation\". Доступные типы: string, function.",
+    "label_invalid-tooltip-totals-aggregation-type-str": "Похоже, что вы пытаетесь использовать некорректное значение для встроенной агрегации \"tooltip.totals.aggregation\". Доступные значения: [{{values}}]."
+  },
+  "tooltip": {
+    "label_totals_sum": "Сумма"
   }
 }

@@ -13,6 +13,11 @@
     "label_invalid-treemap-missing-value": "It seems you are trying to use node without \"value\". Check node with this properties: { id: \"{{id}}\", name: \"{{name}}\" }",
     "label_invalid-y-axis-index": "It seems you are trying to use inappropriate index for Y axis: \"{{index}}\"",
     "label_invalid-axis-plot-band-option": "It seems you are trying to use inappropriate type for \"{{axis}}\" axis plot band option: \"{{option}}\"",
-    "label_axis-plot-band-options-not-equal": "It seems you are trying to use different type for \"{{axis}}\" axis plot band options"
+    "label_axis-plot-band-options-not-equal": "It seems you are trying to use different type for \"{{axis}}\" axis plot band options",
+    "label_invalid-tooltip-totals-aggregation-type": "It seems you are trying to use inappropriate data type for \"tooltip.totals.aggregation\". Available types: string, function.",
+    "label_invalid-tooltip-totals-aggregation-type-str": "It seems you are trying to use inappropriate value for built-in \"tooltip.totals.aggregation\". Available values: [{{values}}]."
+  },
+  "tooltip": {
+    "label_totals_sum": "Sum"
   }
 }
