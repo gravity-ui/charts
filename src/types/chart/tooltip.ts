@@ -102,6 +102,11 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     yAxis?: ChartYAxis;
 }
 
+export interface ChartTooltipTotalsAggregationArgs<T = MeaningfulAny>
+    extends ChartTooltipRendererArgs<T> {}
+
+export type ChartTooltipTotalsBuiltInAggregation = 'sum';
+
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
@@ -114,4 +119,22 @@ export interface ChartTooltip<T = MeaningfulAny> {
     throttle?: number;
     /** Formatting settings for tooltip value. */
     valueFormat?: ValueFormat;
+    /** Settings for totals block in tooltip */
+    totals?: {
+        /**
+         * The aggregation method for calculating totals.
+         * It can be a built-in function (e.g., 'sum') or a custom function.
+         * @default 'sum'
+         */
+        aggregation?:
+            | ChartTooltipTotalsBuiltInAggregation
+            | ((args: ChartTooltipTotalsAggregationArgs) => number | undefined);
+        /**
+         * Enables/disables the display of totals
+         * @default false
+         */
+        enabled?: boolean;
+        /** The label text for the totals. For built-in aggregations, the label can be omitted. */
+        label?: string;
+    };
 }

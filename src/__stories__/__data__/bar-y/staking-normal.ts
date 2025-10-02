@@ -3,7 +3,7 @@ import {groups} from 'd3';
 import type {BarYSeries, ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-function prepareData(): ChartData {
+export function prepareBarYStakingNormalData(): ChartData {
     const grouped = groups(
         nintendoGames,
         (d) => d.platform,
@@ -48,4 +48,4 @@ function prepareData(): ChartData {
     };
 }
 
-export const barYStakingNormalData = prepareData();
+export const barYStakingNormalData = prepareBarYStakingNormalData();
