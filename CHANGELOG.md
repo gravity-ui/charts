@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.4](https://github.com/gravity-ui/charts/compare/v1.11.3...v1.11.4) (2025-10-01)
+
+
+### Bug Fixes
+
+* legend item click should set series visibility ([#178](https://github.com/gravity-ui/charts/issues/178)) ([9a89c04](https://github.com/gravity-ui/charts/commit/9a89c0418b413939b639b9bfdcdebcc7909a92a3))
+* legend position ([#176](https://github.com/gravity-ui/charts/issues/176)) ([fee8430](https://github.com/gravity-ui/charts/commit/fee8430ebd3dd995e502930f5a2e68e72fc858ac))
+
 ## [1.11.3](https://github.com/gravity-ui/charts/compare/v1.11.2...v1.11.3) (2025-10-01)
 
 
