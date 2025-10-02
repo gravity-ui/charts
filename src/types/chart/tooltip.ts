@@ -1,3 +1,4 @@
+import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -105,7 +106,10 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
 export interface ChartTooltipTotalsAggregationArgs<T = MeaningfulAny>
     extends ChartTooltipRendererArgs<T> {}
 
-export type ChartTooltipTotalsBuiltInAggregation = 'sum';
+export type ChartTooltipTotalsBuiltInAggregation =
+    (typeof TOOLTIP_TOTALS_BUILT_IN_AGGREGATION)[keyof typeof TOOLTIP_TOTALS_BUILT_IN_AGGREGATION];
+
+export type ChartTooltipTotalsAggregationValue = number | string | undefined;
 
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
@@ -128,7 +132,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
          */
         aggregation?:
             | ChartTooltipTotalsBuiltInAggregation
-            | ((args: ChartTooltipTotalsAggregationArgs) => number | undefined);
+            | ((args: ChartTooltipTotalsAggregationArgs) => ChartTooltipTotalsAggregationValue);
         /**
          * Enables/disables the display of totals
          * @default false

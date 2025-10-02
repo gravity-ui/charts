@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
-import {DEFAULT_AXIS_TYPE, SeriesType} from '../constants';
+import {DEFAULT_AXIS_TYPE, SeriesType, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {
@@ -10,6 +10,7 @@ import type {
     BarYSeries,
     ChartData,
     ChartSeries,
+    ChartTooltip,
     ChartXAxis,
     ChartYAxis,
     LineSeries,
@@ -19,8 +20,17 @@ import type {
 } from '../types';
 
 type XYSeries = ScatterSeries | BarXSeries | BarYSeries | LineSeries | AreaSeries;
+type GetTypeOfResult = ReturnType<typeof getTypeOf>;
+
+function getTypeOf(value: unknown) {
+    return typeof value;
+}
 
 const AVAILABLE_SERIES_TYPES = Object.values(SeriesType);
+const AVAILABLE_TOOLTIP_TOTALS_BUILT_IN_AGGREGATIONS = Object.values(
+    TOOLTIP_TOTALS_BUILT_IN_AGGREGATION,
+);
+const AVAILABLE_TOOLTIP_TOTALS_AGGREGATION_TYPES: GetTypeOfResult[] = ['function', 'string'];
 
 function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {series, xAxis, yAxis = []} = args;
@@ -395,6 +405,39 @@ function countSeriesByType(args: {series: ChartSeries[]; type: ChartSeries['type
     return count;
 }
 
+function validateTooltip({tooltip}: {tooltip?: ChartTooltip}) {
+    if (!tooltip) {
+        return;
+    }
+
+    if (tooltip.totals) {
+        const aggregation = tooltip.totals.aggregation;
+
+        if (aggregation) {
+            const aggregationType = getTypeOf(aggregation);
+
+            if (!AVAILABLE_TOOLTIP_TOTALS_AGGREGATION_TYPES.includes(aggregationType)) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_invalid-tooltip-totals-aggregation-type'),
+                });
+            }
+
+            if (
+                typeof aggregation === 'string' &&
+                !AVAILABLE_TOOLTIP_TOTALS_BUILT_IN_AGGREGATIONS.includes(aggregation)
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_invalid-tooltip-totals-aggregation-type-str', {
+                        values: AVAILABLE_TOOLTIP_TOTALS_BUILT_IN_AGGREGATIONS,
+                    }),
+                });
+            }
+        }
+    }
+}
+
 export function validateData(data?: ChartData) {
     if (isEmpty(data) || isEmpty(data.series) || isEmpty(data.series.data)) {
         throw new ChartError({
@@ -402,6 +445,8 @@ export function validateData(data?: ChartData) {
             message: i18n('error', 'label_no-data'),
         });
     }
+
+    validateTooltip({tooltip: data.tooltip});
 
     if (data.series.data.some((s) => isEmpty(s.data))) {
         throw new ChartError({

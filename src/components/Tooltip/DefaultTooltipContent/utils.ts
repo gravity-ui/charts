@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 
-import type {PreparedPieSeries} from '../../hooks';
-import {i18n} from '../../i18n';
+import type {PreparedPieSeries} from '../../../hooks';
+import {i18n} from '../../../i18n';
 import type {
     ChartSeriesData,
     ChartTooltip,
@@ -15,9 +15,9 @@ import type {
     TooltipDataChunkSankey,
     TreemapSeriesData,
     ValueFormat,
-} from '../../types';
-import {getDataCategoryValue} from '../../utils';
-import {getFormattedValue} from '../../utils/chart/format';
+} from '../../../types';
+import {getDataCategoryValue} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 
 export type HoveredValue = string | number | null | undefined;
 

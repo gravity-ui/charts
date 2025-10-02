@@ -4,7 +4,7 @@ import isNil from 'lodash/isNil';
 
 import type {ChartTooltip, ChartXAxis, ChartYAxis, TooltipDataChunk} from '../../types';
 
-import {DefaultContent} from './DefaultContent';
+import {DefaultTooltipContent} from './DefaultTooltipContent';
 
 export interface ChartTooltipContentProps {
     hovered?: TooltipDataChunk[];
@@ -25,7 +25,7 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
     const customTooltip = renderer?.({hovered, xAxis, yAxis});
 
     return isNil(customTooltip) ? (
-        <DefaultContent
+        <DefaultTooltipContent
             hovered={hovered}
             xAxis={xAxis}
             yAxis={yAxis}

@@ -3,10 +3,9 @@ import React from 'react';
 import {Divider} from '@gravity-ui/uikit';
 import get from 'lodash/get';
 
-import type {PreparedPieSeries, PreparedRadarSeries} from '../../hooks';
+import type {PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
 import type {
     ChartTooltip,
-    ChartTooltipTotalsBuiltInAggregation,
     ChartXAxis,
     ChartYAxis,
     TooltipDataChunk,
@@ -14,20 +13,19 @@ import type {
     TooltipDataChunkWaterfall,
     TreemapSeriesData,
     ValueFormat,
-} from '../../types';
-import {block} from '../../utils';
-import {getFormattedValue} from '../../utils/chart/format';
+} from '../../../types';
+import {block} from '../../../utils';
+import {getFormattedValue} from '../../../utils/chart/format';
 
+import {Row} from './Row';
+import {RowTotals} from './RowTotals';
 import {
-    getBuiltInAggregatedValue,
-    getBuiltInAggregationLabel,
     getDefaultValueFormat,
     getHoveredValues,
     getMeasureValue,
     getPreparedAggregation,
     getXRowData,
 } from './utils';
-import type {HoveredValue} from './utils';
 
 const b = block('tooltip');
 
@@ -39,53 +37,7 @@ type Props = {
     yAxis?: ChartYAxis;
 };
 
-function Row(props: {
-    label: React.ReactNode;
-    value: React.ReactNode;
-    active?: boolean;
-    className?: string;
-    color?: string;
-    striped?: boolean;
-}) {
-    const {label, value, active, color, className, striped} = props;
-
-    return (
-        <div className={b('content-row', {active, striped}, className)}>
-            {color && <div className={b('content-row-color')} style={{backgroundColor: color}} />}
-            {label}
-            <span className={b('content-row-value')}>{value}</span>
-        </div>
-    );
-}
-
-function RowTotals(props: {
-    aggregation: ChartTooltipTotalsBuiltInAggregation | (() => number | undefined);
-    values: HoveredValue[];
-    label?: string;
-    valueFormat?: ValueFormat;
-}) {
-    const {aggregation, label, valueFormat, values} = props;
-    let resultLabel = label;
-
-    if (!resultLabel && typeof aggregation === 'string') {
-        resultLabel = getBuiltInAggregationLabel({aggregation});
-    }
-
-    const resultValue =
-        typeof aggregation === 'function'
-            ? aggregation()
-            : getBuiltInAggregatedValue({aggregation, values});
-    const formattedResultValue = getFormattedValue({
-        value: resultValue,
-        format: valueFormat || {type: 'number'},
-    });
-
-    return (
-        <Row className={b('content-row-totals')} label={resultLabel} value={formattedResultValue} />
-    );
-}
-
-export const DefaultContent = ({hovered, xAxis, yAxis, valueFormat, totals}: Props) => {
+export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, totals}: Props) => {
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
     const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
 
