@@ -1,75 +1,22 @@
-import {ascending, descending, max, sort} from 'd3';
+import {ascending, descending, sort} from 'd3';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
-import type {BarYSeriesData, LabelData} from '../../../types';
-import {getDataCategoryValue, getLabelsSize} from '../../../utils';
+import type {LabelData} from '../../../types';
+import {getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../useSeries/types';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
+import {
+    getBarYLayoutForCategoryScale,
+    getBarYLayoutForNumericScale,
+    groupBarYDataByYValue,
+} from '../../utils';
 
 import type {PreparedBarYData} from './types';
 
 const DEFAULT_LABEL_PADDING = 7;
-
-function groupByYValue(series: PreparedBarYSeries[], yAxis: PreparedAxis[]) {
-    const data: Record<
-        string | number,
-        Record<string, {data: BarYSeriesData; series: PreparedBarYSeries}[]>
-    > = {};
-    series.forEach((s) => {
-        s.data.forEach((d) => {
-            const axisIndex = get(s, 'yAxis', 0);
-            const seriesYAxis = yAxis[axisIndex];
-            const categories = get(seriesYAxis, 'categories', [] as string[]);
-            const key =
-                seriesYAxis.type === 'category'
-                    ? getDataCategoryValue({axisDirection: 'y', categories, data: d})
-                    : d.y;
-
-            if (key) {
-                if (!data[key]) {
-                    data[key] = {};
-                }
-
-                if (!data[key][s.stackId]) {
-                    data[key][s.stackId] = [];
-                }
-
-                data[key][s.stackId].push({data: d, series: s});
-            }
-        });
-    });
-
-    return data;
-}
-
-function getBandWidth(series: PreparedBarYSeries[], yAxis: PreparedAxis[], yScale: ChartScale) {
-    let bandWidth = Infinity;
-
-    if (yAxis[0].type === 'category') {
-        bandWidth = (yScale as ScaleBand<string>).bandwidth();
-    } else {
-        const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
-        const axisValues = series.reduce<number[]>((acc, s) => {
-            s.data.forEach((dataItem) => acc.push(Number(dataItem.y)));
-            return acc;
-        }, []);
-
-        axisValues.sort().forEach((value, index) => {
-            if (index > 0 && value !== axisValues[index - 1]) {
-                const dist = scale(value) - scale(axisValues[index - 1]);
-                if (dist < bandWidth) {
-                    bandWidth = dist;
-                }
-            }
-        });
-    }
-
-    return bandWidth;
-}
 
 async function setLabel(prepared: PreparedBarYData) {
     const dataLabels = prepared.series.dataLabels;
@@ -127,10 +74,9 @@ export const prepareBarYData = async (args: {
     } = args;
 
     const xLinearScale = xScale as ScaleLinear<number, number>;
+    const yLinearScale = yScale as ScaleLinear<number, number>;
+    const plotHeight = yLinearScale(yLinearScale.domain()[0]);
     const plotWidth = xLinearScale(xLinearScale.domain()[1]);
-    const barMaxWidth = get(seriesOptions, 'bar-y.barMaxWidth');
-    const barPadding = get(seriesOptions, 'bar-y.barPadding');
-    const groupPadding = get(seriesOptions, 'bar-y.groupPadding');
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
     const sortKey = (() => {
@@ -147,23 +93,21 @@ export const prepareBarYData = async (args: {
         }
     })();
 
-    const groupedData = groupByYValue(series, yAxis);
-    const bandWidth = getBandWidth(series, yAxis, yScale);
-
-    const maxGroupSize = max(Object.values(groupedData), (d) => Object.values(d).length) || 1;
-    const groupGap = Math.max(bandWidth * groupPadding, MIN_BAR_GROUP_GAP);
-    const groupWidth = bandWidth - groupGap;
-    const rectGap = Math.max(bandWidth * barPadding, MIN_BAR_GAP);
-    const barHeight = Math.max(
-        MIN_BAR_WIDTH,
-        Math.min(groupWidth / maxGroupSize - rectGap, barMaxWidth),
-    );
+    const groupedData = groupBarYDataByYValue(series, yAxis);
+    const {bandSize, barGap, barSize} =
+        yAxis[0].type === 'category'
+            ? getBarYLayoutForCategoryScale({groupedData, seriesOptions, yScale})
+            : getBarYLayoutForNumericScale({
+                  series,
+                  seriesOptions,
+                  plotHeight: plotHeight - plotHeight * yAxis[0].maxPadding,
+              });
 
     const result: PreparedBarYData[] = [];
 
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
-        const currentBarHeight = barHeight * stacks.length + rectGap * (stacks.length - 1);
+        const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
         stacks.forEach((measureValues, groupItemIndex) => {
             const base = xLinearScale(0);
             let stackSum = base;
@@ -177,13 +121,13 @@ export const prepareBarYData = async (args: {
 
                 if (yAxis[0].type === 'category') {
                     const bandScale = yScale as ScaleBand<string>;
-                    center = (bandScale(yValue as string) || 0) + bandWidth / 2;
+                    center = (bandScale(yValue as string) || 0) + bandSize / 2;
                 } else {
                     const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
                     center = scale(Number(yValue));
                 }
 
-                const y = center - currentBarHeight / 2 + (barHeight + rectGap) * groupItemIndex;
+                const y = center - currentBarHeight / 2 + (barSize + barGap) * groupItemIndex;
                 const xValue = Number(data.x);
                 const width =
                     xValue > 0 ? xLinearScale(xValue) - base : base - xLinearScale(xValue);
@@ -192,7 +136,7 @@ export const prepareBarYData = async (args: {
                     x: xValue > 0 ? stackSum : stackSum - width,
                     y,
                     width,
-                    height: barHeight,
+                    height: barSize,
                     color: data.color || s.color,
                     opacity: get(data, 'opacity', null),
                     data,

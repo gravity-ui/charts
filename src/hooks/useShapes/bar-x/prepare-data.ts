@@ -5,10 +5,10 @@ import get from 'lodash/get';
 import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/types';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
 
 import type {PreparedBarXData} from './types';
 
