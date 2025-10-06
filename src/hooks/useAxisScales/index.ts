@@ -71,7 +71,7 @@ function filterCategoriesByVisibleSeries(args: {
     return categories.filter((c) => visibleCategories.has(c));
 }
 
-// axis is validated in `validation.ts`, so the value of `axis.type` is definitely valid.
+// axis is validated in `validation/index.ts`, so the value of `axis.type` is definitely valid.
 // eslint-disable-next-line consistent-return
 function getYScaleRange(args: {
     axis: PreparedAxis;

@@ -168,4 +168,25 @@ describe('plugins/d3/validation', () => {
             expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
         },
     );
+
+    test.each([
+        {
+            series: {data: [{type: 'line', data: [{x: 1, y: 1}]}]},
+            xAxis: {type: 'unknown'},
+        },
+        {
+            series: {data: [{type: 'line', data: [{x: 1, y: 1}]}]},
+            yAxis: [{type: 'unknown'}],
+        },
+    ])('validateData should throw an error in case of invalid axis type (data: %j)', (data) => {
+        let error: ChartError | null = null;
+
+        try {
+            validateData(data as unknown as ChartData);
+        } catch (e) {
+            error = e as ChartError;
+        }
+
+        expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+    });
 });

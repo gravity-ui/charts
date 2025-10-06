@@ -1,9 +1,9 @@
-import type {DashStyle} from '../../constants';
+import type {AXIS_TYPE, DashStyle} from '../../constants';
 import type {FormatNumberOptions} from '../formatter';
 
 import type {BaseTextStyle} from './base';
 
-export type ChartAxisType = 'category' | 'datetime' | 'linear' | 'logarithmic';
+export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 
 export interface ChartAxisLabels {
