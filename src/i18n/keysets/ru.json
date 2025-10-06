@@ -15,7 +15,8 @@
     "label_invalid-axis-plot-band-option": "Похоже, что вы пытаетесь использовать некорректный тип для параметра полосы: \"{{option}}\" для оси \"{{axis}}\"",
     "label_axis-plot-band-options-not-equal": "Похоже, что вы пытаетесь использовать разные типы для для параметра полосы для оси \"{{axis}}\"",
     "label_invalid-tooltip-totals-aggregation-type": "Похоже, что вы пытаетесь использовать некорректный тип данных для \"tooltip.totals.aggregation\". Доступные типы: string, function.",
-    "label_invalid-tooltip-totals-aggregation-type-str": "Похоже, что вы пытаетесь использовать некорректное значение для встроенной агрегации \"tooltip.totals.aggregation\". Доступные значения: [{{values}}]."
+    "label_invalid-tooltip-totals-aggregation-type-str": "Похоже, что вы пытаетесь использовать некорректное значение для встроенной агрегации \"tooltip.totals.aggregation\". Доступные значения: [{{values}}].",
+    "label_invalid-axis-type": "Похоже, что вы пытаетесь использовать некорректный тип для оси \"{{key}}\". Доступные типы: [{{values}}]."
   },
   "tooltip": {
     "label_totals_sum": "Сумма"

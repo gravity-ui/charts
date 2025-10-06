@@ -5,6 +5,7 @@ import sortBy from 'lodash/sortBy';
 import type {LabelData} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
+import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {
@@ -12,7 +13,6 @@ import type {
     PreparedWaterfallSeries,
     PreparedWaterfallSeriesData,
 } from '../../useSeries/types';
-import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../constants';
 import {getXValue, getYValue} from '../utils';
 
 import type {PreparedWaterfallData} from './types';

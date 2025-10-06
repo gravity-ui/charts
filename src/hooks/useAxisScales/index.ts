@@ -4,7 +4,7 @@ import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_AXIS_TYPE} from '../../constants';
+import {DEFAULT_AXIS_TYPE, SeriesType} from '../../constants';
 import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
@@ -20,8 +20,9 @@ import {
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
-import type {PreparedSeries} from '../useSeries/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
+import {getBarYLayoutForNumericScale} from '../utils';
 
 export type ChartScale =
     | ScaleLinear<number, number>
@@ -32,6 +33,7 @@ type Args = {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
+    seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
@@ -46,15 +48,15 @@ type ReturnValue = {
 
 const X_AXIS_ZOOM_PADDING = 0.02;
 
-const isNumericalArrayData = (data: unknown[]): data is number[] => {
+function isNumericalArrayData(data: unknown[]): data is number[] {
     return data.every((d) => typeof d === 'number' || d === null);
-};
+}
 
-const filterCategoriesByVisibleSeries = (args: {
+function filterCategoriesByVisibleSeries(args: {
     axisDirection: AxisDirection;
     categories: string[];
     series: (PreparedSeries | ChartSeries)[];
-}) => {
+}) {
     const {axisDirection, categories, series} = args;
 
     const visibleCategories = new Set();
@@ -67,20 +69,79 @@ const filterCategoriesByVisibleSeries = (args: {
     });
 
     return categories.filter((c) => visibleCategories.has(c));
-};
+}
 
-export function createYScale(axis: PreparedAxis, series: PreparedSeries[], boundsHeight: number) {
-    const yType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
+// axis is validated in `validation/index.ts`, so the value of `axis.type` is definitely valid.
+// eslint-disable-next-line consistent-return
+function getYScaleRange(args: {
+    axis: PreparedAxis;
+    boundsHeight: number;
+    series: (PreparedSeries | ChartSeries)[];
+    seriesOptions: PreparedSeriesOptions;
+}): [number, number] {
+    const {axis, boundsHeight, series, seriesOptions} = args;
+    switch (axis.type) {
+        case 'datetime':
+        case 'linear':
+        case 'logarithmic': {
+            const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
+
+            if (barYSeries.length) {
+                const {barSize, dataLength} = getBarYLayoutForNumericScale({
+                    plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
+                    series: barYSeries,
+                    seriesOptions: seriesOptions,
+                });
+
+                if (dataLength > 1) {
+                    const alreadyCountedStackingIds = new Set<string>();
+                    const offsetMultiplier = barYSeries.reduce((acc, s) => {
+                        let count = 0;
+
+                        if (s.stackId) {
+                            if (!alreadyCountedStackingIds.has(s.stackId)) {
+                                alreadyCountedStackingIds.add(s.stackId);
+                                count = 1;
+                            }
+                        } else {
+                            count = 1;
+                        }
+
+                        return acc + count;
+                    }, 0);
+                    const offset = (barSize * Math.max(offsetMultiplier, 1)) / 2;
+                    const start = boundsHeight - offset;
+                    const end = boundsHeight * axis.maxPadding + offset;
+
+                    return [start, end];
+                }
+            }
+
+            return [boundsHeight, boundsHeight * axis.maxPadding];
+        }
+        case 'category': {
+            return [boundsHeight, 0];
+        }
+    }
+}
+
+export function createYScale(args: {
+    axis: PreparedAxis;
+    boundsHeight: number;
+    series: (PreparedSeries | ChartSeries)[];
+    seriesOptions: PreparedSeriesOptions;
+}) {
+    const {axis, boundsHeight, series, seriesOptions} = args;
     const yMinProps = get(axis, 'min');
     const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
+    const range = getYScaleRange({axis, boundsHeight, series, seriesOptions});
 
-    switch (yType) {
+    switch (axis.type) {
         case 'linear':
         case 'logarithmic': {
             const domain = getDomainDataYBySeries(series);
-            const range = [boundsHeight, boundsHeight * axis.maxPadding];
 
             if (isNumericalArrayData(domain)) {
                 const [yMinDomain, yMaxDomain] = extent(domain) as [number, number];
@@ -96,7 +157,7 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
-                const scaleFn = yType === 'logarithmic' ? scaleLog : scaleLinear;
+                const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 return scaleFn().domain([yMin, yMax]).range(range).nice();
             }
 
@@ -109,14 +170,12 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
                     categories: yCategories,
                     series: series,
                 });
-                return scaleBand().domain(filteredCategories).range([boundsHeight, 0]);
+                return scaleBand().domain(filteredCategories).range(range);
             }
 
             break;
         }
         case 'datetime': {
-            const range = [boundsHeight, boundsHeight * axis.maxPadding];
-
             if (yTimestamps) {
                 const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
                 const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
@@ -132,8 +191,6 @@ export function createYScale(axis: PreparedAxis, series: PreparedSeries[], bound
                     return scaleUtc().domain([yMin, yMax]).range(range).nice();
                 }
             }
-
-            break;
         }
     }
 
@@ -162,12 +219,13 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 // eslint-disable-next-line complexity
-export function createXScale(
-    axis: PreparedAxis | ChartAxis,
-    series: (PreparedSeries | ChartSeries)[],
-    boundsWidth: number,
-    hasZoomX?: boolean,
-) {
+export function createXScale(args: {
+    axis: PreparedAxis | ChartAxis;
+    boundsWidth: number;
+    series: (PreparedSeries | ChartSeries)[];
+    hasZoomX?: boolean;
+}) {
+    const {axis, boundsWidth, series, hasZoomX} = args;
     const xMinProps = get(axis, 'min');
     const xMaxProps = get(axis, 'max');
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
@@ -280,14 +338,16 @@ export function createXScale(
 }
 
 const createScales = (args: Args) => {
-    const {boundsWidth, boundsHeight, series, xAxis, yAxis, split, hasZoomX} = args;
+    const {boundsWidth, boundsHeight, hasZoomX, series, seriesOptions, split, xAxis, yAxis} = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
     visibleSeries = visibleSeries.length === 0 ? series : visibleSeries;
 
     return {
-        xScale: xAxis ? createXScale(xAxis, visibleSeries, boundsWidth, hasZoomX) : undefined,
+        xScale: xAxis
+            ? createXScale({axis: xAxis, boundsWidth, series: visibleSeries, hasZoomX})
+            : undefined,
         yScale: yAxis.map((axis, index) => {
             const axisSeries = series.filter((s) => {
                 const seriesAxisIndex = get(s, 'yAxis', 0);
@@ -295,11 +355,12 @@ const createScales = (args: Args) => {
             });
             const visibleAxisSeries = getOnlyVisibleSeries(axisSeries);
             const axisHeight = getAxisHeight({boundsHeight, split});
-            return createYScale(
+            return createYScale({
                 axis,
-                visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
-                axisHeight,
-            );
+                boundsHeight: axisHeight,
+                series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
+                seriesOptions,
+            });
         }),
     };
 };
@@ -308,7 +369,17 @@ const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {boundsWidth, boundsHeight, series, xAxis, yAxis, split, hasZoomX, hasZoomY} = args;
+    const {
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        hasZoomY,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+    } = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: ChartScale[] | undefined;
@@ -318,15 +389,16 @@ export const useAxisScales = (args: Args): ReturnValue => {
             ({xScale, yScale} = createScales({
                 boundsWidth,
                 boundsHeight,
-                series,
-                xAxis,
-                yAxis,
-                split,
                 hasZoomX,
                 hasZoomY,
+                series,
+                seriesOptions,
+                split,
+                xAxis,
+                yAxis,
             }));
         }
 
         return {xScale, yScale};
-    }, [boundsWidth, boundsHeight, series, xAxis, yAxis, split, hasZoomX, hasZoomY]);
+    }, [boundsWidth, boundsHeight, hasZoomX, hasZoomY, series, seriesOptions, split, xAxis, yAxis]);
 };

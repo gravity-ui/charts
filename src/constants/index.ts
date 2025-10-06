@@ -1,3 +1,4 @@
+export * from './axis';
 export * from './chart-types';
 export * from './defaults';
 export * from './layout-algorithms';

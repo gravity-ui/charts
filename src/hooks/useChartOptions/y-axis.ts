@@ -21,18 +21,27 @@ import {
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
-import type {PreparedSeries} from '../useSeries/types';
+import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
-const getAxisLabelMaxWidth = async (args: {axis: PreparedAxis; seriesData: ChartSeries[]}) => {
-    const {axis, seriesData} = args;
+const getAxisLabelMaxWidth = async (args: {
+    axis: PreparedAxis;
+    seriesData: ChartSeries[];
+    seriesOptions: PreparedSeriesOptions;
+}) => {
+    const {axis, seriesData, seriesOptions} = args;
 
     if (!axis.labels.enabled) {
         return 0;
     }
 
-    const scale = createYScale(axis, seriesData as PreparedSeries[], 1);
+    const scale = createYScale({
+        axis,
+        boundsHeight: 1,
+        series: seriesData,
+        seriesOptions,
+    });
     const ticks: AxisDomain[] = getScaleTicks(scale as AxisScale<AxisDomain>);
 
     // FIXME: it is necessary to filter data, since we do not draw overlapping ticks
@@ -56,13 +65,15 @@ const getAxisLabelMaxWidth = async (args: {axis: PreparedAxis; seriesData: Chart
 };
 
 export const getPreparedYAxis = ({
-    seriesData,
-    yAxis,
     height,
+    seriesData,
+    seriesOptions,
+    yAxis,
 }: {
-    seriesData: ChartSeries[];
-    yAxis: ChartYAxis[] | undefined;
     height: number;
+    seriesData: ChartSeries[];
+    seriesOptions: PreparedSeriesOptions;
+    yAxis: ChartYAxis[] | undefined;
 }): Promise<PreparedAxis[]> => {
     const axisByPlot: ChartYAxis[][] = [];
     const axisItems = yAxis || [{} as ChartYAxis];
@@ -192,6 +203,7 @@ export const getPreparedYAxis = ({
                 preparedAxis.labels.width = await getAxisLabelMaxWidth({
                     axis: preparedAxis,
                     seriesData,
+                    seriesOptions,
                 });
             }
 
