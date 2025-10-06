@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/gravity-ui/charts/compare/v1.11.4...v1.12.0) (2025-10-06)
+
+
+### Features
+
+* add `tooltip.totals` option ([#179](https://github.com/gravity-ui/charts/issues/179)) ([ff03089](https://github.com/gravity-ui/charts/commit/ff030898fca78513431c18ac049626a401b1f465))
+
+
+### Bug Fixes
+
+* fix bar-y chart layout ([#181](https://github.com/gravity-ui/charts/issues/181)) ([3545fcb](https://github.com/gravity-ui/charts/commit/3545fcbeb1f4b20e6cf7a51d4615eea1f73ca811))
+
 ## [1.11.4](https://github.com/gravity-ui/charts/compare/v1.11.3...v1.11.4) (2025-10-01)
 
 
