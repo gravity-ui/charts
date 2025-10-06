@@ -21,7 +21,7 @@ import {
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
-import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
+import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 
@@ -39,7 +39,7 @@ const getAxisLabelMaxWidth = async (args: {
     const scale = createYScale({
         axis,
         boundsHeight: 1,
-        series: seriesData as PreparedSeries[],
+        series: seriesData,
         seriesOptions,
     });
     const ticks: AxisDomain[] = getScaleTicks(scale as AxisScale<AxisDomain>);

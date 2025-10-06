@@ -20,7 +20,7 @@ import {
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
-import type {PreparedBarYSeries, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
 import {getBarYLayoutForNumericScale} from '../utils';
 
@@ -71,67 +71,77 @@ function filterCategoriesByVisibleSeries(args: {
     return categories.filter((c) => visibleCategories.has(c));
 }
 
-function getAdjustedScaleByBarYSeries<
-    T extends ScaleLinear<number, number> | ScaleTime<number, number>,
->(args: {
+// axis is validated in `validation.ts`, so the value of `axis.type` is definitely valid.
+// eslint-disable-next-line consistent-return
+function getYScaleRange(args: {
     axis: PreparedAxis;
-    preparedBarYSeries: PreparedBarYSeries[];
-    scale: T;
+    boundsHeight: number;
+    series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
-}): T {
-    const {preparedBarYSeries, scale, axis, seriesOptions} = args;
-    const plotHeightBeforeRangeUpdating = scale(scale.domain()[0]);
-    const {barSize, dataLength} = getBarYLayoutForNumericScale({
-        plotHeight: plotHeightBeforeRangeUpdating - plotHeightBeforeRangeUpdating * axis.maxPadding,
-        series: preparedBarYSeries,
-        seriesOptions: seriesOptions,
-    });
+}): [number, number] {
+    const {axis, boundsHeight, series, seriesOptions} = args;
+    switch (axis.type) {
+        case 'datetime':
+        case 'linear':
+        case 'logarithmic': {
+            const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
 
-    if (dataLength === 1) {
-        return scale;
-    }
+            if (barYSeries.length) {
+                const {barSize, dataLength} = getBarYLayoutForNumericScale({
+                    plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
+                    series: barYSeries,
+                    seriesOptions: seriesOptions,
+                });
 
-    let seriesWithStackingHasAlreadyCounted = false;
-    const offsetMultiplier = preparedBarYSeries.reduce((acc, s) => {
-        let count = 0;
+                if (dataLength > 1) {
+                    const alreadyCountedStackingIds = new Set<string>();
+                    const offsetMultiplier = barYSeries.reduce((acc, s) => {
+                        let count = 0;
 
-        if (s.stacking && !seriesWithStackingHasAlreadyCounted) {
-            seriesWithStackingHasAlreadyCounted = true;
-            count = 1;
-        } else if (!s.stacking) {
-            count = 1;
+                        if (s.stackId) {
+                            if (!alreadyCountedStackingIds.has(s.stackId)) {
+                                alreadyCountedStackingIds.add(s.stackId);
+                                count = 1;
+                            }
+                        } else {
+                            count = 1;
+                        }
+
+                        return acc + count;
+                    }, 0);
+                    const offset = (barSize * Math.max(offsetMultiplier, 1)) / 2;
+                    const start = boundsHeight - offset;
+                    const end = boundsHeight * axis.maxPadding + offset;
+
+                    return [start, end];
+                }
+            }
+
+            return [boundsHeight, boundsHeight * axis.maxPadding];
         }
-
-        return acc + count;
-    }, 0);
-
-    const offset = (barSize * Math.max(offsetMultiplier, 1)) / 2;
-    const start = plotHeightBeforeRangeUpdating - offset;
-    const end = plotHeightBeforeRangeUpdating * axis.maxPadding + offset;
-
-    return scale.copy().range([start, end]) as T;
+        case 'category': {
+            return [boundsHeight, 0];
+        }
+    }
 }
 
-// eslint-disable-next-line complexity
 export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
-    series: PreparedSeries[];
+    series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
 }) {
     const {axis, boundsHeight, series, seriesOptions} = args;
-    const yType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const yMinProps = get(axis, 'min');
     const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
+    const range = getYScaleRange({axis, boundsHeight, series, seriesOptions});
 
-    switch (yType) {
+    switch (axis.type) {
         case 'linear':
         case 'logarithmic': {
             const domain = getDomainDataYBySeries(series);
-            const range = [boundsHeight, boundsHeight * axis.maxPadding];
-            let scale: ScaleLinear<number, number> | undefined;
 
             if (isNumericalArrayData(domain)) {
                 const [yMinDomain, yMaxDomain] = extent(domain) as [number, number];
@@ -147,23 +157,8 @@ export function createYScale(args: {
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
-                const scaleFn = yType === 'logarithmic' ? scaleLog : scaleLinear;
-                scale = scaleFn().domain([yMin, yMax]).range(range);
-            }
-
-            const preparedBarYSeries = series.filter((s) => s.type === SeriesType.BarY);
-
-            if (scale && preparedBarYSeries.length) {
-                scale = getAdjustedScaleByBarYSeries({
-                    axis,
-                    preparedBarYSeries,
-                    scale,
-                    seriesOptions,
-                });
-            }
-
-            if (scale) {
-                return scale.nice();
+                const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
+                return scaleFn().domain([yMin, yMax]).range(range).nice();
             }
 
             break;
@@ -175,20 +170,17 @@ export function createYScale(args: {
                     categories: yCategories,
                     series: series,
                 });
-                return scaleBand().domain(filteredCategories).range([boundsHeight, 0]);
+                return scaleBand().domain(filteredCategories).range(range);
             }
 
             break;
         }
         case 'datetime': {
-            const range = [boundsHeight, boundsHeight * axis.maxPadding];
-            let scale: ScaleTime<number, number> | undefined;
-
             if (yTimestamps) {
                 const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
                 const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
                 const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
-                scale = scaleUtc().domain([yMin, yMax]).range(range);
+                return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
 
@@ -196,23 +188,8 @@ export function createYScale(args: {
                     const [yMinTimestamp, yMaxTimestamp] = extent(domain) as [number, number];
                     const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
                     const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
-                    scale = scaleUtc().domain([yMin, yMax]).range(range);
+                    return scaleUtc().domain([yMin, yMax]).range(range).nice();
                 }
-            }
-
-            const preparedBarYSeries = series.filter((s) => s.type === SeriesType.BarY);
-
-            if (scale && preparedBarYSeries.length) {
-                scale = getAdjustedScaleByBarYSeries({
-                    axis,
-                    preparedBarYSeries,
-                    scale,
-                    seriesOptions,
-                });
-            }
-
-            if (scale) {
-                return scale.nice();
             }
         }
     }

@@ -339,4 +339,68 @@ test.describe('Bar-y series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Y-axis linear with stackId & non-stacked series', async ({mount}) => {
+        const data: ChartData = {
+            chart: {
+                margin: CHART_MARGIN,
+            },
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        stackId: '1',
+                        data: [
+                            {y: 2020, x: 100},
+                            {y: 2021, x: 150},
+                            {y: 2022, x: 50},
+                            {y: 2023, x: 200},
+                            {y: 2024, x: 75},
+                            {y: 2025, x: 125},
+                        ],
+                    },
+                    {
+                        type: 'bar-y',
+                        name: 'Series 2',
+                        stackId: '1',
+                        data: [
+                            {y: 2020, x: 25},
+                            {y: 2021, x: 175},
+                            {y: 2022, x: 50},
+                            {y: 2023, x: 15},
+                            {y: 2024, x: 125},
+                            {y: 2025, x: 100},
+                        ],
+                    },
+                    {
+                        type: 'bar-y',
+                        name: 'Series 3',
+                        data: [
+                            {y: 2020, x: 50},
+                            {y: 2021, x: 100},
+                            {y: 2022, x: 50},
+                            {y: 2023, x: 75},
+                            {y: 2024, x: 150},
+                            {y: 2025, x: 125},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                labels: {enabled: false},
+            },
+            yAxis: [
+                {
+                    type: 'linear',
+                    labels: {enabled: false},
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
