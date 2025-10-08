@@ -42,6 +42,9 @@ function prepareData(): ChartData {
                     dashStyle: 'Dot',
                     opacity: 0.6,
                     layerPlacement: 'before', // Line behind the graph
+                    label: {
+                        text: 'plot line label',
+                    },
                 },
             ],
         },

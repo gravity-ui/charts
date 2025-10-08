@@ -24,6 +24,7 @@ import {
 import {createXScale} from '../useAxisScales';
 
 import type {PreparedAxis} from './types';
+import {prepareAxisPlotLabel} from './utils';
 
 async function getLabelSettings({
     axis,
@@ -149,6 +150,7 @@ export const getPreparedXAxis = async ({
             dashStyle: get(d, 'dashStyle', DASH_STYLE.Solid),
             opacity: get(d, 'opacity', 1),
             layerPlacement: get(d, 'layerPlacement', 'before'),
+            label: prepareAxisPlotLabel(d),
         })),
         plotBands: get(xAxis, 'plotBands', []).map((d) => ({
             color: get(d, 'color', 'var(--g-color-base-brand)'),
@@ -156,6 +158,7 @@ export const getPreparedXAxis = async ({
             from: get(d, 'from', 0),
             to: get(d, 'to', 0),
             layerPlacement: get(d, 'layerPlacement', 'before'),
+            label: prepareAxisPlotLabel(d),
         })),
         crosshair: {
             enabled: get(xAxis, 'crosshair.enabled', axisCrosshairDefaults.enabled),

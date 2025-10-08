@@ -3,7 +3,13 @@ import React from 'react';
 import {axisLeft, axisRight, line, select} from 'd3';
 import type {Axis, AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
+import type {
+    ChartScale,
+    PreparedAxis,
+    PreparedAxisPlotBand,
+    PreparedAxisPlotLine,
+    PreparedSplit,
+} from '../../hooks';
 import type {AxisPlotBand} from '../../types';
 import {
     block,
@@ -297,26 +303,38 @@ export const AxisY = (props: Props) => {
                         .attr(plotBandDataAttr, 1)
                         .style('transform', getAxisPlotsPosition(d, split));
 
-                    plotBandsSelection
-                        .append('rect')
-                        .attr('x', 0)
-                        .attr('width', width)
-                        .attr('y', (band) => {
-                            const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
-                            const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
-                            const startPos = halfBandwidth + Math.min(from, to);
+                    plotBandsSelection.each(function () {
+                        const plotBandSelection = select(this);
+                        const band = plotBandSelection.datum() as PreparedAxisPlotBand;
 
-                            return Math.max(0, startPos);
-                        })
-                        .attr('height', (band) => {
-                            const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
-                            const startPos = height - Math.min(from, to);
-                            const endPos = Math.min(Math.abs(to - from), startPos);
+                        const {from, to} = getBandsPosition({band, axisScale, axis: 'y'});
+                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                        const startPos = halfBandwidth + Math.min(from, to);
+                        const endPos = Math.min(Math.abs(to - from), height - Math.min(from, to));
+                        const y = Math.max(0, startPos);
 
-                            return Math.min(endPos, height);
-                        })
-                        .attr('fill', (band) => band.color)
-                        .attr('opacity', (band) => band.opacity);
+                        plotBandSelection
+                            .append('rect')
+                            .attr('x', 0)
+                            .attr('width', width)
+                            .attr('y', y)
+                            .attr('height', Math.min(endPos, height))
+                            .attr('fill', () => band.color)
+                            .attr('opacity', () => band.opacity);
+
+                        if (band.label.text) {
+                            const labelPadding = band.label?.padding ?? 0;
+                            plotBandSelection
+                                .append('text')
+                                .text(band.label.text)
+                                .style('fill', () => band.label.style?.fontColor ?? null)
+                                .style('font-size', () => band.label.style?.fontSize ?? null)
+                                .style('font-weight', () => band.label.style?.fontWeight ?? null)
+                                .style('dominant-baseline', 'text-before-edge')
+                                .attr('x', labelPadding)
+                                .attr('y', y + labelPadding);
+                        }
+                    });
                 };
 
                 setPlotBands(
@@ -349,23 +367,38 @@ export const AxisY = (props: Props) => {
                         .attr(plotLineDataAttr, 1)
                         .style('transform', getAxisPlotsPosition(d, split));
 
-                    plotLinesSelection
-                        .append('path')
-                        .attr('d', (plotLine) => {
-                            const plotLineValue = Number(axisScale(plotLine.value));
-                            const points: [number, number][] = [
-                                [0, plotLineValue],
-                                [width, plotLineValue],
-                            ];
+                    plotLinesSelection.each(function () {
+                        const itemSelection = select(this);
+                        const plotLine = itemSelection.datum() as PreparedAxisPlotLine;
 
-                            return lineGenerator(points);
-                        })
-                        .attr('stroke', (plotLine) => plotLine.color)
-                        .attr('stroke-width', (plotLine) => plotLine.width)
-                        .attr('stroke-dasharray', (plotLine) =>
-                            getLineDashArray(plotLine.dashStyle, plotLine.width),
-                        )
-                        .attr('opacity', (plotLine) => plotLine.opacity);
+                        const plotLineValue = Number(axisScale(plotLine.value));
+                        const points: [number, number][] = [
+                            [0, plotLineValue],
+                            [width, plotLineValue],
+                        ];
+
+                        itemSelection
+                            .append('path')
+                            .attr('d', lineGenerator(points))
+                            .attr('stroke', plotLine.color)
+                            .attr('stroke-width', plotLine.width)
+                            .attr(
+                                'stroke-dasharray',
+                                getLineDashArray(plotLine.dashStyle, plotLine.width),
+                            )
+                            .attr('opacity', plotLine.opacity);
+
+                        if (plotLine.label.text) {
+                            itemSelection
+                                .append('text')
+                                .text(plotLine.label.text)
+                                .style('fill', () => plotLine.label.style.fontColor ?? null)
+                                .attr('font-size', plotLine.label.style.fontSize)
+                                .style('font-weight', () => plotLine.label.style.fontWeight ?? null)
+                                .attr('x', plotLine.label.padding)
+                                .attr('y', plotLineValue - plotLine.label.padding);
+                        }
+                    });
                 };
 
                 setPlotLines(
@@ -451,6 +484,7 @@ export const AxisY = (props: Props) => {
         lineGenerator,
         plotBeforeRef,
         plotAfterRef,
+        topLimit,
     ]);
 
     return <g ref={ref} className={b('container')} />;

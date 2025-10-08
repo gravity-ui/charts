@@ -36,6 +36,9 @@ function prepareData(): ChartData {
                         color: 'red',
                         dashStyle: 'Dash',
                         layerPlacement: 'after',
+                        label: {
+                            text: 'plot line label',
+                        },
                     },
                     {
                         value: 200,

@@ -41,6 +41,11 @@ export type PreparedAxisPlotLine = {
     dashStyle: DashStyle;
     opacity: number;
     layerPlacement: PlotLayerPlacement;
+    label: {
+        text: string;
+        style: BaseTextStyle;
+        padding: number;
+    };
 };
 
 export type PreparedAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotBands'> & {

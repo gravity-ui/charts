@@ -3,7 +3,13 @@ import React from 'react';
 import {line, select} from 'd3';
 import type {AxisDomain, AxisScale, Selection} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedAxisPlotLine, PreparedSplit} from '../../hooks';
+import type {
+    ChartScale,
+    PreparedAxis,
+    PreparedAxisPlotBand,
+    PreparedAxisPlotLine,
+    PreparedSplit,
+} from '../../hooks';
 import type {AxisPlotBand} from '../../types';
 import {
     block,
@@ -101,21 +107,6 @@ export const AxisX = React.memo(function AxisX(props: Props) {
             const svgElement = select(ref.current);
             svgElement.selectAll('*').remove();
 
-            const plotDataAttr = 'data-plot-x';
-
-            let plotBeforeContainer = null;
-            let plotAfterContainer = null;
-
-            if (plotBeforeRef?.current) {
-                plotBeforeContainer = select(plotBeforeRef.current);
-                plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
-            }
-
-            if (plotAfterRef?.current) {
-                plotAfterContainer = select(plotAfterRef.current);
-                plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
-            }
-
             if (!axis.visible) {
                 return;
             }
@@ -181,6 +172,21 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                     });
             }
 
+            const plotDataAttr = 'data-plot-x';
+
+            let plotBeforeContainer = null;
+            let plotAfterContainer = null;
+
+            if (plotBeforeRef?.current) {
+                plotBeforeContainer = select(plotBeforeRef.current);
+                plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
+            }
+
+            if (plotAfterRef?.current) {
+                plotAfterContainer = select(plotAfterRef.current);
+                plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
+            }
+
             // add plot bands
             if (axis.plotBands.length > 0) {
                 const plotBandDataAttr = 'plot-x-band';
@@ -200,26 +206,46 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                         .attr(plotDataAttr, 1)
                         .attr(plotBandDataAttr, 1);
 
-                    plotBandsSelection
-                        .append('rect')
-                        .attr('x', (band) => {
-                            const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
-                            const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
-                            const startPos = halfBandwidth + Math.min(from, to);
+                    plotBandsSelection.each(function () {
+                        const plotBandSelection = select(this);
+                        const band = plotBandSelection.datum() as PreparedAxisPlotBand;
+                        const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
+                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
+                        const startPos = halfBandwidth + Math.min(from, to);
+                        const x = Math.max(0, startPos);
 
-                            return Math.max(0, startPos);
-                        })
-                        .attr('width', (band) => {
-                            const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
-                            const startPos = width - Math.min(from, to);
-                            const endPos = Math.min(Math.abs(to - from), startPos);
+                        plotBandSelection
+                            .append('rect')
+                            .attr('x', x)
+                            .attr('width', () => {
+                                const endPos = Math.min(
+                                    Math.abs(to - from),
+                                    width - Math.min(from, to),
+                                );
 
-                            return Math.min(endPos, width);
-                        })
-                        .attr('y', 0)
-                        .attr('height', totalHeight)
-                        .attr('fill', (band) => band.color)
-                        .attr('opacity', (band) => band.opacity);
+                                return Math.min(endPos, width);
+                            })
+                            .attr('y', 0)
+                            .attr('height', totalHeight)
+                            .attr('fill', () => band.color)
+                            .attr('opacity', () => band.opacity);
+
+                        if (band.label.text) {
+                            const labelPadding = band.label?.padding ?? 0;
+                            plotBandSelection
+                                .append('text')
+                                .text(band.label.text)
+                                .style('fill', () => band.label.style?.fontColor ?? null)
+                                .style('font-size', () => band.label.style?.fontSize ?? null)
+                                .style('font-weight', () => band.label.style?.fontWeight ?? null)
+                                .style('dominant-baseline', 'text-before-edge')
+                                .style('text-anchor', 'end')
+                                .style(
+                                    'transform',
+                                    `translate(${x + labelPadding}px, ${labelPadding}px) rotate(-90deg)`,
+                                );
+                        }
+                    });
                 };
 
                 setPlotBands(
@@ -253,23 +279,42 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                         .attr(plotLineDataAttr, 1);
 
                     const lineGenerator = line();
-                    plotLinesSelection
-                        .append('path')
-                        .attr('d', (plotLine) => {
-                            const plotLineValue = Number(axisScale(plotLine.value));
-                            const points: [number, number][] = [
-                                [plotLineValue, 0],
-                                [plotLineValue, totalHeight],
-                            ];
+                    plotLinesSelection.each(function () {
+                        const itemSelection = select(this);
+                        const plotLine = itemSelection.datum() as PreparedAxisPlotLine;
 
-                            return lineGenerator(points);
-                        })
-                        .attr('stroke', (plotLine) => plotLine.color)
-                        .attr('stroke-width', (plotLine) => plotLine.width)
-                        .attr('stroke-dasharray', (plotLine) =>
-                            getLineDashArray(plotLine.dashStyle, plotLine.width),
-                        )
-                        .attr('opacity', (plotLine) => plotLine.opacity);
+                        const plotLineValue = Number(axisScale(plotLine.value));
+                        const points: [number, number][] = [
+                            [plotLineValue, 0],
+                            [plotLineValue, totalHeight],
+                        ];
+
+                        itemSelection
+                            .append('path')
+                            .attr('d', lineGenerator(points))
+                            .attr('stroke', plotLine.color)
+                            .attr('stroke-width', plotLine.width)
+                            .attr(
+                                'stroke-dasharray',
+                                getLineDashArray(plotLine.dashStyle, plotLine.width),
+                            )
+                            .attr('opacity', plotLine.opacity);
+
+                        if (plotLine.label.text) {
+                            itemSelection
+                                .append('text')
+                                .text(plotLine.label.text)
+                                .style('fill', () => plotLine.label.style.fontColor ?? null)
+                                .attr('font-size', plotLine.label.style.fontSize)
+                                .style('font-weight', () => plotLine.label.style.fontWeight ?? null)
+                                .style('dominant-baseline', 'text-after-edge')
+                                .style('text-anchor', 'end')
+                                .style(
+                                    'transform',
+                                    `translate(${plotLineValue - plotLine.label.padding}px, ${plotLine.label.padding}px) rotate(-90deg)`,
+                                );
+                        }
+                    });
                 };
 
                 setPlotLines(

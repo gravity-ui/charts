@@ -98,6 +98,15 @@ export interface AxisPlot {
      * @default 1
      * */
     opacity?: number;
+    /* Text labels for the plot line/band */
+    label?: {
+        text: string;
+        style?: Partial<BaseTextStyle>;
+        /** The pixel padding for label.
+         * @default 5
+         */
+        padding?: number;
+    };
 }
 
 export interface AxisPlotLine extends AxisPlot {
@@ -130,7 +139,7 @@ export interface AxisPlotBand extends AxisPlot {
     to: number | string;
 }
 
-export interface AxisCrosshair extends Omit<AxisPlotLine, 'value'> {
+export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label'> {
     /** Whether the crosshair should snap to the point or follow the pointer independent of points.
      * @default true
      */
