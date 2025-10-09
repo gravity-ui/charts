@@ -28,6 +28,9 @@ function prepareData(): ChartData {
                     color: '#0fd17a',
                     opacity: 0.5,
                     layerPlacement: 'after',
+                    label: {
+                        text: 'plot band label',
+                    },
                 },
                 {
                     from: 150,
