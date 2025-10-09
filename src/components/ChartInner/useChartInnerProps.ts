@@ -50,8 +50,8 @@ export function useChartInnerProps(props: Props) {
     }, [data.series.options]);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const sortedSeriesData = React.useMemo(() => {
-        return getSortedSeriesData(data.series.data);
-    }, [data.series.data]);
+        return getSortedSeriesData({seriesData: data.series.data, yAxes: data.yAxis});
+    }, [data.series.data, data.yAxis]);
     const {zoomedSeriesData, zoomedShapesSeriesData} = React.useMemo(() => {
         return getZoomedSeriesData({
             seriesData: sortedSeriesData,
@@ -83,7 +83,7 @@ export function useChartInnerProps(props: Props) {
     const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
         colors,
         legend: data.legend,
-        originalSeriesData: data.series.data,
+        originalSeriesData: sortedSeriesData,
         seriesData: zoomedSeriesData,
         seriesOptions: data.series.options,
     });

@@ -24,7 +24,7 @@ import {createYScale} from '../useAxisScales';
 import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
-import {prepareAxisPlotLabel} from './utils';
+import {getAxisCategories, prepareAxisPlotLabel} from './utils';
 
 const getAxisLabelMaxWidth = async (args: {
     axis: PreparedAxis;
@@ -138,7 +138,7 @@ export const getPreparedYAxis = ({
                     maxWidth: get(axisItem, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
                 },
                 lineColor: get(axisItem, 'lineColor'),
-                categories: get(axisItem, 'categories'),
+                categories: getAxisCategories(axisItem),
                 timestamps: get(axisItem, 'timestamps'),
                 title: {
                     text: titleText,
@@ -200,6 +200,7 @@ export const getPreparedYAxis = ({
                     opacity: get(axisItem, 'crosshair.opacity', axisCrosshairDefaults.opacity),
                 },
                 visible: get(axisItem, 'visible', true),
+                order: axisItem.order,
             };
 
             if (labelsEnabled) {

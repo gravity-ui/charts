@@ -98,7 +98,7 @@ export const prepareBarYData = async (args: {
         yAxis[0].type === 'category'
             ? getBarYLayoutForCategoryScale({groupedData, seriesOptions, yScale})
             : getBarYLayoutForNumericScale({
-                  series,
+                  groupedData,
                   seriesOptions,
                   plotHeight: plotHeight - plotHeight * yAxis[0].maxPadding,
               });

@@ -22,7 +22,7 @@ import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
-import {getBarYLayoutForNumericScale} from '../utils';
+import {getBarYLayoutForNumericScale, groupBarYDataByYValue} from '../utils';
 
 export type ChartScale =
     | ScaleLinear<number, number>
@@ -84,12 +84,22 @@ function getYScaleRange(args: {
         case 'datetime':
         case 'linear':
         case 'logarithmic': {
+            let range: [number, number] = [boundsHeight, boundsHeight * axis.maxPadding];
+
+            switch (axis.order) {
+                case 'sortDesc':
+                case 'reverse': {
+                    range.reverse();
+                }
+            }
+
             const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
 
             if (barYSeries.length) {
+                const groupedData = groupBarYDataByYValue(barYSeries, [axis]);
                 const {barSize, dataLength} = getBarYLayoutForNumericScale({
                     plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
-                    series: barYSeries,
+                    groupedData,
                     seriesOptions: seriesOptions,
                 });
 
@@ -110,14 +120,12 @@ function getYScaleRange(args: {
                         return acc + count;
                     }, 0);
                     const offset = (barSize * Math.max(offsetMultiplier, 1)) / 2;
-                    const start = boundsHeight - offset;
-                    const end = boundsHeight * axis.maxPadding + offset;
 
-                    return [start, end];
+                    range = [range[0] - offset, range[1] + offset];
                 }
             }
 
-            return [boundsHeight, boundsHeight * axis.maxPadding];
+            return range;
         }
         case 'category': {
             return [boundsHeight, 0];

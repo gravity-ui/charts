@@ -19,6 +19,23 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Basic with reverse order on Y-axis', async ({mount}) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    ...barYBasicData,
+                    yAxis: [
+                        {
+                            ...barYBasicData.yAxis?.[0],
+                            order: 'reverse',
+                        },
+                    ],
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('With X-axis plot lines', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barYPlotLinesData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
