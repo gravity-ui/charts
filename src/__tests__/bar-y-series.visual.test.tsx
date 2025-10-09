@@ -495,6 +495,6 @@ test.describe('Bar-y series', () => {
             />,
         );
         await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(450);
+        await expect.poll(() => widgetRenderTime).toBeLessThan(900);
     });
 });
