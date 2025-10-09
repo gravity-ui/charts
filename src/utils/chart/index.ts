@@ -341,7 +341,7 @@ export function getClosestPointsRange(axis: PreparedAxis, points: AxisDomain[]) 
         return undefined;
     }
 
-    return (points[1] as number) - (points[0] as number);
+    return Math.abs((points[1] as number) - (points[0] as number));
 }
 
 export {AxisDirection};

@@ -98,13 +98,13 @@ export const prepareBarYData = async (args: {
         yAxis[0].type === 'category'
             ? getBarYLayoutForCategoryScale({groupedData, seriesOptions, yScale})
             : getBarYLayoutForNumericScale({
-                  series,
+                  groupedData,
                   seriesOptions,
                   plotHeight: plotHeight - plotHeight * yAxis[0].maxPadding,
               });
 
     const result: PreparedBarYData[] = [];
-
+    const baseRangeValue = xLinearScale.range()[0];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
         const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
@@ -129,11 +129,10 @@ export const prepareBarYData = async (args: {
 
                 const y = center - currentBarHeight / 2 + (barSize + barGap) * groupItemIndex;
                 const xValue = Number(data.x);
-                const width =
-                    xValue > 0 ? xLinearScale(xValue) - base : base - xLinearScale(xValue);
+                const width = Math.abs(xLinearScale(xValue) - base);
 
                 const item: PreparedBarYData = {
-                    x: xValue > 0 ? stackSum : stackSum - width,
+                    x: xValue > baseRangeValue ? stackSum : stackSum - width,
                     y,
                     width,
                     height: barSize,
