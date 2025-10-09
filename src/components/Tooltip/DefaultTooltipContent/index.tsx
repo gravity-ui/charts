@@ -49,7 +49,7 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                 hovered.map((seriesItem, i) => {
                     const {data, series, closest} = seriesItem;
                     const id = `${get(series, 'id')}_${i}`;
-                    const color = get(series, 'color');
+                    const color = get(data, 'color') || get(series, 'color');
                     const active = closest && hovered.length > 1;
                     const striped = (i + 1) % 2 === 0;
 

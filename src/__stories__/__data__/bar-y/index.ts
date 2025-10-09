@@ -5,3 +5,4 @@ export * from './negative-values';
 export * from './playground';
 export * from './staking-normal';
 export * from './staking-percent';
+export * from './continuous-legend';
