@@ -458,7 +458,7 @@ test.describe('Bar-y series', () => {
     });
 
     test('Performance', async ({mount}) => {
-        const categories = new Array(3000).fill(null).map((_, i) => String(i));
+        const categories = new Array(5000).fill(null).map((_, i) => String(i));
         const items = categories.map((_category, i) => ({
             x: 10 * i,
             y: i,
@@ -495,6 +495,6 @@ test.describe('Bar-y series', () => {
             />,
         );
         await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(400);
+        await expect.poll(() => widgetRenderTime).toBeLessThan(500);
     });
 });
