@@ -181,33 +181,35 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     sorted,
                     pointerY,
                 );
+                const closestYPoint = sorted[closestYIndex];
 
-                let closestPoints: PreparedBarYData[] = [];
-                let closestXIndex = -1;
-                if (closestYIndex !== -1) {
-                    const closestY = sorted[closestYIndex].y;
-                    closestPoints = sort(
-                        points.filter((p) => p.y === closestY),
+                let selectedPoints: PreparedBarYData[] = [];
+                let closestPointXValue: number | undefined = -1;
+                if (closestYPoint) {
+                    selectedPoints = points.filter((p) => p.data.y === closestYPoint.data.y);
+
+                    const closestPoints = sort(
+                        selectedPoints.filter((p) => p.y === closestYPoint.y),
                         (p) => p.x,
                     );
 
                     const lastPoint = closestPoints[closestPoints.length - 1];
                     if (pointerX < closestPoints[0]?.x) {
-                        closestXIndex = 0;
+                        closestPointXValue = closestPoints[0].x;
                     } else if (lastPoint && pointerX > lastPoint.x + lastPoint.width) {
-                        closestXIndex = closestPoints.length - 1;
+                        closestPointXValue = lastPoint.x;
                     } else {
-                        closestXIndex = closestPoints.findIndex(
+                        closestPointXValue = closestPoints.find(
                             (p) => pointerX > p.x && pointerX < p.x + p.width,
-                        );
+                        )?.x;
                     }
                 }
 
                 result.push(
-                    ...(closestPoints.map((p, i) => ({
+                    ...(selectedPoints.map((p) => ({
                         data: p.data,
                         series: p.series,
-                        closest: i === closestXIndex,
+                        closest: p.x === closestPointXValue && p.y === closestYPoint.y,
                     })) as TooltipDataChunk[]),
                 );
                 break;
