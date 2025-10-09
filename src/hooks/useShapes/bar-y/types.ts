@@ -11,7 +11,11 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarX, 'series'> & {
     borderColor: string;
     opacity: number | null;
     series: PreparedBarYSeries;
-    label?: LabelData;
-    htmlElements: HtmlItem[];
     isLastStackItem: boolean;
+};
+
+export type BarYShapesArgs = {
+    shapes: PreparedBarYData[];
+    labels: LabelData[];
+    htmlElements: HtmlItem[];
 };

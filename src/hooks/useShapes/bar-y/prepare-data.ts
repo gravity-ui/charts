@@ -2,8 +2,8 @@ import {ascending, descending, sort} from 'd3';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
-import type {LabelData} from '../../../types';
-import {getLabelsSize} from '../../../utils';
+import type {HtmlItem, LabelData} from '../../../types';
+import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
@@ -14,48 +14,9 @@ import {
     groupBarYDataByYValue,
 } from '../../utils';
 
-import type {PreparedBarYData} from './types';
+import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 const DEFAULT_LABEL_PADDING = 7;
-
-async function setLabel(prepared: PreparedBarYData) {
-    const dataLabels = prepared.series.dataLabels;
-    if (!dataLabels.enabled) {
-        return;
-    }
-
-    const data = prepared.data;
-    const content = getFormattedValue({value: data.label || data.x, ...dataLabels});
-    const {maxHeight: height, maxWidth: width} = await getLabelsSize({
-        labels: [content],
-        style: dataLabels.style,
-        html: dataLabels.html,
-    });
-    const x = dataLabels.inside
-        ? prepared.x + prepared.width / 2
-        : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
-    const y = prepared.y + prepared.height / 2;
-
-    if (dataLabels.html) {
-        prepared.htmlElements.push({
-            x,
-            y: y - height / 2,
-            content,
-            size: {width, height},
-            style: dataLabels.style,
-        });
-    } else {
-        prepared.label = {
-            x,
-            y: y + height / 2,
-            text: content,
-            textAnchor: dataLabels.inside ? 'middle' : 'right',
-            style: dataLabels.style,
-            series: prepared.series,
-            size: {width, height},
-        } as LabelData;
-    }
-}
 
 export const prepareBarYData = async (args: {
     series: PreparedBarYSeries[];
@@ -64,7 +25,7 @@ export const prepareBarYData = async (args: {
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: ChartScale[];
-}): Promise<PreparedBarYData[]> => {
+}): Promise<BarYShapesArgs> => {
     const {
         series,
         seriesOptions,
@@ -142,7 +103,6 @@ export const prepareBarYData = async (args: {
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
-                    htmlElements: [],
                     isLastStackItem: xValueIndex === sortedData.length - 1,
                 };
 
@@ -165,11 +125,64 @@ export const prepareBarYData = async (args: {
         });
     });
 
-    await Promise.all(
-        result.map(async (d) => {
-            await setLabel(d);
-        }),
-    );
+    let labels: LabelData[] = [];
+    const htmlElements: HtmlItem[] = [];
 
-    return result;
+    const map = new Map();
+    for (let i = 0; i < result.length; i++) {
+        const prepared = result[i];
+
+        const dataLabels = prepared.series.dataLabels;
+        if (dataLabels.enabled) {
+            const data = prepared.data;
+            const content = getFormattedValue({value: data.label || data.x, ...dataLabels});
+
+            const x = dataLabels.inside
+                ? prepared.x + prepared.width / 2
+                : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
+            const y = prepared.y + prepared.height / 2;
+
+            if (dataLabels.html) {
+                const {maxHeight: height, maxWidth: width} = await getLabelsSize({
+                    labels: [content],
+                    style: dataLabels.style,
+                    html: dataLabels.html,
+                });
+
+                htmlElements.push({
+                    x,
+                    y: y - height / 2,
+                    content,
+                    size: {width, height},
+                    style: dataLabels.style,
+                });
+            } else {
+                if (!map.has(dataLabels.style)) {
+                    map.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
+                }
+                const getTextSize = map.get(dataLabels.style);
+                const {width, height} = await getTextSize(content);
+
+                labels.push({
+                    x,
+                    y: y + height / 2,
+                    text: content,
+                    textAnchor: dataLabels.inside ? 'middle' : 'right',
+                    style: dataLabels.style,
+                    series: prepared.series,
+                    size: {width, height},
+                } as LabelData);
+            }
+        }
+    }
+
+    if (!result[0]?.series.dataLabels.allowOverlap) {
+        labels = filterOverlappingLabels(labels);
+    }
+
+    return {
+        shapes: result,
+        labels,
+        htmlElements,
+    };
 };

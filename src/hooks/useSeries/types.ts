@@ -176,6 +176,7 @@ export type PreparedBarYSeries = {
         maxWidth: number;
         html: boolean;
         format?: ValueFormat;
+        allowOverlap: boolean;
     };
     borderRadius: number;
     borderWidth: number;
