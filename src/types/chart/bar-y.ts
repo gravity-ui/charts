@@ -33,6 +33,16 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /** The main color of the series (hex, rgba) */
     color?: string;
     /**
+     * The width of the border surrounding each bar.
+     *
+     * @default 0
+     */
+    borderWidth?: number;
+    /**
+     * The color of the border surrounding each bar.
+     */
+    borderColor?: string;
+    /**
      * The corner radius of the border surrounding each bar.
      * @default 0
      */

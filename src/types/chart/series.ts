@@ -144,6 +144,16 @@ export interface ChartSeriesOptions {
          */
         groupPadding?: number;
         /**
+         * The width of the border surrounding each bar.
+         *
+         * @default 0
+         */
+        borderWidth?: number;
+        /**
+         * The color of the border surrounding each bar.
+         */
+        borderColor?: string;
+        /**
          * The corner radius of the border surrounding each bar.
          * @default 0
          */

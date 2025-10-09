@@ -178,6 +178,8 @@ export type PreparedBarYSeries = {
         format?: ValueFormat;
     };
     borderRadius: number;
+    borderWidth: number;
+    borderColor: string;
 } & BasePreparedSeries;
 
 export type PreparedPieSeries = {
