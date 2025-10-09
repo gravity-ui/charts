@@ -282,8 +282,8 @@ export const AxisY = (props: Props) => {
                             node: element as Element,
                         };
                     }, {})
-                    .sort((a, b) => {
-                        return b.top - a.top;
+                    .sort((item1, item2) => {
+                        return item2.top - item1.top;
                     })
                     .filter(function ({top, bottom}, tickIndex) {
                         if (bottom > elementY && tickIndex !== 0) {
@@ -292,8 +292,8 @@ export const AxisY = (props: Props) => {
                         elementY = top - d.labels.padding;
                         return false;
                     })
-                    .forEach(({node}) => {
-                        node.remove();
+                    .forEach((item) => {
+                        item.node.remove();
                     });
             }
 
