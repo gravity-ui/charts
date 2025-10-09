@@ -3,7 +3,12 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {barYBasicData, barYGroupedColumnsData, barYPlotLinesData} from '../__stories__/__data__';
+import {
+    barYBasicData,
+    barYContinuousLegendData,
+    barYGroupedColumnsData,
+    barYPlotLinesData,
+} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
 const CHART_MARGIN: ChartMargin = {
@@ -438,6 +443,14 @@ test.describe('Bar-y series', () => {
 
     test('Grouped series tooltip', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barYGroupedColumnsData} />);
+
+        const bar = component.locator('.gcharts-bar-y__segment').first();
+        await bar.hover();
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Tooltip for series with continuous legend', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={barYContinuousLegendData} />);
 
         const bar = component.locator('.gcharts-bar-y__segment').first();
         await bar.hover();

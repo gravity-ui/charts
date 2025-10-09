@@ -4,6 +4,7 @@ import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     barYBasicData,
+    barYContinuousLegendData,
     barYGroupedColumnsData,
     barYHtmlLabelsData,
     barYPlaygroundData,
@@ -54,6 +55,13 @@ export const BarYHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: barYHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const BarYContinuousLegend = {
+    name: 'Continuous legend',
+    args: {
+        data: barYContinuousLegendData,
     },
 } satisfies Story;
 
