@@ -456,4 +456,45 @@ test.describe('Bar-y series', () => {
         await bar.hover();
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Performance', async ({mount}) => {
+        const categories = new Array(3000).fill(null).map((_, i) => String(i));
+        const items = categories.map((_category, i) => ({
+            x: 10 * i,
+            y: i,
+        }));
+        const data: ChartData = {
+            yAxis: [
+                {
+                    type: 'category',
+                    categories,
+                },
+            ],
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: '',
+                        data: items,
+                        dataLabels: {enabled: true},
+                    },
+                ],
+            },
+        };
+
+        let widgetRenderTime: number | undefined;
+        const handleRender = (renderTime?: number) => {
+            widgetRenderTime = renderTime;
+        };
+
+        const component = await mount(
+            <ChartTestStory
+                data={data}
+                styles={{height: 1000, width: 1000}}
+                onRender={handleRender}
+            />,
+        );
+        await component.locator('svg').waitFor({state: 'visible'});
+        await expect.poll(() => widgetRenderTime).toBeLessThan(900);
+    });
 });

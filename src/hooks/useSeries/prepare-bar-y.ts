@@ -38,6 +38,7 @@ async function prepareDataLabels(series: BarYSeries) {
         maxWidth,
         html,
         format: series.dataLabels?.format,
+        allowOverlap: series.dataLabels?.allowOverlap ?? false,
     };
 }
 

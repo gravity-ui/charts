@@ -162,7 +162,7 @@ export const useShapes = (args: Args) => {
                                         clipPathId={clipPathId}
                                     />,
                                 );
-                                shapesData.push(...preparedData);
+                                shapesData.push(...preparedData.shapes);
                             }
                             break;
                         }
