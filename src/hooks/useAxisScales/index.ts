@@ -246,6 +246,14 @@ export function createXScale(args: {
     const xRange = [0, boundsWidth - xAxisMaxPadding];
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
 
+    switch (axis.order) {
+        case 'sortDesc':
+        case 'reverse': {
+            xRange.reverse();
+            xRangeZoom.reverse();
+        }
+    }
+
     switch (xType) {
         case 'linear':
         case 'logarithmic': {
