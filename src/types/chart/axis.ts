@@ -82,6 +82,10 @@ export interface ChartAxis {
     plotBands?: AxisPlotBand[];
     /** Whether axis, including axis title, line, ticks and labels, should be visible. */
     visible?: boolean;
+    /** Setting the order of the axis values. It is not applied by default.
+     * the "reverse" value is needed to use the reverse order without sorting
+     */
+    order?: 'sortAsc' | 'sortDesc' | 'reverse';
 }
 
 export interface ChartXAxis extends ChartAxis {}

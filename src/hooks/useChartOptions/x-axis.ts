@@ -24,7 +24,7 @@ import {
 import {createXScale} from '../useAxisScales';
 
 import type {PreparedAxis} from './types';
-import {prepareAxisPlotLabel} from './utils';
+import {getAxisCategories, prepareAxisPlotLabel} from './utils';
 
 async function getLabelSettings({
     axis,
@@ -121,7 +121,7 @@ export const getPreparedXAxis = async ({
             maxWidth: get(xAxis, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
         },
         lineColor: get(xAxis, 'lineColor'),
-        categories: get(xAxis, 'categories'),
+        categories: getAxisCategories(xAxis),
         timestamps: get(xAxis, 'timestamps'),
         title: {
             text: titleText,
@@ -174,6 +174,7 @@ export const getPreparedXAxis = async ({
             opacity: get(xAxis, 'crosshair.opacity', axisCrosshairDefaults.opacity),
         },
         visible: get(xAxis, 'visible', true),
+        order: xAxis?.order,
     };
 
     const {height, rotation} = await getLabelSettings({

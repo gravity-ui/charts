@@ -1,5 +1,7 @@
+import {ascending, descending, reverse, sort} from 'd3';
+
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../../constants';
-import type {AxisPlot} from '../../types';
+import type {AxisPlot, ChartYAxis} from '../../types';
 
 export function prepareAxisPlotLabel(d: AxisPlot) {
     return {
@@ -11,4 +13,23 @@ export function prepareAxisPlotLabel(d: AxisPlot) {
         },
         padding: d.label?.padding ?? 5,
     };
+}
+
+export function getAxisCategories(axis?: ChartYAxis) {
+    const categories = axis?.categories;
+    if (categories) {
+        switch (axis.order) {
+            case 'reverse': {
+                return reverse(categories);
+            }
+            case 'sortAsc': {
+                return sort(categories, (a, b) => ascending(a, b));
+            }
+            case 'sortDesc': {
+                return sort(categories, (a, b) => descending(a, b));
+            }
+        }
+    }
+
+    return categories;
 }

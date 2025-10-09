@@ -269,18 +269,32 @@ export const AxisY = (props: Props) => {
             // Note: this method do not prepared for rotated labels
             if (!d.labels.rotation) {
                 let elementY = 0;
+
                 axisItem
                     .selectAll('.tick')
-                    .filter(function (_d, tickIndex) {
-                        const tickNode = this as unknown as Element;
-                        const r = tickNode.getBoundingClientRect();
-                        if (r.bottom > elementY && tickIndex !== 0) {
+                    .nodes()
+                    .map((element) => {
+                        const r = (element as Element).getBoundingClientRect();
+
+                        return {
+                            top: r.top,
+                            bottom: r.bottom,
+                            node: element as Element,
+                        };
+                    }, {})
+                    .sort((item1, item2) => {
+                        return item2.top - item1.top;
+                    })
+                    .filter(function ({top, bottom}, tickIndex) {
+                        if (bottom > elementY && tickIndex !== 0) {
                             return true;
                         }
-                        elementY = r.top - d.labels.padding;
+                        elementY = top - d.labels.padding;
                         return false;
                     })
-                    .remove();
+                    .forEach((item) => {
+                        item.node.remove();
+                    });
             }
 
             if (d.plotBands.length > 0) {

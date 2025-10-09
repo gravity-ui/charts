@@ -157,53 +157,70 @@ export async function axisBottom(args: AxisBottomArgs) {
 
             // add an ellipsis to the labels that go beyond the boundaries of the chart
             // and remove overlapping labels
-            labels.each(function (_d, i, nodes) {
-                const currentElement = this as SVGTextElement;
-                const currentElementPosition = currentElement.getBoundingClientRect();
+            labels
+                .nodes()
+                .map((element) => {
+                    const r = (element as Element).getBoundingClientRect();
 
-                if (i === 0) {
-                    const text = select(currentElement);
+                    return {
+                        left: r.left,
+                        right: r.right,
+                        node: element as Element,
+                    };
+                }, {})
+                .sort((a, b) => {
+                    return a.left - b.left;
+                })
+                .forEach(function (item, i, nodes) {
+                    const {node, left, right: currentElementPositionRigth} = item;
+                    const currentElement = node as SVGTextElement;
 
-                    const nextElement = nodes[i + 1] as SVGTextElement;
-                    const nextElementPosition = nextElement?.getBoundingClientRect();
-
-                    if (currentElementPosition.left < leftmostLimit) {
-                        const rightmostPossiblePoint = nextElementPosition?.left ?? right;
-                        const remainSpace =
-                            rightmostPossiblePoint -
-                            currentElementPosition.right +
-                            x -
-                            labelsMargin;
-
-                        text.attr('text-anchor', 'start');
-                        setEllipsisForOverflowText(text, remainSpace);
-                    }
-                } else {
-                    if (currentElementPosition.left < elementX) {
-                        currentElement.closest('.tick')?.remove();
-                        return;
-                    }
-                    elementX = currentElementPosition.right + labelsPaddings;
-
-                    if (i === nodes.length - 1) {
-                        const prevElement = nodes[i - 1] as SVGTextElement;
+                    if (i === 0) {
                         const text = select(currentElement);
 
-                        const prevElementPosition = prevElement?.getBoundingClientRect();
+                        const nextElement = nodes[i + 1]?.node as SVGTextElement;
+                        const nextElementPosition = nextElement?.getBoundingClientRect();
 
-                        const lackingSpace = Math.max(0, currentElementPosition.right - right);
-                        if (lackingSpace) {
+                        if (left < leftmostLimit) {
+                            const rightmostPossiblePoint = nextElementPosition?.left ?? right;
                             const remainSpace =
-                                right - (prevElementPosition?.right || 0) - labelsPaddings;
+                                rightmostPossiblePoint -
+                                currentElementPositionRigth +
+                                x -
+                                labelsMargin;
 
-                            const translateX = -lackingSpace;
-                            text.style('transform', `translate(${translateX}px,${translateY}px)`);
-
+                            text.attr('text-anchor', 'start');
                             setEllipsisForOverflowText(text, remainSpace);
                         }
+                    } else {
+                        if (left < elementX) {
+                            currentElement.closest('.tick')?.remove();
+                            return;
+                        }
+                        elementX = currentElementPositionRigth + labelsPaddings;
+
+                        if (i === nodes.length - 1) {
+                            const prevElement = nodes[i - 1]?.node as SVGTextElement;
+                            const text = select(currentElement);
+
+                            const prevElementPosition = prevElement?.getBoundingClientRect();
+
+                            const lackingSpace = Math.max(0, currentElementPositionRigth - right);
+                            if (lackingSpace) {
+                                const remainSpace =
+                                    right - (prevElementPosition?.right || 0) - labelsPaddings;
+
+                                const translateX = -lackingSpace;
+                                text.style(
+                                    'transform',
+                                    `translate(${translateX}px,${translateY}px)`,
+                                );
+
+                                setEllipsisForOverflowText(text, remainSpace);
+                            }
+                        }
                     }
-                }
-            });
+                });
         }
 
         const {size: domainSize, color: domainColor} = domain;
