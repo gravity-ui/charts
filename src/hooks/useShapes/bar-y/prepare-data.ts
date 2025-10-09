@@ -104,12 +104,12 @@ export const prepareBarYData = async (args: {
               });
 
     const result: PreparedBarYData[] = [];
-    const base = xLinearScale(0);
     const baseRangeValue = xLinearScale.range()[0];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
         const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
         stacks.forEach((measureValues, groupItemIndex) => {
+            const base = xLinearScale(0 - measureValues[0].series.borderWidth);
             let stackSum = base;
 
             const stackItems: PreparedBarYData[] = [];
@@ -137,6 +137,8 @@ export const prepareBarYData = async (args: {
                     width,
                     height: barSize,
                     color: data.color || s.color,
+                    borderColor: s.borderColor,
+                    borderWidth: s.borderWidth,
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,

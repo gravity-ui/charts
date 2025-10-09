@@ -1,5 +1,6 @@
 .gcharts-chart {
     --gcharts-data-labels: var(--g-color-text-secondary);
+    --gcharts-shape-border-color: var(--g-color-base-background);
 
     position: absolute;
     inset-block-start: 0;

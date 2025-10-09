@@ -65,6 +65,11 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                 dataLabels: await prepareDataLabels(series),
                 cursor: get(series, 'cursor', null),
                 borderRadius: series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
+                borderWidth: series.borderWidth ?? seriesOptions?.['bar-y']?.borderWidth ?? 0,
+                borderColor:
+                    series.borderColor ??
+                    seriesOptions?.['bar-y']?.borderColor ??
+                    'var(--gcharts-shape-border-color)',
             };
         }),
     );

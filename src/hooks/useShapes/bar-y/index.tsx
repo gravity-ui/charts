@@ -60,6 +60,8 @@ export const BarYSeriesShapes = (args: Args) => {
             .attr('height', (d) => d.height)
             .attr('width', (d) => d.width)
             .attr('fill', (d) => d.color)
+            .attr('stroke', (d) => d.borderColor)
+            .attr('stroke-width', (d) => d.borderWidth)
             .attr('opacity', (d) => d.data.opacity || null)
             .attr('cursor', (d) => d.series.cursor);
 
