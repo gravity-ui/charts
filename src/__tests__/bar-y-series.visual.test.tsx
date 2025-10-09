@@ -8,6 +8,7 @@ import {
     barYContinuousLegendData,
     barYGroupedColumnsData,
     barYPlotLinesData,
+    barYStakingNormalData,
 } from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
@@ -496,5 +497,40 @@ test.describe('Bar-y series', () => {
         );
         await component.locator('svg').waitFor({state: 'visible'});
         await expect.poll(() => widgetRenderTime).toBeLessThan(900);
+    });
+
+    test('Stacking normal', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={barYStakingNormalData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Stacking normal with zero y values', async ({mount}) => {
+        const stacks = new Array(10).fill(null).map((_, index) => String(index));
+        const chartData: ChartData = {
+            title: {text: 'Chart title'},
+            series: {
+                data: stacks.map((stack, index) => {
+                    return {
+                        name: stack,
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 0,
+                                x: index === stacks.length - 1 ? 10 : 0,
+                            },
+                        ],
+                    };
+                }),
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['Category'],
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

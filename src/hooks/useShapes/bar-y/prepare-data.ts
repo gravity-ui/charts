@@ -92,6 +92,10 @@ export const prepareBarYData = async (args: {
                 const xValue = Number(data.x);
                 const width = Math.abs(xLinearScale(xValue) - base);
 
+                if (width <= 0) {
+                    return;
+                }
+
                 const item: PreparedBarYData = {
                     x: xValue > baseRangeValue ? stackSum : stackSum - width,
                     y,
