@@ -56,6 +56,7 @@ export const prepareBarXData = async (args: {
     boundsHeight: number;
 }): Promise<PreparedBarXData[]> => {
     const {series, seriesOptions, xAxis, xScale, yScale, boundsHeight: plotHeight} = args;
+    const stackGap = seriesOptions['bar-x'].stackGap ?? 0;
     const categories = get(xAxis, 'categories', [] as string[]);
     const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
     const barPadding = get(seriesOptions, 'bar-x.barPadding');
@@ -174,7 +175,12 @@ export const prepareBarXData = async (args: {
                 const yDataValue = yValue.data.y as number;
                 const y = seriesYScale(yDataValue);
                 const base = seriesYScale(0);
+                const isLastStackItem = yValueIndex === sortedData.length - 1;
                 const height = yDataValue > 0 ? base - y : y - base;
+                let shapeHeight = height - (stackItems.length ? stackGap : 0);
+                if (shapeHeight < 0) {
+                    shapeHeight = height;
+                }
 
                 if (height <= 0) {
                     continue;
@@ -184,12 +190,12 @@ export const prepareBarXData = async (args: {
                     x,
                     y: yDataValue > 0 ? y - stackHeight : seriesYScale(0),
                     width: rectWidth,
-                    height,
+                    height: shapeHeight,
                     opacity: get(yValue.data, 'opacity', null),
                     data: yValue.data,
                     series: yValue.series,
                     htmlElements: [],
-                    isLastStackItem: yValueIndex === sortedData.length - 1,
+                    isLastStackItem,
                 };
 
                 const label = await getLabelData(barData);
@@ -207,7 +213,7 @@ export const prepareBarXData = async (args: {
 
                 stackItems.push(barData);
 
-                stackHeight += height + 1;
+                stackHeight += height;
             }
 
             if (series.some((s) => s.stacking === 'percent')) {

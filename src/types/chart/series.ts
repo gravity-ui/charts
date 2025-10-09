@@ -107,6 +107,11 @@ export interface ChartSeriesOptions {
          * @default 0
          */
         borderRadius?: number;
+        /**
+         * The distance between the shapes of the stacked values, in pixels.
+         * @default 1
+         */
+        stackGap?: number;
         dataSorting?: {
             /** Determines what data value should be used to sort by.
              * Possible values are undefined to disable, "name" to sort by series name or "y"
@@ -158,6 +163,11 @@ export interface ChartSeriesOptions {
          * @default 0
          */
         borderRadius?: number;
+        /**
+         * The distance between the shapes of the stacked values, in pixels.
+         * @default 1
+         */
+        stackGap?: number;
         dataSorting?: {
             /** Determines what data value should be used to sort by.
              * Possible values are undefined to disable, "name" to sort by series name or "x"
