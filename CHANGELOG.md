@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.13.0](https://github.com/gravity-ui/charts/compare/v1.12.0...v1.13.0) (2025-10-09)
+
+
+### Features
+
+* axis order ([#184](https://github.com/gravity-ui/charts/issues/184)) ([244116c](https://github.com/gravity-ui/charts/commit/244116cb5eef184367f9e68f28a2d7bd59bf2a9f))
+* bar-y series border color and width ([#185](https://github.com/gravity-ui/charts/issues/185)) ([9803347](https://github.com/gravity-ui/charts/commit/98033477f79761309f168d35ab76db5833f36b38))
+* plot lines and bands label ([#182](https://github.com/gravity-ui/charts/issues/182)) ([ed4f9ee](https://github.com/gravity-ui/charts/commit/ed4f9ee1cc4e383445a65e2dee011eeaeaf25d05))
+
+
+### Bug Fixes
+
+* bar-x, bar-y zero values ([#189](https://github.com/gravity-ui/charts/issues/189)) ([a25d872](https://github.com/gravity-ui/charts/commit/a25d8722d3e1d71f05fbffb79480c34c07d77706))
+* bar-y item color in tooltip ([#187](https://github.com/gravity-ui/charts/issues/187)) ([bbee417](https://github.com/gravity-ui/charts/commit/bbee41733b6c0ad9759081e1103ee63546cae3bb))
+* bar-y overlapping dataLabels ([#188](https://github.com/gravity-ui/charts/issues/188)) ([bdbad5a](https://github.com/gravity-ui/charts/commit/bdbad5a464e6728fd753772c18b4133939e9306d))
+* display all items in a tooltip for grouped bar-y series ([#186](https://github.com/gravity-ui/charts/issues/186)) ([bcadf58](https://github.com/gravity-ui/charts/commit/bcadf5802b9f674b6badbe0516b0e804cc7e0b8c))
+
 ## [1.12.0](https://github.com/gravity-ui/charts/compare/v1.11.4...v1.12.0) (2025-10-06)
 
 
