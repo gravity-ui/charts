@@ -34,7 +34,7 @@ export const prepareBarYData = async (args: {
         yScale: [yScale],
     } = args;
 
-    const stackGap = seriesOptions['bar-y'].stackGap ?? 0;
+    const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number>;
     const plotHeight = yLinearScale(yLinearScale.domain()[0]);
