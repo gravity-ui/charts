@@ -56,7 +56,7 @@ export const prepareBarXData = async (args: {
     boundsHeight: number;
 }): Promise<PreparedBarXData[]> => {
     const {series, seriesOptions, xAxis, xScale, yScale, boundsHeight: plotHeight} = args;
-    const stackGap = seriesOptions['bar-x'].stackGap ?? 0;
+    const stackGap: number = seriesOptions['bar-x'].stackGap;
     const categories = get(xAxis, 'categories', [] as string[]);
     const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
     const barPadding = get(seriesOptions, 'bar-x.barPadding');
