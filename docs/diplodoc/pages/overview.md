@@ -32,6 +32,4 @@ We have already implemented support for the main chart types:
 We are actively working on library development and continuously improving its features. Here is the list of the priority major features:
 
 - ⏳ Handling null data [#28](https://github.com/gravity-ui/charts/issues/28)
-- ⏳ Charts zooming [#29](https://github.com/gravity-ui/charts/issues/29)
-- ⏳ Plot lines, bands [#30](https://github.com/gravity-ui/charts/issues/30)
 - ⏳ Charts navigator [#35](https://github.com/gravity-ui/charts/issues/35)
