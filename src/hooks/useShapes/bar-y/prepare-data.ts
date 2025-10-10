@@ -71,7 +71,7 @@ export const prepareBarYData = async (args: {
         const stacks = Object.values(val);
         const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
         stacks.forEach((measureValues, groupItemIndex) => {
-            const base = xLinearScale(0 - measureValues[0].series.borderWidth);
+            const base = xLinearScale(0) - measureValues[0].series.borderWidth;
             let stackSum = base;
 
             const stackItems: PreparedBarYData[] = [];
@@ -123,7 +123,7 @@ export const prepareBarYData = async (args: {
                     height: barSize,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
-                    borderWidth: s.borderWidth,
+                    borderWidth: barSize > s.borderWidth * 2 ? s.borderWidth : 0,
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
