@@ -10,7 +10,7 @@ import {
     barYPlotLinesData,
     barYStakingNormalData,
 } from '../__stories__/__data__';
-import type {BarYSeries, ChartData, ChartMargin} from '../types';
+import type {BarYSeries, BarYSeriesData, ChartData, ChartMargin} from '../types';
 
 const CHART_MARGIN: ChartMargin = {
     top: 20,
@@ -716,6 +716,35 @@ test.describe('Bar-y series', () => {
                 }}
             />,
         );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Border should be ignored for dense bars', async ({mount}) => {
+        const seriesData: BarYSeriesData[] = new Array(1000).fill(null).map((_, index) => {
+            return {
+                y: index,
+                x: index,
+            };
+        });
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: seriesData,
+                    },
+                ],
+
+                options: {
+                    'bar-y': {
+                        borderWidth: 1,
+                    },
+                },
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
