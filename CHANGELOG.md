@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/gravity-ui/charts/compare/v1.13.0...v1.13.1) (2025-10-10)
+
+
+### Bug Fixes
+
+* bar-y and bar-x stack gap ([#190](https://github.com/gravity-ui/charts/issues/190)) ([d1fdd59](https://github.com/gravity-ui/charts/commit/d1fdd596916f959584f64e74792f057a88e9dd42))
+
 ## [1.13.0](https://github.com/gravity-ui/charts/compare/v1.12.0...v1.13.0) (2025-10-09)
 
 
