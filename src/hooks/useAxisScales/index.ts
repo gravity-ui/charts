@@ -86,42 +86,23 @@ function getYScaleRange(args: {
         case 'logarithmic': {
             let range: [number, number] = [boundsHeight, boundsHeight * axis.maxPadding];
 
-            switch (axis.order) {
-                case 'sortDesc':
-                case 'reverse': {
-                    range.reverse();
-                }
-            }
-
             const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
-
             if (barYSeries.length) {
                 const groupedData = groupBarYDataByYValue(barYSeries, [axis]);
-                const {barSize, dataLength} = getBarYLayoutForNumericScale({
+                const {barSize, barGap} = getBarYLayoutForNumericScale({
                     plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
                     groupedData,
                     seriesOptions: seriesOptions,
                 });
 
-                if (dataLength > 1) {
-                    const alreadyCountedStackingIds = new Set<string>();
-                    const offsetMultiplier = barYSeries.reduce((acc, s) => {
-                        let count = 0;
+                const offset = barGap + barSize / 2;
+                range = [range[0] - offset, range[1] + offset];
+            }
 
-                        if (s.stackId) {
-                            if (!alreadyCountedStackingIds.has(s.stackId)) {
-                                alreadyCountedStackingIds.add(s.stackId);
-                                count = 1;
-                            }
-                        } else {
-                            count = 1;
-                        }
-
-                        return acc + count;
-                    }, 0);
-                    const offset = (barSize * Math.max(offsetMultiplier, 1)) / 2;
-
-                    range = [range[0] - offset, range[1] + offset];
+            switch (axis.order) {
+                case 'sortDesc':
+                case 'reverse': {
+                    range.reverse();
                 }
             }
 
