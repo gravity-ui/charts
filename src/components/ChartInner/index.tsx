@@ -172,14 +172,16 @@ export const ChartInner = (props: ChartInnerProps) => {
                             {xAxis && (
                                 <g transform={`translate(0, ${boundsHeight})`}>
                                     <AxisX
-                                        leftmostLimit={svgXPos}
                                         axis={xAxis}
-                                        width={boundsWidth}
+                                        boundsOffsetLeft={boundsOffsetLeft}
                                         height={boundsHeight}
+                                        htmlLayout={htmlLayout}
+                                        leftmostLimit={svgXPos}
+                                        plotAfterRef={plotAfterRef}
+                                        plotBeforeRef={plotBeforeRef}
                                         scale={xScale}
                                         split={preparedSplit}
-                                        plotBeforeRef={plotBeforeRef}
-                                        plotAfterRef={plotAfterRef}
+                                        width={boundsWidth}
                                     />
                                 </g>
                             )}

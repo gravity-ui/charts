@@ -28,6 +28,12 @@ export interface ChartAxisLabels {
      * @default 0
      */
     rotation?: number;
+    /**
+     * Allows to use any html-tags to display labels content.
+     *
+     * @default false
+     * */
+    html?: boolean;
 }
 
 export interface ChartAxis {

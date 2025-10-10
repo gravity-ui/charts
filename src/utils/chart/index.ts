@@ -297,6 +297,39 @@ export const getHorisontalSvgTextHeight = (args: {
     return height;
 };
 
+/**
+ * Calculates the height of a text element in HTML layout.
+ *
+ * @param {Object} args - The arguments for the function.
+ * @param {string} args.text - The text to be measured.
+ * @param {Partial<BaseTextStyle>} args.style - Optional style properties for the text element.
+ * @return {number} The height of the text element.
+ */
+export const getHorizontalHtmlTextHeight = (args: {
+    text: string;
+    style?: Partial<BaseTextStyle>;
+}) => {
+    const {text, style} = args;
+    const container = select(document.body).append('div');
+    const fontSize = get(style, 'fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE);
+
+    // Position element off-screen to avoid layout shifts
+    container
+        .style('position', 'absolute')
+        .style('visibility', 'hidden')
+        .style('white-space', 'nowrap')
+        .html(text);
+
+    if (fontSize) {
+        container.style('font-size', fontSize);
+    }
+
+    const height = container.node()?.getBoundingClientRect().height || 0;
+    container.remove();
+
+    return height;
+};
+
 const extractCategoryValue = (args: {
     axisDirection: AxisDirection;
     categories: string[];

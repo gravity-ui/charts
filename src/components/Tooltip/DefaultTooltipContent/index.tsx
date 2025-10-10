@@ -43,7 +43,12 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
 
     return (
         <div className={b('content')}>
-            {measureValue && <div className={b('series-name')}>{measureValue}</div>}
+            {measureValue && (
+                <div
+                    className={b('series-name')}
+                    dangerouslySetInnerHTML={{__html: measureValue}}
+                />
+            )}
             {
                 // eslint-disable-next-line complexity
                 hovered.map((seriesItem, i) => {
@@ -69,7 +74,7 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                     key={id}
                                     active={active}
                                     color={color}
-                                    label={series.name}
+                                    label={<span dangerouslySetInnerHTML={{__html: series.name}} />}
                                     striped={striped}
                                     value={formattedValue}
                                 />
@@ -115,7 +120,7 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                     key={id}
                                     active={active}
                                     color={color}
-                                    label={series.name}
+                                    label={<span dangerouslySetInnerHTML={{__html: series.name}} />}
                                     striped={striped}
                                     value={formattedValue}
                                 />

@@ -391,6 +391,7 @@ export const Legend = (props: Props) => {
                 // ticks
                 const scale = scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>;
                 const xAxisGenerator = await axisBottom({
+                    htmlLayout,
                     scale,
                     ticks: {
                         items: [[0, -rectHeight]],

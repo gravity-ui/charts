@@ -88,24 +88,42 @@ export function hasOverlappingLabels({
     labels,
     padding = 0,
     style,
+    html,
 }: {
     width: number;
     labels: string[];
     style?: BaseTextStyle;
     padding?: number;
+    html?: boolean;
 }) {
     const maxWidth = (width - padding * (labels.length - 1)) / labels.length;
+    let textSvgSelection: Selection<SVGTextElement, unknown, null, undefined> | undefined;
+    let textHtmlSelection: Selection<HTMLDivElement, unknown, null, undefined> | undefined;
 
-    const textElement = select(document.body)
-        .append('text')
-        .style('font-size', style?.fontSize || '');
+    if (html) {
+        textHtmlSelection = select(document.body)
+            .append('div')
+            .style('display', 'inline-block')
+            .style('font-size', style?.fontSize || '');
+    } else {
+        textSvgSelection = select(document.body)
+            .append('text')
+            .style('font-size', style?.fontSize || '');
+    }
 
     const result = labels.some((label) => {
-        const textWidth = textElement.text(label).node()?.getBoundingClientRect()?.width || 0;
+        let textWidth = 0;
+
+        if (textSvgSelection) {
+            textWidth = textSvgSelection.text(label).node()?.getBoundingClientRect()?.width || 0;
+        } else if (textHtmlSelection) {
+            textWidth = textHtmlSelection.html(label).node()?.getBoundingClientRect()?.width || 0;
+        }
+
         return textWidth > maxWidth;
     });
 
-    textElement.remove();
+    (textHtmlSelection || textSvgSelection)?.remove();
 
     return result;
 }
@@ -131,13 +149,20 @@ function renderLabels(
         text.attr(name, value);
     });
 
-    text.selectAll('tspan')
+    const tspanSelection = text
+        .selectAll('tspan')
         .data(labels)
         .enter()
         .append('tspan')
         .attr('x', 0)
         .attr('dy', 0)
         .html((d) => d);
+
+    const labelLength = labels.join('').length;
+
+    if (labelLength > 0 && text.node()?.clientWidth === 0) {
+        tspanSelection.text((d) => d);
+    }
 
     return text;
 }
@@ -179,6 +204,7 @@ export async function getLabelsSize({
             .style('font-weight', style?.fontWeight ?? '')
             .style('max-width', style?.maxWidth ?? '')
             .style('max-height', style?.maxHeight ?? '')
+            .style('transform', `rotate(${rotation}deg)`)
             .node();
 
         let height = 0;

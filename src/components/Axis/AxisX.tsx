@@ -31,13 +31,15 @@ const b = block('axis');
 
 type Props = {
     axis: PreparedAxis;
-    width: number;
+    boundsOffsetLeft: number;
     height: number;
+    htmlLayout: HTMLElement | null;
     scale: ChartScale;
     split: PreparedSplit;
-    plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
-    plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
+    width: number;
     leftmostLimit?: number;
+    plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
+    plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
 };
 
 function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
@@ -88,19 +90,21 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 export const AxisX = React.memo(function AxisX(props: Props) {
     const {
         axis,
-        width,
+        boundsOffsetLeft,
         height: totalHeight,
-        scale,
-        split,
+        htmlLayout,
+        leftmostLimit,
         plotBeforeRef,
         plotAfterRef,
-        leftmostLimit,
+        scale,
+        split,
+        width,
     } = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
         (async () => {
-            if (!ref.current) {
+            if (!ref.current || !htmlLayout) {
                 return;
             }
 
@@ -123,11 +127,14 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
             const axisScale = scale as AxisScale<AxisDomain>;
             const xAxisGenerator = await axisBottom({
+                boundsOffsetLeft,
+                htmlLayout,
                 leftmostLimit,
                 scale: axisScale,
                 ticks: {
                     items: tickItems,
                     labelFormat: getLabelFormatter({axis, scale}),
+                    labelsHtml: axis.labels.html,
                     labelsPaddings: axis.labels.padding,
                     labelsMargin: axis.labels.margin,
                     labelsStyle: axis.labels.style,
@@ -327,7 +334,18 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 );
             }
         })();
-    }, [axis, width, totalHeight, scale, split, leftmostLimit, plotBeforeRef, plotAfterRef]);
+    }, [
+        axis,
+        boundsOffsetLeft,
+        htmlLayout,
+        leftmostLimit,
+        plotAfterRef,
+        plotBeforeRef,
+        scale,
+        split,
+        totalHeight,
+        width,
+    ]);
 
     return <g ref={ref} />;
 });
