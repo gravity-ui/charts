@@ -52,17 +52,21 @@ export function getBarYLayoutForNumericScale(args: {
     const barMaxWidth = get(seriesOptions, 'bar-y.barMaxWidth');
     const barPadding = get(seriesOptions, 'bar-y.barPadding');
     const groupPadding = get(seriesOptions, 'bar-y.groupPadding');
-    const dataLength = Object.values(groupedData).reduce(
-        (sum, items) => sum + Object.keys(items).length,
+    const groups = Object.values(groupedData);
+    const maxGroupItemCount = groups.reduce(
+        (acc, items) => Math.max(acc, Object.keys(items).length),
         0,
     );
-    const bandSize = plotHeight / dataLength;
+    const bandSize = plotHeight / groups.length;
     const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
     const groupSize = bandSize - groupGap;
     const barGap = Math.max(bandSize * barPadding, MIN_BAR_GAP);
-    const barSize = Math.max(MIN_BAR_WIDTH, Math.min(groupSize - barGap, barMaxWidth));
+    const barSize = Math.max(
+        MIN_BAR_WIDTH,
+        Math.min((groupSize - barGap) / maxGroupItemCount, barMaxWidth),
+    );
 
-    return {bandSize, barGap, barSize, dataLength};
+    return {bandSize, barGap, barSize};
 }
 
 export function getBarYLayoutForCategoryScale(args: {

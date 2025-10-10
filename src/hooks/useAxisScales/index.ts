@@ -89,14 +89,16 @@ function getYScaleRange(args: {
             const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
             if (barYSeries.length) {
                 const groupedData = groupBarYDataByYValue(barYSeries, [axis]);
-                const {barSize, barGap} = getBarYLayoutForNumericScale({
-                    plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
-                    groupedData,
-                    seriesOptions: seriesOptions,
-                });
+                if (Object.keys(groupedData).length > 1) {
+                    const {bandSize} = getBarYLayoutForNumericScale({
+                        plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
+                        groupedData,
+                        seriesOptions: seriesOptions,
+                    });
 
-                const offset = barGap + barSize / 2;
-                range = [range[0] - offset, range[1] + offset];
+                    const offset = bandSize / 2;
+                    range = [range[0] - offset, range[1] + offset];
+                }
             }
 
             switch (axis.order) {
