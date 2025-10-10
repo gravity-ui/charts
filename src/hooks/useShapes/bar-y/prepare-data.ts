@@ -37,7 +37,8 @@ export const prepareBarYData = async (args: {
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number>;
-    const plotHeight = yLinearScale(yLinearScale.domain()[0]);
+    const yScaleRange = yLinearScale.range();
+    const plotHeight = Math.abs(yScaleRange[0] - yScaleRange[1]);
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
     const sortKey = (() => {

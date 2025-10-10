@@ -25,20 +25,53 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Basic with reverse order on Y-axis', async ({mount}) => {
-        const component = await mount(
-            <ChartTestStory
-                data={{
-                    ...barYBasicData,
-                    yAxis: [
-                        {
-                            ...barYBasicData.yAxis?.[0],
-                            order: 'reverse',
-                        },
-                    ],
-                }}
-            />,
-        );
+    test('Basic with reverse order on Y-axis (categories)', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {y: 0, x: 10},
+                            {y: 1, x: 5},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    categories: ['1', '2'],
+                    type: 'category',
+                    order: 'reverse',
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Basic with reverse order on Y-axis (linear)', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {y: 1, x: 10},
+                            {y: 2, x: 5},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    order: 'reverse',
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
@@ -535,6 +568,82 @@ test.describe('Bar-y series', () => {
     });
 
     test('Stacking small y values with and without stack gap', async ({mount}) => {
+        const smallValuesSeriesData: BarYSeries[] = new Array(100).fill(null).map((_, index) => {
+            return {
+                name: String(index),
+                type: 'bar-y',
+                stacking: 'normal',
+                data: [
+                    {
+                        y: 0,
+                        x: 0.1,
+                    },
+                ],
+            };
+        });
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    ...smallValuesSeriesData,
+                    {
+                        name: 'Series 1',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 0,
+                                x: 50,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 0,
+                                x: 50,
+                            },
+                        ],
+                    },
+                ],
+
+                options: {
+                    'bar-y': {
+                        stackGap: 2,
+                    },
+                },
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['Category'],
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        await component.update(
+            <ChartTestStory
+                data={{
+                    ...chartData,
+                    series: {
+                        ...chartData.series,
+                        options: {
+                            'bar-y': {
+                                stackGap: 0,
+                            },
+                        },
+                    },
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Stacking (percent) small y-values with and without stack gap', async ({mount}) => {
         const smallValuesSeriesData: BarYSeries[] = new Array(100).fill(null).map((_, index) => {
             return {
                 name: String(index),
