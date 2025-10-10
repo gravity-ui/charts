@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.2](https://github.com/gravity-ui/charts/compare/v1.13.1...v1.13.2) (2025-10-10)
+
+
+### Bug Fixes
+
+* bar-y bar size with reverse order on Y-axis ([#192](https://github.com/gravity-ui/charts/issues/192)) ([5162b02](https://github.com/gravity-ui/charts/commit/5162b0205b43752ed930cfc00188e497ca0043df))
+* border should be ignored for dense bars in bar-y series ([#195](https://github.com/gravity-ui/charts/issues/195)) ([93fb95c](https://github.com/gravity-ui/charts/commit/93fb95ca443d2c54ab1ad791958ca94a860a8cdb))
+
 ## [1.13.1](https://github.com/gravity-ui/charts/compare/v1.13.0...v1.13.1) (2025-10-10)
 
 
