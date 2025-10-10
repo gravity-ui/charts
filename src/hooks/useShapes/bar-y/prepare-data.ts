@@ -34,10 +34,10 @@ export const prepareBarYData = async (args: {
         yScale: [yScale],
     } = args;
 
+    const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number>;
     const plotHeight = yLinearScale(yLinearScale.domain()[0]);
-    const plotWidth = xLinearScale(xLinearScale.domain()[1]);
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
     const sortKey = (() => {
@@ -77,6 +77,19 @@ export const prepareBarYData = async (args: {
             const sortedData = sortKey
                 ? sort(measureValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : measureValues;
+
+            let ratio = 1;
+            if (series.some((s) => s.stacking === 'percent')) {
+                const sum = sortedData.reduce((acc, item) => {
+                    if (item.data.x) {
+                        return acc + xLinearScale(Number(item.data.x));
+                    }
+                    return acc;
+                }, 0);
+
+                ratio = xLinearScale.range()[1] / sum;
+            }
+
             sortedData.forEach(({data, series: s}, xValueIndex) => {
                 let center;
 
@@ -90,16 +103,22 @@ export const prepareBarYData = async (args: {
 
                 const y = center - currentBarHeight / 2 + (barSize + barGap) * groupItemIndex;
                 const xValue = Number(data.x);
-                const width = Math.abs(xLinearScale(xValue) - base);
+                const isLastStackItem = xValueIndex === sortedData.length - 1;
+                const width = Math.abs(xLinearScale(xValue) * ratio - base);
+                let shapeWidth = width - (stackItems.length ? stackGap : 0);
+                if (shapeWidth < 0) {
+                    shapeWidth = width;
+                }
 
-                if (width <= 0) {
+                if (shapeWidth <= 0) {
                     return;
                 }
 
+                const itemStackGap = width - shapeWidth;
                 const item: PreparedBarYData = {
-                    x: xValue > baseRangeValue ? stackSum : stackSum - width,
-                    y,
-                    width,
+                    x: (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap,
+                    y: y,
+                    width: shapeWidth,
                     height: barSize,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
@@ -107,23 +126,12 @@ export const prepareBarYData = async (args: {
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
-                    isLastStackItem: xValueIndex === sortedData.length - 1,
+                    isLastStackItem,
                 };
 
                 stackItems.push(item);
-                stackSum += width + 1;
+                stackSum += width;
             });
-
-            if (series.some((s) => s.stacking === 'percent')) {
-                let acc = 0;
-                const ratio = plotWidth / (stackSum - stackItems.length);
-                stackItems.forEach((item) => {
-                    item.width = item.width * ratio;
-                    item.x = acc;
-
-                    acc += item.width;
-                });
-            }
 
             result.push(...stackItems);
         });

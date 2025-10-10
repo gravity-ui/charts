@@ -1,11 +1,11 @@
 import type {ChartSeriesOptions} from '../../types';
 
 type DefaultBarXSeriesOptions = Partial<ChartSeriesOptions['bar-x']> & {
-    'bar-x': {barMaxWidth: number; barPadding: number; groupPadding: number};
+    'bar-x': {barMaxWidth: number; barPadding: number; groupPadding: number; stackGap: number};
 };
 
-type DefaultBarYSeriesOptions = Partial<ChartSeriesOptions['bar-x']> & {
-    'bar-y': {barMaxWidth: number; barPadding: number; groupPadding: number};
+type DefaultBarYSeriesOptions = Partial<ChartSeriesOptions['bar-y']> & {
+    'bar-y': {barMaxWidth: number; barPadding: number; groupPadding: number; stackGap: number};
 };
 
 type DefaultWaterfallSeriesOptions = Partial<ChartSeriesOptions['waterfall']> & {
@@ -22,6 +22,7 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
         barMaxWidth: 50,
         barPadding: 0.1,
         groupPadding: 0.2,
+        stackGap: 1,
         states: {
             hover: {
                 enabled: true,
@@ -37,6 +38,7 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
         barMaxWidth: 50,
         barPadding: 0.1,
         groupPadding: 0.2,
+        stackGap: 1,
         states: {
             hover: {
                 enabled: true,
