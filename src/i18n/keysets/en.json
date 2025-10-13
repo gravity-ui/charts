@@ -16,7 +16,9 @@
     "label_axis-plot-band-options-not-equal": "It seems you are trying to use different type for \"{{axis}}\" axis plot band options",
     "label_invalid-tooltip-totals-aggregation-type": "It seems you are trying to use inappropriate data type for \"tooltip.totals.aggregation\". Available types: string, function.",
     "label_invalid-tooltip-totals-aggregation-type-str": "It seems you are trying to use inappropriate value for built-in \"tooltip.totals.aggregation\". Available values: [{{values}}].",
-    "label_invalid-axis-type": "It seems you are trying to use inappropriate type for \"{{key}}\" axis. Available types: [{{values}}]."
+    "label_invalid-axis-type": "It seems you are trying to use inappropriate type for \"{{key}}\" axis. Available types: [{{values}}].",
+    "label_invalid-axis-labels-html-type": "It seems you are trying to use inappropriate type for \"labels.html\" property. Only boolean is allowed.",
+    "label_invalid-axis-labels-html-not-supported-axis-type": "It seems you are trying to use \"labels.html\" property for an axis with an unsupported type. This property is supported only for \"category\" axis."
   },
   "tooltip": {
     "label_totals_sum": "Sum"

@@ -6,7 +6,7 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {scatterBasicData} from '../__stories__/__data__';
-import type {ChartMargin} from '../types';
+import type {ChartData, ChartMargin} from '../types';
 
 const CHART_MARGIN: ChartMargin = {
     top: 20,
@@ -14,6 +14,10 @@ const CHART_MARGIN: ChartMargin = {
     right: 20,
     bottom: 20,
 };
+const HTML_CATEGORIES = [
+    '<div style="height: 18px; background-color: #4fc4b7; border-radius: 4px; color: #fff; padding: 4px; display: flex; align-items: center;">1</div>',
+    '<div style="height: 32px; background-color: #4fc4b7; border-radius: 4px; color: #fff; padding: 4px; display: flex; align-items: center;">1000</div>',
+];
 
 test.describe('Y-axis', () => {
     test('min', async ({mount}) => {
@@ -46,5 +50,75 @@ test.describe('Y-axis', () => {
         set(data, 'yAxis[0].maxPadding', 0);
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Html in categories', () => {
+        const baseData: ChartData = {
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {x: 2, y: 0},
+                            {x: 5, y: 1},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: HTML_CATEGORIES,
+                    labels: {html: true},
+                },
+            ],
+            xAxis: {maxPadding: 0},
+        };
+
+        test('default settings', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('chart.margin=20', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'chart.margin', CHART_MARGIN);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('labels.margin=0', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'yAxis[0].labels.margin', 0);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('position=right', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'yAxis[0].position', 'right');
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('position=right, chart.margin=20', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'yAxis[0].position', 'right');
+            set(data, 'chart.margin', CHART_MARGIN);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('position=right, labels.margin=0', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'yAxis[0].position', 'right');
+            set(data, 'yAxis[0].labels.margin', 0);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

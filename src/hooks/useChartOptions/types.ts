@@ -15,7 +15,7 @@ import type {
 } from '../../types';
 
 type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' | 'autoRotation'> &
-    Required<Pick<ChartAxisLabels, 'enabled' | 'padding' | 'margin' | 'rotation'>> & {
+    Required<Pick<ChartAxisLabels, 'enabled' | 'padding' | 'margin' | 'rotation' | 'html'>> & {
         style: BaseTextStyle;
         rotation: number;
         height: number;

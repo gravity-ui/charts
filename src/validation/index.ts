@@ -1,19 +1,13 @@
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
-import {
-    AXIS_TYPE,
-    DEFAULT_AXIS_TYPE,
-    SeriesType,
-    TOOLTIP_TOTALS_BUILT_IN_AGGREGATION,
-} from '../constants';
+import {DEFAULT_AXIS_TYPE, SeriesType, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {
     AreaSeries,
     BarXSeries,
     BarYSeries,
-    ChartAxis,
     ChartData,
     ChartSeries,
     ChartTooltip,
@@ -24,6 +18,8 @@ import type {
     ScatterSeries,
     TreemapSeries,
 } from '../types';
+
+import {validateAxes} from './validate-axes';
 
 type XYSeries = ScatterSeries | BarXSeries | BarYSeries | LineSeries | AreaSeries;
 type GetTypeOfResult = ReturnType<typeof getTypeOf>;
@@ -37,31 +33,6 @@ const AVAILABLE_TOOLTIP_TOTALS_BUILT_IN_AGGREGATIONS = Object.values(
     TOOLTIP_TOTALS_BUILT_IN_AGGREGATION,
 );
 const AVAILABLE_TOOLTIP_TOTALS_AGGREGATION_TYPES: GetTypeOfResult[] = ['function', 'string'];
-const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
-
-function validateAxisType({axis, key}: {axis: ChartAxis; key: 'x' | 'y'}) {
-    if (axis.type && !AVAILABLE_AXIS_TYPES.includes(axis.type)) {
-        throw new ChartError({
-            code: CHART_ERROR_CODE.INVALID_DATA,
-            message: i18n('error', 'label_invalid-axis-type', {
-                key,
-                values: AVAILABLE_AXIS_TYPES,
-            }),
-        });
-    }
-}
-
-function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
-    const {xAxis, yAxis = []} = args;
-
-    if (xAxis) {
-        validateAxisType({axis: xAxis, key: 'x'});
-    }
-
-    yAxis.forEach((axis) => {
-        validateAxisType({axis, key: 'y'});
-    });
-}
 
 function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {series, xAxis, yAxis = []} = args;

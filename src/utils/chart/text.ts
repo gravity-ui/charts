@@ -131,13 +131,20 @@ function renderLabels(
         text.attr(name, value);
     });
 
-    text.selectAll('tspan')
+    const tspanSelection = text
+        .selectAll('tspan')
         .data(labels)
         .enter()
         .append('tspan')
         .attr('x', 0)
         .attr('dy', 0)
         .html((d) => d);
+    const labelLength = labels.join('').length;
+
+    // For cases when labels contain html markup and they cannot be rendered as children of tspan
+    if (labelLength > 0 && text.node()?.clientWidth === 0) {
+        tspanSelection.text((d) => d);
+    }
 
     return text;
 }

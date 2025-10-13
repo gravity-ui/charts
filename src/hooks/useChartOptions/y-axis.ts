@@ -14,7 +14,8 @@ import {
     formatAxisTickLabel,
     getClosestPointsRange,
     getDefaultMinYAxisValue,
-    getHorisontalSvgTextHeight,
+    getHorizontalHtmlTextHeight,
+    getHorizontalSvgTextHeight,
     getLabelsSize,
     getScaleTicks,
     isAxisRelatedSeries,
@@ -34,7 +35,7 @@ const getAxisLabelMaxWidth = async (args: {
     const {axis, seriesData, seriesOptions} = args;
 
     if (!axis.labels.enabled) {
-        return 0;
+        return {height: 0, width: 0};
     }
 
     const scale = createYScale({
@@ -60,9 +61,10 @@ const getAxisLabelMaxWidth = async (args: {
         labels,
         style: axis.labels.style,
         rotation: axis.labels.rotation,
+        html: axis.labels.html,
     });
 
-    return size.maxWidth;
+    return {height: size.maxHeight, width: size.maxWidth};
 };
 
 export const getPreparedYAxis = ({
@@ -99,6 +101,10 @@ export const getPreparedYAxis = ({
             const labelsStyle: BaseTextStyle = {
                 fontSize: get(axisItem, 'labels.style.fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE),
             };
+            const labelsHtml = get(axisItem, 'labels.html', false);
+            const labelsLineHeight = labelsHtml
+                ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
+                : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
             const titleText = get(axisItem, 'title.text', '');
             const titleStyle = {
                 ...yAxisTitleDefaults.style,
@@ -131,11 +137,12 @@ export const getPreparedYAxis = ({
                     dateFormat: get(axisItem, 'labels.dateFormat'),
                     numberFormat: get(axisItem, 'labels.numberFormat'),
                     style: labelsStyle,
-                    rotation: get(axisItem, 'labels.rotation', 0),
+                    rotation: labelsHtml ? 0 : get(axisItem, 'labels.rotation', 0),
                     width: 0,
                     height: 0,
-                    lineHeight: getHorisontalSvgTextHeight({text: 'TmpLabel', style: labelsStyle}),
+                    lineHeight: labelsLineHeight,
                     maxWidth: get(axisItem, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
+                    html: labelsHtml,
                 },
                 lineColor: get(axisItem, 'lineColor'),
                 categories: getAxisCategories(axisItem),
@@ -204,11 +211,17 @@ export const getPreparedYAxis = ({
             };
 
             if (labelsEnabled) {
-                preparedAxis.labels.width = await getAxisLabelMaxWidth({
+                const {height: labelsHeight, width: labelsWidth} = await getAxisLabelMaxWidth({
                     axis: preparedAxis,
                     seriesData,
                     seriesOptions,
                 });
+
+                preparedAxis.labels.height = labelsHeight;
+                preparedAxis.labels.width =
+                    labelsWidth > preparedAxis.labels.maxWidth
+                        ? preparedAxis.labels.maxWidth
+                        : labelsWidth;
             }
 
             return preparedAxis;

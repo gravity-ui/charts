@@ -391,6 +391,11 @@ export const Legend = (props: Props) => {
                 // ticks
                 const scale = scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>;
                 const xAxisGenerator = await axisBottom({
+                    domain: {
+                        size: legend.width,
+                        color: 'transparent',
+                    },
+                    htmlLayout,
                     scale,
                     ticks: {
                         items: [[0, -rectHeight]],
@@ -400,10 +405,6 @@ export const Legend = (props: Props) => {
                         tickColor: '#fff',
                         labelFormat: (value: number) => formatNumber(value, {unit: 'auto'}),
                         labelsStyle: legend.ticks.style,
-                    },
-                    domain: {
-                        size: legend.width,
-                        color: 'transparent',
                     },
                 });
                 const tickTop = legend.title.height + legend.title.margin + rectHeight;

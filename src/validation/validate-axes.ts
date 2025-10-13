@@ -1,0 +1,55 @@
+import {AXIS_TYPE} from '../constants';
+import {i18n} from '../i18n';
+import {CHART_ERROR_CODE, ChartError} from '../libs';
+import type {ChartAxis, ChartXAxis, ChartYAxis} from '../types';
+
+const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
+
+function validateAxisType({axis, key}: {axis: ChartAxis; key: 'x' | 'y'}) {
+    if (axis.type && !AVAILABLE_AXIS_TYPES.includes(axis.type)) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-axis-type', {
+                key,
+                values: AVAILABLE_AXIS_TYPES,
+            }),
+        });
+    }
+}
+
+function validateLabelsHtmlOptions(args: {axis: ChartAxis}) {
+    const {axis} = args;
+    const html = axis.labels?.html;
+
+    if (typeof html === 'undefined') {
+        return;
+    }
+
+    if (typeof html !== 'boolean') {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-axis-labels-html-type'),
+        });
+    }
+
+    if (html && axis.type !== 'category') {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-axis-labels-html-not-supported-axis-type'),
+        });
+    }
+}
+
+export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
+    const {xAxis, yAxis = []} = args;
+
+    if (xAxis) {
+        validateAxisType({axis: xAxis, key: 'x'});
+        validateLabelsHtmlOptions({axis: xAxis});
+    }
+
+    yAxis.forEach((axis) => {
+        validateAxisType({axis, key: 'y'});
+        validateLabelsHtmlOptions({axis});
+    });
+}

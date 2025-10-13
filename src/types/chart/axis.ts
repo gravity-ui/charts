@@ -22,12 +22,22 @@ export interface ChartAxisLabels {
     style?: Partial<BaseTextStyle>;
     /** For horizontal axes, enable label rotation to prevent overlapping labels.
      * If there is enough space, labels are not rotated.
-     * As the chart gets narrower, it will start rotating the labels -45 degrees. */
+     * As the chart gets narrower, it will start rotating the labels -45 degrees.
+     *
+     * Does not apply to html labels.
+     */
     autoRotation?: boolean;
     /** Rotation of the labels in degrees.
+     *
+     * Does not apply to html labels.
      * @default 0
      */
     rotation?: number;
+    /**
+     * Allows to use any html-tags to display labels content. Supports only for axis with type "category".
+     * @default false
+     * */
+    html?: boolean;
 }
 
 export interface ChartAxis {

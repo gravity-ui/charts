@@ -31,13 +31,16 @@ const b = block('axis');
 
 type Props = {
     axis: PreparedAxis;
-    width: number;
+    boundsOffsetLeft: number;
+    boundsOffsetTop: number;
     height: number;
+    htmlLayout: HTMLElement | null;
     scale: ChartScale;
     split: PreparedSplit;
+    width: number;
+    leftmostLimit?: number;
     plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
     plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
-    leftmostLimit?: number;
 };
 
 function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
@@ -88,19 +91,22 @@ export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCo
 export const AxisX = React.memo(function AxisX(props: Props) {
     const {
         axis,
-        width,
+        boundsOffsetLeft,
+        boundsOffsetTop,
         height: totalHeight,
-        scale,
-        split,
-        plotBeforeRef,
-        plotAfterRef,
+        htmlLayout,
         leftmostLimit,
+        plotAfterRef,
+        plotBeforeRef,
+        split,
+        scale,
+        width,
     } = props;
     const ref = React.useRef<SVGGElement | null>(null);
 
     React.useEffect(() => {
         (async () => {
-            if (!ref.current) {
+            if (!ref.current || !htmlLayout) {
                 return;
             }
 
@@ -123,23 +129,28 @@ export const AxisX = React.memo(function AxisX(props: Props) {
 
             const axisScale = scale as AxisScale<AxisDomain>;
             const xAxisGenerator = await axisBottom({
-                leftmostLimit,
-                scale: axisScale,
-                ticks: {
-                    items: tickItems,
-                    labelFormat: getLabelFormatter({axis, scale}),
-                    labelsPaddings: axis.labels.padding,
-                    labelsMargin: axis.labels.margin,
-                    labelsStyle: axis.labels.style,
-                    labelsMaxWidth: axis.labels.maxWidth,
-                    labelsLineHeight: axis.labels.lineHeight,
-                    count: getTicksCount({axis, range: width}),
-                    maxTickCount: getMaxTickCount({axis, width}),
-                    rotation: axis.labels.rotation,
-                },
+                boundsOffsetLeft,
+                boundsOffsetTop,
                 domain: {
                     size: width,
                     color: axis.lineColor,
+                },
+                htmlLayout,
+                leftmostLimit,
+                scale: axisScale,
+                ticks: {
+                    count: getTicksCount({axis, range: width}),
+                    labelsHtml: axis.labels.html,
+                    items: tickItems,
+                    labelFormat: getLabelFormatter({axis, scale}),
+                    labelsHeight: axis.labels.height,
+                    labelsLineHeight: axis.labels.lineHeight,
+                    labelsMargin: axis.labels.margin,
+                    labelsMaxWidth: axis.labels.maxWidth,
+                    labelsPaddings: axis.labels.padding,
+                    labelsStyle: axis.labels.style,
+                    maxTickCount: getMaxTickCount({axis, width}),
+                    rotation: axis.labels.rotation,
                 },
             });
 
@@ -327,7 +338,19 @@ export const AxisX = React.memo(function AxisX(props: Props) {
                 );
             }
         })();
-    }, [axis, width, totalHeight, scale, split, leftmostLimit, plotBeforeRef, plotAfterRef]);
+    }, [
+        axis,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        htmlLayout,
+        leftmostLimit,
+        plotAfterRef,
+        plotBeforeRef,
+        scale,
+        split,
+        totalHeight,
+        width,
+    ]);
 
     return <g ref={ref} />;
 });

@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 
 import type {BaseTextStyle, ChartData} from '../../types';
-import {getHorisontalSvgTextHeight} from '../../utils';
+import {getHorizontalSvgTextHeight} from '../../utils';
 
 import type {PreparedTitle} from './types';
 
@@ -19,7 +19,7 @@ export const getPreparedTitle = ({
         fontWeight: get(title, 'style.fontWeight'),
     };
     const titleHeight = titleText
-        ? getHorisontalSvgTextHeight({text: titleText, style: titleStyle}) + TITLE_PADDINGS
+        ? getHorizontalSvgTextHeight({text: titleText, style: titleStyle}) + TITLE_PADDINGS
         : 0;
     const preparedTitle: PreparedTitle | undefined = titleText
         ? {text: titleText, style: titleStyle, height: titleHeight}

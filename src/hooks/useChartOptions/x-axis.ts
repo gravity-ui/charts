@@ -13,7 +13,8 @@ import {
     calculateCos,
     formatAxisTickLabel,
     getClosestPointsRange,
-    getHorisontalSvgTextHeight,
+    getHorizontalHtmlTextHeight,
+    getHorizontalSvgTextHeight,
     getLabelsSize,
     getMaxTickCount,
     getTicksCount,
@@ -52,24 +53,28 @@ async function getLabelSettings({
             step,
         });
     });
-    const overlapping = hasOverlappingLabels({
-        width,
-        labels,
-        padding: axis.labels.padding,
-        style: axis.labels.style,
-    });
+    const overlapping = axis.labels.html
+        ? false
+        : hasOverlappingLabels({
+              width,
+              labels,
+              padding: axis.labels.padding,
+              style: axis.labels.style,
+          });
 
     const defaultRotation = overlapping && autoRotation ? -45 : 0;
-    const rotation = axis.labels.rotation || defaultRotation;
-    const labelsHeight = rotation
-        ? (
-              await getLabelsSize({
-                  labels,
-                  style: axis.labels.style,
-                  rotation,
-              })
-          ).maxHeight
-        : axis.labels.lineHeight;
+    const rotation = axis.labels.html ? 0 : axis.labels.rotation || defaultRotation;
+    const labelsHeight =
+        rotation || axis.labels.html
+            ? (
+                  await getLabelsSize({
+                      labels,
+                      style: axis.labels.style,
+                      rotation,
+                      html: axis.labels.html,
+                  })
+              ).maxHeight
+            : axis.labels.lineHeight;
     const maxHeight = rotation ? calculateCos(rotation) * axis.labels.maxWidth : labelsHeight;
 
     return {height: Math.min(maxHeight, labelsHeight), rotation};
@@ -104,6 +109,10 @@ export const getPreparedXAxis = async ({
     const labelsStyle = {
         fontSize: get(xAxis, 'labels.style.fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE),
     };
+    const labelsHtml = get(xAxis, 'labels.html', false);
+    const labelsLineHeight = labelsHtml
+        ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
+        : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
 
     const preparedXAxis: PreparedAxis = {
         type: get(xAxis, 'type', 'linear'),
@@ -117,8 +126,9 @@ export const getPreparedXAxis = async ({
             style: labelsStyle,
             width: 0,
             height: 0,
-            lineHeight: getHorisontalSvgTextHeight({text: 'Tmp', style: labelsStyle}),
+            lineHeight: labelsLineHeight,
             maxWidth: get(xAxis, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
+            html: labelsHtml,
         },
         lineColor: get(xAxis, 'lineColor'),
         categories: getAxisCategories(xAxis),
