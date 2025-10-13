@@ -111,10 +111,25 @@ export type ChartTooltipTotalsBuiltInAggregation =
 
 export type ChartTooltipTotalsAggregationValue = number | string | undefined;
 
+export type ChartTooltipRowRendererArgs = {
+    id: string;
+    name: string;
+    active?: boolean;
+    color?: string;
+    striped?: boolean;
+    value: string | number | null | undefined;
+    formattedValue?: string;
+    hovered?: TooltipDataChunk<unknown>[];
+    className?: string;
+};
+
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
     renderer?: (args: ChartTooltipRendererArgs<T>) => React.ReactElement | null;
+    /** Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
+     * It is useful in cases where you need to display additional information, but keep the general format of the tooltip. */
+    rowRenderer?: (args: ChartTooltipRowRendererArgs) => React.ReactElement | null;
     pin?: {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';

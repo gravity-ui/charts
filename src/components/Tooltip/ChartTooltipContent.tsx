@@ -11,12 +11,13 @@ export interface ChartTooltipContentProps {
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     renderer?: ChartTooltip['renderer'];
+    rowRenderer?: ChartTooltip['rowRenderer'];
     valueFormat?: ChartTooltip['valueFormat'];
     totals?: ChartTooltip['totals'];
 }
 
 export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
-    const {hovered, xAxis, yAxis, renderer, valueFormat, totals} = props;
+    const {hovered, xAxis, yAxis, renderer, rowRenderer, valueFormat, totals} = props;
 
     if (!hovered) {
         return null;
@@ -31,6 +32,7 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
             yAxis={yAxis}
             valueFormat={valueFormat}
             totals={totals}
+            rowRenderer={rowRenderer}
         />
     ) : (
         customTooltip

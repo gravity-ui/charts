@@ -6,6 +6,7 @@ import get from 'lodash/get';
 import type {PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
 import type {
     ChartTooltip,
+    ChartTooltipRowRendererArgs,
     ChartXAxis,
     ChartYAxis,
     TooltipDataChunk,
@@ -35,11 +36,54 @@ type Props = {
     valueFormat?: ValueFormat;
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    rowRenderer?: ChartTooltip['rowRenderer'];
 };
 
-export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, totals}: Props) => {
+export const DefaultTooltipContent = ({
+    hovered,
+    xAxis,
+    yAxis,
+    valueFormat,
+    totals,
+    rowRenderer,
+}: Props) => {
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
     const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
+
+    const renderRow = ({
+        id,
+        name,
+        color,
+        active,
+        striped,
+        value,
+        formattedValue,
+    }: ChartTooltipRowRendererArgs) => {
+        if (typeof rowRenderer === 'function') {
+            return rowRenderer({
+                id,
+                name,
+                color,
+                value,
+                formattedValue,
+                striped,
+                active,
+                className: b('content-row', {active, striped}),
+                hovered,
+            });
+        }
+
+        return (
+            <Row
+                key={id}
+                active={active}
+                color={color}
+                label={<span dangerouslySetInnerHTML={{__html: name}} />}
+                striped={striped}
+                value={formattedValue}
+            />
+        );
+    };
 
     return (
         <div className={b('content')}>
@@ -69,16 +113,15 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                 format,
                             });
 
-                            return (
-                                <Row
-                                    key={id}
-                                    active={active}
-                                    color={color}
-                                    label={<span dangerouslySetInnerHTML={{__html: series.name}} />}
-                                    striped={striped}
-                                    value={formattedValue}
-                                />
-                            );
+                            return renderRow({
+                                id,
+                                active,
+                                color,
+                                name: series.name,
+                                striped,
+                                value: hoveredValues[i],
+                                formattedValue,
+                            });
                         }
                         case 'waterfall': {
                             const isTotal = get(data, 'total', false);
@@ -115,16 +158,15 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                 format,
                             });
 
-                            return (
-                                <Row
-                                    key={id}
-                                    active={active}
-                                    color={color}
-                                    label={<span dangerouslySetInnerHTML={{__html: series.name}} />}
-                                    striped={striped}
-                                    value={formattedValue}
-                                />
-                            );
+                            return renderRow({
+                                id,
+                                active,
+                                color,
+                                name: series.name,
+                                striped,
+                                value: hoveredValues[i],
+                                formattedValue,
+                            });
                         }
                         case 'pie':
                         case 'treemap': {
@@ -134,22 +176,13 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                 format: valueFormat || {type: 'number'},
                             });
 
-                            return (
-                                <Row
-                                    key={id}
-                                    color={color}
-                                    label={
-                                        <span
-                                            dangerouslySetInnerHTML={{
-                                                __html: [seriesData.name || seriesData.id]
-                                                    .flat()
-                                                    .join('\n'),
-                                            }}
-                                        />
-                                    }
-                                    value={formattedValue}
-                                />
-                            );
+                            return renderRow({
+                                id,
+                                color,
+                                name: [seriesData.name || seriesData.id].flat().join('\n'),
+                                value: hoveredValues[i],
+                                formattedValue,
+                            });
                         }
                         case 'sankey': {
                             const {target, data: source} = seriesItem as TooltipDataChunkSankey;
@@ -158,18 +191,13 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                 format: valueFormat || {type: 'number'},
                             });
 
-                            return (
-                                <Row
-                                    key={id}
-                                    color={source.color}
-                                    label={
-                                        <span>
-                                            {source.name} → {target?.name}:
-                                        </span>
-                                    }
-                                    value={formattedValue}
-                                />
-                            );
+                            return renderRow({
+                                id,
+                                color,
+                                name: `${source.name} → ${target?.name}`,
+                                value: hoveredValues[i],
+                                formattedValue,
+                            });
                         }
                         case 'radar': {
                             const radarSeries = series as PreparedRadarSeries;
@@ -178,15 +206,14 @@ export const DefaultTooltipContent = ({hovered, xAxis, yAxis, valueFormat, total
                                 format: valueFormat || {type: 'number'},
                             });
 
-                            return (
-                                <Row
-                                    key={id}
-                                    active={active}
-                                    color={color}
-                                    label={radarSeries.name || radarSeries.id}
-                                    value={formattedValue}
-                                />
-                            );
+                            return renderRow({
+                                id,
+                                color,
+                                active,
+                                name: radarSeries.name || radarSeries.id,
+                                value: hoveredValues[i],
+                                formattedValue,
+                            });
                         }
                         default: {
                             return null;
