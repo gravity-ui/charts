@@ -86,7 +86,7 @@ function appendSvgLabels(args: {
 
     ticksSelection
         .append('text')
-        .text(ticks.labelFormat)
+        .html(ticks.labelFormat)
         .style('font-size', ticks.labelsStyle?.fontSize || '')
         .attr('fill', 'currentColor')
         .attr('text-anchor', () => {
