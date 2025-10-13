@@ -87,7 +87,12 @@ function getDomainDataForStackedSeries(
         seriesStack.forEach((singleSeries) => {
             const data = new Map();
             singleSeries.data.forEach((point) => {
-                const key = String(point[keyAttr]);
+                const keyValue = point[keyAttr];
+                if (keyValue === null) {
+                    return;
+                }
+
+                const key = String(keyValue);
                 let value = 0;
 
                 if (valueAttr in point && typeof point[valueAttr] === 'number') {
@@ -115,7 +120,7 @@ function getDomainDataForStackedSeries(
 export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
     const groupedSeries = group(series, (item) => item.type);
 
-    return Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
+    const values = Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
         switch (type) {
             case 'bar-y': {
                 acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[], 'y', 'x'));
@@ -130,6 +135,8 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
 
         return acc;
     }, []);
+
+    return Array.from(new Set(values.filter((v) => v !== null)));
 };
 
 export function getDefaultMaxXAxisValue(series: UnknownSeries[]) {

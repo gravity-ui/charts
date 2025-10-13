@@ -23,6 +23,7 @@ import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
 import {getBarYLayoutForNumericScale, groupBarYDataByYValue} from '../utils';
+import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 
 export type ChartScale =
     | ScaleLinear<number, number>
@@ -209,41 +210,83 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
     return result;
 }
 
+function getXScaleRange({
+    boundsWidth,
+    series,
+    seriesOptions,
+    hasZoomX,
+    axis,
+    maxPadding,
+}: {
+    axis: PreparedAxis | ChartAxis;
+    boundsWidth: number;
+    series: (PreparedSeries | ChartSeries)[];
+    seriesOptions: PreparedSeriesOptions;
+    hasZoomX?: boolean;
+    maxPadding: number;
+}) {
+    const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
+    const xRange = [0, boundsWidth - maxPadding];
+    const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
+    const range = hasZoomX ? xRangeZoom : xRange;
+
+    const barXSeries = series.filter((s) => s.type === SeriesType.BarX);
+    if (barXSeries.length) {
+        const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedAxis);
+        if (Object.keys(groupedData).length > 1) {
+            const {bandSize} = getBarXLayoutForNumericScale({
+                plotWidth: boundsWidth - maxPadding,
+                groupedData,
+                seriesOptions,
+            });
+
+            const offset = bandSize / 2;
+            return [range[0] + offset, range[1] - offset];
+        }
+    }
+
+    return range;
+}
+
 // eslint-disable-next-line complexity
 export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
+    seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
 }) {
-    const {axis, boundsWidth, series, hasZoomX} = args;
+    const {axis, boundsWidth, series, seriesOptions, hasZoomX} = args;
     const xMinProps = get(axis, 'min');
     const xMaxProps = get(axis, 'max');
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const xCategories = get(axis, 'categories');
-    const xTimestamps = get(axis, 'timestamps');
     const maxPadding = get(axis, 'maxPadding', 0);
-
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
-    const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
-    const xRange = [0, boundsWidth - xAxisMaxPadding];
-    const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
+
+    const range = getXScaleRange({
+        boundsWidth,
+        series,
+        seriesOptions,
+        hasZoomX,
+        axis,
+        maxPadding: xAxisMaxPadding,
+    });
 
     switch (axis.order) {
         case 'sortDesc':
         case 'reverse': {
-            xRange.reverse();
-            xRangeZoom.reverse();
+            range.reverse();
         }
     }
 
     switch (xType) {
         case 'linear':
         case 'logarithmic': {
-            const domain = getDomainDataXBySeries(series);
+            const domainData = getDomainDataXBySeries(series);
 
-            if (isNumericalArrayData(domain)) {
-                const [xMinDomain, xMaxDomain] = extent(domain) as [number, number];
+            if (isNumericalArrayData(domainData)) {
+                const [xMinDomain, xMaxDomain] = extent(domainData) as [number, number];
                 let xMin: number;
                 let xMax: number;
 
@@ -265,12 +308,10 @@ export function createXScale(args: {
                 }
 
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
-                const scale = scaleFn()
-                    .domain([xMin, xMax])
-                    .range(hasZoomX ? xRangeZoom : xRange);
+                const scale = scaleFn().domain([xMin, xMax]).range(range);
 
                 if (!hasZoomX) {
-                    scale.nice();
+                    scale.nice(Math.max(10, domainData.length));
                 }
 
                 return scale;
@@ -288,7 +329,7 @@ export function createXScale(args: {
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 
                 if (xScale.step() / 2 < xAxisMaxPadding) {
-                    xScale.range(xRange);
+                    xScale.range(range);
                 }
 
                 return xScale;
@@ -297,36 +338,21 @@ export function createXScale(args: {
             break;
         }
         case 'datetime': {
-            if (xTimestamps) {
-                const [xMinTimestamp, xMaxTimestamp] = extent(xTimestamps) as [number, number];
+            let domain: [number, number] | null = null;
+            const domainData = get(axis, 'timestamps') || getDomainDataXBySeries(series);
+
+            if (isNumericalArrayData(domainData)) {
+                const [xMinTimestamp, xMaxTimestamp] = extent(domainData) as [number, number];
                 const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
                 const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
-                const scale = scaleUtc()
-                    .domain([xMin, xMax])
-                    .range(hasZoomX ? xRangeZoom : xRange);
+                domain = [xMin, xMax];
+
+                const scale = scaleUtc().domain(domain).range(range);
 
                 if (!hasZoomX) {
-                    scale.nice();
+                    scale.nice(Math.max(10, domainData.length));
                 }
-
                 return scale;
-            } else {
-                const domain = getDomainDataXBySeries(series);
-
-                if (isNumericalArrayData(domain)) {
-                    const [xMinTimestamp, xMaxTimestamp] = extent(domain) as [number, number];
-                    const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
-                    const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
-                    const scale = scaleUtc()
-                        .domain([xMin, xMax])
-                        .range(hasZoomX ? xRangeZoom : xRange);
-
-                    if (!hasZoomX) {
-                        scale.nice();
-                    }
-
-                    return scale;
-                }
             }
 
             break;
@@ -345,7 +371,13 @@ const createScales = (args: Args) => {
 
     return {
         xScale: xAxis
-            ? createXScale({axis: xAxis, boundsWidth, series: visibleSeries, hasZoomX})
+            ? createXScale({
+                  axis: xAxis,
+                  boundsWidth,
+                  series: visibleSeries,
+                  seriesOptions,
+                  hasZoomX,
+              })
             : undefined,
         yScale: yAxis.map((axis, index) => {
             const axisSeries = series.filter((s) => {
