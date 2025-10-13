@@ -14,6 +14,10 @@ const CHART_MARGIN: ChartMargin = {
     right: 20,
     bottom: 20,
 };
+const HTML_CATEGORIES = [
+    '<div style="height: 18px; background-color: #4fc4b7; border-radius: 4px; color: #fff; padding: 4px; display: flex; align-items: center;">1</div>',
+    '<div style="height: 32px; background-color: #4fc4b7; border-radius: 4px; color: #fff; padding: 4px; display: flex; align-items: center;">1000</div>',
+];
 
 test.describe('X-axis', () => {
     test('min', async ({mount}) => {
@@ -54,5 +58,51 @@ test.describe('X-axis', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Html in categories', () => {
+        const baseData: ChartData = {
+            legend: {
+                enabled: false,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 2.5},
+                            {x: 1, y: 5},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: HTML_CATEGORIES,
+                labels: {
+                    html: true,
+                },
+            },
+        };
+
+        test('default settings', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('chart.margin=20', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'chart.margin', CHART_MARGIN);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('labels.margin=0', async ({mount}) => {
+            const data: ChartData = cloneDeep(baseData);
+            set(data, 'xAxis.labels.margin', 0);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

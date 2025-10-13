@@ -159,27 +159,33 @@ export const ChartInner = (props: ChartInnerProps) => {
                     {xScale && yScale?.length && (
                         <React.Fragment>
                             <AxisY
-                                bottomLimit={svgBottomPos}
-                                topLimit={svgTopPos}
                                 axes={yAxis}
-                                width={boundsWidth}
+                                bottomLimit={svgBottomPos}
+                                boundsOffsetLeft={boundsOffsetLeft}
+                                boundsOffsetTop={boundsOffsetTop}
                                 height={boundsHeight}
+                                htmlLayout={htmlLayout}
+                                plotAfterRef={plotAfterRef}
+                                plotBeforeRef={plotBeforeRef}
                                 scale={yScale}
                                 split={preparedSplit}
-                                plotBeforeRef={plotBeforeRef}
-                                plotAfterRef={plotAfterRef}
+                                topLimit={svgTopPos}
+                                width={boundsWidth}
                             />
                             {xAxis && (
                                 <g transform={`translate(0, ${boundsHeight})`}>
                                     <AxisX
-                                        leftmostLimit={svgXPos}
                                         axis={xAxis}
-                                        width={boundsWidth}
+                                        boundsOffsetLeft={boundsOffsetLeft}
+                                        boundsOffsetTop={boundsOffsetTop}
                                         height={boundsHeight}
+                                        htmlLayout={htmlLayout}
+                                        leftmostLimit={svgXPos}
+                                        plotAfterRef={plotAfterRef}
+                                        plotBeforeRef={plotBeforeRef}
                                         scale={xScale}
                                         split={preparedSplit}
-                                        plotBeforeRef={plotBeforeRef}
-                                        plotAfterRef={plotAfterRef}
+                                        width={boundsWidth}
                                     />
                                 </g>
                             )}

@@ -33,18 +33,28 @@ import {
 import './styles.scss';
 
 const b = block('axis');
+const AXIS_LEFT_HTML_LABELS_DATA_ATTR = 'data-axis-left-html-labels';
+const AXIS_RIGHT_HTML_LABELS_DATA_ATTR = 'data-axis-right-html-labels';
 
-type Props = {
+interface Props {
     axes: PreparedAxis[];
+    boundsOffsetTop: number;
+    boundsOffsetLeft: number;
     scale: ChartScale[];
     width: number;
     height: number;
+    htmlLayout: HTMLElement | null;
     split: PreparedSplit;
     plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
     plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
     bottomLimit?: number;
     topLimit?: number;
-};
+}
+interface HtmlLabelData {
+    content: string;
+    right: number;
+    top: number;
+}
 
 function transformLabel(args: {node: Element; axis: PreparedAxis; startTopOffset?: number}) {
     const {node, axis, startTopOffset} = args;
@@ -92,7 +102,7 @@ function getAxisGenerator(args: {
         .tickSize(tickSize)
         .tickPadding(preparedAxis.labels.margin)
         .tickFormat((value) => {
-            if (!preparedAxis.labels.enabled) {
+            if (!preparedAxis.labels.enabled || preparedAxis.labels.html) {
                 return '';
             }
 
@@ -151,21 +161,24 @@ function getTitlePosition(args: {axis: PreparedAxis; axisHeight: number; rowCoun
 export const AxisY = (props: Props) => {
     const {
         axes: allAxes,
-        width,
+        bottomLimit = 0,
+        boundsOffsetLeft,
+        boundsOffsetTop,
         height: totalHeight,
+        htmlLayout,
+        plotAfterRef,
+        plotBeforeRef,
         scale,
         split,
-        plotBeforeRef,
-        plotAfterRef,
-        bottomLimit = 0,
         topLimit = 0,
+        width,
     } = props;
     const height = getAxisHeight({split, boundsHeight: totalHeight});
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
 
     React.useEffect(() => {
-        if (!ref.current) {
+        if (!ref.current || !htmlLayout) {
             return;
         }
 
@@ -173,6 +186,10 @@ export const AxisY = (props: Props) => {
 
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
+
+        const htmlSelection = select(htmlLayout);
+        htmlSelection.selectAll(`[${AXIS_LEFT_HTML_LABELS_DATA_ATTR}]`).remove();
+        htmlSelection.selectAll(`[${AXIS_RIGHT_HTML_LABELS_DATA_ATTR}]`).remove();
 
         let plotBeforeContainer = null;
         let plotAfterContainer = null;
@@ -217,7 +234,59 @@ export const AxisY = (props: Props) => {
             // https://github.com/d3/d3-axis/blob/main/src/axis.js#L110
             axisItem.attr('font-family', null);
 
-            if (d.labels.enabled) {
+            if (d.labels.enabled && d.labels.html) {
+                const offsetTop = svgElement.node()?.getBoundingClientRect().top || 0;
+                const offsetLeft = svgElement.node()?.getBoundingClientRect().left || 0;
+                const htmlLabelsData: HtmlLabelData[] = [];
+                axisItem
+                    .selectAll<SVGGElement, unknown>('.tick')
+                    .data(axisScale.domain())
+                    .each(function (tickContent) {
+                        const rect = this.getBoundingClientRect();
+                        htmlLabelsData.push({
+                            content: tickContent as string,
+                            right: rect.right,
+                            top: rect.top,
+                        });
+                    });
+                const dataAttr =
+                    d.position === 'left'
+                        ? AXIS_LEFT_HTML_LABELS_DATA_ATTR
+                        : AXIS_RIGHT_HTML_LABELS_DATA_ATTR;
+                htmlSelection.append('div').attr(dataAttr, 1).style('position', 'absolute');
+                htmlLabelsData.forEach((labelData) => {
+                    htmlSelection
+                        .selectAll<SVGGElement, unknown>(`[${dataAttr}]`)
+                        .data([labelData])
+                        .append('div')
+                        .html(function (l) {
+                            return l.content;
+                        })
+                        .style('font-size', d.labels.style.fontSize || '')
+                        .style('position', 'absolute')
+                        .style('white-space', 'nowrap')
+                        .style('color', 'var(--g-color-text-secondary)')
+                        .style('overflow', 'hidden')
+                        .style('text-overflow', 'ellipsis')
+                        .style('height', `${d.labels.height}px`)
+                        .style('display', 'inline-flex')
+                        .style('align-items', 'center')
+                        .style('left', function (l) {
+                            if (d.position === 'right') {
+                                return `${l.right - offsetLeft + d.labels.margin + boundsOffsetLeft}px`;
+                            }
+
+                            const rect = this.getBoundingClientRect();
+
+                            return `${boundsOffsetLeft - rect.width - d.labels.margin}px`;
+                        })
+                        .style('top', function (l) {
+                            const rect = this.getBoundingClientRect();
+
+                            return `${l.top + boundsOffsetTop - offsetTop - rect.height / 2}px`;
+                        });
+                });
+            } else if (d.labels.enabled) {
                 const labels = axisItem.selectAll<SVGTextElement, string>('.tick text');
                 const tickTexts = labels
                     // The offset must be applied before the labels are rotated.
@@ -490,15 +559,18 @@ export const AxisY = (props: Props) => {
             });
     }, [
         allAxes,
-        width,
+        bottomLimit,
+        boundsOffsetLeft,
+        boundsOffsetTop,
         height,
+        htmlLayout,
+        lineGenerator,
+        plotAfterRef,
+        plotBeforeRef,
         scale,
         split,
-        bottomLimit,
-        lineGenerator,
-        plotBeforeRef,
-        plotAfterRef,
         topLimit,
+        width,
     ]);
 
     return <g ref={ref} className={b('container')} />;

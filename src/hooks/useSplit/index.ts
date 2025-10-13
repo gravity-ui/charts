@@ -3,7 +3,7 @@ import React from 'react';
 import get from 'lodash/get';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
-import {calculateNumericProperty, getHorisontalSvgTextHeight} from '../../utils';
+import {calculateNumericProperty, getHorizontalSvgTextHeight} from '../../utils';
 
 import type {PreparedPlot, PreparedPlotTitle, PreparedSplit} from './types';
 
@@ -30,7 +30,7 @@ function preparePlotTitle(args: {
         fontWeight: get(title, 'style.fontWeight'),
     };
     const titleHeight = titleText
-        ? getHorisontalSvgTextHeight({text: titleText, style: titleStyle}) +
+        ? getHorizontalSvgTextHeight({text: titleText, style: titleStyle}) +
           TITLE_TOP_BOTTOM_PADDING * 2
         : 0;
     const top = plotIndex * (plotHeight + gap);

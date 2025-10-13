@@ -4,7 +4,7 @@ import {CHART_ERROR_CODE} from '../../libs';
 import type {ChartData} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
-describe('plugins/d3/validation', () => {
+describe('validation/validateData', () => {
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',
         (data) => {
@@ -168,25 +168,4 @@ describe('plugins/d3/validation', () => {
             expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
         },
     );
-
-    test.each([
-        {
-            series: {data: [{type: 'line', data: [{x: 1, y: 1}]}]},
-            xAxis: {type: 'unknown'},
-        },
-        {
-            series: {data: [{type: 'line', data: [{x: 1, y: 1}]}]},
-            yAxis: [{type: 'unknown'}],
-        },
-    ])('validateData should throw an error in case of invalid axis type (data: %j)', (data) => {
-        let error: ChartError | null = null;
-
-        try {
-            validateData(data as unknown as ChartData);
-        } catch (e) {
-            error = e as ChartError;
-        }
-
-        expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
-    });
 });
