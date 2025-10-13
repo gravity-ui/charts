@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/gravity-ui/charts/compare/v1.13.2...v1.14.0) (2025-10-13)
+
+
+### Features
+
+* support html in categories axes labels ([#197](https://github.com/gravity-ui/charts/issues/197)) ([d6bf869](https://github.com/gravity-ui/charts/commit/d6bf8695207e333366cc0e57aa0d1418c4095a7b))
+
 ## [1.13.2](https://github.com/gravity-ui/charts/compare/v1.13.1...v1.13.2) (2025-10-10)
 
 
