@@ -4,7 +4,7 @@ import {validateAxes} from '../validate-axes';
 
 type Args = Parameters<typeof validateAxes>[0];
 
-describe('plugins/d3/validate-axes', () => {
+describe('validation/validateAxes', () => {
     test.each([{xAxis: {type: 'unknown'}}, {yAxis: [{type: 'unknown'}]}])(
         'validateAxes should throw an error in case of invalid axis type (data: %j)',
         (data) => {

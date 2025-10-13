@@ -4,7 +4,7 @@ import {CHART_ERROR_CODE} from '../../libs';
 import type {ChartData} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
-describe('plugins/d3/validation', () => {
+describe('validation/validateData', () => {
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',
         (data) => {
