@@ -23,6 +23,7 @@ import {
     wrapText,
 } from '../../utils';
 import {createXScale} from '../useAxisScales';
+import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 import {getAxisCategories, prepareAxisPlotLabel} from './utils';
@@ -30,15 +31,17 @@ import {getAxisCategories, prepareAxisPlotLabel} from './utils';
 async function getLabelSettings({
     axis,
     seriesData,
+    seriesOptions,
     width,
     autoRotation = true,
 }: {
     axis: PreparedAxis;
     seriesData: ChartSeries[];
+    seriesOptions: PreparedSeriesOptions;
     width: number;
     autoRotation?: boolean;
 }) {
-    const scale = createXScale({axis, series: seriesData, boundsWidth: width});
+    const scale = createXScale({axis, series: seriesData, seriesOptions, boundsWidth: width});
     const tickCount = getTicksCount({axis, range: width});
     const ticks = getXAxisItems({
         scale: scale as AxisScale<AxisDomain>,
@@ -83,10 +86,12 @@ async function getLabelSettings({
 export const getPreparedXAxis = async ({
     xAxis,
     seriesData,
+    seriesOptions,
     width,
 }: {
     xAxis?: ChartXAxis;
     seriesData: ChartSeries[];
+    seriesOptions: PreparedSeriesOptions;
     width: number;
 }): Promise<PreparedAxis> => {
     const titleText = get(xAxis, 'title.text', '');
@@ -190,6 +195,7 @@ export const getPreparedXAxis = async ({
     const {height, rotation} = await getLabelSettings({
         axis: preparedXAxis,
         seriesData,
+        seriesOptions,
         width,
         autoRotation: xAxis?.labels?.autoRotation,
     });

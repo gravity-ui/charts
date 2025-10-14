@@ -64,10 +64,13 @@ export function useChartInnerProps(props: Props) {
     const [xAxis, setXAxis] = React.useState<PreparedAxis | null>(null);
     React.useEffect(() => {
         setXAxis(null);
-        getPreparedXAxis({xAxis: data.xAxis, width, seriesData: zoomedSeriesData}).then((val) =>
-            setXAxis(val),
-        );
-    }, [data.xAxis, width, zoomedSeriesData]);
+        getPreparedXAxis({
+            xAxis: data.xAxis,
+            width,
+            seriesData: zoomedSeriesData,
+            seriesOptions: preparedSeriesOptions,
+        }).then((val) => setXAxis(val));
+    }, [data.xAxis, preparedSeriesOptions, width, zoomedSeriesData]);
 
     const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
     React.useEffect(() => {
