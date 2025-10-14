@@ -63,6 +63,7 @@ export const Tooltip = (props: TooltipProps) => {
                     renderer={tooltip.renderer}
                     rowRenderer={tooltip.rowRenderer}
                     valueFormat={tooltip.valueFormat}
+                    headFormat={tooltip.headFormat}
                     totals={tooltip.totals}
                 />
             </div>

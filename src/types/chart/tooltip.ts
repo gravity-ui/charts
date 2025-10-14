@@ -5,7 +5,7 @@ import type {AreaSeries, AreaSeriesData} from './area';
 import type {ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
-import type {ValueFormat} from './base';
+import type {CustomFormat, ValueFormat} from './base';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
 import type {RadarSeries, RadarSeriesCategory, RadarSeriesData} from './radar';
@@ -138,6 +138,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
     throttle?: number;
     /** Formatting settings for tooltip value. */
     valueFormat?: ValueFormat;
+    /** Formatting settings for tooltip header row. */
+    headFormat?: ValueFormat | CustomFormat;
     /** Settings for totals block in tooltip */
     totals?: {
         /**

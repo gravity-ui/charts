@@ -8,6 +8,10 @@ type DateFormat = {
     type: 'date';
     format?: string;
 };
+export type CustomFormat = {
+    type: 'custom';
+    formatter: (args: {value: unknown}) => string;
+};
 export type ValueFormat = NumberFormat | DateFormat;
 
 export interface BaseSeries {

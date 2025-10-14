@@ -54,6 +54,10 @@ export const SeriesWithDifferentFormats = {
                 ],
             },
             tooltip: {
+                headFormat: {
+                    type: 'custom',
+                    formatter: ({value}) => `Custom header format: ${value}`,
+                },
                 totals: {
                     enabled: true,
                     aggregation: 'sum',

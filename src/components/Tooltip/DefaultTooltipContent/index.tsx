@@ -34,6 +34,7 @@ type Props = {
     hovered: TooltipDataChunk[];
     totals?: ChartTooltip['totals'];
     valueFormat?: ValueFormat;
+    headFormat?: ChartTooltip['headFormat'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     rowRenderer?: ChartTooltip['rowRenderer'];
@@ -44,6 +45,7 @@ export const DefaultTooltipContent = ({
     xAxis,
     yAxis,
     valueFormat,
+    headFormat,
     totals,
     rowRenderer,
 }: Props) => {
@@ -85,12 +87,16 @@ export const DefaultTooltipContent = ({
         );
     };
 
+    const formattedHeadValue = headFormat
+        ? getFormattedValue({value: measureValue, format: headFormat})
+        : measureValue;
+
     return (
         <div className={b('content')}>
-            {measureValue && (
+            {formattedHeadValue && (
                 <div
                     className={b('series-name')}
-                    dangerouslySetInnerHTML={{__html: measureValue}}
+                    dangerouslySetInnerHTML={{__html: formattedHeadValue}}
                 />
             )}
             {
