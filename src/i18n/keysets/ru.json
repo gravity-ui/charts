@@ -21,6 +21,7 @@
     "label_invalid-axis-labels-html-not-supported-axis-type": "Похоже, что вы пытаетесь использовать свойство \"labels.html\" для оси с неподдерживаемым типом. Это свойство поддерживается только для оси типа \"category\"."
   },
   "tooltip": {
-    "label_totals_sum": "Сумма"
+    "label_totals_sum": "Сумма",
+    "label_rest": "Остальные {{count}}"
   }
 }

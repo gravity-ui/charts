@@ -2,8 +2,12 @@ import React from 'react';
 
 import {Divider} from '@gravity-ui/uikit';
 import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
 
+import {SCROLLBAR_WIDTH} from '../../../constants';
+import {usePrevious} from '../../../hooks';
 import type {PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
+import {i18n} from '../../../i18n';
 import type {
     ChartTooltip,
     ChartTooltipRowRendererArgs,
@@ -15,11 +19,11 @@ import type {
     TreemapSeriesData,
     ValueFormat,
 } from '../../../types';
-import {block} from '../../../utils';
+import {block, hasVerticalScrollbar} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 
 import {Row} from './Row';
-import {RowTotals} from './RowTotals';
+import {RowWithAggregation} from './RowWithAggregation';
 import {
     getDefaultValueFormat,
     getHoveredValues,
@@ -32,23 +36,32 @@ const b = block('tooltip');
 
 type Props = {
     hovered: TooltipDataChunk[];
+    pinned?: boolean;
+    rowRenderer?: ChartTooltip['rowRenderer'];
     totals?: ChartTooltip['totals'];
     valueFormat?: ValueFormat;
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
-    rowRenderer?: ChartTooltip['rowRenderer'];
 };
 
 export const DefaultTooltipContent = ({
     hovered,
+    pinned,
+    rowRenderer,
+    totals,
+    valueFormat,
     xAxis,
     yAxis,
-    valueFormat,
-    totals,
-    rowRenderer,
 }: Props) => {
+    const [visibleRows, setVisibleRows] = React.useState<number | undefined>();
+    const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
+    const contentRowsRef = React.useRef<HTMLDivElement>(null);
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
     const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
+    const prevHoveredValues = usePrevious(hoveredValues);
+    const visibleHovered = pinned || !visibleRows ? hovered : hovered.slice(0, visibleRows);
+    const restHovered = pinned || !visibleRows ? [] : hovered.slice(visibleRows);
+    const restHoveredValues = pinned || !visibleRows ? [] : hoveredValues.slice(visibleRows);
 
     const renderRow = ({
         id,
@@ -85,6 +98,39 @@ export const DefaultTooltipContent = ({
         );
     };
 
+    React.useEffect(() => {
+        if (!contentRowsRef.current) {
+            return;
+        }
+
+        if (!hasVerticalScrollbar(contentRowsRef.current)) {
+            return;
+        }
+
+        if (!isEqual(hoveredValues, prevHoveredValues)) {
+            const {clientHeight} = contentRowsRef.current;
+            const {top: containerTop} = contentRowsRef.current.getBoundingClientRect();
+            const rows = contentRowsRef.current.querySelectorAll(`.${b('content-row')}`);
+            let nextVisibleRows = 0;
+            let nextMaxContentRowsHeight = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const {top, height} = row.getBoundingClientRect();
+
+                if (top - containerTop + height <= clientHeight) {
+                    nextVisibleRows += 1;
+                    nextMaxContentRowsHeight += height;
+                } else {
+                    break;
+                }
+            }
+
+            setVisibleRows(nextVisibleRows - 1);
+            setMaxContentRowsHeight(nextMaxContentRowsHeight);
+        }
+    }, [hoveredValues, prevHoveredValues]);
+
     return (
         <div className={b('content')}>
             {measureValue && (
@@ -93,9 +139,13 @@ export const DefaultTooltipContent = ({
                     dangerouslySetInnerHTML={{__html: measureValue}}
                 />
             )}
-            {
-                // eslint-disable-next-line complexity
-                hovered.map((seriesItem, i) => {
+            <div
+                className={b('content-rows', {pinned})}
+                ref={contentRowsRef}
+                style={{maxHeight: maxContentRowsHeight}}
+            >
+                {/* eslint-disable-next-line complexity */}
+                {visibleHovered.map((seriesItem, i) => {
                     const {data, series, closest} = seriesItem;
                     const id = `${get(series, 'id')}_${i}`;
                     const color = get(data, 'color') || get(series, 'color');
@@ -219,14 +269,33 @@ export const DefaultTooltipContent = ({
                             return null;
                         }
                     }
-                })
-            }
+                })}
+                {Boolean(restHoveredValues.length) && (
+                    <RowWithAggregation
+                        aggregation={getPreparedAggregation({
+                            hovered: restHovered,
+                            totals,
+                            xAxis,
+                            yAxis,
+                        })}
+                        label={i18n('tooltip', 'label_rest', {count: restHoveredValues.length})}
+                        striped={(visibleHovered.length + 1) % 2 === 0}
+                        values={restHoveredValues}
+                        valueFormat={valueFormat}
+                    />
+                )}
+            </div>
             {totals?.enabled && hovered.length > 1 && (
                 <React.Fragment>
                     <Divider className={b('content-row-totals-divider')} />
-                    <RowTotals
+                    <RowWithAggregation
                         aggregation={getPreparedAggregation({hovered, totals, xAxis, yAxis})}
                         label={totals.label}
+                        style={
+                            typeof visibleRows === 'number' && pinned
+                                ? {marginRight: SCROLLBAR_WIDTH}
+                                : undefined
+                        }
                         values={hoveredValues}
                         valueFormat={valueFormat}
                     />
