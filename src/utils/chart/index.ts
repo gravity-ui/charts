@@ -1,4 +1,3 @@
-import {dateTime} from '@gravity-ui/date-utils';
 import type {AxisDomain} from 'd3';
 import {group, select} from 'd3';
 import get from 'lodash/get';
@@ -13,23 +12,21 @@ import type {
     StackedSeries,
 } from '../../hooks';
 import {getSeriesStackId} from '../../hooks/useSeries/utils';
-import {formatNumber, getDefaultUnit} from '../../libs/format-number';
-import type {FormatOptions} from '../../libs/format-number/types';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 
 import {getWaterfallPointSubtotal} from './series/waterfall';
-import {getDefaultDateFormat} from './time';
 import type {AxisDirection} from './types';
 
-export * from './math';
-export * from './text';
-export * from './time';
 export * from './axis';
+export * from './color';
+export * from './format';
 export * from './labels';
 export * from './legend';
-export * from './symbol';
+export * from './math';
 export * from './series';
-export * from './color';
+export * from './symbol';
+export * from './text';
+export * from './time';
 export * from './zoom';
 
 const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar'];
@@ -246,35 +243,6 @@ export const parseTransformStyle = (style: string | null): {x?: number; y?: numb
     const y = Number.isNaN(Number(yString)) ? undefined : Number(yString);
 
     return {x, y};
-};
-
-export const formatAxisTickLabel = (args: {
-    axis: PreparedAxis;
-    value: AxisDomain;
-    step?: number;
-}) => {
-    const {axis, value, step} = args;
-
-    switch (axis.type) {
-        case 'category': {
-            return value as string;
-        }
-        case 'datetime': {
-            const date = value as number;
-            const format = axis.labels.dateFormat || getDefaultDateFormat(step);
-
-            return dateTime({input: date}).format(format);
-        }
-        case 'linear':
-        default: {
-            const numberFormat: FormatOptions = {
-                unit: value && step ? getDefaultUnit(step) : undefined,
-                ...axis.labels.numberFormat,
-            };
-
-            return formatNumber(value as number | string, numberFormat);
-        }
-    }
 };
 
 export const getHorizontalHtmlTextHeight = (args: {
