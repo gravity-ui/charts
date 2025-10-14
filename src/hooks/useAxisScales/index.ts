@@ -311,6 +311,7 @@ export function createXScale(args: {
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
                 if (!hasZoomX) {
+                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                     scale.nice(Math.max(10, domainData.length));
                 }
 
@@ -350,6 +351,7 @@ export function createXScale(args: {
                 const scale = scaleUtc().domain(domain).range(range);
 
                 if (!hasZoomX) {
+                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                     scale.nice(Math.max(10, domainData.length));
                 }
                 return scale;
