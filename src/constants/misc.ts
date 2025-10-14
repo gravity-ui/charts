@@ -9,6 +9,10 @@ function isTouchEnabled() {
 export const IS_TOUCH_ENABLED = isTouchEnabled();
 
 export const SCROLLBAR_WIDTH = (function () {
+    if (typeof document === 'undefined') {
+        return 0;
+    }
+
     const outer = document.createElement('div');
     outer.style.visibility = 'hidden';
     outer.style.overflow = 'scroll';
