@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/gravity-ui/charts/compare/v1.14.0...v1.15.0) (2025-10-14)
+
+
+### Features
+
+* tooltip rowRenderer option ([#199](https://github.com/gravity-ui/charts/issues/199)) ([57fabec](https://github.com/gravity-ui/charts/commit/57fabecd2981e597c4f894f8fbe39b5884329db9))
+
+
+### Bug Fixes
+
+* calculate x-axis nicing for dense charts with many points ([#201](https://github.com/gravity-ui/charts/issues/201)) ([82c3e1c](https://github.com/gravity-ui/charts/commit/82c3e1cc16c46544a5b7dbae10b73b4e43d05d84))
+
 ## [1.14.0](https://github.com/gravity-ui/charts/compare/v1.13.2...v1.14.0) (2025-10-13)
 
 
