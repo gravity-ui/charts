@@ -44,6 +44,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
                 symbol: prepareLegendSymbol(s),
             },
             cursor: get(s, 'cursor', null),
+            tooltip: s.tooltip,
         };
 
         return preparedSeries;
