@@ -14,6 +14,7 @@ import type {
     BarYSeriesData,
     BaseTextStyle,
     ChartLegend,
+    ChartSeries,
     ConnectorCurve,
     ConnectorShape,
     LineSeries,
@@ -119,6 +120,7 @@ type BasePreparedSeries = {
         symbol: PreparedLegendSymbol;
     };
     cursor: string | null;
+    tooltip: ChartSeries['tooltip'];
 };
 
 export type PreparedScatterSeries = {

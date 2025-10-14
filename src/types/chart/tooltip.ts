@@ -155,5 +155,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
         enabled?: boolean;
         /** The label text for the totals. For built-in aggregations, the label can be omitted. */
         label?: string;
+        /** Formatting settings for totals tooltip value. */
+        valueFormat?: ValueFormat;
     };
 }

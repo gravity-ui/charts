@@ -20,3 +20,49 @@ export const TotalsSum = {
         data: tooltipTotalsSumData,
     },
 } satisfies Story;
+
+export const SeriesWithDifferentFormats = {
+    name: 'Series with different formats',
+    args: {
+        data: {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: [{y: 1, x: 100}],
+                        tooltip: {
+                            valueFormat: {
+                                type: 'number',
+                                precision: 0,
+                            },
+                        },
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: [{y: 1, x: 100.5876}],
+                        tooltip: {
+                            valueFormat: {
+                                type: 'number',
+                                precision: 2,
+                            },
+                        },
+                    },
+                ],
+            },
+            tooltip: {
+                totals: {
+                    enabled: true,
+                    aggregation: 'sum',
+                    valueFormat: {
+                        type: 'number',
+                        precision: 1,
+                    },
+                },
+            },
+        },
+    },
+} satisfies Story;

@@ -101,13 +101,14 @@ export const DefaultTooltipContent = ({
                     const color = get(data, 'color') || get(series, 'color');
                     const active = closest && hovered.length > 1;
                     const striped = (i + 1) % 2 === 0;
+                    const rowValueFormat = get(series, 'tooltip.valueFormat', valueFormat);
 
                     switch (series.type) {
                         case 'scatter':
                         case 'line':
                         case 'area':
                         case 'bar-x': {
-                            const format = valueFormat || getDefaultValueFormat({axis: yAxis});
+                            const format = rowValueFormat || getDefaultValueFormat({axis: yAxis});
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
                                 format,
@@ -127,7 +128,7 @@ export const DefaultTooltipContent = ({
                             const isTotal = get(data, 'total', false);
                             const subTotalValue =
                                 (seriesItem as TooltipDataChunkWaterfall).subTotal ?? 0;
-                            const format = valueFormat || getDefaultValueFormat({axis: yAxis});
+                            const format = rowValueFormat || getDefaultValueFormat({axis: yAxis});
                             const subTotal = getFormattedValue({
                                 value: subTotalValue,
                                 format,
@@ -152,7 +153,7 @@ export const DefaultTooltipContent = ({
                             );
                         }
                         case 'bar-y': {
-                            const format = valueFormat || getDefaultValueFormat({axis: xAxis});
+                            const format = rowValueFormat || getDefaultValueFormat({axis: xAxis});
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
                                 format,
@@ -173,7 +174,7 @@ export const DefaultTooltipContent = ({
                             const seriesData = data as PreparedPieSeries | TreemapSeriesData;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
-                                format: valueFormat || {type: 'number'},
+                                format: rowValueFormat || {type: 'number'},
                             });
 
                             return renderRow({
@@ -188,7 +189,7 @@ export const DefaultTooltipContent = ({
                             const {target, data: source} = seriesItem as TooltipDataChunkSankey;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
-                                format: valueFormat || {type: 'number'},
+                                format: rowValueFormat || {type: 'number'},
                             });
 
                             return renderRow({
@@ -203,7 +204,7 @@ export const DefaultTooltipContent = ({
                             const radarSeries = series as PreparedRadarSeries;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
-                                format: valueFormat || {type: 'number'},
+                                format: rowValueFormat || {type: 'number'},
                             });
 
                             return renderRow({
@@ -228,7 +229,7 @@ export const DefaultTooltipContent = ({
                         aggregation={getPreparedAggregation({hovered, totals, xAxis, yAxis})}
                         label={totals.label}
                         values={hoveredValues}
-                        valueFormat={valueFormat}
+                        valueFormat={totals.valueFormat ?? valueFormat}
                     />
                 </React.Fragment>
             )}
