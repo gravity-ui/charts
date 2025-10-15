@@ -4,7 +4,6 @@ import {Divider} from '@gravity-ui/uikit';
 import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 
-import {SCROLLBAR_WIDTH} from '../../../constants';
 import {usePrevious} from '../../../hooks';
 import type {PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
 import {i18n} from '../../../i18n';
@@ -55,12 +54,12 @@ export const DefaultTooltipContent = ({
 }: Props) => {
     const [visibleRows, setVisibleRows] = React.useState<number | undefined>();
     const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
+    const [scrollBarWidth, setScrollBarWidth] = React.useState<number>(0);
     const contentRowsRef = React.useRef<HTMLDivElement>(null);
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis});
     const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
     const prevHoveredValues = usePrevious(hoveredValues);
     const visibleHovered = pinned || !visibleRows ? hovered : hovered.slice(0, visibleRows);
-    const restHovered = pinned || !visibleRows ? [] : hovered.slice(visibleRows);
     const restHoveredValues = pinned || !visibleRows ? [] : hoveredValues.slice(visibleRows);
 
     const renderRow = ({
@@ -131,6 +130,19 @@ export const DefaultTooltipContent = ({
         }
     }, [hoveredValues, prevHoveredValues]);
 
+    React.useEffect(() => {
+        if (!contentRowsRef.current) {
+            return;
+        }
+
+        if (pinned) {
+            const {offsetWidth, clientWidth} = contentRowsRef.current;
+            setScrollBarWidth(offsetWidth - clientWidth);
+        } else {
+            setScrollBarWidth(0);
+        }
+    }, [pinned]);
+
     return (
         <div className={b('content')}>
             {measureValue && (
@@ -149,6 +161,7 @@ export const DefaultTooltipContent = ({
                     const {data, series, closest} = seriesItem;
                     const id = `${get(series, 'id')}_${i}`;
                     const color = get(data, 'color') || get(series, 'color');
+                    // TODO: improve action item display https://github.com/gravity-ui/charts/issues/208
                     const active = closest && hovered.length > 1;
                     const striped = (i + 1) % 2 === 0;
 
@@ -271,17 +284,9 @@ export const DefaultTooltipContent = ({
                     }
                 })}
                 {Boolean(restHoveredValues.length) && (
-                    <RowWithAggregation
-                        aggregation={getPreparedAggregation({
-                            hovered: restHovered,
-                            totals,
-                            xAxis,
-                            yAxis,
-                        })}
-                        label={i18n('tooltip', 'label_rest', {count: restHoveredValues.length})}
+                    <Row
+                        label={i18n('tooltip', 'label_more', {count: restHoveredValues.length})}
                         striped={(visibleHovered.length + 1) % 2 === 0}
-                        values={restHoveredValues}
-                        valueFormat={valueFormat}
                     />
                 )}
             </div>
@@ -291,11 +296,7 @@ export const DefaultTooltipContent = ({
                     <RowWithAggregation
                         aggregation={getPreparedAggregation({hovered, totals, xAxis, yAxis})}
                         label={totals.label}
-                        style={
-                            typeof visibleRows === 'number' && pinned
-                                ? {marginRight: SCROLLBAR_WIDTH}
-                                : undefined
-                        }
+                        style={{marginRight: scrollBarWidth}}
                         values={hoveredValues}
                         valueFormat={valueFormat}
                     />

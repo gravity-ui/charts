@@ -22,6 +22,6 @@
   },
   "tooltip": {
     "label_totals_sum": "Sum",
-    "label_rest": "Rest {{count}}"
+    "label_more": "{{count}} more"
   }
 }
