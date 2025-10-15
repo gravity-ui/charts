@@ -61,6 +61,9 @@ const config: PlaywrightTestConfig = {
             use: {
                 ...devices['Desktop Chrome'],
                 deviceScaleFactor: 2,
+                launchOptions: {
+                    ignoreDefaultArgs: ['--hide-scrollbars'],
+                },
             },
         },
     ],

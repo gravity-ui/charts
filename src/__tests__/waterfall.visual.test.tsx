@@ -13,7 +13,7 @@ test.describe('Waterfall series', () => {
     });
 
     test('Tooltip for the totals column', async ({page, mount}) => {
-        page.setViewportSize({width: 400, height: 280});
+        page.setViewportSize({width: 450, height: 280});
         const component = await mount(<ChartTestStory data={waterfallBasicData} />);
 
         const totalColumn = component.locator('.gcharts-waterfall__segment').last();

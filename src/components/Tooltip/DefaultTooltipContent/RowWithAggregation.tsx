@@ -14,13 +14,14 @@ import type {HoveredValue} from './utils';
 
 const b = block('tooltip');
 
-export function RowTotals(props: {
+export function RowWithAggregation(props: {
     aggregation: ChartTooltipTotalsBuiltInAggregation | (() => ChartTooltipTotalsAggregationValue);
     values: HoveredValue[];
     label?: string;
+    style?: React.CSSProperties;
     valueFormat?: ValueFormat;
 }) {
-    const {aggregation, label, valueFormat, values} = props;
+    const {aggregation, label, style, valueFormat, values} = props;
     let resultLabel = label;
 
     if (!resultLabel && typeof aggregation === 'string') {
@@ -40,6 +41,11 @@ export function RowTotals(props: {
             : resultValue;
 
     return (
-        <Row className={b('content-row-totals')} label={resultLabel} value={formattedResultValue} />
+        <Row
+            className={b('content-row-totals')}
+            label={resultLabel}
+            style={style}
+            value={formattedResultValue}
+        />
     );
 }

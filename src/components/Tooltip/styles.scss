@@ -1,4 +1,6 @@
 .gcharts-tooltip {
+    padding: var(--gcharts-tooltip-content-padding, 8px 0);
+
     box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
 
     &__popup-content {
@@ -9,7 +11,19 @@
     }
 
     &__content {
-        padding: var(--gcharts-tooltip-content-padding, 8px 0);
+        display: flex;
+        overflow: hidden;
+        flex-direction: column;
+
+        max-height: 90vh;
+    }
+
+    &__content-rows {
+        overflow: hidden;
+
+        &_pinned {
+            overflow: auto;
+        }
     }
 
     &__series-name {

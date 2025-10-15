@@ -58,12 +58,13 @@ export const Tooltip = (props: TooltipProps) => {
             <div className={b('popup-content')}>
                 <ChartTooltipContent
                     hovered={hovered}
-                    xAxis={xAxis}
-                    yAxis={yAxis as ChartYAxis}
+                    pinned={tooltipPinned}
                     renderer={tooltip.renderer}
                     rowRenderer={tooltip.rowRenderer}
-                    valueFormat={tooltip.valueFormat}
                     totals={tooltip.totals}
+                    valueFormat={tooltip.valueFormat}
+                    xAxis={xAxis}
+                    yAxis={yAxis as ChartYAxis}
                 />
             </div>
         </Popup>
