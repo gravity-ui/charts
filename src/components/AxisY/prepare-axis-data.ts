@@ -230,7 +230,21 @@ export async function prepareAxisData({
         };
 
         const bottom = Math.max(0, calculateSin(rotateAngle) * originalTextSize.width);
-        const y = -bottom + height / 2 + rotatedTitleSize.height / 2;
+        let y = 0;
+        switch (axis.title.align) {
+            case 'left': {
+                y = -bottom + height;
+                break;
+            }
+            case 'center': {
+                y = -bottom + height / 2 + rotatedTitleSize.height / 2;
+                break;
+            }
+            case 'right': {
+                y = -bottom + rotatedTitleSize.height;
+                break;
+            }
+        }
 
         const left = Math.min(0, calculateCos(rotateAngle) * originalTextSize.width);
         const x =

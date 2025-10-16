@@ -121,4 +121,69 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.describe.only('Axis title', () => {
+        test('Title alignment - left', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {text: 'Title text', align: 'left'},
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Title alignment - center', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {text: 'Title text', align: 'center'},
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Title alignment - right', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {text: 'Title text', align: 'right'},
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
