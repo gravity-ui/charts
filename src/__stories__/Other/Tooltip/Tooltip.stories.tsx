@@ -54,7 +54,7 @@ export const SeriesWithDifferentFormats = {
                 ],
             },
             tooltip: {
-                headFormat: {
+                headerFormat: {
                     type: 'custom',
                     formatter: ({value}) => `Custom header format: ${value}`,
                 },

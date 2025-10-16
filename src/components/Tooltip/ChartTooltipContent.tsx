@@ -12,15 +12,24 @@ export interface ChartTooltipContentProps {
     renderer?: ChartTooltip['renderer'];
     rowRenderer?: ChartTooltip['rowRenderer'];
     valueFormat?: ChartTooltip['valueFormat'];
-    headFormat?: ChartTooltip['headFormat'];
+    headerFormat?: ChartTooltip['headerFormat'];
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 }
 
 export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
-    const {hovered, xAxis, yAxis, renderer, rowRenderer, valueFormat, headFormat, totals, pinned} =
-        props;
+    const {
+        hovered,
+        xAxis,
+        yAxis,
+        renderer,
+        rowRenderer,
+        valueFormat,
+        headerFormat,
+        totals,
+        pinned,
+    } = props;
 
     if (!hovered) {
         return null;
@@ -35,7 +44,7 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
             rowRenderer={rowRenderer}
             totals={totals}
             valueFormat={valueFormat}
-            headFormat={headFormat}
+            headerFormat={headerFormat}
             xAxis={xAxis}
             yAxis={yAxis}
         />

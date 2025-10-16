@@ -39,7 +39,7 @@ type Props = {
     rowRenderer?: ChartTooltip['rowRenderer'];
     totals?: ChartTooltip['totals'];
     valueFormat?: ValueFormat;
-    headFormat?: ChartTooltip['headFormat'];
+    headerFormat?: ChartTooltip['headerFormat'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 };
@@ -50,7 +50,7 @@ export const DefaultTooltipContent = ({
     rowRenderer,
     totals,
     valueFormat,
-    headFormat,
+    headerFormat,
     xAxis,
     yAxis,
 }: Props) => {
@@ -99,8 +99,8 @@ export const DefaultTooltipContent = ({
         );
     };
 
-    const formattedHeadValue = headFormat
-        ? getFormattedValue({value: measureValue, format: headFormat})
+    const formattedHeadValue = headerFormat
+        ? getFormattedValue({value: measureValue, format: headerFormat})
         : measureValue;
 
     React.useEffect(() => {

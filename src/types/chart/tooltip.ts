@@ -139,7 +139,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
     /** Formatting settings for tooltip value. */
     valueFormat?: ValueFormat;
     /** Formatting settings for tooltip header row. */
-    headFormat?: ValueFormat | CustomFormat;
+    headerFormat?: ValueFormat | CustomFormat;
     /** Settings for totals block in tooltip */
     totals?: {
         /**

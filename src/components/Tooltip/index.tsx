@@ -63,7 +63,7 @@ export const Tooltip = (props: TooltipProps) => {
                     rowRenderer={tooltip.rowRenderer}
                     totals={tooltip.totals}
                     valueFormat={tooltip.valueFormat}
-                    headFormat={tooltip.headFormat}
+                    headerFormat={tooltip.headerFormat}
                     xAxis={xAxis}
                     yAxis={yAxis as ChartYAxis}
                 />
