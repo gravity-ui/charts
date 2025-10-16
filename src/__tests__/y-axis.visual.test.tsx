@@ -222,4 +222,48 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test('Split - few plots and axes', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 10},
+                            {x: 2, y: 5},
+                        ],
+                        yAxis: 0,
+                    },
+                    {
+                        type: 'line',
+                        name: 'Series 2',
+                        data: [
+                            {x: 1, y: 1},
+                            {x: 2, y: 2},
+                        ],
+                        yAxis: 1,
+                    },
+                ],
+            },
+            split: {
+                enable: true,
+                plots: [{title: {text: '1'}}, {title: {text: '2'}}],
+            },
+            yAxis: [
+                {
+                    title: {text: 'First plot title'},
+                    plotIndex: 0,
+                },
+                {
+                    title: {text: 'Second plot title'},
+                    plotIndex: 1,
+                },
+            ],
+        };
+
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

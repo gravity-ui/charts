@@ -138,10 +138,13 @@ export async function prepareAxisData({
     width: number;
     height: number;
 }): Promise<AxisYData> {
+    const axisPlotTopPosition = split.plots[axis.plotIndex]?.top || 0;
+    const axisHeight = split.plots[axis.plotIndex]?.height || height;
+
     const domainX = axis.position === 'left' ? 0 : width;
     const domain: AxisDomainData = {
-        start: [domainX, 0],
-        end: [domainX, height],
+        start: [domainX, axisPlotTopPosition],
+        end: [domainX, axisPlotTopPosition + axisHeight],
         lineColor: axis.lineColor ?? '',
     };
 
@@ -151,12 +154,12 @@ export async function prepareAxisData({
 
     const values = getTickValues({scale, axis, labelLineHeight});
     const labelMaxHeight =
-        values.length > 1 ? values[0].y - values[1].y - axis.labels.padding * 2 : height;
+        values.length > 1 ? values[0].y - values[1].y - axis.labels.padding * 2 : axisHeight;
     const labelFormatter = getLabelFormatter({axis, scale});
 
     for (let i = 0; i < values.length; i++) {
         const tickValue = values[i];
-        const y = tickValue.y;
+        const y = axisPlotTopPosition + tickValue.y;
 
         let svgLabel: AxisSvgLabelData | null = null;
         let htmlLabel: HtmlItem | null = null;
@@ -228,7 +231,7 @@ export async function prepareAxisData({
         const cos = Math.abs(calculateCos(rotateAngle));
 
         const titleContent: TextRowData[] = [];
-        const titleMaxWidth = sin * height;
+        const titleMaxWidth = sin * axisHeight;
 
         if (axis.title.maxRowCount > 1) {
             const titleTextRows = await wrapText({
@@ -280,11 +283,11 @@ export async function prepareAxisData({
         let y = 0;
         switch (axis.title.align) {
             case 'left': {
-                y = -bottom + height;
+                y = -bottom + axisHeight;
                 break;
             }
             case 'center': {
-                y = -bottom + height / 2 + rotatedTitleSize.height / 2;
+                y = -bottom + axisHeight / 2 + rotatedTitleSize.height / 2;
                 break;
             }
             case 'right': {
@@ -304,13 +307,11 @@ export async function prepareAxisData({
             style: axis.title.style,
             size: rotatedTitleSize,
             x: x,
-            y: y,
+            y: axisPlotTopPosition + y,
             rotate: rotateAngle,
             offset: -(originalTextSize.height / titleContent.length) * (titleContent.length - 1),
         };
     }
-
-    const axisPlotTopPosition = split.plots[axis.plotIndex]?.top || 0;
 
     const plotBands: AxisPlotBandData[] = [];
     axis.plotBands.forEach((plotBand) => {
@@ -322,7 +323,7 @@ export async function prepareAxisData({
         });
         const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
         const startPos = halfBandwidth + Math.min(from, to);
-        const endPos = Math.min(Math.abs(to - from), height - Math.min(from, to));
+        const endPos = Math.min(Math.abs(to - from), axisHeight - Math.min(from, to));
         const top = Math.max(0, startPos);
 
         plotBands.push({
@@ -330,7 +331,7 @@ export async function prepareAxisData({
             x: 0,
             y: axisPlotTopPosition + top,
             width,
-            height: Math.min(endPos, height),
+            height: Math.min(endPos, axisHeight),
             color: plotBand.color,
             opacity: plotBand.opacity,
             label: plotBand.label.text
