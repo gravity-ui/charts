@@ -10,6 +10,7 @@ import {
     getLabelFormatter,
     getLabelsSize,
     getTextSizeFn,
+    getTextWithElipsis,
     wrapText,
 } from '../../utils';
 
@@ -62,11 +63,21 @@ async function getSvgAxisLabel({
         let newLabelHeight = 0;
         for (let textRowIndex = 0; textRowIndex < textRows.length; textRowIndex++) {
             const textRow = textRows[textRowIndex];
-            const textSize = await getTextSize(textRow.text);
+            let textSize = await getTextSize(textRow.text);
 
             if (newLabelHeight + textSize.height <= labelMaxHeight) {
                 newLabelWidth = Math.max(newLabelWidth, textSize.width);
                 newLabelHeight += textSize.height;
+
+                let rowText = textRow.text;
+                if (textSize.width > labelMaxWidth) {
+                    rowText = await getTextWithElipsis({
+                        text: rowText,
+                        getTextWidth: async (str) => (await getTextSize(str)).width,
+                        maxWidth: labelMaxWidth,
+                    });
+                    textSize = await getTextSize(rowText);
+                }
 
                 const x =
                     axis.position === 'left'
@@ -74,7 +85,7 @@ async function getSvgAxisLabel({
                         : left + axis.labels.margin;
 
                 content.push({
-                    text: textRow.text,
+                    text: rowText,
                     x,
                     y: topOffset,
                 });
@@ -199,10 +210,11 @@ export async function prepareAxisData({
         });
     }
 
-    const labelsWidth = ticks.reduce(
+    let labelsWidth = ticks.reduce(
         (acc, item) => Math.max(acc, item.svgLabel?.size.width ?? item.htmlLabel?.size.width ?? 0),
         0,
     );
+    labelsWidth = Math.min(axis.labels.width, labelsWidth);
 
     let title: AxisTitleData | null = null;
     if (axis.title.text) {
