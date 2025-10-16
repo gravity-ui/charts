@@ -230,19 +230,6 @@ export const getOnlyVisibleSeries = <T extends {visible: boolean}>(series: T[]) 
     return series.filter((s) => s.visible);
 };
 
-export const parseTransformStyle = (style: string | null): {x?: number; y?: number} => {
-    if (!style) {
-        return {};
-    }
-
-    const stringifiedValue = style.match(/\((.*?)\)/)?.[1] || '';
-    const [xString, yString] = stringifiedValue.split(',');
-    const x = Number.isNaN(Number(xString)) ? undefined : Number(xString);
-    const y = Number.isNaN(Number(yString)) ? undefined : Number(yString);
-
-    return {x, y};
-};
-
 export const getHorizontalHtmlTextHeight = (args: {
     text: string;
     style?: Partial<BaseTextStyle>;
