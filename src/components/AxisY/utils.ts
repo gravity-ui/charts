@@ -10,6 +10,15 @@ function thinOut<T>(items: T[], delta: number) {
 
     return arr;
 }
+function getMinSpaceBetween<T>(arr: T[], iterator: (item: T) => number) {
+    return arr.reduce((acc, item, index) => {
+        const prev = arr[index - 1];
+        if (prev) {
+            return Math.min(acc, Math.abs(iterator(prev) - iterator(item)));
+        }
+        return acc;
+    }, Infinity);
+}
 
 export function getTickValues({
     scale,
@@ -33,7 +42,7 @@ export function getTickValues({
             return result;
         }
 
-        let labelHeight = result[0].y - result[1].y - axis.labels.padding * 2;
+        let labelHeight = getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
         ticksCount = result.length - 1;
         while (labelHeight < labelLineHeight && result.length > 1) {
             ticksCount = ticksCount ? ticksCount - 1 : result.length - 1;
@@ -41,7 +50,8 @@ export function getTickValues({
                 y: scale(t),
                 value: t,
             }));
-            labelHeight = result[0].y - result[1].y - axis.labels.padding * 2;
+
+            labelHeight = getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
         }
 
         return result;

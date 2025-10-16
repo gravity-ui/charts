@@ -25,8 +25,6 @@ export const AxisY = (props: Props) => {
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
 
-    console.log('AxisY', {preparedAxisData});
-
     const htmlLabels = preparedAxisData.ticks.map((d) => d.htmlLabel).filter(Boolean) as HtmlItem[];
 
     React.useEffect(() => {
