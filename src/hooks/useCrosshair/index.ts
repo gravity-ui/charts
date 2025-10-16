@@ -116,6 +116,7 @@ export const useCrosshair = (props: Props) => {
             if (yAxis.crosshair.enabled && hovered?.length) {
                 const crosshairDataAttr = `data-crosshair-y-line-${index}`;
 
+                const crosshairPosition = getAxisPlotsPosition(yAxis, split);
                 const crosshairSelection = svgElement
                     .selectAll(`[${crosshairDataAttr}]`)
                     .data(
@@ -133,7 +134,7 @@ export const useCrosshair = (props: Props) => {
                     .style(
                         'transform',
                         yAxis.crosshair.snap
-                            ? getAxisPlotsPosition(yAxis, split)
+                            ? `translate(${crosshairPosition[0]}px, ${crosshairPosition[1]}px)`
                             : 'translate(0, 0)',
                     );
 

@@ -1,0 +1,21 @@
+.gcharts-y-axis {
+    &__domain {
+        stroke: var(--g-color-line-generic-active);
+    }
+
+    &__label {
+        fill: var(--g-color-text-secondary);
+        stroke: none;
+        dominant-baseline: text-after-edge;
+    }
+
+    &__tick {
+        stroke: var(--g-color-line-generic);
+    }
+
+    &__title {
+        dominant-baseline: text-after-edge;
+
+        fill: var(--g-color-text-secondary);
+    }
+}

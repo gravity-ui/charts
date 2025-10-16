@@ -38,6 +38,10 @@ export interface ChartAxisLabels {
      * @default false
      * */
     html?: boolean;
+    /** The maximum width of the axis labels(absolute or relative to the chart area).
+     * If more than that, it collapses into three points.
+     * */
+    maxWidth?: number | string;
 }
 
 export interface ChartAxis {
@@ -78,8 +82,14 @@ export interface ChartAxis {
     };
     ticks?: {
         /** Pixel interval of the tick marks. Not applicable to categorized axis.
-         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data. */
+         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
+         *
+         * @deprecated use `interval` instead
+         * */
         pixelInterval?: number;
+        /** Interval of the tick marks(absolute or relative to the chart area). Not applicable to categorized axis.
+         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data. */
+        interval?: number | string;
     };
     /** Padding of the max value relative to the length of the axis.
      * A padding of 0.05 will make a 100px axis 5px longer.

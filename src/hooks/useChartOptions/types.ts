@@ -31,7 +31,13 @@ export type PreparedChart = {
     zoom: PreparedZoom | null;
 };
 
-export type PreparedAxisPlotBand = Required<AxisPlotBand>;
+export type PreparedAxisPlotBand = Required<AxisPlotBand> & {
+    label: {
+        text: string;
+        style: BaseTextStyle;
+        padding: number;
+    };
+};
 export type PreparedAxisCrosshair = Required<AxisCrosshair>;
 
 export type PreparedAxisPlotLine = {

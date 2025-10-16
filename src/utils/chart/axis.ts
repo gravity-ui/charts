@@ -1,11 +1,14 @@
-import type {AxisDomain, AxisScale, ScaleBand} from 'd3';
+import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import clamp from 'lodash/clamp';
 
-import type {PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hooks';
 
+import {formatAxisTickLabel} from './format';
 import type {TextRow} from './text';
 import {wrapText} from './text';
 import type {AxisDirection} from './types';
+
+type Ticks = number[] | string[] | Date[];
 
 export function getTicksCount({axis, range}: {axis: PreparedAxis; range: number}) {
     let ticksCount: number | undefined;
@@ -17,42 +20,48 @@ export function getTicksCount({axis, range}: {axis: PreparedAxis; range: number}
     return ticksCount;
 }
 
-export function isBandScale(scale: AxisScale<AxisDomain>): scale is ScaleBand<AxisDomain> {
+export function isBandScale(scale: ChartScale): scale is ScaleBand<string> {
     return 'bandwidth' in scale && typeof scale.bandwidth === 'function';
 }
 
-export function getScaleTicks(scale: AxisScale<AxisDomain>, ticksCount?: number) {
-    return 'ticks' in scale && typeof scale.ticks === 'function'
-        ? scale.ticks(ticksCount)
-        : scale.domain();
+export function getScaleTicks(scale: ChartScale, ticksCount?: number): Ticks {
+    if ('ticks' in scale && typeof scale.ticks === 'function') {
+        return scale.ticks(ticksCount);
+    }
+
+    if (isBandScale(scale)) {
+        return scale.domain();
+    }
+
+    return [];
 }
 
 export function getXAxisOffset() {
     return typeof window !== 'undefined' && window.devicePixelRatio > 1 ? 0 : 0.5;
 }
 
-function number(scale: AxisScale<AxisDomain>) {
-    return (d: AxisDomain) => Number(scale(d));
+function number(scale: ScaleLinear<number, number> | ScaleTime<number, number>) {
+    return (d: unknown) => Number(scale(d as number));
 }
 
-function center(scale: ScaleBand<AxisDomain>, offset: number) {
+function center(scale: ScaleBand<string>, offset: number) {
     offset = Math.max(0, scale.bandwidth() - offset * 2) / 2;
     if (scale.round()) {
         offset = Math.round(offset);
     }
-    return (d: AxisDomain) => Number(scale(d)) + offset;
+    return (d: unknown) => Number(scale(String(d))) + offset;
 }
 
-export function getXTickPosition({scale, offset}: {scale: AxisScale<AxisDomain>; offset: number}) {
-    return isBandScale(scale) ? center(scale.copy(), offset) : number(scale.copy());
+export function getXTickPosition({scale, offset}: {scale: ChartScale; offset: number}) {
+    return isBandScale(scale) ? center(scale, offset) : number(scale);
 }
 
-export function getXAxisItems({
+export function getAxisItems({
     scale,
     count,
     maxCount,
 }: {
-    scale: AxisScale<AxisDomain>;
+    scale: ChartScale;
     count?: number;
     maxCount?: number;
 }) {
@@ -60,14 +69,14 @@ export function getXAxisItems({
 
     if (maxCount && values.length > maxCount) {
         const step = Math.ceil(values.length / maxCount);
-        values = values.filter((_: AxisDomain, i: number) => i % step === 0);
+        values = values.filter((_, i: number) => i % step === 0) as Ticks;
     }
 
     return values;
 }
 
 export function getMaxTickCount({axis, width}: {axis: PreparedAxis; width: number}) {
-    const minTickWidth = parseInt(axis.labels.style.fontSize) + axis.labels.padding;
+    const minTickWidth = parseInt(axis.labels.style.fontSize, 10) + axis.labels.padding;
     return Math.floor(width / minTickWidth);
 }
 
@@ -112,10 +121,10 @@ interface GetBandsPositionArgs {
 export const getAxisPlotsPosition = (axis: PreparedAxis, split: PreparedSplit, width = 0) => {
     const top = split.plots[axis.plotIndex]?.top || 0;
     if (axis.position === 'left') {
-        return `translate(0, ${top}px)`;
+        return [0, top];
     }
 
-    return `translate(${width}px, ${top}px)`;
+    return [width, top];
 };
 
 export function getBandsPosition(args: GetBandsPositionArgs): {from: number; to: number} {
@@ -156,5 +165,30 @@ export function getBandsPosition(args: GetBandsPositionArgs): {from: number; to:
     return {
         from: clamp(from, -halfBandwidth, maxPos),
         to: clamp(to, -halfBandwidth, maxPos),
+    };
+}
+
+export function getClosestPointsRange(axis: PreparedAxis, points: AxisDomain[]) {
+    if (axis.type === 'category') {
+        return undefined;
+    }
+
+    return Math.abs((points[1] as number) - (points[0] as number));
+}
+
+export function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
+    const ticks = getScaleTicks(scale);
+    const tickStep = getClosestPointsRange(axis, ticks);
+
+    return (value: AxisDomain) => {
+        if (!axis.labels.enabled) {
+            return '';
+        }
+
+        return formatAxisTickLabel({
+            axis,
+            value,
+            step: tickStep,
+        });
     };
 }

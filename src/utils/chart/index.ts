@@ -1,4 +1,3 @@
-import type {AxisDomain} from 'd3';
 import {group, select} from 'd3';
 import get from 'lodash/get';
 import isNil from 'lodash/isNil';
@@ -6,7 +5,6 @@ import sortBy from 'lodash/sortBy';
 
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../../constants';
 import type {
-    PreparedAxis,
     PreparedWaterfallSeries,
     PreparedWaterfallSeriesData,
     StackedSeries,
@@ -326,13 +324,5 @@ export const getDataCategoryValue = (args: {
 
     return categoryValue;
 };
-
-export function getClosestPointsRange(axis: PreparedAxis, points: AxisDomain[]) {
-    if (axis.type === 'category') {
-        return undefined;
-    }
-
-    return Math.abs((points[1] as number) - (points[0] as number));
-}
 
 export {AxisDirection};

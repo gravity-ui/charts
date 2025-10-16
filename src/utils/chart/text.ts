@@ -226,15 +226,11 @@ export async function wrapText(args: {
     text: string;
     style?: BaseTextStyle;
     width: number;
+    getTextSize?: ReturnType<typeof getTextSizeFn>;
 }): Promise<TextRow[]> {
-    const {text, style, width} = args;
+    const {text, style, width, getTextSize = getTextSizeFn({style})} = args;
 
-    const height = (
-        await getLabelsSize({
-            labels: [text],
-            style: style,
-        })
-    ).maxHeight;
+    const height = (await getTextSize(text)).height;
     // @ts-ignore
     const segmenter = new Intl.Segmenter([], {granularity: 'word'});
     const segments = Array.from(segmenter.segment(text));
@@ -252,15 +248,7 @@ export async function wrapText(args: {
 
         let lastRow = acc[acc.length - 1];
 
-        if (
-            item.isWordLike &&
-            (
-                await getLabelsSize({
-                    labels: [lastRow.text + item.segment],
-                    style,
-                })
-            ).maxWidth > width
-        ) {
+        if (item.isWordLike && (await getTextSize(lastRow.text + item.segment)).width > width) {
             lastRow = {
                 text: '',
                 y: acc.length * height,
@@ -271,7 +259,7 @@ export async function wrapText(args: {
         lastRow.text += item.segment;
     }
 
-    return acc;
+    return acc.map((row) => ({...row, text: row.text.trim()}));
 }
 
 const entityMap = {
@@ -291,7 +279,7 @@ function unescapeHtml(str: string) {
     }, str);
 }
 
-export function getTextSizeFn({style}: {style: BaseTextStyle}) {
+export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     const map: Record<string, {width: number; height: number}> = {};
     const setSymbolSize = async (s: string) => {
         const labels = [s === ' ' ? '&nbsp;' : s];

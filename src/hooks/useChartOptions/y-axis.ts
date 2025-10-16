@@ -1,6 +1,6 @@
-import type {AxisDomain, AxisScale} from 'd3';
 import get from 'lodash/get';
 
+import {getTickValues} from '../../components/AxisY/utils';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
@@ -11,13 +11,13 @@ import {
 } from '../../constants';
 import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
 import {
-    formatAxisTickLabel,
-    getClosestPointsRange,
+    calculateNumericProperty,
     getDefaultMinYAxisValue,
     getHorizontalHtmlTextHeight,
     getHorizontalSvgTextHeight,
+    getLabelFormatter,
     getLabelsSize,
-    getScaleTicks,
+    getTextSizeFn,
     isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
@@ -31,8 +31,9 @@ const getAxisLabelMaxWidth = async (args: {
     axis: PreparedAxis;
     seriesData: ChartSeries[];
     seriesOptions: PreparedSeriesOptions;
+    height: number;
 }) => {
-    const {axis, seriesData, seriesOptions} = args;
+    const {axis, seriesData, seriesOptions, height} = args;
 
     if (!axis.labels.enabled) {
         return {height: 0, width: 0};
@@ -40,22 +41,15 @@ const getAxisLabelMaxWidth = async (args: {
 
     const scale = createYScale({
         axis,
-        boundsHeight: 1,
+        boundsHeight: height,
         series: seriesData,
         seriesOptions,
     });
-    const ticks: AxisDomain[] = getScaleTicks(scale as AxisScale<AxisDomain>);
-
-    // FIXME: it is necessary to filter data, since we do not draw overlapping ticks
-
-    const step = getClosestPointsRange(axis, ticks);
-    const labels = (ticks as (string | number)[]).map((tick) =>
-        formatAxisTickLabel({
-            axis,
-            value: tick,
-            step,
-        }),
-    );
+    const getTextSize = getTextSizeFn({style: axis.labels.style});
+    const labelLineHeight = (await getTextSize('Tmp')).height;
+    const tickValues = getTickValues({axis, scale, labelLineHeight});
+    const labelFormatter = getLabelFormatter({axis, scale});
+    const labels = tickValues.map((tick) => labelFormatter(tick.value));
 
     const size = await getLabelsSize({
         labels,
@@ -69,11 +63,15 @@ const getAxisLabelMaxWidth = async (args: {
 
 export const getPreparedYAxis = ({
     height,
+    boundsHeight,
+    width,
     seriesData,
     seriesOptions,
     yAxis,
 }: {
     height: number;
+    boundsHeight: number;
+    width: number;
     seriesData: ChartSeries[];
     seriesOptions: PreparedSeriesOptions;
     yAxis: ChartYAxis[] | undefined;
@@ -131,9 +129,7 @@ export const getPreparedYAxis = ({
                     margin: labelsEnabled
                         ? get(axisItem, 'labels.margin', axisLabelsDefaults.margin)
                         : 0,
-                    padding: labelsEnabled
-                        ? get(axisItem, 'labels.padding', axisLabelsDefaults.padding)
-                        : 0,
+                    padding: labelsEnabled ? get(axisItem, 'labels.padding', 4) : 0,
                     dateFormat: get(axisItem, 'labels.dateFormat'),
                     numberFormat: get(axisItem, 'labels.numberFormat'),
                     style: labelsStyle,
@@ -141,7 +137,9 @@ export const getPreparedYAxis = ({
                     width: 0,
                     height: 0,
                     lineHeight: labelsLineHeight,
-                    maxWidth: get(axisItem, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
+                    maxWidth:
+                        calculateNumericProperty({base: width, value: axisItem.labels?.maxWidth}) ??
+                        axisLabelsDefaults.maxWidth,
                     html: labelsHtml,
                 },
                 lineColor: get(axisItem, 'lineColor'),
@@ -168,7 +166,12 @@ export const getPreparedYAxis = ({
                     ),
                 },
                 ticks: {
-                    pixelInterval: get(axisItem, 'ticks.pixelInterval'),
+                    pixelInterval:
+                        axisItem.ticks?.pixelInterval ??
+                        calculateNumericProperty({
+                            base: height,
+                            value: axisItem.ticks?.interval,
+                        }),
                 },
                 position: get(axisItem, 'position', defaultAxisPosition),
                 plotIndex: get(axisItem, 'plotIndex', 0),
@@ -215,6 +218,7 @@ export const getPreparedYAxis = ({
                     axis: preparedAxis,
                     seriesData,
                     seriesOptions,
+                    height: boundsHeight,
                 });
 
                 preparedAxis.labels.height = labelsHeight;

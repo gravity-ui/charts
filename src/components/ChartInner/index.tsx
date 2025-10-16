@@ -5,7 +5,10 @@ import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
 import {EventType, block, getDispatcher} from '../../utils';
-import {AxisX, AxisY} from '../Axis';
+import {AxisX} from '../Axis';
+import {AxisY} from '../AxisY/AxisY';
+import {prepareAxisData} from '../AxisY/prepare-axis-data';
+import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
 import {Title} from '../Title';
@@ -53,8 +56,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         yAxis,
         yScale,
         svgXPos,
-        svgBottomPos,
-        svgTopPos,
     } = useChartInnerProps({
         ...props,
         dispatcher,
@@ -125,6 +126,28 @@ export const ChartInner = (props: ChartInnerProps) => {
         }
     }, [prevWidth, width, prevHeight, height, tooltipPinned, unpinTooltip]);
 
+    const [yAxisDataItems, setYAxisDataItems] = React.useState<AxisYData[]>([]);
+    React.useEffect(() => {
+        (async function () {
+            const items: AxisYData[] = [];
+            for (let i = 0; i < yAxis.length; i++) {
+                const axis = yAxis[i];
+                const scale = yScale?.[i];
+                if (scale) {
+                    const axisData = await prepareAxisData({
+                        axis,
+                        scale,
+                        width: boundsWidth,
+                        height: boundsHeight,
+                        split: preparedSplit,
+                    });
+                    items.push(axisData);
+                }
+            }
+            setYAxisDataItems(items);
+        })();
+    }, [boundsHeight, boundsWidth, preparedSplit, yAxis, yScale]);
+
     return (
         <div className={b()}>
             <svg
@@ -158,20 +181,15 @@ export const ChartInner = (props: ChartInnerProps) => {
                 >
                     {xScale && yScale?.length && (
                         <React.Fragment>
-                            <AxisY
-                                axes={yAxis}
-                                bottomLimit={svgBottomPos}
-                                boundsOffsetLeft={boundsOffsetLeft}
-                                boundsOffsetTop={boundsOffsetTop}
-                                height={boundsHeight}
-                                htmlLayout={htmlLayout}
-                                plotAfterRef={plotAfterRef}
-                                plotBeforeRef={plotBeforeRef}
-                                scale={yScale}
-                                split={preparedSplit}
-                                topLimit={svgTopPos}
-                                width={boundsWidth}
-                            />
+                            {yAxisDataItems.map((axisData, index) => (
+                                <AxisY
+                                    key={index}
+                                    htmlLayout={htmlLayout}
+                                    plotAfterRef={plotAfterRef}
+                                    plotBeforeRef={plotBeforeRef}
+                                    preparedAxisData={axisData}
+                                />
+                            ))}
                             {xAxis && (
                                 <g transform={`translate(0, ${boundsHeight})`}>
                                     <AxisX

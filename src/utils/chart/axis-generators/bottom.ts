@@ -2,7 +2,7 @@ import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 import {path, select} from 'd3';
 
 import type {BaseTextStyle, DeepRequired, MeaningfulAny} from '../../../types';
-import {getXAxisItems, getXAxisOffset, getXTickPosition} from '../axis';
+import {getAxisItems, getXAxisOffset, getXTickPosition} from '../axis';
 import {calculateCos, calculateSin} from '../math';
 import {getLabelsSize, setEllipsisForOverflowText} from '../text';
 
@@ -265,7 +265,7 @@ export async function axisBottom(args: AxisBottomArgs) {
     const htmlSelection = select(htmlLayout);
     const offset = getXAxisOffset();
     const position = getXTickPosition({scale, offset});
-    const values = getXAxisItems({scale, count: ticksCount, maxCount: maxTickCount});
+    const values = getAxisItems({scale, count: ticksCount, maxCount: maxTickCount});
     const labelHeight = (
         await getLabelsSize({
             labels: values.map(labelFormat),
