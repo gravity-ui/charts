@@ -32,6 +32,10 @@ export function getTickValues({
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
         const height = Math.abs(range[0] - range[1]);
+        if (!height) {
+            return [];
+        }
+
         let ticksCount = getTicksCount({axis, range: height});
         let result = scale.ticks(ticksCount).map((t) => ({
             y: scale(t),

@@ -127,8 +127,11 @@ export const ChartInner = (props: ChartInnerProps) => {
     }, [prevWidth, width, prevHeight, height, tooltipPinned, unpinTooltip]);
 
     const [yAxisDataItems, setYAxisDataItems] = React.useState<AxisYData[]>([]);
+    const countedRef = React.useRef(0);
     React.useEffect(() => {
+        countedRef.current++;
         (async function () {
+            const currentRun = countedRef.current;
             const items: AxisYData[] = [];
             for (let i = 0; i < yAxis.length; i++) {
                 const axis = yAxis[i];
@@ -144,7 +147,10 @@ export const ChartInner = (props: ChartInnerProps) => {
                     items.push(axisData);
                 }
             }
-            setYAxisDataItems(items);
+
+            if (countedRef.current === currentRun) {
+                setYAxisDataItems(items);
+            }
         })();
     }, [boundsHeight, boundsWidth, preparedSplit, yAxis, yScale]);
 
