@@ -39,6 +39,7 @@ type Props = {
     rowRenderer?: ChartTooltip['rowRenderer'];
     totals?: ChartTooltip['totals'];
     valueFormat?: ValueFormat;
+    headerFormat?: ChartTooltip['headerFormat'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 };
@@ -49,6 +50,7 @@ export const DefaultTooltipContent = ({
     rowRenderer,
     totals,
     valueFormat,
+    headerFormat,
     xAxis,
     yAxis,
 }: Props) => {
@@ -96,6 +98,10 @@ export const DefaultTooltipContent = ({
             />
         );
     };
+
+    const formattedHeadValue = headerFormat
+        ? getFormattedValue({value: measureValue, format: headerFormat})
+        : measureValue;
 
     React.useEffect(() => {
         if (!contentRowsRef.current) {
@@ -145,10 +151,10 @@ export const DefaultTooltipContent = ({
 
     return (
         <div className={b('content')}>
-            {measureValue && (
+            {formattedHeadValue && (
                 <div
                     className={b('series-name')}
-                    dangerouslySetInnerHTML={{__html: measureValue}}
+                    dangerouslySetInnerHTML={{__html: formattedHeadValue}}
                 />
             )}
             <div
@@ -164,13 +170,14 @@ export const DefaultTooltipContent = ({
                     // TODO: improve action item display https://github.com/gravity-ui/charts/issues/208
                     const active = closest && hovered.length > 1;
                     const striped = (i + 1) % 2 === 0;
+                    const rowValueFormat = get(series, 'tooltip.valueFormat', valueFormat);
 
                     switch (series.type) {
                         case 'scatter':
                         case 'line':
                         case 'area':
                         case 'bar-x': {
-                            const format = valueFormat || getDefaultValueFormat({axis: yAxis});
+                            const format = rowValueFormat || getDefaultValueFormat({axis: yAxis});
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
                                 format,
@@ -190,7 +197,7 @@ export const DefaultTooltipContent = ({
                             const isTotal = get(data, 'total', false);
                             const subTotalValue =
                                 (seriesItem as TooltipDataChunkWaterfall).subTotal ?? 0;
-                            const format = valueFormat || getDefaultValueFormat({axis: yAxis});
+                            const format = rowValueFormat || getDefaultValueFormat({axis: yAxis});
                             const subTotal = getFormattedValue({
                                 value: subTotalValue,
                                 format,
@@ -215,7 +222,7 @@ export const DefaultTooltipContent = ({
                             );
                         }
                         case 'bar-y': {
-                            const format = valueFormat || getDefaultValueFormat({axis: xAxis});
+                            const format = rowValueFormat || getDefaultValueFormat({axis: xAxis});
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
                                 format,
@@ -236,7 +243,7 @@ export const DefaultTooltipContent = ({
                             const seriesData = data as PreparedPieSeries | TreemapSeriesData;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
-                                format: valueFormat || {type: 'number'},
+                                format: rowValueFormat || {type: 'number'},
                             });
 
                             return renderRow({
@@ -251,7 +258,7 @@ export const DefaultTooltipContent = ({
                             const {target, data: source} = seriesItem as TooltipDataChunkSankey;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
-                                format: valueFormat || {type: 'number'},
+                                format: rowValueFormat || {type: 'number'},
                             });
 
                             return renderRow({
@@ -266,7 +273,7 @@ export const DefaultTooltipContent = ({
                             const radarSeries = series as PreparedRadarSeries;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
-                                format: valueFormat || {type: 'number'},
+                                format: rowValueFormat || {type: 'number'},
                             });
 
                             return renderRow({
@@ -298,7 +305,7 @@ export const DefaultTooltipContent = ({
                         label={totals.label}
                         style={{marginRight: scrollBarWidth}}
                         values={hoveredValues}
-                        valueFormat={valueFormat}
+                        valueFormat={totals.valueFormat ?? valueFormat}
                     />
                 </React.Fragment>
             )}

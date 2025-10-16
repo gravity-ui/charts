@@ -41,6 +41,7 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
         },
         cursor: get(series, 'cursor', null),
         data: [],
+        tooltip: series.tooltip,
     };
 
     const positive: PreparedWaterfallSeries = {
