@@ -51,6 +51,7 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
             borderRadius: get(series, 'borderRadius', get(seriesOptions, 'bar-x.borderRadius', 0)),
+            tooltip: series.tooltip,
         };
     }, []);
 }

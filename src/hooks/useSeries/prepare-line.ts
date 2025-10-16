@@ -124,6 +124,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
+            tooltip: series.tooltip,
         };
 
         return prepared;

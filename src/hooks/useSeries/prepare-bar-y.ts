@@ -71,6 +71,7 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                     series.borderColor ??
                     seriesOptions?.['bar-y']?.borderColor ??
                     'var(--gcharts-shape-border-color)',
+                tooltip: series.tooltip,
             };
         }),
     );
