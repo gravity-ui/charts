@@ -228,7 +228,7 @@ export async function prepareAxisData({
         const cos = Math.abs(calculateCos(rotateAngle));
 
         const titleContent: TextRowData[] = [];
-        const titleMaxWidth = -calculateSin(rotateAngle) * height;
+        const titleMaxWidth = sin * height;
 
         if (axis.title.maxRowCount > 1) {
             const titleTextRows = await wrapText({
