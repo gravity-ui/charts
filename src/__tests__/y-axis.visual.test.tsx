@@ -122,7 +122,7 @@ test.describe('Y-axis', () => {
         });
     });
 
-    test.describe.only('Axis title', () => {
+    test.describe('Axis title', () => {
         test('Title alignment - left', async ({mount}) => {
             const data: ChartData = {
                 yAxis: [
@@ -183,6 +183,42 @@ test.describe('Y-axis', () => {
                 },
             };
             const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Long overflowed title', async ({mount}) => {
+            const text = `Oh, mournful season that delights the eyes, Your farewell beauty captivates my spirit.`;
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {text},
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+
+            component.update(
+                <ChartTestStory
+                    data={{
+                        ...data,
+                        yAxis: [
+                            {
+                                title: {text, maxRowCount: 2},
+                            },
+                        ],
+                    }}
+                />,
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });

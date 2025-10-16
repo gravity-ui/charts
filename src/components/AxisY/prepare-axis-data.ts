@@ -24,6 +24,7 @@ import type {
     AxisTickLine,
     AxisTitleData,
     AxisYData,
+    TextRowData,
 } from './types';
 import {getTickValues} from './utils';
 
@@ -88,6 +89,7 @@ async function getSvgAxisLabel({
                     text: rowText,
                     x,
                     y: topOffset,
+                    size: textSize,
                 });
                 topOffset += textSize.height;
             }
@@ -108,6 +110,7 @@ async function getSvgAxisLabel({
             text,
             x,
             y: Math.max(0, top - size.height / 2),
+            size,
         });
     }
 
@@ -121,6 +124,7 @@ async function getSvgAxisLabel({
     return svgLabel;
 }
 
+// eslint-disable-next-line complexity
 export async function prepareAxisData({
     axis,
     split,
@@ -219,11 +223,54 @@ export async function prepareAxisData({
     let title: AxisTitleData | null = null;
     if (axis.title.text) {
         const getTitleTextSize = getTextSizeFn({style: axis.title.style});
-        const originalTextSize = await getTitleTextSize(axis.title.text);
         const rotateAngle = axis.position === 'left' ? -90 : 90;
-
         const sin = Math.abs(calculateSin(rotateAngle));
         const cos = Math.abs(calculateCos(rotateAngle));
+
+        const titleContent: TextRowData[] = [];
+        const titleMaxWidth = -calculateSin(rotateAngle) * height;
+
+        if (axis.title.maxRowCount > 1) {
+            const titleTextRows = await wrapText({
+                text: axis.title.text,
+                style: axis.title.style,
+                width: titleMaxWidth,
+                getTextSize: getTitleTextSize,
+            });
+
+            for (let i = 0; i < axis.title.maxRowCount && i < titleTextRows.length; i++) {
+                const textRow = titleTextRows[i];
+                const textRowSize = await getTitleTextSize(textRow.text);
+
+                titleContent.push({
+                    text: textRow.text,
+                    x: 0,
+                    y: textRow.y,
+                    size: textRowSize,
+                });
+            }
+        } else {
+            const text = await getTextWithElipsis({
+                text: axis.title.text,
+                maxWidth: titleMaxWidth,
+                getTextWidth: async (s) => (await getTitleTextSize(s)).width,
+            });
+            titleContent.push({
+                text,
+                x: 0,
+                y: 0,
+                size: await getTitleTextSize(text),
+            });
+        }
+
+        const originalTextSize = titleContent.reduce(
+            (acc, item) => {
+                acc.width = Math.max(acc.width, item.size.width);
+                acc.height += item.size.height;
+                return acc;
+            },
+            {width: 0, height: 0},
+        );
         const rotatedTitleSize = {
             width: sin * originalTextSize.height + cos * originalTextSize.width,
             height: sin * originalTextSize.width + cos * originalTextSize.height,
@@ -253,12 +300,13 @@ export async function prepareAxisData({
                 : -left + width + labelsWidth + axis.labels.margin + axis.title.margin;
 
         title = {
-            content: axis.title.text,
+            content: titleContent,
             style: axis.title.style,
             size: rotatedTitleSize,
-            x,
-            y,
+            x: x,
+            y: y,
             rotate: rotateAngle,
+            offset: -(originalTextSize.height / titleContent.length) * (titleContent.length - 1),
         };
     }
 

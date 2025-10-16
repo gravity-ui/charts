@@ -54,14 +54,20 @@ export const AxisY = (props: Props) => {
                 .append('g')
                 .attr('class', b('title'))
                 .append('text')
-                .html(preparedAxisData.title.content)
                 .attr('text-anchor', 'start')
                 .style('dominant-baseline', 'text-after-edge')
                 .style(
                     'transform',
-                    `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg)`,
+                    `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
                 )
-                .attr('font-size', preparedAxisData.title.style.fontSize);
+                .attr('font-size', preparedAxisData.title.style.fontSize)
+                .selectAll('tspan')
+                .data(preparedAxisData.title.content)
+                .join('tspan')
+                .html((d) => d.text)
+                .attr('x', (d) => d.x)
+                .attr('y', (d) => d.y)
+                .attr('text-anchor', 'start');
         }
 
         svgElement

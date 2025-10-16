@@ -2,14 +2,15 @@ import type {DashStyle} from 'src/constants';
 
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement} from '../../types';
 
-type AxisSvgLabelRowData = {
+export type TextRowData = {
     text: string;
     x: number;
     y: number;
+    size: {width: number; height: number};
 };
 
 export type AxisSvgLabelData = {
-    content: AxisSvgLabelRowData[];
+    content: TextRowData[];
     title?: string;
     style: BaseTextStyle;
     size: {width: number; height: number};
@@ -26,12 +27,13 @@ export type AxisTickData = {
 };
 
 export type AxisTitleData = {
-    content: string;
+    content: TextRowData[];
     style: BaseTextStyle;
     size: {width: number; height: number};
     x: number;
     y: number;
     rotate: number;
+    offset: number;
 };
 
 export type AxisPlotLineLabel = {
