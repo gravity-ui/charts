@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/gravity-ui/charts/compare/v1.15.0...v1.16.0) (2025-10-16)
+
+
+### Features
+
+* improve overflowed tooltip rows view ([#205](https://github.com/gravity-ui/charts/issues/205)) ([1d4d21a](https://github.com/gravity-ui/charts/commit/1d4d21ad064a3d0eb98e221144e3174c9b884b42))
+* series tooltip formatting ([#204](https://github.com/gravity-ui/charts/issues/204)) ([5b9e51f](https://github.com/gravity-ui/charts/commit/5b9e51fad2e9cacde061306c00273c2758dc7478))
+
+
+### Bug Fixes
+
+* fix datetime formatting in ru locale ([#202](https://github.com/gravity-ui/charts/issues/202)) ([58c02ea](https://github.com/gravity-ui/charts/commit/58c02eaa50d273372aa3b3e444f0754de92b7183))
+
 ## [1.15.0](https://github.com/gravity-ui/charts/compare/v1.14.0...v1.15.0) (2025-10-14)
 
 
