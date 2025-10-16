@@ -227,7 +227,7 @@ export const AxisY = (props: Props) => {
     return (
         <React.Fragment>
             <HtmlLayer preparedData={{htmlElements: htmlLabels}} htmlLayout={htmlLayout} />
-            <g transform={`translate(${preparedAxisData.left}, 0)`} ref={ref} className={b()} />
+            <g ref={ref} className={b()} />
         </React.Fragment>
     );
 };

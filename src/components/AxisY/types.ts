@@ -78,6 +78,4 @@ export type AxisYData = {
     ticks: AxisTickData[];
     plotLines: AxisPlotLineData[];
     plotBands: AxisPlotBandData[];
-    width: number;
-    left: number;
 };

@@ -26,6 +26,90 @@ import type {
 } from './types';
 import {getTickValues} from './utils';
 
+async function getSvgAxisLabel({
+    getTextSize,
+    text,
+    axis,
+    top,
+    left,
+    labelMaxHeight,
+}: {
+    getTextSize: (str: string) => Promise<{width: number; height: number}>;
+    text: string;
+    axis: PreparedAxis;
+    top: number;
+    left: number;
+    labelMaxHeight: number;
+}) {
+    const originalTextSize = await getTextSize(text);
+    // Currently, a preliminary label calculation is used to build the chart - we cannot exceed it here.
+    // Therefore, we rely on a pre-calculated number instead of the current maximum label width.
+    const labelMaxWidth = axis.labels.width; //axis.labels.maxWidth;
+
+    const size = originalTextSize;
+    const content: AxisSvgLabelData['content'] = [];
+    // Warp label text only for categories - it will look strange for numbers or dates.
+    if (originalTextSize.width > labelMaxWidth && axis.type === 'category') {
+        const textRows = await wrapText({
+            text,
+            style: axis.labels.style,
+            width: labelMaxWidth,
+            getTextSize,
+        });
+
+        let topOffset = top;
+        let newLabelWidth = 0;
+        let newLabelHeight = 0;
+        for (let textRowIndex = 0; textRowIndex < textRows.length; textRowIndex++) {
+            const textRow = textRows[textRowIndex];
+            const textSize = await getTextSize(textRow.text);
+
+            if (newLabelHeight + textSize.height <= labelMaxHeight) {
+                newLabelWidth = Math.max(newLabelWidth, textSize.width);
+                newLabelHeight += textSize.height;
+
+                const x =
+                    axis.position === 'left'
+                        ? left - textSize.width - axis.labels.margin
+                        : left + axis.labels.margin;
+
+                content.push({
+                    text: textRow.text,
+                    x,
+                    y: topOffset,
+                });
+                topOffset += textSize.height;
+            }
+        }
+
+        content.forEach((row) => {
+            row.y -= newLabelHeight / 2;
+        });
+
+        size.width = newLabelWidth;
+        size.height = newLabelHeight;
+    } else {
+        const x =
+            axis.position === 'left'
+                ? left - size.width - axis.labels.margin
+                : left + axis.labels.margin;
+        content.push({
+            text,
+            x,
+            y: Math.max(0, top - size.height / 2),
+        });
+    }
+
+    const svgLabel: AxisSvgLabelData = {
+        title: content.length > 1 || content[0]?.text !== text ? text : undefined,
+        content: content,
+        style: axis.labels.style,
+        size: size,
+    };
+
+    return svgLabel;
+}
+
 export async function prepareAxisData({
     axis,
     split,
@@ -39,7 +123,6 @@ export async function prepareAxisData({
     width: number;
     height: number;
 }): Promise<AxisYData> {
-    let axisWidth = 0;
     const domainX = axis.position === 'left' ? 0 : width;
     const domain: AxisDomainData = {
         start: [domainX, 0],
@@ -121,8 +204,6 @@ export async function prepareAxisData({
         0,
     );
 
-    axisWidth += labelsWidth + axis.labels.margin;
-
     let title: AxisTitleData | null = null;
     if (axis.title.text) {
         const getTitleTextSize = getTextSizeFn({style: axis.title.style});
@@ -153,8 +234,6 @@ export async function prepareAxisData({
             y,
             rotate: rotateAngle,
         };
-
-        axisWidth += title.size.width + axis.title.margin;
     }
 
     const axisPlotTopPosition = split.plots[axis.plotIndex]?.top || 0;
@@ -235,90 +314,5 @@ export async function prepareAxisData({
         domain,
         plotBands,
         plotLines,
-        width: axisWidth,
-        left:
-            axis.position === 'left'
-                ? labelsWidth - axis.labels.width
-                : -(labelsWidth - axis.labels.width),
     };
-}
-
-async function getSvgAxisLabel({
-    getTextSize,
-    text,
-    axis,
-    top,
-    left,
-    labelMaxHeight,
-}: {
-    getTextSize: (str: string) => Promise<{width: number; height: number}>;
-    text: string;
-    axis: PreparedAxis;
-    top: number;
-    left: number;
-    labelMaxHeight: number;
-}) {
-    const originalTextSize = await getTextSize(text);
-
-    const size = originalTextSize;
-    const content: AxisSvgLabelData['content'] = [];
-    if (originalTextSize.width > axis.labels.maxWidth) {
-        const textRows = await wrapText({
-            text,
-            style: axis.labels.style,
-            width: axis.labels.maxWidth,
-            getTextSize,
-        });
-
-        let topOffset = top;
-        let newLabelWidth = 0;
-        let newLabelHeight = 0;
-        for (let textRowIndex = 0; textRowIndex < textRows.length; textRowIndex++) {
-            const textRow = textRows[textRowIndex];
-            const textSize = await getTextSize(textRow.text);
-
-            if (newLabelHeight + textSize.height <= labelMaxHeight) {
-                newLabelWidth = Math.max(newLabelWidth, textSize.width);
-                newLabelHeight += textSize.height;
-
-                const x =
-                    axis.position === 'left'
-                        ? left - textSize.width - axis.labels.margin
-                        : left + axis.labels.margin;
-
-                content.push({
-                    text: textRow.text,
-                    x,
-                    y: topOffset,
-                });
-                topOffset += textSize.height;
-            }
-        }
-
-        content.forEach((row) => {
-            row.y -= newLabelHeight / 2;
-        });
-
-        size.width = newLabelWidth;
-        size.height = newLabelHeight;
-    } else {
-        const x =
-            axis.position === 'left'
-                ? left - size.width - axis.labels.margin
-                : left + axis.labels.margin;
-        content.push({
-            text,
-            x,
-            y: top - size.height / 2,
-        });
-    }
-
-    const svgLabel: AxisSvgLabelData = {
-        title: content.length > 1 || content[0]?.text !== text ? text : undefined,
-        content: content,
-        style: axis.labels.style,
-        size: size,
-    };
-
-    return svgLabel;
 }
