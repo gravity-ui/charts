@@ -5,7 +5,7 @@ import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
 import {EventType, block, getDispatcher} from '../../utils';
-import {AxisX} from '../Axis';
+import {AxisX} from '../AxisX/AxisX';
 import {AxisY} from '../AxisY/AxisY';
 import {prepareAxisData} from '../AxisY/prepare-axis-data';
 import type {AxisYData} from '../AxisY/types';
