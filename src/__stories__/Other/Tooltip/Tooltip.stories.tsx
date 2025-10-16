@@ -2,7 +2,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../../components';
 import {ChartStory} from '../../ChartStory';
-import {tooltipTotalsSumData} from '../../__data__';
+import {tooltipOverflowedRowsData, tooltipTotalsSumData} from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Other/Tooltip',
@@ -68,5 +68,12 @@ export const SeriesWithDifferentFormats = {
                 },
             },
         },
+    },
+} satisfies Story;
+
+export const OverflowedRows = {
+    name: 'Overflowed Rows',
+    args: {
+        data: tooltipOverflowedRowsData,
     },
 } satisfies Story;

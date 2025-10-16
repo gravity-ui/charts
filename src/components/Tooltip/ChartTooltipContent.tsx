@@ -8,17 +8,19 @@ import {DefaultTooltipContent} from './DefaultTooltipContent';
 
 export interface ChartTooltipContentProps {
     hovered?: TooltipDataChunk[];
-    xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
+    pinned?: boolean;
     renderer?: ChartTooltip['renderer'];
     rowRenderer?: ChartTooltip['rowRenderer'];
     valueFormat?: ChartTooltip['valueFormat'];
     headFormat?: ChartTooltip['headFormat'];
     totals?: ChartTooltip['totals'];
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis;
 }
 
 export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
-    const {hovered, xAxis, yAxis, renderer, rowRenderer, valueFormat, headFormat, totals} = props;
+    const {hovered, xAxis, yAxis, renderer, rowRenderer, valueFormat, headFormat, totals, pinned} =
+        props;
 
     if (!hovered) {
         return null;
@@ -29,12 +31,13 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
     return isNil(customTooltip) ? (
         <DefaultTooltipContent
             hovered={hovered}
-            xAxis={xAxis}
-            yAxis={yAxis}
+            pinned={pinned}
+            rowRenderer={rowRenderer}
+            totals={totals}
             valueFormat={valueFormat}
             headFormat={headFormat}
-            totals={totals}
-            rowRenderer={rowRenderer}
+            xAxis={xAxis}
+            yAxis={yAxis}
         />
     ) : (
         customTooltip
