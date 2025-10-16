@@ -1,4 +1,4 @@
-import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {AxisDomain, AxisScale, ScaleBand} from 'd3';
 import clamp from 'lodash/clamp';
 
 import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hooks';
@@ -20,11 +20,14 @@ export function getTicksCount({axis, range}: {axis: PreparedAxis; range: number}
     return ticksCount;
 }
 
-export function isBandScale(scale: ChartScale): scale is ScaleBand<string> {
+export function isBandScale(scale: ChartScale | AxisScale<AxisDomain>): scale is ScaleBand<string> {
     return 'bandwidth' in scale && typeof scale.bandwidth === 'function';
 }
 
-export function getScaleTicks(scale: ChartScale, ticksCount?: number): Ticks {
+export function getScaleTicks(
+    scale: ChartScale | AxisScale<AxisDomain>,
+    ticksCount?: number,
+): Ticks {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         return scale.ticks(ticksCount);
     }
@@ -40,7 +43,7 @@ export function getXAxisOffset() {
     return typeof window !== 'undefined' && window.devicePixelRatio > 1 ? 0 : 0.5;
 }
 
-function number(scale: ScaleLinear<number, number> | ScaleTime<number, number>) {
+function number(scale: AxisScale<AxisDomain>) {
     return (d: unknown) => Number(scale(d as number));
 }
 
@@ -52,7 +55,7 @@ function center(scale: ScaleBand<string>, offset: number) {
     return (d: unknown) => Number(scale(String(d))) + offset;
 }
 
-export function getXTickPosition({scale, offset}: {scale: ChartScale; offset: number}) {
+export function getXTickPosition({scale, offset}: {scale: AxisScale<AxisDomain>; offset: number}) {
     return isBandScale(scale) ? center(scale, offset) : number(scale);
 }
 
@@ -61,7 +64,7 @@ export function getAxisItems({
     count,
     maxCount,
 }: {
-    scale: ChartScale;
+    scale: ChartScale | AxisScale<AxisDomain>;
     count?: number;
     maxCount?: number;
 }) {

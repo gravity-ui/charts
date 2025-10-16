@@ -66,7 +66,7 @@ function addDomain(
 function appendSvgLabels(args: {
     leftmostLimit: number;
     right: number;
-    ticksSelection: Selection<BaseType | SVGGElement, unknown, SVGGElement, unknown>;
+    ticksSelection: Selection<BaseType | SVGGElement, AxisDomain, SVGGElement, unknown>;
     ticks: Partial<AxisBottomArgs['ticks']> &
         DeepRequired<
             Pick<
@@ -301,9 +301,9 @@ export async function axisBottom(args: AxisBottomArgs) {
         });
 
         const htmlLabelsData: HtmlLabelData[] = labelsHtml
-            ? values.map((v: string) => {
+            ? values.map((v) => {
                   return {
-                      content: v,
+                      content: String(v),
                       left: position(v) + offset + boundsOffsetLeft,
                       top: Math.abs(tickItems?.[0]?.[1] || 0) + labelsMargin + boundsOffsetTop,
                   };
@@ -312,7 +312,7 @@ export async function axisBottom(args: AxisBottomArgs) {
 
         const ticks = selection
             .selectAll('.tick')
-            .data(values)
+            .data(values as AxisDomain[])
             .order()
             .join('g')
             .attr('class', 'tick')

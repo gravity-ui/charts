@@ -11,6 +11,7 @@ import {
 import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
 import {
     calculateCos,
+    calculateNumericProperty,
     formatAxisTickLabel,
     getAxisItems,
     getClosestPointsRange,
@@ -132,7 +133,9 @@ export const getPreparedXAxis = async ({
             width: 0,
             height: 0,
             lineHeight: labelsLineHeight,
-            maxWidth: get(xAxis, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
+            maxWidth:
+                calculateNumericProperty({base: width, value: xAxis?.labels?.maxWidth}) ??
+                axisLabelsDefaults.maxWidth,
             html: labelsHtml,
         },
         lineColor: get(xAxis, 'lineColor'),
