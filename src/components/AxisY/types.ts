@@ -72,7 +72,7 @@ export type AxisDomainData = {
 };
 
 export type AxisYData = {
-    index: number;
+    id: string;
     title: AxisTitleData | null;
     domain: AxisDomainData;
     ticks: AxisTickData[];

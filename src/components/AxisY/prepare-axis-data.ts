@@ -1,3 +1,4 @@
+import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3';
 
 import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
@@ -184,7 +185,7 @@ export async function prepareAxisData({
                       text: plotBand.label.text,
                       style: plotBand.label.style,
                       x: plotBand.label.padding,
-                      y: plotBand.label.padding + top,
+                      y: plotBand.label.padding,
                   }
                 : null,
         });
@@ -228,7 +229,7 @@ export async function prepareAxisData({
     }
 
     return {
-        index: axis.plotIndex,
+        id: getUniqId(),
         title,
         ticks,
         domain,

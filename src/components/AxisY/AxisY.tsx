@@ -25,6 +25,8 @@ export const AxisY = (props: Props) => {
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
 
+    console.log('AxisY', {preparedAxisData});
+
     const htmlLabels = preparedAxisData.ticks.map((d) => d.htmlLabel).filter(Boolean) as HtmlItem[];
 
     React.useEffect(() => {
@@ -111,7 +113,7 @@ export const AxisY = (props: Props) => {
         });
 
         if (preparedAxisData.plotBands.length > 0) {
-            const plotBandDataAttr = `data-plot-y-band-${preparedAxisData.index}`;
+            const plotBandDataAttr = `data-plot-y-band-${preparedAxisData.id}`;
 
             const setPlotBands = (
                 plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
@@ -145,7 +147,7 @@ export const AxisY = (props: Props) => {
                     if (label) {
                         plotBandSelection
                             .append('text')
-                            .text(label.text)
+                            .html(label.text)
                             .style('fill', label.style.fontColor ?? '')
                             .style('font-size', label.style.fontSize)
                             .style('font-weight', label.style.fontWeight ?? '')
@@ -167,7 +169,7 @@ export const AxisY = (props: Props) => {
         }
 
         if (preparedAxisData.plotLines.length > 0) {
-            const plotLineDataAttr = `data-plot-y-line-${preparedAxisData.index}`;
+            const plotLineDataAttr = `data-plot-y-line-${preparedAxisData.id}`;
 
             const setPlotLines = (
                 plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
