@@ -70,7 +70,20 @@ async function getSvgAxisLabel({
                 newLabelWidth = Math.max(newLabelWidth, textSize.width);
                 newLabelHeight += textSize.height;
 
-                let rowText = textRow.text;
+                let rowText = textRow.text.trim();
+
+                if (textRowIndex < textRows.length - 1) {
+                    const nextTextRow = textRows[textRowIndex + 1];
+                    if (
+                        newLabelHeight + (await getTextSize(nextTextRow.text)).height >
+                        labelMaxHeight
+                    ) {
+                        rowText = textRow.text + nextTextRow.text;
+                    }
+                }
+
+                textSize = await getTextSize(rowText);
+
                 if (textSize.width > labelMaxWidth) {
                     rowText = await getTextWithElipsis({
                         text: rowText,
@@ -243,10 +256,11 @@ export async function prepareAxisData({
 
             for (let i = 0; i < axis.title.maxRowCount && i < titleTextRows.length; i++) {
                 const textRow = titleTextRows[i];
-                const textRowSize = await getTitleTextSize(textRow.text);
+                const textRowContent = textRow.text.trim();
+                const textRowSize = await getTitleTextSize(textRowContent);
 
                 titleContent.push({
-                    text: textRow.text,
+                    text: textRowContent,
                     x: 0,
                     y: textRow.y,
                     size: textRowSize,

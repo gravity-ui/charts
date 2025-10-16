@@ -259,7 +259,7 @@ export async function wrapText(args: {
         lastRow.text += item.segment;
     }
 
-    return acc.map((row) => ({...row, text: row.text.trim()}));
+    return acc;
 }
 
 const entityMap = {

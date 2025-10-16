@@ -20,6 +20,13 @@ const HTML_CATEGORIES = [
 ];
 
 test.describe('Y-axis', () => {
+    test.beforeEach(async ({page}) => {
+        // Cancel test with error when an uncaught exception happens within the page
+        page.on('pageerror', (exception) => {
+            throw exception;
+        });
+    });
+
     test('min', async ({mount}) => {
         const data = cloneDeep(scatterBasicData);
         set(data, 'yAxis[0].min', 5);
@@ -265,5 +272,34 @@ test.describe('Y-axis', () => {
 
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Axis tick labels', () => {
+        test('With text wrapping', async ({mount}) => {
+            const longText = `Oh, mournful season that delights the eyes, Your farewell beauty captivates my spirit.`;
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        type: 'category',
+                        categories: ['...', 'Pushkin A.S.', longText],
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [
+                                {y: 0, x: 10},
+                                {y: 1, x: 15},
+                                {y: 2, x: 20},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });
