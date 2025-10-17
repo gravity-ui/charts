@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.17.0](https://github.com/gravity-ui/charts/compare/v1.16.0...v1.17.0) (2025-10-17)
+
+
+### Features
+
+* refactoring Y-axis rendering ([#209](https://github.com/gravity-ui/charts/issues/209)) ([368f284](https://github.com/gravity-ui/charts/commit/368f2840974d077edbf6780a7bf9c8fe25b4ccdf))
+
+
+### Bug Fixes
+
+* tooltip headerFormat ([#210](https://github.com/gravity-ui/charts/issues/210)) ([849bde2](https://github.com/gravity-ui/charts/commit/849bde27ddba1d0306267bfb8fb65ef3306ca1cd))
+
 ## [1.16.0](https://github.com/gravity-ui/charts/compare/v1.15.0...v1.16.0) (2025-10-16)
 
 
