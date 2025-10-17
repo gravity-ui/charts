@@ -3,6 +3,7 @@ import type {DateTimeInput} from '@gravity-ui/date-utils';
 import type {AxisDomain} from 'd3';
 import capitalize from 'lodash/capitalize';
 
+import {DEFAULT_DATE_FORMAT} from '../../constants';
 import type {PreparedAxis} from '../../hooks';
 import {formatNumber, getDefaultUnit} from '../../libs';
 import type {FormatOptions} from '../../libs/format-number/types';
@@ -13,7 +14,7 @@ import {getDefaultDateFormat} from './time';
 const LETTER_MOUNTH_AT_START_FORMAT_REGEXP = /^M{3,}/;
 
 function getFormattedDate(args: {value: DateTimeInput; format?: string}) {
-    const {value, format = ''} = args;
+    const {value, format = DEFAULT_DATE_FORMAT} = args;
     const date = dateTime({input: value});
 
     if (date?.isValid()) {

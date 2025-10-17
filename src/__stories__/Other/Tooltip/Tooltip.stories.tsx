@@ -1,8 +1,16 @@
+import React from 'react';
+
+import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../../components';
 import {ChartStory} from '../../ChartStory';
-import {tooltipOverflowedRowsData, tooltipTotalsSumData} from '../../__data__';
+import {
+    tooltipOverflowedRowsData,
+    tooltipTotalsSumData,
+    tooltipWithDateFormat,
+    tooltipWithNumberFormat,
+} from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Other/Tooltip',
@@ -21,54 +29,24 @@ export const TotalsSum = {
     },
 } satisfies Story;
 
+const TooltipFormattedValues = () => {
+    return (
+        <Container spaceRow={5}>
+            <Row space={2}>
+                <Col s={6}>
+                    <ChartStory data={tooltipWithNumberFormat} />
+                </Col>
+                <Col s={6}>
+                    <ChartStory data={tooltipWithDateFormat} />
+                </Col>
+            </Row>
+        </Container>
+    );
+};
+
 export const SeriesWithDifferentFormats = {
-    name: 'Series with different formats',
-    args: {
-        data: {
-            series: {
-                data: [
-                    {
-                        name: 'Series 1',
-                        type: 'bar-y',
-                        stacking: 'normal',
-                        data: [{y: 1, x: 100}],
-                        tooltip: {
-                            valueFormat: {
-                                type: 'number',
-                                precision: 0,
-                            },
-                        },
-                    },
-                    {
-                        name: 'Series 2',
-                        type: 'bar-y',
-                        stacking: 'normal',
-                        data: [{y: 1, x: 100.5876}],
-                        tooltip: {
-                            valueFormat: {
-                                type: 'number',
-                                precision: 2,
-                            },
-                        },
-                    },
-                ],
-            },
-            tooltip: {
-                headerFormat: {
-                    type: 'custom',
-                    formatter: ({value}) => `Custom header format: ${value}`,
-                },
-                totals: {
-                    enabled: true,
-                    aggregation: 'sum',
-                    valueFormat: {
-                        type: 'number',
-                        precision: 1,
-                    },
-                },
-            },
-        },
-    },
+    name: 'Formatted values',
+    render: TooltipFormattedValues,
 } satisfies Story;
 
 export const OverflowedRows = {
