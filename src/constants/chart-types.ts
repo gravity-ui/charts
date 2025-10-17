@@ -9,4 +9,5 @@ export const SeriesType = {
     Waterfall: 'waterfall',
     Sankey: 'sankey',
     Radar: 'radar',
+    Heatmap: 'heatmap',
 } as const;

@@ -7,6 +7,7 @@ import type {
     BarYSeries,
     ChartSeries,
     ChartSeriesOptions,
+    HeatmapSeries,
     LineSeries,
     PieSeries,
     RadarSeries,
@@ -19,6 +20,7 @@ import type {
 import {prepareArea} from './prepare-area';
 import {prepareBarXSeries} from './prepare-bar-x';
 import {prepareBarYSeries} from './prepare-bar-y';
+import {prepareHeatmapSeries} from './prepare-heatmap';
 import {prepareLineSeries} from './prepare-line';
 import {preparePieSeries} from './prepare-pie';
 import {prepareRadarSeries} from './prepare-radar';
@@ -117,6 +119,14 @@ export async function prepareSeries(args: {
                 seriesOptions,
                 legend,
                 colors,
+            });
+        }
+        case 'heatmap': {
+            return await prepareHeatmapSeries({
+                series: series as HeatmapSeries[],
+                legend,
+                colorScale,
+                seriesOptions,
             });
         }
         default: {
