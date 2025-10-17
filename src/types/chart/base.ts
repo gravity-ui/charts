@@ -10,7 +10,7 @@ type DateFormat = {
 };
 export type CustomFormat = {
     type: 'custom';
-    formatter: (args: {value: unknown}) => string;
+    formatter: (args: {value: unknown; formattedValue?: string}) => string;
 };
 export type ValueFormat = NumberFormat | DateFormat;
 

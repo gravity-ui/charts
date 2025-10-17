@@ -1,5 +1,6 @@
 export * from './axis';
 export * from './chart-types';
+export * from './date';
 export * from './defaults';
 export * from './layout-algorithms';
 export * from './line-styles';

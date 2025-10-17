@@ -1,5 +1,6 @@
 import get from 'lodash/get';
 
+import {DEFAULT_DATE_FORMAT} from '../../../constants';
 import type {PreparedPieSeries} from '../../../hooks';
 import {i18n} from '../../../i18n';
 import type {
@@ -20,8 +21,6 @@ import {getDataCategoryValue} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 
 export type HoveredValue = string | number | null | undefined;
-
-const DEFAULT_DATE_FORMAT = 'DD.MM.YY';
 
 function getRowData(
     fieldName: 'x' | 'y',
@@ -88,22 +87,28 @@ export const getMeasureValue = ({
     }
 
     if (data.some((item) => item.series.type === 'radar')) {
-        return (data[0] as TooltipDataChunkRadar).category?.key ?? null;
+        const value = (data[0] as TooltipDataChunkRadar).category?.key ?? null;
+        return {value};
     }
 
     if (data.some((item) => item.series.type === 'bar-y')) {
+        const value = getYRowData(data[0]?.data, yAxis);
         const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
-        return getFormattedValue({
+        const formattedValue = getFormattedValue({
             value: getYRowData(data[0]?.data, yAxis),
             format,
         });
+        return {value, formattedValue};
     }
 
+    const value = getXRowData(data[0]?.data, xAxis);
     const format = valueFormat ?? getDefaultValueFormat({axis: xAxis});
-    return getFormattedValue({
+    const formattedValue = getFormattedValue({
         value: getXRowData(data[0]?.data, xAxis),
         format,
     });
+
+    return {value, formattedValue};
 };
 
 export function getHoveredValues(args: {
