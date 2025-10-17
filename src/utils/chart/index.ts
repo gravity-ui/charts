@@ -1,4 +1,3 @@
-import type {AxisDomain} from 'd3';
 import {group, select} from 'd3';
 import get from 'lodash/get';
 import isNil from 'lodash/isNil';
@@ -6,7 +5,6 @@ import sortBy from 'lodash/sortBy';
 
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../../constants';
 import type {
-    PreparedAxis,
     PreparedWaterfallSeries,
     PreparedWaterfallSeriesData,
     StackedSeries,
@@ -232,19 +230,6 @@ export const getOnlyVisibleSeries = <T extends {visible: boolean}>(series: T[]) 
     return series.filter((s) => s.visible);
 };
 
-export const parseTransformStyle = (style: string | null): {x?: number; y?: number} => {
-    if (!style) {
-        return {};
-    }
-
-    const stringifiedValue = style.match(/\((.*?)\)/)?.[1] || '';
-    const [xString, yString] = stringifiedValue.split(',');
-    const x = Number.isNaN(Number(xString)) ? undefined : Number(xString);
-    const y = Number.isNaN(Number(yString)) ? undefined : Number(yString);
-
-    return {x, y};
-};
-
 export const getHorizontalHtmlTextHeight = (args: {
     text: string;
     style?: Partial<BaseTextStyle>;
@@ -326,13 +311,5 @@ export const getDataCategoryValue = (args: {
 
     return categoryValue;
 };
-
-export function getClosestPointsRange(axis: PreparedAxis, points: AxisDomain[]) {
-    if (axis.type === 'category') {
-        return undefined;
-    }
-
-    return Math.abs((points[1] as number) - (points[0] as number));
-}
 
 export {AxisDirection};

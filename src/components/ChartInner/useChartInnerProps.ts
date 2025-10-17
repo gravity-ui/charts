@@ -72,16 +72,30 @@ export function useChartInnerProps(props: Props) {
         }).then((val) => setXAxis(val));
     }, [data.xAxis, preparedSeriesOptions, width, zoomedSeriesData]);
 
+    const estimatedBoundsHeight = React.useMemo(() => {
+        if (xAxis) {
+            return (
+                height -
+                xAxis.title.height +
+                xAxis.title.margin +
+                xAxis.labels.margin +
+                parseInt(xAxis.labels.style.fontSize, 10)
+            );
+        }
+        return 0;
+    }, [height, xAxis]);
     const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
     React.useEffect(() => {
         setYAxis([]);
         getPreparedYAxis({
             height,
+            boundsHeight: estimatedBoundsHeight,
+            width,
             seriesData: zoomedSeriesData,
             seriesOptions: preparedSeriesOptions,
             yAxis: data.yAxis,
         }).then((val) => setYAxis(val));
-    }, [data.yAxis, height, preparedSeriesOptions, zoomedSeriesData]);
+    }, [data.yAxis, estimatedBoundsHeight, height, preparedSeriesOptions, width, zoomedSeriesData]);
 
     const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
         colors,

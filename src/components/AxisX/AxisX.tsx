@@ -13,13 +13,11 @@ import type {
 import type {AxisPlotBand} from '../../types';
 import {
     block,
-    formatAxisTickLabel,
     getAxisTitleRows,
     getBandsPosition,
-    getClosestPointsRange,
+    getLabelFormatter,
     getLineDashArray,
     getMaxTickCount,
-    getScaleTicks,
     getTicksCount,
     handleOverflowingText,
 } from '../../utils';
@@ -42,23 +40,6 @@ type Props = {
     plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
     plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
 };
-
-function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
-    const ticks = getScaleTicks(scale as AxisScale<AxisDomain>);
-    const tickStep = getClosestPointsRange(axis, ticks);
-
-    return (value: AxisDomain) => {
-        if (!axis.labels.enabled) {
-            return '';
-        }
-
-        return formatAxisTickLabel({
-            axis,
-            value,
-            step: tickStep,
-        });
-    };
-}
 
 export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCount: number}) {
     const {axis, width, rowCount} = args;

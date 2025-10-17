@@ -1,4 +1,4 @@
-import type {AxisDomain, AxisScale} from 'd3';
+import type {AxisDomain} from 'd3';
 import get from 'lodash/get';
 
 import {
@@ -11,14 +11,15 @@ import {
 import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
 import {
     calculateCos,
+    calculateNumericProperty,
     formatAxisTickLabel,
+    getAxisItems,
     getClosestPointsRange,
     getHorizontalHtmlTextHeight,
     getHorizontalSvgTextHeight,
     getLabelsSize,
     getMaxTickCount,
     getTicksCount,
-    getXAxisItems,
     hasOverlappingLabels,
     wrapText,
 } from '../../utils';
@@ -43,8 +44,8 @@ async function getLabelSettings({
 }) {
     const scale = createXScale({axis, series: seriesData, seriesOptions, boundsWidth: width});
     const tickCount = getTicksCount({axis, range: width});
-    const ticks = getXAxisItems({
-        scale: scale as AxisScale<AxisDomain>,
+    const ticks = getAxisItems({
+        scale: scale,
         count: tickCount,
         maxCount: getMaxTickCount({width, axis}),
     });
@@ -132,7 +133,9 @@ export const getPreparedXAxis = async ({
             width: 0,
             height: 0,
             lineHeight: labelsLineHeight,
-            maxWidth: get(xAxis, 'labels.maxWidth', axisLabelsDefaults.maxWidth),
+            maxWidth:
+                calculateNumericProperty({base: width, value: xAxis?.labels?.maxWidth}) ??
+                axisLabelsDefaults.maxWidth,
             html: labelsHtml,
         },
         lineColor: get(xAxis, 'lineColor'),
