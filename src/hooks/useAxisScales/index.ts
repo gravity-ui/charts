@@ -40,6 +40,7 @@ type Args = {
     split: PreparedSplit;
     hasZoomX?: boolean;
     hasZoomY?: boolean;
+    originalSeries?: ChartSeries[];
 };
 
 type ReturnValue = {
@@ -122,8 +123,18 @@ export function createYScale(args: {
     boundsHeight: number;
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
+    originalSeries?: ChartSeries[];
 }) {
-    const {axis, boundsHeight, series, seriesOptions} = args;
+    const {axis, boundsHeight, originalSeries, series: propsSeries, seriesOptions} = args;
+    let series = propsSeries;
+    if (originalSeries) {
+        const hasData = series.some((s) => {
+            return 'length' in s.data && s.data.length > 0;
+        });
+        if (!hasData) {
+            series = originalSeries;
+        }
+    }
     const yMinProps = get(axis, 'min');
     const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
@@ -255,13 +266,23 @@ export function createXScale(args: {
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
+    originalSeries?: ChartSeries[];
 }) {
-    const {axis, boundsWidth, series, seriesOptions, hasZoomX} = args;
+    const {axis, boundsWidth, originalSeries, series: propsSeries, seriesOptions, hasZoomX} = args;
     const xMinProps = get(axis, 'min');
     const xMaxProps = get(axis, 'max');
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const xCategories = get(axis, 'categories');
     const maxPadding = get(axis, 'maxPadding', 0);
+    let series = propsSeries;
+    if (originalSeries) {
+        const hasData = series.some((s) => {
+            return 'length' in s.data && s.data.length > 0;
+        });
+        if (!hasData) {
+            series = originalSeries;
+        }
+    }
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
@@ -365,7 +386,17 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {boundsWidth, boundsHeight, hasZoomX, series, seriesOptions, split, xAxis, yAxis} = args;
+    const {
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        originalSeries,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+    } = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -376,6 +407,7 @@ const createScales = (args: Args) => {
             ? createXScale({
                   axis: xAxis,
                   boundsWidth,
+                  originalSeries,
                   series: visibleSeries,
                   seriesOptions,
                   hasZoomX,
@@ -391,6 +423,7 @@ const createScales = (args: Args) => {
             return createYScale({
                 axis,
                 boundsHeight: axisHeight,
+                originalSeries,
                 series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
                 seriesOptions,
             });
@@ -407,6 +440,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
         boundsHeight,
         hasZoomX,
         hasZoomY,
+        originalSeries,
         series,
         seriesOptions,
         split,
@@ -424,6 +458,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 boundsHeight,
                 hasZoomX,
                 hasZoomY,
+                originalSeries,
                 series,
                 seriesOptions,
                 split,
@@ -433,5 +468,16 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [boundsWidth, boundsHeight, hasZoomX, hasZoomY, series, seriesOptions, split, xAxis, yAxis]);
+    }, [
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        hasZoomY,
+        originalSeries,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+    ]);
 };

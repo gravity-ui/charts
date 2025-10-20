@@ -143,6 +143,7 @@ export function useChartInnerProps(props: Props) {
         boundsHeight,
         hasZoomX: Boolean(zoomState.x),
         hasZoomY: Boolean(zoomState.y),
+        originalSeries: data.series.data,
         series: preparedSeries,
         seriesOptions: preparedSeriesOptions,
         split: preparedSplit,

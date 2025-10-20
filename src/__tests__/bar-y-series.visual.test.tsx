@@ -747,4 +747,47 @@ test.describe('Bar-y series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('With x null values', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        data: [{y: 0, x: 1}],
+                        name: '2022',
+                        stacking: 'normal',
+                        type: 'bar-y',
+                    },
+                    {
+                        data: [{y: 0, x: 2}],
+                        name: '2023',
+                        stacking: 'normal',
+                        type: 'bar-y',
+                    },
+                    {
+                        // TODO: https://github.com/gravity-ui/charts/issues/28
+                        // @ts-expect-error
+                        data: [{y: 0, x: null}],
+                        name: '2024',
+                        stacking: 'normal',
+                        type: 'bar-y',
+                    },
+                ],
+            },
+            xAxis: {
+                labels: {enabled: false},
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['Category with null values'],
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+        const legendItem = component.getByText('2024');
+        await legendItem.click();
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
