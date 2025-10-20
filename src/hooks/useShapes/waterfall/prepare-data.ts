@@ -90,7 +90,7 @@ export const prepareWaterfallData = async (args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
-    yScale: ChartScale[];
+    yScale: (ChartScale | undefined)[];
 }): Promise<PreparedWaterfallData[]> => {
     const {
         series,
@@ -100,7 +100,12 @@ export const prepareWaterfallData = async (args: {
         yAxis: [yAxis],
         yScale: [yScale],
     } = args;
-    const yLinearScale = yScale as ScaleLinear<number, number>;
+    const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
+
+    if (!yLinearScale) {
+        return [];
+    }
+
     const plotHeight = yLinearScale(yLinearScale.domain()[0]);
     const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
     const barPadding = get(seriesOptions, 'waterfall.barPadding');
@@ -120,7 +125,7 @@ export const prepareWaterfallData = async (args: {
     const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(bandWidth - rectGap, barMaxWidth));
     const yZero = getYValue({
         point: {y: 0},
-        yScale,
+        yScale: yLinearScale,
         yAxis,
     });
 
@@ -145,7 +150,7 @@ export const prepareWaterfallData = async (args: {
             yZero -
             getYValue({
                 point: {y: Math.abs(yValue)},
-                yScale,
+                yScale: yLinearScale,
                 yAxis,
             });
 
@@ -155,7 +160,7 @@ export const prepareWaterfallData = async (args: {
                 point: {
                     y: yValue > 0 ? yValue : 0,
                 },
-                yScale,
+                yScale: yLinearScale,
                 yAxis,
             });
         } else if (Number(prevPoint.data.y) < 0) {

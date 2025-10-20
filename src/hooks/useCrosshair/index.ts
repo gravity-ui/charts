@@ -15,7 +15,7 @@ type Props = {
     width: number;
     height: number;
     xScale?: ChartScale;
-    yScale?: ChartScale[];
+    yScale?: (ChartScale | undefined)[];
     split: PreparedSplit;
     plotElement: SVGGElement | null;
     dispatcher: Dispatch<object>;
@@ -107,9 +107,12 @@ export const useCrosshair = (props: Props) => {
         }
 
         yAxes.forEach((yAxis, index, currentArr) => {
-            const yAxisScale = yScale[index] as AxisScale<AxisDomain>;
+            const yAxisScale = yScale[index] as AxisScale<AxisDomain> | undefined;
 
-            if (index !== 0 && !yAxis.crosshair.snap && !currentArr[0].crosshair.snap) {
+            if (
+                !yAxisScale ||
+                (index !== 0 && !yAxis.crosshair.snap && !currentArr[0].crosshair.snap)
+            ) {
                 return;
             }
 

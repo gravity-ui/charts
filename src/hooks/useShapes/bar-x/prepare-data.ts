@@ -52,7 +52,7 @@ export const prepareBarXData = async (args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
-    yScale: ChartScale[];
+    yScale: (ChartScale | undefined)[];
     boundsHeight: number;
 }): Promise<PreparedBarXData[]> => {
     const {series, seriesOptions, xAxis, xScale, yScale, boundsHeight: plotHeight} = args;
@@ -156,9 +156,13 @@ export const prepareBarXData = async (args: {
 
             for (let yValueIndex = 0; yValueIndex < sortedData.length; yValueIndex++) {
                 const yValue = sortedData[yValueIndex];
-
                 const yAxisIndex = yValue.series.yAxis;
-                const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number>;
+                const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number> | undefined;
+
+                if (!seriesYScale) {
+                    continue;
+                }
+
                 let xCenter;
 
                 if (xAxis.type === 'category') {

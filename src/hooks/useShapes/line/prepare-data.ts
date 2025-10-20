@@ -63,7 +63,7 @@ export const prepareLineData = async (args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
-    yScale: ChartScale[];
+    yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
 }): Promise<PreparedLineData[]> => {
@@ -78,6 +78,11 @@ export const prepareLineData = async (args: {
         const seriesYAxis = yAxis[yAxisIndex];
         const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
         const seriesYScale = yScale[s.yAxis];
+
+        if (!seriesYScale) {
+            continue;
+        }
+
         const points = s.data.map((d) => ({
             x: getXValue({point: d, points: s.data, xAxis, xScale}),
             y:

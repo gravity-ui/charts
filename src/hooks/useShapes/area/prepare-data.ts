@@ -77,7 +77,7 @@ export const prepareAreaData = async (args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
-    yScale: ChartScale[];
+    yScale: (ChartScale | undefined)[];
     boundsHeight: number;
     isOutsideBounds: (x: number, y: number) => boolean;
 }): Promise<PreparedAreaData[]> => {
@@ -103,6 +103,11 @@ export const prepareAreaData = async (args: {
             const yAxisIndex = s.yAxis;
             const seriesYAxis = yAxis[yAxisIndex];
             const seriesYScale = yScale[yAxisIndex];
+
+            if (!seriesYScale) {
+                continue;
+            }
+
             const yMin = getYValue({
                 point: {y: 0},
                 points: s.data,

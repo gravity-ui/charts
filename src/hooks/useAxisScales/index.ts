@@ -45,13 +45,35 @@ type Args = {
 
 type ReturnValue = {
     xScale?: ChartScale;
-    yScale?: ChartScale[];
+    yScale?: (ChartScale | undefined)[];
 };
 
 const X_AXIS_ZOOM_PADDING = 0.02;
 
 function isNumericalArrayData(data: unknown[]): data is number[] {
     return data.every((d) => typeof d === 'number' || d === null);
+}
+
+function validateArrayData(data: unknown[]) {
+    let hasNumberAndNullValues: boolean | undefined;
+    let hasOnlyNullValues: boolean | undefined;
+
+    for (const d of data) {
+        const isNumber = typeof d === 'number';
+        const isNull = d === null;
+        hasNumberAndNullValues =
+            typeof hasNumberAndNullValues === 'undefined'
+                ? isNumber || isNull
+                : hasNumberAndNullValues && (isNumber || isNull);
+        hasOnlyNullValues =
+            typeof hasOnlyNullValues === 'undefined' ? isNull : hasOnlyNullValues && isNull;
+
+        if (!hasNumberAndNullValues) {
+            break;
+        }
+    }
+
+    return {hasNumberAndNullValues, hasOnlyNullValues};
 }
 
 function filterCategoriesByVisibleSeries(args: {
@@ -69,8 +91,9 @@ function filterCategoriesByVisibleSeries(args: {
             });
         }
     });
+    const filteredCategories = categories.filter((c) => visibleCategories.has(c));
 
-    return categories.filter((c) => visibleCategories.has(c));
+    return filteredCategories.length > 0 ? filteredCategories : categories;
 }
 
 // axis is validated in `validation/index.ts`, so the value of `axis.type` is definitely valid.
@@ -123,18 +146,8 @@ export function createYScale(args: {
     boundsHeight: number;
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
-    originalSeries?: ChartSeries[];
 }) {
-    const {axis, boundsHeight, originalSeries, series: propsSeries, seriesOptions} = args;
-    let series = propsSeries;
-    if (originalSeries) {
-        const hasData = series.some((s) => {
-            return 'length' in s.data && s.data.length > 0;
-        });
-        if (!hasData) {
-            series = originalSeries;
-        }
-    }
+    const {axis, boundsHeight, series, seriesOptions} = args;
     const yMinProps = get(axis, 'min');
     const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
@@ -145,9 +158,17 @@ export function createYScale(args: {
         case 'linear':
         case 'logarithmic': {
             const domain = getDomainDataYBySeries(series);
+            const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
-            if (isNumericalArrayData(domain)) {
-                const [yMinDomain, yMaxDomain] = extent(domain) as [number, number];
+            if (hasOnlyNullValues) {
+                return undefined;
+            }
+
+            if (hasNumberAndNullValues) {
+                const [yMinDomain, yMaxDomain] = extent(domain as [number, number]) as [
+                    number,
+                    number,
+                ];
                 const yMin = typeof yMinProps === 'number' ? yMinProps : yMinDomain;
                 let yMax: number;
 
@@ -186,6 +207,10 @@ export function createYScale(args: {
                 return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
+
+                if (!domain.length) {
+                    return undefined;
+                }
 
                 if (isNumericalArrayData(domain)) {
                     const [yMinTimestamp, yMaxTimestamp] = extent(domain) as [number, number];
@@ -266,23 +291,13 @@ export function createXScale(args: {
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
-    originalSeries?: ChartSeries[];
 }) {
-    const {axis, boundsWidth, originalSeries, series: propsSeries, seriesOptions, hasZoomX} = args;
+    const {axis, boundsWidth, series, seriesOptions, hasZoomX} = args;
     const xMinProps = get(axis, 'min');
     const xMaxProps = get(axis, 'max');
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const xCategories = get(axis, 'categories');
     const maxPadding = get(axis, 'maxPadding', 0);
-    let series = propsSeries;
-    if (originalSeries) {
-        const hasData = series.some((s) => {
-            return 'length' in s.data && s.data.length > 0;
-        });
-        if (!hasData) {
-            series = originalSeries;
-        }
-    }
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
@@ -305,6 +320,10 @@ export function createXScale(args: {
         case 'linear':
         case 'logarithmic': {
             const domainData = getDomainDataXBySeries(series);
+
+            if (!domainData.length) {
+                return undefined;
+            }
 
             if (isNumericalArrayData(domainData)) {
                 const [xMinDomain, xMaxDomain] = extent(domainData) as [number, number];
@@ -363,6 +382,10 @@ export function createXScale(args: {
             let domain: [number, number] | null = null;
             const domainData = get(axis, 'timestamps') || getDomainDataXBySeries(series);
 
+            if (!domainData.length) {
+                return undefined;
+            }
+
             if (isNumericalArrayData(domainData)) {
                 const [xMinTimestamp, xMaxTimestamp] = extent(domainData) as [number, number];
                 const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
@@ -386,17 +409,7 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        hasZoomX,
-        originalSeries,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-    } = args;
+    const {boundsWidth, boundsHeight, hasZoomX, series, seriesOptions, split, xAxis, yAxis} = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -407,7 +420,6 @@ const createScales = (args: Args) => {
             ? createXScale({
                   axis: xAxis,
                   boundsWidth,
-                  originalSeries,
                   series: visibleSeries,
                   seriesOptions,
                   hasZoomX,
@@ -423,7 +435,6 @@ const createScales = (args: Args) => {
             return createYScale({
                 axis,
                 boundsHeight: axisHeight,
-                originalSeries,
                 series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
                 seriesOptions,
             });
@@ -449,7 +460,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
     } = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
-        let yScale: ChartScale[] | undefined;
+        let yScale: (ChartScale | undefined)[] | undefined;
         const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
 
         if (hasAxisRelatedSeries) {

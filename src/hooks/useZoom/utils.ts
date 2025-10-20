@@ -10,7 +10,7 @@ export function selectionToZoomBounds(args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxes: PreparedAxis[];
-    yScales: ChartScale[];
+    yScales: (ChartScale | undefined)[];
     zoomType: PreparedZoom['type'];
 }): Partial<ZoomState> {
     const {selection, xAxis, xScale, yAxes, yScales, zoomType} = args;
@@ -28,13 +28,20 @@ export function selectionToZoomBounds(args: {
                 if (!Array.isArray(zoomState.y)) {
                     zoomState.y = [];
                 }
-                zoomState.y.push(
-                    selectionYToZoomBounds({
-                        yAxis,
-                        yScale: yScales[index],
-                        selection: [y1, y0],
-                    }),
-                );
+
+                const yScale = yScales[index];
+
+                if (yScale) {
+                    zoomState.y.push(
+                        selectionYToZoomBounds({
+                            yAxis,
+                            yScale,
+                            selection: [y1, y0],
+                        }),
+                    );
+                } else {
+                    zoomState.y.push(undefined);
+                }
             });
             break;
         }
@@ -46,13 +53,20 @@ export function selectionToZoomBounds(args: {
                 if (!Array.isArray(zoomState.y)) {
                     zoomState.y = [];
                 }
-                zoomState.y.push(
-                    selectionYToZoomBounds({
-                        yAxis,
-                        yScale: yScales[index],
-                        selection: [y0, y1],
-                    }),
-                );
+
+                const yScale = yScales[index];
+
+                if (yScale) {
+                    zoomState.y.push(
+                        selectionYToZoomBounds({
+                            yAxis,
+                            yScale,
+                            selection: [y0, y1],
+                        }),
+                    );
+                } else {
+                    zoomState.y.push(undefined);
+                }
             });
             break;
         }
