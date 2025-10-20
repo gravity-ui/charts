@@ -50,10 +50,6 @@ type ReturnValue = {
 
 const X_AXIS_ZOOM_PADDING = 0.02;
 
-function isNumericalArrayData(data: unknown[]): data is number[] {
-    return data.every((d) => typeof d === 'number' || d === null);
-}
-
 function validateArrayData(data: unknown[]) {
     let hasNumberAndNullValues: boolean | undefined;
     let hasOnlyNullValues: boolean | undefined;
@@ -141,6 +137,7 @@ function getYScaleRange(args: {
     }
 }
 
+// eslint-disable-next-line complexity
 export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
@@ -160,7 +157,7 @@ export function createYScale(args: {
             const domain = getDomainDataYBySeries(series);
             const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
-            if (hasOnlyNullValues) {
+            if (hasOnlyNullValues || domain.length === 0) {
                 return undefined;
             }
 
@@ -207,13 +204,17 @@ export function createYScale(args: {
                 return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
+                const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
-                if (!domain.length) {
+                if (hasOnlyNullValues || domain.length === 0) {
                     return undefined;
                 }
 
-                if (isNumericalArrayData(domain)) {
-                    const [yMinTimestamp, yMaxTimestamp] = extent(domain) as [number, number];
+                if (hasNumberAndNullValues) {
+                    const [yMinTimestamp, yMaxTimestamp] = extent(domain as [number, number]) as [
+                        number,
+                        number,
+                    ];
                     const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
                     const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
                     return scaleUtc().domain([yMin, yMax]).range(range).nice();
@@ -320,13 +321,17 @@ export function createXScale(args: {
         case 'linear':
         case 'logarithmic': {
             const domainData = getDomainDataXBySeries(series);
+            const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domainData);
 
-            if (!domainData.length) {
+            if (hasOnlyNullValues || domainData.length === 0) {
                 return undefined;
             }
 
-            if (isNumericalArrayData(domainData)) {
-                const [xMinDomain, xMaxDomain] = extent(domainData) as [number, number];
+            if (hasNumberAndNullValues) {
+                const [xMinDomain, xMaxDomain] = extent(domainData as [number, number]) as [
+                    number,
+                    number,
+                ];
                 let xMin: number;
                 let xMax: number;
 
@@ -381,13 +386,17 @@ export function createXScale(args: {
         case 'datetime': {
             let domain: [number, number] | null = null;
             const domainData = get(axis, 'timestamps') || getDomainDataXBySeries(series);
+            const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domainData);
 
-            if (!domainData.length) {
+            if (hasOnlyNullValues || domainData.length === 0) {
                 return undefined;
             }
 
-            if (isNumericalArrayData(domainData)) {
-                const [xMinTimestamp, xMaxTimestamp] = extent(domainData) as [number, number];
+            if (hasNumberAndNullValues) {
+                const [xMinTimestamp, xMaxTimestamp] = extent(domainData as [number, number]) as [
+                    number,
+                    number,
+                ];
                 const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
                 const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
                 domain = [xMin, xMax];
