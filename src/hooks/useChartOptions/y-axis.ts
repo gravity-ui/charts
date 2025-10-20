@@ -166,12 +166,12 @@ export const getPreparedYAxis = ({
                     ),
                 },
                 ticks: {
-                    pixelInterval:
-                        axisItem.ticks?.pixelInterval ??
-                        calculateNumericProperty({
-                            base: height,
-                            value: axisItem.ticks?.interval,
-                        }),
+                    pixelInterval: axisItem.ticks?.interval
+                        ? calculateNumericProperty({
+                              base: height,
+                              value: axisItem.ticks?.interval,
+                          })
+                        : axisItem.ticks?.pixelInterval,
                 },
                 position: get(axisItem, 'position', defaultAxisPosition),
                 plotIndex: get(axisItem, 'plotIndex', 0),

@@ -157,7 +157,12 @@ export const getPreparedXAxis = async ({
             enabled: get(xAxis, 'grid.enabled', true),
         },
         ticks: {
-            pixelInterval: get(xAxis, 'ticks.pixelInterval'),
+            pixelInterval: xAxis?.ticks?.interval
+                ? calculateNumericProperty({
+                      base: width,
+                      value: xAxis.ticks.interval,
+                  })
+                : xAxis?.ticks?.pixelInterval,
         },
         position: 'bottom',
         plotIndex: 0,

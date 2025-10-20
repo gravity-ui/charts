@@ -35,6 +35,7 @@ async function getSvgAxisLabel({
     top,
     left,
     labelMaxHeight,
+    topOffset,
 }: {
     getTextSize: (str: string) => Promise<{width: number; height: number}>;
     text: string;
@@ -42,6 +43,7 @@ async function getSvgAxisLabel({
     top: number;
     left: number;
     labelMaxHeight: number;
+    topOffset: number;
 }) {
     const originalTextSize = await getTextSize(text);
     // Currently, a preliminary label calculation is used to build the chart - we cannot exceed it here.
@@ -59,7 +61,7 @@ async function getSvgAxisLabel({
             getTextSize,
         });
 
-        let topOffset = top;
+        let labelTopOffset = top;
         let newLabelWidth = 0;
         let newLabelHeight = 0;
         for (let textRowIndex = 0; textRowIndex < textRows.length; textRowIndex++) {
@@ -101,10 +103,10 @@ async function getSvgAxisLabel({
                 content.push({
                     text: rowText,
                     x,
-                    y: topOffset,
+                    y: labelTopOffset,
                     size: textSize,
                 });
-                topOffset += textSize.height;
+                labelTopOffset += textSize.height;
             }
         }
 
@@ -122,7 +124,7 @@ async function getSvgAxisLabel({
         content.push({
             text,
             x,
-            y: Math.max(0, top - size.height / 2),
+            y: Math.max(-topOffset, top - size.height / 2),
             size,
         });
     }
@@ -142,12 +144,14 @@ export async function prepareAxisData({
     axis,
     split,
     scale,
+    top: topOffset,
     width,
     height,
 }: {
     axis: PreparedAxis;
     split: PreparedSplit;
     scale: ChartScale;
+    top: number;
     width: number;
     height: number;
 }): Promise<AxisYData> {
@@ -210,6 +214,7 @@ export async function prepareAxisData({
                     top: y,
                     left: domainX,
                     labelMaxHeight,
+                    topOffset,
                 });
             }
         }
