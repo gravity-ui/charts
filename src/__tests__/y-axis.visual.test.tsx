@@ -301,5 +301,35 @@ test.describe('Y-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Top label offset', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        min: 0,
+                        maxPadding: 0,
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series 1',
+                            data: [
+                                {y: 2, x: 10},
+                                {y: 10, x: 5},
+                            ],
+                        },
+                    ],
+                },
+                chart: {
+                    margin: {
+                        top: 10,
+                    },
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });
