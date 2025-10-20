@@ -40,7 +40,6 @@ type Args = {
     split: PreparedSplit;
     hasZoomX?: boolean;
     hasZoomY?: boolean;
-    originalSeries?: ChartSeries[];
 };
 
 type ReturnValue = {
@@ -460,7 +459,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
         boundsHeight,
         hasZoomX,
         hasZoomY,
-        originalSeries,
         series,
         seriesOptions,
         split,
@@ -478,7 +476,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 boundsHeight,
                 hasZoomX,
                 hasZoomY,
-                originalSeries,
                 series,
                 seriesOptions,
                 split,
@@ -488,16 +485,5 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [
-        boundsWidth,
-        boundsHeight,
-        hasZoomX,
-        hasZoomY,
-        originalSeries,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-    ]);
+    }, [boundsWidth, boundsHeight, hasZoomX, hasZoomY, series, seriesOptions, split, xAxis, yAxis]);
 };
