@@ -140,6 +140,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     const axisData = await prepareAxisData({
                         axis,
                         scale,
+                        top: boundsOffsetTop,
                         width: boundsWidth,
                         height: boundsHeight,
                         split: preparedSplit,
@@ -152,7 +153,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 setYAxisDataItems(items);
             }
         })();
-    }, [boundsHeight, boundsWidth, preparedSplit, yAxis, yScale]);
+    }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSplit, yAxis, yScale]);
 
     return (
         <div className={b()}>
