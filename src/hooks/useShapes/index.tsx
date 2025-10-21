@@ -73,7 +73,7 @@ type Args = {
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     xScale?: ChartScale;
-    yScale?: ChartScale[];
+    yScale?: (ChartScale | undefined)[];
     split: PreparedSplit;
     htmlLayout: HTMLElement | null;
     clipPathId: string;

@@ -117,14 +117,20 @@ export function getZoomedSeriesData(args: {
                     'yAxis' in seriesItem && typeof seriesItem.yAxis === 'number'
                         ? seriesItem.yAxis
                         : 0;
-                const [yMin, yMax] = zoomState.y[yAxisIndex];
-                const y = 'y' in point ? point.y : undefined;
-                inYRange = isValueInRange({
-                    axis: yAxes?.[yAxisIndex],
-                    value: y,
-                    min: yMin,
-                    max: yMax,
-                });
+                const zoomStateY = zoomState.y[yAxisIndex];
+
+                if (zoomStateY) {
+                    const [yMin, yMax] = zoomStateY;
+                    const y = 'y' in point ? point.y : undefined;
+                    inYRange = isValueInRange({
+                        axis: yAxes?.[yAxisIndex],
+                        value: y,
+                        min: yMin,
+                        max: yMax,
+                    });
+                } else {
+                    inYRange = false;
+                }
             }
 
             currentPointInRange = inXRange && inYRange;

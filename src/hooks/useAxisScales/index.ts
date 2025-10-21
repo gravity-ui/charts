@@ -44,13 +44,31 @@ type Args = {
 
 type ReturnValue = {
     xScale?: ChartScale;
-    yScale?: ChartScale[];
+    yScale?: (ChartScale | undefined)[];
 };
 
 const X_AXIS_ZOOM_PADDING = 0.02;
 
-function isNumericalArrayData(data: unknown[]): data is number[] {
-    return data.every((d) => typeof d === 'number' || d === null);
+function validateArrayData(data: unknown[]) {
+    let hasNumberAndNullValues: boolean | undefined;
+    let hasOnlyNullValues: boolean | undefined;
+
+    for (const d of data) {
+        const isNumber = typeof d === 'number';
+        const isNull = d === null;
+        hasNumberAndNullValues =
+            typeof hasNumberAndNullValues === 'undefined'
+                ? isNumber || isNull
+                : hasNumberAndNullValues && (isNumber || isNull);
+        hasOnlyNullValues =
+            typeof hasOnlyNullValues === 'undefined' ? isNull : hasOnlyNullValues && isNull;
+
+        if (!hasNumberAndNullValues) {
+            break;
+        }
+    }
+
+    return {hasNumberAndNullValues, hasOnlyNullValues};
 }
 
 function filterCategoriesByVisibleSeries(args: {
@@ -68,8 +86,9 @@ function filterCategoriesByVisibleSeries(args: {
             });
         }
     });
+    const filteredCategories = categories.filter((c) => visibleCategories.has(c));
 
-    return categories.filter((c) => visibleCategories.has(c));
+    return filteredCategories.length > 0 ? filteredCategories : categories;
 }
 
 // axis is validated in `validation/index.ts`, so the value of `axis.type` is definitely valid.
@@ -117,6 +136,7 @@ function getYScaleRange(args: {
     }
 }
 
+// eslint-disable-next-line complexity
 export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
@@ -134,9 +154,17 @@ export function createYScale(args: {
         case 'linear':
         case 'logarithmic': {
             const domain = getDomainDataYBySeries(series);
+            const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
-            if (isNumericalArrayData(domain)) {
-                const [yMinDomain, yMaxDomain] = extent(domain) as [number, number];
+            if (hasOnlyNullValues || domain.length === 0) {
+                return undefined;
+            }
+
+            if (hasNumberAndNullValues) {
+                const [yMinDomain, yMaxDomain] = extent(domain as [number, number]) as [
+                    number,
+                    number,
+                ];
                 const yMin = typeof yMinProps === 'number' ? yMinProps : yMinDomain;
                 let yMax: number;
 
@@ -175,9 +203,17 @@ export function createYScale(args: {
                 return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
+                const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
-                if (isNumericalArrayData(domain)) {
-                    const [yMinTimestamp, yMaxTimestamp] = extent(domain) as [number, number];
+                if (hasOnlyNullValues || domain.length === 0) {
+                    return undefined;
+                }
+
+                if (hasNumberAndNullValues) {
+                    const [yMinTimestamp, yMaxTimestamp] = extent(domain as [number, number]) as [
+                        number,
+                        number,
+                    ];
                     const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
                     const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
                     return scaleUtc().domain([yMin, yMax]).range(range).nice();
@@ -284,9 +320,17 @@ export function createXScale(args: {
         case 'linear':
         case 'logarithmic': {
             const domainData = getDomainDataXBySeries(series);
+            const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domainData);
 
-            if (isNumericalArrayData(domainData)) {
-                const [xMinDomain, xMaxDomain] = extent(domainData) as [number, number];
+            if (hasOnlyNullValues || domainData.length === 0) {
+                return undefined;
+            }
+
+            if (hasNumberAndNullValues) {
+                const [xMinDomain, xMaxDomain] = extent(domainData as [number, number]) as [
+                    number,
+                    number,
+                ];
                 let xMin: number;
                 let xMax: number;
 
@@ -341,9 +385,17 @@ export function createXScale(args: {
         case 'datetime': {
             let domain: [number, number] | null = null;
             const domainData = get(axis, 'timestamps') || getDomainDataXBySeries(series);
+            const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domainData);
 
-            if (isNumericalArrayData(domainData)) {
-                const [xMinTimestamp, xMaxTimestamp] = extent(domainData) as [number, number];
+            if (hasOnlyNullValues || domainData.length === 0) {
+                return undefined;
+            }
+
+            if (hasNumberAndNullValues) {
+                const [xMinTimestamp, xMaxTimestamp] = extent(domainData as [number, number]) as [
+                    number,
+                    number,
+                ];
                 const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
                 const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
                 domain = [xMin, xMax];
@@ -415,7 +467,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
     } = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
-        let yScale: ChartScale[] | undefined;
+        let yScale: (ChartScale | undefined)[] | undefined;
         const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
 
         if (hasAxisRelatedSeries) {

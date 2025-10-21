@@ -15,5 +15,5 @@ export interface ZoomState {
      * or the category index from the categories array specified in the axis settings (if the axis type is `category`).
      * The second element is the corresponding maximum value.
      */
-    y: [number, number][];
+    y: ([number, number] | undefined)[];
 }

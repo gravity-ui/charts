@@ -21,7 +21,7 @@ interface UseZoomProps {
     xAxis: PreparedAxis | null;
     xScale?: ChartScale;
     yAxis: PreparedAxis[];
-    yScale?: ChartScale[];
+    yScale?: (ChartScale | undefined)[];
 }
 
 export function useZoom(props: UseZoomProps) {

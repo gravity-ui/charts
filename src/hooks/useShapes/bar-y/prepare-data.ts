@@ -24,7 +24,7 @@ export const prepareBarYData = async (args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
-    yScale: ChartScale[];
+    yScale: (ChartScale | undefined)[];
 }): Promise<BarYShapesArgs> => {
     const {
         series,
@@ -36,7 +36,16 @@ export const prepareBarYData = async (args: {
 
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
-    const yLinearScale = yScale as ScaleLinear<number, number>;
+    const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
+
+    if (!yLinearScale) {
+        return {
+            shapes: [],
+            labels: [],
+            htmlElements: [],
+        };
+    }
+
     const yScaleRange = yLinearScale.range();
     const plotHeight = Math.abs(yScaleRange[0] - yScaleRange[1]);
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
@@ -58,7 +67,7 @@ export const prepareBarYData = async (args: {
     const groupedData = groupBarYDataByYValue(series, yAxis);
     const {bandSize, barGap, barSize} =
         yAxis[0].type === 'category'
-            ? getBarYLayoutForCategoryScale({groupedData, seriesOptions, yScale})
+            ? getBarYLayoutForCategoryScale({groupedData, seriesOptions, yScale: yLinearScale})
             : getBarYLayoutForNumericScale({
                   groupedData,
                   seriesOptions,

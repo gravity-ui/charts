@@ -43,6 +43,11 @@ async function getLabelSettings({
     autoRotation?: boolean;
 }) {
     const scale = createXScale({axis, series: seriesData, seriesOptions, boundsWidth: width});
+
+    if (!scale) {
+        return {height: 0, rotation: 0};
+    }
+
     const tickCount = getTicksCount({axis, range: width});
     const ticks = getAxisItems({
         scale: scale,

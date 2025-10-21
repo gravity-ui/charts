@@ -186,34 +186,40 @@ export const ChartInner = (props: ChartInnerProps) => {
                     transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
                     ref={plotRef}
                 >
-                    {xScale && yScale?.length && (
+                    {xScale && xAxis && (
+                        <g transform={`translate(0, ${boundsHeight})`}>
+                            <AxisX
+                                axis={xAxis}
+                                boundsOffsetLeft={boundsOffsetLeft}
+                                boundsOffsetTop={boundsOffsetTop}
+                                height={boundsHeight}
+                                htmlLayout={htmlLayout}
+                                leftmostLimit={svgXPos}
+                                plotAfterRef={plotAfterRef}
+                                plotBeforeRef={plotBeforeRef}
+                                scale={xScale}
+                                split={preparedSplit}
+                                width={boundsWidth}
+                            />
+                        </g>
+                    )}
+                    {Boolean(yAxisDataItems.length) && (
                         <React.Fragment>
-                            {yAxisDataItems.map((axisData, index) => (
-                                <AxisY
-                                    key={index}
-                                    htmlLayout={htmlLayout}
-                                    plotAfterRef={plotAfterRef}
-                                    plotBeforeRef={plotBeforeRef}
-                                    preparedAxisData={axisData}
-                                />
-                            ))}
-                            {xAxis && (
-                                <g transform={`translate(0, ${boundsHeight})`}>
-                                    <AxisX
-                                        axis={xAxis}
-                                        boundsOffsetLeft={boundsOffsetLeft}
-                                        boundsOffsetTop={boundsOffsetTop}
-                                        height={boundsHeight}
+                            {yAxisDataItems.map((axisData, index) => {
+                                if (!axisData) {
+                                    return null;
+                                }
+
+                                return (
+                                    <AxisY
+                                        key={index}
                                         htmlLayout={htmlLayout}
-                                        leftmostLimit={svgXPos}
                                         plotAfterRef={plotAfterRef}
                                         plotBeforeRef={plotBeforeRef}
-                                        scale={xScale}
-                                        split={preparedSplit}
-                                        width={boundsWidth}
+                                        preparedAxisData={axisData}
                                     />
-                                </g>
-                            )}
+                                );
+                            })}
                         </React.Fragment>
                     )}
                     <g ref={plotBeforeRef} />

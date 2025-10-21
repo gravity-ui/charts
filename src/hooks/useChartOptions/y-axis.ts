@@ -45,6 +45,11 @@ const getAxisLabelMaxWidth = async (args: {
         series: seriesData,
         seriesOptions,
     });
+
+    if (!scale) {
+        return {height: 0, width: 0};
+    }
+
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
     const tickValues = getTickValues({axis, scale, labelLineHeight});

@@ -17,7 +17,7 @@ export const prepareScatterData = (args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
-    yScale: ChartScale[];
+    yScale: (ChartScale | undefined)[];
     isOutsideBounds: (x: number, y: number) => boolean;
 }): PreparedScatterData[] => {
     const {series, xAxis, xScale, yAxis, yScale, isOutsideBounds} = args;
@@ -26,6 +26,11 @@ export const prepareScatterData = (args: {
         const yAxisIndex = get(s, 'yAxis', 0);
         const seriesYAxis = yAxis[yAxisIndex];
         const seriesYScale = yScale[yAxisIndex];
+
+        if (!seriesYScale) {
+            return acc;
+        }
+
         const filteredData =
             xAxis.type === 'category' || seriesYAxis.type === 'category'
                 ? s.data
@@ -34,6 +39,11 @@ export const prepareScatterData = (args: {
         filteredData.forEach((d) => {
             const x = getXValue({point: d, xAxis, xScale});
             const y = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
+
+            if (typeof x === 'undefined' || typeof y === 'undefined') {
+                return;
+            }
+
             acc.push({
                 point: {
                     data: d,
