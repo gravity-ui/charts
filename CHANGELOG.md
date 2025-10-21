@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.18.0](https://github.com/gravity-ui/charts/compare/v1.17.0...v1.18.0) (2025-10-21)
+
+
+### Features
+
+* add tooltip qa attribute option ([#216](https://github.com/gravity-ui/charts/issues/216)) ([c81ea4a](https://github.com/gravity-ui/charts/commit/c81ea4a50c3cf712bcf1f77e9d5052c1860ec870))
+
+
+### Bug Fixes
+
+* properly handle null data in bar-y & scatter ([#213](https://github.com/gravity-ui/charts/issues/213)) ([8228fde](https://github.com/gravity-ui/charts/commit/8228fde4879d35fd459f382ab82e0aa8a104cccf))
+* tooltip header default date format ([#215](https://github.com/gravity-ui/charts/issues/215)) ([8b7f501](https://github.com/gravity-ui/charts/commit/8b7f5011934ab39c3a1c68612ec79053cb82959c))
+* y-axis top label ([#212](https://github.com/gravity-ui/charts/issues/212)) ([fbb5688](https://github.com/gravity-ui/charts/commit/fbb56887164e73f7292fba40d172c0b5dc3fcc57))
+
 ## [1.17.0](https://github.com/gravity-ui/charts/compare/v1.16.0...v1.17.0) (2025-10-17)
 
 
