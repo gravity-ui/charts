@@ -1,5 +1,5 @@
 import type {ChartScale, PreparedAxis} from '../../hooks';
-import {getTicksCount, isBandScale} from '../../utils';
+import {getMinSpaceBetween, getTicksCount, isBandScale} from '../../utils';
 
 function thinOut<T>(items: T[], delta: number) {
     const arr: T[] = [];
@@ -9,15 +9,6 @@ function thinOut<T>(items: T[], delta: number) {
     }
 
     return arr;
-}
-function getMinSpaceBetween<T>(arr: T[], iterator: (item: T) => number) {
-    return arr.reduce((acc, item, index) => {
-        const prev = arr[index - 1];
-        if (prev) {
-            return Math.min(acc, Math.abs(iterator(prev) - iterator(item)));
-        }
-        return acc;
-    }, Infinity);
 }
 
 export function getTickValues({

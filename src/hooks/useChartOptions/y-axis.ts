@@ -12,11 +12,14 @@ import {
 import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
 import {
     calculateNumericProperty,
+    formatAxisTickLabel,
+    getClosestPointsRange,
+    getDefaultDateFormat,
     getDefaultMinYAxisValue,
     getHorizontalHtmlTextHeight,
     getHorizontalSvgTextHeight,
-    getLabelFormatter,
     getLabelsSize,
+    getScaleTicks,
     getTextSizeFn,
     isAxisRelatedSeries,
     wrapText,
@@ -53,8 +56,20 @@ const getAxisLabelMaxWidth = async (args: {
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
     const tickValues = getTickValues({axis, scale, labelLineHeight});
-    const labelFormatter = getLabelFormatter({axis, scale});
-    const labels = tickValues.map((tick) => labelFormatter(tick.value));
+    const ticks = getScaleTicks(scale);
+    const tickStep = getClosestPointsRange(axis, ticks);
+
+    if (axis.type === 'datetime' && !axis.labels.dateFormat) {
+        axis.labels.dateFormat = getDefaultDateFormat(tickStep);
+    }
+
+    const labels = tickValues.map((tick) =>
+        formatAxisTickLabel({
+            axis,
+            value: tick.value,
+            step: tickStep,
+        }),
+    );
 
     const size = await getLabelsSize({
         labels,

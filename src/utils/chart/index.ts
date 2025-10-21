@@ -16,6 +16,7 @@ import {getWaterfallPointSubtotal} from './series/waterfall';
 import type {AxisDirection} from './types';
 
 export * from './axis';
+export * from './array';
 export * from './color';
 export * from './format';
 export * from './labels';

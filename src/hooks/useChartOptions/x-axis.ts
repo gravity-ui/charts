@@ -15,6 +15,7 @@ import {
     formatAxisTickLabel,
     getAxisItems,
     getClosestPointsRange,
+    getDefaultDateFormat,
     getHorizontalHtmlTextHeight,
     getHorizontalSvgTextHeight,
     getLabelsSize,
@@ -29,7 +30,7 @@ import type {PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedAxis} from './types';
 import {getAxisCategories, prepareAxisPlotLabel} from './utils';
 
-async function getLabelSettings({
+async function setLabelSettings({
     axis,
     seriesData,
     seriesOptions,
@@ -45,7 +46,9 @@ async function getLabelSettings({
     const scale = createXScale({axis, series: seriesData, seriesOptions, boundsWidth: width});
 
     if (!scale) {
-        return {height: 0, rotation: 0};
+        axis.labels.height = 0;
+        axis.labels.rotation = 0;
+        return;
     }
 
     const tickCount = getTicksCount({axis, range: width});
@@ -55,6 +58,10 @@ async function getLabelSettings({
         maxCount: getMaxTickCount({width, axis}),
     });
     const step = getClosestPointsRange(axis, ticks);
+    if (axis.type === 'datetime' && !axis.labels.dateFormat) {
+        axis.labels.dateFormat = getDefaultDateFormat(step);
+    }
+
     const labels = ticks.map((value: AxisDomain) => {
         return formatAxisTickLabel({
             axis,
@@ -86,7 +93,8 @@ async function getLabelSettings({
             : axis.labels.lineHeight;
     const maxHeight = rotation ? calculateCos(rotation) * axis.labels.maxWidth : labelsHeight;
 
-    return {height: Math.min(maxHeight, labelsHeight), rotation};
+    axis.labels.height = Math.min(maxHeight, labelsHeight);
+    axis.labels.rotation = rotation;
 }
 
 export const getPreparedXAxis = async ({
@@ -205,16 +213,13 @@ export const getPreparedXAxis = async ({
         order: xAxis?.order,
     };
 
-    const {height, rotation} = await getLabelSettings({
+    await setLabelSettings({
         axis: preparedXAxis,
         seriesData,
         seriesOptions,
         width,
         autoRotation: xAxis?.labels?.autoRotation,
     });
-
-    preparedXAxis.labels.height = height;
-    preparedXAxis.labels.rotation = rotation;
 
     return preparedXAxis;
 };

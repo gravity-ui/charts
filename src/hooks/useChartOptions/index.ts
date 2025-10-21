@@ -5,6 +5,8 @@ import type {
     ChartSeries,
     ChartTitle,
     ChartTooltip,
+    ChartXAxis,
+    ChartYAxis,
     ChartOptions as GeneralChartOptions,
 } from '../../types';
 
@@ -19,13 +21,15 @@ type Args = {
     colors?: string[];
     title?: ChartTitle;
     tooltip?: ChartTooltip;
+    yAxes?: ChartYAxis[];
+    xAxis?: ChartXAxis;
 };
 
 export const useChartOptions = (args: Args): ChartOptions => {
-    const {chart, colors, seriesData, title, tooltip} = args;
+    const {chart, colors, seriesData, title, tooltip, yAxes, xAxis} = args;
     const options: ChartOptions = React.useMemo(() => {
         const preparedTitle = getPreparedTitle({title});
-        const preparedTooltip = getPreparedTooltip({tooltip});
+        const preparedTooltip = getPreparedTooltip({tooltip, seriesData, yAxes, xAxis});
         const preparedChart = getPreparedChart({
             chart,
             preparedTitle,
@@ -38,7 +42,7 @@ export const useChartOptions = (args: Args): ChartOptions => {
             title: preparedTitle,
             tooltip: preparedTooltip,
         };
-    }, [chart, colors, seriesData, title, tooltip]);
+    }, [chart, colors, seriesData, title, tooltip, xAxis, yAxes]);
 
     return options;
 };
