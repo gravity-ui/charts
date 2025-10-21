@@ -46,7 +46,9 @@ async function setLabelSettings({
     const scale = createXScale({axis, series: seriesData, seriesOptions, boundsWidth: width});
 
     if (!scale) {
-        return {height: 0, rotation: 0};
+        axis.labels.height = 0;
+        axis.labels.rotation = 0;
+        return;
     }
 
     const tickCount = getTicksCount({axis, range: width});
