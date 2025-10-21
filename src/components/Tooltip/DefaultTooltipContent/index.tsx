@@ -42,6 +42,7 @@ type Props = {
     headerFormat?: ChartTooltip['headerFormat'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    qa?: string;
 };
 
 export const DefaultTooltipContent = ({
@@ -53,6 +54,7 @@ export const DefaultTooltipContent = ({
     headerFormat,
     xAxis,
     yAxis,
+    qa,
 }: Props) => {
     const [visibleRows, setVisibleRows] = React.useState<number | undefined>();
     const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
@@ -153,7 +155,7 @@ export const DefaultTooltipContent = ({
     }, [pinned]);
 
     return (
-        <div className={b('content')}>
+        <div className={b('content')} data-qa={qa}>
             {formattedHeadValue && (
                 <div
                     className={b('series-name')}
