@@ -24,14 +24,14 @@ function getDefaultHeaderFormat({
     }
 
     if (seriesData.some((item) => item.type === 'bar-y')) {
-        const domainData = getDomainDataXBySeries(seriesData) as number[];
+        const domainData = getDomainDataYBySeries(seriesData) as number[];
         const closestPointsRange = getMinSpaceBetween(domainData, (d) => d);
-        return getDefaultValueFormat({axis: xAxis, closestPointsRange});
+        return getDefaultValueFormat({axis: yAxes?.[0], closestPointsRange});
     }
 
-    const domainData = getDomainDataYBySeries(seriesData) as number[];
+    const domainData = getDomainDataXBySeries(seriesData) as number[];
     const closestPointsRange = getMinSpaceBetween(domainData, (d) => d);
-    return getDefaultValueFormat({axis: yAxes?.[0], closestPointsRange});
+    return getDefaultValueFormat({axis: xAxis, closestPointsRange});
 }
 
 export const getPreparedTooltip = (args: {
