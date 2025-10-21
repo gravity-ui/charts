@@ -16,6 +16,7 @@ export interface ChartTooltipContentProps {
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    qa?: string;
 }
 
 export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
@@ -29,6 +30,7 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
         headerFormat,
         totals,
         pinned,
+        qa,
     } = props;
 
     if (!hovered) {
@@ -47,6 +49,7 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
             headerFormat={headerFormat}
             xAxis={xAxis}
             yAxis={yAxis}
+            qa={qa}
         />
     ) : (
         customTooltip
