@@ -160,6 +160,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /** Formatting settings for totals tooltip value. */
         valueFormat?: ValueFormat;
     };
-    /** Data-attribute that can be used for the UI automated test */
+    /** Can be used for the UI automated test.
+     * It is assigned as a data-qa attribute to an element. */
     qa?: string;
 }
