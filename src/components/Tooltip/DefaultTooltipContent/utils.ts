@@ -1,6 +1,5 @@
 import get from 'lodash/get';
 
-import {DEFAULT_DATE_FORMAT} from '../../../constants';
 import type {PreparedPieSeries} from '../../../hooks';
 import {i18n} from '../../../i18n';
 import type {
@@ -17,7 +16,7 @@ import type {
     TreemapSeriesData,
     ValueFormat,
 } from '../../../types';
-import {getDataCategoryValue} from '../../../utils';
+import {getDataCategoryValue, getDefaultDateFormat} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 
 export type HoveredValue = string | number | null | undefined;
@@ -48,8 +47,10 @@ function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
 
 export function getDefaultValueFormat({
     axis,
+    closestPointsRange,
 }: {
     axis?: ChartXAxis | ChartYAxis | null;
+    closestPointsRange?: number;
 }): ValueFormat | undefined {
     switch (axis?.type) {
         case 'linear':
@@ -61,7 +62,7 @@ export function getDefaultValueFormat({
         case 'datetime': {
             return {
                 type: 'date',
-                format: DEFAULT_DATE_FORMAT,
+                format: getDefaultDateFormat(closestPointsRange),
             };
         }
         default:
@@ -73,12 +74,12 @@ export const getMeasureValue = ({
     data,
     xAxis,
     yAxis,
-    valueFormat,
+    headerFormat,
 }: {
     data: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
-    valueFormat?: ValueFormat;
+    headerFormat?: ChartTooltip['headerFormat'];
 }) => {
     if (
         data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
@@ -93,19 +94,17 @@ export const getMeasureValue = ({
 
     if (data.some((item) => item.series.type === 'bar-y')) {
         const value = getYRowData(data[0]?.data, yAxis);
-        const format = valueFormat ?? getDefaultValueFormat({axis: yAxis});
         const formattedValue = getFormattedValue({
             value: getYRowData(data[0]?.data, yAxis),
-            format,
+            format: headerFormat,
         });
         return {value, formattedValue};
     }
 
     const value = getXRowData(data[0]?.data, xAxis);
-    const format = valueFormat ?? getDefaultValueFormat({axis: xAxis});
     const formattedValue = getFormattedValue({
         value: getXRowData(data[0]?.data, xAxis),
-        format,
+        format: headerFormat,
     });
 
     return {value, formattedValue};

@@ -44,6 +44,8 @@ export function useChartInnerProps(props: Props) {
         colors: data.colors,
         title: data.title,
         tooltip: data.tooltip,
+        xAxis: data.xAxis,
+        yAxes: data.yAxis,
     });
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(data.series.options);

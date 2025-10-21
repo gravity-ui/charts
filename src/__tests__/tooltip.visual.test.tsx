@@ -5,6 +5,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
 import {tooltipOverflowedRowsData} from 'src/__stories__/__data__';
+import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -28,6 +29,28 @@ test.describe('Tooltip', () => {
         await bar.hover();
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
         await bar.click();
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
+    test('Default date format', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {x: 100, y: new Date('2025-10-20').getTime()},
+                            {x: 95, y: new Date('2026-10-20').getTime()},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [{type: 'datetime'}],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-y').first();
+        await bar.hover({force: true});
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 });
