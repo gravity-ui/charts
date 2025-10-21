@@ -42,7 +42,7 @@ export const useChartOptions = (args: Args): ChartOptions => {
             title: preparedTitle,
             tooltip: preparedTooltip,
         };
-    }, [chart, colors, seriesData, title, tooltip]);
+    }, [chart, colors, seriesData, title, tooltip, xAxis, yAxes]);
 
     return options;
 };

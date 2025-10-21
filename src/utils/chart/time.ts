@@ -22,8 +22,8 @@ export const DATETIME_LABEL_FORMATS: Record<keyof typeof TIME_UNITS, string> = {
 
 function getTimeUnit(range: number): keyof typeof TIME_UNITS {
     const units = Object.keys(TIME_UNITS);
-    const index = units.findIndex((unit) => Math.round(range / TIME_UNITS[unit]) === 1);
-    return index === -1 ? 'year' : units[index];
+    const index = units.findIndex((unit) => range < TIME_UNITS[unit]);
+    return index === -1 ? 'year' : units[index - 1];
 }
 
 export function getDefaultDateFormat(range?: number) {
