@@ -809,7 +809,7 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('With html data labels', async ({mount}) => {
+    test('With html data labels', async ({mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
