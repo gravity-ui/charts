@@ -18,15 +18,43 @@ import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 const DEFAULT_LABEL_PADDING = 7;
 
-export const prepareBarYData = async (args: {
+function isSvgLabelOutsideBounds(args: {
+    boundsHeight: number;
+    boundsWidth: number;
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+}) {
+    const {boundsHeight, boundsWidth, height, width, x, y} = args;
+    return x < 0 || x + width > boundsWidth || y - height < 0 || y > boundsHeight;
+}
+
+function isHtmlLabelOutsideBounds(args: {
+    boundsHeight: number;
+    boundsWidth: number;
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+}) {
+    const {boundsHeight, boundsWidth, height, width, x, y} = args;
+    return x < 0 || x + width > boundsWidth || y < 0 || y + height > boundsHeight;
+}
+
+export async function prepareBarYData(args: {
+    boundsHeight: number;
+    boundsWidth: number;
     series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: (ChartScale | undefined)[];
-}): Promise<BarYShapesArgs> => {
+}): Promise<BarYShapesArgs> {
     const {
+        boundsHeight,
+        boundsWidth,
         series,
         seriesOptions,
         yAxis,
@@ -148,7 +176,7 @@ export const prepareBarYData = async (args: {
     });
 
     let labels: LabelData[] = [];
-    const htmlElements: HtmlItem[] = [];
+    let htmlElements: HtmlItem[] = [];
 
     const map = new Map();
     for (let i = 0; i < result.length; i++) {
@@ -170,36 +198,60 @@ export const prepareBarYData = async (args: {
                     style: dataLabels.style,
                     html: dataLabels.html,
                 });
-
-                htmlElements.push({
+                const isOutsideBounds = isHtmlLabelOutsideBounds({
+                    boundsHeight,
+                    boundsWidth,
+                    height,
+                    width,
                     x,
                     y: y - height / 2,
-                    content,
-                    size: {width, height},
-                    style: dataLabels.style,
                 });
+
+                if (!isOutsideBounds) {
+                    htmlElements.push({
+                        content,
+                        size: {width, height},
+                        style: dataLabels.style,
+                        x,
+                        y: y - height / 2,
+                    });
+                }
             } else {
                 if (!map.has(dataLabels.style)) {
                     map.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
                 }
                 const getTextSize = map.get(dataLabels.style);
                 const {width, height} = await getTextSize(content);
-
-                labels.push({
+                const isOutsideBounds = isSvgLabelOutsideBounds({
+                    boundsHeight,
+                    boundsWidth,
+                    height,
+                    width,
                     x,
                     y: y + height / 2,
-                    text: content,
-                    textAnchor: dataLabels.inside ? 'middle' : 'right',
-                    style: dataLabels.style,
-                    series: prepared.series,
-                    size: {width, height},
-                } as LabelData);
+                });
+
+                if (!isOutsideBounds) {
+                    labels.push({
+                        size: {width, height},
+                        series: prepared.series,
+                        style: dataLabels.style,
+                        text: content,
+                        textAnchor: dataLabels.inside ? 'middle' : 'right',
+                        x,
+                        y: y + height / 2,
+                    } as LabelData);
+                }
             }
         }
     }
 
-    if (!result[0]?.series.dataLabels.allowOverlap) {
+    const allowOverlap = result[0]?.series.dataLabels.allowOverlap;
+
+    if (labels.length && !allowOverlap) {
         labels = filterOverlappingLabels(labels);
+    } else if (htmlElements.length && !allowOverlap) {
+        htmlElements = filterOverlappingLabels(htmlElements);
     }
 
     return {
@@ -207,4 +259,4 @@ export const prepareBarYData = async (args: {
         labels,
         htmlElements,
     };
-};
+}

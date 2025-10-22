@@ -145,6 +145,8 @@ export const useShapes = (args: Args) => {
                         case 'bar-y': {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = await prepareBarYData({
+                                    boundsHeight,
+                                    boundsWidth,
                                     series: chartSeries as PreparedBarYSeries[],
                                     seriesOptions,
                                     xAxis,
