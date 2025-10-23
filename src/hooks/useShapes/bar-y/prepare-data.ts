@@ -3,7 +3,13 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
 import type {HtmlItem, LabelData} from '../../../types';
-import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '../../../utils';
+import {
+    filterOverlappingLabels,
+    getHtmlLabelConstraintedPosition,
+    getLabelsSize,
+    getSvgLabelConstraintedPosition,
+    getTextSizeFn,
+} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
@@ -17,68 +23,6 @@ import {
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 const DEFAULT_LABEL_PADDING = 7;
-
-function getSvgLabelConstraintedPosition(args: {
-    boundsHeight: number;
-    boundsWidth: number;
-    height: number;
-    width: number;
-    x: number;
-    y: number;
-}) {
-    const {boundsHeight, boundsWidth, height, width, x, y} = args;
-    let resultX = x;
-    let resultY = y;
-
-    if (x < 0) {
-        resultX = 0;
-    }
-
-    if (x + width > boundsWidth) {
-        resultX = boundsWidth - width;
-    }
-
-    if (y - height < 0) {
-        resultY = 0;
-    }
-
-    if (y > boundsHeight) {
-        resultY = boundsHeight;
-    }
-
-    return {x: resultX, y: resultY};
-}
-
-function getHtmlLabelConstraintedPosition(args: {
-    boundsHeight: number;
-    boundsWidth: number;
-    height: number;
-    width: number;
-    x: number;
-    y: number;
-}) {
-    const {boundsHeight, boundsWidth, height, width, x, y} = args;
-    let resultX = x;
-    let resultY = y;
-
-    if (x < 0) {
-        resultX = 0;
-    }
-
-    if (x + width > boundsWidth) {
-        resultX = boundsWidth - width;
-    }
-
-    if (y < 0) {
-        resultY = 0;
-    }
-
-    if (y + height > boundsHeight) {
-        resultY = boundsHeight - height;
-    }
-
-    return {x: resultX, y: resultY};
-}
 
 export async function prepareBarYData(args: {
     boundsHeight: number;

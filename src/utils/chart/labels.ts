@@ -70,3 +70,65 @@ export function filterOverlappingLabels<T extends LabelData | HtmlItem>(labels: 
 
     return result;
 }
+
+export function getSvgLabelConstraintedPosition(args: {
+    boundsHeight: number;
+    boundsWidth: number;
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+}) {
+    const {boundsHeight, boundsWidth, height, width, x, y} = args;
+    let resultX = x;
+    let resultY = y;
+
+    if (x < 0) {
+        resultX = 0;
+    }
+
+    if (x + width > boundsWidth) {
+        resultX = boundsWidth - width;
+    }
+
+    if (y - height < 0) {
+        resultY = 0;
+    }
+
+    if (y > boundsHeight) {
+        resultY = boundsHeight;
+    }
+
+    return {x: resultX, y: resultY};
+}
+
+export function getHtmlLabelConstraintedPosition(args: {
+    boundsHeight: number;
+    boundsWidth: number;
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+}) {
+    const {boundsHeight, boundsWidth, height, width, x, y} = args;
+    let resultX = x;
+    let resultY = y;
+
+    if (x < 0) {
+        resultX = 0;
+    }
+
+    if (x + width > boundsWidth) {
+        resultX = boundsWidth - width;
+    }
+
+    if (y < 0) {
+        resultY = 0;
+    }
+
+    if (y + height > boundsHeight) {
+        resultY = boundsHeight - height;
+    }
+
+    return {x: resultX, y: resultY};
+}
