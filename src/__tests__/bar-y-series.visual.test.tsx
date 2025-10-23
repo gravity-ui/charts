@@ -787,4 +787,46 @@ test.describe('Bar-y series', () => {
         await legendItem.click();
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('With svg data labels', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: new Array(100).fill(null).map((_, index) => {
+                            return {y: index, x: index};
+                        }),
+                        dataLabels: {enabled: true},
+                    },
+                ],
+            },
+            yAxis: [{maxPadding: 0}],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('With html data labels', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: new Array(100).fill(null).map((_, index) => {
+                            return {y: index, x: index};
+                        }),
+                        dataLabels: {enabled: true, html: true},
+                    },
+                ],
+            },
+            yAxis: [{maxPadding: 0}],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

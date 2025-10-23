@@ -3,7 +3,13 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
 import type {HtmlItem, LabelData} from '../../../types';
-import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '../../../utils';
+import {
+    filterOverlappingLabels,
+    getHtmlLabelConstraintedPosition,
+    getLabelsSize,
+    getSvgLabelConstraintedPosition,
+    getTextSizeFn,
+} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
@@ -18,15 +24,19 @@ import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 const DEFAULT_LABEL_PADDING = 7;
 
-export const prepareBarYData = async (args: {
+export async function prepareBarYData(args: {
+    boundsHeight: number;
+    boundsWidth: number;
     series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: (ChartScale | undefined)[];
-}): Promise<BarYShapesArgs> => {
+}): Promise<BarYShapesArgs> {
     const {
+        boundsHeight,
+        boundsWidth,
         series,
         seriesOptions,
         yAxis,
@@ -148,7 +158,7 @@ export const prepareBarYData = async (args: {
     });
 
     let labels: LabelData[] = [];
-    const htmlElements: HtmlItem[] = [];
+    let htmlElements: HtmlItem[] = [];
 
     const map = new Map();
     for (let i = 0; i < result.length; i++) {
@@ -170,13 +180,21 @@ export const prepareBarYData = async (args: {
                     style: dataLabels.style,
                     html: dataLabels.html,
                 });
-
-                htmlElements.push({
+                const constrainedPosition = getHtmlLabelConstraintedPosition({
+                    boundsHeight,
+                    boundsWidth,
+                    height,
+                    width,
                     x,
                     y: y - height / 2,
+                });
+
+                htmlElements.push({
                     content,
                     size: {width, height},
                     style: dataLabels.style,
+                    x: constrainedPosition.x,
+                    y: constrainedPosition.y,
                 });
             } else {
                 if (!map.has(dataLabels.style)) {
@@ -184,22 +202,34 @@ export const prepareBarYData = async (args: {
                 }
                 const getTextSize = map.get(dataLabels.style);
                 const {width, height} = await getTextSize(content);
-
-                labels.push({
+                const constrainedPosition = getSvgLabelConstraintedPosition({
+                    boundsHeight,
+                    boundsWidth,
+                    height,
+                    width,
                     x,
                     y: y + height / 2,
+                });
+
+                labels.push({
+                    size: {width, height},
+                    series: prepared.series,
+                    style: dataLabels.style,
                     text: content,
                     textAnchor: dataLabels.inside ? 'middle' : 'right',
-                    style: dataLabels.style,
-                    series: prepared.series,
-                    size: {width, height},
+                    x: constrainedPosition.x,
+                    y: constrainedPosition.y,
                 } as LabelData);
             }
         }
     }
 
-    if (!result[0]?.series.dataLabels.allowOverlap) {
+    const allowOverlap = result[0]?.series.dataLabels.allowOverlap;
+
+    if (labels.length && !allowOverlap) {
         labels = filterOverlappingLabels(labels);
+    } else if (htmlElements.length && !allowOverlap) {
+        htmlElements = filterOverlappingLabels(htmlElements);
     }
 
     return {
@@ -207,4 +237,4 @@ export const prepareBarYData = async (args: {
         labels,
         htmlElements,
     };
-};
+}
