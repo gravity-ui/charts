@@ -21,7 +21,9 @@ async function prepareDataLabels(series: BarYSeries) {
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
     const labels = enabled
-        ? series.data.map((d) => getFormattedValue({value: d.x || d.label, ...series.dataLabels}))
+        ? series.data.map((d) =>
+              getFormattedValue({value: d.x || d.label || '', ...series.dataLabels}),
+          )
         : [];
     const {maxHeight = 0, maxWidth = 0} = await getLabelsSize({
         labels,

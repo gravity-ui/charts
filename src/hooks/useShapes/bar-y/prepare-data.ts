@@ -18,7 +18,7 @@ import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 const DEFAULT_LABEL_PADDING = 7;
 
-function isSvgLabelOutsideBounds(args: {
+function getSvgLabelConstraintedPosition(args: {
     boundsHeight: number;
     boundsWidth: number;
     height: number;
@@ -27,10 +27,29 @@ function isSvgLabelOutsideBounds(args: {
     y: number;
 }) {
     const {boundsHeight, boundsWidth, height, width, x, y} = args;
-    return x < 0 || x + width > boundsWidth || y - height < 0 || y > boundsHeight;
+    let resultX = x;
+    let resultY = y;
+
+    if (x < 0) {
+        resultX = 0;
+    }
+
+    if (x + width > boundsWidth) {
+        resultX = boundsWidth - width;
+    }
+
+    if (y - height < 0) {
+        resultY = 0;
+    }
+
+    if (y > boundsHeight) {
+        resultY = boundsHeight;
+    }
+
+    return {x: resultX, y: resultY};
 }
 
-function isHtmlLabelOutsideBounds(args: {
+function getHtmlLabelConstraintedPosition(args: {
     boundsHeight: number;
     boundsWidth: number;
     height: number;
@@ -39,7 +58,26 @@ function isHtmlLabelOutsideBounds(args: {
     y: number;
 }) {
     const {boundsHeight, boundsWidth, height, width, x, y} = args;
-    return x < 0 || x + width > boundsWidth || y < 0 || y + height > boundsHeight;
+    let resultX = x;
+    let resultY = y;
+
+    if (x < 0) {
+        resultX = 0;
+    }
+
+    if (x + width > boundsWidth) {
+        resultX = boundsWidth - width;
+    }
+
+    if (y < 0) {
+        resultY = 0;
+    }
+
+    if (y + height > boundsHeight) {
+        resultY = boundsHeight - height;
+    }
+
+    return {x: resultX, y: resultY};
 }
 
 export async function prepareBarYData(args: {
@@ -198,7 +236,7 @@ export async function prepareBarYData(args: {
                     style: dataLabels.style,
                     html: dataLabels.html,
                 });
-                const isOutsideBounds = isHtmlLabelOutsideBounds({
+                const constrainedPosition = getHtmlLabelConstraintedPosition({
                     boundsHeight,
                     boundsWidth,
                     height,
@@ -207,22 +245,20 @@ export async function prepareBarYData(args: {
                     y: y - height / 2,
                 });
 
-                if (!isOutsideBounds) {
-                    htmlElements.push({
-                        content,
-                        size: {width, height},
-                        style: dataLabels.style,
-                        x,
-                        y: y - height / 2,
-                    });
-                }
+                htmlElements.push({
+                    content,
+                    size: {width, height},
+                    style: dataLabels.style,
+                    x: constrainedPosition.x,
+                    y: constrainedPosition.y,
+                });
             } else {
                 if (!map.has(dataLabels.style)) {
                     map.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
                 }
                 const getTextSize = map.get(dataLabels.style);
                 const {width, height} = await getTextSize(content);
-                const isOutsideBounds = isSvgLabelOutsideBounds({
+                const constrainedPosition = getSvgLabelConstraintedPosition({
                     boundsHeight,
                     boundsWidth,
                     height,
@@ -231,17 +267,15 @@ export async function prepareBarYData(args: {
                     y: y + height / 2,
                 });
 
-                if (!isOutsideBounds) {
-                    labels.push({
-                        size: {width, height},
-                        series: prepared.series,
-                        style: dataLabels.style,
-                        text: content,
-                        textAnchor: dataLabels.inside ? 'middle' : 'right',
-                        x,
-                        y: y + height / 2,
-                    } as LabelData);
-                }
+                labels.push({
+                    size: {width, height},
+                    series: prepared.series,
+                    style: dataLabels.style,
+                    text: content,
+                    textAnchor: dataLabels.inside ? 'middle' : 'right',
+                    x: constrainedPosition.x,
+                    y: constrainedPosition.y,
+                } as LabelData);
             }
         }
     }
