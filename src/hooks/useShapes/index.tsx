@@ -7,6 +7,7 @@ import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
     PreparedBarYSeries,
+    PreparedHeatmapSeries,
     PreparedLineSeries,
     PreparedPieSeries,
     PreparedRadarSeries,
@@ -30,6 +31,8 @@ import {BarXSeriesShapes, prepareBarXData} from './bar-x';
 import type {PreparedBarXData} from './bar-x';
 import {BarYSeriesShapes, prepareBarYData} from './bar-y';
 import type {PreparedBarYData} from './bar-y/types';
+import type {PreparedHeatmapData} from './heatmap';
+import {HeatmapSeriesShapes, prepareHeatmapData} from './heatmap';
 import {LineSeriesShapes} from './line';
 import {prepareLineData} from './line/prepare-data';
 import type {PreparedLineData} from './line/types';
@@ -62,7 +65,8 @@ export type ShapeData =
     | PreparedAreaData
     | PreparedWaterfallData
     | PreparedSankeyData
-    | PreparedRadarData;
+    | PreparedRadarData
+    | PreparedHeatmapData;
 
 type Args = {
     boundsWidth: number;
@@ -337,6 +341,22 @@ export const useShapes = (args: Args) => {
                                 />,
                             );
                             shapesData.push(...preparedData);
+                            break;
+                        }
+                        case 'heatmap': {
+                            const preparedData = await prepareHeatmapData({
+                                series: chartSeries[0] as PreparedHeatmapSeries,
+                            });
+                            shapes.push(
+                                <HeatmapSeriesShapes
+                                    key="heatmap"
+                                    dispatcher={dispatcher}
+                                    preparedData={preparedData}
+                                    seriesOptions={seriesOptions}
+                                    htmlLayout={htmlLayout}
+                                />,
+                            );
+                            shapesData.push(preparedData);
                             break;
                         }
                         default: {

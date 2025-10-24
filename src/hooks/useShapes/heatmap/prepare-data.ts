@@ -1,19 +1,19 @@
-import type {ChartScale} from '../../useAxisScales';
-import type {PreparedAxis} from '../../useChartOptions/types';
-import type {PreparedHeatmapSeries, PreparedSeriesOptions} from '../../useSeries/types';
+import type {PreparedHeatmapSeries} from '../../useSeries/types';
 
 import type {HeatMapItem, PreparedHeatmapData} from './types';
 
 type PrepareHeatmapDataArgs = {
     series: PreparedHeatmapSeries;
-    seriesOptions: PreparedSeriesOptions;
-    xAxis: PreparedAxis;
-    xScale: ChartScale;
-    yAxis: PreparedAxis[];
-    yScale: ChartScale[];
 };
 
 export function prepareHeatmapData({series}: PrepareHeatmapDataArgs) {
+    // для осей - посчитать равные интервалы (общий множитель?) - можем рабоать только с категорийной осью (частный случай stacked bar) как по оси x, так и по y
+    // считаем размер ячейки - bandWidth без отступов
+    //
+    // обводка - подойдет ли stroke?
+    // возможно стоит рисовать линии на все (но из-за этого не получится сделать обводку на одину ячейку)
+    //
+    // цвет градиента - пробрасыается сверху (mvp), считать по оси (значение value)
     const preparedData: PreparedHeatmapData = {
         htmlElements: [],
         items: series.data.map(() => {

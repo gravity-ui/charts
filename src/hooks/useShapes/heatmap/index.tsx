@@ -17,7 +17,7 @@ const b = block('heatmap');
 
 type Args = {
     dispatcher: Dispatch<object>;
-    preparedData: PreparedHeatmapData[];
+    preparedData: PreparedHeatmapData;
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
 };
