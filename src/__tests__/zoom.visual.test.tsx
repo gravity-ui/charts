@@ -1,8 +1,12 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {MountResult} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {barYDatetimeYData} from '../__stories__/__data__/bar-y';
 import type {ChartData} from '../types';
 
 test.describe('Zoom', () => {
@@ -56,12 +60,59 @@ test.describe('Zoom', () => {
             const endX = boundingBox.x + (boundingBox.width / 10) * 2;
             const y = boundingBox.y + boundingBox.height / 2;
 
-            component.dragTo(brushAreaLocator, {
+            await component.dragTo(brushAreaLocator, {
                 sourcePosition: {x: startX, y},
                 targetPosition: {x: endX, y},
             });
 
             await expect(screenShotLocator).toHaveScreenshot();
+        });
+    });
+
+    test.describe('Type y', () => {
+        const testZoomY = async (args: {component: MountResult}) => {
+            const {component} = args;
+            const screenShotLocator = component.locator('.gcharts-chart');
+            await expect(screenShotLocator).toHaveScreenshot();
+
+            const brushAreaLocator = component.locator('.gcharts-brush');
+            const boundingBox = await brushAreaLocator.boundingBox();
+
+            if (!boundingBox) {
+                throw new Error('Bounding box not found');
+            }
+
+            const startY = boundingBox.y + boundingBox.height / 10;
+            const endY = boundingBox.y + (boundingBox.height / 10) * 2;
+            const x = boundingBox.x + boundingBox.width / 2;
+
+            await component.dragTo(brushAreaLocator, {
+                sourcePosition: {x, y: startY},
+                targetPosition: {x, y: endY},
+            });
+
+            await expect(screenShotLocator).toHaveScreenshot();
+        };
+
+        test('Datetime y axis', async ({mount}) => {
+            const data = cloneDeep(barYDatetimeYData);
+            set(data, 'chart.zoom', {enabled: true, type: 'y'});
+            set(data, 'tooltip.enabled', false);
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await testZoomY({component});
+        });
+
+        test('Datetime y axis order=reverse', async ({mount}) => {
+            const data = cloneDeep(barYDatetimeYData);
+            set(data, 'chart.zoom', {enabled: true, type: 'y'});
+            set(data, 'tooltip.enabled', false);
+            set(data, 'yAxis[0].order', 'reverse');
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await testZoomY({component});
         });
     });
 });

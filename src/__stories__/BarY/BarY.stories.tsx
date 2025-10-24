@@ -5,6 +5,7 @@ import {ChartStory} from '../ChartStory';
 import {
     barYBasicData,
     barYContinuousLegendData,
+    barYDatetimeYData,
     barYGroupedColumnsData,
     barYHtmlLabelsData,
     barYPlaygroundData,
@@ -74,5 +75,12 @@ export const BarYPlayground = {
         data: {
             control: 'object',
         },
+    },
+} satisfies Story;
+
+export const BarYDatetimeY = {
+    name: 'Datetime Y',
+    args: {
+        data: barYDatetimeYData,
     },
 } satisfies Story;

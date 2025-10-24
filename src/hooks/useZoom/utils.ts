@@ -78,13 +78,13 @@ export function selectionToZoomBounds(args: {
 function selectionXToZoomBounds(args: {
     xAxis: PreparedAxis;
     xScale: ChartScale;
-    selection: BrushSelection;
+    selection: [number, number];
 }): [number, number] {
     const {xAxis, xScale, selection} = args;
 
     switch (xAxis.type) {
         case 'category': {
-            const [x0, x1] = selection as [number, number];
+            const [x0, x1] = selection;
             const bandScale = xScale as ScaleBand<string>;
             const categories = xAxis.categories || [];
             const currentDomain = bandScale.domain();
@@ -107,7 +107,7 @@ function selectionXToZoomBounds(args: {
             return [startIndex, endIndex];
         }
         case 'datetime': {
-            const [x0, x1] = selection as [number, number];
+            const [x0, x1] = selection;
             const timeScale = xScale as ScaleTime<number, number>;
             const minTimestamp = timeScale.invert(x0).getTime();
             const maxTimestamp = timeScale.invert(x1).getTime();
@@ -116,7 +116,7 @@ function selectionXToZoomBounds(args: {
         }
         case 'linear':
         case 'logarithmic': {
-            const [x0, x1] = selection as [number, number];
+            const [x0, x1] = selection;
             const linearScale = xScale as ScaleLinear<number, number>;
             const minValue = linearScale.invert(x0);
             const maxValue = linearScale.invert(x1);
@@ -129,22 +129,44 @@ function selectionXToZoomBounds(args: {
     }
 }
 
+function getYMinMaxFromSelection(args: {selection: [number, number]; yAxis: PreparedAxis}) {
+    const {selection, yAxis} = args;
+    let yMin: number;
+    let yMax: number;
+
+    switch (yAxis.order) {
+        case 'reverse':
+        case 'sortDesc': {
+            [yMin, yMax] = selection;
+            break;
+        }
+        default: {
+            [yMax, yMin] = selection;
+        }
+    }
+
+    return [yMin, yMax];
+}
+
 function selectionYToZoomBounds(args: {
     yAxis: PreparedAxis;
     yScale: ChartScale;
-    selection: BrushSelection;
+    selection: [number, number];
 }): [number, number] {
     const {yAxis, yScale, selection} = args;
 
     switch (yAxis.type) {
         case 'category': {
-            const [y1, y0] = selection as [number, number];
+            const [y1, y0] = selection;
             const bandScale = yScale as ScaleBand<string>;
             const categories = yAxis.categories || [];
             const currentDomain = bandScale.domain();
             const step = bandScale.step();
-            let startIndex = currentDomain.length - 1 - Math.floor(y0 / step);
-            let endIndex = currentDomain.length - 1 - Math.floor(y1 / step);
+            let startIndex = Math.max(0, currentDomain.length - 1 - Math.floor(y0 / step));
+            let endIndex = Math.min(
+                currentDomain.length - 1,
+                currentDomain.length - 1 - Math.floor(y1 / step),
+            );
             const startCategory = currentDomain[startIndex];
             const endCategory = currentDomain[endIndex];
             startIndex = categories.indexOf(startCategory);
@@ -161,19 +183,19 @@ function selectionYToZoomBounds(args: {
             return [startIndex, endIndex];
         }
         case 'datetime': {
-            const [y1, y0] = selection as [number, number];
+            const [yMin, yMax] = getYMinMaxFromSelection({selection, yAxis});
             const timeScale = yScale as ScaleTime<number, number>;
-            const minTimestamp = timeScale.invert(y0).getTime();
-            const maxTimestamp = timeScale.invert(y1).getTime();
+            const minTimestamp = timeScale.invert(yMin).getTime();
+            const maxTimestamp = timeScale.invert(yMax).getTime();
 
             return [minTimestamp, maxTimestamp];
         }
         case 'linear':
         case 'logarithmic': {
-            const [y1, y0] = selection as [number, number];
+            const [yMin, yMax] = getYMinMaxFromSelection({selection, yAxis});
             const linearScale = yScale as ScaleLinear<number, number>;
-            const minValue = linearScale.invert(y0);
-            const maxValue = linearScale.invert(y1);
+            const minValue = linearScale.invert(yMin);
+            const maxValue = linearScale.invert(yMax);
 
             return [minValue, maxValue];
         }
