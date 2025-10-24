@@ -13,7 +13,6 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Other/Plot Lines',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;

@@ -8,14 +8,6 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Radar',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
-    parameters: {
-        docs: {
-            description: {
-                component: `A radar chart (also known as spider chart or star chart) is a graphical method of displaying multivariate data in the form of a two-dimensional chart of three or more quantitative variables represented on axes starting from the same point.`,
-            },
-        },
-    },
 };
 
 export default meta;

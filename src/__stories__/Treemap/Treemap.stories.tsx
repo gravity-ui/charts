@@ -10,7 +10,6 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Treemap',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;

@@ -5,6 +5,7 @@ import {ChartStory} from '../ChartStory';
 import {
     barYBasicData,
     barYContinuousLegendData,
+    barYDatetimeYData,
     barYGroupedColumnsData,
     barYHtmlLabelsData,
     barYPlaygroundData,
@@ -16,7 +17,6 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Bar-Y',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;
@@ -74,5 +74,12 @@ export const BarYPlayground = {
         data: {
             control: 'object',
         },
+    },
+} satisfies Story;
+
+export const BarYDatetimeY = {
+    name: 'Datetime Y',
+    args: {
+        data: barYDatetimeYData,
     },
 } satisfies Story;

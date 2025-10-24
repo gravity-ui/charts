@@ -18,7 +18,6 @@ const meta: Meta<typeof Chart> = {
     title: 'Bar-X',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;

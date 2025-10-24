@@ -15,7 +15,6 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Other/Plot Bands',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;
