@@ -17,6 +17,7 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Other/Crosshair',
     render: ChartStory,
     component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;

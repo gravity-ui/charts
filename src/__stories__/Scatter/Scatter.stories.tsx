@@ -9,6 +9,7 @@ const meta: Meta<typeof Chart> = {
     title: 'Scatter',
     render: ChartStory,
     component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;

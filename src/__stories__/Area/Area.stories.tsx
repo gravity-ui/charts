@@ -14,6 +14,7 @@ const meta: Meta<typeof Chart> = {
     title: 'Area',
     render: ChartStory,
     component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;

@@ -8,6 +8,7 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Waterfall',
     render: ChartStory,
     component: Chart,
+    tags: ['autodocs'],
 };
 
 export default meta;
