@@ -94,7 +94,7 @@ test.describe('Zoom', () => {
             await expect(screenShotLocator).toHaveScreenshot();
         };
 
-        test.only('Datetime y axis', async ({mount}) => {
+        test('Datetime y axis', async ({mount}) => {
             const data = cloneDeep(barYDatetimeYData);
             set(data, 'chart.zoom', {enabled: true, type: 'y'});
             set(data, 'tooltip.enabled', false);
