@@ -1,14 +1,15 @@
 import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
 import {
     calculateCos,
     calculateSin,
+    formatAxisTickLabel,
     getBandsPosition,
-    getLabelFormatter,
     getLabelsSize,
+    getMinSpaceBetween,
     getTextSizeFn,
     getTextWithElipsis,
     wrapText,
@@ -147,6 +148,7 @@ export async function prepareAxisData({
     top: topOffset,
     width,
     height,
+    series,
 }: {
     axis: PreparedAxis;
     split: PreparedSplit;
@@ -154,6 +156,7 @@ export async function prepareAxisData({
     top: number;
     width: number;
     height: number;
+    series: PreparedSeries[];
 }): Promise<AxisYData> {
     const axisPlotTopPosition = split.plots[axis.plotIndex]?.top || 0;
     const axisHeight = split.plots[axis.plotIndex]?.height || height;
@@ -169,10 +172,11 @@ export async function prepareAxisData({
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
 
-    const values = getTickValues({scale, axis, labelLineHeight});
+    const values = getTickValues({scale, axis, labelLineHeight, series});
+    const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
+
     const labelMaxHeight =
         values.length > 1 ? values[0].y - values[1].y - axis.labels.padding * 2 : axisHeight;
-    const labelFormatter = getLabelFormatter({axis, scale});
 
     for (let i = 0; i < values.length; i++) {
         const tickValue = values[i];
@@ -206,7 +210,7 @@ export async function prepareAxisData({
                     style: axis.labels.style,
                 };
             } else {
-                const text = labelFormatter(tickValue.value);
+                const text = formatAxisTickLabel({value: tickValue.value, axis, step: tickStep});
                 svgLabel = await getSvgAxisLabel({
                     getTextSize,
                     text,

@@ -1,5 +1,6 @@
-import type {ChartScale, PreparedAxis} from '../../hooks';
-import {getMinSpaceBetween, getTicksCount, isBandScale} from '../../utils';
+import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
+import type {ChartSeries} from '../../types';
+import {getDomainDataYBySeries, getMinSpaceBetween, getTicksCount, isBandScale} from '../../utils';
 
 function thinOut<T>(items: T[], delta: number) {
     const arr: T[] = [];
@@ -15,10 +16,12 @@ export function getTickValues({
     scale,
     axis,
     labelLineHeight,
+    series,
 }: {
     scale: ChartScale;
     axis: PreparedAxis;
     labelLineHeight: number;
+    series: PreparedSeries[] | ChartSeries[];
 }) {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
@@ -27,18 +30,37 @@ export function getTickValues({
             return [];
         }
 
-        let ticksCount = getTicksCount({axis, range: height});
-        let result = scale.ticks(ticksCount).map((t) => ({
+        const getScaleTicks = () => {
+            if (series.some((s) => s.type === 'bar-y')) {
+                const domainData = getDomainDataYBySeries(series) as number[];
+                console.log({domainData, scaleDomain: scale.domain()});
+
+                if (domainData.length < 3) {
+                    return domainData;
+                }
+
+                const ticksCount = getTicksCount({axis, range: height}) ?? domainData.length;
+                return scale.ticks(Math.min(ticksCount, domainData.length));
+            }
+
+            const ticksCount = getTicksCount({axis, range: height});
+            return scale.ticks(ticksCount);
+        };
+
+        const scaleTicks = getScaleTicks();
+        let result = scaleTicks.map((t) => ({
             y: scale(t),
             value: t,
         }));
+
+        console.log({result});
 
         if (result.length <= 1) {
             return result;
         }
 
         let labelHeight = getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
-        ticksCount = result.length - 1;
+        let ticksCount = result.length - 1;
         while (labelHeight < labelLineHeight && result.length > 1) {
             ticksCount = ticksCount ? ticksCount - 1 : result.length - 1;
             result = scale.ticks(ticksCount).map((t) => ({
@@ -65,7 +87,7 @@ export function getTickValues({
         }
 
         let result = [...items];
-        let labelHeight = result[0].y - result[1].y - axis.labels.padding * 2;
+        let labelHeight = Math.abs(result[0].y - result[1].y) - axis.labels.padding * 2;
         let delta = 2;
         while (labelHeight < labelLineHeight && result.length > 1) {
             result = thinOut(items, delta);

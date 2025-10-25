@@ -22,7 +22,6 @@ import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
-import {getBarYLayoutForNumericScale, groupBarYDataByYValue} from '../utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 
 export type ChartScale =
@@ -99,27 +98,12 @@ function getYScaleRange(args: {
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
 }): [number, number] {
-    const {axis, boundsHeight, series, seriesOptions} = args;
+    const {axis, boundsHeight} = args;
     switch (axis.type) {
         case 'datetime':
         case 'linear':
         case 'logarithmic': {
-            let range: [number, number] = [boundsHeight, boundsHeight * axis.maxPadding];
-
-            const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
-            if (barYSeries.length) {
-                const groupedData = groupBarYDataByYValue(barYSeries, [axis]);
-                if (Object.keys(groupedData).length > 1) {
-                    const {bandSize} = getBarYLayoutForNumericScale({
-                        plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
-                        groupedData,
-                        seriesOptions: seriesOptions,
-                    });
-
-                    const offset = bandSize / 2;
-                    range = [range[0] - offset, range[1] + offset];
-                }
-            }
+            const range: [number, number] = [boundsHeight, boundsHeight * axis.maxPadding];
 
             switch (axis.order) {
                 case 'sortDesc':
@@ -177,8 +161,21 @@ export function createYScale(args: {
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
+                let offset = 0;
+                const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
+                if (barYSeries.length) {
+                    if (domain.length > 1) {
+                        const plotHeight = Math.abs(range[0] - range[1]);
+                        const bandSize = plotHeight / (domain.length - 1);
+                        offset = (-1 * bandSize) / 2;
+                    }
+                }
+
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
-                return scaleFn().domain([yMin, yMax]).range(range).nice();
+                const scale = scaleFn().domain([yMin, yMax]).range(range);
+                const domainOffset = Math.abs(scale.invert(offset) - scale.invert(0));
+
+                return scale.domain([yMin - domainOffset, yMax + domainOffset]);
             }
 
             break;
@@ -214,9 +211,26 @@ export function createYScale(args: {
                         number,
                         number,
                     ];
+
+                    let offset = 0;
+                    const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
+                    if (barYSeries.length) {
+                        if (Object.keys(domain).length > 1) {
+                            const plotHeight = Math.abs(range[0] - range[1]);
+                            const bandSize = plotHeight / (domain.length - 1);
+                            offset = (-1 * bandSize) / 2;
+                        }
+                    }
+
                     const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
                     const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
-                    return scaleUtc().domain([yMin, yMax]).range(range).nice();
+
+                    const scale = scaleUtc().domain([yMin, yMax]).range(range);
+                    const domainOffset = Math.abs(
+                        scale.invert(offset).getTime() - scale.invert(0).getTime(),
+                    );
+
+                    return scale.domain([yMin - domainOffset, yMax + domainOffset]);
                 }
             }
         }

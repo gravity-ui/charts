@@ -7,8 +7,8 @@ import {
     barXPlotBandsData,
     barXWithXAxisPlotBandsData,
     barXWithYLinearAxisPlotBandsData,
-    barYDatetimePlotBandData,
     barYPlotBandsData,
+    lineDatetimePlotBandData,
 } from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
@@ -36,10 +36,10 @@ export const BarXWithYLinearAxisPlotBandsData = {
     },
 } satisfies Story;
 
-export const BarYDatetimePlotBandData = {
+export const LineDatetimePlotBandData = {
     name: 'Datetime Y Plot Bands',
     args: {
-        data: barYDatetimePlotBandData,
+        data: lineDatetimePlotBandData,
     },
 } satisfies Story;
 

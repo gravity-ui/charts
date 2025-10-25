@@ -1,4 +1,4 @@
-import {dateTime} from '@gravity-ui/date-utils';
+import {dateTimeUtc} from '@gravity-ui/date-utils';
 import type {DateTimeInput} from '@gravity-ui/date-utils';
 import type {AxisDomain} from 'd3';
 import capitalize from 'lodash/capitalize';
@@ -15,7 +15,7 @@ const LETTER_MOUNTH_AT_START_FORMAT_REGEXP = /^M{3,}/;
 
 function getFormattedDate(args: {value: DateTimeInput; format?: string}) {
     const {value, format = DEFAULT_DATE_FORMAT} = args;
-    const date = dateTime({input: value});
+    const date = dateTimeUtc({input: value});
 
     if (date?.isValid()) {
         const formattedDate = date.format(format);
@@ -71,7 +71,7 @@ export function formatAxisTickLabel(args: {axis: PreparedAxis; value: AxisDomain
                 ...axis.labels.numberFormat,
             };
 
-            return formatNumber(value as number | string, numberFormat);
+            return formatNumber(value as number, numberFormat);
         }
     }
 }

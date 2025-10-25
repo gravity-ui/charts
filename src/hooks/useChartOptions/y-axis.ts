@@ -55,7 +55,7 @@ const getAxisLabelMaxWidth = async (args: {
 
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
-    const tickValues = getTickValues({axis, scale, labelLineHeight});
+    const tickValues = getTickValues({axis, scale, labelLineHeight, series: seriesData});
     const ticks = getScaleTicks(scale);
     const tickStep = getClosestPointsRange(axis, ticks);
 

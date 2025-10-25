@@ -72,4 +72,4 @@ function prepareData(): ChartData {
     };
 }
 
-export const barYDatetimePlotBandData = prepareData();
+export const lineDatetimePlotBandData = prepareData();
