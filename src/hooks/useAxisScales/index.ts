@@ -167,7 +167,7 @@ export function createYScale(args: {
                     if (domain.length > 1) {
                         const plotHeight = Math.abs(range[0] - range[1]);
                         const bandSize = plotHeight / (domain.length - 1);
-                        offset = (-1 * bandSize) / 2;
+                        offset = bandSize / 2;
                     }
                 }
 

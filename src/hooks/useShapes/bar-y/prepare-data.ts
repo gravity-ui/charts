@@ -53,7 +53,6 @@ export async function prepareBarYData(args: {
     }
 
     const yScaleRange = yLinearScale.range();
-    const plotHeight = Math.abs(yScaleRange[0] - yScaleRange[1]);
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
     const sortKey = (() => {
@@ -71,10 +70,11 @@ export async function prepareBarYData(args: {
     })();
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
+    const plotHeight = Math.abs(yScaleRange[0] - yScaleRange[1]);
     const {bandSize, barGap, barSize} = getBarYLayout({
         groupedData,
         seriesOptions,
-        plotHeight: plotHeight - plotHeight * yAxis[0].maxPadding,
+        plotHeight,
     });
 
     const result: PreparedBarYData[] = [];
