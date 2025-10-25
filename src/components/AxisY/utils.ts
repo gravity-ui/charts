@@ -33,7 +33,6 @@ export function getTickValues({
         const getScaleTicks = () => {
             if (series.some((s) => s.type === 'bar-y')) {
                 const domainData = getDomainDataYBySeries(series) as number[];
-                console.log({domainData, scaleDomain: scale.domain()});
 
                 if (domainData.length < 3) {
                     return domainData;
@@ -52,8 +51,6 @@ export function getTickValues({
             y: scale(t),
             value: t,
         }));
-
-        console.log({result});
 
         if (result.length <= 1) {
             return result;
