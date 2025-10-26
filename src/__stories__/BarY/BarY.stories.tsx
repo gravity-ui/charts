@@ -8,6 +8,7 @@ import {
     barYDatetimeYData,
     barYGroupedColumnsData,
     barYHtmlLabelsData,
+    barYLinearYAxisData,
     barYPlaygroundData,
     barYStakingNormalData,
     barYStakingPercentData,
@@ -82,5 +83,12 @@ export const BarYDatetimeY = {
     name: 'Datetime Y',
     args: {
         data: barYDatetimeYData,
+    },
+} satisfies Story;
+
+export const BarYLinearYAxis = {
+    name: 'Linear y-axis',
+    args: {
+        data: barYLinearYAxisData,
     },
 } satisfies Story;

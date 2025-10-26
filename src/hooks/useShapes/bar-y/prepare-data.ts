@@ -75,6 +75,7 @@ export async function prepareBarYData(args: {
         groupedData,
         seriesOptions,
         plotHeight,
+        scale: yScale,
     });
 
     const result: PreparedBarYData[] = [];

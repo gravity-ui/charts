@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3';
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_AXIS_TYPE, SeriesType} from '../../constants';
@@ -22,6 +22,7 @@ import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
+import {getBandSize} from '../utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 
 export type ChartScale =
@@ -155,20 +156,24 @@ export function createYScale(args: {
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
+                const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
+                const scale = scaleFn().domain([yMin, yMax]).range(range);
+
                 let offsetMin = 0;
                 let offsetMax = boundsHeight * axis.maxPadding;
                 const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
                 if (barYSeries.length) {
                     if (domain.length > 1) {
-                        const plotHeight = Math.abs(range[0] - range[1]);
-                        const bandSize = plotHeight / (domain.length - 1);
-                        offsetMin += bandSize / 2;
-                        offsetMax += bandSize / 2;
+                        const bandWidth = getBandSize({
+                            scale: scale as AxisScale<AxisDomain>,
+                            domain: domain as AxisDomain[],
+                        });
+
+                        offsetMin += bandWidth / 2;
+                        offsetMax += bandWidth / 2;
                     }
                 }
 
-                const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
-                const scale = scaleFn().domain([yMin, yMax]).range(range);
                 const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
                 const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
@@ -208,23 +213,25 @@ export function createYScale(args: {
                         number,
                         number,
                     ];
+                    const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
+                    const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
+                    const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
                     let offsetMin = 0;
                     let offsetMax = boundsHeight * axis.maxPadding;
                     const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
                     if (barYSeries.length) {
                         if (Object.keys(domain).length > 1) {
-                            const plotHeight = Math.abs(range[0] - range[1]);
-                            const bandSize = plotHeight / (domain.length - 1);
-                            offsetMin += bandSize / 2;
-                            offsetMax += bandSize / 2;
+                            const bandWidth = getBandSize({
+                                scale: scale as AxisScale<AxisDomain>,
+                                domain: domain as AxisDomain[],
+                            });
+
+                            offsetMin += bandWidth / 2;
+                            offsetMax += bandWidth / 2;
                         }
                     }
 
-                    const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
-                    const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
-
-                    const scale = scaleUtc().domain([yMin, yMax]).range(range);
                     const domainOffsetMin = Math.abs(
                         scale.invert(offsetMin).getTime() - scale.invert(0).getTime(),
                     );
