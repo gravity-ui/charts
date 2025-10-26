@@ -92,18 +92,13 @@ function filterCategoriesByVisibleSeries(args: {
 
 // axis is validated in `validation/index.ts`, so the value of `axis.type` is definitely valid.
 // eslint-disable-next-line consistent-return
-function getYScaleRange(args: {
-    axis: PreparedAxis;
-    boundsHeight: number;
-    series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
-}): [number, number] {
+function getYScaleRange(args: {axis: PreparedAxis; boundsHeight: number}): [number, number] {
     const {axis, boundsHeight} = args;
     switch (axis.type) {
         case 'datetime':
         case 'linear':
         case 'logarithmic': {
-            const range: [number, number] = [boundsHeight, boundsHeight * axis.maxPadding];
+            const range: [number, number] = [boundsHeight, 0];
 
             switch (axis.order) {
                 case 'sortDesc':
@@ -125,14 +120,13 @@ export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
     series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
 }) {
-    const {axis, boundsHeight, series, seriesOptions} = args;
+    const {axis, boundsHeight, series} = args;
     const yMinProps = get(axis, 'min');
     const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
-    const range = getYScaleRange({axis, boundsHeight, series, seriesOptions});
+    const range = getYScaleRange({axis, boundsHeight});
 
     switch (axis.type) {
         case 'linear':
@@ -161,21 +155,24 @@ export function createYScale(args: {
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
-                let offset = 0;
+                let offsetMin = 0;
+                let offsetMax = boundsHeight * axis.maxPadding;
                 const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
                 if (barYSeries.length) {
                     if (domain.length > 1) {
                         const plotHeight = Math.abs(range[0] - range[1]);
                         const bandSize = plotHeight / (domain.length - 1);
-                        offset = bandSize / 2;
+                        offsetMin += bandSize / 2;
+                        offsetMax += bandSize / 2;
                     }
                 }
 
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 const scale = scaleFn().domain([yMin, yMax]).range(range);
-                const domainOffset = Math.abs(scale.invert(offset) - scale.invert(0));
+                const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
-                return scale.domain([yMin - domainOffset, yMax + domainOffset]);
+                return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
             }
 
             break;
@@ -212,13 +209,15 @@ export function createYScale(args: {
                         number,
                     ];
 
-                    let offset = 0;
+                    let offsetMin = 0;
+                    let offsetMax = boundsHeight * axis.maxPadding;
                     const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
                     if (barYSeries.length) {
                         if (Object.keys(domain).length > 1) {
                             const plotHeight = Math.abs(range[0] - range[1]);
                             const bandSize = plotHeight / (domain.length - 1);
-                            offset = (-1 * bandSize) / 2;
+                            offsetMin += bandSize / 2;
+                            offsetMax += bandSize / 2;
                         }
                     }
 
@@ -226,11 +225,14 @@ export function createYScale(args: {
                     const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
 
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
-                    const domainOffset = Math.abs(
-                        scale.invert(offset).getTime() - scale.invert(0).getTime(),
+                    const domainOffsetMin = Math.abs(
+                        scale.invert(offsetMin).getTime() - scale.invert(0).getTime(),
+                    );
+                    const domainOffsetMax = Math.abs(
+                        scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
                     );
 
-                    return scale.domain([yMin - domainOffset, yMax + domainOffset]);
+                    return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
                 }
             }
         }
@@ -458,7 +460,6 @@ const createScales = (args: Args) => {
                 axis,
                 boundsHeight: axisHeight,
                 series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
-                seriesOptions,
             });
         }),
     };

@@ -25,7 +25,6 @@ import {
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
-import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
 import {getAxisCategories, prepareAxisPlotLabel} from './utils';
@@ -33,10 +32,9 @@ import {getAxisCategories, prepareAxisPlotLabel} from './utils';
 const getAxisLabelMaxWidth = async (args: {
     axis: PreparedAxis;
     seriesData: ChartSeries[];
-    seriesOptions: PreparedSeriesOptions;
     height: number;
 }) => {
-    const {axis, seriesData, seriesOptions, height} = args;
+    const {axis, seriesData, height} = args;
 
     if (!axis.labels.enabled) {
         return {height: 0, width: 0};
@@ -46,7 +44,6 @@ const getAxisLabelMaxWidth = async (args: {
         axis,
         boundsHeight: height,
         series: seriesData,
-        seriesOptions,
     });
 
     if (!scale) {
@@ -86,14 +83,12 @@ export const getPreparedYAxis = ({
     boundsHeight,
     width,
     seriesData,
-    seriesOptions,
     yAxis,
 }: {
     height: number;
     boundsHeight: number;
     width: number;
     seriesData: ChartSeries[];
-    seriesOptions: PreparedSeriesOptions;
     yAxis: ChartYAxis[] | undefined;
 }): Promise<PreparedAxis[]> => {
     const axisByPlot: ChartYAxis[][] = [];
@@ -237,7 +232,6 @@ export const getPreparedYAxis = ({
                 const {height: labelsHeight, width: labelsWidth} = await getAxisLabelMaxWidth({
                     axis: preparedAxis,
                     seriesData,
-                    seriesOptions,
                     height: boundsHeight,
                 });
 

@@ -94,10 +94,9 @@ export function useChartInnerProps(props: Props) {
             boundsHeight: estimatedBoundsHeight,
             width,
             seriesData: zoomedSeriesData,
-            seriesOptions: preparedSeriesOptions,
             yAxis: data.yAxis,
         }).then((val) => setYAxis(val));
-    }, [data.yAxis, estimatedBoundsHeight, height, preparedSeriesOptions, width, zoomedSeriesData]);
+    }, [data.yAxis, estimatedBoundsHeight, height, width, zoomedSeriesData]);
 
     const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
         colors,
