@@ -329,7 +329,7 @@ export async function prepareAxisData({
             content: titleContent,
             style: axis.title.style,
             size: rotatedTitleSize,
-            x: x,
+            x,
             y: axisPlotTopPosition + y,
             rotate: rotateAngle,
             offset: -(originalTextSize.height / titleContent.length) * (titleContent.length - 1),

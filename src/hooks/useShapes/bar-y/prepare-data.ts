@@ -163,17 +163,16 @@ export async function prepareBarYData(args: {
             const data = prepared.data;
             const content = getFormattedValue({value: data.label || data.x, ...dataLabels});
 
-            const x = dataLabels.inside
-                ? prepared.x + prepared.width / 2
-                : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
             const y = prepared.y + prepared.height / 2;
-
             if (dataLabels.html) {
                 const {maxHeight: height, maxWidth: width} = await getLabelsSize({
                     labels: [content],
                     style: dataLabels.style,
                     html: dataLabels.html,
                 });
+                const x = dataLabels.inside
+                    ? prepared.x + prepared.width / 2 - width / 2
+                    : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
                 const constrainedPosition = getHtmlLabelConstraintedPosition({
                     boundsHeight,
                     boundsWidth,
@@ -196,6 +195,9 @@ export async function prepareBarYData(args: {
                 }
                 const getTextSize = map.get(dataLabels.style);
                 const {width, height} = await getTextSize(content);
+                const x = dataLabels.inside
+                    ? prepared.x + prepared.width / 2 - width / 2
+                    : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
                 const constrainedPosition = getSvgLabelConstraintedPosition({
                     boundsHeight,
                     boundsWidth,
@@ -210,10 +212,10 @@ export async function prepareBarYData(args: {
                     series: prepared.series,
                     style: dataLabels.style,
                     text: content,
-                    textAnchor: dataLabels.inside ? 'middle' : 'right',
+                    textAnchor: 'start',
                     x: constrainedPosition.x,
                     y: constrainedPosition.y,
-                } as LabelData);
+                });
             }
         }
     }
