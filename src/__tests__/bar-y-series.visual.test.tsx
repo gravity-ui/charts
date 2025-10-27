@@ -855,7 +855,7 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('The labels inside should move outward if there is insufficient space', async ({
+    test('The labels inside should move outward if there is insufficient space', async ({
         mount,
     }) => {
         const chartData: ChartData = {
