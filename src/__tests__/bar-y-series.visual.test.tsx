@@ -165,6 +165,34 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Y-axis linear - with data holes', async ({mount}) => {
+        const data: ChartData = {
+            chart: {
+                margin: CHART_MARGIN,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {y: 1, x: 1},
+                            {y: 2, x: 2},
+                            {y: 10, x: 10},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    type: 'linear',
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Y-axis linear one data point', async ({mount}) => {
         const data: ChartData = {
             chart: {

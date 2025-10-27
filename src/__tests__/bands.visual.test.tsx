@@ -7,8 +7,8 @@ import {
     barXPlotBandsData,
     barXWithXAxisPlotBandsData,
     barXWithYLinearAxisPlotBandsData,
-    barYDatetimePlotBandData,
     barYPlotBandsData,
+    lineDatetimePlotBandData,
 } from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -25,7 +25,7 @@ test.describe('Plot Bands', () => {
     });
 
     test('Datetime Y Plot Bands', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={barYDatetimePlotBandData} />);
+        const component = await mount(<ChartTestStory data={lineDatetimePlotBandData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 

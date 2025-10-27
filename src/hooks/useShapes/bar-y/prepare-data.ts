@@ -14,11 +14,7 @@ import {getFormattedValue} from '../../../utils/chart/format';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../useSeries/types';
-import {
-    getBarYLayoutForCategoryScale,
-    getBarYLayoutForNumericScale,
-    groupBarYDataByYValue,
-} from '../../utils';
+import {getBarYLayout, groupBarYDataByYValue} from '../../utils';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
@@ -57,7 +53,6 @@ export async function prepareBarYData(args: {
     }
 
     const yScaleRange = yLinearScale.range();
-    const plotHeight = Math.abs(yScaleRange[0] - yScaleRange[1]);
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
     const sortKey = (() => {
@@ -75,14 +70,13 @@ export async function prepareBarYData(args: {
     })();
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
-    const {bandSize, barGap, barSize} =
-        yAxis[0].type === 'category'
-            ? getBarYLayoutForCategoryScale({groupedData, seriesOptions, yScale: yLinearScale})
-            : getBarYLayoutForNumericScale({
-                  groupedData,
-                  seriesOptions,
-                  plotHeight: plotHeight - plotHeight * yAxis[0].maxPadding,
-              });
+    const plotHeight = Math.abs(yScaleRange[0] - yScaleRange[1]);
+    const {bandSize, barGap, barSize} = getBarYLayout({
+        groupedData,
+        seriesOptions,
+        plotHeight,
+        scale: yScale,
+    });
 
     const result: PreparedBarYData[] = [];
     const baseRangeValue = xLinearScale.range()[0];

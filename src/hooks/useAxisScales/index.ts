@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3';
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_AXIS_TYPE, SeriesType} from '../../constants';
@@ -22,7 +22,7 @@ import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
-import {getBarYLayoutForNumericScale, groupBarYDataByYValue} from '../utils';
+import {getBandSize} from '../utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 
 export type ChartScale =
@@ -93,33 +93,13 @@ function filterCategoriesByVisibleSeries(args: {
 
 // axis is validated in `validation/index.ts`, so the value of `axis.type` is definitely valid.
 // eslint-disable-next-line consistent-return
-function getYScaleRange(args: {
-    axis: PreparedAxis;
-    boundsHeight: number;
-    series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
-}): [number, number] {
-    const {axis, boundsHeight, series, seriesOptions} = args;
+function getYScaleRange(args: {axis: PreparedAxis; boundsHeight: number}): [number, number] {
+    const {axis, boundsHeight} = args;
     switch (axis.type) {
         case 'datetime':
         case 'linear':
         case 'logarithmic': {
-            let range: [number, number] = [boundsHeight, boundsHeight * axis.maxPadding];
-
-            const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
-            if (barYSeries.length) {
-                const groupedData = groupBarYDataByYValue(barYSeries, [axis]);
-                if (Object.keys(groupedData).length > 1) {
-                    const {bandSize} = getBarYLayoutForNumericScale({
-                        plotHeight: boundsHeight - boundsHeight * axis.maxPadding,
-                        groupedData,
-                        seriesOptions: seriesOptions,
-                    });
-
-                    const offset = bandSize / 2;
-                    range = [range[0] - offset, range[1] + offset];
-                }
-            }
+            const range: [number, number] = [boundsHeight, 0];
 
             switch (axis.order) {
                 case 'sortDesc':
@@ -141,14 +121,13 @@ export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
     series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
 }) {
-    const {axis, boundsHeight, series, seriesOptions} = args;
+    const {axis, boundsHeight, series} = args;
     const yMinProps = get(axis, 'min');
     const yMaxProps = get(axis, 'max');
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
-    const range = getYScaleRange({axis, boundsHeight, series, seriesOptions});
+    const range = getYScaleRange({axis, boundsHeight});
 
     switch (axis.type) {
         case 'linear':
@@ -178,7 +157,27 @@ export function createYScale(args: {
                 }
 
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
-                return scaleFn().domain([yMin, yMax]).range(range).nice();
+                const scale = scaleFn().domain([yMin, yMax]).range(range);
+
+                let offsetMin = 0;
+                let offsetMax = boundsHeight * axis.maxPadding;
+                const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
+                if (barYSeries.length) {
+                    if (domain.length > 1) {
+                        const bandWidth = getBandSize({
+                            scale: scale as AxisScale<AxisDomain>,
+                            domain: domain as AxisDomain[],
+                        });
+
+                        offsetMin += bandWidth / 2;
+                        offsetMax += bandWidth / 2;
+                    }
+                }
+
+                const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
+
+                return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
             }
 
             break;
@@ -216,7 +215,31 @@ export function createYScale(args: {
                     ];
                     const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
                     const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
-                    return scaleUtc().domain([yMin, yMax]).range(range).nice();
+                    const scale = scaleUtc().domain([yMin, yMax]).range(range);
+
+                    let offsetMin = 0;
+                    let offsetMax = boundsHeight * axis.maxPadding;
+                    const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
+                    if (barYSeries.length) {
+                        if (Object.keys(domain).length > 1) {
+                            const bandWidth = getBandSize({
+                                scale: scale as AxisScale<AxisDomain>,
+                                domain: domain as AxisDomain[],
+                            });
+
+                            offsetMin += bandWidth / 2;
+                            offsetMax += bandWidth / 2;
+                        }
+                    }
+
+                    const domainOffsetMin = Math.abs(
+                        scale.invert(offsetMin).getTime() - scale.invert(0).getTime(),
+                    );
+                    const domainOffsetMax = Math.abs(
+                        scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
+                    );
+
+                    return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
                 }
             }
         }
@@ -444,7 +467,6 @@ const createScales = (args: Args) => {
                 axis,
                 boundsHeight: axisHeight,
                 series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
-                seriesOptions,
             });
         }),
     };

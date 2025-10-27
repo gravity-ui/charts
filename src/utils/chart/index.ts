@@ -187,7 +187,7 @@ export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
 export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
     const groupedSeries = group(series, (item) => item.type);
 
-    return Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
+    const items = Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
         switch (type) {
             case 'area':
             case 'bar-x': {
@@ -214,6 +214,8 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
 
         return acc;
     }, []);
+
+    return Array.from(new Set(items));
 };
 
 // Uses to get all series names array (except `pie` charts)
