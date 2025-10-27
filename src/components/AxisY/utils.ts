@@ -47,25 +47,48 @@ export function getTickValues({
         };
 
         const scaleTicks = getScaleTicks();
-        let result = scaleTicks.map((t) => ({
+
+        const originalTickValues = scaleTicks.map((t) => ({
             y: scale(t),
             value: t,
         }));
 
-        if (result.length <= 1) {
-            return result;
+        if (originalTickValues.length <= 1) {
+            return originalTickValues;
         }
 
-        let labelHeight = getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
+        // first, we try to draw "beautiful" tick values
+        let result = originalTickValues;
+        let availableSpaceForLabel =
+            getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
         let ticksCount = result.length - 1;
-        while (labelHeight < labelLineHeight && result.length > 1) {
+        while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
             ticksCount = ticksCount ? ticksCount - 1 : result.length - 1;
-            result = scale.ticks(ticksCount).map((t) => ({
+            const newScaleTicks = scale.ticks(ticksCount);
+            result = newScaleTicks.map((t) => ({
                 y: scale(t),
                 value: t,
             }));
 
-            labelHeight = getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
+            availableSpaceForLabel =
+                getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
+        }
+
+        // when this is not possible (for example, such values cannot be selected for the logarithmic axis with a small range)
+        // just thin out the originally proposed result
+        if (!result.length) {
+            result = originalTickValues;
+            availableSpaceForLabel =
+                getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
+            let delta = 2;
+            while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
+                result = thinOut(result, delta);
+                if (result.length > 1) {
+                    delta += 1;
+                    availableSpaceForLabel =
+                        getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
+                }
+            }
         }
 
         return result;
@@ -84,13 +107,13 @@ export function getTickValues({
         }
 
         let result = [...items];
-        let labelHeight = Math.abs(result[0].y - result[1].y) - axis.labels.padding * 2;
+        let availableSpaceForLabel = Math.abs(result[0].y - result[1].y) - axis.labels.padding * 2;
         let delta = 2;
-        while (labelHeight < labelLineHeight && result.length > 1) {
+        while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
             result = thinOut(items, delta);
             if (result.length > 1) {
                 delta += 1;
-                labelHeight = result[0].y - result[1].y - axis.labels.padding * 2;
+                availableSpaceForLabel = result[0].y - result[1].y - axis.labels.padding * 2;
             }
         }
 
