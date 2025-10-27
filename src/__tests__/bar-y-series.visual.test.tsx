@@ -854,4 +854,27 @@ test.describe('Bar-y series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.only('The labels inside should move outward if there is insufficient space', async ({
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        data: [
+                            {y: 1, x: 1, label: 'Data label: 1'},
+                            {y: 2, x: 100, label: 'Data label: 100'},
+                        ],
+                        dataLabels: {enabled: true, inside: true},
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
