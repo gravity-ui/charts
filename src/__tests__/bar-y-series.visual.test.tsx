@@ -425,9 +425,6 @@ test.describe('Bar-y series', () => {
                     },
                 ],
             },
-            xAxis: {
-                labels: {enabled: false},
-            },
             yAxis: [
                 {
                     type: 'linear',
