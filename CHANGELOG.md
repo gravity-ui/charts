@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.18.1](https://github.com/gravity-ui/charts/compare/v1.18.0...v1.18.1) (2025-10-27)
+
+
+### Bug Fixes
+
+* fix bar-y data labels outside plot boundaries ([#217](https://github.com/gravity-ui/charts/issues/217)) ([9bc4170](https://github.com/gravity-ui/charts/commit/9bc41705908816d479f09df3a5b019dcf355f4c3))
+* fix bar-y datetime zoom ([#219](https://github.com/gravity-ui/charts/issues/219)) ([3c76e55](https://github.com/gravity-ui/charts/commit/3c76e5593dc7689d03d31055c700568675be1219))
+* labels on the x-axis for percentage stacking bar-y ([#221](https://github.com/gravity-ui/charts/issues/221)) ([3dcfc50](https://github.com/gravity-ui/charts/commit/3dcfc5089a854b186941393b3e570020420ce19b))
+* y-axis ticks count and position ([#220](https://github.com/gravity-ui/charts/issues/220)) ([d09eb81](https://github.com/gravity-ui/charts/commit/d09eb8144d244c4b2ec50f01a8f70716b8333dcc))
+
 ## [1.18.0](https://github.com/gravity-ui/charts/compare/v1.17.0...v1.18.0) (2025-10-21)
 
 
