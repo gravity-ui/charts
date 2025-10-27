@@ -178,7 +178,7 @@ export async function prepareBarYData(args: {
                     boundsWidth,
                     height,
                     width,
-                    x: x,
+                    x,
                     y: y - height / 2,
                 });
 

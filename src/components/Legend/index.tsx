@@ -146,7 +146,7 @@ function renderLegendSymbol(args: {
             case 'path': {
                 const y = legendLineHeight / 2;
                 const points = [
-                    {x: x, y},
+                    {x, y},
                     {x: x + d.symbol.width, y},
                 ];
 
