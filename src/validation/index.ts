@@ -441,7 +441,12 @@ function validateTooltip({tooltip}: {tooltip?: ChartTooltip}) {
 }
 
 export function validateData(data?: ChartData) {
-    if (isEmpty(data) || isEmpty(data.series) || isEmpty(data.series.data)) {
+    if (
+        isEmpty(data) ||
+        isEmpty(data.series) ||
+        isEmpty(data.series.data) ||
+        data.series.data.every((s) => isEmpty(s.data))
+    ) {
         throw new ChartError({
             code: CHART_ERROR_CODE.NO_DATA,
             message: i18n('error', 'label_no-data'),
