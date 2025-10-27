@@ -5,7 +5,7 @@ import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3'
 import get from 'lodash/get';
 
 import {DEFAULT_AXIS_TYPE, SeriesType} from '../../constants';
-import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
+import type {BarYSeries, ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
     getAxisHeight,
@@ -347,6 +347,10 @@ export function createXScale(args: {
 
             if (hasOnlyNullValues || domainData.length === 0) {
                 return undefined;
+            }
+
+            if (series.some((s) => (s as BarYSeries).stacking === 'percent')) {
+                return scaleLinear().domain([0, 100]).range(range);
             }
 
             if (hasNumberAndNullValues) {
