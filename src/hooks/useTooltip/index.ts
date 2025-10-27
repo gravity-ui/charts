@@ -1,6 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3';
+import isEqual from 'lodash/isEqual';
 
 import type {PointPosition, TooltipDataChunk} from '../../types';
 import type {PreparedTooltip} from '../useChartOptions/types';
@@ -17,13 +18,24 @@ type TooltipState = {
 
 export const useTooltip = ({dispatcher, tooltip}: Args) => {
     const [{hovered, pointerPosition}, setTooltipState] = React.useState<TooltipState>({});
+    const prevHovered = React.useRef(hovered);
 
     React.useEffect(() => {
         if (tooltip?.enabled) {
             dispatcher.on(
                 'hover-shape.tooltip',
                 (nextHovered?: TooltipDataChunk[], nextPointerPosition?: PointPosition) => {
-                    setTooltipState({hovered: nextHovered, pointerPosition: nextPointerPosition});
+                    const newTooltipState = {
+                        pointerPosition: nextPointerPosition,
+                        hovered: isEqual(prevHovered.current, nextHovered)
+                            ? prevHovered.current
+                            : nextHovered,
+                    };
+
+                    if (!isEqual(prevHovered.current, nextHovered)) {
+                        prevHovered.current = nextHovered;
+                    }
+                    setTooltipState(newTooltipState);
                 },
             );
         }

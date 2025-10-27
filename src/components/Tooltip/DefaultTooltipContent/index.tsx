@@ -244,6 +244,7 @@ export const DefaultTooltipContent = ({
                             });
                         }
                         case 'pie':
+                        case 'heatmap':
                         case 'treemap': {
                             const seriesData = data as PreparedPieSeries | TreemapSeriesData;
                             const formattedValue = getFormattedValue({

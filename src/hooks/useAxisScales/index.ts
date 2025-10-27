@@ -22,8 +22,8 @@ import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
-import {getBandSize} from '../utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
+import {getBandSize} from '../utils/get-band-size';
 
 export type ChartScale =
     | ScaleLinear<number, number>
@@ -116,6 +116,11 @@ function getYScaleRange(args: {axis: PreparedAxis; boundsHeight: number}): [numb
     }
 }
 
+function isSeriesWithYAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
+    const types = [SeriesType.BarY, SeriesType.Heatmap] as string[];
+    return series.some((s) => types.includes(s.type));
+}
+
 // eslint-disable-next-line complexity
 export function createYScale(args: {
     axis: PreparedAxis;
@@ -161,8 +166,7 @@ export function createYScale(args: {
 
                 let offsetMin = 0;
                 let offsetMax = boundsHeight * axis.maxPadding;
-                const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
-                if (barYSeries.length) {
+                if (isSeriesWithYAxisOffset(series)) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({
                             scale: scale as AxisScale<AxisDomain>,
@@ -219,8 +223,7 @@ export function createYScale(args: {
 
                     let offsetMin = 0;
                     let offsetMax = boundsHeight * axis.maxPadding;
-                    const barYSeries = series.filter((s) => s.type === SeriesType.BarY);
-                    if (barYSeries.length) {
+                    if (isSeriesWithYAxisOffset(series)) {
                         if (Object.keys(domain).length > 1) {
                             const bandWidth = getBandSize({
                                 scale: scale as AxisScale<AxisDomain>,
@@ -267,6 +270,11 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
     });
 
     return result;
+}
+
+function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
+    const types = [SeriesType.BarX, SeriesType.Heatmap] as string[];
+    return series.some((s) => types.includes(s.type));
 }
 
 function getXScaleRange({
@@ -381,7 +389,27 @@ export function createXScale(args: {
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
-                if (!hasZoomX) {
+                let offsetMin = 0;
+                let offsetMax = 0;
+                const hasOffset = isSeriesWithXAxisOffset(series);
+                if (hasOffset) {
+                    if (domainData.length > 1) {
+                        const bandWidth = getBandSize({
+                            scale: scale as AxisScale<AxisDomain>,
+                            domain: domainData as AxisDomain[],
+                        });
+
+                        offsetMin += bandWidth / 2;
+                        offsetMax += bandWidth / 2;
+                    }
+                }
+
+                const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
+
+                scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
+
+                if (!hasZoomX && !hasOffset) {
                     // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                     scale.nice(Math.max(10, domainData.length));
                 }
@@ -429,7 +457,31 @@ export function createXScale(args: {
 
                 const scale = scaleUtc().domain(domain).range(range);
 
-                if (!hasZoomX) {
+                let offsetMin = 0;
+                let offsetMax = 0;
+                const hasOffset = isSeriesWithXAxisOffset(series);
+                if (hasOffset) {
+                    if (domainData.length > 1) {
+                        const bandWidth = getBandSize({
+                            scale: scale as AxisScale<AxisDomain>,
+                            domain: domainData as AxisDomain[],
+                        });
+
+                        offsetMin += bandWidth / 2;
+                        offsetMax += bandWidth / 2;
+                    }
+                }
+
+                const domainOffsetMin = Math.abs(
+                    scale.invert(offsetMin).getTime() - scale.invert(0).getTime(),
+                );
+                const domainOffsetMax = Math.abs(
+                    scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
+                );
+
+                scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
+
+                if (!hasZoomX && !hasOffset) {
                     // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                     scale.nice(Math.max(10, domainData.length));
                 }

@@ -2,7 +2,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {heatmapBasicData} from '../__data__';
+import {heatmapBasicData, heatmapPlaygroundData} from '../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Heatmap',
@@ -19,5 +19,12 @@ export const HeatmapBasic = {
     name: 'Basic',
     args: {
         data: heatmapBasicData,
+    },
+} satisfies Story;
+
+export const HeatmapPlayground = {
+    name: 'Playground',
+    args: {
+        data: heatmapPlaygroundData,
     },
 } satisfies Story;

@@ -19,7 +19,7 @@ export interface ChartTooltipContentProps {
     qa?: string;
 }
 
-export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
+export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) => {
     const {
         hovered,
         xAxis,
@@ -54,4 +54,6 @@ export const ChartTooltipContent = (props: ChartTooltipContentProps) => {
     ) : (
         customTooltip
     );
-};
+});
+
+ChartTooltipContent.displayName = 'ChartTooltipContent';

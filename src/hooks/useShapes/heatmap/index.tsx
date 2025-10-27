@@ -1,9 +1,10 @@
 import React from 'react';
 
-import {select} from 'd3';
+import {color, select} from 'd3';
 import type {Dispatch} from 'd3';
 import get from 'lodash/get';
 
+import type {TooltipDataChunkHeatmap} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
@@ -24,7 +25,7 @@ type Args = {
 
 export const HeatmapSeriesShapes = (args: Args) => {
     const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
-    const hoveredDataRef = React.useRef<PreparedHeatmapData[] | null | undefined>(null);
+    const hoveredDataRef = React.useRef<TooltipDataChunkHeatmap[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -37,7 +38,33 @@ export const HeatmapSeriesShapes = (args: Args) => {
         const inactiveOptions = get(seriesOptions, 'heatmap.states.inactive');
         svgElement.selectAll('*').remove();
 
-        function handleShapeHover(data?: PreparedHeatmapData[]) {
+        // heatmap cells
+        const cellsSelection = svgElement
+            .selectAll('rect')
+            .data(preparedData.items)
+            .join('rect')
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y)
+            .attr('height', (d) => d.height)
+            .attr('width', (d) => d.width)
+            .attr('fill', (d) => d.color)
+            .attr('stroke', (d) => d.borderColor)
+            .attr('stroke-width', (d) => d.borderWidth);
+
+        // dataLabels
+        svgElement
+            .selectAll('text')
+            .data(preparedData.labels)
+            .join('text')
+            .text((d) => d.text)
+            .attr('class', b('label'))
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y)
+            .style('font-size', (d) => d.style.fontSize)
+            .style('font-weight', (d) => d.style.fontWeight || null)
+            .style('fill', (d) => d.style.fontColor || null);
+
+        function handleShapeHover(data?: TooltipDataChunkHeatmap[]) {
             hoveredDataRef.current = data;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
@@ -47,7 +74,21 @@ export const HeatmapSeriesShapes = (args: Args) => {
             }
 
             if (hoverEnabled) {
-                // ToDo: do something
+                const hovered = data?.reduce((acc, d) => {
+                    acc.add(d.data);
+                    return acc;
+                }, new Set());
+
+                cellsSelection.attr('fill', (d) => {
+                    const fillColor = d.color;
+                    if (hovered?.has(d.data)) {
+                        return (
+                            color(fillColor)?.brighter(hoverOptions.brightness).toString() ||
+                            fillColor
+                        );
+                    }
+                    return fillColor;
+                });
             }
         }
 

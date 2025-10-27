@@ -6,23 +6,23 @@ import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
 export interface HeatmapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
-     * The `x` value of the bar. Depending on the context , it may represents:
+     * The `x` value of the heatmap cell. Depending on the context, it may represents:
      * - numeric value (for `linear` x axis)
      * - timestamp value (for `datetime` x axis)
      * - x axis category value (for `category` x axis). If the type is a string, then it is a category value itself. If the type is a number, then it is the index of an element in the array of categories described in `xAxis.categories`
      */
-    x?: string | number;
+    x?: number;
     /**
-     * The `y` value of the bar. Depending on the context , it may represents:
+     * The `y` value of the heatmap cell. Depending on the context, it may represents:
      * - numeric value (for `linear` y axis)
      * - timestamp value (for `datetime` y axis)
      * - y axis category value (for `category` y axis). If the type is a string, then it is a category value itself. If the type is a number, then it is the index of an element in the array of categories described in `yAxis[0].categories`
      */
     y?: string | number;
-    /** Data label value of the bar. If not specified, the x value is used. */
-    label?: string | number;
-    /** Individual opacity for the bar. */
-    opacity?: number;
+    /** Value of the heatmap cell */
+    value?: number;
+    /** Data label value of the heatmap cell. If not specified, the value is used. */
+    label?: string;
 }
 
 export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {

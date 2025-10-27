@@ -344,19 +344,25 @@ export const useShapes = (args: Args) => {
                             break;
                         }
                         case 'heatmap': {
-                            const preparedData = await prepareHeatmapData({
-                                series: chartSeries[0] as PreparedHeatmapSeries,
-                            });
-                            shapes.push(
-                                <HeatmapSeriesShapes
-                                    key="heatmap"
-                                    dispatcher={dispatcher}
-                                    preparedData={preparedData}
-                                    seriesOptions={seriesOptions}
-                                    htmlLayout={htmlLayout}
-                                />,
-                            );
-                            shapesData.push(preparedData);
+                            if (xAxis && xScale && yScale?.[0]) {
+                                const preparedData = await prepareHeatmapData({
+                                    series: chartSeries[0] as PreparedHeatmapSeries,
+                                    xAxis,
+                                    xScale,
+                                    yAxis: yAxis[0],
+                                    yScale: yScale[0],
+                                });
+                                shapes.push(
+                                    <HeatmapSeriesShapes
+                                        key="heatmap"
+                                        dispatcher={dispatcher}
+                                        preparedData={preparedData}
+                                        seriesOptions={seriesOptions}
+                                        htmlLayout={htmlLayout}
+                                    />,
+                                );
+                                shapesData.push(preparedData);
+                            }
                             break;
                         }
                         default: {

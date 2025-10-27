@@ -76,7 +76,7 @@ export type AxisDomainData = {
 export type AxisYData = {
     id: string;
     title: AxisTitleData | null;
-    domain: AxisDomainData;
+    domain: AxisDomainData | null;
     ticks: AxisTickData[];
     plotLines: AxisPlotLineData[];
     plotBands: AxisPlotBandData[];

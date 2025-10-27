@@ -5,6 +5,7 @@ import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
+    SeriesType,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     yAxisTitleDefaults,
@@ -137,6 +138,8 @@ export const getPreparedYAxis = ({
             ).slice(0, titleMaxRowsCount);
             const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
+            const shouldHideGrid =
+                axisItem.visible === false || seriesData.some((s) => s.type === SeriesType.Heatmap);
             const preparedAxis: PreparedAxis = {
                 type: axisType,
                 labels: {
@@ -173,12 +176,14 @@ export const getPreparedYAxis = ({
                 max: get(axisItem, 'max'),
                 maxPadding: get(axisItem, 'maxPadding', 0.05),
                 grid: {
-                    enabled: get(
-                        axisItem,
-                        'grid.enabled',
-                        firstPlotAxis ||
-                            (!firstPlotAxis && !(axisByPlot[plotIndex][0].visible ?? true)),
-                    ),
+                    enabled: shouldHideGrid
+                        ? false
+                        : get(
+                              axisItem,
+                              'grid.enabled',
+                              firstPlotAxis ||
+                                  (!firstPlotAxis && !(axisByPlot[plotIndex][0].visible ?? true)),
+                          ),
                 },
                 ticks: {
                     pixelInterval: axisItem.ticks?.interval

@@ -17,7 +17,7 @@ function getDefaultHeaderFormat({
 }) {
     if (
         seriesData.every((item) =>
-            ['pie', 'treemap', 'waterfall', 'sankey', 'radar'].includes(item.type),
+            ['pie', 'treemap', 'waterfall', 'sankey', 'radar', 'heatmap'].includes(item.type),
         )
     ) {
         return undefined;

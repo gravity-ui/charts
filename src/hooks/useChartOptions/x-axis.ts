@@ -4,6 +4,7 @@ import get from 'lodash/get';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
+    SeriesType,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     xAxisTitleDefaults,
@@ -133,6 +134,8 @@ export const getPreparedXAxis = async ({
         ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
         : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
 
+    const shouldHideGrid = seriesData.some((s) => s.type === SeriesType.Heatmap);
+
     const preparedXAxis: PreparedAxis = {
         type: get(xAxis, 'type', 'linear'),
         labels: {
@@ -165,9 +168,9 @@ export const getPreparedXAxis = async ({
         },
         min: get(xAxis, 'min'),
         max: get(xAxis, 'max'),
-        maxPadding: get(xAxis, 'maxPadding', 0.01),
+        maxPadding: shouldHideGrid ? 0 : get(xAxis, 'maxPadding', 0.01),
         grid: {
-            enabled: get(xAxis, 'grid.enabled', true),
+            enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },
         ticks: {
             pixelInterval: xAxis?.ticks?.interval

@@ -70,11 +70,16 @@ export const AxisY = (props: Props) => {
                 .attr('text-anchor', 'start');
         }
 
-        svgElement
-            .append('path')
-            .attr('class', b('domain'))
-            .attr('d', lineGenerator([preparedAxisData.domain.start, preparedAxisData.domain.end]))
-            .style('stroke', preparedAxisData.domain.lineColor);
+        if (preparedAxisData.domain) {
+            svgElement
+                .append('path')
+                .attr('class', b('domain'))
+                .attr(
+                    'd',
+                    lineGenerator([preparedAxisData.domain.start, preparedAxisData.domain.end]),
+                )
+                .style('stroke', preparedAxisData.domain.lineColor);
+        }
 
         const tickClassName = b('tick');
         const ticks = svgElement
