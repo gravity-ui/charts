@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.2](https://github.com/gravity-ui/charts/compare/v1.18.1...v1.18.2) (2025-10-27)
+
+
+### Bug Fixes
+
+* labels that don't fit inside bars ([#224](https://github.com/gravity-ui/charts/issues/224)) ([7d2dff3](https://github.com/gravity-ui/charts/commit/7d2dff3cb2f5ce81c30682619fba7866c1a578ae))
+* should throw no-data error for empty data in all series ([#222](https://github.com/gravity-ui/charts/issues/222)) ([a8f3471](https://github.com/gravity-ui/charts/commit/a8f347188d771a54890a1390c92bdf5c6777d616))
+
 ## [1.18.1](https://github.com/gravity-ui/charts/compare/v1.18.0...v1.18.1) (2025-10-27)
 
 
