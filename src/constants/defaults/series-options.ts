@@ -142,10 +142,6 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
                 enabled: true,
                 brightness: 0.3,
             },
-            inactive: {
-                enabled: false,
-                opacity: 0.5,
-            },
         },
     },
 };
