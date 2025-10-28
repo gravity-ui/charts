@@ -168,7 +168,7 @@ export const getPreparedXAxis = async ({
         },
         min: get(xAxis, 'min'),
         max: get(xAxis, 'max'),
-        maxPadding: shouldHideGrid ? 0 : get(xAxis, 'maxPadding', 0.01),
+        maxPadding: get(xAxis, 'maxPadding', 0.01),
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },

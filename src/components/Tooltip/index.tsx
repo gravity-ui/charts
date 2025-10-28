@@ -46,7 +46,6 @@ export const Tooltip = (props: TooltipProps) => {
     }, [left, top]);
     return hovered?.length ? (
         <Popup
-            key="tooltip-popup"
             anchorElement={anchor}
             className={b({pinned: tooltipPinned})}
             disableTransition={true}
