@@ -1,59 +1,34 @@
-import {dateTime} from '@gravity-ui/date-utils';
 import {interpolateRgb} from 'd3';
 
 import {DEFAULT_PALETTE} from '../../../constants';
-import type {ChartData, HeatmapSeriesData, MeaningfulAny} from '../../../types';
-import marsWeatherData from '../mars-weather';
+import type {ChartData, HeatmapSeriesData} from '../../../types';
 
 function prepareData(): ChartData {
-    const data = marsWeatherData as MeaningfulAny[];
-    const months = Array.from(
-        new Set(
-            data.map((d) => {
-                return dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).format('MMMM');
-            }),
-        ),
-    );
-
-    const maxTemp = Math.max(...data.map((d) => Math.abs(d.max_temp)));
-    const getColor = interpolateRgb(DEFAULT_PALETTE[1], DEFAULT_PALETTE[0]);
+    const data = new Array(99).fill(null).map((_, index) => index);
+    const getColor = interpolateRgb(DEFAULT_PALETTE[0], DEFAULT_PALETTE[1]);
 
     const seriesData: HeatmapSeriesData[] = data.map((d) => {
-        const date = dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'});
-        const colorValue = Math.abs(d.max_temp / maxTemp);
+        const colorValue = Math.abs(d / 100);
         return {
-            x: date.date(),
-            y: date.month(),
-            value: d.max_temp,
-            custom: {
-                ...d,
-                colorValue,
-            },
+            x: Math.ceil((d + 1) / 3),
+            y: d % 3,
+            value: d,
             color: getColor(colorValue),
         };
     });
 
     return {
-        title: {
-            text: `Mars max temperature in ${dateTime({input: data[0].terrestrial_date, format: 'YYYY-MM-DD'}).format('YYYY')}`,
-        },
+        yAxis: [{type: 'category', categories: ['1', '2', '3']}],
         series: {
             data: [
                 {
                     type: 'heatmap',
                     data: seriesData,
-                    name: 'Mars weather',
+                    name: 'Series 1',
                     dataLabels: {enabled: true},
                 },
             ],
         },
-        xAxis: {type: 'linear'},
-        yAxis: [
-            {
-                type: 'category',
-                categories: months,
-            },
-        ],
     };
 }
 

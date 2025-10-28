@@ -98,6 +98,14 @@ async function setLabelSettings({
     axis.labels.rotation = rotation;
 }
 
+function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
+    if (series.some((s) => s.type === SeriesType.Heatmap)) {
+        return 0;
+    }
+
+    return 0.01;
+}
+
 export const getPreparedXAxis = async ({
     xAxis,
     seriesData,
@@ -168,7 +176,7 @@ export const getPreparedXAxis = async ({
         },
         min: get(xAxis, 'min'),
         max: get(xAxis, 'max'),
-        maxPadding: get(xAxis, 'maxPadding', 0.01),
+        maxPadding: get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData})),
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },

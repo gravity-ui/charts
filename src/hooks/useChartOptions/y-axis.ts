@@ -79,6 +79,14 @@ const getAxisLabelMaxWidth = async (args: {
     return {height: size.maxHeight, width: size.maxWidth};
 };
 
+function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
+    if (series.some((s) => s.type === SeriesType.Heatmap)) {
+        return 0;
+    }
+
+    return 0.05;
+}
+
 export const getPreparedYAxis = ({
     height,
     boundsHeight,
@@ -174,7 +182,11 @@ export const getPreparedYAxis = ({
                 },
                 min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(seriesData),
                 max: get(axisItem, 'max'),
-                maxPadding: get(axisItem, 'maxPadding', 0.05),
+                maxPadding: get(
+                    axisItem,
+                    'maxPadding',
+                    getMaxPaddingBySeries({series: seriesData}),
+                ),
                 grid: {
                     enabled: shouldHideGrid
                         ? false
