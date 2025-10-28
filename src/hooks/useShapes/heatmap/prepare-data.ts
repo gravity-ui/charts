@@ -3,7 +3,7 @@ import type {AxisDomain, AxisScale, ScaleLinear, ScaleTime} from 'd3';
 import type {ChartScale} from '../../../hooks/useAxisScales';
 import type {PreparedAxis} from '../../../hooks/useChartOptions/types';
 import {getBandSize} from '../../../hooks/utils/get-band-size';
-import type {HtmlItem} from '../../../types';
+import type {BaseTextStyle, HtmlItem} from '../../../types';
 import {
     getDomainDataXBySeries,
     getDomainDataYBySeries,
@@ -81,14 +81,16 @@ export async function prepareHeatmapData({
                     item.data.label ??
                     getFormattedValue({value: item.data.value, format: series.dataLabels.format});
                 if (labelContent) {
+                    const dataLabelsStyle: BaseTextStyle & React.CSSProperties = {
+                        ...series.dataLabels.style,
+                        maxWidth: `${item.width}px`,
+                        maxHeight: `${item.height}px`,
+                        overflow: 'hidden',
+                    };
                     const {maxHeight: height, maxWidth: width} =
                         (await getLabelsSize({
                             labels: [labelContent],
-                            style: {
-                                ...series.dataLabels.style,
-                                maxWidth: `${item.width}px`,
-                                maxHeight: `${item.height}px`,
-                            },
+                            style: dataLabelsStyle,
                             html: true,
                         })) ?? {};
                     const size = {width, height};
@@ -96,7 +98,7 @@ export async function prepareHeatmapData({
                         x: item.x + item.width / 2 - size.width / 2,
                         y: item.y + item.height / 2 - size.height / 2,
                         content: labelContent,
-                        style: series.dataLabels.style,
+                        style: dataLabelsStyle,
                         size,
                     });
                 }
