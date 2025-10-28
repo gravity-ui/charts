@@ -44,7 +44,10 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSe
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
-            borderColor: series.borderColor ?? seriesOptions?.heatmap?.borderColor ?? 0,
+            borderColor:
+                series.borderColor ??
+                seriesOptions?.heatmap?.borderColor ??
+                'var(--gcharts-shape-border-color)',
             borderWidth: series.borderWidth ?? seriesOptions?.heatmap?.borderWidth ?? 0,
         };
     }, []);
