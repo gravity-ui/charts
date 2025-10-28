@@ -2,6 +2,8 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
+import type {ChartSeries} from 'src/types';
+
 import type {PreparedAxis} from '../../hooks';
 import {
     useAxisScales,
@@ -86,17 +88,6 @@ export function useChartInnerProps(props: Props) {
         }
         return 0;
     }, [height, xAxis]);
-    const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
-    React.useEffect(() => {
-        setYAxis([]);
-        getPreparedYAxis({
-            height,
-            boundsHeight: estimatedBoundsHeight,
-            width,
-            seriesData: zoomedSeriesData,
-            yAxis: data.yAxis,
-        }).then((val) => setYAxis(val));
-    }, [data.yAxis, estimatedBoundsHeight, height, width, zoomedSeriesData]);
 
     const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
         colors,
@@ -105,6 +96,29 @@ export function useChartInnerProps(props: Props) {
         seriesData: zoomedSeriesData,
         seriesOptions: data.series.options,
     });
+
+    const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
+    const yAxisUpdateCounter = React.useRef(0);
+    React.useEffect(() => {
+        yAxisUpdateCounter.current++;
+        (async function () {
+            const currentRun = yAxisUpdateCounter.current;
+            setYAxis([]);
+            const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+            const val = await getPreparedYAxis({
+                height,
+                boundsHeight: estimatedBoundsHeight,
+                width,
+                seriesData,
+                yAxis: data.yAxis,
+            });
+
+            if (yAxisUpdateCounter.current === currentRun) {
+                setYAxis(val);
+            }
+        })();
+    }, [data.yAxis, estimatedBoundsHeight, height, width, preparedSeries]);
+
     const activeLegendItems = React.useMemo(
         () => getActiveLegendItems(preparedSeries),
         [preparedSeries],

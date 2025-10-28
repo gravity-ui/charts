@@ -165,7 +165,8 @@ export function createYScale(args: {
                 const scale = scaleFn().domain([yMin, yMax]).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = boundsHeight * axis.maxPadding;
+                // We should ignore padding if we are drawing only one point on the plot.
+                let offsetMax = yMin === yMax ? 0 : boundsHeight * axis.maxPadding;
                 if (isSeriesWithYAxisOffset(series)) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({

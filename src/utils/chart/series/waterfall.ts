@@ -14,15 +14,15 @@ export function getWaterfallPointColor(
 
 export function getWaterfallPointSubtotal(
     point: PreparedWaterfallSeriesData,
-    series: PreparedWaterfallSeries,
+    data: PreparedWaterfallSeriesData[],
 ) {
-    const pointIndex = series.data.indexOf(point);
+    const pointIndex = data.indexOf(point);
 
     if (pointIndex === -1) {
         return null;
     }
 
-    return series.data.reduce((sum, d, index) => {
+    return data.reduce((sum, d, index) => {
         if (index <= pointIndex) {
             const value = d.total ? 0 : Number(d.y);
             return sum + value;

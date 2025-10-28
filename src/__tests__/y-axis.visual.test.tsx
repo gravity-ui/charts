@@ -331,5 +331,31 @@ test.describe('Y-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('The labels should be displayed considering only the visible series', async ({
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 15001}],
+                        },
+                        {
+                            type: 'scatter',
+                            name: 'Series 2',
+                            data: [{x: 2, y: 24999}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+            const legendItem = component.getByText('Series 2');
+            await legendItem.click();
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

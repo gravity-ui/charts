@@ -144,7 +144,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                         width: boundsWidth,
                         height: boundsHeight,
                         split: preparedSplit,
-                        series: preparedSeries,
+                        series: preparedSeries.filter((s) => s.visible),
                     });
                     items.push(axisData);
                 }
