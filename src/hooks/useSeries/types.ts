@@ -17,6 +17,8 @@ import type {
     ChartSeries,
     ConnectorCurve,
     ConnectorShape,
+    HeatmapSeries,
+    HeatmapSeriesData,
     LineSeries,
     LineSeriesData,
     PathLegendSymbolOptions,
@@ -181,6 +183,19 @@ export type PreparedBarYSeries = {
         allowOverlap: boolean;
     };
     borderRadius: number;
+    borderWidth: number;
+    borderColor: string;
+} & BasePreparedSeries;
+
+export type PreparedHeatmapSeries = {
+    type: HeatmapSeries['type'];
+    data: HeatmapSeriesData[];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        html: boolean;
+        format?: ValueFormat;
+    };
     borderWidth: number;
     borderColor: string;
 } & BasePreparedSeries;
@@ -379,7 +394,8 @@ export type PreparedSeries =
     | PreparedTreemapSeries
     | PreparedWaterfallSeries
     | PreparedSankeySeries
-    | PreparedRadarSeries;
+    | PreparedRadarSeries
+    | PreparedHeatmapSeries;
 
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 

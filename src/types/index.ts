@@ -29,6 +29,7 @@ export * from './chart/treemap';
 export * from './chart/waterfall';
 export * from './chart/sankey';
 export * from './chart/radar';
+export * from './chart/heatmap';
 
 export interface ChartData<T = MeaningfulAny> {
     /**

@@ -56,3 +56,9 @@
         stroke: var(--g-color-line-generic-active);
     }
 }
+
+.gcharts-heatmap {
+    &__label {
+        dominant-baseline: text-before-edge;
+    }
+}

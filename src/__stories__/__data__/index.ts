@@ -9,3 +9,4 @@ export * from './treemap';
 export * from './waterfall';
 export * from './sankey';
 export * from './radar';
+export * from './heatmap';

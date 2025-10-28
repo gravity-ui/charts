@@ -5,6 +5,7 @@ import groupBy from 'lodash/groupBy';
 import type {PreparedBarXData, PreparedScatterData, ShapeData} from '../../hooks';
 import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
 import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
+import type {PreparedHeatmapData} from '../../hooks/useShapes/heatmap';
 import type {PreparedLineData} from '../../hooks/useShapes/line/types';
 import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
 import type {PreparedRadarData} from '../../hooks/useShapes/radar/types';
@@ -16,6 +17,7 @@ import type {
     BarXSeries,
     ChartSeries,
     ChartSeriesData,
+    HeatmapSeries,
     LineSeries,
     RadarSeries,
     SankeySeries,
@@ -268,6 +270,26 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     result.push({
                         data: closestPoint.data,
                         series: data[0].series as unknown as TreemapSeries,
+                        closest: true,
+                    });
+                }
+
+                break;
+            }
+            case 'heatmap': {
+                const data = list as unknown as PreparedHeatmapData[];
+                const closestPoint = data[0]?.items.find((cell) => {
+                    return (
+                        pointerX >= cell.x &&
+                        pointerX <= cell.x + cell.width &&
+                        pointerY >= cell.y &&
+                        pointerY <= cell.y + cell.height
+                    );
+                });
+                if (closestPoint) {
+                    result.push({
+                        data: closestPoint.data,
+                        series: data[0].series as unknown as HeatmapSeries,
                         closest: true,
                     });
                 }

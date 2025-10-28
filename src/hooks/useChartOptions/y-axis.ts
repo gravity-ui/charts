@@ -5,6 +5,7 @@ import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
+    SeriesType,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     yAxisTitleDefaults,
@@ -78,6 +79,14 @@ const getAxisLabelMaxWidth = async (args: {
     return {height: size.maxHeight, width: size.maxWidth};
 };
 
+function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
+    if (series.some((s) => s.type === SeriesType.Heatmap)) {
+        return 0;
+    }
+
+    return 0.05;
+}
+
 export const getPreparedYAxis = ({
     height,
     boundsHeight,
@@ -137,6 +146,8 @@ export const getPreparedYAxis = ({
             ).slice(0, titleMaxRowsCount);
             const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
+            const shouldHideGrid =
+                axisItem.visible === false || seriesData.some((s) => s.type === SeriesType.Heatmap);
             const preparedAxis: PreparedAxis = {
                 type: axisType,
                 labels: {
@@ -171,14 +182,20 @@ export const getPreparedYAxis = ({
                 },
                 min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(seriesData),
                 max: get(axisItem, 'max'),
-                maxPadding: get(axisItem, 'maxPadding', 0.05),
+                maxPadding: get(
+                    axisItem,
+                    'maxPadding',
+                    getMaxPaddingBySeries({series: seriesData}),
+                ),
                 grid: {
-                    enabled: get(
-                        axisItem,
-                        'grid.enabled',
-                        firstPlotAxis ||
-                            (!firstPlotAxis && !(axisByPlot[plotIndex][0].visible ?? true)),
-                    ),
+                    enabled: shouldHideGrid
+                        ? false
+                        : get(
+                              axisItem,
+                              'grid.enabled',
+                              firstPlotAxis ||
+                                  (!firstPlotAxis && !(axisByPlot[plotIndex][0].visible ?? true)),
+                          ),
                 },
                 ticks: {
                     pixelInterval: axisItem.ticks?.interval

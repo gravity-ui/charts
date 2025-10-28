@@ -7,6 +7,7 @@ import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {Halo} from './halo';
+import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PointMarkerOptions} from './marker';
 import type {PieSeries, PieSeriesData} from './pie';
@@ -26,7 +27,8 @@ export type ChartSeries<T = MeaningfulAny> =
     | TreemapSeries<T>
     | WaterfallSeries<T>
     | SankeySeries<T>
-    | RadarSeries<T>;
+    | RadarSeries<T>
+    | HeatmapSeries<T>;
 
 export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
@@ -38,7 +40,8 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | TreemapSeriesData<T>
     | WaterfallSeriesData<T>
     | SankeySeriesData<T>
-    | RadarSeriesData<T>;
+    | RadarSeriesData<T>
+    | HeatmapSeriesData<T>;
 
 export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
@@ -297,5 +300,21 @@ export interface ChartSeriesOptions {
         };
         /** Options for the point markers of radar series */
         marker?: PointMarkerOptions;
+    };
+    heatmap?: {
+        /** Options for the series states that provide additional styling information to the series. */
+        states?: {
+            hover?: BasicHoverState;
+        };
+        /**
+         * The width of the border surrounding each cell.
+         *
+         * @default 0
+         */
+        borderWidth?: number;
+        /**
+         * The color of the border surrounding each cell.
+         */
+        borderColor?: string;
     };
 }

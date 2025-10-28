@@ -73,7 +73,9 @@ export interface ChartAxis {
     min?: number;
     /** The maximum value of the axis. If undefined the max value is automatically calculate. */
     max?: number;
-    /** The grid lines settings. */
+    /** The grid lines settings.
+     * Unavailable for some visualizations, such as a heatmap.
+     */
     grid?: {
         /** Enable or disable the grid lines.
          * @default true

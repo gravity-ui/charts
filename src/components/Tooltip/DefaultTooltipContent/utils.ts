@@ -82,7 +82,9 @@ export const getMeasureValue = ({
     headerFormat?: ChartTooltip['headerFormat'];
 }) => {
     if (
-        data.every((item) => ['pie', 'treemap', 'waterfall', 'sankey'].includes(item.series.type))
+        data.every((item) =>
+            ['pie', 'treemap', 'waterfall', 'sankey', 'heatmap'].includes(item.series.type),
+        )
     ) {
         return null;
     }
@@ -132,6 +134,7 @@ export function getHoveredValues(args: {
             }
             case 'pie':
             case 'radar':
+            case 'heatmap':
             case 'treemap': {
                 const seriesData = data as PreparedPieSeries | TreemapSeriesData | RadarSeriesData;
                 return seriesData.value;

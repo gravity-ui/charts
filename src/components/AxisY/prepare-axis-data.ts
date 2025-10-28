@@ -162,11 +162,14 @@ export async function prepareAxisData({
     const axisHeight = split.plots[axis.plotIndex]?.height || height;
 
     const domainX = axis.position === 'left' ? 0 : width;
-    const domain: AxisDomainData = {
-        start: [domainX, axisPlotTopPosition],
-        end: [domainX, axisPlotTopPosition + axisHeight],
-        lineColor: axis.lineColor ?? '',
-    };
+    let domain: AxisDomainData | null = null;
+    if (axis.visible) {
+        domain = {
+            start: [domainX, axisPlotTopPosition],
+            end: [domainX, axisPlotTopPosition + axisHeight],
+            lineColor: axis.lineColor ?? '',
+        };
+    }
 
     const ticks: AxisTickData[] = [];
     const getTextSize = getTextSizeFn({style: axis.labels.style});

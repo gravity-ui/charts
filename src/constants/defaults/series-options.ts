@@ -136,4 +136,12 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
             },
         },
     },
+    heatmap: {
+        states: {
+            hover: {
+                enabled: true,
+                brightness: 0.3,
+            },
+        },
+    },
 };
