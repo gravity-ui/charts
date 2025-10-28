@@ -273,7 +273,7 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
-    const types = [SeriesType.BarX, SeriesType.Heatmap] as string[];
+    const types = [SeriesType.Heatmap] as string[];
     return series.some((s) => types.includes(s.type));
 }
 
