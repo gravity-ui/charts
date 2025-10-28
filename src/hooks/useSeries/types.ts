@@ -196,6 +196,8 @@ export type PreparedHeatmapSeries = {
         html: boolean;
         format?: ValueFormat;
     };
+    borderWidth: number;
+    borderColor: string;
 } & BasePreparedSeries;
 
 export type PreparedPieSeries = {

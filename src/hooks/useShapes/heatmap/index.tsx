@@ -2,7 +2,6 @@ import React from 'react';
 
 import {color, select} from 'd3';
 import type {Dispatch} from 'd3';
-import get from 'lodash/get';
 
 import type {TooltipDataChunkHeatmap} from '../../../types';
 import {block} from '../../../utils';
@@ -34,8 +33,7 @@ export const HeatmapSeriesShapes = (args: Args) => {
         }
 
         const svgElement = select(ref.current);
-        const hoverOptions = get(seriesOptions, 'heatmap.states.hover');
-        const inactiveOptions = get(seriesOptions, 'heatmap.states.inactive');
+        const hoverOptions = seriesOptions.heatmap?.states?.hover;
         svgElement.selectAll('*').remove();
 
         // heatmap cells
@@ -67,11 +65,6 @@ export const HeatmapSeriesShapes = (args: Args) => {
         function handleShapeHover(data?: TooltipDataChunkHeatmap[]) {
             hoveredDataRef.current = data;
             const hoverEnabled = hoverOptions?.enabled;
-            const inactiveEnabled = inactiveOptions?.enabled;
-
-            if (inactiveEnabled) {
-                // ToDo: do something
-            }
 
             if (hoverEnabled) {
                 const hovered = data?.reduce((acc, d) => {

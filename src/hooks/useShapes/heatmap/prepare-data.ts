@@ -8,6 +8,7 @@ import {
     getDomainDataXBySeries,
     getDomainDataYBySeries,
     getFormattedValue,
+    getLabelsSize,
     getTextSizeFn,
     getTextWithElipsis,
     isBandScale,
@@ -62,8 +63,8 @@ export async function prepareHeatmapData({
             color: d.color ?? series.color,
             width: bandWidth,
             height: bandHeight,
-            borderColor: null,
-            borderWidth: null,
+            borderColor: series.borderColor,
+            borderWidth: series.borderWidth,
             data: d,
         };
 
@@ -74,7 +75,32 @@ export async function prepareHeatmapData({
     const htmlDataLabels: HtmlItem[] = [];
     if (series.dataLabels.enabled) {
         if (series.dataLabels.html) {
-            // toDo: html dataLabels for heatmap
+            for (let i = 0; i < heatmapItems.length; i++) {
+                const item = heatmapItems[i];
+                const labelContent =
+                    item.data.label ??
+                    getFormattedValue({value: item.data.value, format: series.dataLabels.format});
+                if (labelContent) {
+                    const {maxHeight: height, maxWidth: width} =
+                        (await getLabelsSize({
+                            labels: [labelContent],
+                            style: {
+                                ...series.dataLabels.style,
+                                maxWidth: `${item.width}px`,
+                                maxHeight: `${item.height}px`,
+                            },
+                            html: true,
+                        })) ?? {};
+                    const size = {width, height};
+                    htmlDataLabels.push({
+                        x: item.x + item.width / 2 - size.width / 2,
+                        y: item.y + item.height / 2 - size.height / 2,
+                        content: labelContent,
+                        style: series.dataLabels.style,
+                        size,
+                    });
+                }
+            }
         } else {
             const getTextSize = getTextSizeFn({style: series.dataLabels.style});
             for (let i = 0; i < heatmapItems.length; i++) {

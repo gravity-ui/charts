@@ -17,7 +17,7 @@ type PrepareHeatmapSeriesArgs = {
 };
 
 export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSeries[] {
-    const {colorScale, series: seriesList, legend} = args;
+    const {colorScale, series: seriesList, seriesOptions, legend} = args;
 
     return seriesList.map<PreparedHeatmapSeries>((series) => {
         const name = series.name || '';
@@ -38,12 +38,14 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSe
                 enabled: series.dataLabels?.enabled || false,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
-                html: get(series, 'dataLabels.html', false),
+                html: series.dataLabels?.html ?? false,
                 format: series.dataLabels?.format,
             },
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
+            borderColor: series.borderColor ?? seriesOptions?.heatmap?.borderColor ?? 0,
+            borderWidth: series.borderWidth ?? seriesOptions?.heatmap?.borderWidth ?? 0,
         };
     }, []);
 }

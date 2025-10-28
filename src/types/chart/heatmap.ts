@@ -37,4 +37,14 @@ export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
+    /**
+     * The width of the border surrounding each cell.
+     *
+     * @default 0
+     */
+    borderWidth?: number;
+    /**
+     * The color of the border surrounding each cell.
+     */
+    borderColor?: string;
 }

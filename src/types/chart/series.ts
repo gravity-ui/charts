@@ -305,7 +305,16 @@ export interface ChartSeriesOptions {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;
-            inactive?: BasicInactiveState;
         };
+        /**
+         * The width of the border surrounding each cell.
+         *
+         * @default 0
+         */
+        borderWidth?: number;
+        /**
+         * The color of the border surrounding each cell.
+         */
+        borderColor?: string;
     };
 }
