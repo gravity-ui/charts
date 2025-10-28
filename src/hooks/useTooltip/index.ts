@@ -25,14 +25,13 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
             dispatcher.on(
                 'hover-shape.tooltip',
                 (nextHovered?: TooltipDataChunk[], nextPointerPosition?: PointPosition) => {
+                    const isHoveredChanged = !isEqual(prevHovered.current, nextHovered);
                     const newTooltipState = {
                         pointerPosition: nextPointerPosition,
-                        hovered: isEqual(prevHovered.current, nextHovered)
-                            ? prevHovered.current
-                            : nextHovered,
+                        hovered: isHoveredChanged ? nextHovered : prevHovered.current,
                     };
 
-                    if (!isEqual(prevHovered.current, nextHovered)) {
+                    if (isHoveredChanged) {
                         prevHovered.current = nextHovered;
                     }
                     setTooltipState(newTooltipState);
