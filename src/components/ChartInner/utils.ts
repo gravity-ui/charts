@@ -1,3 +1,7 @@
+import React from 'react';
+
+import isEqual from 'lodash/isEqual';
+
 import type {PreparedAxis} from '../../hooks/useChartOptions/types';
 import type {ChartSeries} from '../../types';
 
@@ -35,4 +39,26 @@ export function hasAtLeastOneSeriesDataPerPlot(
     });
 
     return [...hasDataMap.values()].every((hasData) => hasData);
+}
+
+export function useAsyncState<T>(value: T, setState: () => Promise<T>) {
+    const [stateValue, setValue] = React.useState<T>(value);
+    const countedRef = React.useRef(0);
+    const prevValue = React.useRef(value);
+    const ready = React.useRef(false);
+    React.useEffect(() => {
+        countedRef.current++;
+        (async function () {
+            const currentRun = countedRef.current;
+            const newValue = await setState();
+
+            ready.current = true;
+            if (countedRef.current === currentRun && !isEqual(prevValue.current, newValue)) {
+                setValue(newValue);
+                prevValue.current = newValue;
+            }
+        })();
+    }, [setState]);
+
+    return stateValue;
 }

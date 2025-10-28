@@ -2,8 +2,6 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
-import type {ChartSeries} from 'src/types';
-
 import type {PreparedAxis} from '../../hooks';
 import {
     useAxisScales,
@@ -23,10 +21,11 @@ import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {getActiveLegendItems} from '../../hooks/useSeries/utils';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
+import type {ChartSeries} from '../../types';
 import {getSortedSeriesData, getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
-import {hasAtLeastOneSeriesDataPerPlot} from './utils';
+import {hasAtLeastOneSeriesDataPerPlot, useAsyncState} from './utils';
 
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
@@ -65,30 +64,6 @@ export function useChartInnerProps(props: Props) {
         });
     }, [data.xAxis, data.yAxis, sortedSeriesData, zoomState]);
 
-    const [xAxis, setXAxis] = React.useState<PreparedAxis | null>(null);
-    React.useEffect(() => {
-        setXAxis(null);
-        getPreparedXAxis({
-            xAxis: data.xAxis,
-            width,
-            seriesData: zoomedSeriesData,
-            seriesOptions: preparedSeriesOptions,
-        }).then((val) => setXAxis(val));
-    }, [data.xAxis, preparedSeriesOptions, width, zoomedSeriesData]);
-
-    const estimatedBoundsHeight = React.useMemo(() => {
-        if (xAxis) {
-            return (
-                height -
-                xAxis.title.height +
-                xAxis.title.margin +
-                xAxis.labels.margin +
-                parseInt(xAxis.labels.style.fontSize, 10)
-            );
-        }
-        return 0;
-    }, [height, xAxis]);
-
     const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
         colors,
         legend: data.legend,
@@ -97,27 +72,52 @@ export function useChartInnerProps(props: Props) {
         seriesOptions: data.series.options,
     });
 
-    const [yAxis, setYAxis] = React.useState<PreparedAxis[]>([]);
-    const yAxisUpdateCounter = React.useRef(0);
-    React.useEffect(() => {
-        yAxisUpdateCounter.current++;
-        (async function () {
-            const currentRun = yAxisUpdateCounter.current;
-            setYAxis([]);
-            const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
-            const val = await getPreparedYAxis({
-                height,
-                boundsHeight: estimatedBoundsHeight,
-                width,
-                seriesData,
-                yAxis: data.yAxis,
-            });
+    const setAxes = React.useCallback(async () => {
+        const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+        const xAxis = await getPreparedXAxis({
+            xAxis: data.xAxis,
+            width,
+            seriesData,
+            seriesOptions: preparedSeriesOptions,
+        });
 
-            if (yAxisUpdateCounter.current === currentRun) {
-                setYAxis(val);
-            }
-        })();
-    }, [data.yAxis, estimatedBoundsHeight, height, width, preparedSeries]);
+        let estimatedBoundsHeight = height;
+
+        if (xAxis) {
+            estimatedBoundsHeight =
+                height -
+                (xAxis.title.height +
+                    xAxis.title.margin +
+                    xAxis.labels.margin +
+                    xAxis.labels.height +
+                    (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
+                    chart.margin.top +
+                    chart.margin.bottom);
+        }
+
+        const yAxis = await getPreparedYAxis({
+            height,
+            boundsHeight: estimatedBoundsHeight,
+            width,
+            seriesData,
+            yAxis: data.yAxis,
+        });
+
+        return {xAxis, yAxis};
+    }, [
+        chart.margin,
+        data.xAxis,
+        data.yAxis,
+        height,
+        preparedLegend,
+        preparedSeries,
+        preparedSeriesOptions,
+        width,
+    ]);
+    const {xAxis, yAxis} = useAsyncState<{xAxis: PreparedAxis | null; yAxis: PreparedAxis[]}>(
+        {xAxis: null, yAxis: []},
+        setAxes,
+    );
 
     const activeLegendItems = React.useMemo(
         () => getActiveLegendItems(preparedSeries),
