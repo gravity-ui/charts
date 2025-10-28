@@ -60,4 +60,85 @@ describe('validation/validateAxes', () => {
             expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
         },
     );
+
+    test.each<Args>([
+        {
+            xAxis: {
+                type: 'category',
+                categories: ['a', 'b', 'a'],
+            },
+        },
+        {
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['x', 'y', 'x'],
+                },
+            ],
+        },
+        {
+            xAxis: {
+                type: 'category',
+                categories: ['a', 'b', 'c'],
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['a', 'b', 'c'],
+                },
+                {
+                    type: 'category',
+                    categories: ['x', 'y', 'x'],
+                },
+            ],
+        },
+    ])('validateAxes should throw an error in case of duplicate categories (data: %j)', (args) => {
+        let error: ChartError | null = null;
+
+        try {
+            validateAxes(args);
+        } catch (e) {
+            error = e as ChartError;
+        }
+
+        expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+    });
+
+    test.each<Args>([
+        {
+            xAxis: {
+                type: 'category',
+                categories: ['a', 'b', 'c'],
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['x', 'y', 'z'],
+                },
+            ],
+        },
+        {
+            xAxis: {
+                type: 'linear',
+            },
+            yAxis: [
+                {
+                    type: 'datetime',
+                },
+            ],
+        },
+    ])(
+        'validateAxes should not throw an error when categories are unique or axis is not category type (data: %j)',
+        (args) => {
+            let error: ChartError | null = null;
+
+            try {
+                validateAxes(args);
+            } catch (e) {
+                error = e as ChartError;
+            }
+
+            expect(error).toBeNull();
+        },
+    );
 });

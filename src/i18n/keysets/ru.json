@@ -18,7 +18,8 @@
     "label_invalid-tooltip-totals-aggregation-type-str": "Похоже, что вы пытаетесь использовать некорректное значение для встроенной агрегации \"tooltip.totals.aggregation\". Доступные значения: [{{values}}].",
     "label_invalid-axis-type": "Похоже, что вы пытаетесь использовать некорректный тип для оси \"{{key}}\". Доступные типы: [{{values}}].",
     "label_invalid-axis-labels-html-type": "Похоже, что вы пытаетесь использовать некорректный тип для свойства \"labels.html\". Допускается только использование булевых значений.",
-    "label_invalid-axis-labels-html-not-supported-axis-type": "Похоже, что вы пытаетесь использовать свойство \"labels.html\" для оси с неподдерживаемым типом. Это свойство поддерживается только для оси типа \"category\"."
+    "label_invalid-axis-labels-html-not-supported-axis-type": "Похоже, что вы пытаетесь использовать свойство \"labels.html\" для оси с неподдерживаемым типом. Это свойство поддерживается только для оси типа \"category\".",
+    "label_duplicate-axis-categories": "Похоже, что у вас есть дублирующееся значение категории \"{{duplicate}}\" в оси {{key}}[{{axisIndex}}]."
   },
   "tooltip": {
     "label_totals_sum": "Сумма",

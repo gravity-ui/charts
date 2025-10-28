@@ -5,6 +5,32 @@ import type {ChartAxis, ChartXAxis, ChartYAxis} from '../types';
 
 const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
 
+function validateDuplicateCategories({
+    categories,
+    key,
+    axisIndex,
+}: {
+    categories: string[];
+    key: 'x' | 'y';
+    axisIndex: number;
+}) {
+    const seen = new Set<string>();
+
+    categories.forEach((category) => {
+        if (seen.has(category)) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: i18n('error', 'label_duplicate-axis-categories', {
+                    key,
+                    axisIndex,
+                    duplicate: category,
+                }),
+            });
+        }
+        seen.add(category);
+    });
+}
+
 function validateAxisType({axis, key}: {axis: ChartAxis; key: 'x' | 'y'}) {
     if (axis.type && !AVAILABLE_AXIS_TYPES.includes(axis.type)) {
         throw new ChartError({
@@ -46,10 +72,24 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     if (xAxis) {
         validateAxisType({axis: xAxis, key: 'x'});
         validateLabelsHtmlOptions({axis: xAxis});
+        if (xAxis?.type === 'category' && xAxis.categories) {
+            validateDuplicateCategories({
+                categories: xAxis.categories,
+                key: 'x',
+                axisIndex: 0,
+            });
+        }
     }
 
-    yAxis.forEach((axis) => {
+    yAxis.forEach((axis, axisIndex) => {
         validateAxisType({axis, key: 'y'});
+        if (axis.type === 'category' && axis.categories) {
+            validateDuplicateCategories({
+                categories: axis.categories,
+                key: 'y',
+                axisIndex,
+            });
+        }
         validateLabelsHtmlOptions({axis});
     });
 }
