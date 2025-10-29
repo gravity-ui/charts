@@ -39,7 +39,7 @@ function prepareData(): ChartData {
         yAxis: [
             {
                 type: 'category',
-                categories: categories.sort(),
+                categories: [...new Set(categories)].sort(),
                 title: {
                     text: 'Release year',
                 },
