@@ -18,6 +18,7 @@ import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
+import {useAsyncState} from './utils';
 
 import './styles.scss';
 
@@ -126,35 +127,27 @@ export const ChartInner = (props: ChartInnerProps) => {
         }
     }, [prevWidth, width, prevHeight, height, tooltipPinned, unpinTooltip]);
 
-    const [yAxisDataItems, setYAxisDataItems] = React.useState<AxisYData[]>([]);
-    const countedRef = React.useRef(0);
-    React.useEffect(() => {
-        countedRef.current++;
-        (async function () {
-            const currentRun = countedRef.current;
-            const items: AxisYData[] = [];
-            for (let i = 0; i < yAxis.length; i++) {
-                const axis = yAxis[i];
-                const scale = yScale?.[i];
-                if (scale) {
-                    const axisData = await prepareAxisData({
-                        axis,
-                        scale,
-                        top: boundsOffsetTop,
-                        width: boundsWidth,
-                        height: boundsHeight,
-                        split: preparedSplit,
-                        series: preparedSeries.filter((s) => s.visible),
-                    });
-                    items.push(axisData);
-                }
+    const setYAxisDataItems = React.useCallback(async () => {
+        const items: AxisYData[] = [];
+        for (let i = 0; i < yAxis.length; i++) {
+            const axis = yAxis[i];
+            const scale = yScale?.[i];
+            if (scale) {
+                const axisData = await prepareAxisData({
+                    axis,
+                    scale,
+                    top: boundsOffsetTop,
+                    width: boundsWidth,
+                    height: boundsHeight,
+                    split: preparedSplit,
+                    series: preparedSeries.filter((s) => s.visible),
+                });
+                items.push(axisData);
             }
-
-            if (countedRef.current === currentRun) {
-                setYAxisDataItems(items);
-            }
-        })();
+        }
+        return items;
     }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSeries, preparedSplit, yAxis, yScale]);
+    const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems);
 
     return (
         <div className={b()}>

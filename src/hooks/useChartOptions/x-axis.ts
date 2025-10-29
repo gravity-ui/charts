@@ -23,6 +23,7 @@ import {
     getMaxTickCount,
     getTicksCount,
     hasOverlappingLabels,
+    isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
 import {createXScale} from '../useAxisScales';
@@ -116,7 +117,12 @@ export const getPreparedXAxis = async ({
     seriesData: ChartSeries[];
     seriesOptions: PreparedSeriesOptions;
     width: number;
-}): Promise<PreparedAxis> => {
+}): Promise<PreparedAxis | null> => {
+    const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
+    if (!hasAxisRelatedSeries) {
+        return Promise.resolve(null);
+    }
+
     const titleText = get(xAxis, 'title.text', '');
     const titleStyle: BaseTextStyle = {
         ...xAxisTitleDefaults.style,
