@@ -9,12 +9,12 @@ function prepareData(): ChartData {
         (d) => d.platform,
         (d) => (d.date ? new Date(d.date as number).getFullYear() : 'unknown'),
     );
-    const categories: string[] = [];
+    const categories = new Set<string>();
     const series = grouped.map(([platform, years]) => {
         return {
             name: platform,
             data: years.map(([year, list]) => {
-                categories.push(String(year));
+                categories.add(String(year));
 
                 return {
                     y: String(year),
@@ -39,7 +39,7 @@ function prepareData(): ChartData {
         yAxis: [
             {
                 type: 'category',
-                categories: categories.sort(),
+                categories: [...categories].sort(),
                 title: {
                     text: 'Release year',
                 },
