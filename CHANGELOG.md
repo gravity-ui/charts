@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.19.0](https://github.com/gravity-ui/charts/compare/v1.18.2...v1.19.0) (2025-10-29)
+
+
+### Features
+
+* add heatmap series type ([#226](https://github.com/gravity-ui/charts/issues/226)) ([f6cd22b](https://github.com/gravity-ui/charts/commit/f6cd22be400c52c4372ec1291a2468cd2a879b14))
+
+
+### Bug Fixes
+
+* fix y-axis label available space ([#230](https://github.com/gravity-ui/charts/issues/230)) ([b9bdd87](https://github.com/gravity-ui/charts/commit/b9bdd8738086126f1a5ea1269b7c8669044412fb))
+* y-axis labels should be displayed considering only the visible series ([#227](https://github.com/gravity-ui/charts/issues/227)) ([4902ed0](https://github.com/gravity-ui/charts/commit/4902ed061fcf131fb656aa2696f5de5d5c341e8b))
+
 ## [1.18.2](https://github.com/gravity-ui/charts/compare/v1.18.1...v1.18.2) (2025-10-27)
 
 
