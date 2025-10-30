@@ -159,7 +159,6 @@ export function useChartInnerProps(props: Props) {
         height,
         margin: chart.margin,
         preparedLegend,
-        preparedRangeSlider: rangeSlider,
         preparedSeries: preparedSeries,
         preparedYAxis: yAxis,
         preparedXAxis: xAxis,
