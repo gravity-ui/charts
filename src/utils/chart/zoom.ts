@@ -1,4 +1,5 @@
 import {SeriesType} from '../../constants';
+import type {PreparedAxis, PreparedSeries, PreparedZoomableSeries} from '../../hooks';
 import {getAxisCategories} from '../../hooks/useChartOptions/utils';
 import type {ZoomState} from '../../hooks/useZoom/types';
 import type {
@@ -13,7 +14,7 @@ const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SeriesType.Area, 
 
 // eslint-disable-next-line complexity
 function isValueInRange(args: {
-    axis?: ChartXAxis | ChartYAxis;
+    axis?: ChartXAxis | ChartYAxis | PreparedAxis | null;
     value?: number | string;
     min: number | string;
     max: number | string;
@@ -41,7 +42,7 @@ function isValueInRange(args: {
             return numValue >= numMin && numValue <= numMax;
         }
         case 'category': {
-            const categories = getAxisCategories(axis) || [];
+            const categories = getAxisCategories(axis || {}) || [];
 
             if (typeof value === 'string' && typeof min === 'number' && typeof max === 'number') {
                 const valueIndex = categories.indexOf(value);
@@ -69,20 +70,24 @@ function isValueInRange(args: {
     }
 }
 
+function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoomableSeries {
+    return Array.isArray(series.data);
+}
+
 export function getZoomedSeriesData(args: {
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     zoomState: Partial<ZoomState>;
-    xAxis?: ChartXAxis;
-    yAxes?: ChartYAxis[];
+    xAxis?: ChartXAxis | PreparedAxis | null;
+    yAxis?: ChartYAxis[] | PreparedAxis[] | null;
 }) {
-    const {seriesData, xAxis, yAxes, zoomState} = args;
+    const {seriesData, xAxis, yAxis, zoomState} = args;
 
     if (Object.keys(zoomState).length <= 0) {
-        return {zoomedSeriesData: seriesData, zoomedShapesSeriesData: seriesData};
+        return {preparedSeries: seriesData, preparedShapesSeries: seriesData};
     }
 
-    const zoomedSeriesData: ChartSeries[] = [];
-    const zoomedShapesSeriesData: ChartSeries[] = [];
+    const zoomedSeriesData: PreparedSeries[] = [];
+    const zoomedShapesSeriesData: PreparedSeries[] = [];
     let prevPointInRange = false;
     let currentPointInRange = false;
 
@@ -92,6 +97,10 @@ export function getZoomedSeriesData(args: {
             SERIES_TYPE_WITH_HIDDEN_POINTS.includes(seriesItem.type) && xAxis?.type !== 'category'
                 ? []
                 : undefined;
+
+        if (!isPreparedZoomableSeries(seriesItem)) {
+            return;
+        }
 
         seriesItem.data.forEach((point, i) => {
             const prevPoint = seriesItem.data[i - 1];
@@ -123,7 +132,7 @@ export function getZoomedSeriesData(args: {
                     const [yMin, yMax] = zoomStateY;
                     const y = 'y' in point ? point.y : undefined;
                     inYRange = isValueInRange({
-                        axis: yAxes?.[yAxisIndex],
+                        axis: yAxis?.[yAxisIndex],
                         value: y,
                         min: yMin,
                         max: yMax,
@@ -154,14 +163,17 @@ export function getZoomedSeriesData(args: {
         });
 
         zoomedSeriesData.push({
-            ...(seriesItem as Omit<ChartSeries, 'data'>),
+            ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredData,
-        } as ChartSeries);
+        } as PreparedSeries);
         zoomedShapesSeriesData.push({
-            ...(seriesItem as Omit<ChartSeries, 'data'>),
+            ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredShapesData || filteredData,
-        } as ChartSeries);
+        } as PreparedSeries);
     });
 
-    return {zoomedSeriesData, zoomedShapesSeriesData};
+    return {
+        preparedSeries: zoomedSeriesData,
+        preparedShapesSeries: zoomedShapesSeriesData,
+    };
 }
