@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.0](https://github.com/gravity-ui/charts/compare/v1.19.0...v1.20.0) (2025-10-30)
+
+
+### Features
+
+* **validation:** add validation for duplicate category values in axes ([#229](https://github.com/gravity-ui/charts/issues/229)) ([a4b294b](https://github.com/gravity-ui/charts/commit/a4b294be6230f5b0457db0cee188f94e8ed1e4d8))
+
+
+### Bug Fixes
+
+* fix chart update with new categories on the x-axis ([#232](https://github.com/gravity-ui/charts/issues/232)) ([5dfcab3](https://github.com/gravity-ui/charts/commit/5dfcab38a406739b62908d1e2e6b3731a024b205))
+
 ## [1.19.0](https://github.com/gravity-ui/charts/compare/v1.18.2...v1.19.0) (2025-10-29)
 
 
