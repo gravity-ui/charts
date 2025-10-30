@@ -1,6 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3';
+import isEqual from 'lodash/isEqual';
 
 import type {PreparedAxis} from '../../hooks';
 import {
@@ -25,7 +26,7 @@ import type {ChartSeries} from '../../types';
 import {getSortedSeriesData, getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
-import {hasAtLeastOneSeriesDataPerPlot, useAsyncState} from './utils';
+import {hasAtLeastOneSeriesDataPerPlot} from './utils';
 
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
@@ -72,38 +73,61 @@ export function useChartInnerProps(props: Props) {
         seriesOptions: data.series.options,
     });
 
-    const setAxes = React.useCallback(async () => {
-        const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
-        const xAxis = await getPreparedXAxis({
-            xAxis: data.xAxis,
-            width,
-            seriesData,
-            seriesOptions: preparedSeriesOptions,
-        });
+    // preparing the X and Y axes
+    const [axesState, setValue] = React.useState<{
+        xAxis: PreparedAxis | null;
+        yAxis: PreparedAxis[];
+    }>({xAxis: null, yAxis: []});
+    const axesStateRunRef = React.useRef(0);
+    const prevAxesStateValue = React.useRef(axesState);
+    const axesStateReady = React.useRef(false);
+    React.useEffect(() => {
+        axesStateRunRef.current++;
+        axesStateReady.current = false;
 
-        let estimatedBoundsHeight = height;
+        (async function () {
+            const currentRun = axesStateRunRef.current;
+            const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+            const xAxis = await getPreparedXAxis({
+                xAxis: data.xAxis,
+                width,
+                seriesData,
+                seriesOptions: preparedSeriesOptions,
+            });
 
-        if (xAxis) {
-            estimatedBoundsHeight =
-                height -
-                (xAxis.title.height +
-                    xAxis.title.margin +
-                    xAxis.labels.margin +
-                    xAxis.labels.height +
-                    (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
-                    chart.margin.top +
-                    chart.margin.bottom);
-        }
+            let estimatedBoundsHeight = height;
 
-        const yAxis = await getPreparedYAxis({
-            height,
-            boundsHeight: estimatedBoundsHeight,
-            width,
-            seriesData,
-            yAxis: data.yAxis,
-        });
+            if (xAxis) {
+                estimatedBoundsHeight =
+                    height -
+                    (xAxis.title.height +
+                        xAxis.title.margin +
+                        xAxis.labels.margin +
+                        xAxis.labels.height +
+                        (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
+                        chart.margin.top +
+                        chart.margin.bottom);
+            }
 
-        return {xAxis, yAxis};
+            const yAxis = await getPreparedYAxis({
+                height,
+                boundsHeight: estimatedBoundsHeight,
+                width,
+                seriesData,
+                yAxis: data.yAxis,
+            });
+
+            const newStateValue = {xAxis, yAxis};
+
+            if (axesStateRunRef.current === currentRun) {
+                if (!isEqual(prevAxesStateValue.current, newStateValue)) {
+                    setValue(newStateValue);
+                    prevAxesStateValue.current = newStateValue;
+                }
+
+                axesStateReady.current = true;
+            }
+        })();
     }, [
         chart.margin,
         data.xAxis,
@@ -114,10 +138,7 @@ export function useChartInnerProps(props: Props) {
         preparedSeriesOptions,
         width,
     ]);
-    const {xAxis, yAxis} = useAsyncState<{xAxis: PreparedAxis | null; yAxis: PreparedAxis[]}>(
-        {xAxis: null, yAxis: []},
-        setAxes,
-    );
+    const {xAxis, yAxis} = axesStateReady.current ? axesState : {xAxis: null, yAxis: []};
 
     const activeLegendItems = React.useMemo(
         () => getActiveLegendItems(preparedSeries),
