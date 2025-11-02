@@ -5,7 +5,8 @@
     "@gravity-ui/eslint-config/import-order",
     "@gravity-ui/eslint-config/client",
     "@gravity-ui/eslint-config/a11y",
-    "@gravity-ui/eslint-config/prettier"
+    "@gravity-ui/eslint-config/prettier",
+    "plugin:storybook/recommended"
   ],
   "plugins": ["eslint-plugin-react-compiler"],
   "rules": {
@@ -61,6 +62,9 @@
       "files": ["**/*.js", "!src/**/*"],
       "env": {
         "node": true
+      },
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": "off"
       }
     }
   ]

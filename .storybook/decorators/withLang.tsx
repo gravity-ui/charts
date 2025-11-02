@@ -3,7 +3,7 @@ import React from 'react';
 import {settings} from '@gravity-ui/date-utils';
 import type {Lang} from '@gravity-ui/uikit';
 import {configure} from '@gravity-ui/uikit';
-import type {Decorator} from '@storybook/react';
+import type {Decorator} from '@storybook/react-webpack5';
 
 import {i18nFactory} from '../../src/i18n';
 

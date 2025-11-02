@@ -1,19 +1,18 @@
 import React from 'react';
 
-import type {StoryObj} from '@storybook/react';
-import {randomNormal} from 'd3';
+import type {StoryObj} from '@storybook/react-webpack5';
 
 import type {ChartData} from '../../types';
 import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 
-const randomFn = randomNormal(0, 10);
+import {generateSeriesData} from './utils';
+
 const randomStr = () => randomString(Math.random() * 10, 'absdEFGHIJklmnopqrsTUvWxyz');
 
 const ChartStoryWithData = (args: {categoriesCount: number; seriesCount: number}) => {
     const widgetData: ChartData = React.useMemo(() => {
         const categories = Array.from({length: args.categoriesCount}).map(randomStr);
-        const series = Array.from({length: args.seriesCount}).map(randomStr);
 
         return {
             xAxis: {
@@ -21,14 +20,7 @@ const ChartStoryWithData = (args: {categoriesCount: number; seriesCount: number}
                 categories: categories,
             },
             series: {
-                data: series.map((s) => ({
-                    type: 'scatter',
-                    name: s,
-                    data: categories.map((_, i) => ({
-                        x: i,
-                        y: randomFn(),
-                    })),
-                })),
+                data: generateSeriesData(args.seriesCount),
             },
         };
     }, [args]);
@@ -36,6 +28,7 @@ const ChartStoryWithData = (args: {categoriesCount: number; seriesCount: number}
     return <ChartStory data={widgetData} />;
 };
 
+// TODO: the story isn't work. need fix
 export const PerformanceIssueScatter: StoryObj<typeof ChartStoryWithData> = {
     name: 'Performance issue',
     args: {

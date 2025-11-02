@@ -1,4 +1,4 @@
-import {action} from '@storybook/addon-actions';
+import {action} from 'storybook/actions';
 
 import type {ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';

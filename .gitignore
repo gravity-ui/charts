@@ -10,6 +10,7 @@ dist
 dist-docs
 docs/diplodoc/pages/api
 storybook-static
+debug-storybook.log
 .cache
 .tmp
 playwright-report

@@ -1,4 +1,4 @@
-import type {Meta, StoryObj} from '@storybook/react';
+import type {Meta, StoryObj} from '@storybook/react-webpack5';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
@@ -14,7 +14,6 @@ const meta: Meta<typeof Chart> = {
     title: 'Area',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;

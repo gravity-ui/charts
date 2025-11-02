@@ -1,5 +1,5 @@
-import {action} from '@storybook/addon-actions';
 import {descending, groups, sort} from 'd3';
+import {action} from 'storybook/actions';
 
 import type {ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';
