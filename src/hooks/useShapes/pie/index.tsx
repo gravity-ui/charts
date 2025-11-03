@@ -16,10 +16,10 @@ import type {PieLabelData, PreparedPieData, SegmentData} from './types';
 const b = block('pie');
 
 type PreparePieSeriesArgs = {
-    dispatcher: Dispatch<object>;
     preparedData: PreparedPieData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    dispatcher?: Dispatch<object>;
 };
 
 export function getHaloVisibility(d: PieArcDatum<SegmentData>) {
@@ -142,7 +142,7 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
         const hoverOptions = get(seriesOptions, 'pie.states.hover');
         const inactiveOptions = get(seriesOptions, 'pie.states.inactive');
 
-        dispatcher.on(eventName, (data?: TooltipDataChunkPie[]) => {
+        dispatcher?.on(eventName, (data?: TooltipDataChunkPie[]) => {
             const selectedSeriesId = data?.[0]?.series?.id;
             const hoverEnabled = hoverOptions?.enabled;
             const inactiveEnabled = inactiveOptions?.enabled;
@@ -215,7 +215,7 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
         });
 
         return () => {
-            dispatcher.on(eventName, null);
+            dispatcher?.on(eventName, null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

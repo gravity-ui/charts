@@ -1,7 +1,9 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3';
+import isEqual from 'lodash/isEqual';
 
+import type {ZoomState} from '../../hooks/useZoom/types';
 import type {ChartTooltip} from '../../types';
 import {EventType, isMacintosh} from '../../utils';
 
@@ -13,6 +15,7 @@ type Props = {
 export function useChartInnerState(props: Props) {
     const {dispatcher, tooltip} = props;
     const [tooltipPinned, setTooltipPinned] = React.useState(false);
+    const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const tooltipEnabled = tooltip?.enabled;
     const tooltipPinEnabled = tooltip?.pin?.enabled;
     const modifierKey = tooltip?.pin?.modifierKey;
@@ -43,9 +46,20 @@ export function useChartInnerState(props: Props) {
         dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
     }, [dispatcher]);
 
+    const handleSetZoomState = React.useCallback(
+        (nextZoomState: Partial<ZoomState>) => {
+            if (!isEqual(zoomState, nextZoomState)) {
+                setZoomState(nextZoomState);
+            }
+        },
+        [zoomState],
+    );
+
     return {
+        setZoomState: handleSetZoomState,
         tooltipPinned,
         togglePinTooltip: tooltipEnabled && tooltipPinEnabled ? togglePinTooltip : undefined,
         unpinTooltip: tooltipEnabled && tooltipPinEnabled ? unpinTooltip : undefined,
+        zoomState,
     };
 }

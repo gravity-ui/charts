@@ -76,6 +76,7 @@ const shapeScatterChartData = (
         title: {
             text: text('X axis title', ''),
         },
+        // min: 40,
     };
 
     let yAxis: ChartAxis = {
@@ -106,8 +107,22 @@ const shapeScatterChartData = (
         },
         xAxis,
         yAxis: [yAxis],
-        title: {
-            text: text('title', 'Chart title'),
+        // title: {
+        //     text: text('title', 'Chart title'),
+        // },
+        legend: {
+            enabled: true,
+            // margin: 0,
+        },
+        rangeSlider: {
+            enabled: true,
+            // height: 60,
+            // margin: 0,
+        },
+        chart: {
+            zoom: {
+                enabled: true,
+            },
         },
     };
 };

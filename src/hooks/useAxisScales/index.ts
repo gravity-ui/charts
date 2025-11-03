@@ -22,6 +22,7 @@ import type {AxisDirection} from '../../utils';
 import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
+import type {ZoomState} from '../useZoom/types';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
 
@@ -40,6 +41,7 @@ type Args = {
     split: PreparedSplit;
     hasZoomX?: boolean;
     hasZoomY?: boolean;
+    zoomState?: Partial<ZoomState>;
 };
 
 type ReturnValue = {
@@ -316,21 +318,42 @@ function getXScaleRange({
     return range;
 }
 
+function getXMinMaxPropsOrState(args: {
+    axis: PreparedAxis | ChartAxis;
+    zoomStateX?: Partial<ZoomState>['x'];
+}) {
+    const {axis, zoomStateX} = args;
+    const xMinProps = get(axis, 'min');
+    const xMaxProps = get(axis, 'max');
+    const xMinState = zoomStateX?.[0];
+    const xMaxState = zoomStateX?.[1];
+    const xMin = typeof xMinState === 'number' ? xMinState : xMinProps;
+    const xMax = typeof xMaxState === 'number' ? xMaxState : xMaxProps;
+    // console.log('xMinProps', xMinProps);
+    // console.log('xMinState', xMinState);
+    // console.log('xMinProps < xMinState', xMinProps < xMinState);
+
+    return [xMin, xMax];
+}
+
 // eslint-disable-next-line complexity
 export function createXScale(args: {
-    axis: PreparedAxis | ChartAxis;
+    axis: PreparedAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
+    zoomStateX?: Partial<ZoomState>['x'];
 }) {
-    const {axis, boundsWidth, series, seriesOptions, hasZoomX} = args;
-    const xMinProps = get(axis, 'min');
-    const xMaxProps = get(axis, 'max');
+    const {axis, boundsWidth, series, seriesOptions, zoomStateX} = args;
+    // const xMinProps = get(axis, 'min');
+    // const xMaxProps = get(axis, 'max');
+    const [xMinProps, xMaxProps] = getXMinMaxPropsOrState({axis, zoomStateX});
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const xCategories = get(axis, 'categories');
     const maxPadding = get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
+    const hasZoomX = Array.isArray(zoomStateX) && zoomStateX.length > 0;
 
     const range = getXScaleRange({
         boundsWidth,
@@ -370,14 +393,14 @@ export function createXScale(args: {
                 let xMin: number;
                 let xMax: number;
 
-                if (typeof xMinProps === 'number') {
+                if (typeof xMinProps === 'number' && xMinProps > xMinDomain) {
                     xMin = xMinProps;
                 } else {
                     const xMinDefault = getDefaultMinXAxisValue(series);
                     xMin = xMinDefault ?? xMinDomain;
                 }
 
-                if (typeof xMaxProps === 'number') {
+                if (typeof xMaxProps === 'number' && xMaxProps < xMaxDomain) {
                     xMax = xMaxProps;
                 } else {
                     const xMaxDefault = getDefaultMaxXAxisValue(series);
@@ -452,8 +475,14 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
-                const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
+                const xMin =
+                    typeof xMinProps === 'number' && xMinProps > xMinTimestamp
+                        ? xMinProps
+                        : xMinTimestamp;
+                const xMax =
+                    typeof xMaxProps === 'number' && xMaxProps < xMaxTimestamp
+                        ? xMaxProps
+                        : xMaxTimestamp;
                 domain = [xMin, xMax];
 
                 const scale = scaleUtc().domain(domain).range(range);
@@ -486,6 +515,7 @@ export function createXScale(args: {
                     // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                     scale.nice(Math.max(10, domainData.length));
                 }
+                // console.log('scale', scale.domain());
                 return scale;
             }
 
@@ -497,7 +527,17 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {boundsWidth, boundsHeight, hasZoomX, series, seriesOptions, split, xAxis, yAxis} = args;
+    const {
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+        zoomState,
+    } = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -511,6 +551,7 @@ const createScales = (args: Args) => {
                   series: visibleSeries,
                   seriesOptions,
                   hasZoomX,
+                  zoomStateX: zoomState?.x,
               })
             : undefined,
         yScale: yAxis.map((axis, index) => {
@@ -543,6 +584,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
         split,
         xAxis,
         yAxis,
+        zoomState,
     } = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
@@ -560,9 +602,21 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 split,
                 xAxis,
                 yAxis,
+                zoomState,
             }));
         }
 
         return {xScale, yScale};
-    }, [boundsWidth, boundsHeight, hasZoomX, hasZoomY, series, seriesOptions, split, xAxis, yAxis]);
+    }, [
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        hasZoomY,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+        zoomState,
+    ]);
 };

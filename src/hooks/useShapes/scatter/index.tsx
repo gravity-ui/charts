@@ -21,10 +21,10 @@ import type {MarkerData, PreparedScatterData} from './types';
 export {prepareScatterData} from './prepare-data';
 
 type ScatterSeriesShapeProps = {
-    dispatcher: Dispatch<object>;
     preparedData: PreparedScatterData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    dispatcher?: Dispatch<object>;
 };
 
 const b = block('scatter');
@@ -101,10 +101,10 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.scatter', handleShapeHover);
+        dispatcher?.on('hover-shape.scatter', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.scatter', null);
+            dispatcher?.on('hover-shape.scatter', null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

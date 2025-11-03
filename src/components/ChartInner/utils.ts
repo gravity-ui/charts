@@ -1,5 +1,6 @@
 import React from 'react';
 
+import debounce from 'lodash/debounce';
 import isEqual from 'lodash/isEqual';
 
 import type {PreparedSeries} from '../../hooks';
@@ -61,4 +62,18 @@ export function useAsyncState<T>(value: T, setState: () => Promise<T>) {
     }, [setState]);
 
     return stateValue;
+}
+
+export function useDebouncedValue<T>(props: {value: T; delay?: number}) {
+    const {value: propsValue, delay = 0} = props;
+    const [value, setValue] = React.useState<T>(propsValue);
+    React.useEffect(() => {
+        const debouncedSetValue = debounce(setValue, delay);
+        debouncedSetValue(propsValue);
+        return () => {
+            debouncedSetValue.cancel();
+        };
+    }, [propsValue, delay]);
+
+    return value;
 }

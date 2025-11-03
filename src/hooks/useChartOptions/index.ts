@@ -2,47 +2,42 @@ import React from 'react';
 
 import {DEFAULT_PALETTE} from '../../constants';
 import type {
+    ChartRangeSlider,
     ChartSeries,
     ChartTitle,
-    ChartTooltip,
-    ChartXAxis,
-    ChartYAxis,
     ChartOptions as GeneralChartOptions,
 } from '../../types';
 
 import {getPreparedChart} from './chart';
+import {getPreparedRangeSlider} from './range-slider';
 import {getPreparedTitle} from './title';
-import {getPreparedTooltip} from './tooltip';
-import type {ChartOptions} from './types';
 
 type Args = {
     seriesData: ChartSeries[];
     chart?: GeneralChartOptions;
     colors?: string[];
+    rangeSlider?: ChartRangeSlider;
     title?: ChartTitle;
-    tooltip?: ChartTooltip;
-    yAxes?: ChartYAxis[];
-    xAxis?: ChartXAxis;
 };
 
-export const useChartOptions = (args: Args): ChartOptions => {
-    const {chart, colors, seriesData, title, tooltip, yAxes, xAxis} = args;
-    const options: ChartOptions = React.useMemo(() => {
+export const useChartOptions = (args: Args) => {
+    const {chart, colors, rangeSlider, seriesData, title} = args;
+    const options = React.useMemo(() => {
         const preparedTitle = getPreparedTitle({title});
-        const preparedTooltip = getPreparedTooltip({tooltip, seriesData, yAxes, xAxis});
         const preparedChart = getPreparedChart({
             chart,
             preparedTitle,
             seriesData,
         });
+        const preparedRangeSlider = getPreparedRangeSlider({rangeSlider});
 
         return {
             colors: colors ?? DEFAULT_PALETTE,
             chart: preparedChart,
+            rangeSlider: preparedRangeSlider,
             title: preparedTitle,
-            tooltip: preparedTooltip,
         };
-    }, [chart, colors, seriesData, title, tooltip, xAxis, yAxes]);
+    }, [chart, colors, rangeSlider, seriesData, title]);
 
     return options;
 };
