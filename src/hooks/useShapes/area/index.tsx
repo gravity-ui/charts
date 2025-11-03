@@ -48,7 +48,8 @@ export const AreaSeriesShapes = (args: Args) => {
 
         const line = lineGenerator<PointData>()
             .x((d) => d.x)
-            .y((d) => d.y);
+            .defined((d) => d.y !== null)
+            .y((d) => d.y as number);
 
         plotSvgElement.selectAll('*').remove();
         markersSvgElement.selectAll('*').remove();
@@ -71,9 +72,10 @@ export const AreaSeriesShapes = (args: Args) => {
             .attr('stroke-linecap', 'round');
 
         const area = areaGenerator<PointData>()
+            .defined((d) => d.y !== null)
             .x((d) => d.x)
             .y0((d) => d.y0)
-            .y1((d) => d.y);
+            .y1((d) => d.y as number);
         shapeSelection
             .append('path')
             .attr('class', b('region'))
