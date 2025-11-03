@@ -1,8 +1,9 @@
 import get from 'lodash/get';
 import intersection from 'lodash/intersection';
+import merge from 'lodash/merge';
 
-import {SeriesType} from '../../constants';
-import type {ChartData, ChartSeries, ChartZoom} from '../../types';
+import {SeriesType, brushDefaults} from '../../constants';
+import type {ChartBrush, ChartData, ChartSeries, ChartZoom} from '../../types';
 
 import type {PreparedChart, PreparedTitle, PreparedZoom} from './types';
 
@@ -104,15 +105,12 @@ function getPreparedZoom(args: {zoom?: ChartZoom; seriesData: ChartSeries[]}): P
         return null;
     }
 
-    return {
-        type,
-        brush: {
-            style: {
-                fillOpacity: 1,
-                ...zoom?.brush?.style,
-            },
-        },
-    };
+    const brush = merge({}, brushDefaults, zoom?.brush, {
+        borderWidth: 0,
+        handles: {enabled: false},
+    } satisfies Partial<ChartBrush>);
+
+    return {type, brush};
 }
 
 export const getPreparedChart = (args: {

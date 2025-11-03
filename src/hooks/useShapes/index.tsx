@@ -71,7 +71,6 @@ export type ShapeData =
 type Args = {
     boundsWidth: number;
     boundsHeight: number;
-    dispatcher: Dispatch<object>;
     series: PreparedSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis | null;
@@ -82,6 +81,7 @@ type Args = {
     htmlLayout: HTMLElement | null;
     clipPathId: string;
     isOutsideBounds: (x: number, y: number) => boolean;
+    dispatcher?: Dispatch<object>;
 };
 
 export const useShapes = (args: Args) => {

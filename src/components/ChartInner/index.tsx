@@ -4,6 +4,7 @@ import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
+import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
 import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {AxisY} from '../AxisY/AxisY';
@@ -11,6 +12,7 @@ import {prepareAxisData} from '../AxisY/prepare-axis-data';
 import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
+import {RangeSlider} from '../RangeSlider';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
 
@@ -18,7 +20,7 @@ import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
-import {useAsyncState} from './utils';
+import {useAsyncState, useDebouncedValue} from './utils';
 
 import './styles.scss';
 
@@ -33,25 +35,40 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
+    const preparedTooltip = React.useMemo(() => {
+        return getPreparedTooltip({
+            tooltip: data.tooltip,
+            seriesData: data.series.data,
+            yAxes: data.yAxis,
+            xAxis: data.xAxis,
+        });
+    }, [data.series.data, data.tooltip, data.yAxis, data.xAxis]);
+    const {setZoomState, tooltipPinned, togglePinTooltip, unpinTooltip, zoomState} =
+        useChartInnerState({
+            dispatcher,
+            tooltip: preparedTooltip,
+        });
     const {
+        allPreparedSeries,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
         boundsWidth,
         handleLegendItemClick,
-        handleZoomReset,
         isOutsideBounds,
         legendConfig,
         legendItems,
-        preparedSeries,
-        preparedSplit,
+        preparedChart,
         preparedLegend,
+        preparedRangeSlider,
+        preparedSeries,
+        preparedSeriesOptions,
+        preparedSplit,
         prevHeight,
         prevWidth,
         shapes,
         shapesData,
         title,
-        tooltip,
         xAxis,
         xScale,
         yAxis,
@@ -64,11 +81,11 @@ export const ChartInner = (props: ChartInnerProps) => {
         svgContainer: svgRef.current,
         plotNode: plotRef.current,
         clipPathId,
+        setZoomState,
+        zoomState,
     });
-    const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
-        dispatcher,
-        tooltip,
-    });
+    const debouncedBoundsWidth = useDebouncedValue({value: boundsWidth});
+    const debouncedOffsetLeft = useDebouncedValue({value: boundsOffsetLeft});
     const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
         useChartInnerHandlers({
             boundsHeight,
@@ -83,7 +100,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             unpinTooltip,
             xAxis,
             yAxis,
-            tooltipThrottle: tooltip.throttle,
+            tooltipThrottle: preparedTooltip.throttle,
             isOutsideBounds,
         });
     const clickHandler = data.chart?.events?.click;
@@ -220,6 +237,24 @@ export const ChartInner = (props: ChartInnerProps) => {
                     {shapes}
                     <g ref={plotAfterRef} />
                 </g>
+                {preparedRangeSlider.enabled && (
+                    <RangeSlider
+                        boundsOffsetLeft={debouncedOffsetLeft}
+                        boundsWidth={debouncedBoundsWidth}
+                        height={height}
+                        htmlLayout={htmlLayout}
+                        onUpdate={setZoomState}
+                        preparedChart={preparedChart}
+                        preparedLegend={preparedLegend}
+                        preparedSeries={allPreparedSeries}
+                        preparedSeriesOptions={preparedSeriesOptions}
+                        preparedRangeSlider={preparedRangeSlider}
+                        width={width}
+                        xAxis={data.xAxis}
+                        yAxis={data.yAxis}
+                        zoomStateX={zoomState.x}
+                    />
+                )}
                 {preparedLegend?.enabled && legendConfig && (
                     <Legend
                         chartSeries={preparedSeries}
@@ -241,8 +276,11 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {handleZoomReset && (
-                <Button style={{position: 'absolute', top: 0, right: 0}} onClick={handleZoomReset}>
+            {Object.keys(zoomState).length > 0 && (
+                <Button
+                    style={{position: 'absolute', top: 0, right: 0}}
+                    onClick={() => setZoomState({})}
+                >
                     <ButtonIcon>
                         <ArrowRotateLeft />
                     </ButtonIcon>
@@ -250,7 +288,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             )}
             <Tooltip
                 dispatcher={dispatcher}
-                tooltip={tooltip}
+                tooltip={preparedTooltip}
                 svgContainer={svgRef.current}
                 xAxis={xAxis}
                 yAxis={yAxis[0]}

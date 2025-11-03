@@ -23,11 +23,11 @@ export * from './types';
 const b = block('waterfall');
 
 type Args = {
-    dispatcher: Dispatch<object>;
     preparedData: PreparedWaterfallData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
     clipPathId: string;
+    dispatcher?: Dispatch<object>;
 };
 
 export const WaterfallSeriesShapes = (args: Args) => {
@@ -159,10 +159,10 @@ export const WaterfallSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.waterfall', handleShapeHover);
+        dispatcher?.on('hover-shape.waterfall', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.waterfall', null);
+            dispatcher?.on('hover-shape.waterfall', null);
         };
     }, [connectorSelector, dispatcher, preparedData, seriesOptions]);
 

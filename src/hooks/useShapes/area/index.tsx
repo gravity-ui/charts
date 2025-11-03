@@ -23,11 +23,11 @@ import type {MarkerData, PointData, PreparedAreaData} from './types';
 const b = block('area');
 
 type Args = {
-    dispatcher: Dispatch<object>;
     preparedData: PreparedAreaData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
     clipPathId: string;
+    dispatcher?: Dispatch<object>;
 };
 
 export const AreaSeriesShapes = (args: Args) => {
@@ -196,10 +196,10 @@ export const AreaSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.area', handleShapeHover);
+        dispatcher?.on('hover-shape.area', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.area', null);
+            dispatcher?.on('hover-shape.area', null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

@@ -18,11 +18,11 @@ export * from './types';
 const b = block('bar-x');
 
 type Args = {
-    dispatcher: Dispatch<object>;
     preparedData: PreparedBarXData[];
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
     clipPathId: string;
+    dispatcher?: Dispatch<object>;
 };
 
 export const BarXSeriesShapes = (args: Args) => {
@@ -138,10 +138,10 @@ export const BarXSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.bar-x', handleShapeHover);
+        dispatcher?.on('hover-shape.bar-x', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.bar-x', null);
+            dispatcher?.on('hover-shape.bar-x', null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

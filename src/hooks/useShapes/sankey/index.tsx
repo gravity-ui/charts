@@ -13,10 +13,10 @@ import type {PreparedSankeyData} from './types';
 const b = block('sankey');
 
 type ShapeProps = {
-    dispatcher: Dispatch<object>;
     preparedData: PreparedSankeyData;
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
+    dispatcher?: Dispatch<object>;
 };
 
 export const SankeySeriesShape = (props: ShapeProps) => {
@@ -81,10 +81,10 @@ export const SankeySeriesShape = (props: ShapeProps) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on(eventName, handleShapeHover);
+        dispatcher?.on(eventName, handleShapeHover);
 
         return () => {
-            dispatcher.on(eventName, null);
+            dispatcher?.on(eventName, null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

@@ -16,11 +16,11 @@ export {prepareBarYData} from './prepare-data';
 const b = block('bar-y');
 
 type Args = {
-    dispatcher: Dispatch<object>;
     preparedData: BarYShapesArgs;
     seriesOptions: PreparedSeriesOptions;
     htmlLayout: HTMLElement | null;
     clipPathId: string;
+    dispatcher?: Dispatch<object>;
 };
 
 export const BarYSeriesShapes = (args: Args) => {
@@ -128,10 +128,10 @@ export const BarYSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.bar-y', handleShapeHover);
+        dispatcher?.on('hover-shape.bar-y', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.bar-y', null);
+            dispatcher?.on('hover-shape.bar-y', null);
         };
     }, [dataLabels, dispatcher, preparedData, seriesOptions]);
 
