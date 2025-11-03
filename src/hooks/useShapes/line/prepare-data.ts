@@ -83,15 +83,27 @@ export const prepareLineData = async (args: {
             continue;
         }
 
-        const points = s.data.map((d) => ({
-            x: getXValue({point: d, points: s.data, xAxis, xScale}),
-            y:
-                yAxisTop +
-                getYValue({point: d, points: s.data, yAxis: seriesYAxis, yScale: seriesYScale}),
-            active: true,
-            data: d,
-            series: s,
-        }));
+        const points = s.data.reduce<PointData[]>((result, d) => {
+            const yValue = getYValue({
+                point: d,
+                points: s.data,
+                yAxis: seriesYAxis,
+                yScale: seriesYScale,
+            });
+
+            if (yValue === null) {
+                return result;
+            }
+
+            result.push({
+                x: getXValue({point: d, points: s.data, xAxis, xScale}),
+                y: yAxisTop + yValue,
+                data: d,
+                series: s,
+            });
+
+            return result;
+        }, []);
 
         const htmlElements: HtmlItem[] = [];
         let labels: LabelData[] = [];

@@ -54,6 +54,16 @@ export interface BaseSeries {
         /** Formatting settings for tooltip value. */
         valueFormat?: ValueFormat;
     };
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'connect'`: Skip null values, connecting points around them
+     * - `'asZero'`: Treat null values as zero
+     * - `'break'`: Break the line/shape at null values (show gaps)
+     *
+     * @default 'break'
+     */
+    nullHandling?: 'connect' | 'asZero' | 'break';
 }
 
 export interface BaseSeriesData<T = MeaningfulAny> {

@@ -8,6 +8,7 @@ import type {
     ChartSeries,
     ChartSeriesOptions,
     LineSeries,
+    LineSeriesData,
     RectLegendSymbolOptions,
 } from '../../types';
 import {getUniqId} from '../../utils';
@@ -86,6 +87,20 @@ function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
     };
 }
 
+function prepareSeriesData(series: LineSeries): LineSeriesData[] {
+    const nullHandling = series.nullHandling ?? 'break';
+    const data = series.data;
+    switch (nullHandling) {
+        case 'asZero':
+            return data.map((p) => ({...p, y: p.y ?? 0}));
+        case 'connect':
+            return data.filter((p) => p.y !== null && p.y !== undefined);
+        case 'break':
+        default:
+            return data;
+    }
+}
+
 export function prepareLineSeries(args: PrepareLineSeriesArgs) {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
 
@@ -109,7 +124,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLineLegendSymbol(series, seriesOptions),
             },
-            data: series.data,
+            data: prepareSeriesData(series),
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),

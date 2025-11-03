@@ -48,8 +48,8 @@ export function getXValue(args: {
 }
 
 export function getYValue(args: {
-    point: {y?: number | string};
-    points?: {y?: number | string}[];
+    point: {y?: number | string | null};
+    points?: {y?: number | string | null}[];
     yAxis: PreparedAxis;
     yScale: ChartScale;
 }) {
@@ -69,19 +69,22 @@ export function getYValue(args: {
         Number(yMinDomain) === Number(yMaxDomain) &&
         points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
     ) {
-        const y1 = points[0].y as number;
-        const yTarget = points[1].y as number;
-        const y2 = points[2].y as number;
-        const yMin = Math.min(y1, yTarget, y2);
-        const yMax = Math.max(y1, yTarget, y2);
-        yLinearScale = yLinearScale
-            .copy()
-            .domain([yMin + (yTarget - yMin) / 2, yMax - (yMax - yTarget) / 2]) as
-            | ScaleLinear<number, number>
-            | ScaleTime<number, number>;
+        const y1 = points[0].y;
+        const yTarget = points[1].y;
+        const y2 = points[2].y;
+        if (y1 && yTarget && y2) {
+            const yMin = Math.min(y1 as number, yTarget as number, y2 as number);
+            const yMax = Math.max(y1 as number, yTarget as number, y2 as number);
+            yLinearScale = yLinearScale
+                .copy()
+                .domain([
+                    yMin + ((yTarget as number) - yMin) / 2,
+                    yMax - (yMax - (yTarget as number)) / 2,
+                ]) as ScaleLinear<number, number> | ScaleTime<number, number>;
+        }
     }
 
-    return yLinearScale(point.y as number);
+    return point.y === null ? null : yLinearScale(point.y as number);
 }
 
 export function shapeKey(d: unknown) {

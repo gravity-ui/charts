@@ -130,7 +130,7 @@ export function getZoomedSeriesData(args: {
 
                 if (zoomStateY) {
                     const [yMin, yMax] = zoomStateY;
-                    const y = 'y' in point ? point.y : undefined;
+                    const y = 'y' in point ? (point.y ?? undefined) : undefined;
                     inYRange = isValueInRange({
                         axis: yAxis?.[yAxisIndex],
                         value: y,
