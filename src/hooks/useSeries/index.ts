@@ -159,37 +159,3 @@ export const useSeries = (args: Args) => {
         handleLegendItemClick,
     };
 };
-
-export const useShapeSeries = ({
-    seriesData,
-    seriesOptions,
-    colors,
-    preparedLegend,
-    activeLegendItems,
-}: {
-    colors: string[];
-    seriesData: ChartData['series']['data'];
-    seriesOptions: ChartData['series']['options'];
-    activeLegendItems: string[];
-    preparedLegend?: PreparedLegend | null;
-}) => {
-    const [preparedSeries, setPreparedSeries] = React.useState<PreparedSeries[]>([]);
-
-    React.useEffect(() => {
-        (async () => {
-            const items = await getPreparedSeries({
-                seriesData,
-                seriesOptions,
-                preparedLegend,
-                colors,
-            });
-            setPreparedSeries(items);
-        })();
-    }, [seriesData, seriesOptions, preparedLegend, colors]);
-
-    const chartSeries = useVisibleSeries({preparedSeries, activeLegendItems});
-
-    return {
-        preparedSeries: chartSeries,
-    };
-};

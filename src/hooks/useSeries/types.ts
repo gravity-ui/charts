@@ -397,6 +397,13 @@ export type PreparedSeries =
     | PreparedRadarSeries
     | PreparedHeatmapSeries;
 
+export type PreparedZoomableSeries = Extract<
+    PreparedSeries,
+    {
+        data: Array<unknown>;
+    }
+>;
+
 export type PreparedSeriesOptions = SeriesOptionsDefaults;
 
 export type StackedSeries = BarXSeries | AreaSeries | BarYSeries;

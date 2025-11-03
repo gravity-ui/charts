@@ -1,6 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3';
+import isEqual from 'lodash/isEqual';
 
 import type {PreparedAxis} from '../../hooks';
 import {
@@ -9,7 +10,6 @@ import {
     useChartOptions,
     usePrevious,
     useSeries,
-    useShapeSeries,
     useShapes,
     useSplit,
 } from '../../hooks';
@@ -18,14 +18,13 @@ import {getPreparedXAxis} from '../../hooks/useChartOptions/x-axis';
 import {getPreparedYAxis} from '../../hooks/useChartOptions/y-axis';
 import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
-import {getActiveLegendItems} from '../../hooks/useSeries/utils';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
 import type {ChartSeries} from '../../types';
 import {getSortedSeriesData, getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
-import {hasAtLeastOneSeriesDataPerPlot, useAsyncState} from './utils';
+import {hasAtLeastOneSeriesDataPerPlot} from './utils';
 
 type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
@@ -55,55 +54,82 @@ export function useChartInnerProps(props: Props) {
     const sortedSeriesData = React.useMemo(() => {
         return getSortedSeriesData({seriesData: data.series.data, yAxes: data.yAxis});
     }, [data.series.data, data.yAxis]);
-    const {zoomedSeriesData, zoomedShapesSeriesData} = React.useMemo(() => {
-        return getZoomedSeriesData({
-            seriesData: sortedSeriesData,
-            xAxis: data.xAxis,
-            yAxes: data.yAxis,
-            zoomState,
-        });
-    }, [data.xAxis, data.yAxis, sortedSeriesData, zoomState]);
-
-    const {preparedSeries, preparedLegend, handleLegendItemClick} = useSeries({
+    const {
+        preparedSeries: basePreparedSeries,
+        preparedLegend,
+        handleLegendItemClick,
+    } = useSeries({
         colors,
         legend: data.legend,
         originalSeriesData: sortedSeriesData,
-        seriesData: zoomedSeriesData,
+        seriesData: sortedSeriesData,
         seriesOptions: data.series.options,
     });
 
-    const setAxes = React.useCallback(async () => {
-        const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
-        const xAxis = await getPreparedXAxis({
+    const {preparedSeries, preparedShapesSeries} = React.useMemo(() => {
+        return getZoomedSeriesData({
+            seriesData: basePreparedSeries,
             xAxis: data.xAxis,
-            width,
-            seriesData,
-            seriesOptions: preparedSeriesOptions,
-        });
-
-        let estimatedBoundsHeight = height;
-
-        if (xAxis) {
-            estimatedBoundsHeight =
-                height -
-                (xAxis.title.height +
-                    xAxis.title.margin +
-                    xAxis.labels.margin +
-                    xAxis.labels.height +
-                    (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
-                    chart.margin.top +
-                    chart.margin.bottom);
-        }
-
-        const yAxis = await getPreparedYAxis({
-            height,
-            boundsHeight: estimatedBoundsHeight,
-            width,
-            seriesData,
             yAxis: data.yAxis,
+            zoomState,
         });
+    }, [data.xAxis, data.yAxis, basePreparedSeries, zoomState]);
 
-        return {xAxis, yAxis};
+    // preparing the X and Y axes
+    const [axesState, setValue] = React.useState<{
+        xAxis: PreparedAxis | null;
+        yAxis: PreparedAxis[];
+    }>({xAxis: null, yAxis: []});
+    const axesStateRunRef = React.useRef(0);
+    const prevAxesStateValue = React.useRef(axesState);
+    const axesStateReady = React.useRef(false);
+    React.useEffect(() => {
+        axesStateRunRef.current++;
+        axesStateReady.current = false;
+
+        (async function () {
+            const currentRun = axesStateRunRef.current;
+            const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+            const xAxis = await getPreparedXAxis({
+                xAxis: data.xAxis,
+                width,
+                seriesData,
+                seriesOptions: preparedSeriesOptions,
+            });
+
+            let estimatedBoundsHeight = height;
+
+            if (xAxis) {
+                estimatedBoundsHeight =
+                    height -
+                    (xAxis.title.height +
+                        xAxis.title.margin +
+                        xAxis.labels.margin +
+                        xAxis.labels.height +
+                        (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
+                        chart.margin.top +
+                        chart.margin.bottom);
+            }
+
+            const yAxis = await getPreparedYAxis({
+                height,
+                boundsHeight: estimatedBoundsHeight,
+                width,
+                seriesData,
+                yAxis: data.yAxis,
+            });
+
+            const newStateValue = {xAxis, yAxis};
+
+            if (axesStateRunRef.current === currentRun) {
+                if (!isEqual(prevAxesStateValue.current, newStateValue)) {
+                    setValue(newStateValue);
+                    prevAxesStateValue.current = newStateValue;
+                }
+
+                axesStateReady.current = true;
+            }
+        })();
     }, [
         chart.margin,
         data.xAxis,
@@ -114,22 +140,8 @@ export function useChartInnerProps(props: Props) {
         preparedSeriesOptions,
         width,
     ]);
-    const {xAxis, yAxis} = useAsyncState<{xAxis: PreparedAxis | null; yAxis: PreparedAxis[]}>(
-        {xAxis: null, yAxis: []},
-        setAxes,
-    );
+    const {xAxis, yAxis} = axesStateReady.current ? axesState : {xAxis: null, yAxis: []};
 
-    const activeLegendItems = React.useMemo(
-        () => getActiveLegendItems(preparedSeries),
-        [preparedSeries],
-    );
-    const {preparedSeries: preparedShapesSeries} = useShapeSeries({
-        colors,
-        seriesData: zoomedShapesSeriesData,
-        seriesOptions: data.series.options,
-        activeLegendItems,
-        preparedLegend,
-    });
     const {legendConfig, legendItems} = React.useMemo(() => {
         if (!preparedLegend) {
             return {legendConfig: undefined, legendItems: []};
@@ -144,13 +156,13 @@ export function useChartInnerProps(props: Props) {
         });
     }, [width, height, chart.margin, preparedSeries, preparedLegend]);
     const {boundsWidth, boundsHeight} = useChartDimensions({
-        width,
         height,
         margin: chart.margin,
         preparedLegend,
-        preparedXAxis: xAxis,
-        preparedYAxis: yAxis,
         preparedSeries: preparedSeries,
+        preparedYAxis: yAxis,
+        preparedXAxis: xAxis,
+        width,
     });
     const preparedSplit = useSplit({split: data.split, boundsHeight, chartWidth: width});
     const {xScale, yScale} = useAxisScales({
@@ -190,10 +202,10 @@ export function useChartInnerProps(props: Props) {
 
     const handleAttemptToSetZoomState = React.useCallback(
         (nextZoomState: Partial<ZoomState>) => {
-            const {zoomedSeriesData: nextZoomedSeriesData} = getZoomedSeriesData({
-                seriesData: zoomedSeriesData,
-                xAxis: data.xAxis,
-                yAxes: data.yAxis,
+            const {preparedSeries: nextZoomedSeriesData} = getZoomedSeriesData({
+                seriesData: preparedSeries,
+                xAxis,
+                yAxis,
                 zoomState: nextZoomState,
             });
 
@@ -203,7 +215,7 @@ export function useChartInnerProps(props: Props) {
                 setZoomState(nextZoomState);
             }
         },
-        [data.xAxis, data.yAxis, yAxis, zoomedSeriesData],
+        [xAxis, yAxis, preparedSeries],
     );
 
     useZoom({
