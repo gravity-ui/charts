@@ -1,7 +1,7 @@
-import type {HtmlItem, LabelData, TooltipDataChunkBarX} from '../../../types';
+import type {HtmlItem, LabelData, TooltipDataChunkBarY} from '../../../types';
 import type {PreparedBarYSeries} from '../../useSeries/types';
 
-export type PreparedBarYData = Omit<TooltipDataChunkBarX, 'series'> & {
+export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     x: number;
     y: number;
     width: number;

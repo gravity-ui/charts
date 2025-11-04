@@ -87,9 +87,12 @@ export async function prepareBarYData(args: {
             const base = xLinearScale(0) - measureValues[0].series.borderWidth;
             let stackSum = base;
 
+            console.log('measureValues', measureValues, groupItemIndex);
             const stackItems: PreparedBarYData[] = [];
             const sortedData = sortKey
-                ? sort(measureValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
+                ? sort(measureValues, (a, b) =>
+                      comparator(get(a, sortKey) ?? undefined, get(b, sortKey) ?? undefined),
+                  )
                 : measureValues;
 
             let ratio = 1;
@@ -105,6 +108,9 @@ export async function prepareBarYData(args: {
             }
 
             sortedData.forEach(({data, series: s}, xValueIndex) => {
+                if (data.x === null) {
+                    return;
+                }
                 let center;
 
                 if (yAxis[0].type === 'category') {
@@ -122,10 +128,6 @@ export async function prepareBarYData(args: {
                 let shapeWidth = width - (stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
-                }
-
-                if (shapeWidth <= 0) {
-                    return;
                 }
 
                 const itemStackGap = width - shapeWidth;

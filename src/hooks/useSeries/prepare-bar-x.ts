@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../constants';
-import type {BarXSeries, ChartSeriesOptions} from '../../types';
+import type {BarXSeries, BarXSeriesData, ChartSeriesOptions} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_PADDING} from './constants';
@@ -15,6 +15,18 @@ type PrepareBarXSeriesArgs = {
     legend: PreparedLegend;
     seriesOptions?: ChartSeriesOptions;
 };
+
+function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
+    const nullHandling = series.nullHandling ?? 'break';
+    const data = series.data;
+    switch (nullHandling) {
+        case 'asZero':
+            return data.map((p) => ({...p, y: p.y ?? 0}));
+        case 'break':
+        default:
+            return data;
+    }
+}
 
 export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
@@ -33,7 +45,7 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
             },
-            data: series.data,
+            data: prepareSeriesData(series),
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
             dataLabels: {

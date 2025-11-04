@@ -57,4 +57,14 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
     opacity?: number;
     /** Y-axis index (when using two axes) */
     yAxis?: number;
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'filter'`: Skip null values, connecting points around them
+     * - `'asZero'`: Treat null values as zero
+     * - `'break'`: Break the line/shape at null values (show gaps)
+     *
+     * @default 'break'
+     */
+    nullHandling?: 'filter' | 'asZero' | 'break';
 }

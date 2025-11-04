@@ -83,6 +83,9 @@ export const prepareBarXData = async (args: {
     > = {};
     series.forEach((s) => {
         s.data.forEach((d) => {
+            if (d.y === null) {
+                return;
+            }
             const xValue =
                 xAxis.type === 'category'
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
@@ -140,25 +143,23 @@ export const prepareBarXData = async (args: {
     const groupedData = Object.entries(data);
     for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
         const [xValue, val] = groupedData[groupedDataIndex];
-
         const stacks = Object.values(val);
         const currentGroupWidth = rectWidth * stacks.length + rectGap * (stacks.length - 1);
 
         for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
             const yValues = stacks[groupItemIndex];
-
             let stackHeight = 0;
             const stackItems: PreparedBarXData[] = [];
-
             const sortedData = sortKey
-                ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
+                ? sort(yValues, (a, b) =>
+                      comparator(get(a, sortKey) ?? undefined, get(b, sortKey) ?? undefined),
+                  )
                 : yValues;
 
             for (let yValueIndex = 0; yValueIndex < sortedData.length; yValueIndex++) {
                 const yValue = sortedData[yValueIndex];
                 const yAxisIndex = yValue.series.yAxis;
                 const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number> | undefined;
-
                 if (!seriesYScale) {
                     continue;
                 }
@@ -176,7 +177,8 @@ export const prepareBarXData = async (args: {
                 }
 
                 const x = xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * groupItemIndex;
-                const yDataValue = yValue.data.y as number;
+
+                const yDataValue = (yValue.data.y as number) ?? 0;
                 const y = seriesYScale(yDataValue);
                 const base = seriesYScale(0);
                 const isLastStackItem = yValueIndex === sortedData.length - 1;
@@ -186,7 +188,7 @@ export const prepareBarXData = async (args: {
                     shapeHeight = height;
                 }
 
-                if (height <= 0) {
+                if (height < 0) {
                     continue;
                 }
 
@@ -234,6 +236,5 @@ export const prepareBarXData = async (args: {
             result.push(...stackItems);
         }
     }
-
     return result;
 };

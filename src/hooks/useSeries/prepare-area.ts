@@ -59,7 +59,7 @@ function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
     switch (nullHandling) {
         case 'asZero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
-        case 'connect':
+        case 'filter':
             return data.filter((p) => p.y !== null && p.y !== undefined);
         case 'break':
         default:

@@ -3,7 +3,7 @@ import React from 'react';
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
 
-import type {ChartData, LineSeriesData} from '../../types';
+import type {BarXSeriesData, ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
 import nintendoGames from '../__data__/nintendoGames';
 
@@ -24,7 +24,7 @@ const sharedChartData = {
 };
 
 // Create default data with intentional null gaps (every 5th item)
-const createDataWithNulls = (): LineSeriesData[] => {
+const createDataWithNulls = (): BarXSeriesData[] => {
     const dataset = nintendoGames.filter((d) => d.date && d.user_score).slice(0, 30);
     return dataset
         .map((d, i) => ({
@@ -35,32 +35,17 @@ const createDataWithNulls = (): LineSeriesData[] => {
         .filter((d) => d.x);
 };
 
-const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesData[]}) => {
+const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesData[]}) => {
     const breakData: ChartData = {
         ...sharedChartData,
         title: {text: 'nullHandling: "break" (default)'},
         series: {
             data: [
                 {
-                    type: 'line',
+                    type: 'bar-x',
                     name: 'User Score',
                     data: dataWithNulls,
                     nullHandling: 'break',
-                },
-            ],
-        },
-    };
-
-    const filterData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullHandling: "filter"'},
-        series: {
-            data: [
-                {
-                    type: 'line',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullHandling: 'filter',
                 },
             ],
         },
@@ -72,7 +57,7 @@ const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesD
         series: {
             data: [
                 {
-                    type: 'line',
+                    type: 'bar-x',
                     name: 'User Score',
                     data: dataWithNulls,
                     nullHandling: 'asZero',
@@ -84,13 +69,10 @@ const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesD
     return (
         <Container spaceRow={5}>
             <Row space={3}>
-                <Col s={12} m={4}>
+                <Col s={12} m={6}>
                     <ChartStory data={breakData} />
                 </Col>
-                <Col s={12} m={4}>
-                    <ChartStory data={filterData} />
-                </Col>
-                <Col s={12} m={4}>
+                <Col s={12} m={6}>
                     <ChartStory data={asZeroData} />
                 </Col>
             </Row>
@@ -98,7 +80,7 @@ const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesD
     );
 };
 
-export const LineNullHandlingComparisonStory: StoryObj<typeof LineNullHandlingComparison> = {
+export const BarXNullHandlingComparisonStory: StoryObj<typeof BarXNullHandlingComparison> = {
     name: 'Null Handling Comparison',
     args: {
         dataWithNulls: createDataWithNulls(),
@@ -106,12 +88,12 @@ export const LineNullHandlingComparisonStory: StoryObj<typeof LineNullHandlingCo
     argTypes: {
         dataWithNulls: {
             control: 'object',
-            description: 'Array of line series data with null values',
+            description: 'Array of bar-x series data with null values',
         },
     },
 };
 
 export default {
-    title: 'Line',
-    component: LineNullHandlingComparison,
+    title: 'Bar-X',
+    component: BarXNullHandlingComparison,
 };

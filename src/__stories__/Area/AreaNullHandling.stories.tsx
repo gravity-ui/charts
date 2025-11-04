@@ -51,16 +51,16 @@ const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesD
         },
     };
 
-    const connectData: ChartData = {
+    const filterData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "connect"'},
+        title: {text: 'nullHandling: "filter"'},
         series: {
             data: [
                 {
                     type: 'area',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'connect',
+                    nullHandling: 'filter',
                 },
             ],
         },
@@ -88,7 +88,7 @@ const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesD
                     <ChartStory data={breakData} />
                 </Col>
                 <Col s={12} m={4}>
-                    <ChartStory data={connectData} />
+                    <ChartStory data={filterData} />
                 </Col>
                 <Col s={12} m={4}>
                     <ChartStory data={asZeroData} />
