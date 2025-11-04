@@ -505,7 +505,9 @@ test.describe('Bar-y series', () => {
 
         const bar = component.locator('.gcharts-bar-y__segment').first();
         await bar.hover();
-        await expect(component.locator('svg')).toHaveScreenshot();
+        await expect(component.locator('svg')).toHaveScreenshot({
+            animations: 'disabled',
+        });
     });
 
     test('Tooltip for series with continuous legend', async ({mount}) => {
