@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../constants';
-import type {ChartSeriesOptions, HeatmapSeries} from '../../types';
+import type {ChartSeriesOptions, HeatmapSeries, HeatmapSeriesData} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_PADDING} from './constants';
@@ -15,6 +15,18 @@ type PrepareHeatmapSeriesArgs = {
     legend: PreparedLegend;
     seriesOptions?: ChartSeriesOptions;
 };
+
+function prepareSeriesData(series: HeatmapSeries): HeatmapSeriesData[] {
+    const nullHandling = series.nullHandling ?? 'break';
+    const data = series.data;
+    switch (nullHandling) {
+        case 'replaceByZero':
+            return data.map((p) => ({...p, value: p.value ?? 0}));
+        case 'break':
+        default:
+            return data;
+    }
+}
 
 export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
@@ -33,7 +45,7 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSe
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
             },
-            data: series.data,
+            data: prepareSeriesData(series),
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),

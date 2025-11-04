@@ -40,7 +40,11 @@ export async function prepareHeatmapData({
     const bandWidth = getBandSize({domain: xDomainData, scale: xScale as AxisScale<AxisDomain>});
     const xAxisCategories = xAxis.categories ?? [];
 
-    const heatmapItems: HeatmapItem[] = series.data.map((d) => {
+    const heatmapItems: HeatmapItem[] = series.data.reduce<HeatmapItem[]>((items, d) => {
+        if (d.value === null || d.value === undefined) {
+            return items;
+        }
+
         let x = 0;
         if (isBandScale(xScale)) {
             x = xScale(xAxisCategories[d.x as number]) ?? 0;
@@ -68,8 +72,9 @@ export async function prepareHeatmapData({
             data: d,
         };
 
-        return item;
-    });
+        items.push(item);
+        return items;
+    }, []);
 
     const svgDataLabels: HeatmapLabel[] = [];
     const htmlDataLabels: HtmlItem[] = [];
