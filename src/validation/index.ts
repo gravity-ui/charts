@@ -299,7 +299,7 @@ function validateAxisPlotValues(args: {
 
 function validatePieSeries({series}: {series: PieSeries}) {
     series.data.forEach(({value}) => {
-        if (typeof value !== 'number') {
+        if (typeof value !== 'number' && value !== null) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
                 message: i18n('error', 'label_invalid-pie-data-value'),

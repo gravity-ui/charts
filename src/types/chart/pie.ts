@@ -8,7 +8,7 @@ import type {ChartLegend, RectLegendSymbolOptions} from './legend';
 
 export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The value of the pie segment. */
-    value: number;
+    value: number | null;
     /** The name of the pie segment (used in legend, tooltip etc). */
     name: string;
     /** Initial visibility of the pie segment. */
@@ -96,4 +96,13 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
      * @return BaseType
      * */
     renderCustomShape?: (args: {series: {innerRadius: number}}) => BaseType | Promise<BaseType>;
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'replaceByZero'`: Treat null values as zero
+     * - `'break'`: Skip segments with null values (don't render them)
+     *
+     * @default 'break'
+     */
+    nullHandling?: 'replaceByZero' | 'break';
 }
