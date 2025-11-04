@@ -25,14 +25,17 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
             dispatcher.on(
                 'hover-shape.tooltip',
                 (nextHovered?: TooltipDataChunk[], nextPointerPosition?: PointPosition) => {
-                    const isHoveredChanged = !isEqual(prevHovered.current, nextHovered);
+                    const filteredNextHovered = nextHovered?.filter((item) =>
+                        'y' in item.data ? item.data.y !== null : true,
+                    );
+                    const isHoveredChanged = !isEqual(prevHovered.current, filteredNextHovered);
                     const newTooltipState = {
                         pointerPosition: nextPointerPosition,
-                        hovered: isHoveredChanged ? nextHovered : prevHovered.current,
+                        hovered: isHoveredChanged ? filteredNextHovered : prevHovered.current,
                     };
 
                     if (isHoveredChanged) {
-                        prevHovered.current = nextHovered;
+                        prevHovered.current = filteredNextHovered;
                     }
                     setTooltipState(newTooltipState);
                 },
@@ -45,6 +48,8 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
             }
         };
     }, [dispatcher, tooltip]);
-
-    return {hovered, pointerPosition};
+    return {
+        hovered,
+        pointerPosition,
+    };
 };
