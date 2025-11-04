@@ -1,7 +1,6 @@
 import React from 'react';
 
 import {dateTime} from '@gravity-ui/date-utils';
-import {date} from '@storybook/addon-knobs';
 import {range} from 'd3';
 import random from 'lodash/random';
 
@@ -39,8 +38,8 @@ const rowData: ScatterSeriesData<string>[] = [
 ];
 
 function prepareData(): ChartData<string> {
-    const startDate = date('startDate', new Date(2023, 6, 28, 6)).valueOf();
-    const endDate = date('endDate', new Date(2023, 6, 30, 6)).valueOf();
+    const startDate = new Date(2023, 6, 28, 6).valueOf();
+    const endDate = new Date(2023, 6, 30, 6).valueOf();
     const step = (endDate - startDate) / rowData.length;
     const dates = range(rowData.length).map((d) => startDate + step * d);
 
