@@ -82,10 +82,10 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
      * Specifies how null or undefined values should be handled in the series.
      *
      * - `'filter'`: Skip null values, connecting points around them
-     * - `'asZero'`: Treat null values as zero
+     * - `'replaceByZero'`: Treat null values as zero
      * - `'break'`: Break the line/shape at null values (show gaps)
      *
      * @default 'break'
      */
-    nullHandling?: 'filter' | 'asZero' | 'break';
+    nullHandling?: 'filter' | 'replaceByZero' | 'break';
 }

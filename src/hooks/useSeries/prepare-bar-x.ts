@@ -20,7 +20,7 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const nullHandling = series.nullHandling ?? 'break';
     const data = series.data;
     switch (nullHandling) {
-        case 'asZero':
+        case 'replaceByZero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
         case 'break':
         default:

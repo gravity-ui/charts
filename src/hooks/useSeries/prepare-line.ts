@@ -91,7 +91,7 @@ function prepareSeriesData(series: LineSeries): LineSeriesData[] {
     const nullHandling = series.nullHandling ?? 'break';
     const data = series.data;
     switch (nullHandling) {
-        case 'asZero':
+        case 'replaceByZero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
         case 'filter':
             return data.filter((p) => p.y !== null && p.y !== undefined);

@@ -66,16 +66,16 @@ const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesD
         },
     };
 
-    const asZeroData: ChartData = {
+    const replaceByZeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "asZero"'},
+        title: {text: 'nullHandling: "replaceByZero"'},
         series: {
             data: [
                 {
                     type: 'area',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'asZero',
+                    nullHandling: 'replaceByZero',
                 },
             ],
         },
@@ -91,7 +91,7 @@ const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesD
                     <ChartStory data={filterData} />
                 </Col>
                 <Col s={12} m={4}>
-                    <ChartStory data={asZeroData} />
+                    <ChartStory data={replaceByZeroData} />
                 </Col>
             </Row>
         </Container>

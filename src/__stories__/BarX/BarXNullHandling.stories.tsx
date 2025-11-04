@@ -51,16 +51,16 @@ const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesD
         },
     };
 
-    const asZeroData: ChartData = {
+    const replaceByZeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "asZero"'},
+        title: {text: 'nullHandling: "replaceByZero"'},
         series: {
             data: [
                 {
                     type: 'bar-x',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'asZero',
+                    nullHandling: 'replaceByZero',
                 },
             ],
         },
@@ -73,7 +73,7 @@ const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesD
                     <ChartStory data={breakData} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={asZeroData} />
+                    <ChartStory data={replaceByZeroData} />
                 </Col>
             </Row>
         </Container>

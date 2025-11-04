@@ -76,10 +76,10 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
-     * - `'asZero'`: Treat null values as zero
+     * - `'replaceByZero'`: Treat null values as zero
      * - `'break'`: Break the line/shape at null values (show gaps)
      *
      * @default 'break'
      */
-    nullHandling?: 'asZero' | 'break';
+    nullHandling?: 'replaceByZero' | 'break';
 }
