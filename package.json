@@ -129,7 +129,7 @@
     "react-dom": "^18.3.1",
     "rimraf": "^5.0.7",
     "sass": "^1.77.1",
-    "storybook": "^8.2.9",
+    "storybook": "^8.3.6",
     "stylelint": "^15.11.0",
     "stylelint-use-logical": "^2.1.2",
     "ts-jest": "^29.2.5",
