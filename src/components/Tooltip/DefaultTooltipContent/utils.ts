@@ -135,7 +135,8 @@ export function getHoveredValues(args: {
             case 'pie':
             case 'radar':
             case 'heatmap':
-            case 'treemap': {
+            case 'treemap':
+            case 'funnel': {
                 const seriesData = data as PreparedPieSeries | TreemapSeriesData | RadarSeriesData;
                 return seriesData.value;
             }

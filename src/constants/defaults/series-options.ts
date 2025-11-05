@@ -144,4 +144,12 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
             },
         },
     },
+    funnel: {
+        states: {
+            hover: {
+                enabled: true,
+                brightness: 0.3,
+            },
+        },
+    },
 };

@@ -30,6 +30,7 @@ export * from './chart/waterfall';
 export * from './chart/sankey';
 export * from './chart/radar';
 export * from './chart/heatmap';
+export * from './chart/funnel';
 
 export interface ChartData<T = MeaningfulAny> {
     /**
