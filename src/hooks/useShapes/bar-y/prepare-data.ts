@@ -107,6 +107,7 @@ export async function prepareBarYData(args: {
             }
 
             sortedData.forEach(({data, series: s}, xValueIndex) => {
+                console.log('data.x', data.x);
                 if (data.x === null) {
                     return;
                 }

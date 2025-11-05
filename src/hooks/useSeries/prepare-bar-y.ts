@@ -17,14 +17,14 @@ type PrepareBarYSeriesArgs = {
 };
 
 function prepareSeriesData(series: BarYSeries): BarYSeriesData[] {
-    const nullHandling = series.nullHandling ?? 'break';
+    const nullHandling = series.nullHandling ?? 'filter';
     const data = series.data;
     switch (nullHandling) {
         case 'replaceByZero':
             return data.map((p) => ({...p, x: p.x ?? 0}));
-        case 'break':
+        case 'filter':
         default:
-            return data;
+            return data.filter((p) => p.x !== null && p.x !== undefined);
     }
 }
 

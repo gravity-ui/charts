@@ -36,16 +36,16 @@ const createDataWithNulls = (): BarXSeriesData[] => {
 };
 
 const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesData[]}) => {
-    const breakData: ChartData = {
+    const filterData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "break" (default)'},
+        title: {text: 'nullHandling: "filter" (default)'},
         series: {
             data: [
                 {
                     type: 'bar-x',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'break',
+                    nullHandling: 'filter',
                 },
             ],
         },
@@ -70,7 +70,7 @@ const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesD
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={breakData} />
+                    <ChartStory data={filterData} />
                 </Col>
                 <Col s={12} m={6}>
                     <ChartStory data={replaceByZeroData} />

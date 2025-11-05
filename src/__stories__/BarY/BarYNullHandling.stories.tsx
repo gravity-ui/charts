@@ -41,16 +41,16 @@ const BarYNullHandlingComparison = ({
 }: {
     dataWithNulls: {data: BarYSeriesData[]; categories: string[]};
 }) => {
-    const breakData: ChartData = {
+    const filterData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "break" (default)'},
+        title: {text: 'nullHandling: "filter" (default)'},
         series: {
             data: [
                 {
                     type: 'bar-y',
                     name: 'User Score',
                     data: dataWithNulls.data,
-                    nullHandling: 'break',
+                    nullHandling: 'filter',
                 },
             ],
         },
@@ -87,7 +87,7 @@ const BarYNullHandlingComparison = ({
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={breakData} />
+                    <ChartStory data={filterData} />
                 </Col>
                 <Col s={12} m={6}>
                     <ChartStory data={replaceByZeroData} />

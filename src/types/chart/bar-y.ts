@@ -77,10 +77,10 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
+     * - `'filter'`: Filter out data points with null values (don't render them)
      * - `'replaceByZero'`: Treat null values as zero
-     * - `'break'`: Break the line/shape at null values (show gaps)
      *
-     * @default 'break'
+     * @default 'filter'
      */
-    nullHandling?: 'replaceByZero' | 'break';
+    nullHandling?: 'replaceByZero' | 'filter';
 }

@@ -773,7 +773,7 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('With x null values', async ({mount}) => {
+    test.only('With x null values', async ({mount}) => {
         const data: ChartData = {
             series: {
                 data: [
