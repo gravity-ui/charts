@@ -123,11 +123,12 @@ export const prepareWaterfallData = async (args: {
     });
     const rectGap = Math.max(bandWidth * barPadding, MIN_BAR_GAP);
     const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(bandWidth - rectGap, barMaxWidth));
-    const yZero = getYValue({
-        point: {y: 0},
-        yScale: yLinearScale,
-        yAxis,
-    });
+    const yZero =
+        getYValue({
+            point: {y: 0},
+            yScale: yLinearScale,
+            yAxis,
+        }) ?? 0;
 
     let totalValue = 0;
     const result: PreparedWaterfallData[] = [];
@@ -144,15 +145,20 @@ export const prepareWaterfallData = async (args: {
 
         const prevPoint = result[result.length - 1];
         const xCenter = getXValue({point: item.data, xAxis, xScale});
+        if (xCenter === null) {
+            continue;
+        }
         const x = xCenter - rectWidth / 2;
         const yValue = Number(item.data.total ? totalValue : item.data.y);
-        const height =
-            yZero -
-            getYValue({
-                point: {y: Math.abs(yValue)},
-                yScale: yLinearScale,
-                yAxis,
-            });
+        const calculatedYValue = getYValue({
+            point: {y: Math.abs(yValue)},
+            yScale: yLinearScale,
+            yAxis,
+        });
+        if (calculatedYValue === null) {
+            continue;
+        }
+        const height = yZero - calculatedYValue;
 
         let y;
         if (!prevPoint || item.data.total) {
@@ -175,6 +181,10 @@ export const prepareWaterfallData = async (args: {
             y = prevPoint.y - height;
         }
 
+        if (y === null) {
+            continue;
+        }
+
         const preparedData: PreparedWaterfallData = {
             x,
             y,
@@ -191,6 +201,5 @@ export const prepareWaterfallData = async (args: {
 
         result.push(preparedData);
     }
-
     return result;
 };

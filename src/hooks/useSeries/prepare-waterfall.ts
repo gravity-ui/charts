@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../constants';
-import type {WaterfallSeries} from '../../types';
+import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_PADDING} from './constants';
@@ -15,6 +15,22 @@ type PrepareWaterfallSeriesArgs = {
     legend: PreparedLegend;
     colors: string[];
 };
+
+function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
+    const nullHandling = series.nullHandling ?? 'filter';
+    const data = series.data;
+
+    switch (nullHandling) {
+        case 'replaceByZero':
+            return data.map((d) => ({
+                ...d,
+                y: d.total ? d.y : (d.y ?? 0),
+            }));
+        case 'filter':
+        default:
+            return data.filter((d) => d.y !== null);
+    }
+}
 
 export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): PreparedSeries[] {
     const {colorScale, series: seriesList, legend, colors} = args;
@@ -65,18 +81,24 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
         data: [],
     };
 
-    series.data.forEach((d, index) => {
+    const preparedData = prepareSeriesData(series);
+
+    preparedData.forEach((d, index) => {
         const value = d?.y ?? 0;
         const dataItem = {...d, index};
 
         if (d?.total) {
             totals.data.push(dataItem);
-        } else if (value > 0) {
+        } else if (value >= 0) {
             positive.data.push(dataItem);
         } else if (value < 0) {
             negative.data.push(dataItem);
         }
     }, []);
 
+    console.log('preparedData', preparedData);
+    console.log('positive', positive);
+    console.log('negative', negative);
+    console.log('totals', totals);
     return [positive, negative, totals];
 }
