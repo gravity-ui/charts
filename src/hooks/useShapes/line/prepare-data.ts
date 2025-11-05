@@ -128,14 +128,14 @@ export const prepareLineData = async (args: {
         let markers: MarkerData[] = [];
         if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
             markers = points.reduce<MarkerData[]>((result, p) => {
-                if (p.y === null) {
+                if (p.y === null || p.x === null) {
                     return result;
                 }
                 result.push({
                     point: p as MarkerPointData,
                     active: true,
                     hovered: false,
-                    clipped: isOutsideBounds(p.x, p.y as number),
+                    clipped: isOutsideBounds(p.x, p.y),
                 });
                 return result;
             }, []);

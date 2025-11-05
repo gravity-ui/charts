@@ -3,13 +3,13 @@ import type {HtmlItem, LabelData, LineSeriesData} from '../../../types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 
 export type PointData = {
-    x: number;
+    x: number | null;
     y: number | null;
     data: LineSeriesData;
     series: PreparedLineSeries;
     color?: string;
 };
-export type MarkerPointData = PointData & {y: number};
+export type MarkerPointData = PointData & {y: number; x: number};
 export type MarkerData = {
     point: MarkerPointData;
     active: boolean;

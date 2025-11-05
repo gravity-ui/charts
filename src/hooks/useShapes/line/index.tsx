@@ -47,8 +47,8 @@ export const LineSeriesShapes = (args: Args) => {
         const inactiveOptions = get(seriesOptions, 'line.states.inactive');
 
         const line = lineGenerator<PointData>()
-            .defined((d) => d.y !== null)
-            .x((d) => d.x)
+            .defined((d) => d.y !== null && d.x !== null)
+            .x((d) => d.x as number)
             .y((d) => d.y as number);
 
         plotSvgElement.selectAll('*').remove();

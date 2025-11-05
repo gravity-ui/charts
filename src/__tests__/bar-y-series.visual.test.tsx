@@ -790,8 +790,6 @@ test.describe('Bar-y series', () => {
                         type: 'bar-y',
                     },
                     {
-                        // TODO: https://github.com/gravity-ui/charts/issues/28
-                        // @ts-expect-error
                         data: [{y: 0, x: null}],
                         name: '2024',
                         stacking: 'normal',

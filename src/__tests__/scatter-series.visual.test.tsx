@@ -32,8 +32,6 @@ test.describe('Scatter series', () => {
                         type: 'scatter',
                     },
                     {
-                        // TODO: https://github.com/gravity-ui/charts/issues/28
-                        // @ts-expect-error
                         data: [{y: 0, x: null}],
                         name: '2024',
                         type: 'scatter',
@@ -69,8 +67,6 @@ test.describe('Scatter series', () => {
                         type: 'scatter',
                     },
                     {
-                        // TODO: https://github.com/gravity-ui/charts/issues/28
-                        // @ts-expect-error
                         data: [{y: null, x: 0}],
                         name: '2024',
                         type: 'scatter',

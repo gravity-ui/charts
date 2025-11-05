@@ -51,8 +51,9 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedAxis, xScale: C
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
                     : d.x,
             );
-            if (!acc.has(key)) {
-                acc.set(key, getXValue({point: d, points: s.data, xAxis, xScale}));
+            const xValue = getXValue({point: d, points: s.data, xAxis, xScale});
+            if (!acc.has(key) && xValue !== null) {
+                acc.set(key, xValue);
             }
         });
         return acc;
