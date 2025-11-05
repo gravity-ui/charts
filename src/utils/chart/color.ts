@@ -9,7 +9,8 @@ export function getDomainForContinuousColorScale(args: {
     const values = series.reduce<number[]>((acc, s) => {
         switch (s.type) {
             case 'pie':
-            case 'heatmap': {
+            case 'heatmap':
+            case 'funnel': {
                 acc.push(...s.data.map((d) => Number(d.value)));
                 break;
             }

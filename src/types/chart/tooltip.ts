@@ -6,6 +6,7 @@ import type {ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {CustomFormat, ValueFormat} from './base';
+import type {FunnelSeries, FunnelSeriesData} from './funnel';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
@@ -91,6 +92,16 @@ export interface TooltipDataChunkHeatmap<T = MeaningfulAny> {
     closest: boolean;
 }
 
+export interface TooltipDataChunkFunnel<T = MeaningfulAny> {
+    data: FunnelSeriesData<T>;
+    series: {
+        type: FunnelSeries['type'];
+        id: string;
+        name: string;
+    };
+    closest: boolean;
+}
+
 export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkBarX<T>
     | TooltipDataChunkBarY<T>
@@ -103,6 +114,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkWaterfall<T>
     | TooltipDataChunkRadar<T>
     | TooltipDataChunkHeatmap<T>
+    | TooltipDataChunkFunnel<T>
 ) & {closest?: boolean};
 
 export interface ChartTooltipRendererArgs<T = MeaningfulAny> {

@@ -10,6 +10,7 @@ export const SERIES_TYPE = {
     Sankey: 'sankey',
     Radar: 'radar',
     Heatmap: 'heatmap',
+    Funnel: 'funnel',
 } as const;
 
 export type SeriesType = (typeof SERIES_TYPE)[keyof typeof SERIES_TYPE];

@@ -83,7 +83,9 @@ export const getMeasureValue = ({
 }) => {
     if (
         data.every((item) =>
-            ['pie', 'treemap', 'waterfall', 'sankey', 'heatmap'].includes(item.series.type),
+            ['pie', 'treemap', 'waterfall', 'sankey', 'heatmap', 'funnel'].includes(
+                item.series.type,
+            ),
         )
     ) {
         return null;
@@ -135,7 +137,8 @@ export function getHoveredValues(args: {
             case 'pie':
             case 'radar':
             case 'heatmap':
-            case 'treemap': {
+            case 'treemap':
+            case 'funnel': {
                 const seriesData = data as PreparedPieSeries | TreemapSeriesData | RadarSeriesData;
                 return seriesData.value;
             }

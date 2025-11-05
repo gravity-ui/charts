@@ -6,6 +6,7 @@ import type {MeaningfulAny} from '../misc';
 import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
+import type {FunnelSeries, FunnelSeriesData} from './funnel';
 import type {Halo} from './halo';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
@@ -28,7 +29,8 @@ export type ChartSeries<T = MeaningfulAny> =
     | WaterfallSeries<T>
     | SankeySeries<T>
     | RadarSeries<T>
-    | HeatmapSeries<T>;
+    | HeatmapSeries<T>
+    | FunnelSeries<T>;
 
 export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
@@ -41,7 +43,8 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | WaterfallSeriesData<T>
     | SankeySeriesData<T>
     | RadarSeriesData<T>
-    | HeatmapSeriesData<T>;
+    | HeatmapSeriesData<T>
+    | FunnelSeriesData<T>;
 
 export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
@@ -316,6 +319,12 @@ export interface ChartSeriesOptions {
          * The color of the border surrounding each cell.
          */
         borderColor?: string;
+    };
+    funnel?: {
+        /** Options for the series states that provide additional styling information to the series. */
+        states?: {
+            hover?: BasicHoverState;
+        };
     };
 }
 
