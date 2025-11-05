@@ -94,7 +94,7 @@ function prepareSeriesData(series: LineSeries): LineSeriesData[] {
         case 'replaceByZero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
         case 'filter':
-            return data.filter((p) => p.y !== null && p.y !== undefined);
+            return data.filter((p) => p.y !== null);
         case 'break':
         default:
             return data;

@@ -74,15 +74,14 @@ export function getYValue(args: {
         const y1 = points[0].y;
         const yTarget = points[1].y;
         const y2 = points[2].y;
-        if (y1 && yTarget && y2) {
-            const yMin = Math.min(y1 as number, yTarget as number, y2 as number);
-            const yMax = Math.max(y1 as number, yTarget as number, y2 as number);
+        if (typeof y1 === 'number' && typeof yTarget === 'number' && typeof y2 === 'number') {
+            const yMin = Math.min(y1, yTarget, y2);
+            const yMax = Math.max(y1, yTarget, y2);
             yLinearScale = yLinearScale
                 .copy()
-                .domain([
-                    yMin + ((yTarget as number) - yMin) / 2,
-                    yMax - (yMax - (yTarget as number)) / 2,
-                ]) as ScaleLinear<number, number> | ScaleTime<number, number>;
+                .domain([yMin + (yTarget - yMin) / 2, yMax - (yMax - yTarget) / 2]) as
+                | ScaleLinear<number, number>
+                | ScaleTime<number, number>;
         }
     }
 

@@ -96,9 +96,5 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
         }
     }, []);
 
-    console.log('preparedData', preparedData);
-    console.log('positive', positive);
-    console.log('negative', negative);
-    console.log('totals', totals);
     return [positive, negative, totals];
 }

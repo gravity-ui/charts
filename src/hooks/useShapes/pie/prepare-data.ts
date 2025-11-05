@@ -95,7 +95,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
         const labelMaxHeight = max(Object.values(labels).map((l) => l.size?.height ?? 0)) ?? 0;
         const segments = items.reduce<SegmentData[]>((acc, item) => {
-            if (item.value === null || item.value === undefined) {
+            if (item.value === null) {
                 return acc;
             }
 

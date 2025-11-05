@@ -178,7 +178,7 @@ export const prepareBarXData = async (args: {
 
                 const x = xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * groupItemIndex;
 
-                const yDataValue = (yValue.data.y as number) ?? 0;
+                const yDataValue = (yValue.data.y ?? 0) as number;
                 const y = seriesYScale(yDataValue);
                 const base = seriesYScale(0);
                 const isLastStackItem = yValueIndex === sortedData.length - 1;

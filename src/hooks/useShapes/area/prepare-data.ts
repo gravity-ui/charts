@@ -110,7 +110,6 @@ export const prepareAreaData = async (args: {
             }
 
             const yMin =
-                //for ts only
                 getYValue({
                     point: {y: 0},
                     points: s.data,

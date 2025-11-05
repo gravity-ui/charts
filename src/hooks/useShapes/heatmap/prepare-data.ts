@@ -41,7 +41,7 @@ export async function prepareHeatmapData({
     const xAxisCategories = xAxis.categories ?? [];
 
     const heatmapItems: HeatmapItem[] = series.data.reduce<HeatmapItem[]>((items, d) => {
-        if (d.value === null || d.value === undefined) {
+        if (d.value === null) {
             return items;
         }
 
