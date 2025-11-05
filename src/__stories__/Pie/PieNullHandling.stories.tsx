@@ -18,9 +18,9 @@ const createDataWithNulls = (): PieSeriesData[] => {
 };
 
 const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesData[]}) => {
-    const breakData: ChartData = {
+    const filterData: ChartData = {
         title: {
-            text: 'nullHandling: "break" (default)',
+            text: 'nullHandling: "filter" (default)',
             style: {fontSize: '12px', fontWeight: 'normal'},
         },
         legend: {enabled: true},
@@ -29,7 +29,7 @@ const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesDat
                 {
                     type: 'pie',
                     data: dataWithNulls,
-                    nullHandling: 'break',
+                    nullHandling: 'filter',
                     minRadius: 0,
                 },
             ],
@@ -58,7 +58,7 @@ const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesDat
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={breakData} />
+                    <ChartStory data={filterData} />
                 </Col>
                 <Col s={12} m={6}>
                     <ChartStory data={replaceByZeroData} />
