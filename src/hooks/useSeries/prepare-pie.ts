@@ -17,12 +17,12 @@ type PreparePieSeriesArgs = {
 };
 
 function prepareSeriesData(series: PieSeries): PieSeriesData[] {
-    const nullHandling = series.nullHandling ?? 'break';
+    const nullHandling = series.nullHandling ?? 'filter';
     const data = series.data;
     switch (nullHandling) {
         case 'replaceByZero':
             return data.map((p) => ({...p, value: p.value ?? 0}));
-        case 'break':
+        case 'filter':
         default:
             return data.filter((p) => p.value !== null);
     }
