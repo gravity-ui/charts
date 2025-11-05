@@ -15,23 +15,61 @@ export function prepareAxisPlotLabel(d: AxisPlot) {
     };
 }
 
-export function getAxisCategories({
-    categories,
-    order,
-}: {categories?: string[]; order?: ChartAxis['order']} = {}) {
-    if (categories) {
-        switch (order) {
-            case 'reverse': {
-                return reverse(categories);
-            }
-            case 'sortAsc': {
-                return sort(categories, (a, b) => ascending(a, b));
-            }
-            case 'sortDesc': {
-                return sort(categories, (a, b) => descending(a, b));
-            }
-        }
+function getNormalizedIndexMinMax(args: {max?: number; min?: number}) {
+    const {max, min} = args;
+
+    if (typeof min === 'number' && typeof max === 'number') {
+        return min > max ? [max, min] : [min, max];
     }
 
-    return categories;
+    return [min, max];
+}
+
+function getNormalizedStartEnd(args: {
+    length: number;
+    max?: number;
+    min?: number;
+}): [number, number] {
+    const {length, max, min} = args;
+    const [normalizedMin, normalizedMax] = getNormalizedIndexMinMax({max, min});
+    const start = typeof normalizedMin === 'number' && normalizedMin >= 0 ? normalizedMin : 0;
+    const end =
+        typeof normalizedMax === 'number' && normalizedMax <= length ? normalizedMax + 1 : length;
+
+    return [start, end];
+}
+
+export function getAxisCategories({
+    categories: originalCategories,
+    max,
+    min,
+    order,
+}: Partial<ChartAxis> = {}) {
+    if (originalCategories) {
+        let categories = originalCategories;
+
+        switch (order) {
+            case 'reverse': {
+                categories = reverse(originalCategories);
+                break;
+            }
+            case 'sortAsc': {
+                categories = sort(originalCategories, (a, b) => ascending(a, b));
+                break;
+            }
+            case 'sortDesc': {
+                categories = sort(originalCategories, (a, b) => descending(a, b));
+                break;
+            }
+        }
+
+        if (typeof min === 'number' || typeof max === 'number') {
+            const [start, end] = getNormalizedStartEnd({length: categories.length, max, min});
+            categories = categories.slice(start, end);
+        }
+
+        return categories;
+    }
+
+    return originalCategories;
 }

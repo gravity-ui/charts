@@ -4,6 +4,7 @@ export * from './useChartDimensions';
 export * from './useChartOptions';
 export * from './useChartOptions/types';
 export * from './useCrosshair';
+export * from './useNormalizedOriginalData';
 export * from './usePrevious';
 export * from './useSeries';
 export * from './useSeries/types';

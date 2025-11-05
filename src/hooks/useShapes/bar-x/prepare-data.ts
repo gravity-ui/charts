@@ -167,6 +167,12 @@ export const prepareBarXData = async (args: {
 
                 if (xAxis.type === 'category') {
                     const xBandScale = xScale as ScaleBand<string>;
+                    const xBandScaleDomain = xBandScale.domain();
+
+                    if (xBandScaleDomain.indexOf(xValue as string) === -1) {
+                        continue;
+                    }
+
                     xCenter = (xBandScale(xValue as string) || 0) + xBandScale.bandwidth() / 2;
                 } else {
                     const xLinearScale = xScale as

@@ -1,6 +1,8 @@
+import type {ScaleBand} from 'd3';
 import get from 'lodash/get';
 
 import type {ScatterSeriesData} from '../../../types';
+import {getDataCategoryValue} from '../../../utils';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedScatterSeries} from '../../useSeries/types';
@@ -8,18 +10,48 @@ import {getXValue, getYValue} from '../utils';
 
 import type {PreparedScatterData} from './types';
 
-const getFilteredLinearScatterData = (data: ScatterSeriesData[]) => {
+function getFilteredLinearScatterData(data: ScatterSeriesData[]) {
     return data.filter((d) => typeof d.x === 'number' && typeof d.y === 'number');
-};
+}
 
-export const prepareScatterData = (args: {
+function getFilteredCategoryScatterData(args: {
+    data: ScatterSeriesData[];
+    xAxis: PreparedAxis;
+    xScale: ChartScale;
+    yAxis: PreparedAxis;
+    yScale: ChartScale;
+}) {
+    const {data, xAxis, xScale, yAxis, yScale} = args;
+    return data.filter((d) => {
+        let xInRange = true;
+        let yInRange = true;
+
+        if (xAxis.type === 'category') {
+            const xBandScale = xScale as ScaleBand<string>;
+            const categories = get(xAxis, 'categories', [] as string[]);
+            const dataCategory = getDataCategoryValue({axisDirection: 'x', categories, data: d});
+            xInRange = xBandScale.domain().indexOf(dataCategory) !== -1;
+        }
+
+        if (yAxis.type === 'category') {
+            const yBandScale = yScale as ScaleBand<string>;
+            const categories = get(yAxis, 'categories', [] as string[]);
+            const dataCategory = getDataCategoryValue({axisDirection: 'y', categories, data: d});
+            yInRange = yBandScale.domain().indexOf(dataCategory) !== -1;
+        }
+
+        return xInRange && yInRange;
+    });
+}
+
+export function prepareScatterData(args: {
     series: PreparedScatterSeries[];
     xAxis: PreparedAxis;
     xScale: ChartScale;
     yAxis: PreparedAxis[];
     yScale: (ChartScale | undefined)[];
     isOutsideBounds: (x: number, y: number) => boolean;
-}): PreparedScatterData[] => {
+}): PreparedScatterData[] {
     const {series, xAxis, xScale, yAxis, yScale, isOutsideBounds} = args;
 
     return series.reduce<PreparedScatterData[]>((acc, s) => {
@@ -33,7 +65,13 @@ export const prepareScatterData = (args: {
 
         const filteredData =
             xAxis.type === 'category' || seriesYAxis.type === 'category'
-                ? s.data
+                ? getFilteredCategoryScatterData({
+                      data: s.data,
+                      xAxis,
+                      xScale,
+                      yAxis: seriesYAxis,
+                      yScale: seriesYScale,
+                  })
                 : getFilteredLinearScatterData(s.data);
 
         filteredData.forEach((d) => {
@@ -62,4 +100,4 @@ export const prepareScatterData = (args: {
 
         return acc;
     }, []);
-};
+}

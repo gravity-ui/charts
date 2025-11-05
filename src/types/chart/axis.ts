@@ -69,9 +69,27 @@ export interface ChartAxis {
          */
         maxRowCount?: number;
     };
-    /** The minimum value of the axis. If undefined the min value is automatically calculate. */
+    /**
+     * The minimum value of the axis. If undefined the min value is automatically calculated.
+     *
+     * The value type depends on the axis scale:
+     * - For `linear` and `logarithmic` axes: numeric value
+     * - For `datetime` axes: timestamp (milliseconds since Unix epoch)
+     * - For `category` axes: index of the element in the categories array (which has been processed according to the specified `order` property)
+     *
+     * Note: min/max is not supported for category axes in waterfall and heatmap visualizations.
+     */
     min?: number;
-    /** The maximum value of the axis. If undefined the max value is automatically calculate. */
+    /**
+     * The maximum value of the axis. If undefined the max value is automatically calculated.
+     *
+     * The value type depends on the axis scale:
+     * - For `linear` and `logarithmic` axes: numeric value
+     * - For `datetime` axes: timestamp (milliseconds since Unix epoch)
+     * - For `category` axes: index of the element in the categories array (which has been processed according to the specified `order` property)
+     *
+     * Note: min/max is not supported for category axes in waterfall and heatmap visualizations.
+     */
     max?: number;
     /** The grid lines settings.
      * Unavailable for some visualizations, such as a heatmap.

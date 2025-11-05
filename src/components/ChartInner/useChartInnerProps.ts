@@ -7,6 +7,7 @@ import {
     useAxisScales,
     useChartDimensions,
     useChartOptions,
+    useNormalizedOriginalData,
     usePrevious,
     useSeries,
     useShapes,
@@ -17,7 +18,8 @@ import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
-import {getSortedSeriesData, getZoomedSeriesData} from '../../utils';
+import type {ChartSeries} from '../../types';
+import {getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils';
@@ -47,18 +49,25 @@ export function useChartInnerProps(props: Props) {
     } = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
-    const {chart, title, colors} = useChartOptions({
+    const {normalizedSeriesData, normalizedXAxis, normalizedYAxis} = useNormalizedOriginalData({
+        seriesData: data.series.data,
+        xAxis: data.xAxis,
+        yAxis: data.yAxis,
+    });
+    const {chart, title, tooltip, colors} = useChartOptions({
+        seriesData: data.series.data,
         chart: data.chart,
         colors: data.colors,
         seriesData: data.series.data,
         title: data.title,
+        tooltip: data.tooltip,
+        xAxis: normalizedXAxis,
+        yAxes: normalizedYAxis,
     });
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(data.series.options);
     }, [data.series.options]);
-    const sortedSeriesData = React.useMemo(() => {
-        return getSortedSeriesData({seriesData: data.series.data, yAxes: data.yAxis});
-    }, [data.series.data, data.yAxis]);
+    const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const {
         preparedSeries: basePreparedSeries,
         preparedLegend,
@@ -66,16 +75,16 @@ export function useChartInnerProps(props: Props) {
     } = useSeries({
         colors,
         legend: data.legend,
-        originalSeriesData: sortedSeriesData,
-        seriesData: sortedSeriesData,
+        originalSeriesData: normalizedSeriesData,
+        seriesData: normalizedSeriesData,
         seriesOptions: data.series.options,
     });
 
     const {preparedSeries, preparedShapesSeries} = React.useMemo(() => {
         return getZoomedSeriesData({
             seriesData: basePreparedSeries,
-            xAxis: data.xAxis,
-            yAxis: data.yAxis,
+            xAxis: normalizedXAxis,
+            yAxis: normalizedYAxis,
             zoomState,
         });
     }, [data.xAxis, data.yAxis, basePreparedSeries, zoomState]);
