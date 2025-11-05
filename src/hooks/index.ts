@@ -10,3 +10,5 @@ export * from './useTooltip';
 export * from './useSplit';
 export * from './useSplit/types';
 export * from './useCrosshair';
+export * from './useZoom';
+export * from './useZoom/types';
