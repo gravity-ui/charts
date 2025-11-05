@@ -4,7 +4,7 @@
     "label_unknown-plugin": "Unknown plugin type \"{{type}}\"",
     "label_unknown-error": "Unknown error",
     "label_invalid-axis-category-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"category\". Strings and numbers are allowed.",
-    "label_invalid-axis-datetime-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"datetime\". Only numbers are allowed.",
+    "label_invalid-axis-datetime-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"datetime\". Numbers and nulls are allowed.",
     "label_invalid-axis-linear-data-point": "It seems you are trying to use inappropriate data type for \"{{key}}\" value in series \"{{seriesName}}\" for axis with type \"linear\". Numbers and nulls are allowed.",
     "label_invalid-pie-data-value": "It seems you are trying to use inappropriate data type for \"value\" value. Only numbers or nulls are allowed.",
     "label_invalid-series-type": "It seems you haven't defined \"series.type\" property, or defined it incorrectly. Available values: [{{types}}].",

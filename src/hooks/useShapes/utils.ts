@@ -12,8 +12,8 @@ import type {PreparedLineData} from './line/types';
 const ONE_POINT_DOMAIN_DATA_CAPACITY = 3;
 
 export function getXValue(args: {
-    point: {x?: number | string};
-    points?: {x?: number | string}[];
+    point: {x?: number | string | null};
+    points?: {x?: number | string | null}[];
     xAxis: PreparedAxis;
     xScale: ChartScale;
 }) {
@@ -33,18 +33,20 @@ export function getXValue(args: {
         Number(xMinDomain) === Number(xMaxDomain) &&
         points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
     ) {
-        const x1 = points[0].x as number;
-        const xTarget = points[1].x as number;
-        const x3 = points[2].x as number;
-        const xMin = Math.min(x1, xTarget, x3);
-        const xMax = Math.max(x1, xTarget, x3);
-        xLinearScale = xLinearScale
-            .copy()
-            .domain([xMin + (xTarget - xMin) / 2, xMax - (xMax - xTarget) / 2]) as
-            | ScaleLinear<number, number>
-            | ScaleTime<number, number>;
+        const x1 = points[0].x;
+        const xTarget = points[1].x;
+        const x3 = points[2].x;
+        if (typeof x1 === 'number' && typeof xTarget === 'number' && typeof x3 === 'number') {
+            const xMin = Math.min(x1, xTarget, x3);
+            const xMax = Math.max(x1, xTarget, x3);
+            xLinearScale = xLinearScale
+                .copy()
+                .domain([xMin + (xTarget - xMin) / 2, xMax - (xMax - xTarget) / 2]) as
+                | ScaleLinear<number, number>
+                | ScaleTime<number, number>;
+        }
     }
-    return xLinearScale(point.x as number);
+    return point.x === null ? null : xLinearScale(point.x as number);
 }
 
 export function getYValue(args: {

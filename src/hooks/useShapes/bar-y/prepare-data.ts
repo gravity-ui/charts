@@ -87,7 +87,6 @@ export async function prepareBarYData(args: {
             const base = xLinearScale(0) - measureValues[0].series.borderWidth;
             let stackSum = base;
 
-            console.log('measureValues', measureValues, groupItemIndex);
             const stackItems: PreparedBarYData[] = [];
             const sortedData = sortKey
                 ? sort(measureValues, (a, b) =>

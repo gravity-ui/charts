@@ -53,7 +53,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
     series.data.forEach(({x, y}) => {
         switch (xType) {
             case 'category': {
-                if (typeof x !== 'string' && typeof x !== 'number') {
+                if (typeof x !== 'string' && typeof x !== 'number' && x !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-category-data-point', {
@@ -66,7 +66,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
                 break;
             }
             case 'datetime': {
-                if (typeof x !== 'number') {
+                if (typeof x !== 'number' && x !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-datetime-data-point', {
@@ -92,7 +92,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
         }
         switch (yType) {
             case 'category': {
-                if (typeof y !== 'string' && typeof y !== 'number') {
+                if (typeof y !== 'string' && typeof y !== 'number' && y !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-category-data-point', {
@@ -105,7 +105,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
                 break;
             }
             case 'datetime': {
-                if (typeof y !== 'number') {
+                if (typeof y !== 'number' && y !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-datetime-data-point', {
