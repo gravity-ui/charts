@@ -10,6 +10,9 @@ export type TextRowData = {
 };
 
 export type AxisSvgLabelData = {
+    x: number;
+    y: number;
+    angle: number;
     content: TextRowData[];
     title?: string;
     style: BaseTextStyle;
