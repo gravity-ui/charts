@@ -363,7 +363,7 @@ test.describe('Y-axis', () => {
                 yAxis: [
                     {
                         type: 'category',
-                        categories: ['Short text', 'Long text (with ellipsis)'],
+                        categories: ['Long text (with ellipsis)', 'Short text'],
                         labels: {
                             rotation: 45,
                             maxWidth: '30%',
