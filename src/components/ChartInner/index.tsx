@@ -4,6 +4,7 @@ import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
+import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
 import {EventType, block, getDispatcher} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {AxisY} from '../AxisY/AxisY';
@@ -33,13 +34,25 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
+    const preparedTooltip = React.useMemo(() => {
+        return getPreparedTooltip({
+            tooltip: data.tooltip,
+            seriesData: data.series.data,
+            yAxes: data.yAxis,
+            xAxis: data.xAxis,
+        });
+    }, [data.series.data, data.tooltip, data.yAxis, data.xAxis]);
+    const {tooltipPinned, togglePinTooltip, unpinTooltip, updateZoomState, zoomState} =
+        useChartInnerState({
+            dispatcher,
+            tooltip: preparedTooltip,
+        });
     const {
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
         boundsWidth,
         handleLegendItemClick,
-        handleZoomReset,
         isOutsideBounds,
         legendConfig,
         legendItems,
@@ -51,7 +64,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         shapes,
         shapesData,
         title,
-        tooltip,
         xAxis,
         xScale,
         yAxis,
@@ -59,16 +71,15 @@ export const ChartInner = (props: ChartInnerProps) => {
         svgXPos,
     } = useChartInnerProps({
         ...props,
+        clipPathId,
         dispatcher,
         htmlLayout,
-        svgContainer: svgRef.current,
         plotNode: plotRef.current,
-        clipPathId,
+        svgContainer: svgRef.current,
+        updateZoomState,
+        zoomState,
     });
-    const {tooltipPinned, togglePinTooltip, unpinTooltip} = useChartInnerState({
-        dispatcher,
-        tooltip,
-    });
+
     const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
         useChartInnerHandlers({
             boundsHeight,
@@ -83,7 +94,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             unpinTooltip,
             xAxis,
             yAxis,
-            tooltipThrottle: tooltip.throttle,
+            tooltipThrottle: preparedTooltip.throttle,
             isOutsideBounds,
         });
     const clickHandler = data.chart?.events?.click;
@@ -241,8 +252,11 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {handleZoomReset && (
-                <Button style={{position: 'absolute', top: 0, right: 0}} onClick={handleZoomReset}>
+            {Object.keys(zoomState).length > 0 && (
+                <Button
+                    style={{position: 'absolute', top: 0, right: 0}}
+                    onClick={() => updateZoomState({})}
+                >
                     <ButtonIcon>
                         <ArrowRotateLeft />
                     </ButtonIcon>
@@ -250,7 +264,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             )}
             <Tooltip
                 dispatcher={dispatcher}
-                tooltip={tooltip}
+                tooltip={preparedTooltip}
                 svgContainer={svgRef.current}
                 xAxis={xAxis}
                 yAxis={yAxis[0]}
