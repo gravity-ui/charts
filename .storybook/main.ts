@@ -3,12 +3,9 @@ import type {StorybookConfig} from '@storybook/react-webpack5';
 const config: StorybookConfig = {
     stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'],
     addons: [
-        '@storybook/preset-scss',
-        {name: '@storybook/addon-essentials', options: {backgrounds: false}},
-        './theme-addon/register.tsx',
         '@storybook/addon-webpack5-compiler-babel',
-        '@storybook/addon-storysource',
-        '@storybook/addon-knobs',
+        '@storybook/addon-docs',
+        '@storybook/preset-scss',
     ],
     framework: '@storybook/react-webpack5',
     typescript: {
@@ -32,6 +29,9 @@ const config: StorybookConfig = {
             '@babel/preset-typescript',
             ['@babel/preset-react', {runtime: 'automatic'}],
         ],
+    },
+    features: {
+        backgrounds: false,
     },
 };
 
