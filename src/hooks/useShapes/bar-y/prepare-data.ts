@@ -109,6 +109,12 @@ export async function prepareBarYData(args: {
 
                 if (yAxis[0].type === 'category') {
                     const bandScale = yScale as ScaleBand<string>;
+                    const bandScaleDomain = bandScale.domain();
+
+                    if (bandScaleDomain.indexOf(yValue as string) === -1) {
+                        return;
+                    }
+
                     center = (bandScale(yValue as string) || 0) + bandSize / 2;
                 } else {
                     const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;

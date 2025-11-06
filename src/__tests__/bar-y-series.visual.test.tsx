@@ -1,6 +1,8 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
@@ -875,6 +877,14 @@ test.describe('Bar-y series', () => {
             },
         };
         const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('min-max-category', async ({mount}) => {
+        const data = cloneDeep(barYStakingNormalData);
+        set(data, 'yAxis[0].min', 5);
+        set(data, 'yAxis[0].max', 10);
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

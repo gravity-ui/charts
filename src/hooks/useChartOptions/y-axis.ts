@@ -27,7 +27,7 @@ import {
 import {createYScale} from '../useAxisScales';
 
 import type {PreparedAxis} from './types';
-import {getAxisCategories, prepareAxisPlotLabel} from './utils';
+import {prepareAxisPlotLabel} from './utils';
 
 const getAxisLabelMaxWidth = async (args: {
     axis: PreparedAxis;
@@ -167,7 +167,7 @@ export const getPreparedYAxis = ({
                     html: labelsHtml,
                 },
                 lineColor: get(axisItem, 'lineColor'),
-                categories: getAxisCategories(axisItem),
+                categories: axisItem.categories,
                 timestamps: get(axisItem, 'timestamps'),
                 title: {
                     text: titleText,

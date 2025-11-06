@@ -30,7 +30,7 @@ import {createXScale} from '../useAxisScales';
 import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import type {PreparedAxis} from './types';
-import {getAxisCategories, prepareAxisPlotLabel} from './utils';
+import {prepareAxisPlotLabel} from './utils';
 
 async function setLabelSettings({
     axis,
@@ -169,7 +169,7 @@ export const getPreparedXAxis = async ({
             html: labelsHtml,
         },
         lineColor: get(xAxis, 'lineColor'),
-        categories: getAxisCategories(xAxis),
+        categories: xAxis?.categories,
         timestamps: get(xAxis, 'timestamps'),
         title: {
             text: titleText,

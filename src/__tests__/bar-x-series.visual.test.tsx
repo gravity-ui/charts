@@ -1,16 +1,17 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     barXBasicData,
     barXLinearData,
     barXStakingNormalData,
     barXWithYAxisPlotLinesData,
-} from 'src/__stories__/__data__';
-import type {BarXSeries, ChartData} from 'src/types';
-
-import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+} from '../__stories__/__data__';
+import type {BarXSeries, ChartData} from '../types';
 
 test.describe('Bar-x series', () => {
     test('Basic', async ({mount}) => {
@@ -131,6 +132,14 @@ test.describe('Bar-x series', () => {
                 }}
             />,
         );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('min-max-category', async ({mount}) => {
+        const data = cloneDeep(barXStakingNormalData);
+        set(data, 'xAxis.min', 5);
+        set(data, 'xAxis.max', 10);
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
