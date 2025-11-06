@@ -126,8 +126,12 @@ async function getSvgAxisLabel({
         const textMaxWidth = Math.min(
             labelMaxWidth / calculateCos(axis.labels.rotation) -
                 textSize.height * calculateCos(90 - axis.labels.rotation),
+            // for vertical labels, we need to take into account the available height, otherwise there may be intersections
             axis.labels.rotation === 90 ? labelMaxHeight : Infinity,
-            (top + topOffset - textSize.height / 2) / calculateSin(axis.labels.rotation),
+            // if there is no rotation, then the height of the label does not affect the width of the text
+            axis.labels.rotation === 0
+                ? Infinity
+                : (top + topOffset - textSize.height / 2) / calculateSin(axis.labels.rotation),
         );
 
         if (textSize.width > textMaxWidth) {
