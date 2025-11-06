@@ -104,8 +104,8 @@ export function useChartInnerProps(props: Props) {
         preparedSeries,
         preparedSeriesOptions,
         width,
-        xAxis: data.xAxis,
-        yAxis: data.yAxis,
+        xAxis: normalizedXAxis,
+        yAxis: normalizedYAxis,
     });
 
     const {boundsWidth, boundsHeight} = useChartDimensions({
