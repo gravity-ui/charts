@@ -54,9 +54,9 @@ export function useChartInnerProps(props: Props) {
         yAxis: data.yAxis,
     });
     const {chart, title, colors} = useChartOptions({
-        seriesData: normalizedSeriesData,
         chart: data.chart,
         colors: data.colors,
+        seriesData: normalizedSeriesData,
         title: data.title,
     });
     const preparedSeriesOptions = React.useMemo(() => {
