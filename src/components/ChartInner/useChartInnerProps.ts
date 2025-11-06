@@ -18,7 +18,6 @@ import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {useZoom} from '../../hooks/useZoom';
 import type {ZoomState} from '../../hooks/useZoom/types';
-import type {ChartSeries} from '../../types';
 import {getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
@@ -54,20 +53,15 @@ export function useChartInnerProps(props: Props) {
         xAxis: data.xAxis,
         yAxis: data.yAxis,
     });
-    const {chart, title, tooltip, colors} = useChartOptions({
-        seriesData: data.series.data,
+    const {chart, title, colors} = useChartOptions({
+        seriesData: normalizedSeriesData,
         chart: data.chart,
         colors: data.colors,
-        seriesData: data.series.data,
         title: data.title,
-        tooltip: data.tooltip,
-        xAxis: normalizedXAxis,
-        yAxes: normalizedYAxis,
     });
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(data.series.options);
     }, [data.series.options]);
-    const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const {
         preparedSeries: basePreparedSeries,
         preparedLegend,
@@ -87,7 +81,7 @@ export function useChartInnerProps(props: Props) {
             yAxis: normalizedYAxis,
             zoomState,
         });
-    }, [data.xAxis, data.yAxis, basePreparedSeries, zoomState]);
+    }, [basePreparedSeries, normalizedXAxis, normalizedYAxis, zoomState]);
 
     const {legendConfig, legendItems} = React.useMemo(() => {
         if (!preparedLegend) {

@@ -1,7 +1,5 @@
 import React from 'react';
 
-import cloneDeep from 'lodash/cloneDeep';
-
 import type {ChartData} from '../../types';
 import {getSortedSeriesData} from '../../utils';
 import {getAxisCategories} from '../useChartOptions/utils';
@@ -21,32 +19,28 @@ export function useNormalizedOriginalData(props: UseOriginalDataProps) {
         });
     }, [props.seriesData, props.xAxis, props.yAxis]);
     const normalizedXAxis = React.useMemo(() => {
-        let result = props.xAxis;
+        let categories = props.xAxis?.categories;
 
         if (props.xAxis && props.xAxis.categories) {
-            result = cloneDeep(props.xAxis);
-            result.categories = getAxisCategories(props.xAxis);
+            categories = getAxisCategories(props.xAxis);
         }
 
-        return result;
+        return {...props.xAxis, categories};
     }, [props.xAxis]);
     const normalizedYAxis = React.useMemo(() => {
-        let result = props.yAxis;
-
         if (Array.isArray(props.yAxis) && props.yAxis.some((axis) => axis.categories)) {
-            result = props.yAxis.map((axis) => {
-                let resutAxis = axis;
+            return props.yAxis.map((axis) => {
+                let categories = axis.categories;
 
                 if (axis.categories) {
-                    resutAxis = cloneDeep(axis);
-                    resutAxis.categories = getAxisCategories(axis);
+                    categories = getAxisCategories(axis);
                 }
 
-                return resutAxis;
+                return {...axis, categories};
             });
         }
 
-        return result;
+        return props.yAxis;
     }, [props.yAxis]);
 
     return {normalizedSeriesData, normalizedXAxis, normalizedYAxis};

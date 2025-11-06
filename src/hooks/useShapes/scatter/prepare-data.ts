@@ -1,4 +1,3 @@
-import type {ScaleBand} from 'd3';
 import get from 'lodash/get';
 
 import type {ScatterSeriesData} from '../../../types';
@@ -22,22 +21,31 @@ function getFilteredCategoryScatterData(args: {
     yScale: ChartScale;
 }) {
     const {data, xAxis, xScale, yAxis, yScale} = args;
+    const xDomain = xScale.domain();
+    const xCategories = get(xAxis, 'categories', [] as string[]);
+    const yDomain = yScale.domain();
+    const yCategories = get(yAxis, 'categories', [] as string[]);
+
     return data.filter((d) => {
         let xInRange = true;
         let yInRange = true;
 
         if (xAxis.type === 'category') {
-            const xBandScale = xScale as ScaleBand<string>;
-            const categories = get(xAxis, 'categories', [] as string[]);
-            const dataCategory = getDataCategoryValue({axisDirection: 'x', categories, data: d});
-            xInRange = xBandScale.domain().indexOf(dataCategory) !== -1;
+            const dataCategory = getDataCategoryValue({
+                axisDirection: 'x',
+                categories: xCategories,
+                data: d,
+            });
+            xInRange = (xDomain as string[]).indexOf(dataCategory) !== -1;
         }
 
         if (yAxis.type === 'category') {
-            const yBandScale = yScale as ScaleBand<string>;
-            const categories = get(yAxis, 'categories', [] as string[]);
-            const dataCategory = getDataCategoryValue({axisDirection: 'y', categories, data: d});
-            yInRange = yBandScale.domain().indexOf(dataCategory) !== -1;
+            const dataCategory = getDataCategoryValue({
+                axisDirection: 'y',
+                categories: yCategories,
+                data: d,
+            });
+            yInRange = (yDomain as string[]).indexOf(dataCategory) !== -1;
         }
 
         return xInRange && yInRange;
