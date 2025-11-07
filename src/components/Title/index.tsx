@@ -1,9 +1,6 @@
 import React from 'react';
 
 import type {PreparedTitle} from '../../hooks';
-import {block} from '../../utils';
-
-const b = block('title');
 
 type Props = PreparedTitle & {
     chartWidth: number;
@@ -14,7 +11,6 @@ export const Title = (props: Props) => {
 
     return (
         <text
-            className={b()}
             dx={chartWidth / 2}
             dy={height / 2}
             dominantBaseline="middle"
