@@ -21,9 +21,11 @@ export const Title = (props: Props) => {
             dy={height / 2}
             dominantBaseline="middle"
             textAnchor="middle"
+            fill={style?.fontColor}
+            fontSize={style?.fontSize}
+            fontWeight={style?.fontWeight}
             style={{
                 lineHeight: `${height}px`,
-                ...style,
             }}
         >
             <tspan dangerouslySetInnerHTML={{__html: text}}></tspan>
