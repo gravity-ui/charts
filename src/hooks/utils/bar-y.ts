@@ -19,6 +19,9 @@ export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>
     const data: Record<string | number, Record<string, {data: BarYSeriesData; series: T}[]>> = {};
     series.forEach((s) => {
         s.data.forEach((d) => {
+            if (d.x === null) {
+                return;
+            }
             const axisIndex = get(s, 'yAxis', 0);
             const seriesYAxis = yAxis[axisIndex];
             const categories = get(seriesYAxis, 'categories', [] as string[]);

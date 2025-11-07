@@ -24,7 +24,7 @@ function prepareSeriesData(series: BarYSeries): BarYSeriesData[] {
             return data.map((p) => ({...p, x: p.x ?? 0}));
         case 'skip':
         default:
-            return data.filter((p) => p.x !== null && p.x !== undefined);
+            return data.filter((p) => p.x !== null);
     }
 }
 

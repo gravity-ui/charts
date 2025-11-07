@@ -50,7 +50,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
 
     const xType = get(xAxis, 'type', DEFAULT_AXIS_TYPE);
     const yType = get(seriesYAxis, 'type', DEFAULT_AXIS_TYPE);
-    // eslint-disable-next-line complexity
+
     series.data.forEach(({x, y}) => {
         switch (xType) {
             case 'category': {
@@ -67,7 +67,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
                 break;
             }
             case 'datetime': {
-                if (typeof x !== 'number' && x !== null) {
+                if (typeof x !== 'number') {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-datetime-data-point', {
@@ -106,7 +106,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
                 break;
             }
             case 'datetime': {
-                if (typeof y !== 'number' && y !== null) {
+                if (typeof y !== 'number') {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-datetime-data-point', {
