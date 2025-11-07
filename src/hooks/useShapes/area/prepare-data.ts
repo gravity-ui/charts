@@ -99,7 +99,6 @@ export const prepareAreaData = async (args: {
         });
 
         const seriesStackData: PreparedAreaData[] = [];
-
         for (let j = 0; j < seriesStack.length; j++) {
             const s = seriesStack[j];
             const yAxisIndex = s.yAxis;
@@ -117,7 +116,6 @@ export const prepareAreaData = async (args: {
                     yAxis: seriesYAxis,
                     yScale: seriesYScale,
                 }) ?? 0;
-
             const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
                 const key = String(
                     xAxis.type === 'category'
@@ -132,15 +130,17 @@ export const prepareAreaData = async (args: {
             }, new Map());
             const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue]) => {
                 const accumulatedYValue = accumulatedYValues.get(x) || 0;
-                const d = seriesData.get(x) ?? ({x, y: null} as AreaSeriesData);
-
+                const d =
+                    seriesData.get(x) ??
+                    ({
+                        x,
+                        y: 0,
+                    } as AreaSeriesData);
                 const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
-
-                if (yValue !== null) {
-                    accumulatedYValues.set(x, yMin - yValue);
-                }
                 const yPointValue = yValue === null ? null : yValue - accumulatedYValue;
-
+                if (yPointValue !== null) {
+                    accumulatedYValues.set(x, yMin - yPointValue);
+                }
                 pointsAcc.push({
                     y0: yMin - accumulatedYValue,
                     x: xValue,
@@ -164,7 +164,6 @@ export const prepareAreaData = async (args: {
                         return labelItemsAcc;
                     }, []),
                 );
-
                 if (s.dataLabels.html) {
                     const htmlLabels = await Promise.all(
                         labelItems.map(async (l) => {
@@ -208,6 +207,7 @@ export const prepareAreaData = async (args: {
                     return markersAcc;
                 }, []);
             }
+
             seriesStackData.push({
                 points,
                 markers,

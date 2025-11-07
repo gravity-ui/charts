@@ -33,10 +33,10 @@ export function getXValue(args: {
         Number(xMinDomain) === Number(xMaxDomain) &&
         points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
     ) {
-        const x1 = points[0].x;
-        const xTarget = points[1].x;
-        const x3 = points[2].x;
-        if (typeof x1 === 'number' && typeof xTarget === 'number' && typeof x3 === 'number') {
+        const x1 = Number(points[0].x);
+        const xTarget = Number(points[1].x);
+        const x3 = Number(points[2].x);
+        if (!Number.isNaN(x1) && !Number.isNaN(xTarget) && !Number.isNaN(x3)) {
             const xMin = Math.min(x1, xTarget, x3);
             const xMax = Math.max(x1, xTarget, x3);
             xLinearScale = xLinearScale
@@ -46,6 +46,7 @@ export function getXValue(args: {
                 | ScaleTime<number, number>;
         }
     }
+
     return point.x === null ? null : xLinearScale(point.x as number);
 }
 
@@ -71,10 +72,10 @@ export function getYValue(args: {
         Number(yMinDomain) === Number(yMaxDomain) &&
         points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
     ) {
-        const y1 = points[0].y;
-        const yTarget = points[1].y;
-        const y2 = points[2].y;
-        if (typeof y1 === 'number' && typeof yTarget === 'number' && typeof y2 === 'number') {
+        const y1 = Number(points[0].y);
+        const yTarget = Number(points[1].y);
+        const y2 = Number(points[2].y);
+        if (!Number.isNaN(y1) && !Number.isNaN(yTarget) && !Number.isNaN(y2)) {
             const yMin = Math.min(y1, yTarget, y2);
             const yMax = Math.max(y1, yTarget, y2);
             yLinearScale = yLinearScale
