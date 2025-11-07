@@ -2,6 +2,9 @@ import type {Selection} from 'd3';
 import {select} from 'd3-selection';
 
 import type {BaseTextStyle, MeaningfulAny} from '../../types';
+import {block} from '../cn';
+
+const b = block('chart');
 
 export function handleOverflowingText(
     tSpan: SVGTSpanElement | null,
@@ -262,6 +265,10 @@ export async function wrapText(args: {
     return acc;
 }
 
+function getCssStyle(prop: string, el: Element = document.body) {
+    return window.getComputedStyle(el, null).getPropertyValue(prop);
+}
+
 let measureCanvas: HTMLCanvasElement | null = null;
 export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
@@ -270,17 +277,19 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
         throw new Error("Couldn't get canvas context");
     }
 
+    const element = document.getElementsByClassName(b())[0] ?? document.body;
+    const defaultFontFamily = getCssStyle('font-family', element);
+    const defaultFontSize = getCssStyle('font-size', element);
+    const defaultFontWeight = getCssStyle('font-weight', element);
+
     return async (str: string) => {
         await document.fonts.ready;
-        context.font = `${style?.fontWeight ?? 'normal'} ${style?.fontSize}`;
+        context.font = `${style?.fontWeight ?? defaultFontWeight} ${style?.fontSize ?? defaultFontSize} ${defaultFontFamily}`;
         const textMetric = context.measureText(str);
 
         return {
             width: textMetric.width,
-            height:
-                textMetric.fontBoundingBoxDescent +
-                textMetric.fontBoundingBoxAscent +
-                Math.abs(textMetric.ideographicBaseline),
+            height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
         };
     };
 }
