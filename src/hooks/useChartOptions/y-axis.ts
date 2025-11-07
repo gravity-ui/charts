@@ -107,7 +107,7 @@ export const getPreparedYAxis = ({
     }
 
     return Promise.all(
-        axisItems.map(async (axisItem) => {
+        axisItems.map(async (axisItem, axisIndex) => {
             const plotIndex = get(axisItem, 'plotIndex', 0);
             const firstPlotAxis = !axisByPlot[plotIndex];
             if (firstPlotAxis) {
@@ -115,6 +115,8 @@ export const getPreparedYAxis = ({
             }
             axisByPlot[plotIndex].push(axisItem);
             const defaultAxisPosition = firstPlotAxis ? 'left' : 'right';
+
+            const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === axisIndex);
 
             const labelsEnabled = get(axisItem, 'labels.enabled', true);
 
@@ -145,7 +147,8 @@ export const getPreparedYAxis = ({
             const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
             const shouldHideGrid =
-                axisItem.visible === false || seriesData.some((s) => s.type === SeriesType.Heatmap);
+                axisItem.visible === false ||
+                axisSeriesData.some((s) => s.type === SeriesType.Heatmap);
             const preparedAxis: PreparedAxis = {
                 type: axisType,
                 labels: {
@@ -178,12 +181,12 @@ export const getPreparedYAxis = ({
                     align: get(axisItem, 'title.align', yAxisTitleDefaults.align),
                     maxRowCount: titleMaxRowsCount,
                 },
-                min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(seriesData),
+                min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(axisSeriesData),
                 max: get(axisItem, 'max'),
                 maxPadding: get(
                     axisItem,
                     'maxPadding',
-                    getMaxPaddingBySeries({series: seriesData}),
+                    getMaxPaddingBySeries({series: axisSeriesData}),
                 ),
                 grid: {
                     enabled: shouldHideGrid
@@ -246,15 +249,12 @@ export const getPreparedYAxis = ({
             if (labelsEnabled) {
                 const {height: labelsHeight, width: labelsWidth} = await getAxisLabelMaxWidth({
                     axis: preparedAxis,
-                    seriesData,
+                    seriesData: axisSeriesData,
                     height: boundsHeight,
                 });
 
                 preparedAxis.labels.height = labelsHeight;
-                preparedAxis.labels.width =
-                    labelsWidth > preparedAxis.labels.maxWidth
-                        ? preparedAxis.labels.maxWidth
-                        : labelsWidth;
+                preparedAxis.labels.width = Math.min(preparedAxis.labels.maxWidth, labelsWidth);
             }
 
             return preparedAxis;

@@ -16,7 +16,6 @@ const meta: Meta<typeof ChartStory> = {
     title: 'Other/Tooltip',
     render: ChartStory,
     component: Chart,
-    tags: ['autodocs'],
 };
 
 export default meta;

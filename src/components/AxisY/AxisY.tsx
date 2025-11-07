@@ -100,7 +100,17 @@ export const AxisY = (props: Props) => {
 
             if (tickData.svgLabel) {
                 const label = tickData.svgLabel;
-                const textSelection = tickSelection.append('text');
+                const textSelection = tickSelection
+                    .append('text')
+                    .style(
+                        'transform',
+                        [
+                            `translate(${label.x}px, ${label.y}px)`,
+                            label.angle ? `rotate(${label.angle}deg)` : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' '),
+                    );
 
                 if (label.title) {
                     textSelection.append('title').html(label.title);
