@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.21.0](https://github.com/gravity-ui/charts/compare/v1.20.0...v1.21.0) (2025-11-07)
+
+
+### Features
+
+* support min/max for category axes ([#244](https://github.com/gravity-ui/charts/issues/244)) ([d7b07ff](https://github.com/gravity-ui/charts/commit/d7b07ff34eb13c47f64446d66f7961ea6904c2dd))
+
+
+### Bug Fixes
+
+* chart title color ([#249](https://github.com/gravity-ui/charts/issues/249)) ([d519bac](https://github.com/gravity-ui/charts/commit/d519bac649b71caae41da97ed538e8ab4cb6ce81))
+* fix incorrect selection of the nearest bar when hovering ([#248](https://github.com/gravity-ui/charts/issues/248)) ([33808d6](https://github.com/gravity-ui/charts/commit/33808d6808a7e45b2d7757b93adf7eeecb1d3327))
+* y-axis labels rotation ([#246](https://github.com/gravity-ui/charts/issues/246)) ([0392615](https://github.com/gravity-ui/charts/commit/0392615cf7a8c7ffd4550eb8bf70d27b1e69d8c4))
+
 ## [1.20.0](https://github.com/gravity-ui/charts/compare/v1.19.0...v1.20.0) (2025-10-30)
 
 
