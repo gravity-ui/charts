@@ -16,3 +16,6 @@ playwright-report
 playwright-report-docker
 playwright/.cache-docker
 test-results
+
+# System files
+.DS_Store

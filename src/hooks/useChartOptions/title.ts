@@ -15,8 +15,9 @@ export const getPreparedTitle = ({
 }): PreparedTitle | undefined => {
     const titleText = get(title, 'text');
     const titleStyle: BaseTextStyle = {
-        fontSize: get(title, 'style.fontSize', DEFAULT_TITLE_FONT_SIZE),
-        fontWeight: get(title, 'style.fontWeight'),
+        fontSize: title?.style?.fontSize ?? DEFAULT_TITLE_FONT_SIZE,
+        fontWeight: title?.style?.fontWeight ?? 'var(--g-text-subheader-font-weight)',
+        fontColor: title?.style?.fontColor ?? 'var(--g-color-text-primary)',
     };
     const titleHeight = titleText
         ? getHorizontalSvgTextHeight({text: titleText, style: titleStyle}) + TITLE_PADDINGS

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {StoryObj} from '@storybook/react';
+import type {StoryObj} from '@storybook/react-webpack5';
 import {randomNormal} from 'd3';
 
 import type {ChartData} from '../../types';

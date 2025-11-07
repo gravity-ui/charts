@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {StoryFn} from '@storybook/react';
+import type {StoryFn} from '@storybook/react-webpack5';
 
 import type {ChartProps} from '../components';
 import {Chart} from '../components';

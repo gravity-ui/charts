@@ -1,6 +1,5 @@
 import {SeriesType} from '../../constants';
 import type {PreparedAxis, PreparedSeries, PreparedZoomableSeries} from '../../hooks';
-import {getAxisCategories} from '../../hooks/useChartOptions/utils';
 import type {ZoomState} from '../../hooks/useZoom/types';
 import type {
     ChartAxisType,
@@ -42,7 +41,7 @@ function isValueInRange(args: {
             return numValue >= numMin && numValue <= numMax;
         }
         case 'category': {
-            const categories = getAxisCategories(axis || {}) || [];
+            const categories = axis?.categories || [];
 
             if (typeof value === 'string' && typeof min === 'number' && typeof max === 'number') {
                 const valueIndex = categories.indexOf(value);

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 IMAGE_NAME="mcr.microsoft.com/playwright"
-IMAGE_TAG="v1.51.1-jammy" # This version have to be synchronized with playwright version from package.json
+IMAGE_TAG="v1.56.1-jammy" # This version have to be synchronized with playwright version from package.json
 
 NODE_MODULES_CACHE_DIR="$HOME/.cache/uikit-playwright-docker-node-modules"
 
@@ -13,6 +13,7 @@ command_exists() {
 
 run_command() {
   $CONTAINER_TOOL run --rm --network host -it -w /work \
+    --memory=4g --shm-size=1g \
     -v $(pwd):/work \
     -v "$NODE_MODULES_CACHE_DIR:/work/node_modules" \
     -e IS_DOCKER=1 \

@@ -357,5 +357,35 @@ test.describe('Y-axis', () => {
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Rotated labels (short and long values)', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        type: 'category',
+                        categories: ['Long text (with ellipsis)', 'Short text'],
+                        labels: {
+                            rotation: 45,
+                            maxWidth: '30%',
+                        },
+                    },
+                ],
+                xAxis: {visible: false},
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [
+                                {x: 10, y: 0},
+                                {x: 10, y: 1},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

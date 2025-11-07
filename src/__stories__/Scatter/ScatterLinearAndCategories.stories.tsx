@@ -1,7 +1,6 @@
 import React from 'react';
 
-import {radios, select, text, withKnobs} from '@storybook/addon-knobs';
-import type {Meta, StoryFn} from '@storybook/react';
+import type {Meta, StoryFn} from '@storybook/react-webpack5';
 import random from 'lodash/random';
 
 import type {
@@ -14,6 +13,9 @@ import type {
 import {ChartStory} from '../ChartStory';
 
 import penguins from '../__data__/penguins.json';
+
+const categoriesTypes = ['none', 'x', 'y'] as const;
+type CategoriesType = (typeof categoriesTypes)[number];
 
 const shapeScatterSeriesData = (args: {
     data: Record<string, MeaningfulAny>[];
@@ -67,20 +69,32 @@ const shapeScatterSeries = (data: Record<string, ScatterSeriesData[]>) => {
     }, []);
 };
 
-const shapeScatterChartData = (
-    series: ScatterSeries[],
-    categoriesType: 'none' | 'x' | 'y',
-    categories?: string[],
-): ChartData => {
+type ShapeChartDataOptions = {
+    series: ScatterSeries[];
+    categoriesType: CategoriesType;
+    categories?: string[];
+    title: string;
+    xAxisTitle: string;
+    yAxisTitle: string;
+};
+
+const shapeScatterChartData = ({
+    series,
+    categoriesType,
+    categories,
+    title,
+    xAxisTitle,
+    yAxisTitle,
+}: ShapeChartDataOptions): ChartData => {
     let xAxis: ChartAxis = {
         title: {
-            text: text('X axis title', ''),
+            text: xAxisTitle,
         },
     };
 
     let yAxis: ChartAxis = {
         title: {
-            text: text('Y axis title', ''),
+            text: yAxisTitle,
         },
     };
 
@@ -107,49 +121,61 @@ const shapeScatterChartData = (
         xAxis,
         yAxis: [yAxis],
         title: {
-            text: text('title', 'Chart title'),
+            text: title,
         },
     };
 };
 
-const Template: StoryFn = () => {
-    const x = select(
-        'x',
-        ['culmen_length_mm', 'culmen_depth_mm', 'flipper_length_mm', 'body_mass_g'],
-        'culmen_length_mm',
-    );
-    const y = select(
-        'y',
-        ['culmen_length_mm', 'culmen_depth_mm', 'flipper_length_mm', 'body_mass_g'],
-        'culmen_depth_mm',
-    );
+type StoryArgs = {
+    title?: string;
+    x: string;
+    y: string;
+    xAxisTitle?: string;
+    yAxisTitle?: string;
+    groupBy: string;
+    category: string;
+    categoriesType: CategoriesType;
+};
 
-    const groupBy = select('groupBy', ['species', 'island', 'sex'], 'species');
-    const categoriesType = radios('categoriesType', {none: 'none', x: 'x', y: 'y'}, 'none');
-    const category =
-        categoriesType === 'none'
-            ? undefined
-            : select('category', ['species', 'island', 'sex'], 'island');
+const Template: StoryFn<StoryArgs> = ({
+    x,
+    y,
+    category,
+    groupBy,
+    categoriesType,
+    title = '',
+    xAxisTitle = '',
+    yAxisTitle = '',
+}) => {
+    const categoryValue = categoriesType === 'none' ? undefined : category;
+
     let categories: string[] | undefined;
-
-    if (categoriesType !== 'none' && category) {
+    if (categoriesType !== 'none' && categoryValue) {
         categories = penguins.reduce<string[]>((acc, p) => {
-            const cerrentCategory = p[category];
-
-            if (typeof cerrentCategory === 'string' && !acc.includes(cerrentCategory)) {
-                acc.push(cerrentCategory);
+            // @ts-expect-error
+            const currentCategory = p[categoryValue];
+            if (typeof currentCategory === 'string' && !acc.includes(currentCategory)) {
+                acc.push(currentCategory);
             }
 
             return acc;
         }, []);
     }
+
     const shapedScatterSeriesData = shapeScatterSeriesData({
         data: penguins,
         groupBy,
         map: {x, y, category, categoriesType},
     });
     const shapedScatterSeries = shapeScatterSeries(shapedScatterSeriesData);
-    const data = shapeScatterChartData(shapedScatterSeries, categoriesType, categories);
+    const data = shapeScatterChartData({
+        series: shapedScatterSeries,
+        categoriesType,
+        categories,
+        title,
+        xAxisTitle,
+        yAxisTitle,
+    });
 
     return <ChartStory data={data} />;
 };
@@ -158,7 +184,48 @@ export const LinearAndCategories = Template.bind({});
 
 const meta: Meta = {
     title: 'Scatter',
-    decorators: [withKnobs],
+    argTypes: {
+        x: {
+            control: 'select',
+            options: ['culmen_length_mm', 'culmen_depth_mm', 'flipper_length_mm', 'body_mass_g'],
+        },
+        y: {
+            control: 'select',
+            options: ['culmen_length_mm', 'culmen_depth_mm', 'flipper_length_mm', 'body_mass_g'],
+        },
+        groupBy: {
+            control: 'select',
+            options: ['species', 'island', 'sex'],
+        },
+        category: {
+            control: 'select',
+            options: ['species', 'island', 'sex'],
+        },
+        categoriesType: {
+            control: 'inline-radio',
+            options: categoriesTypes,
+        },
+        xAxisTitle: {
+            control: 'text',
+            name: 'X-axis title',
+        },
+        yAxisTitle: {
+            control: 'text',
+            name: 'Y-axis title',
+        },
+        title: {
+            control: 'text',
+            name: 'Chart title',
+        },
+    },
+
+    args: {
+        x: 'culmen_length_mm',
+        y: 'culmen_depth_mm',
+        category: 'island',
+        groupBy: 'species',
+        categoriesType: 'none',
+    },
 };
 
 export default meta;

@@ -53,8 +53,14 @@ async function getSvgAxisLabel({
 
     const size = originalTextSize;
     const content: AxisSvgLabelData['content'] = [];
-    // Warp label text only for categories - it will look strange for numbers or dates.
-    if (originalTextSize.width > labelMaxWidth && axis.type === 'category') {
+    // line breaks in the text are supported only
+    // 1. for the category axis - it will look strange for numbers or dates
+    // 2. for labels without rotation - it is unclear how to handle long strings correctly
+    if (
+        originalTextSize.width > labelMaxWidth &&
+        axis.type === 'category' &&
+        axis.labels.rotation === 0
+    ) {
         const textRows = await wrapText({
             text,
             style: axis.labels.style,
@@ -62,7 +68,7 @@ async function getSvgAxisLabel({
             getTextSize,
         });
 
-        let labelTopOffset = top;
+        let labelTopOffset = 0;
         let newLabelWidth = 0;
         let newLabelHeight = 0;
         for (let textRowIndex = 0; textRowIndex < textRows.length; textRowIndex++) {
@@ -96,10 +102,7 @@ async function getSvgAxisLabel({
                     textSize = await getTextSize(rowText);
                 }
 
-                const x =
-                    axis.position === 'left'
-                        ? left - textSize.width - axis.labels.margin
-                        : left + axis.labels.margin;
+                const x = axis.position === 'left' ? -textSize.width : 0;
 
                 content.push({
                     text: rowText,
@@ -118,23 +121,51 @@ async function getSvgAxisLabel({
         size.width = newLabelWidth;
         size.height = newLabelHeight;
     } else {
-        const x =
-            axis.position === 'left'
-                ? left - size.width - axis.labels.margin
-                : left + axis.labels.margin;
+        let rowText = text;
+        let textSize = await getTextSize(rowText);
+        const textMaxWidth = Math.min(
+            labelMaxWidth / calculateCos(axis.labels.rotation) -
+                textSize.height * calculateCos(90 - axis.labels.rotation),
+            // for vertical labels, we need to take into account the available height, otherwise there may be intersections
+            axis.labels.rotation === 90 ? labelMaxHeight : Infinity,
+            // if there is no rotation, then the height of the label does not affect the width of the text
+            axis.labels.rotation === 0
+                ? Infinity
+                : (top + topOffset - textSize.height / 2) / calculateSin(axis.labels.rotation),
+        );
+
+        if (textSize.width > textMaxWidth) {
+            rowText = await getTextWithElipsis({
+                text: rowText,
+                getTextWidth: async (str) => (await getTextSize(str)).width,
+                maxWidth: textMaxWidth,
+            });
+            textSize = await getTextSize(rowText);
+        }
+
+        const actualTextHeight = axis.labels.rotation
+            ? textSize.height / calculateSin(axis.labels.rotation)
+            : textSize.height;
+        const x = axis.position === 'left' ? -textSize.width : 0;
+        const y = Math.max(-topOffset - top, -actualTextHeight / 2);
         content.push({
-            text,
+            text: rowText,
             x,
-            y: Math.max(-topOffset, top - size.height / 2),
-            size,
+            y,
+            size: textSize,
         });
     }
 
+    const x = axis.position === 'left' ? left - axis.labels.margin : left + axis.labels.margin;
+    const y = top;
     const svgLabel: AxisSvgLabelData = {
         title: content.length > 1 || content[0]?.text !== text ? text : undefined,
         content: content,
         style: axis.labels.style,
         size: size,
+        x,
+        y,
+        angle: axis.labels.rotation,
     };
 
     return svgLabel;
