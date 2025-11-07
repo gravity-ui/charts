@@ -55,6 +55,7 @@ async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined>
     };
 }
 
+// eslint-disable-next-line complexity
 export const prepareBarXData = async (args: {
     series: PreparedBarXSeries[];
     seriesOptions: PreparedSeriesOptions;

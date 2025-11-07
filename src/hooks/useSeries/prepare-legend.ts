@@ -200,7 +200,7 @@ function getPagination(args: {
             pages[currentPageIndex] = {start: i, end: i};
         }
 
-        const legendLineHeight = Math.max(...item.map((item) => item.height));
+        const legendLineHeight = Math.max(...item.map(({height}) => height));
         currentHeight += legendLineHeight;
 
         if (currentHeight > maxLegendHeight - paginatorHeight) {
