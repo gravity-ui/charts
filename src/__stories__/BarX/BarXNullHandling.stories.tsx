@@ -11,14 +11,14 @@ const sharedChartData = {
     yAxis: [
         {
             title: {
-                text: 'User score',
+                text: 'Y values',
             },
         },
     ],
     xAxis: {
-        type: 'datetime' as const,
+        type: 'linear' as const,
         title: {
-            text: 'Release dates',
+            text: 'X values',
         },
     },
 };

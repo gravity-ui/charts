@@ -1,19 +1,14 @@
 import type {BarXSeriesData} from '../../../types';
-import nintendoGames from '../nintendoGames';
 
 function createBarXDataWithNulls(): BarXSeriesData[] {
-    const dataset = nintendoGames
-        .filter((d) => d.date && d.user_score)
-        .slice(0, 6)
-        .sort((a, b) => (a.date || 0) - (b.date || 0));
-    return dataset
-        .map((d, i) => ({
-            x: d.date || undefined,
-            y: i % 2 === 0 ? null : d.user_score || undefined,
-            custom: d,
-        }))
-        .filter((d) => d.x);
+    const data: BarXSeriesData[] = [];
+    for (let i = 0; i < 8; i++) {
+        data.push({
+            x: i,
+            y: i % 2 === 0 ? null : Math.round(50 + Math.random() * 50),
+        });
+    }
+    return data;
 }
 
 export const barXDataWithNulls = createBarXDataWithNulls();
-console.log('barXDataWithNulls', barXDataWithNulls);
