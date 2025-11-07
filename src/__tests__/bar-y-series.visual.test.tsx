@@ -502,22 +502,6 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Grouped series tooltip', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={barYGroupedColumnsData} />);
-
-        const bar = component.locator('.gcharts-bar-y__segment').first();
-        await bar.hover();
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
-
-    test('Tooltip for series with continuous legend', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={barYContinuousLegendData} />);
-
-        const bar = component.locator('.gcharts-bar-y__segment').first();
-        await bar.hover();
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
-
     test('Performance', async ({mount}) => {
         const categories = new Array(3000).fill(null).map((_, i) => String(i));
         const items = categories.map((_category, i) => ({
@@ -886,5 +870,35 @@ test.describe('Bar-y series', () => {
         set(data, 'yAxis[0].max', 10);
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Tooltip', () => {
+        test('Grouped series tooltip', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={barYGroupedColumnsData} />);
+
+            const bar = component.locator('.gcharts-bar-y__segment').first();
+            await bar.hover();
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Series with continuous legend', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={barYContinuousLegendData} />);
+
+            const bar = component.locator('.gcharts-bar-y__segment').first();
+            await bar.hover();
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Сorrect selection of the nearest bar', async ({mount, page}) => {
+            const component = await mount(<ChartTestStory data={barYBasicData} />);
+
+            const bar = component.locator('.gcharts-bar-y__segment').last();
+            const position = await bar.boundingBox();
+            if (position === null) {
+                throw Error('bar position is null');
+            }
+            await page.mouse.move(position.x + 1, position.y + position.height - 1);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

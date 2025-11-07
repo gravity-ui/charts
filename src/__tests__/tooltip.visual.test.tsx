@@ -32,7 +32,7 @@ test.describe('Tooltip', () => {
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 
-    test('Default date format', async ({mount}) => {
+    test('Default date format', async ({page, mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
@@ -50,7 +50,11 @@ test.describe('Tooltip', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-y').first();
-        await bar.hover({force: true});
+        const position = await bar.boundingBox();
+        if (position === null) {
+            throw Error('bar position is null');
+        }
+        await page.mouse.move(position.x + position.width / 2, 50);
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 });
