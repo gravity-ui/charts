@@ -12,14 +12,26 @@ import {getSeriesStackId} from '../useSeries/utils';
 
 import {getBandSize} from './get-band-size';
 
+/**
+ * BarY always filters out data with null or replace null by zero.
+ */
+type PreparedBarYSeriesData = BarYSeriesData & {x?: number | string};
+
+const isSeriesDataValid = (
+    d: BarYSeriesData | PreparedBarYSeriesData,
+): d is PreparedBarYSeriesData => d.x !== null;
+
 export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>(
     series: T[],
     yAxis: PreparedAxis[],
 ) {
-    const data: Record<string | number, Record<string, {data: BarYSeriesData; series: T}[]>> = {};
+    const data: Record<
+        string | number,
+        Record<string, {data: PreparedBarYSeriesData; series: T}[]>
+    > = {};
     series.forEach((s) => {
         s.data.forEach((d) => {
-            if (d.x === null) {
+            if (!isSeriesDataValid(d)) {
                 return;
             }
             const axisIndex = get(s, 'yAxis', 0);

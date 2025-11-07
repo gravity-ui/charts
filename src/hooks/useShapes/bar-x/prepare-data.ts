@@ -12,6 +12,15 @@ import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/ty
 
 import type {PreparedBarXData} from './types';
 
+/**
+ * BarX always filters out data with null or replace null by zero.
+ */
+type PreparedBarXSeriesData = BarXSeriesData & {y?: number | string};
+
+const isSeriesDataValid = (
+    d: BarXSeriesData | PreparedBarXSeriesData,
+): d is PreparedBarXSeriesData => d.y !== null;
+
 async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined> {
     if (!d.series.dataLabels.enabled) {
         return undefined;
@@ -79,11 +88,11 @@ export const prepareBarXData = async (args: {
 
     const data: Record<
         string | number,
-        Record<string, {data: BarXSeriesData; series: PreparedBarXSeries}[]>
+        Record<string, {data: PreparedBarXSeriesData; series: PreparedBarXSeries}[]>
     > = {};
     series.forEach((s) => {
         s.data.forEach((d) => {
-            if (d.y === null) {
+            if (!isSeriesDataValid(d)) {
                 return;
             }
             const xValue =
@@ -151,9 +160,7 @@ export const prepareBarXData = async (args: {
             let stackHeight = 0;
             const stackItems: PreparedBarXData[] = [];
             const sortedData = sortKey
-                ? sort(yValues, (a, b) =>
-                      comparator(get(a, sortKey) ?? undefined, get(b, sortKey) ?? undefined),
-                  )
+                ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : yValues;
 
             for (let yValueIndex = 0; yValueIndex < sortedData.length; yValueIndex++) {

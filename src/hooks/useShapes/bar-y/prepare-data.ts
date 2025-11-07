@@ -89,9 +89,7 @@ export async function prepareBarYData(args: {
 
             const stackItems: PreparedBarYData[] = [];
             const sortedData = sortKey
-                ? sort(measureValues, (a, b) =>
-                      comparator(get(a, sortKey) ?? undefined, get(b, sortKey) ?? undefined),
-                  )
+                ? sort(measureValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : measureValues;
 
             let ratio = 1;
