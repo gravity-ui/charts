@@ -43,19 +43,19 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
 
 export function getSortedSeriesData({
     seriesData,
-    yAxes,
     xAxis,
+    yAxis,
 }: {
     seriesData: ChartSeries[];
-    yAxes?: ChartAxis[];
     xAxis?: ChartAxis;
+    yAxis?: ChartAxis[];
 }) {
     return seriesData.map((s) => {
-        const yAxis = yAxes?.[0];
+        const yAxisItem = yAxis?.[0];
 
         let sortedSeries = s;
 
-        sortedSeries = applyAxisCategoriesOrder({series: sortedSeries, axis: yAxis, key: 'y'});
+        sortedSeries = applyAxisCategoriesOrder({series: sortedSeries, axis: yAxisItem, key: 'y'});
         sortedSeries = applyAxisCategoriesOrder({series: sortedSeries, axis: xAxis, key: 'x'});
 
         switch (sortedSeries.type) {

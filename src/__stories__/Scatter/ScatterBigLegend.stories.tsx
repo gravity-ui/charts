@@ -1,11 +1,10 @@
 import React from 'react';
 
-import {boolean, number, select, withKnobs} from '@storybook/addon-knobs';
-import type {Meta, StoryObj} from '@storybook/react';
+import type {Meta, StoryObj} from '@storybook/react-webpack5';
 import random from 'lodash/random';
 import range from 'lodash/range';
 
-import type {ChartData, ScatterSeries} from '../../types';
+import type {ChartLegend, ScatterSeries} from '../../types';
 import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 
@@ -26,42 +25,93 @@ const generateSeriesData = (seriesCount = 5): ScatterSeries[] => {
     });
 };
 
-const shapeData = (): ChartData => {
-    return {
-        legend: {
-            align: select('Align', ['left', 'right', 'center'], 'left', 'legend'),
-            margin: number('Margin', 15, undefined, 'legend'),
-            itemDistance: number('Item distance', 20, undefined, 'legend'),
-        },
-        series: {
-            data: generateSeriesData(number('Amount of series', 1000, undefined, 'legend')),
-        },
-        xAxis: {
-            labels: {
-                enabled: boolean('Show labels', true, 'xAxis'),
-            },
-        },
-        yAxis: [
-            {
-                labels: {
-                    enabled: boolean('Show labels', true, 'yAxis'),
-                },
-            },
-        ],
-    };
+type ChartStoryArgs = {
+    seriesAmount?: number;
+    legendItemDistance?: number;
+    legendMargin?: number;
+    legendAlign?: ChartLegend['align'];
+    showLabelsX?: boolean;
+    showLabelsY?: boolean;
 };
 
-function ChartStoryWithData() {
-    return <ChartStory data={shapeData()} />;
+function ChartStoryWithArgs({
+    seriesAmount,
+    showLabelsX,
+    showLabelsY,
+    legendAlign,
+    legendMargin,
+    legendItemDistance,
+}: ChartStoryArgs) {
+    const seriesData = React.useMemo(() => {
+        return {
+            data: generateSeriesData(seriesAmount),
+        };
+    }, [seriesAmount]);
+
+    return (
+        <ChartStory
+            data={{
+                series: seriesData,
+                legend: {
+                    align: legendAlign,
+                    margin: legendMargin,
+                    itemDistance: legendItemDistance,
+                },
+                xAxis: {
+                    labels: {
+                        enabled: showLabelsX,
+                    },
+                },
+                yAxis: [
+                    {
+                        labels: {
+                            enabled: showLabelsY,
+                        },
+                    },
+                ],
+            }}
+        />
+    );
 }
 
-const meta: Meta = {
+const meta: Meta<ChartStoryArgs> = {
     title: 'Scatter',
-    decorators: [withKnobs],
-    component: ChartStoryWithData,
+    component: ChartStoryWithArgs,
+    argTypes: {
+        legendAlign: {
+            name: 'Legend align',
+            control: {type: 'select'},
+            options: ['left', 'right', 'center'],
+        },
+        showLabelsX: {
+            name: 'Show X-axis labels',
+        },
+        showLabelsY: {
+            name: 'Show Y-axis labels',
+        },
+        legendMargin: {
+            name: 'Legend margin',
+        },
+        legendItemDistance: {
+            name: 'Legend item distance',
+        },
+        seriesAmount: {
+            name: 'Amount of series',
+        },
+    },
+
+    args: {
+        seriesAmount: 1000,
+        showLabelsX: true,
+        showLabelsY: true,
+
+        legendAlign: 'left',
+        legendMargin: 15,
+        legendItemDistance: 20,
+    },
 };
 
-type Story = StoryObj<typeof ChartStoryWithData>;
+type Story = StoryObj<typeof ChartStory>;
 
 export const ScatterBigLegend = {
     name: 'Big legend',

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {Button} from '@gravity-ui/uikit';
-import type {StoryObj} from '@storybook/react';
+import type {StoryObj} from '@storybook/react-webpack5';
 
 import {Chart} from '../../components';
 import type {ChartData} from '../../types';

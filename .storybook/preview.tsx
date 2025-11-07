@@ -1,30 +1,19 @@
-// eslint-disable-next-line import/order
-import '@gravity-ui/uikit/styles/styles.scss';
-
 import React from 'react';
 
-import {Lang, MobileProvider, ThemeProvider, configure} from '@gravity-ui/uikit';
-import {MINIMAL_VIEWPORTS} from '@storybook/addon-viewport';
-import {Controls, Description, Primary, Subtitle, Title} from '@storybook/blocks';
-import type {Decorator, Preview} from '@storybook/react';
+import {Lang, configure} from '@gravity-ui/uikit';
+import {Controls, Description, Primary, Subtitle, Title} from '@storybook/addon-docs/blocks';
+import type {Preview} from '@storybook/react-webpack5';
+import {MINIMAL_VIEWPORTS} from 'storybook/viewport';
 
+import {WithContext} from './decorators/withContext';
 import {WithLang} from './decorators/withLang';
+
+import '@gravity-ui/uikit/styles/fonts.scss';
+import '@gravity-ui/uikit/styles/styles.scss';
 
 configure({
     lang: Lang.En,
 });
-
-const WithContextProvider: Decorator = (Story, context) => {
-    return (
-        <React.StrictMode>
-            <ThemeProvider theme={context.globals.theme} direction={context.globals.direction}>
-                <MobileProvider mobile={context.globals.platform === 'mobile'}>
-                    <Story {...context} />
-                </MobileProvider>
-            </ThemeProvider>
-        </React.StrictMode>
-    );
-};
 
 const preview: Preview = {
     parameters: {
@@ -50,7 +39,7 @@ const preview: Preview = {
             },
         },
     },
-    decorators: [WithLang, WithContextProvider],
+    decorators: [WithLang, WithContext],
     globalTypes: {
         theme: {
             defaultValue: 'light',
