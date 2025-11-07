@@ -142,4 +142,42 @@ test.describe('Bar-x series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('With y null values', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        data: [{x: 0, y: 10}],
+                        name: 'Series 1',
+                        type: 'bar-x',
+                    },
+                    {
+                        data: [{x: 0, y: 20}],
+                        name: 'Series 2',
+                        type: 'bar-x',
+                    },
+                    {
+                        data: [{x: 0, y: null}],
+                        name: 'Series 3',
+                        type: 'bar-x',
+                    },
+                    {
+                        data: [{x: 0, y: 15}],
+                        name: 'Series 4',
+                        type: 'bar-x',
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['Category with null values'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+        const legendItem = component.getByText('Series 3');
+        await legendItem.click();
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

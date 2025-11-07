@@ -232,7 +232,7 @@ export const prepareAreaData = async (args: {
                 seriesStackData.forEach((item) => {
                     const point = item.points[index];
 
-                    if (point.y !== null) {
+                    if (point.y !== null && point.y !== undefined) {
                         const height = (point.y0 - point.y) * ratio;
                         point.y0 = plotHeight - height - acc;
                         point.y = point.y0 + height;

@@ -160,4 +160,54 @@ test.describe('Scatter series', () => {
         component.update(<ChartTestStory data={dataWithMinMax} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('Different null modes', () => {
+        const scatterData = [
+            {x: 10, y: 30},
+            {x: 20, y: null},
+            {x: 30, y: 50},
+            {x: null, y: 40},
+            {x: 50, y: 60},
+            {x: 60, y: null},
+            {x: 70, y: 45},
+        ];
+
+        test('Skip mode', async ({mount}) => {
+            const data: ChartData = {
+                title: {text: 'Skip mode (default)'},
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series 1',
+                            data: scatterData,
+                            nullMode: 'skip',
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Zero mode', async ({mount}) => {
+            const data: ChartData = {
+                title: {text: 'Zero mode'},
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series 1',
+                            data: scatterData,
+                            nullMode: 'zero',
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

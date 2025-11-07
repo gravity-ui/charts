@@ -635,4 +635,53 @@ test.describe('Pie series', () => {
 
         await expect(component).toHaveScreenshot();
     });
+
+    test.describe('Different null modes', () => {
+        const pieData = [
+            {name: 'A', value: 100},
+            {name: 'B', value: null},
+            {name: 'C', value: 150},
+            {name: 'D', value: null},
+            {name: 'E', value: 80},
+            {name: 'F', value: 120},
+        ];
+
+        test('Skip mode', async ({mount}) => {
+            const data: ChartData = {
+                title: {text: 'Skip mode (default)'},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            data: pieData,
+                            nullMode: 'skip',
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Zero mode', async ({mount}) => {
+            const data: ChartData = {
+                title: {text: 'Zero mode'},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            data: pieData,
+                            nullMode: 'zero',
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
