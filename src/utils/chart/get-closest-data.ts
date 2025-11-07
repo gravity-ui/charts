@@ -179,10 +179,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             case 'bar-y': {
                 const points = list as PreparedBarYData[];
                 const sorted = sort(points, (p) => p.y);
-                const closestYIndex = bisector<PreparedBarYData, number>((p) => p.y).center(
-                    sorted,
-                    pointerY,
-                );
+                const closestYIndex = bisector<PreparedBarYData, number>(
+                    (p) => p.y + p.height / 2,
+                ).center(sorted, pointerY);
+
                 const closestYPoint = sorted[closestYIndex];
 
                 let selectedPoints: PreparedBarYData[] = [];
