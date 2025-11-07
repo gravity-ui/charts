@@ -301,7 +301,7 @@ describe('validation/validateData', () => {
                             type: 'scatter',
                             name: 'Series 1',
                             data: [
-                                {x: '2023-01-01' as any, y: 100},
+                                {x: null, y: 100},
                                 {x: 1234567900, y: 3},
                             ],
                         },
