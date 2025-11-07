@@ -49,10 +49,10 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Defines how to handle null values in the data.
      *
-     * - `'replaceByZero'`: Treat null values as zero
-     * - `'filter'`: Skip data points with null values (don't render them)
+     * - `'zero'`: Treat null values as zero
+     * - `'skip'`: Omit data points with null values (don't render them)
      *
-     * @default 'filter'
+     * @default 'skip'
      */
-    nullHandling?: 'replaceByZero' | 'filter';
+    nullMode?: 'zero' | 'skip';
 }

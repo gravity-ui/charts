@@ -76,10 +76,10 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
-     * - `'filter'`: Filter out data points with null values (don't render them)
-     * - `'replaceByZero'`: Treat null values as zero
+     * - `'skip'`: Omit data points with null values (no bar shown)
+     * - `'zero'`: Treat null values as zero
      *
-     * @default 'filter'
+     * @default 'skip'
      */
-    nullHandling?: 'replaceByZero' | 'filter';
+    nullMode?: 'zero' | 'skip';
 }

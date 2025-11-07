@@ -31,7 +31,7 @@ const createDataWithNulls = (): HeatmapSeriesData[] => {
 const HeatmapNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: HeatmapSeriesData[]}) => {
     const breakData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "break" (default)'},
+        title: {text: 'nullMode: "skip" (default)'},
         series: {
             data: [
                 {
@@ -39,7 +39,7 @@ const HeatmapNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: HeatmapS
                     name: 'Series 1',
                     data: dataWithNulls,
                     dataLabels: {enabled: true},
-                    nullHandling: 'break',
+                    nullMode: 'skip',
                 },
             ],
         },
@@ -47,7 +47,7 @@ const HeatmapNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: HeatmapS
 
     const replaceByZeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "replaceByZero"'},
+        title: {text: 'nullMode: "zero"'},
         series: {
             data: [
                 {
@@ -55,7 +55,7 @@ const HeatmapNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: HeatmapS
                     name: 'Series 1',
                     data: dataWithNulls,
                     dataLabels: {enabled: true},
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                 },
             ],
         },

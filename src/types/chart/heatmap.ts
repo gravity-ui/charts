@@ -50,10 +50,10 @@ export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
-     * - `'replaceByZero'`: Treat null values as zero
-     * - `'break'`: Break the line/shape at null values (show gaps)
+     * - `'zero'`: Treat null values as zero
+     * - `'skip'`: Omit data points with null values (show gaps)
      *
-     * @default 'break'
+     * @default 'skip'
      */
-    nullHandling?: 'replaceByZero' | 'break';
+    nullMode?: 'zero' | 'skip';
 }

@@ -36,14 +36,14 @@ const createDataWithNulls = (): ScatterSeriesData[] => {
 const ScatterNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: ScatterSeriesData[]}) => {
     const filterData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "filter" (default)'},
+        title: {text: 'nullMode: "skip" (default)'},
         series: {
             data: [
                 {
                     type: 'scatter',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'filter',
+                    nullMode: 'skip',
                 },
             ],
         },
@@ -51,14 +51,14 @@ const ScatterNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: ScatterS
 
     const replaceByZeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "replaceByZero"'},
+        title: {text: 'nullMode: "zero"'},
         series: {
             data: [
                 {
                     type: 'scatter',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                 },
             ],
         },

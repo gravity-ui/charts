@@ -17,12 +17,12 @@ type PrepareBarXSeriesArgs = {
 };
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
-    const nullHandling = series.nullHandling ?? 'filter';
+    const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
-    switch (nullHandling) {
-        case 'replaceByZero':
+    switch (nullMode) {
+        case 'zero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
-        case 'filter':
+        case 'skip':
         default:
             return data.filter((p) => p.y !== null && p.y !== undefined);
     }

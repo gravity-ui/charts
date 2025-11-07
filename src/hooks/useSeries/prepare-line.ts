@@ -88,14 +88,14 @@ function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
 }
 
 function prepareSeriesData(series: LineSeries): LineSeriesData[] {
-    const nullHandling = series.nullHandling ?? 'break';
+    const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
-    switch (nullHandling) {
-        case 'replaceByZero':
+    switch (nullMode) {
+        case 'zero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
-        case 'filter':
+        case 'connect':
             return data.filter((p) => p.y !== null);
-        case 'break':
+        case 'skip':
         default:
             return data;
     }

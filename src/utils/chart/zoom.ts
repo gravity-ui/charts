@@ -102,6 +102,7 @@ export function getZoomedSeriesData(args: {
             return;
         }
 
+        // eslint-disable-next-line complexity
         seriesItem.data.forEach((point, i) => {
             const prevPoint = seriesItem.data[i - 1];
             const isFirstPoint = i === 0;

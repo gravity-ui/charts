@@ -43,14 +43,14 @@ const BarYNullHandlingComparison = ({
 }) => {
     const filterData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "filter" (default)'},
+        title: {text: 'nullMode: "skip" (default)'},
         series: {
             data: [
                 {
                     type: 'bar-y',
                     name: 'User Score',
                     data: dataWithNulls.data,
-                    nullHandling: 'filter',
+                    nullMode: 'skip',
                 },
             ],
         },
@@ -64,14 +64,14 @@ const BarYNullHandlingComparison = ({
 
     const replaceByZeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "replaceByZero"'},
+        title: {text: 'nullMode: "zero"'},
         series: {
             data: [
                 {
                     type: 'bar-y',
                     name: 'User Score',
                     data: dataWithNulls.data,
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                 },
             ],
         },

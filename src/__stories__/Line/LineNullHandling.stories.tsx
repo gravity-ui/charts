@@ -36,46 +36,46 @@ const createDataWithNulls = (): LineSeriesData[] => {
 };
 
 const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesData[]}) => {
-    const breakData: ChartData = {
+    const skipData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "break" (default)'},
+        title: {text: 'nullMode: "skip" (default)'},
         series: {
             data: [
                 {
                     type: 'line',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'break',
+                    nullMode: 'skip',
                 },
             ],
         },
     };
 
-    const filterData: ChartData = {
+    const connectData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "filter"'},
+        title: {text: 'nullMode: "connect"'},
         series: {
             data: [
                 {
                     type: 'line',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'filter',
+                    nullMode: 'connect',
                 },
             ],
         },
     };
 
-    const replaceByZeroData: ChartData = {
+    const zeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "replaceByZero"'},
+        title: {text: 'nullMode: "zero"'},
         series: {
             data: [
                 {
                     type: 'line',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                 },
             ],
         },
@@ -85,13 +85,13 @@ const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesD
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={4}>
-                    <ChartStory data={breakData} />
+                    <ChartStory data={skipData} />
                 </Col>
                 <Col s={12} m={4}>
-                    <ChartStory data={filterData} />
+                    <ChartStory data={connectData} />
                 </Col>
                 <Col s={12} m={4}>
-                    <ChartStory data={replaceByZeroData} />
+                    <ChartStory data={zeroData} />
                 </Col>
             </Row>
         </Container>

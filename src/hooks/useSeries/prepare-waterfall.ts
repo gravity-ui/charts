@@ -17,16 +17,16 @@ type PrepareWaterfallSeriesArgs = {
 };
 
 function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
-    const nullHandling = series.nullHandling ?? 'filter';
+    const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
 
-    switch (nullHandling) {
-        case 'replaceByZero':
+    switch (nullMode) {
+        case 'zero':
             return data.map((d) => ({
                 ...d,
                 y: d.total ? d.y : (d.y ?? 0),
             }));
-        case 'filter':
+        case 'skip':
         default:
             return data.filter((d) => d.y !== null);
     }

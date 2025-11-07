@@ -36,31 +36,31 @@ const createDataWithNulls = (): BarXSeriesData[] => {
 };
 
 const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesData[]}) => {
-    const filterData: ChartData = {
+    const skipData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "filter" (default)'},
+        title: {text: 'nullMode: "skip" (default)'},
         series: {
             data: [
                 {
                     type: 'bar-x',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'filter',
+                    nullMode: 'skip',
                 },
             ],
         },
     };
 
-    const replaceByZeroData: ChartData = {
+    const zeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "replaceByZero"'},
+        title: {text: 'nullMode: "zero"'},
         series: {
             data: [
                 {
                     type: 'bar-x',
                     name: 'User Score',
                     data: dataWithNulls,
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                 },
             ],
         },
@@ -70,10 +70,10 @@ const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesD
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={filterData} />
+                    <ChartStory data={skipData} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={replaceByZeroData} />
+                    <ChartStory data={zeroData} />
                 </Col>
             </Row>
         </Container>

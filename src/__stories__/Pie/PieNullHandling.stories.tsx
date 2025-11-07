@@ -20,7 +20,7 @@ const createDataWithNulls = (): PieSeriesData[] => {
 const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesData[]}) => {
     const filterData: ChartData = {
         title: {
-            text: 'nullHandling: "filter" (default)',
+            text: 'nullMode: "skip" (default)',
             style: {fontSize: '12px', fontWeight: 'normal'},
         },
         legend: {enabled: true},
@@ -29,7 +29,7 @@ const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesDat
                 {
                     type: 'pie',
                     data: dataWithNulls,
-                    nullHandling: 'filter',
+                    nullMode: 'skip',
                     minRadius: 0,
                 },
             ],
@@ -38,7 +38,7 @@ const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesDat
 
     const replaceByZeroData: ChartData = {
         title: {
-            text: 'nullHandling: "replaceByZero"',
+            text: 'nullMode: "zero"',
             style: {fontSize: '12px', fontWeight: 'normal'},
         },
         legend: {enabled: true},
@@ -47,7 +47,7 @@ const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesDat
                 {
                     type: 'pie',
                     data: dataWithNulls,
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                     minRadius: 0,
                 },
             ],

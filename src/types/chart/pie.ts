@@ -99,10 +99,10 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
-     * - `'replaceByZero'`: Treat null values as zero
-     * - `'filter'`: Filter out segments with null values (don't render them)
+     * - `'zero'`: Treat null values as zero
+     * - `'skip'`: Omit segments with null values (don't render them)
      *
-     * @default 'filter'
+     * @default 'skip'
      */
-    nullHandling?: 'replaceByZero' | 'filter';
+    nullMode?: 'zero' | 'skip';
 }

@@ -35,7 +35,7 @@ const WaterfallNullHandlingComparison = ({
 }) => {
     const filterData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "filter" (default)'},
+        title: {text: 'nullMode: "skip" (default)'},
         xAxis: {
             ...sharedChartData.xAxis,
             categories: dataWithNulls.map((d) => d.x).filter((x) => x !== undefined) as string[],
@@ -46,7 +46,7 @@ const WaterfallNullHandlingComparison = ({
                     type: 'waterfall',
                     name: 'Profit',
                     data: dataWithNulls,
-                    nullHandling: 'filter',
+                    nullMode: 'skip',
                     legend: {
                         itemText: {
                             positive: 'income',
@@ -61,7 +61,7 @@ const WaterfallNullHandlingComparison = ({
 
     const replaceByZeroData: ChartData = {
         ...sharedChartData,
-        title: {text: 'nullHandling: "replaceByZero"'},
+        title: {text: 'nullMode: "zero"'},
         xAxis: {
             ...sharedChartData.xAxis,
             categories: dataWithNulls.map((d) => d.x).filter((x) => x !== undefined) as string[],
@@ -72,7 +72,7 @@ const WaterfallNullHandlingComparison = ({
                     type: 'waterfall',
                     name: 'Profit',
                     data: dataWithNulls,
-                    nullHandling: 'replaceByZero',
+                    nullMode: 'zero',
                     legend: {
                         itemText: {
                             positive: 'income',

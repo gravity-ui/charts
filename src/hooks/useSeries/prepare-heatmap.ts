@@ -17,12 +17,12 @@ type PrepareHeatmapSeriesArgs = {
 };
 
 function prepareSeriesData(series: HeatmapSeries): HeatmapSeriesData[] {
-    const nullHandling = series.nullHandling ?? 'break';
+    const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
-    switch (nullHandling) {
-        case 'replaceByZero':
+    switch (nullMode) {
+        case 'zero':
             return data.map((p) => ({...p, value: p.value ?? 0}));
-        case 'break':
+        case 'skip':
         default:
             return data;
     }
