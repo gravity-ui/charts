@@ -3,8 +3,6 @@ import React from 'react';
 import type {PreparedTitle} from '../../hooks';
 import {block} from '../../utils';
 
-import './styles.scss';
-
 const b = block('title');
 
 type Props = PreparedTitle & {
@@ -21,10 +19,10 @@ export const Title = (props: Props) => {
             dy={height / 2}
             dominantBaseline="middle"
             textAnchor="middle"
-            fill={style?.fontColor}
-            fontSize={style?.fontSize}
-            fontWeight={style?.fontWeight}
             style={{
+                fill: style?.fontColor,
+                fontSize: style?.fontSize,
+                fontWeight: style?.fontWeight,
                 lineHeight: `${height}px`,
             }}
         >

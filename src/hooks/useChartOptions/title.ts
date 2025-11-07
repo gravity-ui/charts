@@ -16,7 +16,7 @@ export const getPreparedTitle = ({
     const titleText = get(title, 'text');
     const titleStyle: BaseTextStyle = {
         fontSize: title?.style?.fontSize ?? DEFAULT_TITLE_FONT_SIZE,
-        fontWeight: title?.style?.fontWeight,
+        fontWeight: title?.style?.fontWeight ?? 'var(--g-text-subheader-font-weight)',
         fontColor: title?.style?.fontColor ?? 'var(--g-color-text-primary)',
     };
     const titleHeight = titleText
