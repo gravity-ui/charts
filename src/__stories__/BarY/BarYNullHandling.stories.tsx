@@ -5,7 +5,7 @@ import type {StoryObj} from '@storybook/react';
 
 import type {BarYSeriesData, ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import nintendoGames from '../__data__/nintendoGames';
+import {barYDataWithNulls} from '../__data__/bar-y/null-handling';
 
 const sharedChartData = {
     xAxis: {
@@ -22,18 +22,6 @@ const sharedChartData = {
             },
         },
     ],
-};
-
-// Create default data with intentional null gaps (every 5th item)
-const createDataWithNulls = (): {data: BarYSeriesData[]; categories: string[]} => {
-    const dataset = nintendoGames.filter((d) => d.title && d.user_score).slice(0, 30);
-    const categories = dataset.map((d) => d.title);
-    const data = dataset.map((d, i) => ({
-        y: d.title,
-        x: i % 5 === 0 ? null : d.user_score || undefined,
-        custom: d,
-    }));
-    return {data, categories};
 };
 
 const BarYNullHandlingComparison = ({
@@ -100,7 +88,7 @@ const BarYNullHandlingComparison = ({
 export const BarYNullHandlingComparisonStory: StoryObj<typeof BarYNullHandlingComparison> = {
     name: 'Null Handling Comparison',
     args: {
-        dataWithNulls: createDataWithNulls(),
+        dataWithNulls: barYDataWithNulls,
     },
     argTypes: {
         dataWithNulls: {

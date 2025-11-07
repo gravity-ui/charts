@@ -5,7 +5,7 @@ import type {StoryObj} from '@storybook/react';
 
 import type {AreaSeriesData, ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import nintendoGames from '../__data__/nintendoGames';
+import {areaDataWithNulls} from '../__data__/area/null-handling';
 
 const sharedChartData = {
     yAxis: [
@@ -21,18 +21,6 @@ const sharedChartData = {
             text: 'Release dates',
         },
     },
-};
-
-// Create default data with intentional null gaps (every 5th item)
-const createDataWithNulls = (): AreaSeriesData[] => {
-    const dataset = nintendoGames.filter((d) => d.date && d.user_score).slice(0, 30);
-    return dataset
-        .map((d, i) => ({
-            x: d.date || undefined,
-            y: i % 5 === 0 ? null : d.user_score || undefined,
-            custom: d,
-        }))
-        .filter((d) => d.x);
 };
 
 const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesData[]}) => {
@@ -101,7 +89,7 @@ const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesD
 export const AreaNullHandlingComparisonStory: StoryObj<typeof AreaNullHandlingComparison> = {
     name: 'Null Handling Comparison',
     args: {
-        dataWithNulls: createDataWithNulls(),
+        dataWithNulls: areaDataWithNulls,
     },
     argTypes: {
         dataWithNulls: {

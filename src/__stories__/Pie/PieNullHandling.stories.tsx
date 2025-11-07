@@ -2,20 +2,10 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
-import {groups} from 'd3';
 
 import type {ChartData, PieSeriesData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import nintendoGames from '../__data__/nintendoGames';
-
-// Create default data with intentional null gaps (every 5th item)
-const createDataWithNulls = (): PieSeriesData[] => {
-    const gamesByPlatform = groups(nintendoGames, (item) => item.platform);
-    return gamesByPlatform.map(([platform, games], index) => ({
-        name: platform,
-        value: index % 5 === 0 ? null : games.length,
-    }));
-};
+import {pieDataWithNulls} from '../__data__/pie/null-handling';
 
 const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesData[]}) => {
     const filterData: ChartData = {
@@ -71,7 +61,7 @@ const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesDat
 export const PieNullHandlingComparisonStory: StoryObj<typeof PieNullHandlingComparison> = {
     name: 'Null Handling Comparison',
     args: {
-        dataWithNulls: createDataWithNulls(),
+        dataWithNulls: pieDataWithNulls,
     },
     argTypes: {
         dataWithNulls: {

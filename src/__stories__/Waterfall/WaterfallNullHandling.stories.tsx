@@ -5,6 +5,7 @@ import type {StoryObj} from '@storybook/react';
 
 import type {ChartData, WaterfallSeriesData} from '../../types';
 import {ChartStory} from '../ChartStory';
+import {waterfallDataWithNulls} from '../__data__/waterfall/null-handling';
 
 const sharedChartData = {
     xAxis: {
@@ -12,20 +13,6 @@ const sharedChartData = {
         labels: {autoRotation: false},
     },
     legend: {enabled: true},
-};
-
-// Create default data with intentional null values
-const createDataWithNulls = (): WaterfallSeriesData[] => {
-    return [
-        {y: 100, x: 'Start'},
-        {y: 20, x: 'Revenue Q1'},
-        {y: null, x: 'Revenue Q2'}, // Null value
-        {y: 15, x: 'Revenue Q3'},
-        {y: -30, x: 'Costs Q1'},
-        {y: null, x: 'Costs Q2'}, // Null value
-        {y: -10, x: 'Costs Q3'},
-        {total: true, x: 'End'},
-    ];
 };
 
 const WaterfallNullHandlingComparison = ({
@@ -104,7 +91,7 @@ export const WaterfallNullHandlingComparisonStory: StoryObj<
 > = {
     name: 'Null Handling Comparison',
     args: {
-        dataWithNulls: createDataWithNulls(),
+        dataWithNulls: waterfallDataWithNulls,
     },
     argTypes: {
         dataWithNulls: {

@@ -5,7 +5,7 @@ import type {StoryObj} from '@storybook/react';
 
 import type {ChartData, ScatterSeriesData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import nintendoGames from '../__data__/nintendoGames';
+import {scatterDataWithNulls} from '../__data__/scatter/null-handling';
 
 const sharedChartData = {
     yAxis: [
@@ -21,16 +21,6 @@ const sharedChartData = {
             text: 'Release dates',
         },
     },
-};
-
-// Create default data with intentional null gaps (every 5th item)
-const createDataWithNulls = (): ScatterSeriesData[] => {
-    const dataset = nintendoGames.filter((d) => d.date && d.user_score).slice(0, 30);
-    return dataset.map((d, i) => ({
-        x: i % 3 === 0 ? null : d.date || undefined,
-        y: i % 2 === 0 ? null : d.user_score || undefined,
-        custom: d,
-    }));
 };
 
 const ScatterNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: ScatterSeriesData[]}) => {
@@ -81,7 +71,7 @@ const ScatterNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: ScatterS
 export const ScatterNullHandlingComparisonStory: StoryObj<typeof ScatterNullHandlingComparison> = {
     name: 'Null Handling Comparison',
     args: {
-        dataWithNulls: createDataWithNulls(),
+        dataWithNulls: scatterDataWithNulls,
     },
     argTypes: {
         dataWithNulls: {
