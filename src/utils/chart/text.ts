@@ -262,50 +262,26 @@ export async function wrapText(args: {
     return acc;
 }
 
-const entityMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-    '/': '&#x2F;',
-    '`': '&#x60;',
-    '=': '&#x3D;',
-};
-
-function unescapeHtml(str: string) {
-    return Object.entries(entityMap).reduce((result, [key, value]) => {
-        return result.replace(value, key);
-    }, str);
-}
-
+let measureCanvas: HTMLCanvasElement | null = null;
 export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
-    const map: Record<string, {width: number; height: number}> = {};
-    const setSymbolSize = async (s: string) => {
-        const labels = [s === ' ' ? '&nbsp;' : s];
-        const size = await getLabelsSize({
-            labels,
-            style,
-        });
-        map[s] = {width: size.maxWidth, height: size.maxHeight};
-    };
+    const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error("Couldn't get canvas context");
+    }
 
     return async (str: string) => {
-        let width = 0;
-        let height = 0;
+        await document.fonts.ready;
+        context.font = `${style?.fontWeight ?? 'normal'} ${style?.fontSize}`;
+        const textMetric = context.measureText(str);
 
-        const symbols = unescapeHtml(str);
-        for (let i = 0; i < symbols.length; i++) {
-            const s = symbols[i];
-            if (!map[s]) {
-                await setSymbolSize(s);
-            }
-
-            width += map[s].width;
-            height = Math.max(height, map[s].height);
-        }
-
-        return {width, height};
+        return {
+            width: textMetric.width,
+            height:
+                textMetric.fontBoundingBoxDescent +
+                textMetric.fontBoundingBoxAscent +
+                Math.abs(textMetric.ideographicBaseline),
+        };
     };
 }
 
