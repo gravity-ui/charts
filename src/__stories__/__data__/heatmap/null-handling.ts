@@ -1,6 +1,5 @@
 import type {HeatmapSeriesData} from '../../../types';
 
-// Create heatmap data with intentional null gaps
 function createHeatmapDataWithNulls(): HeatmapSeriesData[] {
     const data: HeatmapSeriesData[] = [];
     for (let x = 0; x < 7; x++) {

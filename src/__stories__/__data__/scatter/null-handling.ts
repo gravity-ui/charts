@@ -1,7 +1,6 @@
 import type {ScatterSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-// Create scatter data with intentional null gaps (nulls for both x and y)
 function createScatterDataWithNulls(): ScatterSeriesData[] {
     const dataset = nintendoGames.filter((d) => d.date && d.user_score).slice(0, 15);
     return dataset.map((d, i) => ({

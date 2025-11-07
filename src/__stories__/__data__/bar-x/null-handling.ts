@@ -1,9 +1,11 @@
 import type {BarXSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-// Create data with intentional null gaps (every 2nd item)
 function createBarXDataWithNulls(): BarXSeriesData[] {
-    const dataset = nintendoGames.filter((d) => d.date && d.user_score).slice(0, 10);
+    const dataset = nintendoGames
+        .filter((d) => d.date && d.user_score)
+        .slice(0, 6)
+        .sort((a, b) => (a.date || 0) - (b.date || 0));
     return dataset
         .map((d, i) => ({
             x: d.date || undefined,
@@ -14,3 +16,4 @@ function createBarXDataWithNulls(): BarXSeriesData[] {
 }
 
 export const barXDataWithNulls = createBarXDataWithNulls();
+console.log('barXDataWithNulls', barXDataWithNulls);

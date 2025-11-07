@@ -1,6 +1,5 @@
 import type {WaterfallSeriesData} from '../../../types';
 
-// Create waterfall data with intentional null gaps
 function createWaterfallDataWithNulls(): WaterfallSeriesData[] {
     return [
         {x: 'Jan', y: 150},

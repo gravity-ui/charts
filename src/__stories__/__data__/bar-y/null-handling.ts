@@ -1,9 +1,8 @@
 import type {BarYSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 
-// Create data with intentional null gaps (every 2nd item)
 function createBarYDataWithNulls(): {data: BarYSeriesData[]; categories: string[]} {
-    const dataset = nintendoGames.filter((d) => d.title && d.user_score).slice(0, 10);
+    const dataset = nintendoGames.filter((d) => d.title && d.user_score).slice(0, 5);
     const categories = dataset.map((d) => d.title);
     const data = dataset.map((d, i) => ({
         y: d.title,
