@@ -3,7 +3,7 @@ import React from 'react';
 import isEqual from 'lodash/isEqual';
 
 import type {PreparedSeries} from '../../hooks';
-import type {PreparedAxis} from '../../hooks/useChartOptions/types';
+import type {PreparedAxis, PreparedZoom} from '../../hooks/useChartOptions/types';
 
 export function hasAtLeastOneSeriesDataPerPlot(
     seriesData: PreparedSeries[],
@@ -61,4 +61,87 @@ export function useAsyncState<T>(value: T, setState: () => Promise<T>) {
     }, [setState]);
 
     return stateValue;
+}
+
+export function getResetZoomButtonStyle(
+    args: {
+        boundsHeight: number;
+        boundsOffsetLeft: number;
+        boundsOffsetTop: number;
+        boundsWidth: number;
+        node: HTMLElement | null;
+        titleHeight?: number;
+    } & PreparedZoom['resetButton'],
+) {
+    const {
+        align,
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        boundsWidth,
+        node,
+        offset,
+        relativeTo,
+        titleHeight,
+    } = args;
+    const style: React.CSSProperties = {
+        position: 'absolute',
+        transform: `translate(${offset.x}px, ${offset.y}px)`,
+    };
+
+    switch (relativeTo) {
+        case 'chart-box': {
+            switch (align) {
+                case 'bottom-left': {
+                    style.bottom = 0;
+                    style.left = 0;
+                    break;
+                }
+                case 'bottom-right': {
+                    style.bottom = 0;
+                    style.right = 0;
+                    break;
+                }
+                case 'top-left': {
+                    style.top = 0;
+                    style.left = 0;
+                    break;
+                }
+                case 'top-right': {
+                    style.top = 0;
+                    style.right = 0;
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 'plot-box': {
+            switch (align) {
+                case 'bottom-left': {
+                    style.left = boundsOffsetLeft;
+                    style.top = boundsHeight - (node?.clientHeight || 0) + (titleHeight || 0);
+                    break;
+                }
+                case 'bottom-right': {
+                    style.left = boundsWidth + boundsOffsetLeft - (node?.clientWidth || 0);
+                    style.top = boundsOffsetTop;
+                    break;
+                }
+                case 'top-left': {
+                    style.left = boundsOffsetLeft;
+                    style.top = boundsOffsetTop;
+                    break;
+                }
+                case 'top-right': {
+                    style.left = boundsWidth + boundsOffsetLeft - (node?.clientWidth || 0);
+                    style.top = boundsHeight - (node?.clientHeight || 0) + (titleHeight || 0);
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    return style;
 }

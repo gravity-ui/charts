@@ -19,7 +19,7 @@ import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
-import {useAsyncState} from './utils';
+import {getResetZoomButtonStyle, useAsyncState} from './utils';
 
 import './styles.scss';
 
@@ -28,6 +28,7 @@ const b = block('chart');
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
+    const resetZoomButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
     const plotBeforeRef = React.useRef<SVGGElement | null>(null);
@@ -59,16 +60,17 @@ export const ChartInner = (props: ChartInnerProps) => {
         preparedSeries,
         preparedSplit,
         preparedLegend,
+        preparedZoom,
         prevHeight,
         prevWidth,
         shapes,
         shapesData,
+        svgXPos,
         title,
         xAxis,
         xScale,
         yAxis,
         yScale,
-        svgXPos,
     } = useChartInnerProps({
         ...props,
         clipPathId,
@@ -252,10 +254,19 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {Object.keys(zoomState).length > 0 && (
+            {Object.keys(zoomState).length > 0 && preparedZoom && (
                 <Button
-                    style={{position: 'absolute', top: 0, right: 0}}
                     onClick={() => updateZoomState({})}
+                    ref={resetZoomButtonRef}
+                    style={getResetZoomButtonStyle({
+                        boundsHeight,
+                        boundsOffsetLeft,
+                        boundsOffsetTop,
+                        boundsWidth,
+                        node: resetZoomButtonRef.current,
+                        titleHeight: title?.height,
+                        ...preparedZoom.resetButton,
+                    })}
                 >
                     <ButtonIcon>
                         <ArrowRotateLeft />
