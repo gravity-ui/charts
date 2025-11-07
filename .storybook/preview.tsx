@@ -1,6 +1,3 @@
-// eslint-disable-next-line import/order
-import '@gravity-ui/uikit/styles/styles.scss';
-
 import React from 'react';
 
 import {Lang, configure} from '@gravity-ui/uikit';
@@ -10,6 +7,9 @@ import {MINIMAL_VIEWPORTS} from 'storybook/viewport';
 
 import {WithContext} from './decorators/withContext';
 import {WithLang} from './decorators/withLang';
+
+import '@gravity-ui/uikit/styles/fonts.scss';
+import '@gravity-ui/uikit/styles/styles.scss';
 
 configure({
     lang: Lang.En,
