@@ -548,7 +548,7 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Stacking normal with zero y values', async ({mount}) => {
+    test('Stacking normal with zero y values', async ({mount}) => {
         const stacks = new Array(10).fill(null).map((_, index) => String(index));
         const chartData: ChartData = {
             title: {text: 'Chart title'},
