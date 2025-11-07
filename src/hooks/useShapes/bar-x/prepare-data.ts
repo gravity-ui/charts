@@ -198,11 +198,12 @@ export const prepareBarXData = async (args: {
                 const isLastStackItem = yValueIndex === sortedData.length - 1;
                 const height = yDataValue > 0 ? base - y : y - base;
                 let shapeHeight = height - (stackItems.length ? stackGap : 0);
+
                 if (shapeHeight < 0) {
                     shapeHeight = height;
                 }
 
-                if (height < 0) {
+                if (shapeHeight < 0) {
                     continue;
                 }
 

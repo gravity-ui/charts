@@ -133,6 +133,10 @@ export async function prepareBarYData(args: {
                     shapeWidth = width;
                 }
 
+                if (shapeWidth < 0) {
+                    return;
+                }
+
                 const itemStackGap = width - shapeWidth;
                 const item: PreparedBarYData = {
                     x: (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap,
