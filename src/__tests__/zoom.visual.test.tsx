@@ -130,7 +130,7 @@ test.describe('Zoom', () => {
         });
     });
 
-    test.describe.only('Reset button', () => {
+    test.describe('Reset button', () => {
         test('align=bottom-left, relativeTo=chart-box', async ({mount}) => {
             const data = cloneDeep(lineTwoYAxisData);
             set(data, 'chart.zoom', {
