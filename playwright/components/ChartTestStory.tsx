@@ -8,12 +8,13 @@ import {CustomShapeRenderer} from '../../src/utils';
 
 type Props = {
     data: ChartData;
-    styles?: React.CSSProperties;
-    onRender?: (renderTime?: number) => void;
+    chartStyles?: React.CSSProperties;
     customShape?: {text: string; padding?: number; minFontSize?: number};
+    onRender?: (renderTime?: number) => void;
+    styles?: React.CSSProperties;
 };
 
-export const ChartTestStory = ({data, styles, customShape, onRender}: Props) => {
+export const ChartTestStory = ({chartStyles, customShape, data, onRender, styles}: Props) => {
     const storyStyles: React.CSSProperties = {
         height: 280,
         width: 400,
@@ -36,7 +37,7 @@ export const ChartTestStory = ({data, styles, customShape, onRender}: Props) => 
         <div style={storyStyles}>
             <ChartStory
                 data={data}
-                style={{height: storyStyles.height, width: storyStyles.width}}
+                style={{height: storyStyles.height, width: storyStyles.width, ...chartStyles}}
                 onRender={onRender}
             />
         </div>

@@ -125,7 +125,7 @@ export function getResetZoomButtonStyle(
                 }
                 case 'bottom-right': {
                     style.left = boundsWidth + boundsOffsetLeft - (node?.clientWidth || 0);
-                    style.top = boundsOffsetTop;
+                    style.top = boundsHeight - (node?.clientHeight || 0) + (titleHeight || 0);
                     break;
                 }
                 case 'top-left': {
@@ -135,7 +135,7 @@ export function getResetZoomButtonStyle(
                 }
                 case 'top-right': {
                     style.left = boundsWidth + boundsOffsetLeft - (node?.clientWidth || 0);
-                    style.top = boundsHeight - (node?.clientHeight || 0) + (titleHeight || 0);
+                    style.top = boundsOffsetTop;
                     break;
                 }
             }
