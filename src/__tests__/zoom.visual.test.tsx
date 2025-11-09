@@ -54,7 +54,15 @@ async function testZoom(args: {
     }
 
     const brushAreaLocator = component.locator('.gcharts-brush');
-    const boundingBox = await brushAreaLocator.boundingBox();
+    let boundingBox: BoundingBox | null = null;
+
+    for (let i = 0; i < 5; i++) {
+        boundingBox = await brushAreaLocator.boundingBox();
+
+        if (boundingBox) {
+            break;
+        }
+    }
 
     if (!boundingBox) {
         throw new Error('Bounding box not found');
@@ -362,7 +370,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -385,7 +392,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -404,7 +410,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -427,7 +432,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -446,7 +450,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -469,7 +472,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -488,7 +490,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
 
@@ -511,7 +512,6 @@ test.describe('Zoom', () => {
                 component,
                 getZoomOptions: getZoomXOptions,
                 shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
             });
         });
     });
