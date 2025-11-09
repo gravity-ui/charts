@@ -356,13 +356,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -385,13 +379,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -410,13 +398,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -439,13 +421,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -464,13 +440,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -493,13 +463,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -518,13 +482,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
@@ -547,13 +505,7 @@ test.describe('Zoom', () => {
             });
             set(data, 'tooltip.enabled', false);
 
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
+            const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({
                 component,
