@@ -199,11 +199,9 @@ export function useChartInnerProps(props: Props) {
             return acc;
         }, 0);
 
-    const {bottom, top, x} = svgContainer?.getBoundingClientRect() ?? {};
+    const {x} = svgContainer?.getBoundingClientRect() ?? {};
 
     return {
-        svgBottomPos: bottom,
-        svgTopPos: top,
         svgXPos: x,
         boundsHeight,
         boundsOffsetLeft,
@@ -216,6 +214,7 @@ export function useChartInnerProps(props: Props) {
         preparedLegend,
         preparedSeries,
         preparedSplit,
+        preparedZoom: chart.zoom,
         prevHeight,
         prevWidth,
         shapes,
