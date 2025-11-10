@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.0](https://github.com/gravity-ui/charts/compare/v1.21.0...v1.22.0) (2025-11-10)
+
+
+### Features
+
+* add reset zoom button configuration ([#253](https://github.com/gravity-ui/charts/issues/253)) ([b5da66a](https://github.com/gravity-ui/charts/commit/b5da66a46c07d22f43cce59b68991fc7f03e78c9))
+
+
+### Bug Fixes
+
+* fix text size calculation ([#252](https://github.com/gravity-ui/charts/issues/252)) ([3ad7db0](https://github.com/gravity-ui/charts/commit/3ad7db09989a3bab7d33597753644913bea2fc2f))
+
 ## [1.21.0](https://github.com/gravity-ui/charts/compare/v1.20.0...v1.21.0) (2025-11-07)
 
 
