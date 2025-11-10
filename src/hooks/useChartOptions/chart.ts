@@ -112,6 +112,11 @@ function getPreparedZoom(args: {zoom?: ChartZoom; seriesData: ChartSeries[]}): P
                 ...zoom?.brush?.style,
             },
         },
+        resetButton: {
+            align: zoom?.resetButton?.align || 'top-right',
+            offset: Object.assign({x: 0, y: 0}, zoom?.resetButton?.offset),
+            relativeTo: zoom?.resetButton?.relativeTo || 'chart-box',
+        },
     };
 }
 
