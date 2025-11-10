@@ -10,4 +10,5 @@ export const SeriesType = {
     Sankey: 'sankey',
     Radar: 'radar',
     Heatmap: 'heatmap',
+    Funnel: 'funnel',
 } as const;

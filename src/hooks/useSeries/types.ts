@@ -17,6 +17,8 @@ import type {
     ChartSeries,
     ConnectorCurve,
     ConnectorShape,
+    FunnelSeries,
+    FunnelSeriesData,
     HeatmapSeries,
     HeatmapSeriesData,
     LineSeries,
@@ -384,6 +386,18 @@ export type PreparedRadarSeries = {
     };
 } & BasePreparedSeries;
 
+export type PreparedFunnelSeries = {
+    type: FunnelSeries['type'];
+    data: FunnelSeriesData;
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        html: boolean;
+        format?: ValueFormat;
+    };
+    connectors: Required<FunnelSeries['connectors']>;
+} & BasePreparedSeries;
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
@@ -395,7 +409,8 @@ export type PreparedSeries =
     | PreparedWaterfallSeries
     | PreparedSankeySeries
     | PreparedRadarSeries
-    | PreparedHeatmapSeries;
+    | PreparedHeatmapSeries
+    | PreparedFunnelSeries;
 
 export type PreparedZoomableSeries = Extract<
     PreparedSeries,

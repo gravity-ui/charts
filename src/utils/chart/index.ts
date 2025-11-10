@@ -24,7 +24,7 @@ export * from './text';
 export * from './time';
 export * from './zoom';
 
-const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar'];
+const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar', 'funnel'];
 export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
     'bar-x',
     'area',
