@@ -265,6 +265,23 @@ export async function wrapText(args: {
     return acc;
 }
 
+const entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;',
+};
+
+function unescapeHtml(str: string) {
+    return Object.entries(entityMap).reduce((result, [key, value]) => {
+        return result.replace(value, key);
+    }, str);
+}
+
 function getCssStyle(prop: string, el: Element = document.body) {
     return window.getComputedStyle(el, null).getPropertyValue(prop);
 }
@@ -285,7 +302,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     return async (str: string) => {
         await document.fonts.ready;
         context.font = `${style?.fontWeight ?? defaultFontWeight} ${style?.fontSize ?? defaultFontSize} ${defaultFontFamily}`;
-        const textMetric = context.measureText(str);
+        const textMetric = context.measureText(unescapeHtml(str));
 
         return {
             width: textMetric.width,
