@@ -54,15 +54,8 @@ async function testZoom(args: {
     }
 
     const brushAreaLocator = component.locator('.gcharts-brush');
-    let boundingBox: BoundingBox | null = null;
-
-    for (let i = 0; i < 5; i++) {
-        boundingBox = await brushAreaLocator.boundingBox();
-
-        if (boundingBox) {
-            break;
-        }
-    }
+    await expect(brushAreaLocator).toBeVisible();
+    const boundingBox = await brushAreaLocator.boundingBox();
 
     if (!boundingBox) {
         throw new Error('Bounding box not found');
