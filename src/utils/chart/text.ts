@@ -2,6 +2,9 @@ import type {Selection} from 'd3';
 import {select} from 'd3-selection';
 
 import type {BaseTextStyle, MeaningfulAny} from '../../types';
+import {block} from '../cn';
+
+const b = block('chart');
 
 export function handleOverflowingText(
     tSpan: SVGTSpanElement | null,
@@ -279,33 +282,32 @@ function unescapeHtml(str: string) {
     }, str);
 }
 
+function getCssStyle(prop: string, el: Element = document.body) {
+    return window.getComputedStyle(el, null).getPropertyValue(prop);
+}
+
+let measureCanvas: HTMLCanvasElement | null = null;
 export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
-    const map: Record<string, {width: number; height: number}> = {};
-    const setSymbolSize = async (s: string) => {
-        const labels = [s === ' ' ? '&nbsp;' : s];
-        const size = await getLabelsSize({
-            labels,
-            style,
-        });
-        map[s] = {width: size.maxWidth, height: size.maxHeight};
-    };
+    const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error("Couldn't get canvas context");
+    }
+
+    const element = document.getElementsByClassName(b())[0] ?? document.body;
+    const defaultFontFamily = getCssStyle('font-family', element);
+    const defaultFontSize = getCssStyle('font-size', element);
+    const defaultFontWeight = getCssStyle('font-weight', element);
 
     return async (str: string) => {
-        let width = 0;
-        let height = 0;
+        await document.fonts.ready;
+        context.font = `${style?.fontWeight ?? defaultFontWeight} ${style?.fontSize ?? defaultFontSize} ${defaultFontFamily}`;
+        const textMetric = context.measureText(unescapeHtml(str));
 
-        const symbols = unescapeHtml(str);
-        for (let i = 0; i < symbols.length; i++) {
-            const s = symbols[i];
-            if (!map[s]) {
-                await setSymbolSize(s);
-            }
-
-            width += map[s].width;
-            height = Math.max(height, map[s].height);
-        }
-
-        return {width, height};
+        return {
+            width: textMetric.width,
+            height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
+        };
     };
 }
 

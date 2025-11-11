@@ -33,5 +33,33 @@ export interface ChartZoom {
             fillOpacity?: number;
         };
     };
-    // TODO: add resetButton configuration
+    /**
+     * Reset zoom button configuration.
+     * The button appears only after the zoom has been applied.
+     */
+    resetButton?: {
+        /**
+         * The alignment of the button.
+         *
+         * @default 'top-right'
+         */
+        align?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+        /**
+         * The offset of the button.
+         *
+         * @default {x: 0, y: 0}
+         */
+        offset?: {
+            x?: number;
+            y?: number;
+        };
+        /**
+         * The box to which the button is positioned relative to.
+         * - `chart-box` refers to the entire chart area, including titles and legends.
+         * - `plot-box` refers to the area where the series are drawn.
+         *
+         * @default 'chart-box'
+         */
+        relativeTo?: 'chart-box' | 'plot-box';
+    };
 }
