@@ -177,3 +177,120 @@ export function getRectPath(args: {
 
     return p;
 }
+
+export function getRectBorderPath(args: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    borderWidth: number;
+    borderRadius?: number | number[];
+    skipBorderStart?: boolean;
+    skipBorderEnd?: boolean;
+}) {
+    const {
+        x,
+        y,
+        width,
+        height,
+        borderWidth,
+        borderRadius = 0,
+        skipBorderStart,
+        skipBorderEnd,
+    } = args;
+
+    if (!borderWidth) {
+        return '';
+    }
+
+    const halfWidth = borderWidth / 2;
+    const expandedWidth = width + borderWidth;
+    const expandedHeight = height + borderWidth;
+    const innerWidth = width - borderWidth;
+    const innerHeight = height - borderWidth;
+
+    const borderRadiuses =
+        typeof borderRadius === 'number' ? new Array(4).fill(borderRadius) : borderRadius;
+    const [
+        borderRadiusTopLeft = 0,
+        borderRadiusTopRight = 0,
+        borderRadiusBottomRight = 0,
+        borderRadiusBottomLeft = 0,
+    ] = borderRadiuses ?? [];
+
+    const adjustOuterRadius = (radius: number) => (radius ? radius + halfWidth : 0);
+    const outerBorderRadius = [
+        adjustOuterRadius(borderRadiusTopLeft),
+        adjustOuterRadius(borderRadiusTopRight),
+        adjustOuterRadius(borderRadiusBottomRight),
+        adjustOuterRadius(borderRadiusBottomLeft),
+    ];
+
+    const outerPath = getRectPath({
+        x: x - halfWidth,
+        y: y - halfWidth,
+        width: expandedWidth,
+        height: expandedHeight,
+        borderRadius: outerBorderRadius,
+    }).toString();
+
+    if (innerWidth <= 0 || innerHeight <= 0) {
+        return outerPath;
+    }
+
+    const innerBorderRadius = [
+        Math.max(borderRadiusTopLeft - halfWidth, 0),
+        Math.max(borderRadiusTopRight - halfWidth, 0),
+        Math.max(borderRadiusBottomRight - halfWidth, 0),
+        Math.max(borderRadiusBottomLeft - halfWidth, 0),
+    ];
+
+    // Calculate where inner path should start and its dimensions
+    // By default, inner path is inset by halfWidth on all sides
+    let innerX = x + halfWidth;
+    let innerY = y + halfWidth;
+    let adjustedInnerWidth = innerWidth;
+    let adjustedInnerHeight = innerHeight;
+    const adjustedInnerBorderRadius = [...innerBorderRadius];
+
+    // Adjust inner path to skip start/end borders
+    // When skipping borders, inner path should extend to match the outer path edge
+    if (skipBorderStart && skipBorderEnd) {
+        // Both borders skipped - inner path matches outer path exactly
+        innerX = x - halfWidth;
+        innerY = y - halfWidth;
+        adjustedInnerWidth = expandedWidth;
+        adjustedInnerHeight = expandedHeight;
+        adjustedInnerBorderRadius[0] = outerBorderRadius[0];
+        adjustedInnerBorderRadius[1] = outerBorderRadius[1];
+        adjustedInnerBorderRadius[2] = outerBorderRadius[2];
+        adjustedInnerBorderRadius[3] = outerBorderRadius[3];
+    } else if (skipBorderStart) {
+        // For horizontal bars (bar-y), start = left side
+        // Outer path starts at: x - halfWidth
+        // Inner should start there too and extend to normal inner end
+        innerX = x - halfWidth;
+        adjustedInnerWidth = innerWidth + borderWidth;
+        adjustedInnerBorderRadius[0] = outerBorderRadius[0]; // top-left
+        adjustedInnerBorderRadius[3] = outerBorderRadius[3]; // bottom-left
+    } else if (skipBorderEnd) {
+        // For horizontal bars (bar-y), end = right side
+        // Inner should extend to outer end: x + width + halfWidth
+        // Current inner end: (x + halfWidth) + (width - borderWidth) = x + width - halfWidth
+        // Target: x + width + halfWidth
+        // Difference: borderWidth
+        adjustedInnerWidth = innerWidth + borderWidth;
+        adjustedInnerBorderRadius[1] = outerBorderRadius[1]; // top-right
+        adjustedInnerBorderRadius[2] = outerBorderRadius[2]; // bottom-right
+    }
+
+    const innerPath = getRectPath({
+        x: innerX,
+        y: innerY,
+        width: adjustedInnerWidth,
+        height: adjustedInnerHeight,
+        borderRadius: adjustedInnerBorderRadius,
+    }).toString();
+
+    return `${outerPath} ${innerPath}`;
+}

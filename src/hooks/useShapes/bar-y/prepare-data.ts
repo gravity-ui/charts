@@ -43,6 +43,9 @@ export async function prepareBarYData(args: {
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
+    const [xRangeStart, xRangeEnd] = xLinearScale.range();
+    const xRangeMin = Math.min(xRangeStart, xRangeEnd);
+    const xRangeMax = Math.max(xRangeStart, xRangeEnd);
 
     if (!yLinearScale) {
         return {
@@ -79,7 +82,7 @@ export async function prepareBarYData(args: {
     });
 
     const result: PreparedBarYData[] = [];
-    const baseRangeValue = xLinearScale.range()[0];
+    const baseRangeValue = xRangeStart;
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
         const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
@@ -138,19 +141,58 @@ export async function prepareBarYData(args: {
                 }
 
                 const itemStackGap = width - shapeWidth;
+                const candidateBorderWidth = barSize > s.borderWidth * 2 ? s.borderWidth : 0;
+                const isFirstInStack = xValueIndex === 0;
+                // Psitive bars grow right from zero, skip left border
+                const skipBorderStart = isFirstInStack && xValue > 0;
+                // Negative bars grow left from zero, skip right border
+                const skipBorderEnd = isFirstInStack && xValue < 0;
+                // Calculate position with border compensation
+                // Border extends halfBorder outward from the shape, so we need to adjust position
+                let itemX = (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap;
+                const halfBorder = candidateBorderWidth / 2;
+
+                if (skipBorderStart) {
+                    // Positive bar: border extends left, so shift position left by halfBorder
+                    // to keep the visual left edge at the zero line
+                    itemX -= halfBorder;
+                } else if (skipBorderEnd) {
+                    // Negative bar: border extends right, so shift position right by halfBorder
+                    // to keep the visual right edge at the zero line
+                    itemX += halfBorder;
+                }
+
                 const item: PreparedBarYData = {
-                    x: (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap,
+                    x: itemX,
                     y: y,
                     width: shapeWidth,
                     height: barSize,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
-                    borderWidth: barSize > s.borderWidth * 2 ? s.borderWidth : 0,
+                    borderWidth: candidateBorderWidth,
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
                     isLastStackItem,
+                    skipBorderStart,
+                    skipBorderEnd,
                 };
+
+                // Check if border touches the plot area edges (not including bars that start from zero)
+                if (candidateBorderWidth > 0 && !skipBorderStart && !skipBorderEnd) {
+                    const shapeStart = Math.min(item.x, item.x + item.width);
+                    const shapeEnd = Math.max(item.x, item.x + item.width);
+                    const outerStart = shapeStart - halfBorder;
+                    const outerEnd = shapeEnd + halfBorder;
+                    // Tolerance in pixels to account for floating point precision when checking edge proximity
+                    const edgeTolerance = 0.5;
+                    const touchesRangeStart = outerStart - xRangeMin <= edgeTolerance;
+                    const touchesRangeEnd = xRangeMax - outerEnd <= edgeTolerance;
+
+                    if (touchesRangeStart || touchesRangeEnd) {
+                        item.borderWidth = 0;
+                    }
+                }
 
                 stackItems.push(item);
                 stackSum += width;
