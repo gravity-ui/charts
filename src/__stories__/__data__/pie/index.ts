@@ -4,5 +4,6 @@ export * from './donut';
 export * from './donut-totals';
 export * from './html-labels';
 export * from './html-legend';
+export * from './null-modes';
 export * from './playground';
 export * from './user-styles';

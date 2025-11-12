@@ -2,56 +2,29 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react-webpack5';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
-import type {ChartData, HeatmapSeriesData} from '../../types';
+import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {heatmapDataWithNulls} from '../__data__/heatmap/null-handling';
+import {heatmapNullModeSkipLinearXData, heatmapNullModeZeroLinearXData} from '../__data__';
 
-const sharedChartData = {
-    yAxis: [{type: 'category' as const, categories: ['Row 1', 'Row 2', 'Row 3', 'Row 4', 'Row 5']}],
-};
-
-const HeatmapNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: HeatmapSeriesData[]}) => {
-    const breakData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "skip" (default)'},
-        series: {
-            data: [
-                {
-                    type: 'heatmap',
-                    name: 'Series 1',
-                    data: dataWithNulls,
-                    dataLabels: {enabled: true},
-                    nullMode: 'skip',
-                },
-            ],
-        },
-    };
-
-    const replaceByZeroData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "zero"'},
-        series: {
-            data: [
-                {
-                    type: 'heatmap',
-                    name: 'Series 1',
-                    data: dataWithNulls,
-                    dataLabels: {enabled: true},
-                    nullMode: 'zero',
-                },
-            ],
-        },
-    };
+const HeatmapNullHandlingComparison = () => {
+    const skipData: ChartData = cloneDeep(heatmapNullModeSkipLinearXData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true});
+    const zeroData: ChartData = cloneDeep(heatmapNullModeZeroLinearXData);
+    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 
     return (
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={breakData} />
+                    <ChartStory data={skipData} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={replaceByZeroData} />
+                    <ChartStory data={zeroData} />
                 </Col>
             </Row>
         </Container>
@@ -59,16 +32,7 @@ const HeatmapNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: HeatmapS
 };
 
 export const HeatmapNullHandlingComparisonStory: StoryObj<typeof HeatmapNullHandlingComparison> = {
-    name: 'Null Handling Comparison',
-    args: {
-        dataWithNulls: heatmapDataWithNulls,
-    },
-    argTypes: {
-        dataWithNulls: {
-            control: 'object',
-            description: 'Array of heatmap series data with null values',
-        },
-    },
+    name: 'Null modes',
 };
 
 export default {

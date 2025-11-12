@@ -2,73 +2,37 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react-webpack5';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
-import type {ChartData, PieSeriesData} from '../../types';
+import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {pieDataWithNulls} from '../__data__/pie/null-handling';
+import {pieNullModeSkipData, pieNullModeZeroData} from '../__data__';
 
-const PieNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: PieSeriesData[]}) => {
-    const filterData: ChartData = {
-        title: {
-            text: 'nullMode: "skip" (default)',
-            style: {fontSize: '12px', fontWeight: 'normal'},
-        },
-        legend: {enabled: true},
-        series: {
-            data: [
-                {
-                    type: 'pie',
-                    data: dataWithNulls,
-                    nullMode: 'skip',
-                    minRadius: 0,
-                },
-            ],
-        },
-    };
-
-    const replaceByZeroData: ChartData = {
-        title: {
-            text: 'nullMode: "zero"',
-            style: {fontSize: '12px', fontWeight: 'normal'},
-        },
-        legend: {enabled: true},
-        series: {
-            data: [
-                {
-                    type: 'pie',
-                    data: dataWithNulls,
-                    nullMode: 'zero',
-                    minRadius: 0,
-                },
-            ],
-        },
-    };
+const PieNullHandlingComparison = () => {
+    const skipData: ChartData = cloneDeep(pieNullModeSkipData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true});
+    const zeroData: ChartData = cloneDeep(pieNullModeZeroData);
+    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 
     return (
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={filterData} />
+                    <ChartStory data={skipData} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={replaceByZeroData} />
+                    <ChartStory data={zeroData} />
                 </Col>
             </Row>
         </Container>
     );
 };
 
-export const PieNullHandlingComparisonStory: StoryObj<typeof PieNullHandlingComparison> = {
-    name: 'Null Handling Comparison',
-    args: {
-        dataWithNulls: pieDataWithNulls,
-    },
-    argTypes: {
-        dataWithNulls: {
-            control: 'object',
-            description: 'Array of pie series data with null values',
-        },
-    },
+export const PieNullHandlingComparisonStory: StoryObj = {
+    name: 'Null modes',
 };
 
 export default {

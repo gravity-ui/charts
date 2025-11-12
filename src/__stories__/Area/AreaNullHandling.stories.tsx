@@ -2,72 +2,26 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react-webpack5';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
-import type {AreaSeriesData, ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {areaDataWithNulls} from '../__data__/area/null-handling';
+import {
+    areaNullModeConnectLinearXData,
+    areaNullModeSkipLinearXData,
+    areaNullModeZeroLinearXData,
+} from '../__data__';
 
-const sharedChartData = {
-    yAxis: [
-        {
-            title: {
-                text: 'User score',
-            },
-        },
-    ],
-    xAxis: {
-        type: 'datetime' as const,
-        title: {
-            text: 'Release dates',
-        },
-    },
-};
-
-const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesData[]}) => {
-    const skipData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "skip" (default)'},
-        series: {
-            data: [
-                {
-                    type: 'area',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'skip',
-                },
-            ],
-        },
-    };
-
-    const connectData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "connect"'},
-        series: {
-            data: [
-                {
-                    type: 'area',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'connect',
-                },
-            ],
-        },
-    };
-
-    const zeroData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "zero"'},
-        series: {
-            data: [
-                {
-                    type: 'area',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'zero',
-                },
-            ],
-        },
-    };
+const AreaNullHandlingComparison = () => {
+    const skipData = cloneDeep(areaNullModeSkipLinearXData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true});
+    const connectData = cloneDeep(areaNullModeConnectLinearXData);
+    set(connectData, 'title', {text: 'nullMode: "connect"'});
+    set(connectData, 'series.data[0].dataLabels', {enabled: true});
+    const zeroData = cloneDeep(areaNullModeZeroLinearXData);
+    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 
     return (
         <Container spaceRow={5}>
@@ -87,16 +41,7 @@ const AreaNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: AreaSeriesD
 };
 
 export const AreaNullHandlingComparisonStory: StoryObj<typeof AreaNullHandlingComparison> = {
-    name: 'Null Handling Comparison',
-    args: {
-        dataWithNulls: areaDataWithNulls,
-    },
-    argTypes: {
-        dataWithNulls: {
-            control: 'object',
-            description: 'Array of area series data with null values',
-        },
-    },
+    name: 'Null modes',
 };
 
 export default {

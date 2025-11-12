@@ -8,5 +8,6 @@ export * from './scatter';
 export * from './treemap';
 export * from './waterfall';
 export * from './sankey';
+export * from './scatter';
 export * from './radar';
 export * from './heatmap';

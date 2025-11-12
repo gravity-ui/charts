@@ -2,72 +2,27 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react-webpack5';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
-import type {ChartData, LineSeriesData} from '../../types';
+import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {lineDataWithNulls} from '../__data__/line/null-handling';
+import {
+    lineNullModeConnectLinearXData,
+    lineNullModeSkipLinearXData,
+    lineNullModeZeroLinearXData,
+} from '../__data__';
 
-const sharedChartData = {
-    yAxis: [
-        {
-            title: {
-                text: 'User score',
-            },
-        },
-    ],
-    xAxis: {
-        type: 'datetime' as const,
-        title: {
-            text: 'Release dates',
-        },
-    },
-};
-
-const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesData[]}) => {
-    const skipData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "skip" (default)'},
-        series: {
-            data: [
-                {
-                    type: 'line',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'skip',
-                },
-            ],
-        },
-    };
-
-    const connectData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "connect"'},
-        series: {
-            data: [
-                {
-                    type: 'line',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'connect',
-                },
-            ],
-        },
-    };
-
-    const zeroData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "zero"'},
-        series: {
-            data: [
-                {
-                    type: 'line',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'zero',
-                },
-            ],
-        },
-    };
+const LineNullHandlingComparison = () => {
+    const skipData: ChartData = cloneDeep(lineNullModeSkipLinearXData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true});
+    const connectData: ChartData = cloneDeep(lineNullModeConnectLinearXData);
+    set(connectData, 'title', {text: 'nullMode: "connect"'});
+    set(connectData, 'series.data[0].dataLabels', {enabled: true});
+    const zeroData: ChartData = cloneDeep(lineNullModeZeroLinearXData);
+    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 
     return (
         <Container spaceRow={5}>
@@ -87,16 +42,7 @@ const LineNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: LineSeriesD
 };
 
 export const LineNullHandlingComparisonStory: StoryObj<typeof LineNullHandlingComparison> = {
-    name: 'Null Handling Comparison',
-    args: {
-        dataWithNulls: lineDataWithNulls,
-    },
-    argTypes: {
-        dataWithNulls: {
-            control: 'object',
-            description: 'Array of line series data with null values',
-        },
-    },
+    name: 'Null modes',
 };
 
 export default {

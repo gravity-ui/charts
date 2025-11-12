@@ -2,57 +2,20 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react-webpack5';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
-import type {BarXSeriesData, ChartData} from '../../types';
+import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {barXDataWithNulls} from '../__data__/bar-x/null-handling';
+import {barXNullModeSkipLinearXData, barXNullModeZeroLinearXData} from '../__data__';
 
-const sharedChartData = {
-    yAxis: [
-        {
-            title: {
-                text: 'Y values',
-            },
-        },
-    ],
-    xAxis: {
-        type: 'linear' as const,
-        title: {
-            text: 'X values',
-        },
-    },
-};
-
-const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesData[]}) => {
-    const skipData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "skip" (default)'},
-        series: {
-            data: [
-                {
-                    type: 'bar-x',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'skip',
-                },
-            ],
-        },
-    };
-
-    const zeroData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "zero"'},
-        series: {
-            data: [
-                {
-                    type: 'bar-x',
-                    name: 'User Score',
-                    data: dataWithNulls,
-                    nullMode: 'zero',
-                },
-            ],
-        },
-    };
+const BarXNullHandlingComparison = () => {
+    const skipData: ChartData = cloneDeep(barXNullModeSkipLinearXData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true, inside: true});
+    const zeroData: ChartData = cloneDeep(barXNullModeZeroLinearXData);
+    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true, inside: true});
 
     return (
         <Container spaceRow={5}>
@@ -69,16 +32,7 @@ const BarXNullHandlingComparison = ({dataWithNulls}: {dataWithNulls: BarXSeriesD
 };
 
 export const BarXNullHandlingComparisonStory: StoryObj<typeof BarXNullHandlingComparison> = {
-    name: 'Null Handling Comparison',
-    args: {
-        dataWithNulls: barXDataWithNulls,
-    },
-    argTypes: {
-        dataWithNulls: {
-            control: 'object',
-            description: 'Array of bar-x series data with null values',
-        },
-    },
+    name: 'Null Modes',
 };
 
 export default {

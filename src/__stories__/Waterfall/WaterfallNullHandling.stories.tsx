@@ -2,103 +2,36 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react-webpack5';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
-import type {ChartData, WaterfallSeriesData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {waterfallDataWithNulls} from '../__data__/waterfall/null-handling';
+import {waterfallNullModeSkipData, waterfallNullModeZeroData} from '../__data__';
 
-const sharedChartData = {
-    xAxis: {
-        type: 'category' as const,
-        labels: {autoRotation: false},
-    },
-    legend: {enabled: true},
-};
-
-const WaterfallNullHandlingComparison = ({
-    dataWithNulls,
-}: {
-    dataWithNulls: WaterfallSeriesData[];
-}) => {
-    const filterData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "skip" (default)'},
-        xAxis: {
-            ...sharedChartData.xAxis,
-            categories: dataWithNulls.map((d) => d.x).filter((x) => x !== undefined) as string[],
-        },
-        series: {
-            data: [
-                {
-                    type: 'waterfall',
-                    name: 'Profit',
-                    data: dataWithNulls,
-                    nullMode: 'skip',
-                    legend: {
-                        itemText: {
-                            positive: 'income',
-                            negative: 'outcome',
-                            totals: 'totals',
-                        },
-                    },
-                },
-            ],
-        },
-    };
-
-    const replaceByZeroData: ChartData = {
-        ...sharedChartData,
-        title: {text: 'nullMode: "zero"'},
-        xAxis: {
-            ...sharedChartData.xAxis,
-            categories: dataWithNulls.map((d) => d.x).filter((x) => x !== undefined) as string[],
-        },
-        series: {
-            data: [
-                {
-                    type: 'waterfall',
-                    name: 'Profit',
-                    data: dataWithNulls,
-                    nullMode: 'zero',
-                    legend: {
-                        itemText: {
-                            positive: 'income',
-                            negative: 'outcome',
-                            totals: 'totals',
-                        },
-                    },
-                },
-            ],
-        },
-    };
+const WaterfallNullHandlingComparison = () => {
+    const skipData = cloneDeep(waterfallNullModeSkipData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true});
+    const zeroData = cloneDeep(waterfallNullModeZeroData);
+    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 
     return (
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={filterData} />
+                    <ChartStory data={skipData} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={replaceByZeroData} />
+                    <ChartStory data={zeroData} />
                 </Col>
             </Row>
         </Container>
     );
 };
 
-export const WaterfallNullHandlingComparisonStory: StoryObj<
-    typeof WaterfallNullHandlingComparison
-> = {
-    name: 'Null Handling Comparison',
-    args: {
-        dataWithNulls: waterfallDataWithNulls,
-    },
-    argTypes: {
-        dataWithNulls: {
-            control: 'object',
-            description: 'Array of waterfall series data with null values',
-        },
-    },
+export const WaterfallNullHandlingComparisonStory: StoryObj = {
+    name: 'Null modes',
 };
 
 export default {
