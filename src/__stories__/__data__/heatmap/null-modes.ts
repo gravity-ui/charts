@@ -1,6 +1,6 @@
 import type {ChartData, HeatmapSeriesData} from '../../../types';
 
-const dataWithNullsLinearX: HeatmapSeriesData[] = [
+const dataWithNulls: HeatmapSeriesData[] = [
     {x: 10, y: 10, value: 10},
     {x: 15, y: 15, value: 15},
     {x: 20, y: 20, value: null},
@@ -8,26 +8,26 @@ const dataWithNullsLinearX: HeatmapSeriesData[] = [
     {x: 30, y: 30, value: 30},
 ];
 
-export const heatmapNullModeSkipLinearXData: ChartData = {
+export const heatmapNullModeSkipData: ChartData = {
     series: {
         data: [
             {
                 type: 'heatmap',
                 name: 'Series',
-                data: dataWithNullsLinearX,
+                data: dataWithNulls,
                 nullMode: 'skip',
             },
         ],
     },
 };
 
-export const heatmapNullModeZeroLinearXData: ChartData = {
+export const heatmapNullModeZeroData: ChartData = {
     series: {
         data: [
             {
                 type: 'heatmap',
                 name: 'Series',
-                data: dataWithNullsLinearX,
+                data: dataWithNulls,
                 nullMode: 'zero',
             },
         ],

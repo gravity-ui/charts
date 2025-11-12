@@ -12,10 +12,8 @@ import {barYNullModeSkipLinearXData, barYNullModeZeroLinearXData} from '../__dat
 const BarYNullHandlingComparison = () => {
     const skipData: ChartData = cloneDeep(barYNullModeSkipLinearXData);
     set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
-    set(skipData, 'series.data[0].dataLabels', {enabled: true, inside: true});
     const zeroData: ChartData = cloneDeep(barYNullModeZeroLinearXData);
     set(zeroData, 'title', {text: 'nullMode: "zero"'});
-    set(zeroData, 'series.data[0].dataLabels', {enabled: true, inside: true});
 
     return (
         <Container spaceRow={5}>

@@ -5,7 +5,12 @@ import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {scatterBasicData, scatterContinuousLegendData} from '../__stories__/__data__';
+import {
+    scatterBasicData,
+    scatterContinuousLegendData,
+    scatterNullModeSkipLinearXData,
+    scatterNullModeZeroLinearXData,
+} from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
 test.describe('Scatter series', () => {
@@ -161,53 +166,13 @@ test.describe('Scatter series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.describe('Different null modes', () => {
-        const scatterData = [
-            {x: 10, y: 30},
-            {x: 20, y: null},
-            {x: 30, y: 50},
-            {x: null, y: 40},
-            {x: 50, y: 60},
-            {x: 60, y: null},
-            {x: 70, y: 45},
-        ];
+    test('x null values, nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={scatterNullModeSkipLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 
-        test('Skip mode', async ({mount}) => {
-            const data: ChartData = {
-                title: {text: 'Skip mode (default)'},
-                series: {
-                    data: [
-                        {
-                            type: 'scatter',
-                            name: 'Series 1',
-                            data: scatterData,
-                            nullMode: 'skip',
-                        },
-                    ],
-                },
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
-        test('Zero mode', async ({mount}) => {
-            const data: ChartData = {
-                title: {text: 'Zero mode'},
-                series: {
-                    data: [
-                        {
-                            type: 'scatter',
-                            name: 'Series 1',
-                            data: scatterData,
-                            nullMode: 'zero',
-                        },
-                    ],
-                },
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
+    test('x null values, nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={scatterNullModeZeroLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

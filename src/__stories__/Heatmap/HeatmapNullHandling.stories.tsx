@@ -7,13 +7,13 @@ import set from 'lodash/set';
 
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {heatmapNullModeSkipLinearXData, heatmapNullModeZeroLinearXData} from '../__data__';
+import {heatmapNullModeSkipData, heatmapNullModeZeroData} from '../__data__';
 
 const HeatmapNullHandlingComparison = () => {
-    const skipData: ChartData = cloneDeep(heatmapNullModeSkipLinearXData);
+    const skipData: ChartData = cloneDeep(heatmapNullModeSkipData);
     set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
     set(skipData, 'series.data[0].dataLabels', {enabled: true});
-    const zeroData: ChartData = cloneDeep(heatmapNullModeZeroLinearXData);
+    const zeroData: ChartData = cloneDeep(heatmapNullModeZeroData);
     set(zeroData, 'title', {text: 'nullMode: "zero"'});
     set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 

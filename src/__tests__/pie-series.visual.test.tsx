@@ -7,7 +7,12 @@ import range from 'lodash/range';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {pieBasicData, piePlaygroundData} from '../__stories__/__data__';
+import {
+    pieBasicData,
+    pieNullModeSkipData,
+    pieNullModeZeroData,
+    piePlaygroundData,
+} from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
 import {randomString} from '../utils';
 
@@ -636,52 +641,13 @@ test.describe('Pie series', () => {
         await expect(component).toHaveScreenshot();
     });
 
-    test.describe('Different null modes', () => {
-        const pieData = [
-            {name: 'A', value: 100},
-            {name: 'B', value: null},
-            {name: 'C', value: 150},
-            {name: 'D', value: null},
-            {name: 'E', value: 80},
-            {name: 'F', value: 120},
-        ];
+    test('nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={pieNullModeSkipData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 
-        test('Skip mode', async ({mount}) => {
-            const data: ChartData = {
-                title: {text: 'Skip mode (default)'},
-                series: {
-                    data: [
-                        {
-                            type: 'pie',
-                            data: pieData,
-                            nullMode: 'skip',
-                            dataLabels: {enabled: true},
-                        },
-                    ],
-                },
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
-        test('Zero mode', async ({mount}) => {
-            const data: ChartData = {
-                title: {text: 'Zero mode'},
-                series: {
-                    data: [
-                        {
-                            type: 'pie',
-                            data: pieData,
-                            nullMode: 'zero',
-                            dataLabels: {enabled: true},
-                        },
-                    ],
-                },
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
+    test('nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={pieNullModeZeroData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

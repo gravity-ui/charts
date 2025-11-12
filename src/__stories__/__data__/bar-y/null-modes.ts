@@ -16,6 +16,10 @@ export const barYNullModeSkipLinearXData: ChartData = {
                 name: 'Series',
                 data: dataWithNullsLinearX,
                 nullMode: 'skip',
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                },
             },
         ],
     },
@@ -29,6 +33,10 @@ export const barYNullModeZeroLinearXData: ChartData = {
                 name: 'Series',
                 data: dataWithNullsLinearX,
                 nullMode: 'zero',
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                },
             },
         ],
     },

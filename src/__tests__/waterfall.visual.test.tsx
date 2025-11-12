@@ -2,7 +2,11 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {waterfallBasicData} from 'src/__stories__/__data__';
+import {
+    waterfallBasicData,
+    waterfallNullModeSkipData,
+    waterfallNullModeZeroData,
+} from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -23,61 +27,13 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.describe('Different null modes', () => {
-        const waterfallData = [
-            {x: 'Jan', y: 150},
-            {x: 'Feb', y: null},
-            {x: 'Mar', y: -50},
-            {x: 'Apr', y: 80},
-            {x: 'May', y: null},
-            {x: 'Jun', y: -30},
-            {x: 'Total', y: 0, total: true},
-        ];
+    test('nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={waterfallNullModeSkipData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 
-        test('Skip mode', async ({mount}) => {
-            const data = {
-                title: {text: 'Skip mode (default)'},
-                series: {
-                    data: [
-                        {
-                            type: 'waterfall' as const,
-                            name: 'Budget',
-                            data: waterfallData,
-                            nullMode: 'skip' as const,
-                        },
-                    ],
-                },
-                xAxis: {
-                    type: 'category' as const,
-                    categories: waterfallData.map((d) => d.x),
-                },
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
-        test('Zero mode', async ({mount}) => {
-            const data = {
-                title: {text: 'Zero mode'},
-                series: {
-                    data: [
-                        {
-                            type: 'waterfall' as const,
-                            name: 'Budget',
-                            data: waterfallData,
-                            nullMode: 'zero' as const,
-                        },
-                    ],
-                },
-                xAxis: {
-                    type: 'category' as const,
-                    categories: waterfallData.map((d) => d.x),
-                },
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
+    test('nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={waterfallNullModeZeroData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
