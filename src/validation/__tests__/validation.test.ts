@@ -168,4 +168,158 @@ describe('validation/validateData', () => {
             expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
         },
     );
+
+    describe('Null value support', () => {
+        test.each<ChartData>([
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: null},
+                                {x: 2, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                xAxis: {type: 'datetime'},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1234567890, y: null},
+                                {x: 1234567900, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: null},
+                                {x: 2, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: null},
+                                {x: 2, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                yAxis: [{type: 'category'}],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [
+                                {y: 'A', x: null},
+                                {y: 'B', x: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: null},
+                                {x: null, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+        ])('[XY Series] validateData should accept null values for x and y (data: %j)', (data) => {
+            expect(() => validateData(data)).not.toThrow();
+        });
+
+        test.each([
+            {
+                xAxis: {type: 'datetime'},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: null, y: 100},
+                                {x: 1234567900, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                xAxis: {type: 'datetime'},
+                yAxis: [{type: 'datetime'}],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1234567890, y: null},
+                                {x: 1234567900, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                xAxis: {type: 'datetime'},
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series 1',
+                            data: [
+                                {x: null, y: 100},
+                                {x: 1234567900, y: 3},
+                            ],
+                        },
+                    ],
+                },
+            },
+        ])(
+            '[Datetime Axis] validateData should throw error for nullable values (data: %j)',
+            (data) => {
+                let error: ChartError | null = null;
+
+                try {
+                    validateData(data as ChartData);
+                } catch (e) {
+                    error = e as ChartError;
+                }
+                expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+            },
+        );
+    });
 });

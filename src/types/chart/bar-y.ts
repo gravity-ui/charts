@@ -11,7 +11,7 @@ export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
      * - timestamp value (for `datetime` x axis)
      * - x axis category value (for `category` x axis). If the type is a string, then it is a category value itself. If the type is a number, then it is the index of an element in the array of categories described in `xAxis.categories`
      */
-    x?: string | number;
+    x?: string | number | null;
     /**
      * The `y` value of the bar. Depending on the context , it may represents:
      * - numeric value (for `linear` y axis)
@@ -74,4 +74,13 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     legend?: ChartLegend & {
         symbol?: RectLegendSymbolOptions;
     };
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'skip'`: Omit data points with null values (no bar shown)
+     * - `'zero'`: Treat null values as zero
+     *
+     * @default 'skip'
+     */
+    nullMode?: 'zero' | 'skip';
 }

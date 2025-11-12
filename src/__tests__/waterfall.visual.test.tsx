@@ -2,7 +2,11 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {waterfallBasicData} from 'src/__stories__/__data__';
+import {
+    waterfallBasicData,
+    waterfallNullModeSkipData,
+    waterfallNullModeZeroData,
+} from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -20,6 +24,16 @@ test.describe('Waterfall series', () => {
         await expect(totalColumn).toBeVisible();
         await totalColumn.hover();
 
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={waterfallNullModeSkipData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={waterfallNullModeZeroData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

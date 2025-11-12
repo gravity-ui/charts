@@ -2,7 +2,7 @@ import {scaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../constants';
-import type {ChartSeriesOptions, PieSeries} from '../../types';
+import type {ChartSeriesOptions, PieSeries, PieSeriesData} from '../../types';
 import {getUniqId} from '../../utils';
 
 import {DEFAULT_DATALABELS_PADDING} from './constants';
@@ -16,14 +16,27 @@ type PreparePieSeriesArgs = {
     colors: string[];
 };
 
+function prepareSeriesData(series: PieSeries): PieSeriesData[] {
+    const nullMode = series.nullMode ?? 'skip';
+    const data = series.data;
+    switch (nullMode) {
+        case 'zero':
+            return data.map((p) => ({...p, value: p.value ?? 0}));
+        case 'skip':
+        default:
+            return data.filter((p) => p.value !== null);
+    }
+}
+
 export function preparePieSeries(args: PreparePieSeriesArgs) {
     const {series, seriesOptions, legend, colors} = args;
-    const dataNames = series.data.map((d) => d.name);
+    const preparedData = prepareSeriesData(series);
+    const dataNames = preparedData.map((d) => d.name);
     const colorScale = scaleOrdinal(dataNames, colors);
     const stackId = getUniqId();
     const seriesHoverState = get(seriesOptions, 'pie.states.hover');
 
-    const preparedSeries: PreparedSeries[] = series.data.map<PreparedPieSeries>((dataItem, i) => {
+    const preparedSeries: PreparedSeries[] = preparedData.map<PreparedPieSeries>((dataItem, i) => {
         const result: PreparedPieSeries = {
             type: 'pie',
             data: dataItem,

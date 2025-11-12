@@ -86,7 +86,7 @@ export function prepareScatterData(args: {
             const x = getXValue({point: d, xAxis, xScale});
             const y = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
 
-            if (typeof x === 'undefined' || typeof y === 'undefined') {
+            if (typeof x === 'undefined' || typeof y === 'undefined' || x === null || y === null) {
                 return;
             }
 

@@ -7,7 +7,12 @@ import range from 'lodash/range';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {pieBasicData, piePlaygroundData} from '../__stories__/__data__';
+import {
+    pieBasicData,
+    pieNullModeSkipData,
+    pieNullModeZeroData,
+    piePlaygroundData,
+} from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
 import {randomString} from '../utils';
 
@@ -634,5 +639,15 @@ test.describe('Pie series', () => {
         );
 
         await expect(component).toHaveScreenshot();
+    });
+
+    test('nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={pieNullModeSkipData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={pieNullModeZeroData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

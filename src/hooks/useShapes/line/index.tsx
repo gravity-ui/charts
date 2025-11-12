@@ -47,12 +47,12 @@ export const LineSeriesShapes = (args: Args) => {
         const inactiveOptions = get(seriesOptions, 'line.states.inactive');
 
         const line = lineGenerator<PointData>()
-            .x((d) => d.x)
-            .y((d) => d.y);
+            .defined((d) => d.y !== null && d.x !== null)
+            .x((d) => d.x as number)
+            .y((d) => d.y as number);
 
         plotSvgElement.selectAll('*').remove();
         markersSvgElement.selectAll('*').remove();
-
         const lineSelection = plotSvgElement
             .selectAll('path')
             .data(preparedData)

@@ -20,7 +20,7 @@ export interface HeatmapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
      */
     y?: string | number;
     /** Value of the heatmap cell */
-    value?: number;
+    value?: number | null;
     /** Data label value of the heatmap cell. If not specified, the value is used. */
     label?: string;
 }
@@ -47,4 +47,13 @@ export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
      * The color of the border surrounding each cell.
      */
     borderColor?: string;
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'zero'`: Treat null values as zero
+     * - `'skip'`: Omit data points with null values (show gaps)
+     *
+     * @default 'skip'
+     */
+    nullMode?: 'zero' | 'skip';
 }

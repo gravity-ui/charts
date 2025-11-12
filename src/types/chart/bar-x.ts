@@ -19,7 +19,7 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
      * - timestamp value (for `datetime` y axis)
      * - y axis category value (for `category` y axis). If the type is a string, then it is a category value itself. If the type is a number, then it is the index of an element in the array of categories described in `yAxis[0].categories`
      */
-    y?: string | number;
+    y?: string | number | null;
     /**
      * Corresponding value of axis category.
      *
@@ -73,4 +73,13 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     };
     /** Y-axis index (when using two axes) */
     yAxis?: number;
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'skip'`: Omit data points with null values (no bar shown)
+     * - `'zero'`: Treat null values as zero
+     *
+     * @default 'skip'
+     */
+    nullMode?: 'zero' | 'skip';
 }

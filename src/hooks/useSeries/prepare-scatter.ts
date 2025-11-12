@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {ChartSeriesOptions, ScatterSeries} from '../../types';
+import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getSymbolType, getUniqId} from '../../utils';
 
@@ -38,6 +38,23 @@ function prepareMarker(
     };
 }
 
+function prepareSeriesData(series: ScatterSeries): ScatterSeriesData[] {
+    const nullMode = series.nullMode ?? 'skip';
+    const data = series.data;
+
+    switch (nullMode) {
+        case 'zero':
+            return data.map((p) => ({
+                ...p,
+                x: p.x ?? 0,
+                y: p.y ?? 0,
+            }));
+        case 'skip':
+        default:
+            return data.filter((p) => p.y !== null && p.x !== null);
+    }
+}
+
 interface PrepareScatterSeriesArgs {
     colorScale: ScaleOrdinal<string, string>;
     series: ScatterSeries[];
@@ -63,7 +80,7 @@ export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedSc
                 enabled: get(s, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(s, symbolType),
             },
-            data: s.data,
+            data: prepareSeriesData(s),
             marker: prepareMarker(s, seriesOptions, index),
             cursor: get(s, 'cursor', null),
             yAxis: get(s, 'yAxis', 0),

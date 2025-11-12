@@ -5,7 +5,12 @@ import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {scatterBasicData, scatterContinuousLegendData} from '../__stories__/__data__';
+import {
+    scatterBasicData,
+    scatterContinuousLegendData,
+    scatterNullModeSkipLinearXData,
+    scatterNullModeZeroLinearXData,
+} from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
 test.describe('Scatter series', () => {
@@ -34,8 +39,6 @@ test.describe('Scatter series', () => {
                         type: 'scatter',
                     },
                     {
-                        // TODO: https://github.com/gravity-ui/charts/issues/28
-                        // @ts-expect-error
                         data: [{y: 0, x: null}],
                         name: '2024',
                         type: 'scatter',
@@ -71,8 +74,6 @@ test.describe('Scatter series', () => {
                         type: 'scatter',
                     },
                     {
-                        // TODO: https://github.com/gravity-ui/charts/issues/28
-                        // @ts-expect-error
                         data: [{y: null, x: 0}],
                         name: '2024',
                         type: 'scatter',
@@ -162,6 +163,16 @@ test.describe('Scatter series', () => {
         set(dataWithMinMax, 'yAxis[0].min', 1);
         set(dataWithMinMax, 'yAxis[0].max', 1);
         component.update(<ChartTestStory data={dataWithMinMax} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={scatterNullModeSkipLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={scatterNullModeZeroLinearXData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

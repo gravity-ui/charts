@@ -7,9 +7,9 @@ import type {PreparedLineSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
 
-import type {MarkerData, PointData, PreparedLineData} from './types';
+import type {MarkerData, MarkerPointData, PreparedLineData} from './types';
 
-async function getLabelData(point: PointData, series: PreparedLineSeries, xMax: number) {
+async function getLabelData(point: MarkerPointData, series: PreparedLineSeries, xMax: number) {
     const text = getFormattedValue({
         value: point.data.label || point.data.y,
         ...series.dataLabels,
@@ -42,7 +42,7 @@ async function getLabelData(point: PointData, series: PreparedLineSeries, xMax: 
 }
 
 async function getHtmlLabel(
-    point: PointData,
+    point: MarkerPointData,
     series: PreparedLineSeries,
     xMax: number,
 ): Promise<HtmlItem> {
@@ -82,38 +82,64 @@ export const prepareLineData = async (args: {
         if (!seriesYScale) {
             continue;
         }
-
-        const points = s.data.map((d) => ({
-            x: getXValue({point: d, points: s.data, xAxis, xScale}),
-            y:
-                yAxisTop +
-                getYValue({point: d, points: s.data, yAxis: seriesYAxis, yScale: seriesYScale}),
-            active: true,
-            data: d,
-            series: s,
-        }));
+        const points = s.data.map((d) => {
+            const yValue = getYValue({
+                point: d,
+                points: s.data,
+                yAxis: seriesYAxis,
+                yScale: seriesYScale,
+            });
+            return {
+                x: getXValue({point: d, points: s.data, xAxis, xScale}),
+                y: yValue === null ? null : yAxisTop + yValue,
+                active: true,
+                data: d,
+                series: s,
+            };
+        });
 
         const htmlElements: HtmlItem[] = [];
         let labels: LabelData[] = [];
         if (s.dataLabels.enabled) {
             if (s.dataLabels.html) {
-                const list = await Promise.all(points.map((p) => getHtmlLabel(p, s, xMax)));
+                const list = await Promise.all(
+                    points.reduce<Promise<HtmlItem>[]>((result, p) => {
+                        if (p.y === null) {
+                            return result;
+                        }
+                        result.push(getHtmlLabel(p as MarkerPointData, s, xMax));
+                        return result;
+                    }, []),
+                );
                 htmlElements.push(...list);
             } else {
-                labels = await Promise.all(points.map((p) => getLabelData(p, s, xMax)));
+                labels = await Promise.all(
+                    points.reduce<Promise<LabelData>[]>((result, p) => {
+                        if (p.y === null) {
+                            return result;
+                        }
+                        result.push(getLabelData(p as MarkerPointData, s, xMax));
+                        return result;
+                    }, []),
+                );
             }
         }
 
         let markers: MarkerData[] = [];
         if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
-            markers = points.map<MarkerData>((p) => ({
-                point: p,
-                active: true,
-                hovered: false,
-                clipped: isOutsideBounds(p.x, p.y),
-            }));
+            markers = points.reduce<MarkerData[]>((result, p) => {
+                if (p.y === null || p.x === null) {
+                    return result;
+                }
+                result.push({
+                    point: p as MarkerPointData,
+                    active: true,
+                    hovered: false,
+                    clipped: isOutsideBounds(p.x, p.y),
+                });
+                return result;
+            }, []);
         }
-
         const result: PreparedLineData = {
             points,
             markers,

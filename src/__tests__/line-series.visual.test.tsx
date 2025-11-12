@@ -2,10 +2,15 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {lineBasicData, lineTwoYAxisData} from 'src/__stories__/__data__';
-import type {ChartData} from 'src/types';
-
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {
+    lineBasicData,
+    lineNullModeConnectLinearXData,
+    lineNullModeSkipLinearXData,
+    lineNullModeZeroLinearXData,
+    lineTwoYAxisData,
+} from '../__stories__/__data__';
+import type {ChartData} from '../types';
 
 test.describe('Line series', () => {
     test.beforeEach(async ({page}) => {
@@ -75,6 +80,21 @@ test.describe('Line series', () => {
         // 20 - reserved space for point with marker
         const y = typeof boundingBox?.height === 'number' ? boundingBox.height - 20 : 0;
         await line.hover({force: true, position: {x: 0, y}});
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=connect', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={lineNullModeConnectLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=skip', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={lineNullModeSkipLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=zero', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={lineNullModeZeroLinearXData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

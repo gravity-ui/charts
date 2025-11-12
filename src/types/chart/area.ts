@@ -19,7 +19,7 @@ export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
      * - timestamp value (for `datetime` y axis)
      * - y axis category value (for `category` y axis). If the type is a string, then it is a category value itself. If the type is a number, then it is the index of an element in the array of categories described in `yAxis[0].categories`
      */
-    y?: string | number;
+    y?: string | number | null;
     /** Data label value of the point. If not specified, the y value is used. */
     label?: string | number;
     /** Individual marker options for the point. */
@@ -78,4 +78,14 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     marker?: AreaMarkerOptions;
     /** Y-axis index (when using two axes) */
     yAxis?: number;
+    /**
+     * Specifies how null or undefined values should be handled in the series.
+     *
+     * - `'connect'`: Connect points across null values (skip nulls in rendering)
+     * - `'zero'`: Treat null values as zero
+     * - `'skip'`: Omit the data point (creates gap in area)
+     *
+     * @default 'skip'
+     */
+    nullMode?: 'connect' | 'zero' | 'skip';
 }

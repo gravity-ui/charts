@@ -161,13 +161,18 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             case 'line': {
                 const points = (list as PreparedLineData[]).reduce<ShapePoint[]>((acc, d) => {
                     acc.push(
-                        ...d.points.map((p) => ({
-                            data: p.data,
-                            series: p.series as LineSeries,
-                            x: p.x,
-                            y0: p.y,
-                            y1: p.y,
-                        })),
+                        ...d.points.reduce<ShapePoint[]>((accPoints, p) => {
+                            if (p.y !== null && p.x !== null) {
+                                accPoints.push({
+                                    data: p.data,
+                                    series: p.series as LineSeries,
+                                    x: p.x,
+                                    y0: p.y,
+                                    y1: p.y,
+                                });
+                            }
+                            return accPoints;
+                        }, []),
                     );
                     return acc;
                 }, []);

@@ -12,6 +12,15 @@ import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/ty
 
 import type {PreparedBarXData} from './types';
 
+/**
+ * BarX always filters out data with null or replace null by zero.
+ */
+type PreparedBarXSeriesData = BarXSeriesData & {y?: number | string};
+
+const isSeriesDataValid = (
+    d: BarXSeriesData | PreparedBarXSeriesData,
+): d is PreparedBarXSeriesData => d.y !== null;
+
 async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined> {
     if (!d.series.dataLabels.enabled) {
         return undefined;
@@ -46,6 +55,7 @@ async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined>
     };
 }
 
+// eslint-disable-next-line complexity
 export const prepareBarXData = async (args: {
     series: PreparedBarXSeries[];
     seriesOptions: PreparedSeriesOptions;
@@ -79,10 +89,13 @@ export const prepareBarXData = async (args: {
 
     const data: Record<
         string | number,
-        Record<string, {data: BarXSeriesData; series: PreparedBarXSeries}[]>
+        Record<string, {data: PreparedBarXSeriesData; series: PreparedBarXSeries}[]>
     > = {};
     series.forEach((s) => {
         s.data.forEach((d) => {
+            if (!isSeriesDataValid(d)) {
+                return;
+            }
             const xValue =
                 xAxis.type === 'category'
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
@@ -140,16 +153,13 @@ export const prepareBarXData = async (args: {
     const groupedData = Object.entries(data);
     for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
         const [xValue, val] = groupedData[groupedDataIndex];
-
         const stacks = Object.values(val);
         const currentGroupWidth = rectWidth * stacks.length + rectGap * (stacks.length - 1);
 
         for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
             const yValues = stacks[groupItemIndex];
-
             let stackHeight = 0;
             const stackItems: PreparedBarXData[] = [];
-
             const sortedData = sortKey
                 ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : yValues;
@@ -158,7 +168,6 @@ export const prepareBarXData = async (args: {
                 const yValue = sortedData[yValueIndex];
                 const yAxisIndex = yValue.series.yAxis;
                 const seriesYScale = yScale[yAxisIndex] as ScaleLinear<number, number> | undefined;
-
                 if (!seriesYScale) {
                     continue;
                 }
@@ -182,17 +191,19 @@ export const prepareBarXData = async (args: {
                 }
 
                 const x = xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * groupItemIndex;
-                const yDataValue = yValue.data.y as number;
+
+                const yDataValue = (yValue.data.y ?? 0) as number;
                 const y = seriesYScale(yDataValue);
                 const base = seriesYScale(0);
                 const isLastStackItem = yValueIndex === sortedData.length - 1;
                 const height = yDataValue > 0 ? base - y : y - base;
                 let shapeHeight = height - (stackItems.length ? stackGap : 0);
+
                 if (shapeHeight < 0) {
                     shapeHeight = height;
                 }
 
-                if (height <= 0) {
+                if (shapeHeight < 0) {
                     continue;
                 }
 
@@ -240,6 +251,5 @@ export const prepareBarXData = async (args: {
             result.push(...stackItems);
         }
     }
-
     return result;
 };

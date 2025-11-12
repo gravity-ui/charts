@@ -101,6 +101,7 @@ export function getZoomedSeriesData(args: {
             return;
         }
 
+        // eslint-disable-next-line complexity
         seriesItem.data.forEach((point, i) => {
             const prevPoint = seriesItem.data[i - 1];
             const isFirstPoint = i === 0;
@@ -111,7 +112,7 @@ export function getZoomedSeriesData(args: {
 
             if (zoomState.x) {
                 const [xMin, xMax] = zoomState.x;
-                const x = 'x' in point ? point.x : undefined;
+                const x = 'x' in point ? (point.x ?? undefined) : undefined;
                 inXRange = isValueInRange({
                     axis: xAxis,
                     value: x,
@@ -129,7 +130,7 @@ export function getZoomedSeriesData(args: {
 
                 if (zoomStateY) {
                     const [yMin, yMax] = zoomStateY;
-                    const y = 'y' in point ? point.y : undefined;
+                    const y = 'y' in point ? (point.y ?? undefined) : undefined;
                     inYRange = isValueInRange({
                         axis: yAxis?.[yAxisIndex],
                         value: y,

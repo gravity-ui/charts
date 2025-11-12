@@ -105,6 +105,9 @@ export async function prepareBarYData(args: {
             }
 
             sortedData.forEach(({data, series: s}, xValueIndex) => {
+                if (data.x === null) {
+                    return;
+                }
                 let center;
 
                 if (yAxis[0].type === 'category') {
@@ -130,7 +133,7 @@ export async function prepareBarYData(args: {
                     shapeWidth = width;
                 }
 
-                if (shapeWidth <= 0) {
+                if (shapeWidth < 0) {
                     return;
                 }
 

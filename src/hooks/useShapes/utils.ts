@@ -12,8 +12,8 @@ import type {PreparedLineData} from './line/types';
 const ONE_POINT_DOMAIN_DATA_CAPACITY = 3;
 
 export function getXValue(args: {
-    point: {x?: number | string};
-    points?: {x?: number | string}[];
+    point: {x?: number | string | null};
+    points?: {x?: number | string | null}[];
     xAxis: PreparedAxis;
     xScale: ChartScale;
 }) {
@@ -33,23 +33,26 @@ export function getXValue(args: {
         Number(xMinDomain) === Number(xMaxDomain) &&
         points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
     ) {
-        const x1 = points[0].x as number;
-        const xTarget = points[1].x as number;
-        const x3 = points[2].x as number;
-        const xMin = Math.min(x1, xTarget, x3);
-        const xMax = Math.max(x1, xTarget, x3);
-        xLinearScale = xLinearScale
-            .copy()
-            .domain([xMin + (xTarget - xMin) / 2, xMax - (xMax - xTarget) / 2]) as
-            | ScaleLinear<number, number>
-            | ScaleTime<number, number>;
+        const x1 = Number(points[0].x);
+        const xTarget = Number(points[1].x);
+        const x3 = Number(points[2].x);
+        if (!Number.isNaN(x1) && !Number.isNaN(xTarget) && !Number.isNaN(x3)) {
+            const xMin = Math.min(x1, xTarget, x3);
+            const xMax = Math.max(x1, xTarget, x3);
+            xLinearScale = xLinearScale
+                .copy()
+                .domain([xMin + (xTarget - xMin) / 2, xMax - (xMax - xTarget) / 2]) as
+                | ScaleLinear<number, number>
+                | ScaleTime<number, number>;
+        }
     }
-    return xLinearScale(point.x as number);
+
+    return point.x === null ? null : xLinearScale(point.x as number);
 }
 
 export function getYValue(args: {
-    point: {y?: number | string};
-    points?: {y?: number | string}[];
+    point: {y?: number | string | null};
+    points?: {y?: number | string | null}[];
     yAxis: PreparedAxis;
     yScale: ChartScale;
 }) {
@@ -69,19 +72,21 @@ export function getYValue(args: {
         Number(yMinDomain) === Number(yMaxDomain) &&
         points?.length === ONE_POINT_DOMAIN_DATA_CAPACITY
     ) {
-        const y1 = points[0].y as number;
-        const yTarget = points[1].y as number;
-        const y2 = points[2].y as number;
-        const yMin = Math.min(y1, yTarget, y2);
-        const yMax = Math.max(y1, yTarget, y2);
-        yLinearScale = yLinearScale
-            .copy()
-            .domain([yMin + (yTarget - yMin) / 2, yMax - (yMax - yTarget) / 2]) as
-            | ScaleLinear<number, number>
-            | ScaleTime<number, number>;
+        const y1 = Number(points[0].y);
+        const yTarget = Number(points[1].y);
+        const y2 = Number(points[2].y);
+        if (!Number.isNaN(y1) && !Number.isNaN(yTarget) && !Number.isNaN(y2)) {
+            const yMin = Math.min(y1, yTarget, y2);
+            const yMax = Math.max(y1, yTarget, y2);
+            yLinearScale = yLinearScale
+                .copy()
+                .domain([yMin + (yTarget - yMin) / 2, yMax - (yMax - yTarget) / 2]) as
+                | ScaleLinear<number, number>
+                | ScaleTime<number, number>;
+        }
     }
 
-    return yLinearScale(point.y as number);
+    return point.y === null ? null : yLinearScale(point.y as number);
 }
 
 export function shapeKey(d: unknown) {

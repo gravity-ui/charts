@@ -4,14 +4,18 @@ import type {PreparedAreaSeries} from '../../useSeries/types';
 export type PointData = {
     y0: number;
     x: number;
-    y: number;
+    y: number | null;
     data: AreaSeriesData;
     series: PreparedAreaSeries;
     color?: string;
 };
 
+export type MarkerPointData = PointData & {
+    y: number;
+};
+
 export type MarkerData = {
-    point: PointData;
+    point: MarkerPointData;
     active: boolean;
     hovered: boolean;
     clipped: boolean;

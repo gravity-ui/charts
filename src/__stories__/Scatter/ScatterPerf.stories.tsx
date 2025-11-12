@@ -12,7 +12,7 @@ const randomStr = () => randomString(Math.random() * 10, 'absdEFGHIJklmnopqrsTUv
 
 const ChartStoryWithData = (args: {categoriesCount: number; seriesCount: number}) => {
     const widgetData: ChartData = React.useMemo(() => {
-        const categories = Array.from({length: args.categoriesCount}).map(randomStr);
+        const categories = [...new Set(Array.from({length: args.categoriesCount}).map(randomStr))];
         const series = Array.from({length: args.seriesCount}).map(randomStr);
 
         return {

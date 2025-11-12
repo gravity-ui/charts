@@ -50,10 +50,11 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
 
     const xType = get(xAxis, 'type', DEFAULT_AXIS_TYPE);
     const yType = get(seriesYAxis, 'type', DEFAULT_AXIS_TYPE);
+
     series.data.forEach(({x, y}) => {
         switch (xType) {
             case 'category': {
-                if (typeof x !== 'string' && typeof x !== 'number') {
+                if (typeof x !== 'string' && typeof x !== 'number' && x !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-category-data-point', {
@@ -92,7 +93,7 @@ function validateXYSeries(args: {series: XYSeries; xAxis?: ChartXAxis; yAxis?: C
         }
         switch (yType) {
             case 'category': {
-                if (typeof y !== 'string' && typeof y !== 'number') {
+                if (typeof y !== 'string' && typeof y !== 'number' && y !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
                         message: i18n('error', 'label_invalid-axis-category-data-point', {
@@ -299,7 +300,7 @@ function validateAxisPlotValues(args: {
 
 function validatePieSeries({series}: {series: PieSeries}) {
     series.data.forEach(({value}) => {
-        if (typeof value !== 'number') {
+        if (typeof value !== 'number' && value !== null) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
                 message: i18n('error', 'label_invalid-pie-data-value'),

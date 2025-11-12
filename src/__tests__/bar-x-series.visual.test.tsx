@@ -8,6 +8,8 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     barXBasicData,
     barXLinearData,
+    barXNullModeSkipLinearXData,
+    barXNullModeZeroLinearXData,
     barXStakingNormalData,
     barXWithYAxisPlotLinesData,
 } from '../__stories__/__data__';
@@ -139,6 +141,20 @@ test.describe('Bar-x series', () => {
         const data = cloneDeep(barXStakingNormalData);
         set(data, 'xAxis.min', 5);
         set(data, 'xAxis.max', 10);
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=skip', async ({mount}) => {
+        const data = cloneDeep(barXNullModeSkipLinearXData);
+        set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=zero', async ({mount}) => {
+        const data = cloneDeep(barXNullModeZeroLinearXData);
+        set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });

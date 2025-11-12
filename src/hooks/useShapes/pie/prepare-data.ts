@@ -94,7 +94,11 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         };
 
         const labelMaxHeight = max(Object.values(labels).map((l) => l.size?.height ?? 0)) ?? 0;
-        const segments = items.map<SegmentData>((item) => {
+        const segments = items.reduce<SegmentData[]>((acc, item) => {
+            if (item.value === null) {
+                return acc;
+            }
+
             let maxSegmentRadius = maxRadius;
 
             if (dataLabels.enabled) {
@@ -106,7 +110,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 calculateNumericProperty({value: item.radius, base: maxSegmentRadius}) ??
                 maxSegmentRadius;
 
-            return {
+            acc.push({
                 value: item.value,
                 color: item.color,
                 opacity: item.opacity,
@@ -115,8 +119,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 active: true,
                 pie: data,
                 radius: segmentRadius,
-            };
-        });
+            });
+
+            return acc;
+        }, []);
 
         data.segments = pieGenerator(segments);
 

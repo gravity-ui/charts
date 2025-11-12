@@ -9,6 +9,8 @@ import {
     barYBasicData,
     barYContinuousLegendData,
     barYGroupedColumnsData,
+    barYNullModeSkipLinearXData,
+    barYNullModeZeroLinearXData,
     barYPlotLinesData,
     barYStakingNormalData,
 } from '../__stories__/__data__';
@@ -759,46 +761,6 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('With x null values', async ({mount}) => {
-        const data: ChartData = {
-            series: {
-                data: [
-                    {
-                        data: [{y: 0, x: 1}],
-                        name: '2022',
-                        stacking: 'normal',
-                        type: 'bar-y',
-                    },
-                    {
-                        data: [{y: 0, x: 2}],
-                        name: '2023',
-                        stacking: 'normal',
-                        type: 'bar-y',
-                    },
-                    {
-                        // TODO: https://github.com/gravity-ui/charts/issues/28
-                        // @ts-expect-error
-                        data: [{y: 0, x: null}],
-                        name: '2024',
-                        stacking: 'normal',
-                        type: 'bar-y',
-                    },
-                ],
-            },
-            yAxis: [
-                {
-                    type: 'category',
-                    categories: ['Category with null values'],
-                },
-            ],
-        };
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-        const legendItem = component.getByText('2024');
-        await legendItem.click();
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
-
     test('With svg data labels', async ({mount}) => {
         const chartData: ChartData = {
             series: {
@@ -900,5 +862,17 @@ test.describe('Bar-y series', () => {
             await page.mouse.move(position.x + 1, position.y + position.height - 1);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+    });
+
+    test('x null values, nullMode=skip', async ({mount}) => {
+        const data = cloneDeep(barYNullModeSkipLinearXData);
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('x null values, nullMode=zero', async ({mount}) => {
+        const data = cloneDeep(barYNullModeZeroLinearXData);
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

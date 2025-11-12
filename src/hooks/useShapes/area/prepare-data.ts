@@ -8,9 +8,9 @@ import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
-import type {MarkerData, PointData, PreparedAreaData} from './types';
+import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
 
-async function getLabelData(point: PointData, series: PreparedAreaSeries, xMax: number) {
+async function getLabelData(point: MarkerPointData, series: PreparedAreaSeries, xMax: number) {
     const text = getFormattedValue({
         value: point.data.label || point.data.y,
         ...series.dataLabels,
@@ -51,8 +51,9 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedAxis, xScale: C
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
                     : d.x,
             );
-            if (!acc.has(key)) {
-                acc.set(key, getXValue({point: d, points: s.data, xAxis, xScale}));
+            const xValue = getXValue({point: d, points: s.data, xAxis, xScale});
+            if (!acc.has(key) && xValue !== null) {
+                acc.set(key, xValue);
             }
         });
         return acc;
@@ -108,12 +109,13 @@ export const prepareAreaData = async (args: {
                 continue;
             }
 
-            const yMin = getYValue({
-                point: {y: 0},
-                points: s.data,
-                yAxis: seriesYAxis,
-                yScale: seriesYScale,
-            });
+            const yMin =
+                getYValue({
+                    point: {y: 0},
+                    points: s.data,
+                    yAxis: seriesYAxis,
+                    yScale: seriesYScale,
+                }) ?? 0;
             const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
                 const key = String(
                     xAxis.type === 'category'
@@ -129,21 +131,20 @@ export const prepareAreaData = async (args: {
             const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue]) => {
                 const accumulatedYValue = accumulatedYValues.get(x) || 0;
                 const d =
-                    seriesData.get(x) ||
+                    seriesData.get(x) ??
                     ({
                         x,
-                        // FIXME: think about how to break the series into separate areas(null Y values)
                         y: 0,
                     } as AreaSeriesData);
-                const yValue =
-                    getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale}) -
-                    accumulatedYValue;
-                accumulatedYValues.set(x, yMin - yValue);
-
+                const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
+                const yPointValue = yValue === null ? null : yValue - accumulatedYValue;
+                if (yPointValue !== null) {
+                    accumulatedYValues.set(x, yMin - yPointValue);
+                }
                 pointsAcc.push({
                     y0: yMin - accumulatedYValue,
                     x: xValue,
-                    y: yValue,
+                    y: yPointValue,
                     data: d,
                     series: s,
                 });
@@ -154,7 +155,15 @@ export const prepareAreaData = async (args: {
             const htmlElements: HtmlItem[] = [];
 
             if (s.dataLabels.enabled) {
-                const labelItems = await Promise.all(points.map((p) => getLabelData(p, s, xMax)));
+                const labelItems = await Promise.all(
+                    points.reduce<Promise<LabelData>[]>((labelItemsAcc, p) => {
+                        if (p.y === null) {
+                            return labelItemsAcc;
+                        }
+                        labelItemsAcc.push(getLabelData(p as MarkerPointData, s, xMax));
+                        return labelItemsAcc;
+                    }, []),
+                );
                 if (s.dataLabels.html) {
                     const htmlLabels = await Promise.all(
                         labelItems.map(async (l) => {
@@ -185,12 +194,18 @@ export const prepareAreaData = async (args: {
 
             let markers: MarkerData[] = [];
             if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
-                markers = points.map<MarkerData>((p) => ({
-                    point: p,
-                    active: true,
-                    hovered: false,
-                    clipped: isOutsideBounds(p.x, p.y),
-                }));
+                markers = points.reduce<MarkerData[]>((markersAcc, p) => {
+                    if (p.y === null) {
+                        return markersAcc;
+                    }
+                    markersAcc.push({
+                        point: p as MarkerPointData,
+                        active: true,
+                        hovered: false,
+                        clipped: isOutsideBounds(p.x, p.y),
+                    });
+                    return markersAcc;
+                }, []);
             }
 
             seriesStackData.push({
@@ -217,7 +232,7 @@ export const prepareAreaData = async (args: {
                 seriesStackData.forEach((item) => {
                     const point = item.points[index];
 
-                    if (point) {
+                    if (point.y !== null && point.y !== undefined) {
                         const height = (point.y0 - point.y) * ratio;
                         point.y0 = plotHeight - height - acc;
                         point.y = point.y0 + height;

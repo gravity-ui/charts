@@ -10,9 +10,13 @@ function prepareData(): ChartData {
         {name: 'B', value: 900000},
         {name: 'C', value: 1310000},
     ];
-    const getColor = getContinuesColorFn({colors, stops, values: data.map((d) => d.value)});
+    const getColor = getContinuesColorFn({
+        colors,
+        stops,
+        values: data.map((d) => d.value ?? 0),
+    });
     data.forEach((d) => {
-        d.color = getColor(d.value);
+        d.color = getColor(d.value ?? 0);
     });
 
     return {

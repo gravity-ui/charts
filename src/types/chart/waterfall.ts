@@ -16,7 +16,7 @@ export interface WaterfallSeriesData<T = MeaningfulAny> extends BaseSeriesData<T
      * The `y` value. Depending on the context , it may represents:
      * - numeric value (for `linear` y axis)
      */
-    y?: number;
+    y?: number | null;
     /** Data label value of the point. If not specified, the y value is used. */
     label?: string | number;
     /** Individual opacity for the point. */
@@ -49,4 +49,13 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
             totals?: string;
         };
     };
+    /**
+     * Defines how to handle null values in the data.
+     *
+     * - `'zero'`: Treat null values as zero
+     * - `'skip'`: Omit data points with null values (don't render them)
+     *
+     * @default 'skip'
+     */
+    nullMode?: 'zero' | 'skip';
 }

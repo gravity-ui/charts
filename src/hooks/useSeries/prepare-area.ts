@@ -3,7 +3,7 @@ import get from 'lodash/get';
 import merge from 'lodash/merge';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../constants';
-import type {AreaSeries, ChartSeriesOptions} from '../../types';
+import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getUniqId} from '../../utils';
 
@@ -53,6 +53,20 @@ function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
     };
 }
 
+function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
+    const nullMode = series.nullMode ?? 'skip';
+    const data = series.data;
+    switch (nullMode) {
+        case 'zero':
+            return data.map((p) => ({...p, y: p.y ?? 0}));
+        case 'connect':
+            return data.filter((p) => p.y !== null);
+        case 'skip':
+        default:
+            return data;
+    }
+}
+
 export function prepareArea(args: PrepareAreaSeriesArgs) {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
     const defaultAreaWidth = get(seriesOptions, 'area.lineWidth', DEFAULT_LINE_WIDTH);
@@ -75,7 +89,7 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
             },
-            data: series.data,
+            data: prepareSeriesData(series),
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
             dataLabels: {
