@@ -185,19 +185,8 @@ export function getRectBorderPath(args: {
     height: number;
     borderWidth: number;
     borderRadius?: number | number[];
-    skipBorderStart?: boolean;
-    skipBorderEnd?: boolean;
 }) {
-    const {
-        x,
-        y,
-        width,
-        height,
-        borderWidth,
-        borderRadius = 0,
-        skipBorderStart,
-        skipBorderEnd,
-    } = args;
+    const {x, y, width, height, borderWidth, borderRadius = 0} = args;
 
     if (!borderWidth) {
         return '';
@@ -245,51 +234,12 @@ export function getRectBorderPath(args: {
         Math.max(borderRadiusBottomLeft - halfWidth, 0),
     ];
 
-    // Calculate where inner path should start and its dimensions
-    // By default, inner path is inset by halfWidth on all sides
-    let innerX = x + halfWidth;
-    let innerY = y + halfWidth;
-    let adjustedInnerWidth = innerWidth;
-    let adjustedInnerHeight = innerHeight;
-    const adjustedInnerBorderRadius = [...innerBorderRadius];
-
-    // Adjust inner path to skip start/end borders
-    // When skipping borders, inner path should extend to match the outer path edge
-    if (skipBorderStart && skipBorderEnd) {
-        // Both borders skipped - inner path matches outer path exactly
-        innerX = x - halfWidth;
-        innerY = y - halfWidth;
-        adjustedInnerWidth = expandedWidth;
-        adjustedInnerHeight = expandedHeight;
-        adjustedInnerBorderRadius[0] = outerBorderRadius[0];
-        adjustedInnerBorderRadius[1] = outerBorderRadius[1];
-        adjustedInnerBorderRadius[2] = outerBorderRadius[2];
-        adjustedInnerBorderRadius[3] = outerBorderRadius[3];
-    } else if (skipBorderStart) {
-        // For horizontal bars (bar-y), start = left side
-        // Outer path starts at: x - halfWidth
-        // Inner should start there too and extend to normal inner end
-        innerX = x - halfWidth;
-        adjustedInnerWidth = innerWidth + borderWidth;
-        adjustedInnerBorderRadius[0] = outerBorderRadius[0]; // top-left
-        adjustedInnerBorderRadius[3] = outerBorderRadius[3]; // bottom-left
-    } else if (skipBorderEnd) {
-        // For horizontal bars (bar-y), end = right side
-        // Inner should extend to outer end: x + width + halfWidth
-        // Current inner end: (x + halfWidth) + (width - borderWidth) = x + width - halfWidth
-        // Target: x + width + halfWidth
-        // Difference: borderWidth
-        adjustedInnerWidth = innerWidth + borderWidth;
-        adjustedInnerBorderRadius[1] = outerBorderRadius[1]; // top-right
-        adjustedInnerBorderRadius[2] = outerBorderRadius[2]; // bottom-right
-    }
-
     const innerPath = getRectPath({
-        x: innerX,
-        y: innerY,
-        width: adjustedInnerWidth,
-        height: adjustedInnerHeight,
-        borderRadius: adjustedInnerBorderRadius,
+        x: x + halfWidth,
+        y: y + halfWidth,
+        width: innerWidth,
+        height: innerHeight,
+        borderRadius: innerBorderRadius,
     }).toString();
 
     return `${outerPath} ${innerPath}`;

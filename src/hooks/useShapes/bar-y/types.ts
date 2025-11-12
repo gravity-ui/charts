@@ -12,8 +12,6 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     opacity: number | null;
     series: PreparedBarYSeries;
     isLastStackItem: boolean;
-    skipBorderStart?: boolean;
-    skipBorderEnd?: boolean;
 };
 
 export type BarYShapesArgs = {

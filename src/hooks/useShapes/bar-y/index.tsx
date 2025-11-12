@@ -8,9 +8,10 @@ import type {LabelData} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
-import {getRectBorderPath, getRectPath} from '../utils';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
+import {getAdjustedRectBorderPath, getAdjustedRectPath} from './utils';
+
 export {prepareBarYData} from './prepare-data';
 
 const b = block('bar-y');
@@ -23,7 +24,7 @@ type Args = {
     clipPathId: string;
 };
 
-export const BarYSeriesShapes = (args: Args) => {
+export function BarYSeriesShapes(args: Args) {
     const {
         dispatcher,
         preparedData: {shapes: preparedData, labels: dataLabels, htmlElements},
@@ -45,59 +46,7 @@ export const BarYSeriesShapes = (args: Args) => {
             .selectAll(`path.${b('segment')}`)
             .data(preparedData)
             .join('path')
-            .attr('d', (d) => {
-                const borderRadius = d.isLastStackItem
-                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
-                    : 0;
-
-                // Fill should match the inner border dimensions to prevent color bleeding
-                const halfBorder = d.borderWidth / 2;
-                const innerBorderRadius = Math.max(borderRadius - halfBorder, 0);
-
-                // Adjust fill position and size based on which borders are skipped
-                let fillX = d.x;
-                let fillY = d.y;
-                let fillWidth = d.width;
-                let fillHeight = d.height;
-                let fillBorderRadiusRight = borderRadius;
-
-                if (d.borderWidth > 0) {
-                    // Default: fill is inset by halfBorder on all sides
-                    fillX = d.x + halfBorder;
-                    fillY = d.y + halfBorder;
-                    fillWidth = d.width - d.borderWidth;
-                    fillHeight = d.height - d.borderWidth;
-                    fillBorderRadiusRight = innerBorderRadius;
-
-                    if (d.skipBorderStart && d.skipBorderEnd) {
-                        // No border on either side - fill extends fully horizontally
-                        fillX = d.x;
-                        fillWidth = d.width;
-                    } else if (d.skipBorderStart) {
-                        // No left border - fill extends to the left edge
-                        // Since position was shifted left by halfBorder in prepare-data,
-                        // fill should extend from x to x + width (full width, no left inset, right inset is included in position)
-                        fillX = d.x;
-                        fillWidth = d.width;
-                        fillBorderRadiusRight = 0;
-                    } else if (d.skipBorderEnd) {
-                        // No right border - fill extends to the right edge
-                        // Position was shifted right by halfBorder, fill extends full width from that point
-                        fillWidth = d.width;
-                        fillBorderRadiusRight = 0;
-                    }
-                }
-
-                const p = getRectPath({
-                    x: fillX,
-                    y: fillY,
-                    width: fillWidth,
-                    height: fillHeight,
-                    borderRadius: [0, fillBorderRadiusRight, fillBorderRadiusRight, 0],
-                });
-
-                return p.toString();
-            })
+            .attr('d', (d) => getAdjustedRectPath(d))
             .attr('class', b('segment'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)
@@ -111,22 +60,7 @@ export const BarYSeriesShapes = (args: Args) => {
             .selectAll(`path.${b('segment-border')}`)
             .data(preparedData.filter((d) => d.borderWidth > 0))
             .join('path')
-            .attr('d', (d) => {
-                const borderRadius = d.isLastStackItem
-                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
-                    : 0;
-
-                return getRectBorderPath({
-                    x: d.x,
-                    y: d.y,
-                    width: d.width,
-                    height: d.height,
-                    borderWidth: d.borderWidth,
-                    borderRadius: [0, borderRadius, borderRadius, 0],
-                    skipBorderStart: d.skipBorderStart,
-                    skipBorderEnd: d.skipBorderEnd,
-                });
-            })
+            .attr('d', (d) => getAdjustedRectBorderPath(d))
             .attr('class', b('segment-border'))
             .attr('fill', (d) => d.borderColor)
             .attr('fill-rule', 'evenodd')
@@ -204,4 +138,4 @@ export const BarYSeriesShapes = (args: Args) => {
             <HtmlLayer preparedData={{htmlElements}} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
-};
+}
