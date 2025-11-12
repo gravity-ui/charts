@@ -8,9 +8,10 @@ import type {LabelData} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
-import {getRectPath} from '../utils';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
+import {getAdjustedRectBorderPath, getAdjustedRectPath} from './utils';
+
 export {prepareBarYData} from './prepare-data';
 
 const b = block('bar-y');
@@ -23,7 +24,7 @@ type Args = {
     clipPathId: string;
 };
 
-export const BarYSeriesShapes = (args: Args) => {
+export function BarYSeriesShapes(args: Args) {
     const {
         dispatcher,
         preparedData: {shapes: preparedData, labels: dataLabels, htmlElements},
@@ -41,35 +42,30 @@ export const BarYSeriesShapes = (args: Args) => {
 
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
-        const rectSelection = svgElement
-            .selectAll('rect')
+        const segmentSelection = svgElement
+            .selectAll(`path.${b('segment')}`)
             .data(preparedData)
             .join('path')
-            .attr('d', (d) => {
-                const borderRadius = d.isLastStackItem
-                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
-                    : 0;
-
-                const p = getRectPath({
-                    x: d.x,
-                    y: d.y,
-                    width: d.width,
-                    height: d.height,
-                    borderRadius: [0, borderRadius, borderRadius, 0],
-                });
-
-                return p.toString();
-            })
+            .attr('d', (d) => getAdjustedRectPath(d))
             .attr('class', b('segment'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)
             .attr('height', (d) => d.height)
             .attr('width', (d) => d.width)
             .attr('fill', (d) => d.color)
-            .attr('stroke', (d) => d.borderColor)
-            .attr('stroke-width', (d) => d.borderWidth)
             .attr('opacity', (d) => d.data.opacity || null)
             .attr('cursor', (d) => d.series.cursor);
+
+        const borderSelection = svgElement
+            .selectAll(`path.${b('segment-border')}`)
+            .data(preparedData.filter((d) => d.borderWidth > 0))
+            .join('path')
+            .attr('d', (d) => getAdjustedRectBorderPath(d))
+            .attr('class', b('segment-border'))
+            .attr('fill', (d) => d.borderColor)
+            .attr('fill-rule', 'evenodd')
+            .attr('opacity', (d) => d.data.opacity || null)
+            .attr('pointer-events', 'none');
 
         const labelSelection = svgElement
             .selectAll('text')
@@ -96,7 +92,7 @@ export const BarYSeriesShapes = (args: Args) => {
                     return acc;
                 }, new Set());
 
-                rectSelection.attr('fill', (d) => {
+                segmentSelection.attr('fill', (d) => {
                     const fillColor = d.color;
 
                     if (hovered?.has(d.data.y)) {
@@ -119,7 +115,8 @@ export const BarYSeriesShapes = (args: Args) => {
 
                     return null;
                 };
-                rectSelection.attr('opacity', newOpacity);
+                segmentSelection.attr('opacity', newOpacity);
+                borderSelection.attr('opacity', newOpacity);
                 labelSelection.attr('opacity', newOpacity);
             }
         }
@@ -141,4 +138,4 @@ export const BarYSeriesShapes = (args: Args) => {
             <HtmlLayer preparedData={{htmlElements}} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
-};
+}

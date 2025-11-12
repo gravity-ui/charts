@@ -177,3 +177,70 @@ export function getRectPath(args: {
 
     return p;
 }
+
+export function getRectBorderPath(args: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    borderWidth: number;
+    borderRadius?: number | number[];
+}) {
+    const {x, y, width, height, borderWidth, borderRadius = 0} = args;
+
+    if (!borderWidth) {
+        return '';
+    }
+
+    const halfWidth = borderWidth / 2;
+    const expandedWidth = width + borderWidth;
+    const expandedHeight = height + borderWidth;
+    const innerWidth = width - borderWidth;
+    const innerHeight = height - borderWidth;
+
+    const borderRadiuses =
+        typeof borderRadius === 'number' ? new Array(4).fill(borderRadius) : borderRadius;
+    const [
+        borderRadiusTopLeft = 0,
+        borderRadiusTopRight = 0,
+        borderRadiusBottomRight = 0,
+        borderRadiusBottomLeft = 0,
+    ] = borderRadiuses ?? [];
+
+    const adjustOuterRadius = (radius: number) => (radius ? radius + halfWidth : 0);
+    const outerBorderRadius = [
+        adjustOuterRadius(borderRadiusTopLeft),
+        adjustOuterRadius(borderRadiusTopRight),
+        adjustOuterRadius(borderRadiusBottomRight),
+        adjustOuterRadius(borderRadiusBottomLeft),
+    ];
+
+    const outerPath = getRectPath({
+        x: x - halfWidth,
+        y: y - halfWidth,
+        width: expandedWidth,
+        height: expandedHeight,
+        borderRadius: outerBorderRadius,
+    }).toString();
+
+    if (innerWidth <= 0 || innerHeight <= 0) {
+        return outerPath;
+    }
+
+    const innerBorderRadius = [
+        Math.max(borderRadiusTopLeft - halfWidth, 0),
+        Math.max(borderRadiusTopRight - halfWidth, 0),
+        Math.max(borderRadiusBottomRight - halfWidth, 0),
+        Math.max(borderRadiusBottomLeft - halfWidth, 0),
+    ];
+
+    const innerPath = getRectPath({
+        x: x + halfWidth,
+        y: y + halfWidth,
+        width: innerWidth,
+        height: innerHeight,
+        borderRadius: innerBorderRadius,
+    }).toString();
+
+    return `${outerPath} ${innerPath}`;
+}

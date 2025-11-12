@@ -875,4 +875,60 @@ test.describe('Bar-y series', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('negative-values', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        data: [
+                            {x: -1, y: 0},
+                            {x: -2, y: 1},
+                            {x: -3, y: 2},
+                        ],
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        name: 'Series 1',
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['Category 1', 'Category 2', 'Category 3'],
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={data} styles={{width: 600}} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('negative-values-with-border', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        data: [
+                            {x: -1, y: 0},
+                            {x: -2, y: 1},
+                            {x: -3, y: 2},
+                        ],
+                        type: 'bar-y',
+                        stacking: 'normal',
+                        name: 'Series 1',
+                        borderWidth: 2,
+                        borderColor: 'green',
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['Category 1', 'Category 2', 'Category 3'],
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={data} styles={{width: 600}} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

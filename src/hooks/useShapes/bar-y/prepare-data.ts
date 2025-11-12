@@ -43,6 +43,7 @@ export async function prepareBarYData(args: {
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
+    const [baseRangeValue] = xLinearScale.range();
 
     if (!yLinearScale) {
         return {
@@ -79,7 +80,6 @@ export async function prepareBarYData(args: {
     });
 
     const result: PreparedBarYData[] = [];
-    const baseRangeValue = xLinearScale.range()[0];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
         const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
@@ -126,7 +126,6 @@ export async function prepareBarYData(args: {
 
                 const y = center - currentBarHeight / 2 + (barSize + barGap) * groupItemIndex;
                 const xValue = Number(data.x);
-                const isLastStackItem = xValueIndex === sortedData.length - 1;
                 const width = Math.abs(xLinearScale(xValue) * ratio - base);
                 let shapeWidth = width - (stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
@@ -138,14 +137,32 @@ export async function prepareBarYData(args: {
                 }
 
                 const itemStackGap = width - shapeWidth;
+                const borderWidth = barSize > s.borderWidth * 2 ? s.borderWidth : 0;
+                const isFirstInStack = xValueIndex === 0;
+                const isLastStackItem = xValueIndex === sortedData.length - 1;
+                // Calculate position with border compensation
+                // Border extends halfBorder outward from the shape, so we need to adjust position
+                let itemX = (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap;
+                const halfBorder = borderWidth / 2;
+
+                if (isFirstInStack && xValue > 0) {
+                    // Positive bar: border extends left, so shift position left by halfBorder
+                    // to keep the visual left edge at the zero line
+                    itemX -= halfBorder;
+                } else if (isFirstInStack && xValue < 0) {
+                    // Negative bar: border extends right, so shift position right by halfBorder
+                    // to keep the visual right edge at the zero line
+                    itemX += halfBorder;
+                }
+
                 const item: PreparedBarYData = {
-                    x: (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap,
+                    x: itemX,
                     y: y,
                     width: shapeWidth,
                     height: barSize,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
-                    borderWidth: barSize > s.borderWidth * 2 ? s.borderWidth : 0,
+                    borderWidth,
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
