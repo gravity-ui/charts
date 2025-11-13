@@ -37,7 +37,7 @@ export function useZoom(props: UseZoomProps) {
         yAxis,
         yScale,
     } = props;
-
+    const isBrushDisabled = Boolean(!xAxis || !yAxis || !xScale || !yScale);
     const areas: BrushArea[] = React.useMemo(() => {
         const result: BrushArea[] = [];
 
@@ -88,6 +88,7 @@ export function useZoom(props: UseZoomProps) {
     useBrush({
         areas,
         brushOptions: preparedZoom?.brush,
+        disabled: isBrushDisabled,
         node,
         type: preparedZoom?.type,
         onBrushEnd: handleChartBrushEnd,
