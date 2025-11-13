@@ -1,7 +1,9 @@
 import type {BrushSelection, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 
+import {ZOOM_TYPE} from '../../constants';
+import type {ZoomType} from '../../constants';
 import type {ChartScale} from '../useAxisScales';
-import type {PreparedAxis, PreparedZoom} from '../useChartOptions/types';
+import type {PreparedAxis} from '../useChartOptions/types';
 
 import type {ZoomState} from './types';
 
@@ -11,18 +13,18 @@ export function selectionToZoomBounds(args: {
     xScale: ChartScale;
     yAxes: PreparedAxis[];
     yScales: (ChartScale | undefined)[];
-    zoomType: PreparedZoom['type'];
+    zoomType: ZoomType;
 }): Partial<ZoomState> {
     const {selection, xAxis, xScale, yAxes, yScales, zoomType} = args;
     const zoomState: Partial<ZoomState> = {};
 
     switch (zoomType) {
-        case 'x': {
+        case ZOOM_TYPE.X: {
             const [x0, x1] = selection as [number, number];
             zoomState.x = selectionXToZoomBounds({xAxis, xScale, selection: [x0, x1]});
             break;
         }
-        case 'y': {
+        case ZOOM_TYPE.Y: {
             const [y1, y0] = selection as [number, number];
             yAxes.forEach((yAxis, index) => {
                 if (!Array.isArray(zoomState.y)) {
@@ -45,7 +47,7 @@ export function selectionToZoomBounds(args: {
             });
             break;
         }
-        case 'xy': {
+        case ZOOM_TYPE.XY: {
             const [x0, y0] = selection[0] as [number, number];
             const [x1, y1] = selection[1] as [number, number];
             zoomState.x = selectionXToZoomBounds({xAxis, xScale, selection: [x0, x1]});

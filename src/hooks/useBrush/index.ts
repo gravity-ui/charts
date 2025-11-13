@@ -3,6 +3,7 @@ import React from 'react';
 import {brush, brushX, brushY, select} from 'd3';
 import type {BrushBehavior, Selection} from 'd3';
 
+import {ZOOM_TYPE} from '../../constants';
 import {block} from '../../utils';
 
 import type {UseBrushProps} from './types';
@@ -27,15 +28,15 @@ export function useBrush(props: UseBrushProps) {
             let brushFn: () => BrushBehavior<unknown>;
 
             switch (type) {
-                case 'x': {
+                case ZOOM_TYPE.X: {
                     brushFn = brushX;
                     break;
                 }
-                case 'y': {
+                case ZOOM_TYPE.Y: {
                     brushFn = brushY;
                     break;
                 }
-                case 'xy':
+                case ZOOM_TYPE.XY:
                 default: {
                     brushFn = brush;
                     break;

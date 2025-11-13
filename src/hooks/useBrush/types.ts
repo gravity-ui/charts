@@ -1,8 +1,8 @@
 import type {BrushBehavior} from 'd3';
 
+import type {ZoomType} from '../../constants';
 import type {PreparedZoom} from '../useChartOptions/types';
 
-type BrushType = PreparedZoom['type'];
 type BrushSelection = [number, number] | [[number, number], [number, number]];
 
 export interface BrushArea {
@@ -19,7 +19,7 @@ export interface BrushArea {
 export interface UseBrushProps {
     areas: BrushArea[];
     node: SVGGElement | null;
-    type?: BrushType;
+    type?: ZoomType;
     brushOptions?: PreparedZoom['brush'];
     onBrushStart?: (this: SVGGElement, brushInstance: BrushBehavior<unknown>) => void;
     onBrush?: (
