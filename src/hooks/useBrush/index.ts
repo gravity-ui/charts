@@ -13,10 +13,10 @@ import './styles.scss';
 const b = block('brush');
 
 export function useBrush(props: UseBrushProps) {
-    const {areas, brushOptions, node, type, onBrushStart, onBrush, onBrushEnd} = props;
+    const {areas, brushOptions, disabled, node, type, onBrushStart, onBrush, onBrushEnd} = props;
 
     React.useEffect(() => {
-        if (!node || !areas.length) {
+        if (!node || !areas.length || disabled) {
             return () => {};
         }
 
@@ -85,5 +85,5 @@ export function useBrush(props: UseBrushProps) {
                 selection?.remove();
             });
         };
-    }, [areas, brushOptions, node, type, onBrushStart, onBrush, onBrushEnd]);
+    }, [areas, brushOptions, disabled, node, type, onBrushStart, onBrush, onBrushEnd]);
 }
