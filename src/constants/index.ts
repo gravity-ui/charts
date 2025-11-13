@@ -9,3 +9,4 @@ export * from './palette';
 export * from './symbol-types';
 export * from './tooltip';
 export * from './typography';
+export * from './zoom';

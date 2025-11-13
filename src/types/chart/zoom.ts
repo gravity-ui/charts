@@ -1,3 +1,5 @@
+import type {ZoomType} from '../../constants';
+
 /**
  * Configuration options for chart zooming functionality using area selection.
  * Working with only axis related series.
@@ -24,7 +26,7 @@ export interface ChartZoom {
      * - `Scatter`: `xy`
      * - All others: `x`
      */
-    type?: 'x' | 'y' | 'xy';
+    type?: ZoomType;
     /**
      * Zoom brush configuration.
      */
