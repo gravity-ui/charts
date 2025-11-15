@@ -94,7 +94,7 @@ export async function getPreparedLegend(args: {
         ticks,
         colorScale,
         html: get(legend, 'html', false),
-        position: get(legend, 'position', 'top'),
+        position: get(legend, 'position', 'bottom'),
     };
 }
 
