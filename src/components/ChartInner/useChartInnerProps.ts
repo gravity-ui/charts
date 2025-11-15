@@ -117,6 +117,7 @@ export function useChartInnerProps(props: Props) {
         preparedXAxis: xAxis,
         width,
     });
+
     const preparedSplit = useSplit({split: data.split, boundsHeight, chartWidth: width});
     const {xScale, yScale} = useAxisScales({
         boundsWidth,
@@ -184,7 +185,11 @@ export function useChartInnerProps(props: Props) {
         yScale,
     });
 
-    const boundsOffsetTop = chart.margin.top;
+    const boundsOffsetTop =
+        chart.margin.top +
+        (preparedLegend?.enabled && preparedLegend.position === 'top'
+            ? preparedLegend.height + preparedLegend.margin
+            : 0);
     // We need to calculate the width of each left axis because the first axis can be hidden
     const boundsOffsetLeft =
         chart.margin.left +
