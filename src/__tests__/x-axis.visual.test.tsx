@@ -105,4 +105,35 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test('max-indexed-category', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        data: [{x: 0, y: 10}],
+                        name: 'Series 1',
+                    },
+                    {
+                        type: 'scatter',
+                        data: [{x: 1, y: 20}],
+                        name: 'Series 2',
+                    },
+                    {
+                        type: 'scatter',
+                        data: [{x: 3, y: 30}],
+                        name: 'Series 3',
+                    },
+                ],
+            },
+            xAxis: {
+                categories: ['Category 1', 'Category 2', 'Category 3'],
+                max: 1,
+                type: 'category',
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

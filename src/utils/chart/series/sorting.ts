@@ -4,7 +4,7 @@ import get from 'lodash/get';
 
 import {SeriesType} from '../../../constants';
 import {getAxisCategories} from '../../../hooks/useChartOptions/utils';
-import type {ChartAxis, ChartSeries} from '../../../types';
+import type {ChartAxis, ChartSeries, ChartSeriesData} from '../../../types';
 
 function applyAxisCategoriesOrder<T extends ChartSeries>({
     series,
@@ -24,16 +24,29 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
     const axisCategories = getAxisCategories(axis) ?? [];
     const order = Object.fromEntries(axisCategories.map((value, index) => [value, index]));
 
-    const newSeriesData = series.data.map((d) => {
+    const newSeriesData = series.data.reduce<ChartSeriesData[]>((acc, d) => {
         const value = get(d, key);
+        let newData: ChartSeriesData | undefined;
+
         if (typeof value === 'number') {
-            return {
-                ...d,
-                [key]: order[originalCategories[value]],
-            };
+            const newIndex = order[originalCategories[value]];
+
+            // newIndex can be undefined when the number of categories in originalCategories and axisCategories
+            // don't match due to min/max constraints applied to the corresponding axis
+            if (newIndex !== undefined) {
+                newData = {...d, [key]: newIndex};
+            }
+        } else {
+            // TODO: https://github.com/gravity-ui/charts/issues/266
+            newData = d;
         }
-        return d;
-    });
+
+        if (newData !== undefined) {
+            acc.push(newData);
+        }
+
+        return acc;
+    }, []);
 
     return {
         ...series,
