@@ -29,14 +29,15 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
         let newData: ChartSeriesData | undefined;
 
         if (typeof value === 'number') {
-            const newOrder = order[originalCategories[value]];
+            const newIndex = order[originalCategories[value]];
 
-            // newOrder can be undefined when the number of categories in originalCategories and axisCategories
+            // newIndex can be undefined when the number of categories in originalCategories and axisCategories
             // don't match due to min/max constraints applied to the corresponding axis
-            if (newOrder !== undefined) {
-                newData = {...d, [key]: newOrder};
+            if (newIndex !== undefined) {
+                newData = {...d, [key]: newIndex};
             }
         } else {
+            // TODO: https://github.com/gravity-ui/charts/issues/266
             newData = d;
         }
 
