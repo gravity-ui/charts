@@ -175,4 +175,68 @@ test.describe('Scatter series', () => {
         const component = await mount(<ChartTestStory data={scatterNullModeZeroLinearXData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('max-numeric-category-x', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        data: [{x: 0, y: 10}],
+                        name: 'Series 1',
+                    },
+                    {
+                        type: 'scatter',
+                        data: [{x: 1, y: 20}],
+                        name: 'Series 2',
+                    },
+                    {
+                        type: 'scatter',
+                        data: [{x: 3, y: 30}],
+                        name: 'Series 3',
+                    },
+                ],
+            },
+            xAxis: {
+                categories: ['Category 1', 'Category 2', 'Category 3'],
+                max: 1,
+                type: 'category',
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('max-numeric-category-y', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        data: [{x: 10, y: 0}],
+                        name: 'Series 1',
+                    },
+                    {
+                        type: 'scatter',
+                        data: [{x: 20, y: 1}],
+                        name: 'Series 2',
+                    },
+                    {
+                        type: 'scatter',
+                        data: [{x: 30, y: 2}],
+                        name: 'Series 3',
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    categories: ['Category 1', 'Category 2', 'Category 3'],
+                    max: 1,
+                    type: 'category',
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
