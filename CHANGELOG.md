@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.23.0](https://github.com/gravity-ui/charts/compare/v1.22.0...v1.23.0) (2025-11-17)
+
+
+### Features
+
+* add nullMode for area, bar-x, bar-y, heatmap, line, pie, scatter, waterfall charts ([#243](https://github.com/gravity-ui/charts/issues/243)) ([06547bb](https://github.com/gravity-ui/charts/commit/06547bb1f381c4742cbff3a687d184f00d2baf35))
+
+
+### Bug Fixes
+
+* fix applyAxisCategoriesOrder ([#265](https://github.com/gravity-ui/charts/issues/265)) ([6ac3cd2](https://github.com/gravity-ui/charts/commit/6ac3cd29cb736e4860c2c9a308b6a42ce5a330e0))
+* properly handle zoom configuration for unzoomable charts ([#261](https://github.com/gravity-ui/charts/issues/261)) ([2d85319](https://github.com/gravity-ui/charts/commit/2d853192ac7c858f158008b68a57883c6f32c412))
+
 ## [1.22.0](https://github.com/gravity-ui/charts/compare/v1.21.0...v1.22.0) (2025-11-10)
 
 
