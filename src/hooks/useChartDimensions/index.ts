@@ -26,7 +26,7 @@ const getBottomOffset = (args: {
     const {hasAxisRelatedSeries, preparedLegend, preparedXAxis} = args;
     let result = 0;
 
-    if (preparedLegend?.enabled) {
+    if (preparedLegend?.enabled && preparedLegend.position === 'bottom') {
         result += preparedLegend.height + preparedLegend.margin;
     }
 
@@ -47,6 +47,14 @@ const getBottomOffset = (args: {
     return result;
 };
 
+const getTopOffset = ({preparedLegend}: {preparedLegend: PreparedLegend | null}) => {
+    if (preparedLegend?.enabled && preparedLegend.position === 'top') {
+        return preparedLegend.height + preparedLegend.margin;
+    }
+
+    return 0;
+};
+
 export const useChartDimensions = (args: Args) => {
     const {margin, width, height, preparedLegend, preparedXAxis, preparedYAxis, preparedSeries} =
         args;
@@ -59,8 +67,9 @@ export const useChartDimensions = (args: Args) => {
             preparedLegend,
             preparedXAxis,
         });
+        const topOffset = getTopOffset({preparedLegend});
 
-        const boundsHeight = height - margin.top - margin.bottom - bottomOffset;
+        const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
 
         return {boundsWidth, boundsHeight};
     }, [margin, width, height, preparedLegend, preparedXAxis, preparedYAxis, preparedSeries]);

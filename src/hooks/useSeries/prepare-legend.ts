@@ -94,6 +94,7 @@ export async function getPreparedLegend(args: {
         ticks,
         colorScale,
         html: get(legend, 'html', false),
+        position: get(legend, 'position', 'bottom'),
     };
 }
 
@@ -259,7 +260,10 @@ export function getLegendComponents(args: {
         preparedLegend.height = legendHeight;
     }
 
-    const top = chartHeight - chartMargin.bottom - preparedLegend.height;
+    const top =
+        preparedLegend.position === 'top'
+            ? chartMargin.top
+            : chartHeight - chartMargin.bottom - preparedLegend.height;
     const offset: LegendConfig['offset'] = {
         left: chartMargin.left,
         top,

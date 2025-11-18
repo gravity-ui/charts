@@ -71,6 +71,12 @@ export interface ChartLegend {
      * @default false
      * */
     html?: boolean;
+    /**
+     * The position of the legend box within the chart area.
+     *
+     * @default 'bottom'
+     * */
+    position?: 'top' | 'bottom';
 }
 
 export interface BaseLegendSymbol {
