@@ -12,6 +12,7 @@ import {prepareAxisData} from '../AxisY/prepare-axis-data';
 import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
+import {RangeSlider} from '../RangeSlider';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
 
@@ -19,7 +20,7 @@ import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
-import {getResetZoomButtonStyle, useAsyncState} from './utils';
+import {getResetZoomButtonStyle, useAsyncState, useDebouncedValue} from './utils';
 
 import './styles.scss';
 
@@ -43,12 +44,20 @@ export const ChartInner = (props: ChartInnerProps) => {
             xAxis: data.xAxis,
         });
     }, [data.series.data, data.tooltip, data.yAxis, data.xAxis]);
-    const {tooltipPinned, togglePinTooltip, unpinTooltip, updateZoomState, zoomState} =
-        useChartInnerState({
-            dispatcher,
-            tooltip: preparedTooltip,
-        });
     const {
+        tooltipPinned,
+        togglePinTooltip,
+        unpinTooltip,
+        rangeSliderState,
+        updateRangeSliderState,
+        updateZoomState,
+        zoomState,
+    } = useChartInnerState({
+        dispatcher,
+        tooltip: preparedTooltip,
+    });
+    const {
+        allPreparedSeries,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
@@ -57,9 +66,12 @@ export const ChartInner = (props: ChartInnerProps) => {
         isOutsideBounds,
         legendConfig,
         legendItems,
-        preparedSeries,
-        preparedSplit,
+        preparedChart,
         preparedLegend,
+        preparedRangeSlider,
+        preparedSeries,
+        preparedSeriesOptions,
+        preparedSplit,
         preparedZoom,
         prevHeight,
         prevWidth,
@@ -77,11 +89,14 @@ export const ChartInner = (props: ChartInnerProps) => {
         dispatcher,
         htmlLayout,
         plotNode: plotRef.current,
+        rangeSliderState,
         svgContainer: svgRef.current,
         updateZoomState,
         zoomState,
     });
-
+    const debouncedBoundsWidth = useDebouncedValue({value: boundsWidth, delay: 10});
+    const debouncedOffsetLeft = useDebouncedValue({value: boundsOffsetLeft, delay: 10});
+    const debouncedAllPreparedSeries = useDebouncedValue({value: allPreparedSeries, delay: 10});
     const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
         useChartInnerHandlers({
             boundsHeight,
@@ -233,6 +248,24 @@ export const ChartInner = (props: ChartInnerProps) => {
                     {shapes}
                     <g ref={plotAfterRef} />
                 </g>
+                {preparedRangeSlider.enabled && (
+                    <RangeSlider
+                        boundsOffsetLeft={debouncedOffsetLeft}
+                        boundsWidth={debouncedBoundsWidth}
+                        height={height}
+                        htmlLayout={htmlLayout}
+                        onUpdate={updateRangeSliderState}
+                        preparedChart={preparedChart}
+                        preparedLegend={preparedLegend}
+                        preparedSeries={debouncedAllPreparedSeries}
+                        preparedSeriesOptions={preparedSeriesOptions}
+                        preparedRangeSlider={preparedRangeSlider}
+                        rangeSliderState={rangeSliderState}
+                        width={width}
+                        xAxis={data.xAxis}
+                        yAxis={data.yAxis}
+                    />
+                )}
                 {preparedLegend?.enabled && legendConfig && (
                     <Legend
                         chartSeries={preparedSeries}

@@ -7,8 +7,10 @@ import type {
     ChartAxisLabels,
     ChartAxisTitleAlignment,
     ChartAxisType,
+    ChartBrush,
     ChartData,
     ChartMargin,
+    ChartRangeSlider,
     ChartZoom,
     DeepRequired,
     PlotLayerPlacement,
@@ -24,7 +26,8 @@ type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' 
         maxWidth: number;
     };
 
-export type PreparedZoom = DeepRequired<Omit<ChartZoom, 'enabled'>>;
+export type PreparedZoom = DeepRequired<Omit<ChartZoom, 'enabled' | 'brush'>> &
+    DeepRequired<{brush: ChartBrush}>;
 
 export type PreparedChart = {
     margin: ChartMargin;
@@ -90,8 +93,9 @@ export type PreparedTooltip = ChartData['tooltip'] & {
     throttle: number;
 };
 
-export type ChartOptions = {
-    chart: PreparedChart;
-    title?: PreparedTitle;
-    colors: string[];
+export type PreparedRangeSlider = DeepRequired<
+    Omit<ChartRangeSlider, 'defaultMax' | 'defaultMin'>
+> & {
+    defaultMax?: number;
+    defaultMin?: number;
 };

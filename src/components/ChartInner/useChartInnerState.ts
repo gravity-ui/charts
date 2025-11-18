@@ -3,7 +3,7 @@ import React from 'react';
 import type {Dispatch} from 'd3';
 import isEqual from 'lodash/isEqual';
 
-import type {PreparedTooltip, ZoomState} from '../../hooks';
+import type {PreparedTooltip, RangeSliderState, ZoomState} from '../../hooks';
 import {EventType, isMacintosh} from '../../utils';
 
 type Props = {
@@ -15,6 +15,7 @@ export function useChartInnerState(props: Props) {
     const {dispatcher, tooltip} = props;
     const [tooltipPinned, setTooltipPinned] = React.useState(false);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
+    const [rangeSliderState, setRangeSliderState] = React.useState<RangeSliderState | undefined>();
     const tooltipEnabled = tooltip?.enabled;
     const tooltipPinEnabled = tooltip?.pin?.enabled;
     const modifierKey = tooltip?.pin?.modifierKey;
@@ -54,10 +55,28 @@ export function useChartInnerState(props: Props) {
         [zoomState],
     );
 
+    const updateRangeSliderState = React.useCallback(
+        (nextRangeSliderState?: RangeSliderState) => {
+            if (!isEqual(rangeSliderState, nextRangeSliderState)) {
+                setRangeSliderState(
+                    nextRangeSliderState
+                        ? {
+                              max: nextRangeSliderState.max,
+                              min: nextRangeSliderState.min,
+                          }
+                        : undefined,
+                );
+            }
+        },
+        [rangeSliderState],
+    );
+
     return {
+        rangeSliderState,
         tooltipPinned,
         togglePinTooltip: tooltipEnabled && tooltipPinEnabled ? togglePinTooltip : undefined,
         unpinTooltip: tooltipEnabled && tooltipPinEnabled ? unpinTooltip : undefined,
+        updateRangeSliderState,
         updateZoomState,
         zoomState,
     };

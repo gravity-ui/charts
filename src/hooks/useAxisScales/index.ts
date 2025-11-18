@@ -5,6 +5,13 @@ import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3'
 import get from 'lodash/get';
 
 import {DEFAULT_AXIS_TYPE, SeriesType} from '../../constants';
+import type {
+    PreparedAxis,
+    PreparedSeries,
+    PreparedSeriesOptions,
+    PreparedSplit,
+    RangeSliderState,
+} from '../../hooks';
 import type {BarYSeries, ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
@@ -19,9 +26,7 @@ import {
     isSeriesWithCategoryValues,
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
-import type {PreparedAxis} from '../useChartOptions/types';
-import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
-import type {PreparedSplit} from '../useSplit/types';
+import {getAxisCategories} from '../useChartOptions/utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
 
@@ -40,6 +45,7 @@ type Args = {
     split: PreparedSplit;
     hasZoomX?: boolean;
     hasZoomY?: boolean;
+    rangeSliderState?: RangeSliderState;
 };
 
 type ReturnValue = {
@@ -323,12 +329,21 @@ export function createXScale(args: {
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
+    rangeSliderState?: RangeSliderState;
 }) {
-    const {axis, boundsWidth, series, seriesOptions, hasZoomX} = args;
-    const xMinProps = get(axis, 'min');
-    const xMaxProps = get(axis, 'max');
+    const {axis, boundsWidth, series, seriesOptions, hasZoomX, rangeSliderState} = args;
+    const xMinProps = rangeSliderState?.min ?? get(axis, 'min');
+    const xMaxProps = rangeSliderState?.max ?? get(axis, 'max');
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
-    const xCategories = get(axis, 'categories');
+    let xCategories = get(axis, 'categories');
+    if (rangeSliderState && xCategories) {
+        xCategories = getAxisCategories({
+            categories: xCategories,
+            min: rangeSliderState.min,
+            max: rangeSliderState.max,
+            order: axis.order,
+        });
+    }
     const maxPadding = get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
@@ -497,7 +512,17 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {boundsWidth, boundsHeight, hasZoomX, series, seriesOptions, split, xAxis, yAxis} = args;
+    const {
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        rangeSliderState,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+    } = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -508,6 +533,7 @@ const createScales = (args: Args) => {
             ? createXScale({
                   axis: xAxis,
                   boundsWidth,
+                  rangeSliderState,
                   series: visibleSeries,
                   seriesOptions,
                   hasZoomX,
@@ -538,6 +564,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
         boundsHeight,
         hasZoomX,
         hasZoomY,
+        rangeSliderState,
         series,
         seriesOptions,
         split,
@@ -555,6 +582,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 boundsHeight,
                 hasZoomX,
                 hasZoomY,
+                rangeSliderState,
                 series,
                 seriesOptions,
                 split,
@@ -564,5 +592,16 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [boundsWidth, boundsHeight, hasZoomX, hasZoomY, series, seriesOptions, split, xAxis, yAxis]);
+    }, [
+        boundsWidth,
+        boundsHeight,
+        hasZoomX,
+        hasZoomY,
+        rangeSliderState,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        yAxis,
+    ]);
 };

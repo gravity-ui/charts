@@ -20,8 +20,10 @@ export function getTicksCount({axis, range}: {axis: PreparedAxis; range: number}
     return ticksCount;
 }
 
-export function isBandScale(scale: ChartScale | AxisScale<AxisDomain>): scale is ScaleBand<string> {
-    return 'bandwidth' in scale && typeof scale.bandwidth === 'function';
+export function isBandScale(
+    scale?: ChartScale | AxisScale<AxisDomain>,
+): scale is ScaleBand<string> {
+    return Boolean(scale && 'bandwidth' in scale && typeof scale.bandwidth === 'function');
 }
 
 export function getScaleTicks(
