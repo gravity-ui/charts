@@ -37,28 +37,31 @@ const pieOverflowedLegendItemsData: ChartData = {
     },
 };
 
+const piePaginatedLegendData: ChartData = {
+    legend: {
+        enabled: true,
+        type: 'discrete',
+    },
+    series: {
+        data: [
+            {
+                type: 'pie',
+                dataLabels: {enabled: false},
+                data: range(1, 40).map((i) => ({
+                    name: `Label ${i + 1}`,
+                    value: i,
+                })),
+            },
+        ],
+    },
+};
+
 test.describe('Legend', () => {
     test.describe('Discrete', () => {
         test('Pagination svg', async ({mount}) => {
-            const data: ChartData = {
-                legend: {
-                    enabled: true,
-                    type: 'discrete',
-                },
-                series: {
-                    data: [
-                        {
-                            type: 'pie',
-                            dataLabels: {enabled: false},
-                            data: range(1, 40).map((i) => ({
-                                name: `Label ${i + 1}`,
-                                value: i,
-                            })),
-                        },
-                    ],
-                },
-            };
-            const component = await mount(<ChartTestStory data={data} styles={{width: '150px'}} />);
+            const component = await mount(
+                <ChartTestStory data={piePaginatedLegendData} styles={{width: '150px'}} />,
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
             const arrowNext = component.getByText('▼');
             await arrowNext.click();
@@ -122,6 +125,43 @@ test.describe('Legend', () => {
             // When clicking on the legend again, the chart should return to its original state.
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test.describe('Position top', () => {
+            test('Basic', async ({mount}) => {
+                const data = cloneDeep(pieOverflowedLegendItemsData);
+                set(data, 'legend.position', 'top');
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: '270px'}} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('With html', async ({mount}) => {
+                const data = cloneDeep(pieOverflowedLegendItemsData);
+                set(data, 'legend.position', 'top');
+                set(data, 'legend.html', true);
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: '270px'}} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Paginated', async ({mount}) => {
+                const data = cloneDeep(piePaginatedLegendData);
+                set(data, 'legend.position', 'top');
+
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: '150px'}} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+
+                const arrowNext = component.getByText('▼');
+                await arrowNext.click();
+                await expect(component.locator('svg')).toHaveScreenshot();
+                await arrowNext.click();
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
         });
     });
 });

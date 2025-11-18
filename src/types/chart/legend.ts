@@ -74,7 +74,6 @@ export interface ChartLegend {
     /**
      * The position of the legend box within the chart area.
      *
-     * @experimental Can be changed in the future.
      * @default 'bottom'
      * */
     position?: 'top' | 'bottom';
