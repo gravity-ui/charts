@@ -57,6 +57,7 @@ export function setBrushBorder(
     // If selection is collapsed to a point, draw only a vertical line
     if (selection[0] === selection[1]) {
         const centerX: number = selection[0];
+        // TODO: https://github.com/gravity-ui/charts/issues/270
         // Draw a single vertical line in the center
         brushBorderPath = `
                 M ${centerX - strokeWidth / 2} ${selectionTop}
@@ -66,6 +67,7 @@ export function setBrushBorder(
                 Z
             `.replace(/[\n\s]{2,}/g, ' ');
     } else {
+        // TODO: https://github.com/gravity-ui/charts/issues/270
         // Draw full border frame
         brushBorderPath = `
                 M ${selectionLeft} ${selectionTop}
@@ -162,6 +164,7 @@ export function setBrushHandles(
             .attr('fill', 'var(--g-color-base-float)')
             .attr('pointer-events', 'none');
 
+        // TODO: https://github.com/gravity-ui/charts/issues/270
         // Border frame using path with cutout (similar to RangeSlider)
         const borderPath = `
             M ${handleLeft} ${handleTop}
@@ -187,6 +190,7 @@ export function setBrushHandles(
         // Two vertical lines (1px from center on each side) as a single path
         const y1 = handleY + padding;
         const y2 = handleY + brushOptions.handles.height - padding;
+        // TODO: https://github.com/gravity-ui/charts/issues/270
         const linesPath = `
             M ${handleCenterX - 1} ${y1}
             L ${handleCenterX - 1} ${y2}

@@ -73,6 +73,7 @@ type Args = {
     boundsHeight: number;
     clipPathId: string;
     htmlLayout: HTMLElement | null;
+    // TODO: https://github.com/gravity-ui/charts/issues/270
     isOutsideBounds: (x: number, y: number) => boolean;
     series: PreparedSeries[];
     seriesOptions: PreparedSeriesOptions;
@@ -80,6 +81,7 @@ type Args = {
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
     dispatcher?: Dispatch<object>;
+    // TODO: https://github.com/gravity-ui/charts/issues/270
     shouldUseClipPathIdForScatter?: boolean;
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
