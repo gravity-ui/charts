@@ -1,7 +1,6 @@
 import type {ChartXAxis, ChartYAxis} from './chart/axis';
 import type {ChartOptions} from './chart/chart';
 import type {ChartLegend} from './chart/legend';
-import type {ChartRangeSlider} from './chart/range-slider';
 import type {ChartSeries, ChartSeriesOptions} from './chart/series';
 import type {ChartSplit} from './chart/split';
 import type {ChartTitle} from './chart/title';
@@ -32,7 +31,6 @@ export * from './chart/sankey';
 export * from './chart/radar';
 export * from './chart/heatmap';
 export * from './chart/brush';
-export * from './chart/range-slider';
 
 export interface ChartData<T = MeaningfulAny> {
     /**
@@ -44,15 +42,6 @@ export interface ChartData<T = MeaningfulAny> {
      * It shows a distinctive symbol paired with a name for every series.
      */
     legend?: ChartLegend;
-    /**
-     * Configuration options for the chart range slider component.
-     *
-     * The range slider allows users to select a specific range of data to display
-     * on the chart by adjusting the slider handles.
-     *
-     * Supported only for `linear`, `datetime`, and `logarithmic` X axis types.
-     */
-    rangeSlider?: ChartRangeSlider;
     /**
      * Represents the series data and series options.
      */

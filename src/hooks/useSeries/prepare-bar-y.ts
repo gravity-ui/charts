@@ -1,7 +1,7 @@
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../../constants';
 import type {BarYSeries, BarYSeriesData, ChartSeriesOptions} from '../../types';
 import {getLabelsSize, getUniqId} from '../../utils';
 import {getFormattedValue} from '../../utils/chart/format';
@@ -86,6 +86,11 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                     seriesOptions?.['bar-y']?.borderColor ??
                     'var(--gcharts-shape-border-color)',
                 tooltip: series.tooltip,
+                rangeSlider: Object.assign(
+                    {},
+                    seriesRangeSliderOptionsDefaults,
+                    series.rangeSlider,
+                ),
             };
         }),
     );

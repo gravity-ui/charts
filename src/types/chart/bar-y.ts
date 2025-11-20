@@ -3,7 +3,7 @@ import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
-
+import type {ChartSeriesRangeSliderOptions} from './series';
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
@@ -83,4 +83,8 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';
+    /**
+     * Options to configure how this series appears and behaves in the Range Slider component.
+     */
+    rangeSlider?: ChartSeriesRangeSliderOptions;
 }

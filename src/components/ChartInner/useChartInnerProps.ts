@@ -55,10 +55,9 @@ export function useChartInnerProps(props: Props) {
         xAxis: data.xAxis,
         yAxis: data.yAxis,
     });
-    const {chart, colors, rangeSlider, title} = useChartOptions({
+    const {chart, colors, title} = useChartOptions({
         chart: data.chart,
         colors: data.colors,
-        rangeSlider: data.rangeSlider,
         seriesData: normalizedSeriesData,
         title: data.title,
         xAxis: data.xAxis,
@@ -116,7 +115,6 @@ export function useChartInnerProps(props: Props) {
         height,
         margin: chart.margin,
         preparedLegend,
-        preparedRangeSlider: rangeSlider,
         preparedSeries: preparedSeries,
         preparedYAxis: yAxis,
         preparedXAxis: xAxis,
@@ -224,7 +222,6 @@ export function useChartInnerProps(props: Props) {
         legendItems,
         preparedChart: chart,
         preparedLegend,
-        preparedRangeSlider: rangeSlider,
         preparedSeries,
         preparedSeriesOptions,
         preparedSplit,

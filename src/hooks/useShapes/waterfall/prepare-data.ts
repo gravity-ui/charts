@@ -6,8 +6,8 @@ import type {LabelData} from '../../../types';
 import {getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../constants';
+import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
-import type {PreparedAxis} from '../../useChartOptions/types';
 import type {
     PreparedSeriesOptions,
     PreparedWaterfallSeries,
@@ -53,7 +53,7 @@ async function getLabelData(
 
 function getBandWidth(args: {
     series: PreparedWaterfallSeries[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
 }) {
     const {series, xAxis, xScale} = args;
@@ -87,9 +87,9 @@ type DataItem = {data: PreparedWaterfallSeriesData; series: PreparedWaterfallSer
 export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
     seriesOptions: PreparedSeriesOptions;
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
 }): Promise<PreparedWaterfallData[]> => {
     const {

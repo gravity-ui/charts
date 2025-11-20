@@ -1,8 +1,8 @@
 import type {HtmlItem, LabelData} from '../../../types';
 import {getLabelsSize, getLeftPosition} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
+import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
-import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
@@ -60,9 +60,9 @@ async function getHtmlLabel(
 
 export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;

@@ -5,10 +5,10 @@ import type {AxisDomain, AxisScale, Selection} from 'd3';
 
 import type {
     ChartScale,
-    PreparedAxis,
     PreparedAxisPlotBand,
     PreparedAxisPlotLine,
     PreparedSplit,
+    PreparedXAxis,
 } from '../../hooks';
 import type {AxisPlotBand} from '../../types';
 import {
@@ -28,7 +28,7 @@ import './styles.scss';
 const b = block('axis');
 
 type Props = {
-    axis: PreparedAxis;
+    axis: PreparedXAxis;
     boundsOffsetLeft: number;
     boundsOffsetTop: number;
     height: number;
@@ -41,7 +41,7 @@ type Props = {
     plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
 };
 
-export function getTitlePosition(args: {axis: PreparedAxis; width: number; rowCount: number}) {
+export function getTitlePosition(args: {axis: PreparedXAxis; width: number; rowCount: number}) {
     const {axis, width, rowCount} = args;
     if (rowCount < 1) {
         return {x: 0, y: 0};

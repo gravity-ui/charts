@@ -1,5 +1,6 @@
 .gcharts-brush {
     --gcharts-brush-color: rgba(51, 92, 173, 0.25);
+    --gcharts-brush-border-color: rgb(153, 153, 153);
 
     &:not([data-gc-brush-pressed='true']) .overlay {
         cursor: default;

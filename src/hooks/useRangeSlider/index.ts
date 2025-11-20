@@ -13,11 +13,7 @@ import type {PreparedSplit} from '../useSplit/types';
 import {selectionToZoomBounds} from '../useZoom/utils';
 
 import type {PreparedRangeSliderProps, UseRangeSliderProps} from './types';
-import {
-    getDefaultRangeSliderSelection,
-    getRangeSliderOffsetTop,
-    getRangeSliderSelection,
-} from './utils';
+import {getRangeSliderOffsetTop, getRangeSliderSelection} from './utils';
 export const EMPTY_PREPARED_SPLIT: PreparedSplit = {
     plots: [],
     gap: 0,
@@ -43,6 +39,15 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         xAxis,
         yAxis,
     } = props;
+    const filteredPreparedSeries = React.useMemo(() => {
+        return preparedSeries.filter((s) => {
+            if ('rangeSlider' in s && !s.rangeSlider.visible) {
+                return false;
+            }
+
+            return true;
+        });
+    }, [preparedSeries]);
     const {xAxis: preparedXAxis, yAxis: preparedYAxis} = useAxis({
         boundsHeight: preparedRangeSlider.height,
         height,
@@ -69,7 +74,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         clipPathId,
         htmlLayout,
         isOutsideBounds: IS_OUTSIDE_BOUNDS,
-        series: preparedSeries,
+        series: filteredPreparedSeries,
         seriesOptions: preparedSeriesOptions,
         shouldUseClipPathIdForScatter: true,
         split: EMPTY_PREPARED_SPLIT,
@@ -83,19 +88,8 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
             return getRangeSliderSelection({rangeSliderState, xScale: xScale});
         }
 
-        return getDefaultRangeSliderSelection({
-            boundsWidth,
-            defaultMax: preparedRangeSlider.defaultMax,
-            defaultMin: preparedRangeSlider.defaultMin,
-            xScale: xScale,
-        });
-    }, [
-        boundsWidth,
-        rangeSliderState,
-        xScale,
-        preparedRangeSlider.defaultMax,
-        preparedRangeSlider.defaultMin,
-    ]);
+        return undefined;
+    }, [rangeSliderState, xScale]);
     const offsetTop = getRangeSliderOffsetTop({
         height,
         preparedLegend,

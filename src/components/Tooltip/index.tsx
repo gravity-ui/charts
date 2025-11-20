@@ -4,7 +4,7 @@ import {Popup, useVirtualElement} from '@gravity-ui/uikit';
 import type {PopupProps} from '@gravity-ui/uikit';
 import type {Dispatch} from 'd3';
 
-import type {PreparedAxis, PreparedTooltip} from '../../hooks';
+import type {PreparedTooltip, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import {useTooltip} from '../../hooks';
 import type {ChartYAxis} from '../../types';
 import {block} from '../../utils';
@@ -19,8 +19,8 @@ type TooltipProps = {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
     svgContainer: SVGSVGElement | null;
-    xAxis: PreparedAxis | null;
-    yAxis: PreparedAxis;
+    xAxis: PreparedXAxis | null;
+    yAxis: PreparedYAxis;
     tooltipPinned: boolean;
     onOutsideClick?: () => void;
 };

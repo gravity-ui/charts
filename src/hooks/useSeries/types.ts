@@ -15,6 +15,7 @@ import type {
     BaseTextStyle,
     ChartLegend,
     ChartSeries,
+    ChartSeriesRangeSliderOptions,
     ConnectorCurve,
     ConnectorShape,
     HeatmapSeries,
@@ -125,6 +126,10 @@ type BasePreparedSeries = {
     tooltip: ChartSeries['tooltip'];
 };
 
+type BasePreparedAxisRelatedSeries = {
+    rangeSlider: Required<ChartSeriesRangeSliderOptions>;
+};
+
 export type PreparedScatterSeries = {
     type: ScatterSeries['type'];
     data: ScatterSeriesData[];
@@ -147,7 +152,8 @@ export type PreparedScatterSeries = {
         };
     };
     yAxis: number;
-} & BasePreparedSeries;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
 
 export type PreparedBarXSeries = {
     type: BarXSeries['type'];
@@ -165,7 +171,8 @@ export type PreparedBarXSeries = {
     };
     borderRadius: number;
     yAxis: number;
-} & BasePreparedSeries;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
 
 export type PreparedBarYSeries = {
     type: BarYSeries['type'];
@@ -185,7 +192,8 @@ export type PreparedBarYSeries = {
     borderRadius: number;
     borderWidth: number;
     borderColor: string;
-} & BasePreparedSeries;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
 
 export type PreparedHeatmapSeries = {
     type: HeatmapSeries['type'];
@@ -268,7 +276,8 @@ export type PreparedLineSeries = {
     linecap: LineCap;
     opacity: number | null;
     yAxis: number;
-} & BasePreparedSeries;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
 
 export type PreparedAreaSeries = {
     type: AreaSeries['type'];
@@ -304,7 +313,8 @@ export type PreparedAreaSeries = {
         };
     };
     yAxis: number;
-} & BasePreparedSeries;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
 
 export type PreparedTreemapSeries = {
     type: TreemapSeries['type'];
@@ -336,7 +346,8 @@ export type PreparedWaterfallSeries = {
         html: boolean;
         format?: ValueFormat;
     };
-} & BasePreparedSeries;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
 
 export type PreparedSankeySeries = {
     type: SankeySeries['type'];

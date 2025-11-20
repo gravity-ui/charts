@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {PreparedAxis, PreparedLegend, PreparedRangeSlider, PreparedSeries} from '../../hooks';
+import type {PreparedLegend, PreparedSeries, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartMargin} from '../../types';
 import {isAxisRelatedSeries} from '../../utils';
 
@@ -12,20 +12,18 @@ type Args = {
     height: number;
     margin: ChartMargin;
     preparedLegend: PreparedLegend | null;
-    preparedRangeSlider: PreparedRangeSlider;
     preparedSeries: PreparedSeries[];
-    preparedXAxis: PreparedAxis | null;
-    preparedYAxis: PreparedAxis[] | null;
+    preparedXAxis: PreparedXAxis | null;
+    preparedYAxis: PreparedYAxis[] | null;
     width: number;
 };
 
 const getBottomOffset = (args: {
     hasAxisRelatedSeries: boolean;
     preparedLegend: PreparedLegend | null;
-    preparedRangeSlider: PreparedRangeSlider;
-    preparedXAxis: PreparedAxis | null;
+    preparedXAxis: PreparedXAxis | null;
 }) => {
-    const {hasAxisRelatedSeries, preparedLegend, preparedRangeSlider, preparedXAxis} = args;
+    const {hasAxisRelatedSeries, preparedLegend, preparedXAxis} = args;
     let result = 0;
 
     if (preparedLegend?.enabled && preparedLegend.position === 'bottom') {
@@ -46,8 +44,8 @@ const getBottomOffset = (args: {
         }
     }
 
-    if (preparedRangeSlider.enabled) {
-        result += preparedRangeSlider.height + preparedRangeSlider.margin;
+    if (preparedXAxis.rangeSlider.enabled) {
+        result += preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin;
     }
 
     return result;
@@ -62,16 +60,8 @@ const getTopOffset = ({preparedLegend}: {preparedLegend: PreparedLegend | null})
 };
 
 export const useChartDimensions = (args: Args) => {
-    const {
-        height,
-        margin,
-        preparedLegend,
-        preparedRangeSlider,
-        preparedSeries,
-        preparedXAxis,
-        preparedYAxis,
-        width,
-    } = args;
+    const {height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width} =
+        args;
 
     return React.useMemo(() => {
         const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
@@ -79,7 +69,6 @@ export const useChartDimensions = (args: Args) => {
         const bottomOffset = getBottomOffset({
             hasAxisRelatedSeries,
             preparedLegend,
-            preparedRangeSlider,
             preparedXAxis,
         });
         const topOffset = getTopOffset({preparedLegend});
@@ -87,14 +76,5 @@ export const useChartDimensions = (args: Args) => {
         const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
 
         return {boundsWidth, boundsHeight};
-    }, [
-        height,
-        margin,
-        preparedLegend,
-        preparedRangeSlider,
-        preparedSeries,
-        preparedXAxis,
-        preparedYAxis,
-        width,
-    ]);
+    }, [height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width]);
 };

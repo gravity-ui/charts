@@ -20,68 +20,56 @@ export default meta;
 type Story = StoryObj<typeof ChartStory>;
 
 const dateTimeData = cloneDeep(lineTwoYAxisData);
-set(dateTimeData, 'rangeSlider', {enabled: true});
+set(dateTimeData, 'xAxis.rangeSlider', {enabled: true});
 set(dateTimeData, 'legend', {enabled: true});
+set(dateTimeData, 'title', {
+    text: 'Without default range',
+});
+
+const dateTimeDataWithRange = cloneDeep(lineTwoYAxisData);
+set(dateTimeDataWithRange, 'xAxis.rangeSlider', {enabled: true, defaultRange: {size: 'P1M'}});
+set(dateTimeDataWithRange, 'legend', {enabled: true});
+set(dateTimeDataWithRange, 'title', {
+    text: 'With default range (1 month)',
+});
+
 export const RangeSliderDateTime = {
     name: 'Datetime X axis',
-    args: {
-        data: dateTimeData,
-        style: {
-            height: 350,
-        },
-    },
-} satisfies Story;
-
-const linearTimeData = cloneDeep(scatterLinearXAxisData);
-set(linearTimeData, 'rangeSlider', {enabled: true});
-set(linearTimeData, 'legend', {enabled: true});
-export const RangeSliderLinear = {
-    name: 'Linear X axis',
-    args: {
-        data: linearTimeData,
-        style: {
-            height: 350,
-        },
-    },
-} satisfies Story;
-
-const linearWithDefaultRangeData1 = cloneDeep(scatterLinearXAxisData);
-set(linearWithDefaultRangeData1, 'rangeSlider', {enabled: true, defaultMin: 3800});
-set(linearWithDefaultRangeData1, 'legend', {enabled: true});
-set(linearWithDefaultRangeData1, 'title', {
-    text: 'With defaultMin (open-ended range to max)',
-});
-
-const linearWithDefaultRangeData2 = cloneDeep(scatterLinearXAxisData);
-set(linearWithDefaultRangeData2, 'rangeSlider', {enabled: true, defaultMax: 3800});
-set(linearWithDefaultRangeData2, 'legend', {enabled: true});
-set(linearWithDefaultRangeData2, 'title', {
-    text: 'With defaultMax (open-ended range from min)',
-});
-
-const linearWithDefaultRangeData3 = cloneDeep(scatterLinearXAxisData);
-set(linearWithDefaultRangeData3, 'rangeSlider', {
-    enabled: true,
-    defaultMin: 3600,
-    defaultMax: 4000,
-});
-set(linearWithDefaultRangeData3, 'legend', {enabled: true});
-set(linearWithDefaultRangeData3, 'title', {
-    text: 'With defaultMin and defaultMax (closed range)',
-});
-
-export const RangeSliderWithDefaultRange = {
-    name: 'With defaultMin / defaultMax',
     render: () => (
         <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
             <div style={{height: 350}}>
-                <Chart data={linearWithDefaultRangeData1} />
+                <Chart data={dateTimeData} />
             </div>
             <div style={{height: 350}}>
-                <Chart data={linearWithDefaultRangeData2} />
+                <Chart data={dateTimeDataWithRange} />
+            </div>
+        </div>
+    ),
+} satisfies Story;
+
+const linearData = cloneDeep(scatterLinearXAxisData);
+set(linearData, 'xAxis.rangeSlider', {enabled: true});
+set(linearData, 'legend', {enabled: true});
+set(linearData, 'title', {
+    text: 'Without default range',
+});
+
+const linearDataWithRange = cloneDeep(scatterLinearXAxisData);
+set(linearDataWithRange, 'xAxis.rangeSlider', {enabled: true, defaultRange: {size: 1000}});
+set(linearDataWithRange, 'legend', {enabled: true});
+set(linearDataWithRange, 'title', {
+    text: 'With default range (1000)',
+});
+
+export const RangeSliderLinear = {
+    name: 'Linear X axis',
+    render: () => (
+        <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+            <div style={{height: 350}}>
+                <Chart data={linearData} />
             </div>
             <div style={{height: 350}}>
-                <Chart data={linearWithDefaultRangeData3} />
+                <Chart data={linearDataWithRange} />
             </div>
         </div>
     ),

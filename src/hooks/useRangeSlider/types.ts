@@ -1,7 +1,8 @@
 import type {ChartXAxis, ChartYAxis} from '../../types';
+import type {PreparedRangeSlider, PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
 import type {BrushSelection, UseBrushProps} from '../useBrush/types';
-import type {PreparedAxis, PreparedChart, PreparedRangeSlider} from '../useChartOptions/types';
+import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 
 export type RangeSliderState = {
@@ -34,8 +35,8 @@ export interface PreparedRangeSliderProps extends Omit<PreparedRangeSlider, 'ena
     htmlLayout: HTMLElement | null;
     offsetLeft: number;
     offsetTop: number;
-    preparedXAxis: PreparedAxis | null;
-    preparedYAxis: PreparedAxis[] | null;
+    preparedXAxis: PreparedXAxis | null;
+    preparedYAxis: PreparedYAxis[] | null;
     shapes: React.ReactElement[];
     width: number;
     onBrushEnd?: UseBrushProps['onBrushEnd'];

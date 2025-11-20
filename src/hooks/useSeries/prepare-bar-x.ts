@@ -1,7 +1,7 @@
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../../constants';
 import type {BarXSeries, BarXSeriesData, ChartSeriesOptions} from '../../types';
 import {getUniqId} from '../../utils';
 
@@ -64,6 +64,7 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
             yAxis: get(series, 'yAxis', 0),
             borderRadius: get(series, 'borderRadius', get(seriesOptions, 'bar-x.borderRadius', 0)),
             tooltip: series.tooltip,
+            rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
         };
     }, []);
 }

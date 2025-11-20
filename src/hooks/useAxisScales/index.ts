@@ -10,11 +10,13 @@ import type {
     PreparedSeries,
     PreparedSeriesOptions,
     PreparedSplit,
+    PreparedXAxis,
     RangeSliderState,
 } from '../../hooks';
 import type {BarYSeries, ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
+    getAxisCategories,
     getAxisHeight,
     getDataCategoryValue,
     getDefaultMaxXAxisValue,
@@ -26,7 +28,6 @@ import {
     isSeriesWithCategoryValues,
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
-import {getAxisCategories} from '../useChartOptions/utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
 
@@ -306,7 +307,7 @@ function getXScaleRange({
 
     const barXSeries = series.filter((s) => s.type === SeriesType.BarX);
     if (barXSeries.length) {
-        const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedAxis);
+        const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
         if (Object.keys(groupedData).length > 1) {
             const {bandSize} = getBarXLayoutForNumericScale({
                 plotWidth: boundsWidth - maxPadding,

@@ -2,8 +2,8 @@ import get from 'lodash/get';
 
 import type {ScatterSeriesData} from '../../../types';
 import {getDataCategoryValue} from '../../../utils';
+import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
-import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedScatterSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
@@ -15,9 +15,9 @@ function getFilteredLinearScatterData(data: ScatterSeriesData[]) {
 
 function getFilteredCategoryScatterData(args: {
     data: ScatterSeriesData[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxis: PreparedAxis;
+    yAxis: PreparedYAxis;
     yScale: ChartScale;
 }) {
     const {data, xAxis, xScale, yAxis, yScale} = args;
@@ -54,9 +54,9 @@ function getFilteredCategoryScatterData(args: {
 
 export function prepareScatterData(args: {
     series: PreparedScatterSeries[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     isOutsideBounds: (x: number, y: number) => boolean;
 }): PreparedScatterData[] {

@@ -1,7 +1,7 @@
 import {isBandScale} from '../../utils';
+import type {PreparedRangeSlider} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
 import type {BrushSelection} from '../useBrush/types';
-import type {PreparedRangeSlider} from '../useChartOptions/types';
 import type {PreparedLegend} from '../useSeries/types';
 
 import type {RangeSliderState} from './types';
@@ -29,22 +29,4 @@ export function getRangeSliderSelection(args: {
     }
 
     return [xScale(rangeSliderState.min), xScale(rangeSliderState.max)];
-}
-
-export function getDefaultRangeSliderSelection(args: {
-    boundsWidth: number;
-    defaultMax?: number;
-    defaultMin?: number;
-    xScale?: ChartScale;
-}): BrushSelection | undefined {
-    const {boundsWidth, defaultMax, defaultMin, xScale} = args;
-
-    if (!xScale || isBandScale(xScale)) {
-        return undefined;
-    }
-
-    return [
-        typeof defaultMin === 'number' ? xScale(defaultMin) : 0,
-        typeof defaultMax === 'number' ? xScale(defaultMax) : boundsWidth,
-    ] as [number, number];
 }

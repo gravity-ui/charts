@@ -26,11 +26,11 @@ import {
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
 
-import type {PreparedAxis} from './types';
+import type {PreparedYAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
 
 const getAxisLabelMaxWidth = async (args: {
-    axis: PreparedAxis;
+    axis: PreparedYAxis;
     seriesData: ChartSeries[];
     height: number;
 }) => {
@@ -97,7 +97,7 @@ export const getPreparedYAxis = ({
     width: number;
     seriesData: ChartSeries[];
     yAxis: ChartYAxis[] | undefined;
-}): Promise<PreparedAxis[]> => {
+}): Promise<PreparedYAxis[]> => {
     const axisByPlot: ChartYAxis[][] = [];
     const axisItems = yAxis || [{} as ChartYAxis];
 
@@ -149,7 +149,7 @@ export const getPreparedYAxis = ({
             const shouldHideGrid =
                 axisItem.visible === false ||
                 axisSeriesData.some((s) => s.type === SeriesType.Heatmap);
-            const preparedAxis: PreparedAxis = {
+            const preparedAxis: PreparedYAxis = {
                 type: axisType,
                 labels: {
                     enabled: labelsEnabled,

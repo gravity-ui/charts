@@ -1,7 +1,10 @@
+import type {DurationInput} from '@gravity-ui/date-utils';
+
 import type {AXIS_TYPE, DashStyle} from '../../constants';
 import type {FormatNumberOptions} from '../formatter';
 
 import type {BaseTextStyle} from './base';
+import type {ChartBrush} from './brush';
 
 export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
@@ -42,6 +45,41 @@ export interface ChartAxisLabels {
      * If more than that, it collapses into three points.
      * */
     maxWidth?: number | string;
+}
+
+export interface ChartAxisRangeSlider {
+    /**
+     * Range slider brush configuration.
+     */
+    brush?: ChartBrush;
+    /**
+     * Configuration for the range slider state after the initial chart render.
+     */
+    defaultRange?: {
+        /**
+         * Default size of the range slider.
+         *
+         * The value type depends on the axis scale:
+         * - For `datetime` axes: {@link https://github.com/gravity-ui/date-utils/blob/8d53ff16a4582831140e75f1305dc6a0112a5ad6/src/typings/duration.ts#L7 DurationInput}
+         * - For `linear` and `logarithmic` axes: numeric value
+         */
+        size?: DurationInput | number;
+    };
+    /**
+     * Enable or disable the display of range slider
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * The height of the range slider in pixels.
+     * @default 40
+     */
+    height?: number;
+    /**
+     * The pixel distance between the range slider and the the X axis or X axis labels.
+     * @default 10
+     */
+    margin?: number;
 }
 
 export interface ChartAxis {
@@ -128,7 +166,17 @@ export interface ChartAxis {
     order?: 'sortAsc' | 'sortDesc' | 'reverse';
 }
 
-export interface ChartXAxis extends ChartAxis {}
+export interface ChartXAxis extends ChartAxis {
+    /**
+     * Configuration options for the chart range slider component.
+     *
+     * The range slider allows users to select a specific range of data to display
+     * on the chart by adjusting the slider handles.
+     *
+     * Supported only for `linear`, `datetime`, and `logarithmic` axes.
+     */
+    rangeSlider?: ChartAxisRangeSlider;
+}
 
 export type PlotLayerPlacement = 'before' | 'after';
 

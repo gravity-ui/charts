@@ -318,3 +318,12 @@ export interface ChartSeriesOptions {
         borderColor?: string;
     };
 }
+
+export type ChartSeriesRangeSliderOptions = {
+    /**
+     * Enable or disable the visibility of this series in the Range Slider.
+     *
+     * @default true
+     */
+    visible?: boolean;
+};

@@ -1,6 +1,6 @@
 import type {ChartBrush, DeepRequired} from '../../types';
 
-const DEFAULT_BORDER_COLOR = 'rgb(153, 153, 153)';
+const DEFAULT_BORDER_COLOR = 'var(--gcharts-brush-border-color)';
 
 export const brushDefaults: DeepRequired<ChartBrush> = {
     borderColor: DEFAULT_BORDER_COLOR,

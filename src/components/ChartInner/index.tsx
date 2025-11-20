@@ -1,11 +1,13 @@
 import React from 'react';
 
+import {duration} from '@gravity-ui/date-utils';
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
+import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
-import {EventType, block, getDispatcher} from '../../utils';
+import {EventType, block, getDispatcher, isBandScale, isTimeScale} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {AxisY} from '../AxisY/AxisY';
 import {prepareAxisData} from '../AxisY/prepare-axis-data';
@@ -26,6 +28,8 @@ import './styles.scss';
 
 const b = block('chart');
 
+const DEBOUNCED_VALUE_DELAY = 10;
+
 export const ChartInner = (props: ChartInnerProps) => {
     const {width, height, data} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
@@ -44,7 +48,12 @@ export const ChartInner = (props: ChartInnerProps) => {
             xAxis: data.xAxis,
         });
     }, [data.series.data, data.tooltip, data.yAxis, data.xAxis]);
+    const preparedRangeSlider = React.useMemo(() => {
+        return getPreparedRangeSlider({xAxis: data.xAxis});
+    }, [data.xAxis]);
     const {
+        initialized,
+        setInitialized,
         tooltipPinned,
         togglePinTooltip,
         unpinTooltip,
@@ -55,6 +64,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     } = useChartInnerState({
         dispatcher,
         tooltip: preparedTooltip,
+        preparedRangeSlider,
     });
     const {
         allPreparedSeries,
@@ -68,7 +78,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         legendItems,
         preparedChart,
         preparedLegend,
-        preparedRangeSlider,
         preparedSeries,
         preparedSeriesOptions,
         preparedSplit,
@@ -94,9 +103,18 @@ export const ChartInner = (props: ChartInnerProps) => {
         updateZoomState,
         zoomState,
     });
-    const debouncedBoundsWidth = useDebouncedValue({value: boundsWidth, delay: 10});
-    const debouncedOffsetLeft = useDebouncedValue({value: boundsOffsetLeft, delay: 10});
-    const debouncedAllPreparedSeries = useDebouncedValue({value: allPreparedSeries, delay: 10});
+    const debouncedBoundsWidth = useDebouncedValue({
+        value: boundsWidth,
+        delay: DEBOUNCED_VALUE_DELAY,
+    });
+    const debouncedOffsetLeft = useDebouncedValue({
+        value: boundsOffsetLeft,
+        delay: DEBOUNCED_VALUE_DELAY,
+    });
+    const debouncedAllPreparedSeries = useDebouncedValue({
+        value: allPreparedSeries,
+        delay: DEBOUNCED_VALUE_DELAY,
+    });
     const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
         useChartInnerHandlers({
             boundsHeight,
@@ -177,6 +195,147 @@ export const ChartInner = (props: ChartInnerProps) => {
     }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSeries, preparedSplit, yAxis, yScale]);
     const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems);
 
+    React.useEffect(() => {
+        if (!initialized && xScale) {
+            const defaultRange = preparedRangeSlider.defaultRange;
+
+            if (isBandScale(xScale)) {
+                setInitialized(true);
+                return;
+            }
+
+            if (isTimeScale(xScale)) {
+                const domain = xScale.domain();
+                const minDomainMs = domain[0].valueOf();
+                const maxDomainMs = domain[1].valueOf();
+                let minRangeMs = minDomainMs;
+
+                try {
+                    if (defaultRange?.size) {
+                        const durationMs = duration(defaultRange.size).asMilliseconds();
+                        const minDefaultRangeMs = maxDomainMs - durationMs;
+
+                        if (minDefaultRangeMs < maxDomainMs) {
+                            minRangeMs = minDefaultRangeMs;
+                        }
+                    }
+                } catch {}
+
+                updateRangeSliderState({min: minRangeMs, max: maxDomainMs});
+                setInitialized(true);
+            } else {
+                const [minDomain, maxDomain] = xScale.domain();
+                let minRange = minDomain;
+
+                if (typeof defaultRange?.size === 'number') {
+                    const minDefaultRange = maxDomain - defaultRange.size;
+                    if (minDefaultRange < maxDomain) {
+                        minRange = minDefaultRange;
+                    }
+                }
+
+                updateRangeSliderState({min: minRange, max: maxDomain});
+                setInitialized(true);
+            }
+        }
+    }, [
+        initialized,
+        preparedRangeSlider.defaultRange,
+        setInitialized,
+        updateRangeSliderState,
+        xScale,
+    ]);
+
+    const chartContent = (
+        <React.Fragment>
+            <defs>
+                <clipPath id={clipPathId}>
+                    <rect x={0} y={0} width={boundsWidth} height={boundsHeight} />
+                </clipPath>
+            </defs>
+            {title && <Title {...title} chartWidth={width} />}
+            <g transform={`translate(0, ${boundsOffsetTop})`}>
+                {preparedSplit.plots.map((plot, index) => {
+                    return <PlotTitle key={`plot-${index}`} title={plot.title} />;
+                })}
+            </g>
+            <g
+                width={boundsWidth}
+                height={boundsHeight}
+                transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
+                ref={plotRef}
+            >
+                {xScale && xAxis && (
+                    <g transform={`translate(0, ${boundsHeight})`}>
+                        <AxisX
+                            axis={xAxis}
+                            boundsOffsetLeft={boundsOffsetLeft}
+                            boundsOffsetTop={boundsOffsetTop}
+                            height={boundsHeight}
+                            htmlLayout={htmlLayout}
+                            leftmostLimit={svgXPos}
+                            plotAfterRef={plotAfterRef}
+                            plotBeforeRef={plotBeforeRef}
+                            scale={xScale}
+                            split={preparedSplit}
+                            width={boundsWidth}
+                        />
+                    </g>
+                )}
+                {Boolean(yAxisDataItems.length) && (
+                    <React.Fragment>
+                        {yAxisDataItems.map((axisData, index) => {
+                            if (!axisData) {
+                                return null;
+                            }
+
+                            return (
+                                <AxisY
+                                    key={index}
+                                    htmlLayout={htmlLayout}
+                                    plotAfterRef={plotAfterRef}
+                                    plotBeforeRef={plotBeforeRef}
+                                    preparedAxisData={axisData}
+                                />
+                            );
+                        })}
+                    </React.Fragment>
+                )}
+                <g ref={plotBeforeRef} />
+                {shapes}
+                <g ref={plotAfterRef} />
+            </g>
+            {xAxis?.rangeSlider?.enabled && (
+                <RangeSlider
+                    boundsOffsetLeft={debouncedOffsetLeft}
+                    boundsWidth={debouncedBoundsWidth}
+                    height={height}
+                    htmlLayout={htmlLayout}
+                    onUpdate={updateRangeSliderState}
+                    preparedChart={preparedChart}
+                    preparedLegend={preparedLegend}
+                    preparedSeries={debouncedAllPreparedSeries}
+                    preparedSeriesOptions={preparedSeriesOptions}
+                    preparedRangeSlider={xAxis.rangeSlider}
+                    rangeSliderState={rangeSliderState}
+                    width={width}
+                    xAxis={data.xAxis}
+                    yAxis={data.yAxis}
+                />
+            )}
+            {preparedLegend?.enabled && legendConfig && (
+                <Legend
+                    chartSeries={preparedSeries}
+                    legend={preparedLegend}
+                    items={legendItems}
+                    config={legendConfig}
+                    onItemClick={handleLegendItemClick}
+                    onUpdate={unpinTooltip}
+                    htmlLayout={htmlLayout}
+                />
+            )}
+        </React.Fragment>
+    );
     return (
         <div className={b()}>
             <svg
@@ -191,92 +350,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
             >
-                <defs>
-                    <clipPath id={clipPathId}>
-                        <rect x={0} y={0} width={boundsWidth} height={boundsHeight} />
-                    </clipPath>
-                </defs>
-                {title && <Title {...title} chartWidth={width} />}
-                <g transform={`translate(0, ${boundsOffsetTop})`}>
-                    {preparedSplit.plots.map((plot, index) => {
-                        return <PlotTitle key={`plot-${index}`} title={plot.title} />;
-                    })}
-                </g>
-                <g
-                    width={boundsWidth}
-                    height={boundsHeight}
-                    transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
-                    ref={plotRef}
-                >
-                    {xScale && xAxis && (
-                        <g transform={`translate(0, ${boundsHeight})`}>
-                            <AxisX
-                                axis={xAxis}
-                                boundsOffsetLeft={boundsOffsetLeft}
-                                boundsOffsetTop={boundsOffsetTop}
-                                height={boundsHeight}
-                                htmlLayout={htmlLayout}
-                                leftmostLimit={svgXPos}
-                                plotAfterRef={plotAfterRef}
-                                plotBeforeRef={plotBeforeRef}
-                                scale={xScale}
-                                split={preparedSplit}
-                                width={boundsWidth}
-                            />
-                        </g>
-                    )}
-                    {Boolean(yAxisDataItems.length) && (
-                        <React.Fragment>
-                            {yAxisDataItems.map((axisData, index) => {
-                                if (!axisData) {
-                                    return null;
-                                }
-
-                                return (
-                                    <AxisY
-                                        key={index}
-                                        htmlLayout={htmlLayout}
-                                        plotAfterRef={plotAfterRef}
-                                        plotBeforeRef={plotBeforeRef}
-                                        preparedAxisData={axisData}
-                                    />
-                                );
-                            })}
-                        </React.Fragment>
-                    )}
-                    <g ref={plotBeforeRef} />
-                    {shapes}
-                    <g ref={plotAfterRef} />
-                </g>
-                {preparedRangeSlider.enabled && (
-                    <RangeSlider
-                        boundsOffsetLeft={debouncedOffsetLeft}
-                        boundsWidth={debouncedBoundsWidth}
-                        height={height}
-                        htmlLayout={htmlLayout}
-                        onUpdate={updateRangeSliderState}
-                        preparedChart={preparedChart}
-                        preparedLegend={preparedLegend}
-                        preparedSeries={debouncedAllPreparedSeries}
-                        preparedSeriesOptions={preparedSeriesOptions}
-                        preparedRangeSlider={preparedRangeSlider}
-                        rangeSliderState={rangeSliderState}
-                        width={width}
-                        xAxis={data.xAxis}
-                        yAxis={data.yAxis}
-                    />
-                )}
-                {preparedLegend?.enabled && legendConfig && (
-                    <Legend
-                        chartSeries={preparedSeries}
-                        legend={preparedLegend}
-                        items={legendItems}
-                        config={legendConfig}
-                        onItemClick={handleLegendItemClick}
-                        onUpdate={unpinTooltip}
-                        htmlLayout={htmlLayout}
-                    />
-                )}
+                {initialized ? chartContent : null}
             </svg>
             <div
                 className={b('html-layer')}

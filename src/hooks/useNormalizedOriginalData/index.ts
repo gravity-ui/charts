@@ -1,8 +1,7 @@
 import React from 'react';
 
 import type {ChartData} from '../../types';
-import {getSortedSeriesData} from '../../utils';
-import {getAxisCategories} from '../useChartOptions/utils';
+import {getAxisCategories, getSortedSeriesData} from '../../utils';
 
 interface UseOriginalDataProps {
     seriesData: ChartData['series']['data'];

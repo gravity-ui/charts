@@ -3,10 +3,12 @@ import React from 'react';
 import isEqual from 'lodash/isEqual';
 
 import type {ChartSeries, ChartXAxis, ChartYAxis} from '../../types';
-import type {PreparedAxis, PreparedChart} from '../useChartOptions/types';
-import {getPreparedXAxis} from '../useChartOptions/x-axis';
-import {getPreparedYAxis} from '../useChartOptions/y-axis';
+import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
+
+import type {PreparedXAxis, PreparedYAxis} from './types';
+import {getPreparedXAxis} from './x-axis';
+import {getPreparedYAxis} from './y-axis';
 
 interface UseAxesProps {
     height: number;
@@ -33,8 +35,8 @@ export function useAxis(props: UseAxesProps) {
         yAxis,
     } = props;
     const [axesState, setValue] = React.useState<{
-        xAxis: PreparedAxis | null;
-        yAxis: PreparedAxis[];
+        xAxis: PreparedXAxis | null;
+        yAxis: PreparedYAxis[];
     }>({xAxis: null, yAxis: []});
     const axesStateRunRef = React.useRef(0);
     const prevAxesStateValue = React.useRef(axesState);

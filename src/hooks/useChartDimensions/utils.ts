@@ -1,9 +1,9 @@
-import type {PreparedAxis, PreparedChart} from '../../hooks';
+import type {PreparedChart, PreparedYAxis} from '../../hooks';
 
 export const getBoundsWidth = (args: {
     chartWidth: number;
     chartMargin: PreparedChart['margin'];
-    preparedYAxis: PreparedAxis[] | null;
+    preparedYAxis: PreparedYAxis[] | null;
 }) => {
     const {chartWidth, chartMargin, preparedYAxis} = args;
 
@@ -15,7 +15,7 @@ export const getBoundsWidth = (args: {
     );
 };
 
-export function getYAxisWidth(axis: PreparedAxis | undefined) {
+export function getYAxisWidth(axis: PreparedYAxis | undefined) {
     if (!axis?.visible) {
         return 0;
     }
@@ -32,7 +32,7 @@ export function getYAxisWidth(axis: PreparedAxis | undefined) {
     return result;
 }
 
-export function getWidthOccupiedByYAxis(args: {preparedAxis: PreparedAxis[] | null}) {
+export function getWidthOccupiedByYAxis(args: {preparedAxis: PreparedYAxis[] | null}) {
     const {preparedAxis} = args;
     let leftAxisWidth = 0;
     let rightAxisWidth = 0;

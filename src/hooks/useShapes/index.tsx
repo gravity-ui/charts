@@ -21,8 +21,8 @@ import type {
 } from '../';
 import {ChartError} from '../../libs';
 import {getOnlyVisibleSeries} from '../../utils';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
-import type {PreparedAxis} from '../useChartOptions/types';
 
 import {AreaSeriesShapes} from './area';
 import {prepareAreaData} from './area/prepare-data';
@@ -77,8 +77,8 @@ type Args = {
     series: PreparedSeries[];
     seriesOptions: PreparedSeriesOptions;
     split: PreparedSplit;
-    xAxis: PreparedAxis | null;
-    yAxis: PreparedAxis[];
+    xAxis: PreparedXAxis | null;
+    yAxis: PreparedYAxis[];
     dispatcher?: Dispatch<object>;
     shouldUseClipPathIdForScatter?: boolean;
     xScale?: ChartScale;

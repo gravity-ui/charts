@@ -1,4 +1,5 @@
 export * from './useAxis';
+export * from './useAxis/types';
 export * from './useAxisScales';
 export * from './useBrush';
 export * from './useBrush/types';

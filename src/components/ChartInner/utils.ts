@@ -3,8 +3,7 @@ import React from 'react';
 import debounce from 'lodash/debounce';
 import isEqual from 'lodash/isEqual';
 
-import type {PreparedSeries} from '../../hooks';
-import type {PreparedAxis, PreparedZoom} from '../../hooks/useChartOptions/types';
+import type {PreparedAxis, PreparedSeries, PreparedZoom} from '../../hooks';
 
 export function hasAtLeastOneSeriesDataPerPlot(
     seriesData: PreparedSeries[],
