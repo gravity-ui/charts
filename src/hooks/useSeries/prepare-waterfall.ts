@@ -1,7 +1,7 @@
 import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE} from '../../constants';
 import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
 import {getUniqId} from '../../utils';
 
@@ -58,7 +58,6 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
         cursor: get(series, 'cursor', null),
         data: [],
         tooltip: series.tooltip,
-        rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
     };
 
     const positive: PreparedWaterfallSeries = {

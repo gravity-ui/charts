@@ -192,8 +192,7 @@ export type PreparedBarYSeries = {
     borderRadius: number;
     borderWidth: number;
     borderColor: string;
-} & BasePreparedSeries &
-    BasePreparedAxisRelatedSeries;
+} & BasePreparedSeries;
 
 export type PreparedHeatmapSeries = {
     type: HeatmapSeries['type'];
@@ -346,8 +345,7 @@ export type PreparedWaterfallSeries = {
         html: boolean;
         format?: ValueFormat;
     };
-} & BasePreparedSeries &
-    BasePreparedAxisRelatedSeries;
+} & BasePreparedSeries;
 
 export type PreparedSankeySeries = {
     type: SankeySeries['type'];
