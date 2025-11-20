@@ -2,6 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
+import {seriesRangeSliderOptionsDefaults} from '../../constants';
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getSymbolType, getUniqId} from '../../utils';
@@ -85,6 +86,7 @@ export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedSc
             cursor: get(s, 'cursor', null),
             yAxis: get(s, 'yAxis', 0),
             tooltip: s.tooltip,
+            rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, s.rangeSlider),
         };
 
         return prepared;

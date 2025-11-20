@@ -5,7 +5,7 @@ import type {Dispatch} from 'd3';
 import throttle from 'lodash/throttle';
 
 import {IS_TOUCH_ENABLED} from '../../constants';
-import type {PreparedAxis, ShapeData} from '../../hooks';
+import type {PreparedXAxis, PreparedYAxis, ShapeData} from '../../hooks';
 import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
 import {EventType} from '../../utils';
 import {getClosestPoints} from '../../utils/chart/get-closest-data';
@@ -25,8 +25,8 @@ type Props = {
     togglePinTooltip: ChartInnerState['togglePinTooltip'];
     tooltipPinned: boolean;
     unpinTooltip: ChartInnerState['unpinTooltip'];
-    xAxis: PreparedAxis | null;
-    yAxis: PreparedAxis[];
+    xAxis: PreparedXAxis | null;
+    yAxis: PreparedYAxis[];
     tooltipThrottle: number;
     isOutsideBounds: (x: number, y: number) => boolean;
 };

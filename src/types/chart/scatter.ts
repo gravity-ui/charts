@@ -3,6 +3,7 @@ import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartSeriesRangeSliderOptions} from './series';
 
 export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -55,4 +56,8 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';
+    /**
+     * Options to configure how this series appears and behaves in the Range Slider component.
+     */
+    rangeSlider?: ChartSeriesRangeSliderOptions;
 }

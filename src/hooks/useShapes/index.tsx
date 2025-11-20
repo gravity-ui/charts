@@ -21,8 +21,8 @@ import type {
 } from '../';
 import {ChartError} from '../../libs';
 import {getOnlyVisibleSeries} from '../../utils';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
-import type {PreparedAxis} from '../useChartOptions/types';
 
 import {AreaSeriesShapes} from './area';
 import {prepareAreaData} from './area/prepare-data';
@@ -71,34 +71,36 @@ export type ShapeData =
 type Args = {
     boundsWidth: number;
     boundsHeight: number;
-    dispatcher: Dispatch<object>;
+    clipPathId: string;
+    htmlLayout: HTMLElement | null;
+    isOutsideBounds: (x: number, y: number) => boolean;
     series: PreparedSeries[];
     seriesOptions: PreparedSeriesOptions;
-    xAxis: PreparedAxis | null;
-    yAxis: PreparedAxis[];
+    split: PreparedSplit;
+    xAxis: PreparedXAxis | null;
+    yAxis: PreparedYAxis[];
+    dispatcher?: Dispatch<object>;
+    shouldUseClipPathIdForScatter?: boolean;
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
-    split: PreparedSplit;
-    htmlLayout: HTMLElement | null;
-    clipPathId: string;
-    isOutsideBounds: (x: number, y: number) => boolean;
 };
 
 export const useShapes = (args: Args) => {
     const {
         boundsWidth,
         boundsHeight,
+        clipPathId,
         dispatcher,
+        htmlLayout,
+        isOutsideBounds,
         series,
         seriesOptions,
+        shouldUseClipPathIdForScatter,
+        split,
         xAxis,
         xScale,
         yAxis,
         yScale,
-        split,
-        htmlLayout,
-        clipPathId,
-        isOutsideBounds,
     } = args;
 
     const [shapesElemens, setShapesElements] = React.useState<React.ReactElement[]>([]);
@@ -259,6 +261,9 @@ export const useShapes = (args: Args) => {
                                 shapes.push(
                                     <ScatterSeriesShape
                                         key="scatter"
+                                        clipPathId={
+                                            shouldUseClipPathIdForScatter ? clipPathId : undefined
+                                        }
                                         dispatcher={dispatcher}
                                         preparedData={preparedData}
                                         seriesOptions={seriesOptions}
@@ -386,6 +391,7 @@ export const useShapes = (args: Args) => {
         htmlLayout,
         series,
         seriesOptions,
+        shouldUseClipPathIdForScatter,
         split,
         xAxis,
         xScale,

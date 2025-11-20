@@ -4,8 +4,8 @@ import get from 'lodash/get';
 
 import type {BasicInactiveState} from '../../types';
 import {getDataCategoryValue} from '../../utils';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
-import type {PreparedAxis} from '../useChartOptions/types';
 
 import type {PreparedLineData} from './line/types';
 
@@ -14,7 +14,7 @@ const ONE_POINT_DOMAIN_DATA_CAPACITY = 3;
 export function getXValue(args: {
     point: {x?: number | string | null};
     points?: {x?: number | string | null}[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
 }) {
     const {point, points, xAxis, xScale} = args;
@@ -53,7 +53,7 @@ export function getXValue(args: {
 export function getYValue(args: {
     point: {y?: number | string | null};
     points?: {y?: number | string | null}[];
-    yAxis: PreparedAxis;
+    yAxis: PreparedYAxis;
     yScale: ChartScale;
 }) {
     const {point, points, yAxis, yScale} = args;

@@ -2,10 +2,11 @@ import React from 'react';
 
 import {select} from 'd3';
 
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
 import {useBrush} from '../useBrush';
 import type {BrushArea, UseBrushProps} from '../useBrush/types';
-import type {PreparedAxis, PreparedZoom} from '../useChartOptions/types';
+import type {PreparedZoom} from '../useChartOptions/types';
 import type {PreparedSplit} from '../useSplit/types';
 
 import type {ZoomState} from './types';
@@ -18,9 +19,9 @@ interface UseZoomProps {
     plotContainerWidth: number;
     preparedSplit: PreparedSplit;
     preparedZoom: PreparedZoom | null;
-    xAxis: PreparedAxis | null;
+    xAxis: PreparedXAxis | null;
     xScale?: ChartScale;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     yScale?: (ChartScale | undefined)[];
 }
 

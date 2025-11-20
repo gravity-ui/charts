@@ -2,16 +2,16 @@ import type {BrushSelection, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 
 import {ZOOM_TYPE} from '../../constants';
 import type {ZoomType} from '../../constants';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
-import type {PreparedAxis} from '../useChartOptions/types';
 
 import type {ZoomState} from './types';
 
 export function selectionToZoomBounds(args: {
     selection: BrushSelection;
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxes: PreparedAxis[];
+    yAxes: PreparedYAxis[];
     yScales: (ChartScale | undefined)[];
     zoomType: ZoomType;
 }): Partial<ZoomState> {
@@ -78,7 +78,7 @@ export function selectionToZoomBounds(args: {
 }
 
 function selectionXToZoomBounds(args: {
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
     selection: [number, number];
 }): [number, number] {
@@ -131,7 +131,7 @@ function selectionXToZoomBounds(args: {
     }
 }
 
-function getYMinMaxFromSelection(args: {selection: [number, number]; yAxis: PreparedAxis}) {
+function getYMinMaxFromSelection(args: {selection: [number, number]; yAxis: PreparedYAxis}) {
     const {selection, yAxis} = args;
     let yMin: number;
     let yMax: number;
@@ -151,7 +151,7 @@ function getYMinMaxFromSelection(args: {selection: [number, number]; yAxis: Prep
 }
 
 function selectionYToZoomBounds(args: {
-    yAxis: PreparedAxis;
+    yAxis: PreparedYAxis;
     yScale: ChartScale;
     selection: [number, number];
 }): [number, number] {

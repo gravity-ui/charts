@@ -23,11 +23,11 @@ import type {MarkerData, PointData, PreparedLineData} from './types';
 const b = block('line');
 
 type Args = {
-    dispatcher: Dispatch<object>;
+    clipPathId: string;
+    htmlLayout: HTMLElement | null;
     preparedData: PreparedLineData[];
     seriesOptions: PreparedSeriesOptions;
-    htmlLayout: HTMLElement | null;
-    clipPathId: string;
+    dispatcher?: Dispatch<object>;
 };
 
 export const LineSeriesShapes = (args: Args) => {
@@ -183,10 +183,10 @@ export const LineSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.line', handleShapeHover);
+        dispatcher?.on('hover-shape.line', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.line', null);
+            dispatcher?.on('hover-shape.line', null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

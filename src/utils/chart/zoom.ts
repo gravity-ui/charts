@@ -1,5 +1,11 @@
 import {SeriesType} from '../../constants';
-import type {PreparedAxis, PreparedSeries, PreparedZoomableSeries} from '../../hooks';
+import type {
+    PreparedAxis,
+    PreparedSeries,
+    PreparedXAxis,
+    PreparedYAxis,
+    PreparedZoomableSeries,
+} from '../../hooks';
 import type {ZoomState} from '../../hooks/useZoom/types';
 import type {
     ChartAxisType,
@@ -76,8 +82,8 @@ function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoo
 export function getZoomedSeriesData(args: {
     seriesData: PreparedSeries[];
     zoomState: Partial<ZoomState>;
-    xAxis?: ChartXAxis | PreparedAxis | null;
-    yAxis?: ChartYAxis[] | PreparedAxis[] | null;
+    xAxis?: ChartXAxis | PreparedXAxis | null;
+    yAxis?: ChartYAxis[] | PreparedYAxis[] | null;
 }) {
     const {seriesData, xAxis, yAxis, zoomState} = args;
 

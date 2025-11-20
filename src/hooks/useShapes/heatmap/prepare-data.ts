@@ -1,7 +1,7 @@
 import type {AxisDomain, AxisScale, ScaleLinear, ScaleTime} from 'd3';
 
+import type {PreparedXAxis, PreparedYAxis} from '../../../hooks/useAxis/types';
 import type {ChartScale} from '../../../hooks/useAxisScales';
-import type {PreparedAxis} from '../../../hooks/useChartOptions/types';
 import {getBandSize} from '../../../hooks/utils/get-band-size';
 import type {BaseTextStyle, HtmlItem} from '../../../types';
 import {
@@ -19,8 +19,8 @@ import type {HeatmapItem, HeatmapLabel, PreparedHeatmapData} from './types';
 
 type PrepareHeatmapDataArgs = {
     series: PreparedHeatmapSeries;
-    xAxis: PreparedAxis;
-    yAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
+    yAxis: PreparedYAxis;
     xScale: ChartScale;
     yScale: ChartScale;
 };

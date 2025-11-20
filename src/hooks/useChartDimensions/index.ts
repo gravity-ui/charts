@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {PreparedAxis, PreparedLegend, PreparedSeries} from '../../hooks';
+import type {PreparedLegend, PreparedSeries, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartMargin} from '../../types';
 import {isAxisRelatedSeries} from '../../utils';
 
@@ -9,19 +9,19 @@ import {getBoundsWidth} from './utils';
 export {getBoundsWidth} from './utils';
 
 type Args = {
-    width: number;
     height: number;
     margin: ChartMargin;
     preparedLegend: PreparedLegend | null;
-    preparedXAxis: PreparedAxis | null;
-    preparedYAxis: PreparedAxis[] | null;
     preparedSeries: PreparedSeries[];
+    preparedXAxis: PreparedXAxis | null;
+    preparedYAxis: PreparedYAxis[] | null;
+    width: number;
 };
 
 const getBottomOffset = (args: {
     hasAxisRelatedSeries: boolean;
     preparedLegend: PreparedLegend | null;
-    preparedXAxis: PreparedAxis | null;
+    preparedXAxis: PreparedXAxis | null;
 }) => {
     const {hasAxisRelatedSeries, preparedLegend, preparedXAxis} = args;
     let result = 0;
@@ -44,6 +44,10 @@ const getBottomOffset = (args: {
         }
     }
 
+    if (preparedXAxis.rangeSlider.enabled) {
+        result += preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin;
+    }
+
     return result;
 };
 
@@ -56,7 +60,7 @@ const getTopOffset = ({preparedLegend}: {preparedLegend: PreparedLegend | null})
 };
 
 export const useChartDimensions = (args: Args) => {
-    const {margin, width, height, preparedLegend, preparedXAxis, preparedYAxis, preparedSeries} =
+    const {height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width} =
         args;
 
     return React.useMemo(() => {
@@ -72,5 +76,5 @@ export const useChartDimensions = (args: Args) => {
         const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
 
         return {boundsWidth, boundsHeight};
-    }, [margin, width, height, preparedLegend, preparedXAxis, preparedYAxis, preparedSeries]);
+    }, [height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width]);
 };

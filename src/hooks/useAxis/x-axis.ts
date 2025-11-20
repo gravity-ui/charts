@@ -29,7 +29,8 @@ import {
 import {createXScale} from '../useAxisScales';
 import type {PreparedSeriesOptions} from '../useSeries/types';
 
-import type {PreparedAxis} from './types';
+import {getPreparedRangeSlider} from './range-slider';
+import type {PreparedXAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
 
 async function setLabelSettings({
@@ -39,7 +40,7 @@ async function setLabelSettings({
     width,
     autoRotation = true,
 }: {
-    axis: PreparedAxis;
+    axis: PreparedXAxis;
     seriesData: ChartSeries[];
     seriesOptions: PreparedSeriesOptions;
     width: number;
@@ -117,7 +118,7 @@ export const getPreparedXAxis = async ({
     seriesData: ChartSeries[];
     seriesOptions: PreparedSeriesOptions;
     width: number;
-}): Promise<PreparedAxis | null> => {
+}): Promise<PreparedXAxis | null> => {
     const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
     if (!hasAxisRelatedSeries) {
         return Promise.resolve(null);
@@ -150,7 +151,7 @@ export const getPreparedXAxis = async ({
 
     const shouldHideGrid = seriesData.some((s) => s.type === SeriesType.Heatmap);
 
-    const preparedXAxis: PreparedAxis = {
+    const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
         labels: {
             enabled: get(xAxis, 'labels.enabled', true),
@@ -228,6 +229,7 @@ export const getPreparedXAxis = async ({
         },
         visible: get(xAxis, 'visible', true),
         order: xAxis?.order,
+        rangeSlider: getPreparedRangeSlider({xAxis}),
     };
 
     await setLabelSettings({

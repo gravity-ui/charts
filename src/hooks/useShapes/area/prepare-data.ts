@@ -3,8 +3,8 @@ import {group} from 'd3';
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getLeftPosition} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
+import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
-import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
@@ -42,7 +42,7 @@ async function getLabelData(point: MarkerPointData, series: PreparedAreaSeries, 
     return labelData;
 }
 
-function getXValues(series: PreparedAreaSeries[], xAxis: PreparedAxis, xScale: ChartScale) {
+function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: ChartScale) {
     const categories = xAxis.categories || [];
     const xValues = series.reduce<Map<string, number>>((acc, s) => {
         s.data.forEach((d) => {
@@ -75,9 +75,9 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedAxis, xScale: C
 
 export const prepareAreaData = async (args: {
     series: PreparedAreaSeries[];
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     boundsHeight: number;
     isOutsideBounds: (x: number, y: number) => boolean;

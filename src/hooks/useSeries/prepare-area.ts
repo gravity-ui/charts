@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {DEFAULT_DATALABELS_STYLE} from '../../constants';
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../../constants';
 import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 import type {PointMarkerOptions} from '../../types/chart/marker';
 import {getUniqId} from '../../utils';
@@ -104,6 +104,7 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
+            rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
         };
 
         return prepared;
