@@ -219,19 +219,6 @@ export const prepareBarXData = async (args: {
                     isLastStackItem,
                 };
 
-                const label = await getLabelData(barData);
-                if (yValue.series.dataLabels.html && label) {
-                    barData.htmlElements.push({
-                        x: label.x,
-                        y: label.y,
-                        content: label.text,
-                        size: label.size,
-                        style: label.style,
-                    });
-                } else {
-                    barData.label = await getLabelData(barData);
-                }
-
                 stackItems.push(barData);
 
                 stackHeight += height;
@@ -251,5 +238,25 @@ export const prepareBarXData = async (args: {
             result.push(...stackItems);
         }
     }
+
+    for (let i = 0; i < result.length; i++) {
+        const barData = result[i];
+
+        if (barData.series.dataLabels.enabled) {
+            const label = await getLabelData(barData);
+            if (barData.series.dataLabels.html && label) {
+                barData.htmlElements.push({
+                    x: label.x,
+                    y: label.y,
+                    content: label.text,
+                    size: label.size,
+                    style: label.style,
+                });
+            } else {
+                barData.label = label;
+            }
+        }
+    }
+
     return result;
 };
