@@ -1,4 +1,4 @@
-import {select} from 'd3';
+import {path, select} from 'd3';
 import type {BrushBehavior} from 'd3';
 import round from 'lodash/round';
 
@@ -57,30 +57,28 @@ export function setBrushBorder(
     // If selection is collapsed to a point, draw only a vertical line
     if (selection[0] === selection[1]) {
         const centerX: number = selection[0];
-        // TODO: https://github.com/gravity-ui/charts/issues/270
         // Draw a single vertical line in the center
-        brushBorderPath = `
-                M ${centerX - strokeWidth / 2} ${selectionTop}
-                L ${centerX + strokeWidth / 2} ${selectionTop}
-                L ${centerX + strokeWidth / 2} ${selectionBottom}
-                L ${centerX - strokeWidth / 2} ${selectionBottom}
-                Z
-            `.replace(/[\n\s]{2,}/g, ' ');
+        const p = path();
+        p.moveTo(centerX - strokeWidth / 2, selectionTop);
+        p.lineTo(centerX + strokeWidth / 2, selectionTop);
+        p.lineTo(centerX + strokeWidth / 2, selectionBottom);
+        p.lineTo(centerX - strokeWidth / 2, selectionBottom);
+        p.closePath();
+        brushBorderPath = p.toString();
     } else {
-        // TODO: https://github.com/gravity-ui/charts/issues/270
         // Draw full border frame
-        brushBorderPath = `
-                M ${selectionLeft} ${selectionTop}
-                L ${selectionRight} ${selectionTop}
-                L ${selectionRight} ${selectionBottom}
-                L ${selectionLeft} ${selectionBottom}
-                Z
-                M ${selectionLeft + strokeWidth} ${selectionTop + strokeWidth}
-                L ${selectionLeft + strokeWidth} ${selectionBottom - strokeWidth}
-                L ${selectionRight - strokeWidth} ${selectionBottom - strokeWidth}
-                L ${selectionRight - strokeWidth} ${selectionTop + strokeWidth}
-                Z
-            `.replace(/[\n\s]{2,}/g, ' ');
+        const p = path();
+        p.moveTo(selectionLeft, selectionTop);
+        p.lineTo(selectionRight, selectionTop);
+        p.lineTo(selectionRight, selectionBottom);
+        p.lineTo(selectionLeft, selectionBottom);
+        p.closePath();
+        p.moveTo(selectionLeft + strokeWidth, selectionTop + strokeWidth);
+        p.lineTo(selectionLeft + strokeWidth, selectionBottom - strokeWidth);
+        p.lineTo(selectionRight - strokeWidth, selectionBottom - strokeWidth);
+        p.lineTo(selectionRight - strokeWidth, selectionTop + strokeWidth);
+        p.closePath();
+        brushBorderPath = p.toString();
     }
 
     brushGroup
@@ -164,20 +162,19 @@ export function setBrushHandles(
             .attr('fill', 'var(--g-color-base-float)')
             .attr('pointer-events', 'none');
 
-        // TODO: https://github.com/gravity-ui/charts/issues/270
         // Border frame using path with cutout (similar to RangeSlider)
-        const borderPath = `
-            M ${handleLeft} ${handleTop}
-            L ${handleRight} ${handleTop}
-            L ${handleRight} ${handleBottom}
-            L ${handleLeft} ${handleBottom}
-            Z
-            M ${handleLeft + strokeWidth} ${handleTop + strokeWidth}
-            L ${handleLeft + strokeWidth} ${handleBottom - strokeWidth}
-            L ${handleRight - strokeWidth} ${handleBottom - strokeWidth}
-            L ${handleRight - strokeWidth} ${handleTop + strokeWidth}
-            Z
-        `.replace(/[\n\s]{2,}/g, ' ');
+        const borderPathD3 = path();
+        borderPathD3.moveTo(handleLeft, handleTop);
+        borderPathD3.lineTo(handleRight, handleTop);
+        borderPathD3.lineTo(handleRight, handleBottom);
+        borderPathD3.lineTo(handleLeft, handleBottom);
+        borderPathD3.closePath();
+        borderPathD3.moveTo(handleLeft + strokeWidth, handleTop + strokeWidth);
+        borderPathD3.lineTo(handleLeft + strokeWidth, handleBottom - strokeWidth);
+        borderPathD3.lineTo(handleRight - strokeWidth, handleBottom - strokeWidth);
+        borderPathD3.lineTo(handleRight - strokeWidth, handleTop + strokeWidth);
+        borderPathD3.closePath();
+        const borderPath = borderPathD3.toString();
 
         handleGroup
             .append('path')
@@ -190,13 +187,12 @@ export function setBrushHandles(
         // Two vertical lines (1px from center on each side) as a single path
         const y1 = handleY + padding;
         const y2 = handleY + brushOptions.handles.height - padding;
-        // TODO: https://github.com/gravity-ui/charts/issues/270
-        const linesPath = `
-            M ${handleCenterX - 1} ${y1}
-            L ${handleCenterX - 1} ${y2}
-            M ${handleCenterX + 1} ${y1}
-            L ${handleCenterX + 1} ${y2}
-        `.replace(/[\n\s]{2,}/g, ' ');
+        const linesPathD3 = path();
+        linesPathD3.moveTo(handleCenterX - 1, y1);
+        linesPathD3.lineTo(handleCenterX - 1, y2);
+        linesPathD3.moveTo(handleCenterX + 1, y1);
+        linesPathD3.lineTo(handleCenterX + 1, y2);
+        const linesPath = linesPathD3.toString();
 
         handleGroup
             .append('path')

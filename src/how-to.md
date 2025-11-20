@@ -8,7 +8,7 @@ How to add new series type?
 2. When you open the added story, you will see an error that your type is not in the allowed values.
    `It seems you haven't defined "series.type" property, or defined it incorrectly. Available values: [...].`
 
-3. Add type of your series to SeriesType. Describe your series interface and add it to ChartSeries<T>
+3. Add type of your series to SERIES_TYPE. Describe your series interface and add it to ChartSeries<T>
 
 4. A new error is now displayed in Storybook: `Failed to create xScale`
    If your chart type doesn't need the X and Y axes: add your chart type to the CHARTS_WITHOUT_AXIS array.

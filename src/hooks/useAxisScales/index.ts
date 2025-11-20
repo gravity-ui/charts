@@ -4,7 +4,7 @@ import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3';
 import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
-import {DEFAULT_AXIS_TYPE, SeriesType} from '../../constants';
+import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';
 import type {
     PreparedAxis,
     PreparedSeries,
@@ -124,7 +124,7 @@ function getYScaleRange(args: {axis: PreparedAxis; boundsHeight: number}): [numb
 }
 
 function isSeriesWithYAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
-    const types = [SeriesType.BarY, SeriesType.Heatmap] as string[];
+    const types = [SERIES_TYPE.BarY, SERIES_TYPE.Heatmap] as string[];
     return series.some((s) => types.includes(s.type));
 }
 
@@ -289,7 +289,7 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
-    const types = [SeriesType.Heatmap] as string[];
+    const types = [SERIES_TYPE.Heatmap] as string[];
     return series.some((s) => types.includes(s.type));
 }
 
@@ -313,7 +313,7 @@ function getXScaleRange({
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
     const range = hasZoomX ? xRangeZoom : xRange;
 
-    const barXSeries = series.filter((s) => s.type === SeriesType.BarX);
+    const barXSeries = series.filter((s) => s.type === SERIES_TYPE.BarX);
     if (barXSeries.length) {
         const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
         if (Object.keys(groupedData).length > 1) {

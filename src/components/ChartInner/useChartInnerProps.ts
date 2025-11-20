@@ -2,6 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
+import {SERIES_TYPE} from '../../constants';
 import {
     useAxis,
     useAxisScales,
@@ -14,7 +15,7 @@ import {
     useSplit,
     useZoom,
 } from '../../hooks';
-import type {RangeSliderState, ZoomState} from '../../hooks';
+import type {ClipPathBySeriesType, RangeSliderState, ZoomState} from '../../hooks';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
@@ -32,6 +33,10 @@ type Props = ChartInnerProps & {
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
     rangeSliderState?: RangeSliderState;
+};
+
+const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
+    [SERIES_TYPE.Scatter]: false,
 };
 
 export function useChartInnerProps(props: Props) {
@@ -145,6 +150,7 @@ export function useChartInnerProps(props: Props) {
     const {shapes, shapesData} = useShapes({
         boundsWidth,
         boundsHeight,
+        clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
         dispatcher,
         series: preparedShapesSeries,
         seriesOptions: preparedSeriesOptions,

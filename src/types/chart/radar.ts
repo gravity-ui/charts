@@ -1,4 +1,4 @@
-import type {SeriesType} from '../../constants';
+import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -24,7 +24,7 @@ export interface RadarMarkerOptions extends PointMarkerOptions {
 }
 
 export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SeriesType.Radar;
+    type: typeof SERIES_TYPE.Radar;
     /** The categories for the radar chart. */
     categories?: RadarSeriesCategory[];
     data: RadarSeriesData<T>[];

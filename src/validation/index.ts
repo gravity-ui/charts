@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
-import {DEFAULT_AXIS_TYPE, SeriesType, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
+import {DEFAULT_AXIS_TYPE, SERIES_TYPE, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {
@@ -28,7 +28,7 @@ function getTypeOf(value: unknown) {
     return typeof value;
 }
 
-const AVAILABLE_SERIES_TYPES = Object.values(SeriesType);
+const AVAILABLE_SERIES_TYPES = Object.values(SERIES_TYPE);
 const AVAILABLE_TOOLTIP_TOTALS_BUILT_IN_AGGREGATIONS = Object.values(
     TOOLTIP_TOTALS_BUILT_IN_AGGREGATION,
 );
@@ -466,7 +466,7 @@ export function validateData(data?: ChartData) {
 
     const treemapSeriesCount = countSeriesByType({
         series: data.series.data,
-        type: SeriesType.Treemap,
+        type: SERIES_TYPE.Treemap,
     });
 
     if (treemapSeriesCount > 1) {

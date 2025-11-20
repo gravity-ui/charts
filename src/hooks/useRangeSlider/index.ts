@@ -3,24 +3,28 @@ import React from 'react';
 import {pointer} from 'd3';
 import {isEqual} from 'lodash';
 
+import {SERIES_TYPE} from '../../constants';
 import {isBandScale} from '../../utils';
 import {useAxis} from '../useAxis';
 import {useAxisScales} from '../useAxisScales';
 import type {UseBrushProps} from '../useBrush/types';
 import {getNormalizedSelection, isOneDimensionalSelection} from '../useBrush/utils';
 import {useShapes} from '../useShapes';
+import type {ClipPathBySeriesType} from '../useShapes';
 import type {PreparedSplit} from '../useSplit/types';
 import {selectionToZoomBounds} from '../useZoom/utils';
 
 import type {PreparedRangeSliderProps, UseRangeSliderProps} from './types';
 import {getRangeSliderOffsetTop, getRangeSliderSelection} from './utils';
+
 export const EMPTY_PREPARED_SPLIT: PreparedSplit = {
     plots: [],
     gap: 0,
 };
 
-// TODO: https://github.com/gravity-ui/charts/issues/270
-const IS_OUTSIDE_BOUNDS = () => false;
+const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
+    [SERIES_TYPE.Scatter]: true,
+};
 
 export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderProps {
     const {
@@ -73,11 +77,10 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         boundsHeight: preparedRangeSlider.height,
         boundsWidth,
         clipPathId,
+        clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
         htmlLayout,
-        isOutsideBounds: IS_OUTSIDE_BOUNDS,
         series: filteredPreparedSeries,
         seriesOptions: preparedSeriesOptions,
-        shouldUseClipPathIdForScatter: true,
         split: EMPTY_PREPARED_SPLIT,
         xAxis: preparedXAxis,
         xScale,

@@ -2,7 +2,7 @@ import {sort} from 'd3';
 import {isEmpty} from 'lodash';
 import get from 'lodash/get';
 
-import {SeriesType} from '../../../constants';
+import {SERIES_TYPE} from '../../../constants';
 import type {ChartAxis, ChartSeries, ChartSeriesData} from '../../../types';
 import {getAxisCategories} from '../../../utils';
 
@@ -72,7 +72,7 @@ export function getSortedSeriesData({
         sortedSeries = applyAxisCategoriesOrder({series: sortedSeries, axis: xAxis, key: 'x'});
 
         switch (sortedSeries.type) {
-            case SeriesType.Area: {
+            case SERIES_TYPE.Area: {
                 sortedSeries = {
                     ...sortedSeries,
                     data: sort(sortedSeries.data, (d) => d.x),

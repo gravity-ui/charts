@@ -1,7 +1,7 @@
 import intersection from 'lodash/intersection';
 import merge from 'lodash/merge';
 
-import {SeriesType, ZOOM_TYPE, brushDefaults} from '../../constants';
+import {SERIES_TYPE, ZOOM_TYPE, brushDefaults} from '../../constants';
 import type {ZoomType} from '../../constants';
 import type {ChartBrush, ChartSeries, ChartZoom} from '../../types';
 
@@ -9,22 +9,22 @@ import type {PreparedZoom} from './types';
 
 function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
     switch (seriesType) {
-        case SeriesType.Area: {
+        case SERIES_TYPE.Area: {
             return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
         }
-        case SeriesType.BarX: {
+        case SERIES_TYPE.BarX: {
             return [ZOOM_TYPE.X];
         }
-        case SeriesType.BarY: {
+        case SERIES_TYPE.BarY: {
             return [ZOOM_TYPE.Y];
         }
-        case SeriesType.Line: {
+        case SERIES_TYPE.Line: {
             return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
         }
-        case SeriesType.Scatter: {
+        case SERIES_TYPE.Scatter: {
             return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
         }
-        case SeriesType.Waterfall: {
+        case SERIES_TYPE.Waterfall: {
             return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
         }
         default: {
@@ -35,16 +35,16 @@ function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
 
 function getDefaultZoomType(seriesType: ChartSeries['type']): ZoomType | undefined {
     switch (seriesType) {
-        case SeriesType.BarY: {
+        case SERIES_TYPE.BarY: {
             return ZOOM_TYPE.Y;
         }
-        case SeriesType.Scatter: {
+        case SERIES_TYPE.Scatter: {
             return ZOOM_TYPE.XY;
         }
-        case SeriesType.Area:
-        case SeriesType.BarX:
-        case SeriesType.Line:
-        case SeriesType.Waterfall: {
+        case SERIES_TYPE.Area:
+        case SERIES_TYPE.BarX:
+        case SERIES_TYPE.Line:
+        case SERIES_TYPE.Waterfall: {
             return ZOOM_TYPE.X;
         }
         default: {

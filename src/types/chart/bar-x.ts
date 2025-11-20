@@ -1,4 +1,4 @@
-import type {SeriesType} from '../../constants';
+import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -33,7 +33,7 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SeriesType.BarX;
+    type: typeof SERIES_TYPE.BarX;
     data: BarXSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;

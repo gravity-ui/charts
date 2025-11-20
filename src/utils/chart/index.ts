@@ -3,7 +3,7 @@ import get from 'lodash/get';
 import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';
 
-import {DEFAULT_AXIS_LABEL_FONT_SIZE, SeriesType} from '../../constants';
+import {DEFAULT_AXIS_LABEL_FONT_SIZE, SERIES_TYPE} from '../../constants';
 import type {PreparedWaterfallSeries, StackedSeries} from '../../hooks';
 import {getSeriesStackId} from '../../hooks/useSeries/utils';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
@@ -154,7 +154,7 @@ export function getDefaultMinXAxisValue(series: UnknownSeries[]) {
 
 export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
     if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
-        if (series.some((s) => s.type === SeriesType.Waterfall)) {
+        if (series.some((s) => s.type === SERIES_TYPE.Waterfall)) {
             const seriesData = (series as PreparedWaterfallSeries[]).map((s) => s.data).flat();
             const minSubTotal = seriesData.reduce(
                 (res, d) => Math.min(res, getWaterfallPointSubtotal(d, seriesData) || 0),

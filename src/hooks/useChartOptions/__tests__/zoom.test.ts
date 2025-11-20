@@ -1,64 +1,64 @@
-import {SeriesType, ZOOM_TYPE} from '../../../constants';
+import {SERIES_TYPE, ZOOM_TYPE} from '../../../constants';
 import type {ChartSeries} from '../../../types';
 import {getZoomType} from '../zoom';
 
 const AREA_SERIES: ChartSeries = {
     data: [],
     name: 'Area',
-    type: SeriesType.Area,
+    type: SERIES_TYPE.Area,
 };
 
 const BAR_X_SERIES: ChartSeries = {
     data: [],
     name: 'BarX',
-    type: SeriesType.BarX,
+    type: SERIES_TYPE.BarX,
 };
 
 const BAR_Y_SERIES: ChartSeries = {
     data: [],
     name: 'BarY',
-    type: SeriesType.BarY,
+    type: SERIES_TYPE.BarY,
 };
 
 const LINE_SERIES: ChartSeries = {
     data: [],
     name: 'Line',
-    type: SeriesType.Line,
+    type: SERIES_TYPE.Line,
 };
 
 const PIE_SERIES: ChartSeries = {
     data: [],
-    type: SeriesType.Pie,
+    type: SERIES_TYPE.Pie,
 };
 
 const RADAR_SERIES: ChartSeries = {
     data: [],
     name: 'Radar',
-    type: SeriesType.Radar,
+    type: SERIES_TYPE.Radar,
 };
 
 const SANKEY_SERIES: ChartSeries = {
     data: [],
     name: 'Sankey',
-    type: SeriesType.Sankey,
+    type: SERIES_TYPE.Sankey,
 };
 
 const SCATTER_SERIES: ChartSeries = {
     data: [],
     name: 'Scatter',
-    type: SeriesType.Scatter,
+    type: SERIES_TYPE.Scatter,
 };
 
 const TREEMAP_SERIES: ChartSeries = {
     data: [],
     name: 'Treemap',
-    type: SeriesType.Treemap,
+    type: SERIES_TYPE.Treemap,
 };
 
 const WATERFALL_SERIES: ChartSeries = {
     data: [],
     name: 'Waterfall',
-    type: SeriesType.Waterfall,
+    type: SERIES_TYPE.Waterfall,
 };
 
 describe('useChartOptions/zoom/getZoomType', () => {
