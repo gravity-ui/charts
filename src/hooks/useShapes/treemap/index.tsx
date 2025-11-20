@@ -14,10 +14,10 @@ import type {PreparedTreemapData, TreemapLabelData} from './types';
 const b = block('treemap');
 
 type ShapeProps = {
-    dispatcher: Dispatch<object>;
+    htmlLayout: HTMLElement | null;
     preparedData: PreparedTreemapData;
     seriesOptions: PreparedSeriesOptions;
-    htmlLayout: HTMLElement | null;
+    dispatcher?: Dispatch<object>;
 };
 
 export const TreemapSeriesShape = (props: ShapeProps) => {
@@ -119,10 +119,10 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on(eventName, handleShapeHover);
+        dispatcher?.on(eventName, handleShapeHover);
 
         return () => {
-            dispatcher.on(eventName, null);
+            dispatcher?.on(eventName, null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

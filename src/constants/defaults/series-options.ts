@@ -1,4 +1,4 @@
-import type {ChartSeriesOptions} from '../../types';
+import type {ChartSeriesOptions, ChartSeriesRangeSliderOptions} from '../../types';
 
 type DefaultBarXSeriesOptions = Partial<ChartSeriesOptions['bar-x']> & {
     'bar-x': {barMaxWidth: number; barPadding: number; groupPadding: number; stackGap: number};
@@ -144,4 +144,8 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
             },
         },
     },
+};
+
+export const seriesRangeSliderOptionsDefaults: Required<ChartSeriesRangeSliderOptions> = {
+    visible: true,
 };

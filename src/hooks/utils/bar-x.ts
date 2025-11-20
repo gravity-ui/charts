@@ -3,13 +3,13 @@ import get from 'lodash/get';
 import type {BarXSeries, BarXSeriesData} from '../../types';
 import {getDataCategoryValue} from '../../utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
-import type {PreparedAxis} from '../useChartOptions/types';
+import type {PreparedXAxis} from '../useAxis/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../useSeries/types';
 import {getSeriesStackId} from '../useSeries/utils';
 
 export function groupBarXDataByXValue<T extends BarXSeries | PreparedBarXSeries>(
     series: T[],
-    xAxis: PreparedAxis,
+    xAxis: PreparedXAxis,
 ) {
     const data: Record<string | number, Record<string, {data: BarXSeriesData; series: T}[]>> = {};
     series.forEach((s) => {

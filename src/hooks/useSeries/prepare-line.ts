@@ -2,8 +2,13 @@ import type {ScaleOrdinal} from 'd3';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
+import {
+    DASH_STYLE,
+    DEFAULT_DATALABELS_STYLE,
+    LineCap,
+    seriesRangeSliderOptionsDefaults,
+} from '../../constants';
 import type {DashStyle} from '../../constants';
-import {DASH_STYLE, DEFAULT_DATALABELS_STYLE, LineCap} from '../../constants';
 import type {
     ChartSeries,
     ChartSeriesOptions,
@@ -140,6 +145,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
+            rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
         };
 
         return prepared;

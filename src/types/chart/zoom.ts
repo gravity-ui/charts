@@ -1,5 +1,7 @@
 import type {ZoomType} from '../../constants';
 
+import type {ChartBrush} from './brush';
+
 /**
  * Configuration options for chart zooming functionality using area selection.
  * Working with only axis related series.
@@ -30,11 +32,7 @@ export interface ChartZoom {
     /**
      * Zoom brush configuration.
      */
-    brush?: {
-        style?: {
-            fillOpacity?: number;
-        };
-    };
+    brush?: Omit<ChartBrush, 'handles'>;
     /**
      * Reset zoom button configuration.
      * The button appears only after the zoom has been applied.

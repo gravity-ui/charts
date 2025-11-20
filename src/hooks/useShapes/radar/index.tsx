@@ -23,10 +23,10 @@ import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from './types';
 const b = block('radar');
 
 type PrepareRadarSeriesArgs = {
-    dispatcher: Dispatch<object>;
+    htmlLayout: HTMLElement | null;
     series: PreparedRadarData[];
     seriesOptions: PreparedSeriesOptions;
-    htmlLayout: HTMLElement | null;
+    dispatcher?: Dispatch<object>;
 };
 
 export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
@@ -115,7 +115,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
         const hoverOptions = get(seriesOptions, 'radar.states.hover');
         const inactiveOptions = get(seriesOptions, 'radar.states.inactive');
 
-        dispatcher.on(eventName, (data?: TooltipDataChunkRadar[]) => {
+        dispatcher?.on(eventName, (data?: TooltipDataChunkRadar[]) => {
             const closest = data?.find((d) => d.closest);
             const selectedSeries = closest?.series as PreparedRadarSeries;
             const selectedSeriesData = closest?.data;
@@ -182,7 +182,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
         });
 
         return () => {
-            dispatcher.on(eventName, null);
+            dispatcher?.on(eventName, null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 

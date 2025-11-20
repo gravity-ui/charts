@@ -1,22 +1,27 @@
 import React from 'react';
 
 import {DEFAULT_PALETTE} from '../../constants';
-import type {ChartSeries, ChartTitle, ChartOptions as GeneralChartOptions} from '../../types';
+import type {
+    ChartSeries,
+    ChartTitle,
+    ChartXAxis,
+    ChartOptions as GeneralChartOptions,
+} from '../../types';
 
 import {getPreparedChart} from './chart';
 import {getPreparedTitle} from './title';
-import type {ChartOptions} from './types';
 
 type Args = {
     seriesData: ChartSeries[];
     chart?: GeneralChartOptions;
     colors?: string[];
     title?: ChartTitle;
+    xAxis?: ChartXAxis;
 };
 
-export const useChartOptions = (args: Args): ChartOptions => {
+export const useChartOptions = (args: Args) => {
     const {chart, colors, seriesData, title} = args;
-    const options: ChartOptions = React.useMemo(() => {
+    const options = React.useMemo(() => {
         const preparedTitle = getPreparedTitle({title});
         const preparedChart = getPreparedChart({
             chart,

@@ -21,16 +21,17 @@ import type {MarkerData, PreparedScatterData} from './types';
 export {prepareScatterData} from './prepare-data';
 
 type ScatterSeriesShapeProps = {
-    dispatcher: Dispatch<object>;
+    htmlLayout: HTMLElement | null;
     preparedData: PreparedScatterData[];
     seriesOptions: PreparedSeriesOptions;
-    htmlLayout: HTMLElement | null;
+    clipPathId?: string;
+    dispatcher?: Dispatch<object>;
 };
 
 const b = block('scatter');
 
 export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout} = props;
+    const {clipPathId, dispatcher, preparedData, seriesOptions, htmlLayout} = props;
     const hoveredDataRef = React.useRef<TooltipDataChunkScatter[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
@@ -101,16 +102,20 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.scatter', handleShapeHover);
+        dispatcher?.on('hover-shape.scatter', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.scatter', null);
+            dispatcher?.on('hover-shape.scatter', null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 
     return (
         <React.Fragment>
-            <g ref={ref} className={b()} />
+            <g
+                ref={ref}
+                className={b()}
+                clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
+            />
             <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

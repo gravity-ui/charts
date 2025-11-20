@@ -6,8 +6,8 @@ import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../constants';
+import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
-import type {PreparedAxis} from '../../useChartOptions/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/types';
 
 import type {PreparedBarXData} from './types';
@@ -59,9 +59,9 @@ async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined>
 export const prepareBarXData = async (args: {
     series: PreparedBarXSeries[];
     seriesOptions: PreparedSeriesOptions;
-    xAxis: PreparedAxis;
+    xAxis: PreparedXAxis;
     xScale: ChartScale;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     boundsHeight: number;
 }): Promise<PreparedBarXData[]> => {

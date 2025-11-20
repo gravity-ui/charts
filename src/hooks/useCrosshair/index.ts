@@ -3,15 +3,15 @@ import React from 'react';
 import {line, select} from 'd3';
 import type {AxisDomain, AxisScale, Dispatch} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedSplit, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {PointPosition, TooltipDataChunk} from '../../types';
 import {getAxisPlotsPosition, getLineDashArray} from '../../utils';
 
 import {useCrosshairHover} from './useCrosshairHover';
 
 type Props = {
-    xAxis: PreparedAxis | null;
-    yAxes: PreparedAxis[];
+    xAxis: PreparedXAxis | null;
+    yAxes: PreparedYAxis[];
     width: number;
     height: number;
     xScale?: ChartScale;

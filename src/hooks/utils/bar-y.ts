@@ -5,8 +5,8 @@ import get from 'lodash/get';
 import type {BarYSeries, BarYSeriesData} from '../../types';
 import {getDataCategoryValue} from '../../utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
+import type {PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
-import type {PreparedAxis} from '../useChartOptions/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '../useSeries/types';
 import {getSeriesStackId} from '../useSeries/utils';
 
@@ -23,7 +23,7 @@ const isSeriesDataValid = (
 
 export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>(
     series: T[],
-    yAxis: PreparedAxis[],
+    yAxis: PreparedYAxis[],
 ) {
     const data: Record<
         string | number,

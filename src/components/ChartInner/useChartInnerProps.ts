@@ -12,12 +12,12 @@ import {
     useSeries,
     useShapes,
     useSplit,
+    useZoom,
 } from '../../hooks';
+import type {RangeSliderState, ZoomState} from '../../hooks';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
-import {useZoom} from '../../hooks/useZoom';
-import type {ZoomState} from '../../hooks/useZoom/types';
 import {getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
@@ -31,6 +31,7 @@ type Props = ChartInnerProps & {
     svgContainer: SVGGElement | null;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
+    rangeSliderState?: RangeSliderState;
 };
 
 export function useChartInnerProps(props: Props) {
@@ -41,6 +42,7 @@ export function useChartInnerProps(props: Props) {
         height,
         htmlLayout,
         plotNode,
+        rangeSliderState,
         svgContainer,
         width,
         updateZoomState,
@@ -53,17 +55,18 @@ export function useChartInnerProps(props: Props) {
         xAxis: data.xAxis,
         yAxis: data.yAxis,
     });
-    const {chart, title, colors} = useChartOptions({
+    const {chart, colors, title} = useChartOptions({
         chart: data.chart,
         colors: data.colors,
         seriesData: normalizedSeriesData,
         title: data.title,
+        xAxis: data.xAxis,
     });
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(data.series.options);
     }, [data.series.options]);
     const {
-        preparedSeries: basePreparedSeries,
+        preparedSeries: allPreparedSeries,
         preparedLegend,
         handleLegendItemClick,
     } = useSeries({
@@ -76,12 +79,12 @@ export function useChartInnerProps(props: Props) {
 
     const {preparedSeries, preparedShapesSeries} = React.useMemo(() => {
         return getZoomedSeriesData({
-            seriesData: basePreparedSeries,
+            seriesData: allPreparedSeries,
             xAxis: normalizedXAxis,
             yAxis: normalizedYAxis,
             zoomState,
         });
-    }, [basePreparedSeries, normalizedXAxis, normalizedYAxis, zoomState]);
+    }, [allPreparedSeries, normalizedXAxis, normalizedYAxis, zoomState]);
 
     const {legendConfig, legendItems} = React.useMemo(() => {
         if (!preparedLegend) {
@@ -124,6 +127,7 @@ export function useChartInnerProps(props: Props) {
         boundsHeight,
         hasZoomX: Boolean(zoomState.x),
         hasZoomY: Boolean(zoomState.y),
+        rangeSliderState,
         series: preparedSeries,
         seriesOptions: preparedSeriesOptions,
         split: preparedSplit,
@@ -207,7 +211,7 @@ export function useChartInnerProps(props: Props) {
     const {x} = svgContainer?.getBoundingClientRect() ?? {};
 
     return {
-        svgXPos: x,
+        allPreparedSeries,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
@@ -216,14 +220,17 @@ export function useChartInnerProps(props: Props) {
         isOutsideBounds,
         legendConfig,
         legendItems,
+        preparedChart: chart,
         preparedLegend,
         preparedSeries,
+        preparedSeriesOptions,
         preparedSplit,
         preparedZoom: chart.zoom,
         prevHeight,
         prevWidth,
         shapes,
         shapesData,
+        svgXPos: x,
         title,
         xAxis,
         xScale,

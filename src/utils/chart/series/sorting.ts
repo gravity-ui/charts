@@ -3,8 +3,8 @@ import {isEmpty} from 'lodash';
 import get from 'lodash/get';
 
 import {SeriesType} from '../../../constants';
-import {getAxisCategories} from '../../../hooks/useChartOptions/utils';
 import type {ChartAxis, ChartSeries, ChartSeriesData} from '../../../types';
+import {getAxisCategories} from '../../../utils';
 
 function applyAxisCategoriesOrder<T extends ChartSeries>({
     series,

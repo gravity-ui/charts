@@ -16,10 +16,10 @@ export * from './types';
 const b = block('heatmap');
 
 type Args = {
-    dispatcher: Dispatch<object>;
+    htmlLayout: HTMLElement | null;
     preparedData: PreparedHeatmapData;
     seriesOptions: PreparedSeriesOptions;
-    htmlLayout: HTMLElement | null;
+    dispatcher?: Dispatch<object>;
 };
 
 export const HeatmapSeriesShapes = (args: Args) => {
@@ -89,10 +89,10 @@ export const HeatmapSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher.on('hover-shape.heatmap', handleShapeHover);
+        dispatcher?.on('hover-shape.heatmap', handleShapeHover);
 
         return () => {
-            dispatcher.on('hover-shape.heatmap', null);
+            dispatcher?.on('hover-shape.heatmap', null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 
