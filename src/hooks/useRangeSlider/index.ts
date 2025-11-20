@@ -19,6 +19,7 @@ export const EMPTY_PREPARED_SPLIT: PreparedSplit = {
     gap: 0,
 };
 
+// TODO: https://github.com/gravity-ui/charts/issues/270
 const IS_OUTSIDE_BOUNDS = () => false;
 
 export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderProps {
