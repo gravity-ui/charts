@@ -26,6 +26,42 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.describe('Stacking percent', () => {
+        test('Linear X-axis ', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            stacking: 'percent',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: 10},
+                                {x: 200, y: 70},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                        {
+                            type: 'bar-x',
+                            stacking: 'percent',
+                            name: 'Series 2',
+                            data: [
+                                {x: 1, y: 15},
+                                {x: 200, y: 20},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                xAxis: {
+                    type: 'linear',
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
     test('With Y-axis plot lines', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXWithYAxisPlotLinesData} />);
         await expect(component.locator('svg')).toHaveScreenshot();

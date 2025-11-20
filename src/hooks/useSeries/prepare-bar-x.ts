@@ -34,6 +34,8 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
     return seriesList.map<PreparedBarXSeries>((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
+        const dataLabelsInside =
+            series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
 
         return {
             type: series.type,
@@ -50,10 +52,7 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
             stackId: getSeriesStackId(series),
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
-                inside:
-                    typeof series.dataLabels?.inside === 'boolean'
-                        ? series.dataLabels?.inside
-                        : false,
+                inside: dataLabelsInside,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
                 allowOverlap: series.dataLabels?.allowOverlap || false,
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),

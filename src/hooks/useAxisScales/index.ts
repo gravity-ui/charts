@@ -13,7 +13,7 @@ import type {
     PreparedXAxis,
     RangeSliderState,
 } from '../../hooks';
-import type {BarYSeries, ChartAxis, ChartAxisType, ChartSeries} from '../../types';
+import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
     getAxisCategories,
@@ -149,6 +149,14 @@ export function createYScale(args: {
 
             if (hasOnlyNullValues || domain.length === 0) {
                 return undefined;
+            }
+
+            if (
+                series.some(
+                    (s) => (s.type === 'bar-x' || s.type === 'area') && s.stacking === 'percent',
+                )
+            ) {
+                return scaleLinear().domain([0, 100]).range(range);
             }
 
             if (hasNumberAndNullValues) {
@@ -374,7 +382,7 @@ export function createXScale(args: {
                 return undefined;
             }
 
-            if (series.some((s) => (s as BarYSeries).stacking === 'percent')) {
+            if (series.some((s) => s.type === 'bar-y' && s.stacking === 'percent')) {
                 return scaleLinear().domain([0, 100]).range(range);
             }
 
