@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.24.0](https://github.com/gravity-ui/charts/compare/v1.23.0...v1.24.0) (2025-11-21)
+
+
+### Features
+
+* add basic range slider ([#264](https://github.com/gravity-ui/charts/issues/264)) ([ef9ebf2](https://github.com/gravity-ui/charts/commit/ef9ebf2ae810cacb1107ec8c77ae784e56e90556))
+* add position to the legend configuration (top and bottom options) ([#263](https://github.com/gravity-ui/charts/issues/263)) ([e421cf5](https://github.com/gravity-ui/charts/commit/e421cf5c38b872c000473918884e6c03b7cf19fe))
+* basic funnel chart ([#241](https://github.com/gravity-ui/charts/issues/241)) ([8a65bf0](https://github.com/gravity-ui/charts/commit/8a65bf0199786883b587777416e7cec75a48b44e))
+
+
+### Bug Fixes
+
+* bar-x percent stacking (linear x-axis) ([#268](https://github.com/gravity-ui/charts/issues/268)) ([d202689](https://github.com/gravity-ui/charts/commit/d2026891ca2b3931bc55fb8d8c6bbd7b5b6865a6))
+
 ## [1.23.0](https://github.com/gravity-ui/charts/compare/v1.22.0...v1.23.0) (2025-11-17)
 
 
