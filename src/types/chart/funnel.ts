@@ -1,4 +1,4 @@
-import type {DashStyle, SeriesType} from '../../constants';
+import type {DashStyle, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseDataLabels, BaseSeries, BaseSeriesData} from './base';
@@ -14,7 +14,7 @@ export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels'> {
-    type: typeof SeriesType.Funnel;
+    type: typeof SERIES_TYPE.Funnel;
     data: FunnelSeriesData<T>[];
     /** The name of the funnel series. */
     name?: string;
