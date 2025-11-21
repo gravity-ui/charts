@@ -6,7 +6,7 @@ import {funnelBasicData, funnelContinuousLegendData} from 'src/__stories__/__dat
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
-test.describe.only('Funnel series', () => {
+test.describe('Funnel series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
