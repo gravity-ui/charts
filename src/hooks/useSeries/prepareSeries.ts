@@ -7,6 +7,7 @@ import type {
     BarYSeries,
     ChartSeries,
     ChartSeriesOptions,
+    FunnelSeries,
     HeatmapSeries,
     LineSeries,
     PieSeries,
@@ -20,6 +21,7 @@ import type {
 import {prepareArea} from './prepare-area';
 import {prepareBarXSeries} from './prepare-bar-x';
 import {prepareBarYSeries} from './prepare-bar-y';
+import {prepareFunnelSeries} from './prepare-funnel';
 import {prepareHeatmapSeries} from './prepare-heatmap';
 import {prepareLineSeries} from './prepare-line';
 import {preparePieSeries} from './prepare-pie';
@@ -127,6 +129,14 @@ export async function prepareSeries(args: {
                 legend,
                 colorScale,
                 seriesOptions,
+            });
+        }
+        case 'funnel': {
+            return prepareFunnelSeries({
+                series: series[0] as FunnelSeries,
+                seriesOptions,
+                legend,
+                colors,
             });
         }
         default: {

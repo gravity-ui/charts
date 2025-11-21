@@ -14,37 +14,39 @@ export type CustomFormat = {
 };
 export type ValueFormat = NumberFormat | DateFormat;
 
+export interface BaseDataLabels {
+    /**
+     * Enable or disable the data labels
+     * @default true
+     */
+    enabled?: boolean;
+    style?: Partial<BaseTextStyle>;
+    /**
+     * @default 5
+     * */
+    padding?: number;
+    /**
+     * @default false
+     * */
+    allowOverlap?: boolean;
+    /**
+     * Allows to use any html-tags to display the content.
+     * The element will be displayed outside the box of the SVG element.
+     *
+     * @default false
+     * */
+    html?: boolean;
+    /** Formatting settings for labels. */
+    format?: ValueFormat;
+}
+
 export interface BaseSeries {
     /** Initial visibility of the series */
     visible?: boolean;
     /**
      * Options for the series data labels, appearing next to each data point.
      * */
-    dataLabels?: {
-        /**
-         * Enable or disable the data labels
-         * @default true
-         */
-        enabled?: boolean;
-        style?: Partial<BaseTextStyle>;
-        /**
-         * @default 5
-         * */
-        padding?: number;
-        /**
-         * @default false
-         * */
-        allowOverlap?: boolean;
-        /**
-         * Allows to use any html-tags to display the content.
-         * The element will be displayed outside the box of the SVG element.
-         *
-         * @default false
-         * */
-        html?: boolean;
-        /** Formatting settings for labels. */
-        format?: ValueFormat;
-    };
+    dataLabels?: BaseDataLabels;
     /** You can set the cursor to "pointer" if you have click events attached to the series, to signal to the user that the points and lines can be clicked. */
     cursor?: string;
     /**

@@ -5,7 +5,7 @@ import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 
 import {usePrevious} from '../../../hooks';
-import type {PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
+import type {PreparedFunnelSeries, PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
 import {i18n} from '../../../i18n';
 import type {
     ChartTooltip,
@@ -245,8 +245,12 @@ export const DefaultTooltipContent = ({
                         }
                         case 'pie':
                         case 'heatmap':
-                        case 'treemap': {
-                            const seriesData = data as PreparedPieSeries | TreemapSeriesData;
+                        case 'treemap':
+                        case 'funnel': {
+                            const seriesData = data as
+                                | PreparedPieSeries
+                                | TreemapSeriesData
+                                | PreparedFunnelSeries;
                             const formattedValue = getFormattedValue({
                                 value: hoveredValues[i],
                                 format: rowValueFormat || {type: 'number'},

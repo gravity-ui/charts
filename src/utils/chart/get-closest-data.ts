@@ -5,6 +5,7 @@ import groupBy from 'lodash/groupBy';
 import type {PreparedBarXData, PreparedScatterData, ShapeData} from '../../hooks';
 import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
 import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
+import type {PreparedFunnelData} from '../../hooks/useShapes/funnel/types';
 import type {PreparedHeatmapData} from '../../hooks/useShapes/heatmap';
 import type {PreparedLineData} from '../../hooks/useShapes/line/types';
 import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
@@ -354,6 +355,26 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                             });
                         });
                     }
+                }
+
+                break;
+            }
+            case 'funnel': {
+                const data = list as unknown as PreparedFunnelData[];
+                const closestPoint = data[0]?.items.find((item) => {
+                    return (
+                        pointerX >= item.x &&
+                        pointerX <= item.x + item.width &&
+                        pointerY >= item.y &&
+                        pointerY <= item.y + item.height
+                    );
+                });
+                if (closestPoint) {
+                    result.push({
+                        data: closestPoint.data,
+                        series: closestPoint.series,
+                        closest: true,
+                    });
                 }
 
                 break;

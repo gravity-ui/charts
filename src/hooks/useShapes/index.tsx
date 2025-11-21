@@ -13,6 +13,7 @@ import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
     PreparedBarYSeries,
+    PreparedFunnelSeries,
     PreparedHeatmapSeries,
     PreparedLineSeries,
     PreparedPieSeries,
@@ -33,6 +34,8 @@ import {BarXSeriesShapes, prepareBarXData} from './bar-x';
 import type {PreparedBarXData} from './bar-x';
 import {BarYSeriesShapes, prepareBarYData} from './bar-y';
 import type {PreparedBarYData} from './bar-y/types';
+import type {PreparedFunnelData} from './funnel';
+import {FunnelSeriesShapes, prepareFunnelData} from './funnel';
 import type {PreparedHeatmapData} from './heatmap';
 import {HeatmapSeriesShapes, prepareHeatmapData} from './heatmap';
 import {LineSeriesShapes} from './line';
@@ -68,7 +71,8 @@ export type ShapeData =
     | PreparedWaterfallData
     | PreparedSankeyData
     | PreparedRadarData
-    | PreparedHeatmapData;
+    | PreparedHeatmapData
+    | PreparedFunnelData;
 
 export type ClipPathBySeriesType = Partial<Record<SeriesType, boolean>>;
 
@@ -385,6 +389,24 @@ export const useShapes = (args: Args) => {
                                 );
                                 shapesData.push(preparedData);
                             }
+                            break;
+                        }
+                        case 'funnel': {
+                            const preparedData = await prepareFunnelData({
+                                series: chartSeries as PreparedFunnelSeries[],
+                                boundsWidth,
+                                boundsHeight,
+                            });
+                            shapes.push(
+                                <FunnelSeriesShapes
+                                    key="funnel"
+                                    dispatcher={dispatcher}
+                                    preparedData={preparedData}
+                                    seriesOptions={seriesOptions}
+                                    htmlLayout={htmlLayout}
+                                />,
+                            );
+                            shapesData.push(preparedData);
                             break;
                         }
                         default: {
