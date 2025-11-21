@@ -342,7 +342,7 @@ export const Legend = (props: Props) => {
                                 align: legend.align,
                                 width: config.maxWidth,
                                 contentWidth,
-                                offsetLeft: 0,
+                                offsetLeft: config.offset.left,
                             });
                             left = legendLinePostion.left;
                             legendWidth = config.maxWidth;

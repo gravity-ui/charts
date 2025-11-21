@@ -6,7 +6,6 @@ import type {Dispatch} from 'd3';
 import type {TooltipDataChunkFunnel} from '../../../types';
 import {block, getLineDashArray} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
-import {HtmlLayer} from '../HtmlLayer';
 
 import type {PreparedFunnelData} from './types';
 
@@ -23,7 +22,7 @@ type Args = {
 };
 
 export const FunnelSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout} = args;
+    const {dispatcher, preparedData, seriesOptions} = args;
     const hoveredDataRef = React.useRef<TooltipDataChunkFunnel[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
@@ -124,7 +123,6 @@ export const FunnelSeriesShapes = (args: Args) => {
     return (
         <React.Fragment>
             <g ref={ref} className={b()} />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 };

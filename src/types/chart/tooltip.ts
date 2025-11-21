@@ -89,7 +89,6 @@ export interface TooltipDataChunkRadar<T = MeaningfulAny> {
 export interface TooltipDataChunkHeatmap<T = MeaningfulAny> {
     data: HeatmapSeriesData<T>;
     series: HeatmapSeries<T>;
-    closest: boolean;
 }
 
 export interface TooltipDataChunkFunnel<T = MeaningfulAny> {
@@ -99,7 +98,6 @@ export interface TooltipDataChunkFunnel<T = MeaningfulAny> {
         id: string;
         name: string;
     };
-    closest: boolean;
 }
 
 export type TooltipDataChunk<T = MeaningfulAny> = (

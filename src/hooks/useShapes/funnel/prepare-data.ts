@@ -144,7 +144,6 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         type: 'funnel',
         items,
         svgLabels,
-        htmlElements: [],
         connectors,
     };
 
