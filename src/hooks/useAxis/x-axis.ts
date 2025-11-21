@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
-    SeriesType,
+    SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     xAxisTitleDefaults,
@@ -101,7 +101,7 @@ async function setLabelSettings({
 }
 
 function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
-    if (series.some((s) => s.type === SeriesType.Heatmap)) {
+    if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
         return 0;
     }
 
@@ -149,7 +149,7 @@ export const getPreparedXAxis = async ({
         ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
         : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
 
-    const shouldHideGrid = seriesData.some((s) => s.type === SeriesType.Heatmap);
+    const shouldHideGrid = seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
 
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),

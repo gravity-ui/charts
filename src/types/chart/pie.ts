@@ -1,6 +1,6 @@
 import type {BaseType} from 'd3';
 
-import type {SeriesType} from '../../constants';
+import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -25,7 +25,7 @@ export type ConnectorShape = 'straight-line' | 'polyline';
 export type ConnectorCurve = 'linear' | 'basic';
 
 export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SeriesType.Pie;
+    type: typeof SERIES_TYPE.Pie;
     data: PieSeriesData<T>[];
     /**
      * The color of the border surrounding each segment.

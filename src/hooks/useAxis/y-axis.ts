@@ -5,7 +5,7 @@ import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
-    SeriesType,
+    SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     yAxisTitleDefaults,
@@ -78,7 +78,7 @@ const getAxisLabelMaxWidth = async (args: {
 };
 
 function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
-    if (series.some((s) => s.type === SeriesType.Heatmap)) {
+    if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
         return 0;
     }
 
@@ -148,7 +148,7 @@ export const getPreparedYAxis = ({
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
             const shouldHideGrid =
                 axisItem.visible === false ||
-                axisSeriesData.some((s) => s.type === SeriesType.Heatmap);
+                axisSeriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
             const preparedAxis: PreparedYAxis = {
                 type: axisType,
                 labels: {

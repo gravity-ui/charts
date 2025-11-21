@@ -3,6 +3,12 @@ import React from 'react';
 import type {Dispatch} from 'd3';
 import {group} from 'd3';
 
+import {SERIES_TYPE} from '../../constants';
+import type {SeriesType} from '../../constants';
+import {ChartError} from '../../libs';
+import {getOnlyVisibleSeries} from '../../utils';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
+import type {ChartScale} from '../useAxisScales';
 import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
@@ -15,14 +21,10 @@ import type {
     PreparedScatterSeries,
     PreparedSeries,
     PreparedSeriesOptions,
-    PreparedSplit,
     PreparedTreemapSeries,
     PreparedWaterfallSeries,
-} from '../';
-import {ChartError} from '../../libs';
-import {getOnlyVisibleSeries} from '../../utils';
-import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+} from '../useSeries/types';
+import type {PreparedSplit} from '../useSplit/types';
 
 import {AreaSeriesShapes} from './area';
 import {prepareAreaData} from './area/prepare-data';
@@ -68,36 +70,44 @@ export type ShapeData =
     | PreparedRadarData
     | PreparedHeatmapData;
 
+export type ClipPathBySeriesType = Partial<Record<SeriesType, boolean>>;
+
 type Args = {
     boundsWidth: number;
     boundsHeight: number;
     clipPathId: string;
     htmlLayout: HTMLElement | null;
-    // TODO: https://github.com/gravity-ui/charts/issues/270
-    isOutsideBounds: (x: number, y: number) => boolean;
     series: PreparedSeries[];
     seriesOptions: PreparedSeriesOptions;
     split: PreparedSplit;
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
+    clipPathBySeriesType?: ClipPathBySeriesType;
     dispatcher?: Dispatch<object>;
-    // TODO: https://github.com/gravity-ui/charts/issues/270
-    shouldUseClipPathIdForScatter?: boolean;
+    isOutsideBounds?: (x: number, y: number) => boolean;
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
 };
+
+function IS_OUTSIDE_BOUNDS() {
+    return false;
+}
+
+function shouldUseClipPathId(seriesType: SeriesType, clipPathBySeriesType?: ClipPathBySeriesType) {
+    return clipPathBySeriesType?.[seriesType] ?? true;
+}
 
 export const useShapes = (args: Args) => {
     const {
         boundsWidth,
         boundsHeight,
         clipPathId,
+        clipPathBySeriesType,
         dispatcher,
         htmlLayout,
-        isOutsideBounds,
+        isOutsideBounds = IS_OUTSIDE_BOUNDS,
         series,
         seriesOptions,
-        shouldUseClipPathIdForScatter,
         split,
         xAxis,
         xScale,
@@ -125,7 +135,7 @@ export const useShapes = (args: Args) => {
                 Array.from(groupedSeries).map(async (item) => {
                     const [seriesType, chartSeries] = item;
                     switch (seriesType) {
-                        case 'bar-x': {
+                        case SERIES_TYPE.BarX: {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = await prepareBarXData({
                                     series: chartSeries as PreparedBarXSeries[],
@@ -138,7 +148,7 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <BarXSeriesShapes
-                                        key="bar-x"
+                                        key={SERIES_TYPE.BarX}
                                         dispatcher={dispatcher}
                                         seriesOptions={seriesOptions}
                                         preparedData={preparedData}
@@ -150,7 +160,7 @@ export const useShapes = (args: Args) => {
                             }
                             break;
                         }
-                        case 'bar-y': {
+                        case SERIES_TYPE.BarY: {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = await prepareBarYData({
                                     boundsHeight,
@@ -164,7 +174,7 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <BarYSeriesShapes
-                                        key="bar-y"
+                                        key={SERIES_TYPE.BarY}
                                         dispatcher={dispatcher}
                                         seriesOptions={seriesOptions}
                                         preparedData={preparedData}
@@ -176,7 +186,7 @@ export const useShapes = (args: Args) => {
                             }
                             break;
                         }
-                        case 'waterfall': {
+                        case SERIES_TYPE.Waterfall: {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = await prepareWaterfallData({
                                     series: chartSeries as PreparedWaterfallSeries[],
@@ -188,7 +198,7 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <WaterfallSeriesShapes
-                                        key="waterfall"
+                                        key={SERIES_TYPE.Waterfall}
                                         dispatcher={dispatcher}
                                         seriesOptions={seriesOptions}
                                         preparedData={preparedData}
@@ -200,7 +210,7 @@ export const useShapes = (args: Args) => {
                             }
                             break;
                         }
-                        case 'line': {
+                        case SERIES_TYPE.Line: {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = await prepareLineData({
                                     series: chartSeries as PreparedLineSeries[],
@@ -213,7 +223,7 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <LineSeriesShapes
-                                        key="line"
+                                        key={SERIES_TYPE.Line}
                                         dispatcher={dispatcher}
                                         seriesOptions={seriesOptions}
                                         preparedData={preparedData}
@@ -225,7 +235,7 @@ export const useShapes = (args: Args) => {
                             }
                             break;
                         }
-                        case 'area': {
+                        case SERIES_TYPE.Area: {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = await prepareAreaData({
                                     series: chartSeries as PreparedAreaSeries[],
@@ -238,7 +248,7 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <AreaSeriesShapes
-                                        key="area"
+                                        key={SERIES_TYPE.Area}
                                         dispatcher={dispatcher}
                                         seriesOptions={seriesOptions}
                                         preparedData={preparedData}
@@ -250,7 +260,7 @@ export const useShapes = (args: Args) => {
                             }
                             break;
                         }
-                        case 'scatter': {
+                        case SERIES_TYPE.Scatter: {
                             if (xAxis && xScale && yScale?.length) {
                                 const preparedData = prepareScatterData({
                                     series: chartSeries as PreparedScatterSeries[],
@@ -262,9 +272,14 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <ScatterSeriesShape
-                                        key="scatter"
+                                        key={SERIES_TYPE.Scatter}
                                         clipPathId={
-                                            shouldUseClipPathIdForScatter ? clipPathId : undefined
+                                            shouldUseClipPathId(
+                                                SERIES_TYPE.Scatter,
+                                                clipPathBySeriesType,
+                                            )
+                                                ? clipPathId
+                                                : undefined
                                         }
                                         dispatcher={dispatcher}
                                         preparedData={preparedData}
@@ -276,7 +291,7 @@ export const useShapes = (args: Args) => {
                             }
                             break;
                         }
-                        case 'pie': {
+                        case SERIES_TYPE.Pie: {
                             const preparedData = await preparePieData({
                                 series: chartSeries as PreparedPieSeries[],
                                 boundsWidth,
@@ -284,7 +299,7 @@ export const useShapes = (args: Args) => {
                             });
                             shapes.push(
                                 <PieSeriesShapes
-                                    key="pie"
+                                    key={SERIES_TYPE.Pie}
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
@@ -294,7 +309,7 @@ export const useShapes = (args: Args) => {
                             shapesData.push(...preparedData);
                             break;
                         }
-                        case 'treemap': {
+                        case SERIES_TYPE.Treemap: {
                             const preparedData = await prepareTreemapData({
                                 // We should have exactly one series with "treemap" type
                                 // Otherwise data validation should emit an error
@@ -304,7 +319,7 @@ export const useShapes = (args: Args) => {
                             });
                             shapes.push(
                                 <TreemapSeriesShape
-                                    key="treemap"
+                                    key={SERIES_TYPE.Treemap}
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
@@ -314,7 +329,7 @@ export const useShapes = (args: Args) => {
                             shapesData.push(preparedData as unknown as ShapeData);
                             break;
                         }
-                        case 'sankey': {
+                        case SERIES_TYPE.Sankey: {
                             const preparedData = prepareSankeyData({
                                 series: chartSeries[0] as PreparedSankeySeries,
                                 width: boundsWidth,
@@ -322,7 +337,7 @@ export const useShapes = (args: Args) => {
                             });
                             shapes.push(
                                 <SankeySeriesShape
-                                    key="sankey"
+                                    key={SERIES_TYPE.Sankey}
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
@@ -332,7 +347,7 @@ export const useShapes = (args: Args) => {
                             shapesData.push(preparedData);
                             break;
                         }
-                        case 'radar': {
+                        case SERIES_TYPE.Radar: {
                             const preparedData = await prepareRadarData({
                                 series: chartSeries as PreparedRadarSeries[],
                                 boundsWidth,
@@ -340,7 +355,7 @@ export const useShapes = (args: Args) => {
                             });
                             shapes.push(
                                 <RadarSeriesShapes
-                                    key="radar"
+                                    key={SERIES_TYPE.Radar}
                                     dispatcher={dispatcher}
                                     series={preparedData}
                                     seriesOptions={seriesOptions}
@@ -350,7 +365,7 @@ export const useShapes = (args: Args) => {
                             shapesData.push(...preparedData);
                             break;
                         }
-                        case 'heatmap': {
+                        case SERIES_TYPE.Heatmap: {
                             if (xAxis && xScale && yScale?.[0]) {
                                 const preparedData = await prepareHeatmapData({
                                     series: chartSeries[0] as PreparedHeatmapSeries,
@@ -361,7 +376,7 @@ export const useShapes = (args: Args) => {
                                 });
                                 shapes.push(
                                     <HeatmapSeriesShapes
-                                        key="heatmap"
+                                        key={SERIES_TYPE.Heatmap}
                                         dispatcher={dispatcher}
                                         preparedData={preparedData}
                                         seriesOptions={seriesOptions}
@@ -389,18 +404,18 @@ export const useShapes = (args: Args) => {
     }, [
         boundsHeight,
         boundsWidth,
+        clipPathId,
+        clipPathBySeriesType,
         dispatcher,
         htmlLayout,
+        isOutsideBounds,
         series,
         seriesOptions,
-        shouldUseClipPathIdForScatter,
         split,
         xAxis,
         xScale,
         yAxis,
         yScale,
-        clipPathId,
-        isOutsideBounds,
     ]);
 
     return {shapes: shapesElemens, shapesData: shapesElemensData};

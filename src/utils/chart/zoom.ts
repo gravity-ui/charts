@@ -1,4 +1,4 @@
-import {SeriesType} from '../../constants';
+import {SERIES_TYPE} from '../../constants';
 import type {
     PreparedAxis,
     PreparedSeries,
@@ -15,7 +15,7 @@ import type {
     ChartYAxis,
 } from '../../types';
 
-const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SeriesType.Area, SeriesType.Line];
+const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SERIES_TYPE.Area, SERIES_TYPE.Line];
 
 // eslint-disable-next-line complexity
 function isValueInRange(args: {

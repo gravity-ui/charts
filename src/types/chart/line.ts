@@ -1,4 +1,4 @@
-import type {DashStyle, LineCap, SeriesType} from '../../constants';
+import type {DashStyle, LineCap, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -33,7 +33,7 @@ export interface LineSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SeriesType.Line;
+    type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;

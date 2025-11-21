@@ -1,4 +1,4 @@
-import type {SeriesType} from '../../constants';
+import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -26,7 +26,7 @@ export interface HeatmapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
 }
 
 export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SeriesType.Heatmap;
+    type: typeof SERIES_TYPE.Heatmap;
     data: HeatmapSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;

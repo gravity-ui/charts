@@ -1,4 +1,4 @@
-import type {LayoutAlgorithm, SeriesType} from '../../constants';
+import type {LayoutAlgorithm, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
@@ -19,7 +19,7 @@ export interface TreemapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
 }
 
 export interface TreemapSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SeriesType.Treemap;
+    type: typeof SERIES_TYPE.Treemap;
     data: TreemapSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
     name: string;
