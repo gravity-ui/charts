@@ -353,7 +353,7 @@ export function createXScale(args: {
             order: axis.order,
         });
     }
-    const maxPadding = get(axis, 'maxPadding', 0);
+    const maxPadding = rangeSliderState ? 0 : get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({

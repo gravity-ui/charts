@@ -13,3 +13,10 @@ export type PointPosition = [number, number];
 export type DeepRequired<T> = Required<{
     [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
 }>;
+
+/**
+ * Makes all properties in T optional, including nested objects.
+ */
+export type DeepPartial<T> = {
+    [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
