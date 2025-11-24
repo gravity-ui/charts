@@ -217,6 +217,41 @@ function getPagination(args: {
     return {pages};
 }
 
+function getLegendOffset(args: {
+    position: PreparedLegend['position'];
+    chartWidth: number;
+    chartHeight: number;
+    chartMargin: PreparedChart['margin'];
+    legendWidth: number;
+    legendHeight: number;
+}): LegendConfig['offset'] {
+    const {position, chartWidth, chartHeight, chartMargin, legendWidth, legendHeight} = args;
+
+    switch (position) {
+        case 'top':
+            return {
+                top: chartMargin.top,
+                left: chartMargin.left,
+            };
+        case 'right':
+            return {
+                top: chartMargin.top,
+                left: chartWidth - chartMargin.right - legendWidth,
+            };
+        case 'left':
+            return {
+                top: chartMargin.top,
+                left: chartMargin.left,
+            };
+        case 'bottom':
+        default:
+            return {
+                top: chartHeight - chartMargin.bottom - legendHeight,
+                left: chartMargin.left,
+            };
+    }
+}
+
 export function getLegendComponents(args: {
     chartWidth: number;
     chartHeight: number;
@@ -225,7 +260,11 @@ export function getLegendComponents(args: {
     preparedLegend: PreparedLegend;
 }) {
     const {chartWidth, chartHeight, chartMargin, series, preparedLegend} = args;
-    const maxLegendWidth = chartWidth - chartMargin.right - chartMargin.left;
+    const isVerticalPosition =
+        preparedLegend.position === 'right' || preparedLegend.position === 'left';
+    const maxLegendWidth = isVerticalPosition
+        ? preparedLegend.width
+        : chartWidth - chartMargin.right - chartMargin.left;
     const maxLegendHeight =
         (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
@@ -260,14 +299,14 @@ export function getLegendComponents(args: {
         preparedLegend.height = legendHeight;
     }
 
-    const top =
-        preparedLegend.position === 'top'
-            ? chartMargin.top
-            : chartHeight - chartMargin.bottom - preparedLegend.height;
-    const offset: LegendConfig['offset'] = {
-        left: chartMargin.left,
-        top,
-    };
+    const offset = getLegendOffset({
+        position: preparedLegend.position,
+        chartWidth,
+        chartHeight,
+        chartMargin,
+        legendWidth: preparedLegend.width,
+        legendHeight: preparedLegend.height,
+    });
 
     return {legendConfig: {offset, pagination, maxWidth: maxLegendWidth}, legendItems: items};
 }

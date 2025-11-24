@@ -1,7 +1,7 @@
 import React from 'react';
 
-import {line as lineGenerator, scaleLinear, select, symbol} from 'd3';
 import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
+import {line as lineGenerator, scaleLinear, select, symbol} from 'd3';
 
 import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
 import type {
@@ -39,24 +39,31 @@ type Props = {
     onUpdate?: () => void;
 };
 
-const getLegendPosition = (args: {
+const getLegendItemPosition = (args: {
     align: PreparedLegend['align'];
     contentWidth: number;
     width: number;
-    offsetLeft: number;
 }) => {
-    const {align, offsetLeft = 0, width, contentWidth} = args;
+    const {align, width, contentWidth} = args;
+
     const top = 0;
 
-    if (align === 'left') {
-        return {top, left: offsetLeft};
-    }
-
     if (align === 'right') {
-        return {top, left: offsetLeft + width - contentWidth};
+        return {top, left: width - contentWidth};
     }
 
-    return {top, left: offsetLeft + width / 2 - contentWidth / 2};
+    return {top, left: 0};
+};
+
+const getLegendPosition = (args: {
+    contentWidth: number;
+    width: number;
+    offsetLeft: number;
+    offsetTop: number;
+}) => {
+    const {offsetLeft = 0, offsetTop = 0} = args;
+
+    return {left: offsetLeft, top: offsetTop};
 };
 
 const appendPaginator = (args: {
@@ -338,11 +345,10 @@ export const Legend = (props: Props) => {
                     let left = 0;
                     switch (legend.justifyContent) {
                         case 'center': {
-                            const legendLinePostion = getLegendPosition({
+                            const legendLinePostion = getLegendItemPosition({
                                 align: legend.align,
                                 width: config.maxWidth,
                                 contentWidth,
-                                offsetLeft: config.offset.left,
                             });
                             left = legendLinePostion.left;
                             legendWidth = config.maxWidth;
@@ -458,17 +464,15 @@ export const Legend = (props: Props) => {
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();
             }
 
-            const {left} = getLegendPosition({
-                align: legend.align,
+            const {left, top} = getLegendPosition({
                 width: config.maxWidth,
                 contentWidth: legendWidth,
                 offsetLeft: config.offset.left,
+                offsetTop: config.offset.top,
             });
 
-            svgElement
-                .attr('transform', `translate(${[left, config.offset.top].join(',')})`)
-                .style('opacity', 1);
-            htmlContainer?.style('transform', `translate(${left}px, ${config.offset.top}px)`);
+            svgElement.attr('transform', `translate(${[left, top].join(',')})`).style('opacity', 1);
+            htmlContainer?.style('transform', `translate(${left}px, ${top}px)`);
         }
 
         prepareLegend();

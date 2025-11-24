@@ -59,6 +59,22 @@ const getTopOffset = ({preparedLegend}: {preparedLegend: PreparedLegend | null})
     return 0;
 };
 
+const getRightOffset = ({preparedLegend}: {preparedLegend: PreparedLegend | null}) => {
+    if (preparedLegend?.enabled && preparedLegend.position === 'right') {
+        return preparedLegend.width + preparedLegend.margin;
+    }
+
+    return 0;
+};
+
+const getLeftOffset = ({preparedLegend}: {preparedLegend: PreparedLegend | null}) => {
+    if (preparedLegend?.enabled && preparedLegend.position === 'left') {
+        return preparedLegend.width + preparedLegend.margin;
+    }
+
+    return 0;
+};
+
 export const useChartDimensions = (args: Args) => {
     const {height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width} =
         args;
@@ -72,9 +88,16 @@ export const useChartDimensions = (args: Args) => {
             preparedXAxis,
         });
         const topOffset = getTopOffset({preparedLegend});
+        const rightOffset = getRightOffset({preparedLegend});
+        const leftOffset = getLeftOffset({preparedLegend});
 
         const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
+        const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
+        console.log('adjustedBoundsWidth', adjustedBoundsWidth);
+        console.log('rightOffset', rightOffset);
+        console.log('leftOffset', leftOffset);
+        console.log('boundsWidth', boundsWidth);
 
-        return {boundsWidth, boundsHeight};
+        return {boundsWidth: adjustedBoundsWidth, boundsHeight};
     }, [height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width]);
 };

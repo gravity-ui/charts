@@ -203,6 +203,9 @@ export function useChartInnerProps(props: Props) {
     // We need to calculate the width of each left axis because the first axis can be hidden
     const boundsOffsetLeft =
         chart.margin.left +
+        (preparedLegend?.enabled && preparedLegend.position === 'left'
+            ? preparedLegend.width + preparedLegend.margin
+            : 0) +
         yAxis.reduce((acc, axis) => {
             if (axis.position !== 'left') {
                 return acc;

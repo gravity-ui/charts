@@ -20,10 +20,10 @@ export const LegendPosition = {
     argTypes: {
         position: {
             control: 'inline-radio',
-            options: ['top', 'bottom'],
+            options: ['top', 'bottom', 'left', 'right'],
         },
     },
-    render: (args: {position: 'top' | 'bottom'}) => {
+    render: (args: {position: 'top' | 'bottom' | 'left' | 'right'}) => {
         const data = {
             ...lineBasicData,
             legend: {
