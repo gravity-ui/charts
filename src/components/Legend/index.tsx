@@ -241,6 +241,8 @@ export const Legend = (props: Props) => {
                 : null;
 
             let legendWidth = 0;
+            let legendLeft = 0;
+            let legendTop = 0;
             if (legend.type === 'discrete') {
                 const start = config.pagination?.pages[pageIndex]?.start;
                 const end = config.pagination?.pages[pageIndex]?.end;
@@ -379,7 +381,29 @@ export const Legend = (props: Props) => {
                         onArrowClick: setPageIndex,
                     });
                 }
+                const {left, top} = getLegendPosition({
+                    width: config.maxWidth,
+                    contentWidth: legendWidth,
+                    offsetLeft: config.offset.left,
+                    offsetTop: config.offset.top,
+                });
+
+                legendLeft = left;
+                legendTop = top;
             } else {
+                const {left} = getLegendItemPosition({
+                    align: legend.align,
+                    width: config.maxWidth,
+                    contentWidth: legend.width,
+                });
+                const {top} = getLegendPosition({
+                    width: config.maxWidth,
+                    contentWidth: legendWidth,
+                    offsetLeft: config.offset.left,
+                    offsetTop: config.offset.top,
+                });
+                legendLeft = left;
+                legendTop = top;
                 // gradient rect
                 const domain = legend.colorScale.domain ?? [];
                 const rectHeight = CONTINUOUS_LEGEND_SIZE.height;
@@ -464,15 +488,10 @@ export const Legend = (props: Props) => {
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();
             }
 
-            const {left, top} = getLegendPosition({
-                width: config.maxWidth,
-                contentWidth: legendWidth,
-                offsetLeft: config.offset.left,
-                offsetTop: config.offset.top,
-            });
-
-            svgElement.attr('transform', `translate(${[left, top].join(',')})`).style('opacity', 1);
-            htmlContainer?.style('transform', `translate(${left}px, ${top}px)`);
+            svgElement
+                .attr('transform', `translate(${[legendLeft, legendTop].join(',')})`)
+                .style('opacity', 1);
+            htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
         }
 
         prepareLegend();
