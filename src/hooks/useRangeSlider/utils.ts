@@ -2,20 +2,28 @@ import {isBandScale} from '../../utils';
 import type {PreparedRangeSlider} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales';
 import type {BrushSelection} from '../useBrush/types';
+import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend} from '../useSeries/types';
 
 import type {RangeSliderState} from './types';
 
 export function getRangeSliderOffsetTop(args: {
     height: number;
+    preparedChart: PreparedChart;
     preparedLegend: PreparedLegend | null;
     preparedRangeSlider: PreparedRangeSlider;
 }) {
-    const {height, preparedLegend, preparedRangeSlider} = args;
+    const {height, preparedChart, preparedLegend, preparedRangeSlider} = args;
     const legendHeight = preparedLegend?.enabled ? (preparedLegend?.height ?? 0) : 0;
     const legendMargin = preparedLegend?.enabled ? (preparedLegend?.margin ?? 0) : 0;
 
-    return height - preparedRangeSlider.height - legendHeight - legendMargin;
+    return (
+        height -
+        preparedRangeSlider.height -
+        legendHeight -
+        legendMargin -
+        preparedChart.margin.bottom
+    );
 }
 
 export function getRangeSliderSelection(args: {

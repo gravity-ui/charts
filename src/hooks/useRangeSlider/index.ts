@@ -96,6 +96,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
     }, [rangeSliderState, xScale]);
     const offsetTop = getRangeSliderOffsetTop({
         height,
+        preparedChart,
         preparedLegend,
         preparedRangeSlider,
     });

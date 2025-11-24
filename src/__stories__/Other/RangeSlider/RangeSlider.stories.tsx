@@ -20,6 +20,7 @@ export default meta;
 type Story = StoryObj<typeof ChartStory>;
 
 const dateTimeData = cloneDeep(lineTwoYAxisData);
+set(dateTimeData, 'xAxis.maxPadding', 0);
 set(dateTimeData, 'xAxis.rangeSlider', {enabled: true});
 set(dateTimeData, 'legend', {enabled: true});
 set(dateTimeData, 'title', {
@@ -27,6 +28,7 @@ set(dateTimeData, 'title', {
 });
 
 const dateTimeDataWithRange = cloneDeep(lineTwoYAxisData);
+set(dateTimeDataWithRange, 'xAxis.maxPadding', 0);
 set(dateTimeDataWithRange, 'xAxis.rangeSlider', {enabled: true, defaultRange: {size: 'P1M'}});
 set(dateTimeDataWithRange, 'legend', {enabled: true});
 set(dateTimeDataWithRange, 'title', {
@@ -48,6 +50,7 @@ export const RangeSliderDateTime = {
 } satisfies Story;
 
 const linearData = cloneDeep(scatterLinearXAxisData);
+set(linearData, 'xAxis.maxPadding', 0);
 set(linearData, 'xAxis.rangeSlider', {enabled: true});
 set(linearData, 'legend', {enabled: true});
 set(linearData, 'title', {
@@ -55,6 +58,7 @@ set(linearData, 'title', {
 });
 
 const linearDataWithRange = cloneDeep(scatterLinearXAxisData);
+set(linearDataWithRange, 'xAxis.maxPadding', 0);
 set(linearDataWithRange, 'xAxis.rangeSlider', {enabled: true, defaultRange: {size: 1000}});
 set(linearDataWithRange, 'legend', {enabled: true});
 set(linearDataWithRange, 'title', {
@@ -71,6 +75,23 @@ export const RangeSliderLinear = {
             <div style={{height: 350}}>
                 <Chart data={linearDataWithRange} />
             </div>
+        </div>
+    ),
+} satisfies Story;
+
+const dateTimeDataWithPadding = cloneDeep(lineTwoYAxisData);
+set(dateTimeDataWithPadding, 'xAxis.maxPadding', 0.2);
+set(dateTimeDataWithPadding, 'xAxis.rangeSlider', {enabled: true});
+set(dateTimeDataWithPadding, 'legend', {enabled: true});
+set(dateTimeDataWithPadding, 'title', {
+    text: 'With maxPadding 0.2',
+});
+
+export const RangeSliderWithPadding = {
+    name: 'With maxPadding',
+    render: () => (
+        <div style={{height: 350}}>
+            <Chart data={dateTimeDataWithPadding} />
         </div>
     ),
 } satisfies Story;
