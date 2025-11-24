@@ -46,13 +46,13 @@ const getLegendItemPosition = (args: {
 }) => {
     const {align, width, contentWidth} = args;
 
-    const top = 0;
-
     if (align === 'right') {
-        return {top, left: width - contentWidth};
+        return {left: width - contentWidth};
+    } else if (align === 'left') {
+        return {left: 0};
+    } else {
+        return {left: width / 2 - contentWidth / 2};
     }
-
-    return {top, left: 0};
 };
 
 const getLegendPosition = (args: {

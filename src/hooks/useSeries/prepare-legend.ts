@@ -70,7 +70,7 @@ export async function getPreparedLegend(args: {
         }
     }
 
-    const legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
+    const legendWidth = enabled ? get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width) : 0;
 
     return {
         align: get(legend, 'align', legendDefaults.align),
@@ -260,13 +260,15 @@ export function getLegendComponents(args: {
     preparedLegend: PreparedLegend;
 }) {
     const {chartWidth, chartHeight, chartMargin, series, preparedLegend} = args;
+
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
     const maxLegendWidth = isVerticalPosition
         ? preparedLegend.width
         : chartWidth - chartMargin.right - chartMargin.left;
-    const maxLegendHeight =
-        (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
+    const maxLegendHeight = isVerticalPosition
+        ? chartHeight - chartMargin.top - chartMargin.bottom - 2 * preparedLegend.margin
+        : (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
     const items = getGroupedLegendItems({
         maxLegendWidth,

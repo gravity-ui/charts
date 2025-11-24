@@ -93,10 +93,6 @@ export const useChartDimensions = (args: Args) => {
 
         const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
         const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
-        console.log('adjustedBoundsWidth', adjustedBoundsWidth);
-        console.log('rightOffset', rightOffset);
-        console.log('leftOffset', leftOffset);
-        console.log('boundsWidth', boundsWidth);
 
         return {boundsWidth: adjustedBoundsWidth, boundsHeight};
     }, [height, margin, preparedLegend, preparedSeries, preparedXAxis, preparedYAxis, width]);
