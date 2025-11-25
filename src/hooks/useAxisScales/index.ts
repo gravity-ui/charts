@@ -276,7 +276,8 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
                 // Since labels can be located to the right of the bar, need to add an additional space
                 const inside = get(s, 'dataLabels.inside');
                 if (!inside) {
-                    const labelsMaxWidth = get(s, 'dataLabels.maxWidth', 0);
+                    const labelsMaxWidth =
+                        get(s, 'dataLabels.maxWidth', 0) + (s.dataLabels?.padding ?? 0);
                     result = Math.max(result, labelsMaxWidth);
                 }
 

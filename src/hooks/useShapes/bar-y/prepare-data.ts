@@ -18,8 +18,6 @@ import {getBarYLayout, groupBarYDataByYValue} from '../../utils';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
-const DEFAULT_LABEL_PADDING = 7;
-
 export async function prepareBarYData(args: {
     boundsHeight: number;
     boundsWidth: number;
@@ -198,7 +196,7 @@ export async function prepareBarYData(args: {
                 });
                 const x = dataLabels.inside
                     ? prepared.x + prepared.width / 2 - width / 2
-                    : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
+                    : prepared.x + prepared.width + dataLabels.padding;
                 const constrainedPosition = getHtmlLabelConstraintedPosition({
                     boundsHeight,
                     boundsWidth,
@@ -223,7 +221,7 @@ export async function prepareBarYData(args: {
                 const {width, height} = await getTextSize(content);
                 const x = dataLabels.inside
                     ? prepared.x + prepared.width / 2 - width / 2
-                    : prepared.x + prepared.width + DEFAULT_LABEL_PADDING;
+                    : prepared.x + prepared.width + dataLabels.padding;
                 const constrainedPosition = getSvgLabelConstraintedPosition({
                     boundsHeight,
                     boundsWidth,
