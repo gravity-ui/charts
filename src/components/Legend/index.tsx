@@ -61,9 +61,9 @@ const getLegendPosition = (args: {
     offsetLeft: number;
     offsetTop: number;
 }) => {
-    const {offsetLeft = 0, offsetTop = 0} = args;
+    const {offsetLeft, offsetTop, contentWidth, width} = args;
 
-    return {left: offsetLeft, top: offsetTop};
+    return {top: offsetTop, left: offsetLeft + width / 2 - contentWidth / 2};
 };
 
 const appendPaginator = (args: {
@@ -344,7 +344,7 @@ export const Legend = (props: Props) => {
                             ? getXPosition(line.length) - legend.itemDistance
                             : legendLine.node()?.getBoundingClientRect().width) || 0;
 
-                    let left = config.offset.left;
+                    let left = 0;
                     switch (legend.justifyContent) {
                         case 'center': {
                             const legendLinePostion = getLegendItemPosition({
