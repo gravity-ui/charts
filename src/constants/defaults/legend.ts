@@ -14,3 +14,5 @@ export const CONTINUOUS_LEGEND_SIZE = {
     height: 12,
     width: 200,
 };
+
+export const DEFAULT_LEGEND_WIDTH = 80;

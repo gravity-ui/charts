@@ -344,7 +344,7 @@ export const Legend = (props: Props) => {
                             ? getXPosition(line.length) - legend.itemDistance
                             : legendLine.node()?.getBoundingClientRect().width) || 0;
 
-                    let left = 0;
+                    let left = config.offset.left;
                     switch (legend.justifyContent) {
                         case 'center': {
                             const legendLinePostion = getLegendItemPosition({

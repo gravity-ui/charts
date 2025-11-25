@@ -3,7 +3,7 @@ import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../../constants';
+import {CONTINUOUS_LEGEND_SIZE, DEFAULT_LEGEND_WIDTH, legendDefaults} from '../../constants';
 import type {BaseTextStyle, ChartData} from '../../types';
 import {getDefaultColorStops, getDomainForContinuousColorScale, getLabelsSize} from '../../utils';
 import type {PreparedChart} from '../useChartOptions/types';
@@ -54,9 +54,11 @@ export async function getPreparedLegend(args: {
     };
 
     let height = 0;
+    let legendWidth = 0;
     if (enabled) {
         height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
+            legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
             height += CONTINUOUS_LEGEND_SIZE.height;
             height += ticks.labelsLineHeight + ticks.labelsMargin;
 
@@ -67,10 +69,9 @@ export async function getPreparedLegend(args: {
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
             height += lineHeight;
+            legendWidth = get(legend, 'width', DEFAULT_LEGEND_WIDTH);
         }
     }
-
-    const legendWidth = enabled ? get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width) : 0;
 
     return {
         align: get(legend, 'align', legendDefaults.align),
@@ -264,7 +265,10 @@ export function getLegendComponents(args: {
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
     const maxLegendWidth = isVerticalPosition
-        ? preparedLegend.width
+        ? Math.min(
+              (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2,
+              preparedLegend.width,
+          )
         : chartWidth - chartMargin.right - chartMargin.left;
     const maxLegendHeight = isVerticalPosition
         ? chartHeight - chartMargin.top - chartMargin.bottom - 2 * preparedLegend.margin

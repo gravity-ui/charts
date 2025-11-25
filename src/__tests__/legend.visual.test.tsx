@@ -127,40 +127,44 @@ test.describe('Legend', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test.describe('Position top', () => {
-            test('Basic', async ({mount}) => {
-                const data = cloneDeep(pieOverflowedLegendItemsData);
-                set(data, 'legend.position', 'top');
-                const component = await mount(
-                    <ChartTestStory data={data} styles={{width: '270px'}} />,
-                );
-                await expect(component.locator('svg')).toHaveScreenshot();
-            });
+        const positions = ['top', 'bottom', 'left', 'right'] as const;
 
-            test('With html', async ({mount}) => {
-                const data = cloneDeep(pieOverflowedLegendItemsData);
-                set(data, 'legend.position', 'top');
-                set(data, 'legend.html', true);
-                const component = await mount(
-                    <ChartTestStory data={data} styles={{width: '270px'}} />,
-                );
-                await expect(component.locator('svg')).toHaveScreenshot();
-            });
+        positions.forEach((position) => {
+            test.describe(`Position ${position}`, () => {
+                test('Basic', async ({mount}) => {
+                    const data = cloneDeep(pieOverflowedLegendItemsData);
+                    set(data, 'legend.position', position);
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: '270px'}} />,
+                    );
+                    await expect(component.locator('svg')).toHaveScreenshot();
+                });
 
-            test('Paginated', async ({mount}) => {
-                const data = cloneDeep(piePaginatedLegendData);
-                set(data, 'legend.position', 'top');
+                test('With html', async ({mount}) => {
+                    const data = cloneDeep(pieOverflowedLegendItemsData);
+                    set(data, 'legend.position', position);
+                    set(data, 'legend.html', true);
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: '270px'}} />,
+                    );
+                    await expect(component.locator('svg')).toHaveScreenshot();
+                });
 
-                const component = await mount(
-                    <ChartTestStory data={data} styles={{width: '150px'}} />,
-                );
-                await expect(component.locator('svg')).toHaveScreenshot();
+                test('Paginated', async ({mount}) => {
+                    const data = cloneDeep(piePaginatedLegendData);
+                    set(data, 'legend.position', position);
 
-                const arrowNext = component.getByText('▼');
-                await arrowNext.click();
-                await expect(component.locator('svg')).toHaveScreenshot();
-                await arrowNext.click();
-                await expect(component.locator('svg')).toHaveScreenshot();
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: '150px'}} />,
+                    );
+                    await expect(component.locator('svg')).toHaveScreenshot();
+
+                    const arrowNext = component.getByText('▼');
+                    await arrowNext.click();
+                    await expect(component.locator('svg')).toHaveScreenshot();
+                    await arrowNext.click();
+                    await expect(component.locator('svg')).toHaveScreenshot();
+                });
             });
         });
     });
