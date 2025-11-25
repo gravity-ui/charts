@@ -167,8 +167,9 @@ export const prepareBarXData = async (args: {
 
     const result: PreparedBarXData[] = [];
 
-    for (let plotDataIndex = 0; plotDataIndex < dataByPlots.size; plotDataIndex++) {
-        const data = dataByPlots.get(plotDataIndex) ?? {};
+    const plotIndexes = Array.from(dataByPlots.keys());
+    for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
+        const data = dataByPlots.get(plotIndexes[plotDataIndex]) ?? {};
         const maxGroupSize = max(Object.values(data), (d) => Object.values(d).length) || 1;
         const groupGap = Math.max(bandWidth * groupPadding, MIN_BAR_GROUP_GAP);
         const groupWidth = bandWidth - groupGap;
