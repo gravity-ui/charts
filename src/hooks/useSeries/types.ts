@@ -182,6 +182,7 @@ export type PreparedBarYSeries = {
     stackId: string;
     stacking: BarYSeries['stacking'];
     dataLabels: {
+        padding: number;
         enabled: boolean;
         inside: boolean;
         style: BaseTextStyle;
