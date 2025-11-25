@@ -7,7 +7,15 @@ import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 import {useCrosshair} from '../../hooks';
 import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
-import {EventType, block, getDispatcher, isBandScale, isTimeScale} from '../../utils';
+import {
+    EventType,
+    block,
+    getDefaultMaxXAxisValue,
+    getDefaultMinXAxisValue,
+    getDispatcher,
+    isBandScale,
+    isTimeScale,
+} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {AxisY} from '../AxisY/AxisY';
 import {prepareAxisData} from '../AxisY/prepare-axis-data';
@@ -225,7 +233,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                 setInitialized(true);
             } else {
                 const [minDomain, maxDomain] = xScale.domain();
-                let minRange = minDomain;
+                let minRange: number | undefined;
+                const maxRange = getDefaultMaxXAxisValue(preparedSeries) ?? maxDomain;
 
                 if (typeof defaultRange?.size === 'number') {
                     const minDefaultRange = maxDomain - defaultRange.size;
@@ -234,13 +243,18 @@ export const ChartInner = (props: ChartInnerProps) => {
                     }
                 }
 
-                updateRangeSliderState({min: minRange, max: maxDomain});
+                if (typeof minRange === 'undefined') {
+                    minRange = getDefaultMinXAxisValue(preparedSeries) ?? minDomain;
+                }
+
+                updateRangeSliderState({min: minRange, max: maxRange});
                 setInitialized(true);
             }
         }
     }, [
         initialized,
         preparedRangeSlider.defaultRange,
+        preparedSeries,
         setInitialized,
         updateRangeSliderState,
         xScale,
@@ -321,6 +335,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     width={width}
                     xAxis={data.xAxis}
                     yAxis={data.yAxis}
+                    zoomState={zoomState}
                 />
             )}
             {preparedLegend?.enabled && legendConfig && (

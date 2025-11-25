@@ -6,7 +6,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {barYDatetimeYData, lineTwoYAxisData} from '../__stories__/__data__';
+import {barYDatetimeYData, lineTwoYAxisData, scatterBasicData} from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
 type BoundingBox = NonNullable<
@@ -31,6 +31,15 @@ const getZoomYOptions: GetZoomOptions = (boundingBox) => {
     const x = boundingBox.x + boundingBox.width / 2;
 
     return {sourcePosition: {x, y: startY}, targetPosition: {x, y: endY}};
+};
+
+const getZoomXYOptions: GetZoomOptions = (boundingBox) => {
+    const startX = boundingBox.x + boundingBox.width * 0.25;
+    const startY = boundingBox.y + boundingBox.height * 0.25;
+    const endX = boundingBox.x + boundingBox.width * 0.75;
+    const endY = boundingBox.y + boundingBox.height * 0.75;
+
+    return {sourcePosition: {x: startX, y: startY}, targetPosition: {x: endX, y: endY}};
 };
 
 async function testZoom(args: {
@@ -106,6 +115,18 @@ test.describe('Zoom', () => {
 
             await testZoom({component, getZoomOptions: getZoomXOptions});
         });
+
+        test('Datetime x axis min/max', async ({mount}) => {
+            const data = cloneDeep(lineTwoYAxisData);
+            set(data, 'chart.zoom', {enabled: true, type: 'x'});
+            set(data, 'tooltip.enabled', false);
+            set(data, 'xAxis.min', 1390777200000);
+            set(data, 'xAxis.max', 1394319600000);
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await testZoom({component, getZoomOptions: getZoomXOptions});
+        });
     });
 
     test.describe('Type y', () => {
@@ -128,6 +149,44 @@ test.describe('Zoom', () => {
             const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({component, getZoomOptions: getZoomYOptions});
+        });
+
+        test('Datetime y axis min/max', async ({mount}) => {
+            const data = cloneDeep(barYDatetimeYData);
+            set(data, 'chart.zoom', {enabled: true, type: 'y'});
+            set(data, 'tooltip.enabled', false);
+            set(data, 'yAxis[0].min', 1737158400000);
+            set(data, 'yAxis[0].max', 1743120000000);
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await testZoom({component, getZoomOptions: getZoomYOptions});
+        });
+    });
+
+    test.describe('Type xy', () => {
+        test('Datetime x, linear y', async ({mount}) => {
+            const data = cloneDeep(scatterBasicData);
+            set(data, 'chart.zoom', {enabled: true, type: 'xy'});
+            set(data, 'tooltip.enabled', false);
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await testZoom({component, getZoomOptions: getZoomXYOptions});
+        });
+
+        test('Datetime x, linear y, min/max x and y', async ({mount}) => {
+            const data = cloneDeep(scatterBasicData);
+            set(data, 'chart.zoom', {enabled: true, type: 'xy'});
+            set(data, 'tooltip.enabled', false);
+            set(data, 'xAxis.min', 1275253200000);
+            set(data, 'xAxis.max', 1455832800000);
+            set(data, 'yAxis[0].min', 5);
+            set(data, 'yAxis[0].max', 8);
+
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await testZoom({component, getZoomOptions: getZoomXYOptions});
         });
     });
 
