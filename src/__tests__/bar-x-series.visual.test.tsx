@@ -10,6 +10,7 @@ import {
     barXLinearData,
     barXNullModeSkipLinearXData,
     barXNullModeZeroLinearXData,
+    barXSplitData,
     barXStakingNormalData,
     barXWithYAxisPlotLinesData,
 } from '../__stories__/__data__';
@@ -192,6 +193,11 @@ test.describe('Bar-x series', () => {
         const data = cloneDeep(barXNullModeZeroLinearXData);
         set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
         const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Basic split', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={barXSplitData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
