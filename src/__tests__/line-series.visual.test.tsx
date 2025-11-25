@@ -97,4 +97,30 @@ test.describe('Line series', () => {
         const component = await mount(<ChartTestStory data={lineNullModeZeroLinearXData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('Data labels', () => {
+        test('Positioning of extreme point dataLabels', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: '',
+                            type: 'line',
+                            data: [
+                                {x: 0, y: 0, label: 'left-bottom'},
+                                {y: 10, x: 0, label: 'left-top'},
+                                {y: 10, x: 10, label: 'right-top'},
+                                {y: 0, x: 10, label: 'right-bottom'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                yAxis: [{maxPadding: 0}],
+                xAxis: {maxPadding: 0},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

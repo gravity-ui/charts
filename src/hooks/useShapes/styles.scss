@@ -1,3 +1,9 @@
+.gcharts-line {
+    &__label {
+        dominant-baseline: text-before-edge;
+    }
+}
+
 .gcharts-scatter {
     &__point {
         stroke-width: 1px;
