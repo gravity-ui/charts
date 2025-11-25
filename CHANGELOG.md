@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.24.0](https://github.com/gravity-ui/charts/compare/v1.23.0...v1.24.0) (2025-11-25)
+
+
+### Features
+
+* add basic range slider ([#264](https://github.com/gravity-ui/charts/issues/264)) ([ef9ebf2](https://github.com/gravity-ui/charts/commit/ef9ebf2ae810cacb1107ec8c77ae784e56e90556))
+* add position to the legend configuration (top and bottom options) ([#263](https://github.com/gravity-ui/charts/issues/263)) ([e421cf5](https://github.com/gravity-ui/charts/commit/e421cf5c38b872c000473918884e6c03b7cf19fe))
+* basic funnel chart ([#241](https://github.com/gravity-ui/charts/issues/241)) ([8a65bf0](https://github.com/gravity-ui/charts/commit/8a65bf0199786883b587777416e7cec75a48b44e))
+
+
+### Bug Fixes
+
+* bar-x percent stacking (linear x-axis) ([#268](https://github.com/gravity-ui/charts/issues/268)) ([d202689](https://github.com/gravity-ui/charts/commit/d2026891ca2b3931bc55fb8d8c6bbd7b5b6865a6))
+* ignore `maxPadding` in case of range slider using ([#279](https://github.com/gravity-ui/charts/issues/279)) ([cf0e266](https://github.com/gravity-ui/charts/commit/cf0e2669e6925220f12209696f50aadf66b73707))
+* line series dataLabels position ([#281](https://github.com/gravity-ui/charts/issues/281)) ([82245b2](https://github.com/gravity-ui/charts/commit/82245b2986d3f369c27443f7bb58f7532278c5e6))
+* only the necessary free space should be reserved for data-labels ([#282](https://github.com/gravity-ui/charts/issues/282)) ([ce40ad8](https://github.com/gravity-ui/charts/commit/ce40ad8853aafcd88e529a416cbac387beed26bf))
+
 ## [1.23.0](https://github.com/gravity-ui/charts/compare/v1.22.0...v1.23.0) (2025-11-17)
 
 
