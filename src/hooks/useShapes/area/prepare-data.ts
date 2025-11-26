@@ -127,7 +127,7 @@ export const prepareAreaData = async (args: {
         isOutsideBounds,
     } = args;
     const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax / (1 - xAxis.maxPadding);
+    const xMax = xRangeMax;
 
     const result: PreparedAreaData[] = [];
     const dataByPlots = Array.from(
