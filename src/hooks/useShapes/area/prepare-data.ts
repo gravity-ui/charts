@@ -6,6 +6,7 @@ import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
 import type {PreparedAreaSeries} from '../../useSeries/types';
+import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
@@ -41,6 +42,70 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: 
     return Array.from(xValues);
 }
 
+async function prepareDataLabels({
+    series,
+    points,
+    xMax,
+    yAxisTop,
+}: {
+    series: PreparedAreaSeries;
+    points: PointData[];
+    xMax: number;
+    yAxisTop: number;
+}) {
+    const svgLabels: LabelData[] = [];
+    const htmlLabels: HtmlItem[] = [];
+
+    const getTextSize = getTextSizeFn({style: series.dataLabels.style});
+    for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
+        const point = points[pointsIndex];
+
+        if (point.y === null) {
+            continue;
+        }
+
+        const text = getFormattedValue({
+            value: point.data.label || point.data.y,
+            ...series.dataLabels,
+        });
+
+        if (series.dataLabels.html) {
+            const size = await getLabelsSize({
+                labels: [text],
+                style: series.dataLabels.style,
+                html: series.dataLabels.html,
+            });
+            const labelSize = {width: size.maxWidth, height: size.maxHeight};
+            const x = Math.min(xMax - labelSize.width, Math.max(0, point.x - labelSize.width / 2));
+            const y = Math.max(yAxisTop, point.y - series.dataLabels.padding - labelSize.height);
+
+            htmlLabels.push({
+                x,
+                y,
+                content: text,
+                size: labelSize,
+                style: series.dataLabels.style,
+            });
+        } else {
+            const labelSize = await getTextSize(text);
+            const x = Math.min(xMax - labelSize.width, Math.max(0, point.x - labelSize.width / 2));
+            const y = Math.max(yAxisTop, point.y - series.dataLabels.padding - labelSize.height);
+            svgLabels.push({
+                text,
+                x,
+                y,
+                style: series.dataLabels.style,
+                size: labelSize,
+                textAnchor: 'start',
+                series,
+                active: true,
+            });
+        }
+    }
+
+    return {svgLabels, htmlLabels};
+}
+
 export const prepareAreaData = async (args: {
     series: PreparedAreaSeries[];
     xAxis: PreparedXAxis;
@@ -48,195 +113,167 @@ export const prepareAreaData = async (args: {
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     boundsHeight: number;
+    split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
 }): Promise<PreparedAreaData[]> => {
-    const {series, xAxis, xScale, yAxis, yScale, boundsHeight: plotHeight, isOutsideBounds} = args;
+    const {
+        series,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        boundsHeight: plotHeight,
+        split,
+        isOutsideBounds,
+    } = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax / (1 - xAxis.maxPadding);
 
     const result: PreparedAreaData[] = [];
-    const list = Array.from(group(series, (s) => s.stackId));
-    for (let i = 0; i < list.length; i++) {
-        const [_stackId, seriesStack] = list[i];
+    const dataByPlots = Array.from(
+        group(
+            series,
+            (s) => {
+                const yAxisIndex = s.yAxis;
+                const seriesYAxis = yAxis[yAxisIndex];
+                const plotIndex = seriesYAxis.plotIndex;
+                return plotIndex;
+            },
+            (s) => s.stackId,
+        ),
+    );
 
-        const xValues = getXValues(seriesStack, xAxis, xScale);
+    const plotIndexes = Object.keys(dataByPlots);
+    for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
+        const [plotIndex, stackItems] = dataByPlots[plotDataIndex];
+        const list = Array.from(stackItems);
+        for (let i = 0; i < list.length; i++) {
+            const [_stackId, seriesStack] = list[i];
 
-        const accumulatedYValues = new Map<string, number>();
-        xValues.forEach(([key]) => {
-            accumulatedYValues.set(key, 0);
-        });
+            const xValues = getXValues(seriesStack, xAxis, xScale);
 
-        const seriesStackData: PreparedAreaData[] = [];
-        for (let j = 0; j < seriesStack.length; j++) {
-            const s = seriesStack[j];
-            const yAxisIndex = s.yAxis;
-            const seriesYAxis = yAxis[yAxisIndex];
-            const seriesYScale = yScale[yAxisIndex];
+            const accumulatedYValues = new Map<string, number>();
+            xValues.forEach(([key]) => {
+                accumulatedYValues.set(key, 0);
+            });
 
-            if (!seriesYScale) {
-                continue;
-            }
+            const seriesStackData: PreparedAreaData[] = [];
+            for (let j = 0; j < seriesStack.length; j++) {
+                const s = seriesStack[j];
+                const yAxisIndex = s.yAxis;
+                const seriesYAxis = yAxis[yAxisIndex];
+                const seriesYScale = yScale[yAxisIndex];
 
-            const yAxisTop = 0;
-            const yMin =
-                getYValue({
-                    point: {y: 0},
-                    points: s.data,
-                    yAxis: seriesYAxis,
-                    yScale: seriesYScale,
-                }) ?? 0;
-            const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
-                const key = String(
-                    xAxis.type === 'category'
-                        ? getDataCategoryValue({
-                              axisDirection: 'x',
-                              categories: xAxis.categories || [],
-                              data: d,
-                          })
-                        : d.x,
-                );
-                return m.set(key, d);
-            }, new Map());
-            const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue]) => {
-                const accumulatedYValue = accumulatedYValues.get(x) || 0;
-                const d =
-                    seriesData.get(x) ??
-                    ({
-                        x,
-                        y: 0,
-                    } as AreaSeriesData);
-                const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
-                const yPointValue = yValue === null ? null : yValue - accumulatedYValue;
-                if (yPointValue !== null) {
-                    accumulatedYValues.set(x, yMin - yPointValue);
+                if (!seriesYScale) {
+                    continue;
                 }
-                pointsAcc.push({
-                    y0: yMin - accumulatedYValue,
-                    x: xValue,
-                    y: yPointValue,
-                    data: d,
-                    series: s,
-                });
-                return pointsAcc;
-            }, []);
 
-            const labels: LabelData[] = [];
-            const htmlElements: HtmlItem[] = [];
+                const yAxisTop = split.plots[plotIndex]?.top || 0;
 
-            if (s.dataLabels.enabled) {
-                const getTextSize = getTextSizeFn({style: s.dataLabels.style});
-
-                for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
-                    const point = points[pointsIndex];
-
-                    if (point.y === null) {
-                        continue;
-                    }
-
-                    const text = getFormattedValue({
-                        value: point.data.label || point.data.y,
-                        ...s.dataLabels,
-                    });
-
-                    if (s.dataLabels.html) {
-                        const size = await getLabelsSize({
-                            labels: [text],
-                            style: s.dataLabels.style,
-                            html: s.dataLabels.html,
-                        });
-                        const labelSize = {width: size.maxWidth, height: size.maxHeight};
-                        const x = Math.min(
-                            xMax - labelSize.width,
-                            Math.max(0, point.x - labelSize.width / 2),
-                        );
-                        const y = Math.max(
-                            yAxisTop,
-                            point.y - s.dataLabels.padding - labelSize.height,
-                        );
-
-                        htmlElements.push({
+                const yMin =
+                    getYValue({
+                        point: {y: 0},
+                        points: s.data,
+                        yAxis: seriesYAxis,
+                        yScale: seriesYScale,
+                    }) ?? 0;
+                const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
+                    const key = String(
+                        xAxis.type === 'category'
+                            ? getDataCategoryValue({
+                                  axisDirection: 'x',
+                                  categories: xAxis.categories || [],
+                                  data: d,
+                              })
+                            : d.x,
+                    );
+                    return m.set(key, d);
+                }, new Map());
+                const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue]) => {
+                    const accumulatedYValue = accumulatedYValues.get(x) || 0;
+                    const d =
+                        seriesData.get(x) ??
+                        ({
                             x,
-                            y,
-                            content: text,
-                            size: labelSize,
-                            style: s.dataLabels.style,
-                        });
-                    } else {
-                        const labelSize = await getTextSize(text);
-                        const x = Math.min(
-                            xMax - labelSize.width,
-                            Math.max(0, point.x - labelSize.width / 2),
-                        );
-                        const y = Math.max(
-                            yAxisTop,
-                            point.y - s.dataLabels.padding - labelSize.height,
-                        );
-                        labels.push({
-                            text,
-                            x,
-                            y,
-                            style: s.dataLabels.style,
-                            size: labelSize,
-                            textAnchor: 'start',
-                            series: s,
-                            active: true,
-                        });
+                            y: 0,
+                        } as AreaSeriesData);
+                    const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
+                    const yPointValue = yValue === null ? null : yValue - accumulatedYValue;
+                    if (yPointValue !== null) {
+                        accumulatedYValues.set(x, yMin - yPointValue);
                     }
-                }
-            }
-
-            let markers: MarkerData[] = [];
-            if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
-                markers = points.reduce<MarkerData[]>((markersAcc, p) => {
-                    if (p.y === null) {
-                        return markersAcc;
-                    }
-                    markersAcc.push({
-                        point: p as MarkerPointData,
-                        active: true,
-                        hovered: false,
-                        clipped: isOutsideBounds(p.x, p.y),
+                    pointsAcc.push({
+                        y0: yAxisTop + yMin - accumulatedYValue,
+                        x: xValue,
+                        y: yPointValue === null ? null : yAxisTop + (yPointValue ?? 0),
+                        data: d,
+                        series: s,
                     });
-                    return markersAcc;
+                    return pointsAcc;
                 }, []);
+
+                const labels: LabelData[] = [];
+                const htmlElements: HtmlItem[] = [];
+
+                if (s.dataLabels.enabled) {
+                    const labelsData = await prepareDataLabels({series: s, points, xMax, yAxisTop});
+                    labels.push(...labelsData.svgLabels);
+                    htmlElements.push(...labelsData.htmlLabels);
+                }
+
+                let markers: MarkerData[] = [];
+                if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
+                    markers = points.reduce<MarkerData[]>((markersAcc, p) => {
+                        if (p.y === null) {
+                            return markersAcc;
+                        }
+                        markersAcc.push({
+                            point: p as MarkerPointData,
+                            active: true,
+                            hovered: false,
+                            clipped: isOutsideBounds(p.x, p.y),
+                        });
+                        return markersAcc;
+                    }, []);
+                }
+
+                seriesStackData.push({
+                    points,
+                    markers,
+                    labels,
+                    color: s.color,
+                    opacity: s.opacity,
+                    width: s.lineWidth,
+                    series: s,
+                    hovered: false,
+                    active: true,
+                    id: s.id,
+                    htmlElements,
+                });
             }
 
-            seriesStackData.push({
-                points,
-                markers,
-                labels,
-                color: s.color,
-                opacity: s.opacity,
-                width: s.lineWidth,
-                series: s,
-                hovered: false,
-                active: true,
-                id: s.id,
-                htmlElements,
-            });
-        }
+            if (series.some((s) => s.stacking === 'percent')) {
+                xValues.forEach(([x], index) => {
+                    const stackHeight = accumulatedYValues.get(x) || 0;
+                    let acc = 0;
+                    const ratio = plotHeight / stackHeight;
 
-        if (series.some((s) => s.stacking === 'percent')) {
-            xValues.forEach(([x], index) => {
-                const stackHeight = accumulatedYValues.get(x) || 0;
-                let acc = 0;
-                const ratio = plotHeight / stackHeight;
+                    seriesStackData.forEach((item) => {
+                        const point = item.points[index];
 
-                seriesStackData.forEach((item) => {
-                    const point = item.points[index];
+                        if (point.y !== null && point.y !== undefined) {
+                            const height = (point.y0 - point.y) * ratio;
+                            point.y0 = plotHeight - height - acc;
+                            point.y = point.y0 + height;
 
-                    if (point.y !== null && point.y !== undefined) {
-                        const height = (point.y0 - point.y) * ratio;
-                        point.y0 = plotHeight - height - acc;
-                        point.y = point.y0 + height;
-
-                        acc += height;
-                    }
+                            acc += height;
+                        }
+                    });
                 });
-            });
-        }
+            }
 
-        result.push(...seriesStackData);
+            result.push(...seriesStackData);
+        }
     }
 
     return result;
