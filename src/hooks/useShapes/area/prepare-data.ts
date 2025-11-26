@@ -1,7 +1,7 @@
 import {group} from 'd3';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
-import {getDataCategoryValue, getLabelsSize, getLeftPosition} from '../../../utils';
+import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
@@ -9,38 +9,6 @@ import type {PreparedAreaSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
-
-async function getLabelData(point: MarkerPointData, series: PreparedAreaSeries, xMax: number) {
-    const text = getFormattedValue({
-        value: point.data.label || point.data.y,
-        ...series.dataLabels,
-    });
-    const style = series.dataLabels.style;
-    const size = await getLabelsSize({labels: [text], style, html: series.dataLabels.html});
-
-    const labelData: LabelData = {
-        text,
-        x: point.x,
-        y: point.y - series.dataLabels.padding,
-        style,
-        size: {width: size.maxWidth, height: size.maxHeight},
-        textAnchor: 'middle',
-        series: series,
-        active: true,
-    };
-
-    const left = getLeftPosition(labelData);
-    if (left < 0) {
-        labelData.x = labelData.x + Math.abs(left);
-    } else {
-        const right = left + labelData.size.width;
-        if (right > xMax) {
-            labelData.x = labelData.x - (right - xMax);
-        }
-    }
-
-    return labelData;
-}
 
 function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: ChartScale) {
     const categories = xAxis.categories || [];
@@ -109,6 +77,7 @@ export const prepareAreaData = async (args: {
                 continue;
             }
 
+            const yAxisTop = 0;
             const yMin =
                 getYValue({
                     point: {y: 0},
@@ -151,44 +120,68 @@ export const prepareAreaData = async (args: {
                 return pointsAcc;
             }, []);
 
-            let labels: LabelData[] = [];
+            const labels: LabelData[] = [];
             const htmlElements: HtmlItem[] = [];
 
             if (s.dataLabels.enabled) {
-                const labelItems = await Promise.all(
-                    points.reduce<Promise<LabelData>[]>((labelItemsAcc, p) => {
-                        if (p.y === null) {
-                            return labelItemsAcc;
-                        }
-                        labelItemsAcc.push(getLabelData(p as MarkerPointData, s, xMax));
-                        return labelItemsAcc;
-                    }, []),
-                );
-                if (s.dataLabels.html) {
-                    const htmlLabels = await Promise.all(
-                        labelItems.map(async (l) => {
-                            const style = l.style ?? s.dataLabels.style;
-                            const labelSize = await getLabelsSize({
-                                labels: [l.text],
-                                style,
-                                html: true,
-                            });
+                const getTextSize = getTextSizeFn({style: s.dataLabels.style});
 
-                            return {
-                                x: l.x - l.size.width / 2,
-                                y: l.y,
-                                content: l.text,
-                                size: {
-                                    width: labelSize.maxWidth,
-                                    height: labelSize.maxHeight,
-                                },
-                                style,
-                            };
-                        }),
-                    );
-                    htmlElements.push(...htmlLabels);
-                } else {
-                    labels = labelItems;
+                for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
+                    const point = points[pointsIndex];
+
+                    if (point.y === null) {
+                        continue;
+                    }
+
+                    const text = getFormattedValue({
+                        value: point.data.label || point.data.y,
+                        ...s.dataLabels,
+                    });
+
+                    if (s.dataLabels.html) {
+                        const size = await getLabelsSize({
+                            labels: [text],
+                            style: s.dataLabels.style,
+                            html: s.dataLabels.html,
+                        });
+                        const labelSize = {width: size.maxWidth, height: size.maxHeight};
+                        const x = Math.min(
+                            xMax - labelSize.width,
+                            Math.max(0, point.x - labelSize.width / 2),
+                        );
+                        const y = Math.max(
+                            yAxisTop,
+                            point.y - s.dataLabels.padding - labelSize.height,
+                        );
+
+                        htmlElements.push({
+                            x,
+                            y,
+                            content: text,
+                            size: labelSize,
+                            style: s.dataLabels.style,
+                        });
+                    } else {
+                        const labelSize = await getTextSize(text);
+                        const x = Math.min(
+                            xMax - labelSize.width,
+                            Math.max(0, point.x - labelSize.width / 2),
+                        );
+                        const y = Math.max(
+                            yAxisTop,
+                            point.y - s.dataLabels.padding - labelSize.height,
+                        );
+                        labels.push({
+                            text,
+                            x,
+                            y,
+                            style: s.dataLabels.style,
+                            size: labelSize,
+                            textAnchor: 'start',
+                            series: s,
+                            active: true,
+                        });
+                    }
                 }
             }
 
