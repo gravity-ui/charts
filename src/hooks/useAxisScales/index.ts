@@ -477,11 +477,17 @@ export function createXScale(args: {
                 const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
                 const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
+
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                if (!hasZoomX && !hasOffset) {
-                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                    scale.nice(Math.max(10, domainData.length));
+                if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        Math.min(nicedDomain[0], domainWithOffset[0]),
+                        Math.max(nicedDomain[1], domainWithOffset[1]),
+                    ]);
                 }
 
                 return scale;
@@ -559,12 +565,17 @@ export function createXScale(args: {
                 const domainOffsetMax = Math.abs(
                     scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
                 );
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                if (!hasZoomX && !hasOffset) {
-                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                    scale.nice(Math.max(10, domainData.length));
+                if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        Math.min(Number(nicedDomain[0]), Number(domainWithOffset[0])),
+                        Math.max(Number(nicedDomain[1]), Number(domainWithOffset[1])),
+                    ]);
                 }
                 return scale;
             }
