@@ -38,14 +38,14 @@ export function getMinMaxPropsOrState(args: {
 }
 
 /**
- * Checks whether a domain is zero (when minimum and maximum values are equal).
+ * Checks whether a domain represents a single point (when minimum and maximum values are equal).
  *
  * This is necessary for cases where exactly one marker needs to be rendered on an axis.
  * In such cases, it is not allowed to use axis extremums (min/max)
  * that differ from those in the domain, as this can lead to incorrect visualization
  * and scale stretching around a single point.
  */
-export function isZeroDomain(domain: [number, number]) {
+export function checkIsPointDomain(domain: [number, number]) {
     return domain[0] === domain[1];
 }
 

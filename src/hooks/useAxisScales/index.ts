@@ -32,7 +32,7 @@ import type {AxisDirection} from '../../utils';
 import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
 
-import {getMinMaxPropsOrState, hasOnlyMarkerSeries, isZeroDomain} from './utils';
+import {checkIsPointDomain, getMinMaxPropsOrState, hasOnlyMarkerSeries} from './utils';
 
 export type ChartScale =
     | ScaleLinear<number, number>
@@ -171,17 +171,17 @@ export function createYScale(args: {
                     number,
                     number,
                 ];
-                const zeroDomain = hasOnlyMarkerSeries(series)
-                    ? isZeroDomain([yMinDomain, yMaxDomain])
+                const isPointDomain = hasOnlyMarkerSeries(series)
+                    ? checkIsPointDomain([yMinDomain, yMaxDomain])
                     : false;
 
                 const yMin =
-                    typeof yMinPropsOrState === 'number' && !zeroDomain
+                    typeof yMinPropsOrState === 'number' && !isPointDomain
                         ? yMinPropsOrState
                         : yMinDomain;
                 let yMax: number;
 
-                if (typeof yMaxPropsOrState === 'number' && !zeroDomain) {
+                if (typeof yMaxPropsOrState === 'number' && !isPointDomain) {
                     yMax = yMaxPropsOrState;
                 } else {
                     const hasSeriesWithVolumeOnYAxis = series.some((s) =>
@@ -231,18 +231,18 @@ export function createYScale(args: {
         case 'datetime': {
             if (yTimestamps) {
                 const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
-                const zeroDomain = hasOnlyMarkerSeries(series)
-                    ? isZeroDomain([yMinTimestamp, yMaxTimestamp])
+                const isPointDomain = hasOnlyMarkerSeries(series)
+                    ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
                     : false;
                 const yMin =
                     typeof yMinPropsOrState === 'number' &&
-                    !zeroDomain &&
+                    !isPointDomain &&
                     yMinPropsOrState > yMinTimestamp
                         ? yMinPropsOrState
                         : yMinTimestamp;
                 const yMax =
                     typeof yMaxPropsOrState === 'number' &&
-                    !zeroDomain &&
+                    !isPointDomain &&
                     yMaxPropsOrState < yMaxTimestamp
                         ? yMaxPropsOrState
                         : yMaxTimestamp;
@@ -260,18 +260,18 @@ export function createYScale(args: {
                         number,
                         number,
                     ];
-                    const zeroDomain = hasOnlyMarkerSeries(series)
-                        ? isZeroDomain([yMinTimestamp, yMaxTimestamp])
+                    const isPointDomain = hasOnlyMarkerSeries(series)
+                        ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
                         : false;
                     const yMin =
                         typeof yMinPropsOrState === 'number' &&
-                        !zeroDomain &&
+                        !isPointDomain &&
                         yMinPropsOrState > yMinTimestamp
                             ? yMinPropsOrState
                             : yMinTimestamp;
                     const yMax =
                         typeof yMaxPropsOrState === 'number' &&
-                        !zeroDomain &&
+                        !isPointDomain &&
                         yMaxPropsOrState < yMaxTimestamp
                             ? yMaxPropsOrState
                             : yMaxTimestamp;
@@ -436,20 +436,20 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const zeroDomain = hasOnlyMarkerSeries(series)
-                    ? isZeroDomain([xMinDomain, xMaxDomain])
+                const isPointDomain = hasOnlyMarkerSeries(series)
+                    ? checkIsPointDomain([xMinDomain, xMaxDomain])
                     : false;
                 let xMin: number;
                 let xMax: number;
 
-                if (typeof xMinPropsOrState === 'number' && !zeroDomain) {
+                if (typeof xMinPropsOrState === 'number' && !isPointDomain) {
                     xMin = xMinPropsOrState;
                 } else {
                     const xMinDefault = getDefaultMinXAxisValue(series);
                     xMin = xMinDefault ?? xMinDomain;
                 }
 
-                if (typeof xMaxPropsOrState === 'number' && !zeroDomain) {
+                if (typeof xMaxPropsOrState === 'number' && !isPointDomain) {
                     xMax = xMaxPropsOrState;
                 } else {
                     const xMaxDefault = getDefaultMaxXAxisValue(series);
@@ -524,17 +524,17 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const zeroDomain = isZeroDomain([xMinTimestamp, xMaxTimestamp]);
+                const isPointDomain = checkIsPointDomain([xMinTimestamp, xMaxTimestamp]);
                 const xMin =
                     typeof xMinPropsOrState === 'number' &&
                     xMinPropsOrState > xMinTimestamp &&
-                    !zeroDomain
+                    !isPointDomain
                         ? xMinPropsOrState
                         : xMinTimestamp;
                 const xMax =
                     typeof xMaxPropsOrState === 'number' &&
                     xMaxPropsOrState < xMaxTimestamp &&
-                    !zeroDomain
+                    !isPointDomain
                         ? xMaxPropsOrState
                         : xMaxTimestamp;
                 domain = [xMin, xMax];
