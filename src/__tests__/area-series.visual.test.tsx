@@ -10,6 +10,7 @@ import {
     areaNullModeConnectLinearXData,
     areaNullModeSkipLinearXData,
     areaNullModeZeroLinearXData,
+    areaSplitData,
     areaStakingNormalData,
 } from '../__stories__/__data__';
 
@@ -39,6 +40,11 @@ test.describe('Area series', () => {
 
     test('x null values, nullMode=zero', async ({mount}) => {
         const component = await mount(<ChartTestStory data={areaNullModeZeroLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Basic split', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={areaSplitData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
