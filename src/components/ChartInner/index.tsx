@@ -241,6 +241,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     }, [
         initialized,
         preparedRangeSlider.defaultRange,
+        preparedSeries,
         setInitialized,
         updateRangeSliderState,
         xScale,
@@ -321,6 +322,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     width={width}
                     xAxis={data.xAxis}
                     yAxis={data.yAxis}
+                    zoomState={zoomState}
                 />
             )}
             {preparedLegend?.enabled && legendConfig && (

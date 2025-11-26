@@ -130,14 +130,13 @@ export function useChartInnerProps(props: Props) {
     const {xScale, yScale} = useAxisScales({
         boundsWidth,
         boundsHeight,
-        hasZoomX: Boolean(zoomState.x),
-        hasZoomY: Boolean(zoomState.y),
         rangeSliderState,
         series: preparedSeries,
         seriesOptions: preparedSeriesOptions,
         split: preparedSplit,
         xAxis,
         yAxis,
+        zoomState,
     });
 
     const isOutsideBounds = React.useCallback(
