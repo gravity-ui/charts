@@ -77,40 +77,48 @@ async function testZoom(args: {
 
 test.describe('Zoom', () => {
     test.describe('Type x', () => {
-        test('One zoomed point', async ({mount}) => {
-            const data: ChartData = {
-                chart: {
-                    zoom: {
-                        enabled: true,
-                        type: 'x',
+        const basicData: ChartData = {
+            chart: {
+                zoom: {
+                    enabled: true,
+                    type: 'x',
+                },
+            },
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Line series',
+                        data: [
+                            {x: 0, y: 97},
+                            {x: 1, y: 14},
+                            {x: 2, y: 42},
+                            {x: 3, y: 28},
+                            {x: 4, y: 16},
+                            {x: 5, y: 79},
+                            {x: 6, y: 73},
+                            {x: 7, y: 82},
+                            {x: 8, y: 27},
+                            {x: 9, y: 100},
+                            {x: 10, y: 97},
+                        ],
                     },
-                },
-                series: {
-                    data: [
-                        {
-                            type: 'line',
-                            name: 'Line series',
-                            data: [
-                                {x: 0, y: 97},
-                                {x: 1, y: 14},
-                                {x: 2, y: 42},
-                                {x: 3, y: 28},
-                                {x: 4, y: 16},
-                                {x: 5, y: 79},
-                                {x: 6, y: 73},
-                                {x: 7, y: 82},
-                                {x: 8, y: 27},
-                                {x: 9, y: 100},
-                                {x: 10, y: 97},
-                            ],
-                        },
-                    ],
-                },
-                tooltip: {
-                    enabled: false,
-                },
-            };
+                ],
+            },
+            tooltip: {
+                enabled: false,
+            },
+        };
 
+        test('One zoomed point', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={basicData} />);
+
+            await testZoom({component, getZoomOptions: getZoomXOptions});
+        });
+
+        test('One zoomed point scatter', async ({mount}) => {
+            const data = cloneDeep(basicData);
+            set(data, 'series.data[0].type', 'scatter');
             const component = await mount(<ChartTestStory data={data} />);
 
             await testZoom({component, getZoomOptions: getZoomXOptions});
