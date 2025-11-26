@@ -340,17 +340,15 @@ function getXScaleRange({
     seriesOptions,
     hasZoomX,
     axis,
-    maxPadding,
 }: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
-    maxPadding: number;
 }) {
     const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
-    const xRange = [0, boundsWidth - maxPadding];
+    const xRange = [0, boundsWidth];
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
     const range = hasZoomX ? xRangeZoom : xRange;
 
@@ -359,7 +357,7 @@ function getXScaleRange({
         const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
         if (Object.keys(groupedData).length > 1) {
             const {bandSize} = getBarXLayoutForNumericScale({
-                plotWidth: boundsWidth - maxPadding,
+                plotWidth: boundsWidth,
                 groupedData,
                 seriesOptions,
             });
@@ -407,7 +405,6 @@ export function createXScale(args: {
         seriesOptions,
         hasZoomX,
         axis,
-        maxPadding: xAxisMaxPadding,
     });
 
     switch (axis.order) {
@@ -463,7 +460,7 @@ export function createXScale(args: {
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = 0;
+                let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -542,7 +539,7 @@ export function createXScale(args: {
                 const scale = scaleUtc().domain(domain).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = 0;
+                let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
