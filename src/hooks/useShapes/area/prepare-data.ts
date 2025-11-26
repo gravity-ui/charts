@@ -173,7 +173,7 @@ export const prepareAreaData = async (args: {
                     pointsAcc.push({
                         y0: yAxisTop + yMin - accumulatedYValue,
                         x: xValue,
-                        y: yAxisTop + (yPointValue ?? 0),
+                        y: yPointValue === null ? null : yAxisTop + (yPointValue ?? 0),
                         data: d,
                         series: s,
                     });
