@@ -253,6 +253,39 @@ function getLegendOffset(args: {
     }
 }
 
+function getMaxLegendWidth(args: {
+    chartWidth: number;
+    chartMargin: PreparedChart['margin'];
+    preparedLegend: PreparedLegend;
+    isVerticalPosition: boolean;
+}): number {
+    const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
+
+    if (isVerticalPosition) {
+        return Math.min(
+            (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2,
+            preparedLegend.width,
+        );
+    }
+
+    return chartWidth - chartMargin.right - chartMargin.left;
+}
+
+function getMaxLegendHeight(args: {
+    chartHeight: number;
+    chartMargin: PreparedChart['margin'];
+    preparedLegend: PreparedLegend;
+    isVerticalPosition: boolean;
+}): number {
+    const {chartHeight, chartMargin, preparedLegend, isVerticalPosition} = args;
+
+    if (isVerticalPosition) {
+        return chartHeight - chartMargin.top - chartMargin.bottom - 2 * preparedLegend.margin;
+    }
+
+    return (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
+}
+
 export function getLegendComponents(args: {
     chartWidth: number;
     chartHeight: number;
@@ -264,15 +297,18 @@ export function getLegendComponents(args: {
 
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
-    const maxLegendWidth = isVerticalPosition
-        ? Math.min(
-              (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2,
-              preparedLegend.width,
-          )
-        : chartWidth - chartMargin.right - chartMargin.left;
-    const maxLegendHeight = isVerticalPosition
-        ? chartHeight - chartMargin.top - chartMargin.bottom - 2 * preparedLegend.margin
-        : (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
+    const maxLegendWidth = getMaxLegendWidth({
+        chartWidth,
+        chartMargin,
+        preparedLegend,
+        isVerticalPosition,
+    });
+    const maxLegendHeight = getMaxLegendHeight({
+        chartHeight,
+        chartMargin,
+        preparedLegend,
+        isVerticalPosition,
+    });
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
     const items = getGroupedLegendItems({
         maxLegendWidth,

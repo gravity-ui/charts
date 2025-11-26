@@ -15,7 +15,13 @@ import {
     useSplit,
     useZoom,
 } from '../../hooks';
-import type {ClipPathBySeriesType, RangeSliderState, ZoomState} from '../../hooks';
+import type {
+    ClipPathBySeriesType,
+    PreparedAxis,
+    PreparedLegend,
+    RangeSliderState,
+    ZoomState,
+} from '../../hooks';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
@@ -38,6 +44,47 @@ type Props = ChartInnerProps & {
 const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
     [SERIES_TYPE.Scatter]: false,
 };
+
+function getBoundsOffsetTop(args: {
+    chartMarginTop: number;
+    preparedLegend: PreparedLegend | null;
+}): number {
+    const {chartMarginTop, preparedLegend} = args;
+
+    return (
+        chartMarginTop +
+        (preparedLegend?.enabled && preparedLegend.position === 'top'
+            ? preparedLegend.height + preparedLegend.margin
+            : 0)
+    );
+}
+
+function getBoundsOffsetLeft(args: {
+    chartMarginLeft: number;
+    preparedLegend: PreparedLegend | null;
+    yAxis: PreparedAxis[];
+    getYAxisWidth: (axis: PreparedAxis) => number;
+}): number {
+    const {chartMarginLeft, preparedLegend, yAxis, getYAxisWidth: getAxisWidth} = args;
+
+    const legendOffset =
+        preparedLegend?.enabled && preparedLegend.position === 'left'
+            ? preparedLegend.width + preparedLegend.margin
+            : 0;
+
+    const leftAxisWidth = yAxis.reduce((acc, axis) => {
+        if (axis.position !== 'left') {
+            return acc;
+        }
+        const axisWidth = getAxisWidth(axis);
+        if (acc < axisWidth) {
+            acc = axisWidth;
+        }
+        return acc;
+    }, 0);
+
+    return chartMarginLeft + legendOffset + leftAxisWidth;
+}
 
 export function useChartInnerProps(props: Props) {
     const {
@@ -195,27 +242,18 @@ export function useChartInnerProps(props: Props) {
         yScale,
     });
 
-    const boundsOffsetTop =
-        chart.margin.top +
-        (preparedLegend?.enabled && preparedLegend.position === 'top'
-            ? preparedLegend.height + preparedLegend.margin
-            : 0);
+    const boundsOffsetTop = getBoundsOffsetTop({
+        chartMarginTop: chart.margin.top,
+        preparedLegend,
+    });
+
     // We need to calculate the width of each left axis because the first axis can be hidden
-    const boundsOffsetLeft =
-        chart.margin.left +
-        (preparedLegend?.enabled && preparedLegend.position === 'left'
-            ? preparedLegend.width + preparedLegend.margin
-            : 0) +
-        yAxis.reduce((acc, axis) => {
-            if (axis.position !== 'left') {
-                return acc;
-            }
-            const axisWidth = getYAxisWidth(axis);
-            if (acc < axisWidth) {
-                acc = axisWidth;
-            }
-            return acc;
-        }, 0);
+    const boundsOffsetLeft = getBoundsOffsetLeft({
+        chartMarginLeft: chart.margin.left,
+        preparedLegend,
+        yAxis,
+        getYAxisWidth,
+    });
 
     const {x} = svgContainer?.getBoundingClientRect() ?? {};
 

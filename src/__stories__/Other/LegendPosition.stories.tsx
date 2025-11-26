@@ -49,7 +49,6 @@ export const LegendPosition = {
                 enabled: args.enabled,
                 position: args.position,
                 align: args.align,
-                //todo:implement for vertical legend
                 justifyContent: args.justifyContent,
             },
         };
