@@ -72,8 +72,8 @@ export interface BaseSeriesData<T = MeaningfulAny> {
 }
 
 export interface BaseSeriesLegend extends ChartLegendItem {
-    /** If grouping is enabled in the legend, then for multiple series with the same groupId, only one label in the legend will be displayed.
-     * The first non-empty name and symbol of the legend from the group's series is used for the legend's label.
+    /** For multiple series with the same groupId, only one label in the legend will be displayed.
+     * The legend element uses the name and symbol from the first series of the group.
      */
     groupId?: string;
     /** The text is displayed in the legend instead of the series name. */
