@@ -8,7 +8,6 @@ import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';
 import type {
     PreparedAxis,
     PreparedSeries,
-    PreparedSeriesOptions,
     PreparedSplit,
     RangeSliderState,
     ZoomState,
@@ -41,7 +40,6 @@ type Args = {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
-    seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
@@ -346,7 +344,6 @@ export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
     rangeSliderState?: RangeSliderState;
     zoomStateX?: [number, number];
 }) {
@@ -556,17 +553,8 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
+    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
+        args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -579,7 +567,6 @@ const createScales = (args: Args) => {
                   boundsWidth,
                   rangeSliderState,
                   series: visibleSeries,
-                  seriesOptions,
                   zoomStateX: zoomState?.x,
               })
             : undefined,
@@ -605,17 +592,8 @@ const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
+    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
+        args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: (ChartScale | undefined)[] | undefined;
@@ -627,7 +605,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 boundsHeight,
                 rangeSliderState,
                 series,
-                seriesOptions,
                 split,
                 xAxis,
                 yAxis,
@@ -636,15 +613,5 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    ]);
+    }, [boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState]);
 };
