@@ -53,7 +53,6 @@ export function useAxis(props: UseAxesProps) {
                 xAxis,
                 width,
                 seriesData,
-                seriesOptions: preparedSeriesOptions,
             });
 
             let estimatedBoundsHeight = boundsHeight ?? height;

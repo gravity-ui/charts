@@ -69,7 +69,6 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         boundsHeight: preparedRangeSlider.height,
         boundsWidth,
         series: preparedSeries,
-        seriesOptions: preparedSeriesOptions,
         split: EMPTY_PREPARED_SPLIT,
         xAxis: preparedXAxis,
         yAxis: preparedYAxis,
