@@ -27,6 +27,63 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.only('Same data with different x-axis type', async ({mount}) => {
+        const points = [
+            {x: 0, y: 1},
+            {x: 1, y: 3},
+            {x: 2, y: 2},
+        ];
+        // linear x-axis
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    title: {text: 'linear x-axis'},
+                    series: {
+                        data: [{type: 'bar-x', name: '', data: points}],
+                    },
+                    xAxis: {type: 'linear'},
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        // datetime x-axis
+        const startDate = new Date('2000-10-10T00:00:00Z').getTime();
+        const day = 1000 * 60 * 60 * 24;
+        await component.update(
+            <ChartTestStory
+                data={{
+                    title: {text: 'datetime x-axis'},
+                    series: {
+                        data: [
+                            {
+                                type: 'bar-x',
+                                name: '',
+                                data: points.map((d) => ({x: d.x * day + startDate, y: d.y})),
+                            },
+                        ],
+                    },
+                    xAxis: {type: 'datetime'},
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        // categorical x-axis
+        await component.update(
+            <ChartTestStory
+                data={{
+                    title: {text: 'categorical x-axis'},
+                    series: {
+                        data: [{type: 'bar-x', name: '', data: points}],
+                    },
+                    xAxis: {type: 'category', categories: ['0', '1', '2']},
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test.describe('Stacking percent', () => {
         test('Linear X-axis ', async ({mount}) => {
             const chartData: ChartData = {
