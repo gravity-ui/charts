@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.2](https://github.com/gravity-ui/charts/compare/v1.24.1...v1.24.2) (2025-11-27)
+
+
+### Bug Fixes
+
+* x-axis max value padding should affect axis scale domain, not range ([#288](https://github.com/gravity-ui/charts/issues/288)) ([326f4b5](https://github.com/gravity-ui/charts/commit/326f4b590c1efb7041b34639e0f1a2e05eadfc14))
+
 ## [1.24.1](https://github.com/gravity-ui/charts/compare/v1.24.0...v1.24.1) (2025-11-27)
 
 
