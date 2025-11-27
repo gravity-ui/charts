@@ -340,17 +340,15 @@ function getXScaleRange({
     seriesOptions,
     hasZoomX,
     axis,
-    maxPadding,
 }: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
     seriesOptions: PreparedSeriesOptions;
     hasZoomX?: boolean;
-    maxPadding: number;
 }) {
     const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
-    const xRange = [0, boundsWidth - maxPadding];
+    const xRange = [0, boundsWidth];
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
     const range = hasZoomX ? xRangeZoom : xRange;
 
@@ -359,7 +357,7 @@ function getXScaleRange({
         const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
         if (Object.keys(groupedData).length > 1) {
             const {bandSize} = getBarXLayoutForNumericScale({
-                plotWidth: boundsWidth - maxPadding,
+                plotWidth: boundsWidth,
                 groupedData,
                 seriesOptions,
             });
@@ -407,7 +405,6 @@ export function createXScale(args: {
         seriesOptions,
         hasZoomX,
         axis,
-        maxPadding: xAxisMaxPadding,
     });
 
     switch (axis.order) {
@@ -463,7 +460,7 @@ export function createXScale(args: {
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = 0;
+                let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -480,11 +477,17 @@ export function createXScale(args: {
                 const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
                 const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
+
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                if (!hasZoomX && !hasOffset) {
-                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                    scale.nice(Math.max(10, domainData.length));
+                if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        Math.min(nicedDomain[0], domainWithOffset[0]),
+                        Math.max(nicedDomain[1], domainWithOffset[1]),
+                    ]);
                 }
 
                 return scale;
@@ -542,7 +545,7 @@ export function createXScale(args: {
                 const scale = scaleUtc().domain(domain).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = 0;
+                let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -562,12 +565,17 @@ export function createXScale(args: {
                 const domainOffsetMax = Math.abs(
                     scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
                 );
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                if (!hasZoomX && !hasOffset) {
-                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                    scale.nice(Math.max(10, domainData.length));
+                if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        Math.min(Number(nicedDomain[0]), Number(domainWithOffset[0])),
+                        Math.max(Number(nicedDomain[1]), Number(domainWithOffset[1])),
+                    ]);
                 }
                 return scale;
             }

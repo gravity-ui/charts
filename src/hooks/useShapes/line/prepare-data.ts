@@ -37,7 +37,7 @@ export const prepareLineData = async (args: {
 }): Promise<PreparedLineData[]> => {
     const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds} = args;
     const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax / (1 - xAxis.maxPadding);
+    const xMax = xRangeMax;
 
     const acc: PreparedLineData[] = [];
     for (let i = 0; i < series.length; i++) {
