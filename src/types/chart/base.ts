@@ -1,6 +1,8 @@
 import type {FormatNumberOptions} from '../formatter';
 import type {MeaningfulAny} from '../misc';
 
+import type {ChartLegendItem} from './legend';
+
 type NumberFormat = {
     type: 'number';
 } & FormatNumberOptions;
@@ -67,6 +69,15 @@ export interface BaseSeriesData<T = MeaningfulAny> {
     custom?: T;
     /** Individual color for the data chunk (point in scatter, segment in pie, bar etc) */
     color?: string;
+}
+
+export interface BaseSeriesLegend extends ChartLegendItem {
+    /** If grouping is enabled in the legend, then for multiple series with the same groupId, only one label in the legend will be displayed.
+     * The first non-empty name and symbol of the legend from the group's series is used for the legend's label.
+     */
+    groupId?: string;
+    /** The text is displayed in the legend instead of the series name. */
+    itemText?: string;
 }
 
 export interface BaseTextStyle {

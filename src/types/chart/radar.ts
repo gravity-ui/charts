@@ -1,8 +1,8 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 
 export interface RadarSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
@@ -48,7 +48,7 @@ export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
      */
     fillOpacity?: number;
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartLegend & {
+    legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Options for the point markers of line in radar series */

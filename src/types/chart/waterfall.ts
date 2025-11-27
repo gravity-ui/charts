@@ -2,7 +2,7 @@ import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {ChartLegendItem, RectLegendSymbolOptions} from './legend';
 
 export interface WaterfallSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -37,7 +37,7 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
     /** The color used for negative values. If it is not specified, the general color of the series is used. */
     negativeColor?: string;
     /** Individual series legend options. Has higher priority than legend options in widget data. */
-    legend?: ChartLegend & {
+    legend?: ChartLegendItem & {
         symbol?: RectLegendSymbolOptions;
         /** The legend item text for positive, negative values and totals. */
         itemText?: {

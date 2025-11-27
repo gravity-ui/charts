@@ -60,8 +60,12 @@ export function preparePieSeries(args: PreparePieSeriesArgs) {
             id,
             color: dataItem.color || colorScale(dataItem.name),
             legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
+                enabled: dataItem.legend?.enabled ?? series.legend?.enabled ?? legend.enabled,
+                symbol: dataItem.legend?.symbol
+                    ? prepareLegendSymbol(dataItem)
+                    : prepareLegendSymbol(series),
+                groupId: dataItem.legend?.groupId ?? getUniqId(),
+                itemText: dataItem.legend?.itemText ?? dataItem.name,
             },
             center: series.center || ['50%', '50%'],
             borderColor: series.borderColor || '',
