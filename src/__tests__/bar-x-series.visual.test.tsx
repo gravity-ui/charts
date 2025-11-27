@@ -27,7 +27,7 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Same data with different x-axis type', async ({mount}) => {
+    test('Same data with different x-axis type', async ({mount}) => {
         const points = [
             {x: 0, y: 1},
             {x: 1, y: 3},
