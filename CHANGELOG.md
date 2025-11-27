@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.24.1](https://github.com/gravity-ui/charts/compare/v1.24.0...v1.24.1) (2025-11-27)
+
+
+### Bug Fixes
+
+* area series with the same y values ([#290](https://github.com/gravity-ui/charts/issues/290)) ([e3bc78e](https://github.com/gravity-ui/charts/commit/e3bc78e8b79f07eebd190e3e84c44b912f978fca))
+* basic area split ([#286](https://github.com/gravity-ui/charts/issues/286)) ([793fbe7](https://github.com/gravity-ui/charts/commit/793fbe7083c7daa55a3914344857ddfae3f6a168))
+* basic bar-x split ([#283](https://github.com/gravity-ui/charts/issues/283)) ([85d94fd](https://github.com/gravity-ui/charts/commit/85d94fd30d3133174a2fc3befa98fb10acc1d258))
+* fix the label positioning in the area series ([#287](https://github.com/gravity-ui/charts/issues/287)) ([55e1ff1](https://github.com/gravity-ui/charts/commit/55e1ff1769a8949a9ef954fabd2c0de62cb53bd8))
+* fix zoom in case of min/max usage ([#284](https://github.com/gravity-ui/charts/issues/284)) ([f397251](https://github.com/gravity-ui/charts/commit/f3972513ff62c885f6a653a98724e6c4bfc986cb))
+
 ## [1.24.0](https://github.com/gravity-ui/charts/compare/v1.23.0...v1.24.0) (2025-11-25)
 
 
