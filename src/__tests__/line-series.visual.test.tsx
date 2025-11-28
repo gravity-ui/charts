@@ -98,14 +98,14 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Single point', async ({mount}) => {
+    test('Single point (with marker enabled)', async ({mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
                     {
                         name: 'Series 1',
                         type: 'line',
-                        data: [{y: 10, x: 10}],
+                        data: [{y: 10, x: 10, marker: {states: {normal: {enabled: true}}}}],
                     },
                 ],
             },
