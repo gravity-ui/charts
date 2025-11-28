@@ -3,7 +3,7 @@ import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {CONTINUOUS_LEGEND_SIZE, DEFAULT_LEGEND_WIDTH, legendDefaults} from '../../constants';
+import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../../constants';
 import type {BaseTextStyle, ChartData} from '../../types';
 import {getDefaultColorStops, getDomainForContinuousColorScale, getLabelsSize} from '../../utils';
 import type {PreparedChart} from '../useChartOptions/types';
@@ -23,8 +23,10 @@ export async function getPreparedLegend(args: {
     const defaultItemStyle = clone(legendDefaults.itemStyle);
     const itemStyle = get(legend, 'itemStyle');
     const computedItemStyle = merge(defaultItemStyle, itemStyle);
-    const lineHeight = (await getLabelsSize({labels: ['Tmp'], style: computedItemStyle})).maxHeight;
-
+    const {maxHeight: lineHeight, maxWidth: lineWidth} = await getLabelsSize({
+        labels: ['Tmp'],
+        style: computedItemStyle,
+    });
     const legendType = get(legend, 'type', 'discrete');
     const isTitleEnabled = Boolean(legend?.title?.text);
     const titleMargin = isTitleEnabled ? get(legend, 'title.margin', 4) : 0;
@@ -36,7 +38,6 @@ export async function getPreparedLegend(args: {
     const titleText = isTitleEnabled ? get(legend, 'title.text', '') : '';
     const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
     const titleHeight = isTitleEnabled ? titleSize.maxHeight : 0;
-
     const tickStyle: BaseTextStyle = {
         fontSize: '12px',
     };
@@ -69,10 +70,9 @@ export async function getPreparedLegend(args: {
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
             height += lineHeight;
-            legendWidth = get(legend, 'width', DEFAULT_LEGEND_WIDTH);
+            legendWidth = get(legend, 'width', lineWidth);
         }
     }
-
     return {
         align: get(legend, 'align', legendDefaults.align),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
@@ -262,10 +262,7 @@ function getMaxLegendWidth(args: {
     const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
 
     if (isVerticalPosition) {
-        return Math.min(
-            (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2,
-            preparedLegend.width,
-        );
+        return (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2;
     }
 
     return chartWidth - chartMargin.right - chartMargin.left;
@@ -280,7 +277,7 @@ function getMaxLegendHeight(args: {
     const {chartHeight, chartMargin, preparedLegend, isVerticalPosition} = args;
 
     if (isVerticalPosition) {
-        return chartHeight - chartMargin.top - chartMargin.bottom - 2 * preparedLegend.margin;
+        return chartHeight - chartMargin.top - chartMargin.bottom;
     }
 
     return (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
@@ -339,6 +336,7 @@ export function getLegendComponents(args: {
         }
 
         preparedLegend.height = legendHeight;
+        preparedLegend.width = Math.max(maxLegendWidth, preparedLegend.width);
     }
 
     const offset = getLegendOffset({
