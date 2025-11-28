@@ -30,13 +30,15 @@ export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>
         Record<string, {data: PreparedBarYSeriesData; series: T}[]>
     > = {};
     series.forEach((s) => {
+        const axisIndex = get(s, 'yAxis', 0);
+        const seriesYAxis = yAxis[axisIndex];
+        const categories = get(seriesYAxis, 'categories', [] as string[]);
+
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;
             }
-            const axisIndex = get(s, 'yAxis', 0);
-            const seriesYAxis = yAxis[axisIndex];
-            const categories = get(seriesYAxis, 'categories', [] as string[]);
+
             const key =
                 seriesYAxis.type === 'category'
                     ? getDataCategoryValue({axisDirection: 'y', categories, data: d})
@@ -61,7 +63,6 @@ export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>
 }
 
 export function getBarYLayout(args: {
-    plotHeight: number;
     seriesOptions: PreparedSeriesOptions;
     groupedData: ReturnType<typeof groupBarYDataByYValue>;
     scale: ChartScale | undefined;

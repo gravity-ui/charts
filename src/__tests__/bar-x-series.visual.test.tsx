@@ -200,4 +200,22 @@ test.describe('Bar-x series', () => {
         const component = await mount(<ChartTestStory data={barXSplitData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Single point', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-x',
+                        data: [{y: 10, x: 10}],
+                    },
+                ],
+            },
+            yAxis: [{maxPadding: 0}],
+            xAxis: {maxPadding: 0},
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

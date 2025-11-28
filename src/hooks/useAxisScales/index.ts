@@ -10,7 +10,6 @@ import type {
     PreparedSeries,
     PreparedSeriesOptions,
     PreparedSplit,
-    PreparedXAxis,
     RangeSliderState,
     ZoomState,
 } from '../../hooks';
@@ -29,7 +28,6 @@ import {
     isSeriesWithCategoryValues,
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
-import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
 
 import {checkIsPointDomain, getMinMaxPropsOrState, hasOnlyMarkerSeries} from './utils';
@@ -330,42 +328,15 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
-    const types = [SERIES_TYPE.Heatmap] as string[];
+    const types = [SERIES_TYPE.Heatmap, SERIES_TYPE.BarX] as string[];
     return series.some((s) => types.includes(s.type));
 }
 
-function getXScaleRange({
-    boundsWidth,
-    series,
-    seriesOptions,
-    hasZoomX,
-    axis,
-}: {
-    axis: PreparedAxis | ChartAxis;
-    boundsWidth: number;
-    series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
-    hasZoomX?: boolean;
-}) {
+function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?: boolean}) {
     const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
     const xRange = [0, boundsWidth];
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
     const range = hasZoomX ? xRangeZoom : xRange;
-
-    const barXSeries = series.filter((s) => s.type === SERIES_TYPE.BarX);
-    if (barXSeries.length) {
-        const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
-        if (Object.keys(groupedData).length > 1) {
-            const {bandSize} = getBarXLayoutForNumericScale({
-                plotWidth: boundsWidth,
-                groupedData,
-                seriesOptions,
-            });
-
-            const offset = bandSize / 2;
-            return [range[0] + offset, range[1] - offset];
-        }
-    }
 
     return range;
 }
@@ -379,7 +350,7 @@ export function createXScale(args: {
     rangeSliderState?: RangeSliderState;
     zoomStateX?: [number, number];
 }) {
-    const {axis, boundsWidth, series, seriesOptions, rangeSliderState, zoomStateX} = args;
+    const {axis, boundsWidth, series, rangeSliderState, zoomStateX} = args;
     const [xMinPropsOrState, xMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
         maxValues: [zoomStateX?.[1], rangeSliderState?.max],
@@ -401,10 +372,7 @@ export function createXScale(args: {
 
     const range = getXScaleRange({
         boundsWidth,
-        series,
-        seriesOptions,
         hasZoomX,
-        axis,
     });
 
     switch (axis.order) {
