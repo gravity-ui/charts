@@ -32,7 +32,7 @@ const useVisibleSeries = ({
             if (singleSeries.legend.enabled) {
                 return {
                     ...singleSeries,
-                    visible: activeLegendItems.includes(singleSeries.name),
+                    visible: activeLegendItems.includes(singleSeries.legend.groupId),
                 };
             }
 
@@ -124,22 +124,22 @@ export const useSeries = (args: Args) => {
     const chartSeries = useVisibleSeries({preparedSeries, activeLegendItems});
 
     const handleLegendItemClick: OnLegendItemClick = React.useCallback(
-        ({name, metaKey}) => {
+        ({id, metaKey}) => {
             const allItems = getAllLegendItems(preparedSeries);
             const onlyItemSelected =
-                activeLegendItems.length === 1 && activeLegendItems.includes(name);
+                activeLegendItems.length === 1 && activeLegendItems.includes(id);
             let nextActiveLegendItems: string[];
 
-            if (metaKey && activeLegendItems.includes(name)) {
-                nextActiveLegendItems = activeLegendItems.filter((item) => item !== name);
-            } else if (metaKey && !activeLegendItems.includes(name)) {
-                nextActiveLegendItems = activeLegendItems.concat(name);
+            if (metaKey && activeLegendItems.includes(id)) {
+                nextActiveLegendItems = activeLegendItems.filter((item) => item !== id);
+            } else if (metaKey && !activeLegendItems.includes(id)) {
+                nextActiveLegendItems = activeLegendItems.concat(id);
             } else if (onlyItemSelected && allItems.length === 1) {
                 nextActiveLegendItems = [];
             } else if (onlyItemSelected) {
                 nextActiveLegendItems = allItems;
             } else {
-                nextActiveLegendItems = [name];
+                nextActiveLegendItems = [id];
             }
 
             setActiveLegendItems(nextActiveLegendItems);

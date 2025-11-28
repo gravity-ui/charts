@@ -1,8 +1,8 @@
 import type {DashStyle, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseDataLabels, BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {ChartLegendItem, RectLegendSymbolOptions} from './legend';
 
 export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The value of the funnel segment. */
@@ -11,6 +11,10 @@ export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     name: string;
     /** Initial data label of the funnel segment. If not specified, the value is used. */
     label?: string;
+    /** Individual series legend options. Has higher priority than legend options in series data */
+    legend?: BaseSeriesLegend & {
+        symbol?: RectLegendSymbolOptions;
+    };
 }
 
 export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels'> {
@@ -20,10 +24,6 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
     name?: string;
     /** The color of the funnel series. */
     color?: string;
-    /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartLegend & {
-        symbol?: RectLegendSymbolOptions;
-    };
     /** Lines or areas connecting the funnel segments. */
     connectors?: {
         enabled?: boolean;
@@ -45,5 +45,9 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
     dataLabels?: Omit<BaseDataLabels, 'html' | 'allowOverlap'> & {
         /** Horizontal alignment of the data labels. */
         align?: 'left' | 'center' | 'right';
+    };
+    /** Individual series legend options. Has higher priority than legend options in widget data */
+    legend?: ChartLegendItem & {
+        symbol?: RectLegendSymbolOptions;
     };
 }

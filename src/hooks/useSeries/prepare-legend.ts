@@ -1,4 +1,5 @@
 import {select} from 'd3';
+import {groupBy} from 'lodash';
 import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
@@ -99,12 +100,15 @@ export async function getPreparedLegend(args: {
 }
 
 function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegend) {
-    return series.reduce<LegendItemWithoutTextWidth[]>((acc, s) => {
-        const legendEnabled = get(s, 'legend.enabled', true);
+    const grouped = groupBy(series, (s) => s.legend.groupId);
+    return Object.values(grouped).reduce<LegendItemWithoutTextWidth[]>((acc, items) => {
+        const s = items.find((item) => item.legend.enabled);
 
-        if (legendEnabled) {
+        if (s) {
             acc.push({
                 ...s,
+                id: s.legend.groupId,
+                name: s.legend.itemText,
                 height: preparedLegend.lineHeight,
                 symbol: s.legend.symbol,
             });

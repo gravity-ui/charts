@@ -78,8 +78,10 @@ export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedSc
             color: get(s, 'color', colorScale(name)),
             visible: get(s, 'visible', true),
             legend: {
-                enabled: get(s, 'legend.enabled', legend.enabled),
+                enabled: s.legend?.enabled ?? legend.enabled,
                 symbol: prepareLegendSymbol(s, symbolType),
+                groupId: s.legend?.groupId ?? getUniqId(),
+                itemText: s.legend?.itemText ?? name,
             },
             data: prepareSeriesData(s),
             marker: prepareMarker(s, seriesOptions, index),

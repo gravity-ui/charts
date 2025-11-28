@@ -1,8 +1,8 @@
 import type {LayoutAlgorithm, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {RectLegendSymbolOptions} from './legend';
 
 export interface TreemapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The name of the node (used in legend, tooltip etc). */
@@ -26,7 +26,7 @@ export interface TreemapSeries<T = MeaningfulAny> extends BaseSeries {
     /** The main color of the series (hex, rgba). */
     color?: string;
     /** Individual series legend options. Has higher priority than legend options in widget data. */
-    legend?: ChartLegend & {
+    legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Set options on specific levels. Takes precedence over series options, but not point options. */

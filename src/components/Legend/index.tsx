@@ -254,7 +254,7 @@ export const Legend = (props: Props) => {
                         .append('g')
                         .attr('class', b('item'))
                         .on('click', function (e, d) {
-                            onItemClick({name: d.name, metaKey: e.metaKey});
+                            onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
                             onUpdate?.();
                         });
 
@@ -298,7 +298,7 @@ export const Legend = (props: Props) => {
                                 return '0px';
                             })
                             .on('click', function (e, d) {
-                                onItemClick({name: d.name, metaKey: e.metaKey});
+                                onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
                                 onUpdate?.();
                             })
                             [legend.html ? 'html' : 'text'](function (d) {

@@ -43,10 +43,6 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
         type: series.type,
         name: series.name,
         visible: get(series, 'visible', true),
-        legend: {
-            enabled: get(series, 'legend.enabled', legend.enabled),
-            symbol: prepareLegendSymbol(series),
-        },
         dataLabels: {
             enabled: series.dataLabels?.enabled || true,
             style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
@@ -55,28 +51,53 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
             html: get(series, 'dataLabels.html', false),
             format: series.dataLabels?.format,
         },
+        legend: {
+            enabled: get(series, 'legend.enabled', legend.enabled),
+            symbol: prepareLegendSymbol(series),
+            groupId: '',
+            itemText: '',
+        },
         cursor: get(series, 'cursor', null),
         data: [],
         tooltip: series.tooltip,
     };
 
+    const positiveName = series.legend?.itemText?.positive ?? `${series.name} ↑`;
     const positive: PreparedWaterfallSeries = {
         ...common,
-        name: series.legend?.itemText?.positive ?? `${series.name} ↑`,
+        name: positiveName,
+        legend: {
+            ...common.legend,
+            groupId: getUniqId(),
+            itemText: series.legend?.itemText?.positive ?? positiveName,
+        },
         id: getUniqId(),
         color: series.positiveColor || positiveColor,
         data: [],
     };
+    const negativeName = series.legend?.itemText?.negative ?? `${series.name} ↓`;
     const negative: PreparedWaterfallSeries = {
         ...common,
-        name: series.legend?.itemText?.negative ?? `${series.name} ↓`,
+        name: negativeName,
+        legend: {
+            ...common.legend,
+            groupId: getUniqId(),
+            itemText: series.legend?.itemText?.negative ?? negativeName,
+        },
         id: getUniqId(),
         color: series.negativeColor || negativeColor,
         data: [],
     };
+
+    const totalsName = series.legend?.itemText?.totals ?? series.name;
     const totals: PreparedWaterfallSeries = {
         ...common,
-        name: series.legend?.itemText?.totals ?? series.name,
+        name: totalsName,
+        legend: {
+            ...common.legend,
+            groupId: getUniqId(),
+            itemText: series.legend?.itemText?.totals ?? totalsName,
+        },
         id: getUniqId(),
         data: [],
     };
