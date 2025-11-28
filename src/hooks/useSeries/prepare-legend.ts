@@ -23,8 +23,10 @@ export async function getPreparedLegend(args: {
     const defaultItemStyle = clone(legendDefaults.itemStyle);
     const itemStyle = get(legend, 'itemStyle');
     const computedItemStyle = merge(defaultItemStyle, itemStyle);
-    const lineHeight = (await getLabelsSize({labels: ['Tmp'], style: computedItemStyle})).maxHeight;
-
+    const {maxHeight: lineHeight, maxWidth: lineWidth} = await getLabelsSize({
+        labels: ['Tmp'],
+        style: computedItemStyle,
+    });
     const legendType = get(legend, 'type', 'discrete');
     const isTitleEnabled = Boolean(legend?.title?.text);
     const titleMargin = isTitleEnabled ? get(legend, 'title.margin', 4) : 0;
@@ -36,7 +38,6 @@ export async function getPreparedLegend(args: {
     const titleText = isTitleEnabled ? get(legend, 'title.text', '') : '';
     const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
     const titleHeight = isTitleEnabled ? titleSize.maxHeight : 0;
-
     const tickStyle: BaseTextStyle = {
         fontSize: '12px',
     };
@@ -54,9 +55,11 @@ export async function getPreparedLegend(args: {
     };
 
     let height = 0;
+    let legendWidth = 0;
     if (enabled) {
         height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
+            legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
             height += CONTINUOUS_LEGEND_SIZE.height;
             height += ticks.labelsLineHeight + ticks.labelsMargin;
 
@@ -67,11 +70,9 @@ export async function getPreparedLegend(args: {
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
             height += lineHeight;
+            legendWidth = get(legend, 'width', lineWidth);
         }
     }
-
-    const legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
-
     return {
         align: get(legend, 'align', legendDefaults.align),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
@@ -217,6 +218,71 @@ function getPagination(args: {
     return {pages};
 }
 
+function getLegendOffset(args: {
+    position: PreparedLegend['position'];
+    chartWidth: number;
+    chartHeight: number;
+    chartMargin: PreparedChart['margin'];
+    legendWidth: number;
+    legendHeight: number;
+}): LegendConfig['offset'] {
+    const {position, chartWidth, chartHeight, chartMargin, legendWidth, legendHeight} = args;
+
+    switch (position) {
+        case 'top':
+            return {
+                top: chartMargin.top,
+                left: chartMargin.left,
+            };
+        case 'right':
+            return {
+                top: chartMargin.top,
+                left: chartWidth - chartMargin.right - legendWidth,
+            };
+        case 'left':
+            return {
+                top: chartMargin.top,
+                left: chartMargin.left,
+            };
+        case 'bottom':
+        default:
+            return {
+                top: chartHeight - chartMargin.bottom - legendHeight,
+                left: chartMargin.left,
+            };
+    }
+}
+
+function getMaxLegendWidth(args: {
+    chartWidth: number;
+    chartMargin: PreparedChart['margin'];
+    preparedLegend: PreparedLegend;
+    isVerticalPosition: boolean;
+}): number {
+    const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
+
+    if (isVerticalPosition) {
+        return (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2;
+    }
+
+    return chartWidth - chartMargin.right - chartMargin.left;
+}
+
+function getMaxLegendHeight(args: {
+    chartHeight: number;
+    chartMargin: PreparedChart['margin'];
+    preparedLegend: PreparedLegend;
+    isVerticalPosition: boolean;
+}): number {
+    const {chartHeight, chartMargin, preparedLegend, isVerticalPosition} = args;
+
+    if (isVerticalPosition) {
+        return chartHeight - chartMargin.top - chartMargin.bottom;
+    }
+
+    return (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
+}
+
 export function getLegendComponents(args: {
     chartWidth: number;
     chartHeight: number;
@@ -225,9 +291,21 @@ export function getLegendComponents(args: {
     preparedLegend: PreparedLegend;
 }) {
     const {chartWidth, chartHeight, chartMargin, series, preparedLegend} = args;
-    const maxLegendWidth = chartWidth - chartMargin.right - chartMargin.left;
-    const maxLegendHeight =
-        (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
+
+    const isVerticalPosition =
+        preparedLegend.position === 'right' || preparedLegend.position === 'left';
+    const maxLegendWidth = getMaxLegendWidth({
+        chartWidth,
+        chartMargin,
+        preparedLegend,
+        isVerticalPosition,
+    });
+    const maxLegendHeight = getMaxLegendHeight({
+        chartHeight,
+        chartMargin,
+        preparedLegend,
+        isVerticalPosition,
+    });
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
     const items = getGroupedLegendItems({
         maxLegendWidth,
@@ -258,16 +336,17 @@ export function getLegendComponents(args: {
         }
 
         preparedLegend.height = legendHeight;
+        preparedLegend.width = Math.max(maxLegendWidth, preparedLegend.width);
     }
 
-    const top =
-        preparedLegend.position === 'top'
-            ? chartMargin.top
-            : chartHeight - chartMargin.bottom - preparedLegend.height;
-    const offset: LegendConfig['offset'] = {
-        left: chartMargin.left,
-        top,
-    };
+    const offset = getLegendOffset({
+        position: preparedLegend.position,
+        chartWidth,
+        chartHeight,
+        chartMargin,
+        legendWidth: preparedLegend.width,
+        legendHeight: preparedLegend.height,
+    });
 
     return {legendConfig: {offset, pagination, maxWidth: maxLegendWidth}, legendItems: items};
 }
