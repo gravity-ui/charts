@@ -5,15 +5,24 @@ import type {StoryObj} from '@storybook/react-webpack5';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
-import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {barYNullModeSkipLinearXData, barYNullModeZeroLinearXData} from '../__data__';
+import {
+    barYNullModeSkipCategoryYData,
+    barYNullModeSkipLinearXData,
+    barYNullModeZeroCategoryYData,
+    barYNullModeZeroLinearXData,
+} from '../__data__';
 
 const BarYNullHandlingComparison = () => {
-    const skipData: ChartData = cloneDeep(barYNullModeSkipLinearXData);
-    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
-    const zeroData: ChartData = cloneDeep(barYNullModeZeroLinearXData);
-    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    const skipData = cloneDeep(barYNullModeSkipLinearXData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default) - Linear X-axis'});
+    const zeroData = cloneDeep(barYNullModeZeroLinearXData);
+    set(zeroData, 'title', {text: 'nullMode: "zero" - Linear X-axis'});
+
+    const skipDataCategory = cloneDeep(barYNullModeSkipCategoryYData);
+    set(skipDataCategory, 'title', {text: 'nullMode: "skip" (default) - Category Y-axis'});
+    const zeroDataCategory = cloneDeep(barYNullModeZeroCategoryYData);
+    set(zeroDataCategory, 'title', {text: 'nullMode: "zero" - Category Y-axis'});
 
     return (
         <Container spaceRow={5}>
@@ -23,6 +32,14 @@ const BarYNullHandlingComparison = () => {
                 </Col>
                 <Col s={12} m={6}>
                     <ChartStory data={zeroData} />
+                </Col>
+            </Row>
+            <Row space={3}>
+                <Col s={12} m={6}>
+                    <ChartStory data={skipDataCategory} />
+                </Col>
+                <Col s={12} m={6}>
+                    <ChartStory data={zeroDataCategory} />
                 </Col>
             </Row>
         </Container>
