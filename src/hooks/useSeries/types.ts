@@ -288,6 +288,7 @@ export type PreparedAreaSeries = {
     stackId: string;
     lineWidth: number;
     opacity: number;
+    nullMode: AreaSeries['nullMode'];
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;

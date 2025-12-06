@@ -60,7 +60,6 @@ function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
         case 'zero':
             return data.map((p) => ({...p, y: p.y ?? 0}));
         case 'connect':
-            return data.filter((p) => p.y !== null);
         case 'skip':
         default:
             return data;
@@ -105,6 +104,7 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
+            nullMode: series.nullMode,
         };
 
         return prepared;
