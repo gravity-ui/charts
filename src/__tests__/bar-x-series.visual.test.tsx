@@ -8,7 +8,9 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     barXBasicData,
     barXLinearData,
+    barXNullModeSkipCategoryXData,
     barXNullModeSkipLinearXData,
+    barXNullModeZeroCategoryXData,
     barXNullModeZeroLinearXData,
     barXSplitData,
     barXStakingNormalData,
@@ -182,18 +184,38 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('x null values, nullMode=skip', async ({mount}) => {
-        const data = cloneDeep(barXNullModeSkipLinearXData);
-        set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
+    test.describe('Null modes', () => {
+        test.describe('Linear X-axis', () => {
+            test('nullMode=skip', async ({mount}) => {
+                const data = cloneDeep(barXNullModeSkipLinearXData);
+                set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
 
-    test('x null values, nullMode=zero', async ({mount}) => {
-        const data = cloneDeep(barXNullModeZeroLinearXData);
-        set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+            test('nullMode=zero', async ({mount}) => {
+                const data = cloneDeep(barXNullModeZeroLinearXData);
+                set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+
+        test.describe('Category X-axis', () => {
+            test('nullMode=skip', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={barXNullModeSkipCategoryXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('nullMode=zero', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={barXNullModeZeroCategoryXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
     });
 
     test('Basic split', async ({mount}) => {
