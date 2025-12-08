@@ -1,8 +1,8 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {RectLegendSymbolOptions} from './legend';
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
@@ -70,7 +70,7 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
         inside?: boolean;
     };
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartLegend & {
+    legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /**

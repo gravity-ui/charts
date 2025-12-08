@@ -75,6 +75,8 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                 legend: {
                     enabled: get(series, 'legend.enabled', legend.enabled),
                     symbol: prepareLegendSymbol(series),
+                    groupId: series.legend?.groupId ?? getUniqId(),
+                    itemText: series.legend?.itemText ?? name,
                 },
                 data: prepareSeriesData(series),
                 stacking: series.stacking,

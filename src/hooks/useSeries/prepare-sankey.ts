@@ -42,6 +42,8 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
             legend: {
                 enabled: get(s, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(s),
+                groupId: s.legend?.groupId ?? getUniqId(),
+                itemText: s.legend?.itemText ?? name,
             },
             cursor: get(s, 'cursor', null),
             tooltip: s.tooltip,

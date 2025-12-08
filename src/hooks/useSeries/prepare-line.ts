@@ -10,7 +10,6 @@ import {
 } from '../../constants';
 import type {DashStyle} from '../../constants';
 import type {
-    ChartSeries,
     ChartSeriesOptions,
     LineSeries,
     LineSeriesData,
@@ -54,7 +53,7 @@ function prepareLinecap(
 }
 
 function prepareLineLegendSymbol(
-    series: ChartSeries,
+    series: LineSeries,
     seriesOptions?: ChartSeriesOptions,
 ): PreparedLegendSymbol {
     const symbolOptions: RectLegendSymbolOptions = series.legend?.symbol || {};
@@ -128,6 +127,8 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             legend: {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLineLegendSymbol(series, seriesOptions),
+                groupId: series.legend?.groupId ?? getUniqId(),
+                itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),
             dataLabels: {
