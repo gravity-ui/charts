@@ -44,6 +44,8 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSe
             legend: {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
+                groupId: series.legend?.groupId ?? getUniqId(),
+                itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),
             dataLabels: {

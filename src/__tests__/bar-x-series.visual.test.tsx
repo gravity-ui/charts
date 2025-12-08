@@ -16,7 +16,7 @@ import {
 } from '../__stories__/__data__';
 import type {BarXSeries, ChartData} from '../types';
 
-test.describe('Bar-x series', () => {
+test.describe.only('Bar-x series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -24,6 +24,63 @@ test.describe('Bar-x series', () => {
 
     test('Linear X-axis', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXLinearData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Same data with different x-axis type', async ({mount}) => {
+        const points = [
+            {x: 0, y: 1},
+            {x: 1, y: 3},
+            {x: 2, y: 2},
+        ];
+        // linear x-axis
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    title: {text: 'linear x-axis'},
+                    series: {
+                        data: [{type: 'bar-x', name: '', data: points}],
+                    },
+                    xAxis: {type: 'linear'},
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        // datetime x-axis
+        const startDate = new Date('2000-10-10T00:00:00Z').getTime();
+        const day = 1000 * 60 * 60 * 24;
+        await component.update(
+            <ChartTestStory
+                data={{
+                    title: {text: 'datetime x-axis'},
+                    series: {
+                        data: [
+                            {
+                                type: 'bar-x',
+                                name: '',
+                                data: points.map((d) => ({x: d.x * day + startDate, y: d.y})),
+                            },
+                        ],
+                    },
+                    xAxis: {type: 'datetime'},
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        // categorical x-axis
+        await component.update(
+            <ChartTestStory
+                data={{
+                    title: {text: 'categorical x-axis'},
+                    series: {
+                        data: [{type: 'bar-x', name: '', data: points}],
+                    },
+                    xAxis: {type: 'category', categories: ['0', '1', '2']},
+                }}
+            />,
+        );
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
