@@ -1,3 +1,13 @@
+.gcharts-line,
+.gcharts-area,
+.gcharts-radar,
+.gcharts-heatmap,
+.gcharts-funnel {
+    &__label {
+        dominant-baseline: text-before-edge;
+    }
+}
+
 .gcharts-scatter {
     &__point {
         stroke-width: 1px;
@@ -14,12 +24,6 @@
         font-weight: bold;
 
         fill: var(--g-color-text-complementary);
-        dominant-baseline: text-before-edge;
-    }
-}
-
-.gcharts-radar {
-    &__label {
         dominant-baseline: text-before-edge;
     }
 }
@@ -54,17 +58,5 @@
 .gcharts-waterfall {
     &__connector {
         stroke: var(--g-color-line-generic-active);
-    }
-}
-
-.gcharts-heatmap {
-    &__label {
-        dominant-baseline: text-before-edge;
-    }
-}
-
-.gcharts-funnel {
-    &__label {
-        dominant-baseline: text-before-edge;
     }
 }

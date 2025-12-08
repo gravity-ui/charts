@@ -13,6 +13,7 @@ import {
     barXStakingNormalData,
     barXStakingPercentData,
 } from '../__data__';
+import {barXSplitData} from '../__data__/bar-x/split';
 
 const meta: Meta<typeof Chart> = {
     title: 'Bar-X',
@@ -78,6 +79,14 @@ export const BarXHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: barXHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const BarXSplit = {
+    name: 'Split',
+    args: {
+        data: barXSplitData,
+        style: {height: 560},
     },
 } satisfies Story;
 

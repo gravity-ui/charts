@@ -2,18 +2,18 @@ import React from 'react';
 
 import type {Meta} from '@storybook/react-webpack5';
 
-import {ChartStory} from '../ChartStory';
-import {legendPositionData} from '../__data__';
+import {ChartStory} from '../../ChartStory';
+import {legendPositionData} from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
-    title: 'Other',
+    title: 'Other/Legend',
     component: ChartStory,
 };
 
 export default meta;
 
 export const LegendPosition = {
-    name: 'Legend Position',
+    name: 'Position',
     args: {
         enabled: true,
         position: 'bottom',

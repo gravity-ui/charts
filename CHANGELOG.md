@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.24.2](https://github.com/gravity-ui/charts/compare/v1.24.1...v1.24.2) (2025-11-27)
+
+
+### Bug Fixes
+
+* x-axis max value padding should affect axis scale domain, not range ([#288](https://github.com/gravity-ui/charts/issues/288)) ([326f4b5](https://github.com/gravity-ui/charts/commit/326f4b590c1efb7041b34639e0f1a2e05eadfc14))
+
+## [1.24.1](https://github.com/gravity-ui/charts/compare/v1.24.0...v1.24.1) (2025-11-27)
+
+
+### Bug Fixes
+
+* area series with the same y values ([#290](https://github.com/gravity-ui/charts/issues/290)) ([e3bc78e](https://github.com/gravity-ui/charts/commit/e3bc78e8b79f07eebd190e3e84c44b912f978fca))
+* basic area split ([#286](https://github.com/gravity-ui/charts/issues/286)) ([793fbe7](https://github.com/gravity-ui/charts/commit/793fbe7083c7daa55a3914344857ddfae3f6a168))
+* basic bar-x split ([#283](https://github.com/gravity-ui/charts/issues/283)) ([85d94fd](https://github.com/gravity-ui/charts/commit/85d94fd30d3133174a2fc3befa98fb10acc1d258))
+* fix the label positioning in the area series ([#287](https://github.com/gravity-ui/charts/issues/287)) ([55e1ff1](https://github.com/gravity-ui/charts/commit/55e1ff1769a8949a9ef954fabd2c0de62cb53bd8))
+* fix zoom in case of min/max usage ([#284](https://github.com/gravity-ui/charts/issues/284)) ([f397251](https://github.com/gravity-ui/charts/commit/f3972513ff62c885f6a653a98724e6c4bfc986cb))
+
+## [1.24.0](https://github.com/gravity-ui/charts/compare/v1.23.0...v1.24.0) (2025-11-25)
+
+
+### Features
+
+* add basic range slider ([#264](https://github.com/gravity-ui/charts/issues/264)) ([ef9ebf2](https://github.com/gravity-ui/charts/commit/ef9ebf2ae810cacb1107ec8c77ae784e56e90556))
+* add position to the legend configuration (top and bottom options) ([#263](https://github.com/gravity-ui/charts/issues/263)) ([e421cf5](https://github.com/gravity-ui/charts/commit/e421cf5c38b872c000473918884e6c03b7cf19fe))
+* basic funnel chart ([#241](https://github.com/gravity-ui/charts/issues/241)) ([8a65bf0](https://github.com/gravity-ui/charts/commit/8a65bf0199786883b587777416e7cec75a48b44e))
+
+
+### Bug Fixes
+
+* bar-x percent stacking (linear x-axis) ([#268](https://github.com/gravity-ui/charts/issues/268)) ([d202689](https://github.com/gravity-ui/charts/commit/d2026891ca2b3931bc55fb8d8c6bbd7b5b6865a6))
+* ignore `maxPadding` in case of range slider using ([#279](https://github.com/gravity-ui/charts/issues/279)) ([cf0e266](https://github.com/gravity-ui/charts/commit/cf0e2669e6925220f12209696f50aadf66b73707))
+* line series dataLabels position ([#281](https://github.com/gravity-ui/charts/issues/281)) ([82245b2](https://github.com/gravity-ui/charts/commit/82245b2986d3f369c27443f7bb58f7532278c5e6))
+* only the necessary free space should be reserved for data-labels ([#282](https://github.com/gravity-ui/charts/issues/282)) ([ce40ad8](https://github.com/gravity-ui/charts/commit/ce40ad8853aafcd88e529a416cbac387beed26bf))
+
 ## [1.23.0](https://github.com/gravity-ui/charts/compare/v1.22.0...v1.23.0) (2025-11-17)
 
 

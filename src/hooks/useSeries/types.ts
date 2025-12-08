@@ -82,9 +82,10 @@ export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>>
     };
 };
 
-export type OnLegendItemClick = (data: {name: string; metaKey: boolean}) => void;
+export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
 
 export type LegendItem = {
+    id: string;
     color: string;
     height: number;
     name: string;
@@ -121,6 +122,8 @@ type BasePreparedSeries = {
     id: string;
     visible: boolean;
     legend: {
+        groupId: string;
+        itemText: string;
         enabled: boolean;
         symbol: PreparedLegendSymbol;
     };
@@ -182,6 +185,7 @@ export type PreparedBarYSeries = {
     stackId: string;
     stacking: BarYSeries['stacking'];
     dataLabels: {
+        padding: number;
         enabled: boolean;
         inside: boolean;
         style: BaseTextStyle;

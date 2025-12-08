@@ -10,8 +10,10 @@ import {
     areaNullModeConnectLinearXData,
     areaNullModeSkipLinearXData,
     areaNullModeZeroLinearXData,
+    areaSplitData,
     areaStakingNormalData,
 } from '../__stories__/__data__';
+import type {ChartData} from '../types';
 
 test.describe('Area series', () => {
     test('Basic', async ({mount}) => {
@@ -39,6 +41,65 @@ test.describe('Area series', () => {
 
     test('x null values, nullMode=zero', async ({mount}) => {
         const component = await mount(<ChartTestStory data={areaNullModeZeroLinearXData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Basic split', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={areaSplitData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Data labels', () => {
+        test('Positioning of extreme point dataLabels', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 'Series 1',
+                            type: 'area',
+                            data: [
+                                {x: 0, y: 0, label: 'left-bottom'},
+                                {y: 10, x: 10, label: 'right-top'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                        {
+                            name: 'Series 2',
+                            type: 'area',
+                            data: [
+                                {y: 10, x: 0, label: 'left-top'},
+                                {y: 0, x: 10, label: 'right-bottom'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                yAxis: [{maxPadding: 0}],
+                xAxis: {maxPadding: 0},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
+    test('Two points with the same y value', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'area',
+                        data: [
+                            {x: 0, y: 10},
+                            {y: 10, x: 10},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [{maxPadding: 0}],
+            xAxis: {maxPadding: 0},
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

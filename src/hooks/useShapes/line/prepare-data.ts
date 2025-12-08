@@ -1,5 +1,5 @@
 import type {HtmlItem, LabelData} from '../../../types';
-import {getLabelsSize, getLeftPosition} from '../../../utils';
+import {getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
@@ -8,38 +8,6 @@ import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PreparedLineData} from './types';
-
-async function getLabelData(point: MarkerPointData, series: PreparedLineSeries, xMax: number) {
-    const text = getFormattedValue({
-        value: point.data.label || point.data.y,
-        ...series.dataLabels,
-    });
-    const style = series.dataLabels.style;
-    const size = await getLabelsSize({labels: [text], style});
-
-    const labelData: LabelData = {
-        text,
-        x: point.x,
-        y: point.y - series.dataLabels.padding,
-        style,
-        size: {width: size.maxWidth, height: size.maxHeight},
-        textAnchor: 'middle',
-        series: series,
-        active: true,
-    };
-
-    const left = getLeftPosition(labelData);
-    if (left < 0) {
-        labelData.x = labelData.x + Math.abs(left);
-    } else {
-        const right = left + labelData.size.width;
-        if (right > xMax) {
-            labelData.x = labelData.x - xMax - right;
-        }
-    }
-
-    return labelData;
-}
 
 async function getHtmlLabel(
     point: MarkerPointData,
@@ -69,7 +37,7 @@ export const prepareLineData = async (args: {
 }): Promise<PreparedLineData[]> => {
     const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds} = args;
     const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax / (1 - xAxis.maxPadding);
+    const xMax = xRangeMax;
 
     const acc: PreparedLineData[] = [];
     for (let i = 0; i < series.length; i++) {
@@ -99,7 +67,7 @@ export const prepareLineData = async (args: {
         });
 
         const htmlElements: HtmlItem[] = [];
-        let labels: LabelData[] = [];
+        const labels: LabelData[] = [];
         if (s.dataLabels.enabled) {
             if (s.dataLabels.html) {
                 const list = await Promise.all(
@@ -113,15 +81,40 @@ export const prepareLineData = async (args: {
                 );
                 htmlElements.push(...list);
             } else {
-                labels = await Promise.all(
-                    points.reduce<Promise<LabelData>[]>((result, p) => {
-                        if (p.y === null) {
-                            return result;
-                        }
-                        result.push(getLabelData(p as MarkerPointData, s, xMax));
-                        return result;
-                    }, []),
-                );
+                const getTextSize = getTextSizeFn({style: s.dataLabels.style});
+                for (let index = 0; index < points.length; index++) {
+                    const point = points[index];
+                    if (point.y !== null && point.x !== null) {
+                        const text = getFormattedValue({
+                            value: point.data.label || point.data.y,
+                            ...s.dataLabels,
+                        });
+                        const labelSize = await getTextSize(text);
+
+                        const style = s.dataLabels.style;
+
+                        const y = Math.max(
+                            yAxisTop,
+                            point.y - s.dataLabels.padding - labelSize.height,
+                        );
+                        const x = Math.min(
+                            xMax - labelSize.width,
+                            Math.max(0, point.x - labelSize.width / 2),
+                        );
+                        const labelData: LabelData = {
+                            text,
+                            x,
+                            y,
+                            style,
+                            size: labelSize,
+                            textAnchor: 'start',
+                            series: s,
+                            active: true,
+                        };
+
+                        labels.push(labelData);
+                    }
+                }
             }
         }
 

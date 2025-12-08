@@ -94,6 +94,22 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Basic with reverse order on X-axis and maxPadding', async ({mount}) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    ...barYBasicData,
+                    xAxis: {
+                        ...barYBasicData.xAxis,
+                        order: 'reverse',
+                        maxPadding: 0.5,
+                    },
+                }}
+            />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('With X-axis plot lines', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barYPlotLinesData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -761,46 +777,74 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('With svg data labels', async ({mount}) => {
-        const chartData: ChartData = {
-            series: {
-                data: [
-                    {
-                        name: 'Series 1',
-                        type: 'bar-y',
-                        stacking: 'normal',
-                        data: new Array(100).fill(null).map((_, index) => {
-                            return {y: index, x: index};
-                        }),
-                        dataLabels: {enabled: true},
-                    },
-                ],
-            },
-            yAxis: [{maxPadding: 0}],
+    test.describe('Data labels', () => {
+        const basicSeries: BarYSeries = {
+            name: 'Series 1',
+            type: 'bar-y',
+            data: new Array(100).fill(null).map((_, index) => {
+                return {y: index, x: index};
+            }),
         };
-        const component = await mount(<ChartTestStory data={chartData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
 
-    test('With html data labels', async ({mount}) => {
-        const chartData: ChartData = {
-            series: {
-                data: [
-                    {
-                        name: 'Series 1',
-                        type: 'bar-y',
-                        stacking: 'normal',
-                        data: new Array(100).fill(null).map((_, index) => {
-                            return {y: index, x: index};
-                        }),
-                        dataLabels: {enabled: true, html: true},
-                    },
-                ],
-            },
-            yAxis: [{maxPadding: 0}],
-        };
-        const component = await mount(<ChartTestStory data={chartData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+        test('Svg data labels', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            ...basicSeries,
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                yAxis: [{maxPadding: 0}],
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Html data labels', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            ...basicSeries,
+                            dataLabels: {enabled: true, html: true},
+                        },
+                    ],
+                },
+                yAxis: [{maxPadding: 0}],
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Only the necessary free space to the right of the bars is reserved for labels', async ({
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: '',
+                            type: 'bar-y',
+                            dataLabels: {
+                                enabled: true,
+                            },
+                            data: [
+                                {
+                                    y: 1,
+                                    x: 9.999999999,
+                                    label: 'A',
+                                },
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {ticks: {interval: '50%'}},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('The labels inside should move outward if there is insufficient space', async ({

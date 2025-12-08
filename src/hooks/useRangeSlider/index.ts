@@ -43,6 +43,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         width,
         xAxis,
         yAxis,
+        zoomState,
     } = props;
     const filteredPreparedSeries = React.useMemo(() => {
         return preparedSeries.filter((s) => {
@@ -68,10 +69,10 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         boundsHeight: preparedRangeSlider.height,
         boundsWidth,
         series: preparedSeries,
-        seriesOptions: preparedSeriesOptions,
         split: EMPTY_PREPARED_SPLIT,
         xAxis: preparedXAxis,
         yAxis: preparedYAxis,
+        zoomState,
     });
     const {shapes} = useShapes({
         boundsHeight: preparedRangeSlider.height,
@@ -96,6 +97,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
     }, [rangeSliderState, xScale]);
     const offsetTop = getRangeSliderOffsetTop({
         height,
+        preparedChart,
         preparedLegend,
         preparedRangeSlider,
     });

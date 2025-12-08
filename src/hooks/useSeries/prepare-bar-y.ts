@@ -16,6 +16,8 @@ type PrepareBarYSeriesArgs = {
     seriesOptions?: ChartSeriesOptions;
 };
 
+const DEFAULT_LABEL_PADDING = 7;
+
 function prepareSeriesData(series: BarYSeries): BarYSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
@@ -33,9 +35,7 @@ async function prepareDataLabels(series: BarYSeries) {
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
     const labels = enabled
-        ? series.data
-              .filter((d) => Boolean(d.x || d.label))
-              .map((d) => getFormattedValue({value: d.x || d.label, ...series.dataLabels}))
+        ? series.data.map((d) => getFormattedValue({value: d.label || d.x, ...series.dataLabels}))
         : [];
     const {maxHeight = 0, maxWidth = 0} = await getLabelsSize({
         labels,
@@ -43,6 +43,7 @@ async function prepareDataLabels(series: BarYSeries) {
         html,
     });
     const inside = series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
+    const padding = enabled ? (series.dataLabels?.padding ?? DEFAULT_LABEL_PADDING) : 0;
 
     return {
         enabled,
@@ -53,6 +54,7 @@ async function prepareDataLabels(series: BarYSeries) {
         html,
         format: series.dataLabels?.format,
         allowOverlap: series.dataLabels?.allowOverlap ?? false,
+        padding,
     };
 }
 
@@ -73,6 +75,8 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                 legend: {
                     enabled: get(series, 'legend.enabled', legend.enabled),
                     symbol: prepareLegendSymbol(series),
+                    groupId: series.legend?.groupId ?? getUniqId(),
+                    itemText: series.legend?.itemText ?? name,
                 },
                 data: prepareSeriesData(series),
                 stacking: series.stacking,

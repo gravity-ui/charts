@@ -6,6 +6,7 @@ import {
     areaBasicData,
     areaHtmlLabelsData,
     areaPlaygroundData,
+    areaSplitData,
     areaStakingNormalData,
     areaStakingPercentData,
 } from '../__data__';
@@ -46,6 +47,14 @@ export const AreaHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: areaHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const AreaSplit = {
+    name: 'Split',
+    args: {
+        data: areaSplitData,
+        style: {height: 560},
     },
 } satisfies Story;
 

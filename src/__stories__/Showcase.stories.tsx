@@ -22,6 +22,8 @@ import {
     barYNegativeValuesData,
     barYStakingNormalData,
     barYStakingPercentData,
+    funnelBasicData,
+    heatmapBasicData,
     lineBasicData,
     lineDataLabelsData,
     lineMarkersData,
@@ -34,6 +36,7 @@ import {
     scatterBasicData,
     scatterTwoYAxisData,
     treemapPlaygroundData,
+    waterfallBasicData,
 } from './__data__';
 
 const ShowcaseStory = () => {
@@ -183,12 +186,24 @@ const ShowcaseStory = () => {
                         <ChartStory data={treemapPlaygroundData} />
                     </Col>
                     <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">Heatmap</Text>
+                        <ChartStory data={heatmapBasicData} />
+                    </Col>
+                    <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Sankey</Text>
                         <ChartStory data={sankeyPlaygroundData} />
                     </Col>
                     <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">Waterfall</Text>
+                        <ChartStory data={waterfallBasicData} style={{marginTop: 24}} />
+                    </Col>
+                    <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Radar</Text>
                         <ChartStory data={radarBasicData} />
+                    </Col>
+                    <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">Funnel</Text>
+                        <ChartStory data={funnelBasicData} style={{margin: 24}} />
                     </Col>
                 </Row>
             </Container>

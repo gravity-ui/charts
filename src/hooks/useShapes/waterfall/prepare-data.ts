@@ -139,7 +139,9 @@ export const prepareWaterfallData = async (args: {
             continue;
         }
 
-        if (!item.data.total) {
+        if (item.data.total) {
+            item.data.y = totalValue;
+        } else {
             totalValue += Number(item.data.y);
         }
 

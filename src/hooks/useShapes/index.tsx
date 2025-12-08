@@ -149,6 +149,7 @@ export const useShapes = (args: Args) => {
                                     yAxis,
                                     yScale,
                                     boundsHeight,
+                                    split,
                                 });
                                 shapes.push(
                                     <BarXSeriesShapes
@@ -248,6 +249,7 @@ export const useShapes = (args: Args) => {
                                     yAxis,
                                     yScale,
                                     boundsHeight,
+                                    split,
                                     isOutsideBounds,
                                 });
                                 shapes.push(

@@ -3,8 +3,8 @@ import type {BaseType} from 'd3';
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {ChartLegendItem, RectLegendSymbolOptions} from './legend';
 
 export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** The value of the pie segment. */
@@ -19,6 +19,10 @@ export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     opacity?: number;
     /** The individual radius of the pie segment. The default value is series.radius */
     radius?: string | number;
+    /** Individual series legend options. Has higher priority than legend options in series data */
+    legend?: BaseSeriesLegend & {
+        symbol?: RectLegendSymbolOptions;
+    };
 }
 
 export type ConnectorShape = 'straight-line' | 'polyline';
@@ -59,10 +63,6 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
      * If not specified, the minimum radius is calculated as 30% of the height or width of the chart (the minimum value is taken) minus the halo effect.
      */
     minRadius?: string | number;
-    /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartLegend & {
-        symbol?: RectLegendSymbolOptions;
-    };
     dataLabels?: BaseSeries['dataLabels'] & {
         /**
          * The distance of the data label from the pie's edge.
@@ -89,6 +89,10 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
          * @default 'basic'
          * */
         connectorCurve?: ConnectorCurve;
+    };
+    /** Individual series legend options. Has higher priority than legend options in chart data */
+    legend?: ChartLegendItem & {
+        symbol?: RectLegendSymbolOptions;
     };
     /**
      * Function for adding custom svg nodes for a series

@@ -8,10 +8,9 @@ import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';
 import type {
     PreparedAxis,
     PreparedSeries,
-    PreparedSeriesOptions,
     PreparedSplit,
-    PreparedXAxis,
     RangeSliderState,
+    ZoomState,
 } from '../../hooks';
 import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
@@ -28,8 +27,9 @@ import {
     isSeriesWithCategoryValues,
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
-import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
+
+import {checkIsPointDomain, getMinMaxPropsOrState, hasOnlyMarkerSeries} from './utils';
 
 export type ChartScale =
     | ScaleLinear<number, number>
@@ -40,13 +40,11 @@ type Args = {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
-    seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
-    hasZoomX?: boolean;
-    hasZoomY?: boolean;
     rangeSliderState?: RangeSliderState;
+    zoomState?: Partial<ZoomState>;
 };
 
 type ReturnValue = {
@@ -133,10 +131,15 @@ export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
     series: (PreparedSeries | ChartSeries)[];
+    zoomStateY?: [number, number];
 }) {
-    const {axis, boundsHeight, series} = args;
-    const yMinProps = get(axis, 'min');
-    const yMaxProps = get(axis, 'max');
+    const {axis, boundsHeight, series, zoomStateY} = args;
+    const [yMinPropsOrState, yMaxPropsOrState] = getMinMaxPropsOrState({
+        axis,
+        maxValues: [zoomStateY?.[1]],
+        minValues: [zoomStateY?.[0]],
+    });
+
     const yCategories = get(axis, 'categories');
     const yTimestamps = get(axis, 'timestamps');
     const range = getYScaleRange({axis, boundsHeight});
@@ -164,11 +167,18 @@ export function createYScale(args: {
                     number,
                     number,
                 ];
-                const yMin = typeof yMinProps === 'number' ? yMinProps : yMinDomain;
+                const isPointDomain = hasOnlyMarkerSeries(series)
+                    ? checkIsPointDomain([yMinDomain, yMaxDomain])
+                    : false;
+
+                const yMin =
+                    typeof yMinPropsOrState === 'number' && !isPointDomain
+                        ? yMinPropsOrState
+                        : yMinDomain;
                 let yMax: number;
 
-                if (typeof yMaxProps === 'number') {
-                    yMax = yMaxProps;
+                if (typeof yMaxPropsOrState === 'number' && !isPointDomain) {
+                    yMax = yMaxPropsOrState;
                 } else {
                     const hasSeriesWithVolumeOnYAxis = series.some((s) =>
                         CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
@@ -217,8 +227,21 @@ export function createYScale(args: {
         case 'datetime': {
             if (yTimestamps) {
                 const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
-                const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
-                const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
+                const isPointDomain = hasOnlyMarkerSeries(series)
+                    ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
+                    : false;
+                const yMin =
+                    typeof yMinPropsOrState === 'number' &&
+                    !isPointDomain &&
+                    yMinPropsOrState > yMinTimestamp
+                        ? yMinPropsOrState
+                        : yMinTimestamp;
+                const yMax =
+                    typeof yMaxPropsOrState === 'number' &&
+                    !isPointDomain &&
+                    yMaxPropsOrState < yMaxTimestamp
+                        ? yMaxPropsOrState
+                        : yMaxTimestamp;
                 return scaleUtc().domain([yMin, yMax]).range(range).nice();
             } else {
                 const domain = getDomainDataYBySeries(series);
@@ -233,8 +256,21 @@ export function createYScale(args: {
                         number,
                         number,
                     ];
-                    const yMin = typeof yMinProps === 'number' ? yMinProps : yMinTimestamp;
-                    const yMax = typeof yMaxProps === 'number' ? yMaxProps : yMaxTimestamp;
+                    const isPointDomain = hasOnlyMarkerSeries(series)
+                        ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
+                        : false;
+                    const yMin =
+                        typeof yMinPropsOrState === 'number' &&
+                        !isPointDomain &&
+                        yMinPropsOrState > yMinTimestamp
+                            ? yMinPropsOrState
+                            : yMinTimestamp;
+                    const yMax =
+                        typeof yMaxPropsOrState === 'number' &&
+                        !isPointDomain &&
+                        yMaxPropsOrState < yMaxTimestamp
+                            ? yMaxPropsOrState
+                            : yMaxTimestamp;
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
                     let offsetMin = 0;
@@ -276,7 +312,8 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
                 // Since labels can be located to the right of the bar, need to add an additional space
                 const inside = get(s, 'dataLabels.inside');
                 if (!inside) {
-                    const labelsMaxWidth = get(s, 'dataLabels.maxWidth', 0);
+                    const labelsMaxWidth =
+                        get(s, 'dataLabels.maxWidth', 0) + (s.dataLabels?.padding ?? 0);
                     result = Math.max(result, labelsMaxWidth);
                 }
 
@@ -289,44 +326,15 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
-    const types = [SERIES_TYPE.Heatmap] as string[];
+    const types = [SERIES_TYPE.Heatmap, SERIES_TYPE.BarX] as string[];
     return series.some((s) => types.includes(s.type));
 }
 
-function getXScaleRange({
-    boundsWidth,
-    series,
-    seriesOptions,
-    hasZoomX,
-    axis,
-    maxPadding,
-}: {
-    axis: PreparedAxis | ChartAxis;
-    boundsWidth: number;
-    series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
-    hasZoomX?: boolean;
-    maxPadding: number;
-}) {
+function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?: boolean}) {
     const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
-    const xRange = [0, boundsWidth - maxPadding];
+    const xRange = [0, boundsWidth];
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
     const range = hasZoomX ? xRangeZoom : xRange;
-
-    const barXSeries = series.filter((s) => s.type === SERIES_TYPE.BarX);
-    if (barXSeries.length) {
-        const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
-        if (Object.keys(groupedData).length > 1) {
-            const {bandSize} = getBarXLayoutForNumericScale({
-                plotWidth: boundsWidth - maxPadding,
-                groupedData,
-                seriesOptions,
-            });
-
-            const offset = bandSize / 2;
-            return [range[0] + offset, range[1] - offset];
-        }
-    }
 
     return range;
 }
@@ -336,14 +344,17 @@ export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
-    hasZoomX?: boolean;
     rangeSliderState?: RangeSliderState;
+    zoomStateX?: [number, number];
 }) {
-    const {axis, boundsWidth, series, seriesOptions, hasZoomX, rangeSliderState} = args;
-    const xMinProps = rangeSliderState?.min ?? get(axis, 'min');
-    const xMaxProps = rangeSliderState?.max ?? get(axis, 'max');
+    const {axis, boundsWidth, series, rangeSliderState, zoomStateX} = args;
+    const [xMinPropsOrState, xMaxPropsOrState] = getMinMaxPropsOrState({
+        axis,
+        maxValues: [zoomStateX?.[1], rangeSliderState?.max],
+        minValues: [zoomStateX?.[0], rangeSliderState?.min],
+    });
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
+    const hasZoomX = Boolean(zoomStateX);
     let xCategories = get(axis, 'categories');
     if (rangeSliderState && xCategories) {
         xCategories = getAxisCategories({
@@ -353,16 +364,12 @@ export function createXScale(args: {
             order: axis.order,
         });
     }
-    const maxPadding = get(axis, 'maxPadding', 0);
+    const maxPadding = rangeSliderState ? 0 : get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
         boundsWidth,
-        series,
-        seriesOptions,
         hasZoomX,
-        axis,
-        maxPadding: xAxisMaxPadding,
     });
 
     switch (axis.order) {
@@ -391,18 +398,21 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
+                const isPointDomain = hasOnlyMarkerSeries(series)
+                    ? checkIsPointDomain([xMinDomain, xMaxDomain])
+                    : false;
                 let xMin: number;
                 let xMax: number;
 
-                if (typeof xMinProps === 'number') {
-                    xMin = xMinProps;
+                if (typeof xMinPropsOrState === 'number' && !isPointDomain) {
+                    xMin = xMinPropsOrState;
                 } else {
                     const xMinDefault = getDefaultMinXAxisValue(series);
                     xMin = xMinDefault ?? xMinDomain;
                 }
 
-                if (typeof xMaxProps === 'number') {
-                    xMax = xMaxProps;
+                if (typeof xMaxPropsOrState === 'number' && !isPointDomain) {
+                    xMax = xMaxPropsOrState;
                 } else {
                     const xMaxDefault = getDefaultMaxXAxisValue(series);
                     xMax =
@@ -415,7 +425,7 @@ export function createXScale(args: {
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = 0;
+                let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -432,11 +442,17 @@ export function createXScale(args: {
                 const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
                 const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
+
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                if (!hasZoomX && !hasOffset) {
-                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                    scale.nice(Math.max(10, domainData.length));
+                if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        Math.min(nicedDomain[0], domainWithOffset[0]),
+                        Math.max(nicedDomain[1], domainWithOffset[1]),
+                    ]);
                 }
 
                 return scale;
@@ -476,14 +492,25 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const xMin = typeof xMinProps === 'number' ? xMinProps : xMinTimestamp;
-                const xMax = typeof xMaxProps === 'number' ? xMaxProps : xMaxTimestamp;
+                const isPointDomain = checkIsPointDomain([xMinTimestamp, xMaxTimestamp]);
+                const xMin =
+                    typeof xMinPropsOrState === 'number' &&
+                    xMinPropsOrState > xMinTimestamp &&
+                    !isPointDomain
+                        ? xMinPropsOrState
+                        : xMinTimestamp;
+                const xMax =
+                    typeof xMaxPropsOrState === 'number' &&
+                    xMaxPropsOrState < xMaxTimestamp &&
+                    !isPointDomain
+                        ? xMaxPropsOrState
+                        : xMaxTimestamp;
                 domain = [xMin, xMax];
 
                 const scale = scaleUtc().domain(domain).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = 0;
+                let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -503,12 +530,17 @@ export function createXScale(args: {
                 const domainOffsetMax = Math.abs(
                     scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
                 );
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                if (!hasZoomX && !hasOffset) {
-                    // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                    scale.nice(Math.max(10, domainData.length));
+                if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        Math.min(Number(nicedDomain[0]), Number(domainWithOffset[0])),
+                        Math.max(Number(nicedDomain[1]), Number(domainWithOffset[1])),
+                    ]);
                 }
                 return scale;
             }
@@ -521,17 +553,8 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        hasZoomX,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-    } = args;
+    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
+        args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -544,8 +567,7 @@ const createScales = (args: Args) => {
                   boundsWidth,
                   rangeSliderState,
                   series: visibleSeries,
-                  seriesOptions,
-                  hasZoomX,
+                  zoomStateX: zoomState?.x,
               })
             : undefined,
         yScale: yAxis.map((axis, index) => {
@@ -555,10 +577,12 @@ const createScales = (args: Args) => {
             });
             const visibleAxisSeries = getOnlyVisibleSeries(axisSeries);
             const axisHeight = getAxisHeight({boundsHeight, split});
+            const zoomStateY = zoomState?.y?.[index];
             return createYScale({
                 axis,
                 boundsHeight: axisHeight,
                 series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
+                zoomStateY,
             });
         }),
     };
@@ -568,18 +592,8 @@ const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        hasZoomX,
-        hasZoomY,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-    } = args;
+    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
+        args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: (ChartScale | undefined)[] | undefined;
@@ -589,28 +603,15 @@ export const useAxisScales = (args: Args): ReturnValue => {
             ({xScale, yScale} = createScales({
                 boundsWidth,
                 boundsHeight,
-                hasZoomX,
-                hasZoomY,
                 rangeSliderState,
                 series,
-                seriesOptions,
                 split,
                 xAxis,
                 yAxis,
+                zoomState,
             }));
         }
 
         return {xScale, yScale};
-    }, [
-        boundsWidth,
-        boundsHeight,
-        hasZoomX,
-        hasZoomY,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-    ]);
+    }, [boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState]);
 };
