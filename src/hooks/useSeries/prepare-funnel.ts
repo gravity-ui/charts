@@ -40,8 +40,12 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
             id,
             color,
             legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
+                enabled: dataItem.legend?.enabled ?? series.legend?.enabled ?? legend.enabled,
+                symbol: dataItem.legend?.symbol
+                    ? prepareLegendSymbol(dataItem)
+                    : prepareLegendSymbol(series),
+                groupId: dataItem.legend?.groupId ?? getUniqId(),
+                itemText: dataItem.legend?.itemText ?? dataItem.name,
             },
             cursor: get(series, 'cursor', null),
             tooltip: series.tooltip,

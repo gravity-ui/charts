@@ -6,7 +6,7 @@ import range from 'lodash/range';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {pieHtmlLegendData} from '../__stories__/__data__';
+import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
 const pieOverflowedLegendItemsData: ChartData = {
@@ -162,6 +162,16 @@ test.describe('Legend', () => {
                 await arrowNext.click();
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
+        });
+
+        test('Grouped legend items', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={groupedLegend} />);
+
+            await expect(component.locator('svg')).toHaveScreenshot();
+
+            const legendItem = component.locator('.gcharts-legend__item text').first();
+            await legendItem.click();
+            await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
 });

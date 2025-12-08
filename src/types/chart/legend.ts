@@ -1,7 +1,18 @@
 import type {BaseTextStyle} from './base';
 
-export interface ChartLegend {
+export interface ChartLegendItem {
     enabled?: boolean;
+    /**
+     * Defines the pixel distance between each legend item
+     *
+     * @default 20
+     * */
+    itemDistance?: number;
+    /** CSS styles for each legend item */
+    itemStyle?: BaseTextStyle;
+}
+
+export interface ChartLegend extends ChartLegendItem {
     /**
      * Different types for different color schemes.
      * If the color scheme is continuous, a gradient legend will be drawn.
@@ -22,14 +33,6 @@ export interface ChartLegend {
      * @default center
      * */
     justifyContent?: 'start' | 'center';
-    /**
-     * Defines the pixel distance between each legend item
-     *
-     * @default 20
-     * */
-    itemDistance?: number;
-    /** CSS styles for each legend item */
-    itemStyle?: BaseTextStyle;
     /**
      * The space between the legend and the axis labels or chart area.
      *

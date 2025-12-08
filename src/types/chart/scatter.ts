@@ -1,8 +1,8 @@
 import type {SERIES_TYPE, SymbolType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData} from './base';
-import type {ChartLegend, RectLegendSymbolOptions} from './legend';
+import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {RectLegendSymbolOptions} from './legend';
 import type {ChartSeriesRangeSliderOptions} from './series';
 
 export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
@@ -42,7 +42,7 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
     /** A predefined shape or symbol for the dot */
     symbolType?: `${SymbolType}`;
     /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: ChartLegend & {
+    legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Y-axis index (when using two axes) */

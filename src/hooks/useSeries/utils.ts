@@ -1,16 +1,16 @@
 import memoize from 'lodash/memoize';
 
 import {SymbolType} from '../../constants';
-import type {ChartSeries} from '../../types';
+import type {RectLegendSymbolOptions} from '../../types';
 import {getUniqId} from '../../utils/misc';
 
 import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './constants';
-import type {PreparedLegendSymbol, PreparedSeries, StackedSeries} from './types';
+import type {PathLegendSymbol, PreparedLegendSymbol, PreparedSeries, StackedSeries} from './types';
 
 export const getActiveLegendItems = (series: PreparedSeries[]) => {
     return series.reduce<string[]>((acc, s) => {
         if (s.legend.enabled && s.visible) {
-            acc.push(s.name);
+            acc.push(s.legend.groupId);
         }
 
         return acc;
@@ -18,11 +18,11 @@ export const getActiveLegendItems = (series: PreparedSeries[]) => {
 };
 
 export const getAllLegendItems = (series: PreparedSeries[]) => {
-    return series.map((s) => s.name);
+    return series.map((s) => s.legend.groupId);
 };
 
 export function prepareLegendSymbol(
-    series: ChartSeries,
+    series: {legend?: {symbol?: RectLegendSymbolOptions | PathLegendSymbol}},
     symbolType?: `${SymbolType}`,
 ): PreparedLegendSymbol {
     const symbolOptions = series.legend?.symbol || {};
