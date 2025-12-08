@@ -27,7 +27,6 @@ import {
     wrapText,
 } from '../../utils';
 import {createXScale} from '../useAxisScales';
-import type {PreparedSeriesOptions} from '../useSeries/types';
 
 import {getPreparedRangeSlider} from './range-slider';
 import type {PreparedXAxis} from './types';
@@ -36,17 +35,15 @@ import {prepareAxisPlotLabel} from './utils';
 async function setLabelSettings({
     axis,
     seriesData,
-    seriesOptions,
     width,
     autoRotation = true,
 }: {
     axis: PreparedXAxis;
     seriesData: ChartSeries[];
-    seriesOptions: PreparedSeriesOptions;
     width: number;
     autoRotation?: boolean;
 }) {
-    const scale = createXScale({axis, series: seriesData, seriesOptions, boundsWidth: width});
+    const scale = createXScale({axis, series: seriesData, boundsWidth: width});
 
     if (!scale) {
         axis.labels.height = 0;
@@ -111,12 +108,10 @@ function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
 export const getPreparedXAxis = async ({
     xAxis,
     seriesData,
-    seriesOptions,
     width,
 }: {
     xAxis?: ChartXAxis;
     seriesData: ChartSeries[];
-    seriesOptions: PreparedSeriesOptions;
     width: number;
 }): Promise<PreparedXAxis | null> => {
     const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
@@ -235,7 +230,6 @@ export const getPreparedXAxis = async ({
     await setLabelSettings({
         axis: preparedXAxis,
         seriesData,
-        seriesOptions,
         width,
         autoRotation: xAxis?.labels?.autoRotation,
     });

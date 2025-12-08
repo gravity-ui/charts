@@ -127,7 +127,7 @@ export const prepareBarXData = async (args: {
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
                     : d.x;
 
-            if (xValue) {
+            if (typeof xValue !== 'undefined') {
                 if (!data[xValue]) {
                     data[xValue] = {};
                 }

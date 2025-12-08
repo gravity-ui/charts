@@ -8,9 +8,7 @@ import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';
 import type {
     PreparedAxis,
     PreparedSeries,
-    PreparedSeriesOptions,
     PreparedSplit,
-    PreparedXAxis,
     RangeSliderState,
     ZoomState,
 } from '../../hooks';
@@ -29,7 +27,6 @@ import {
     isSeriesWithCategoryValues,
 } from '../../utils';
 import type {AxisDirection} from '../../utils';
-import {getBarXLayoutForNumericScale, groupBarXDataByXValue} from '../utils/bar-x';
 import {getBandSize} from '../utils/get-band-size';
 
 import {checkIsPointDomain, getMinMaxPropsOrState, hasOnlyMarkerSeries} from './utils';
@@ -43,7 +40,6 @@ type Args = {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
-    seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
@@ -330,42 +326,15 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
-    const types = [SERIES_TYPE.Heatmap] as string[];
+    const types = [SERIES_TYPE.Heatmap, SERIES_TYPE.BarX] as string[];
     return series.some((s) => types.includes(s.type));
 }
 
-function getXScaleRange({
-    boundsWidth,
-    series,
-    seriesOptions,
-    hasZoomX,
-    axis,
-}: {
-    axis: PreparedAxis | ChartAxis;
-    boundsWidth: number;
-    series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
-    hasZoomX?: boolean;
-}) {
+function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?: boolean}) {
     const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
     const xRange = [0, boundsWidth];
     const xRangeZoom = [0 + xAxisZoomPadding, boundsWidth - xAxisZoomPadding];
     const range = hasZoomX ? xRangeZoom : xRange;
-
-    const barXSeries = series.filter((s) => s.type === SERIES_TYPE.BarX);
-    if (barXSeries.length) {
-        const groupedData = groupBarXDataByXValue(barXSeries, axis as PreparedXAxis);
-        if (Object.keys(groupedData).length > 1) {
-            const {bandSize} = getBarXLayoutForNumericScale({
-                plotWidth: boundsWidth,
-                groupedData,
-                seriesOptions,
-            });
-
-            const offset = bandSize / 2;
-            return [range[0] + offset, range[1] - offset];
-        }
-    }
 
     return range;
 }
@@ -375,11 +344,10 @@ export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
-    seriesOptions: PreparedSeriesOptions;
     rangeSliderState?: RangeSliderState;
     zoomStateX?: [number, number];
 }) {
-    const {axis, boundsWidth, series, seriesOptions, rangeSliderState, zoomStateX} = args;
+    const {axis, boundsWidth, series, rangeSliderState, zoomStateX} = args;
     const [xMinPropsOrState, xMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
         maxValues: [zoomStateX?.[1], rangeSliderState?.max],
@@ -401,10 +369,7 @@ export function createXScale(args: {
 
     const range = getXScaleRange({
         boundsWidth,
-        series,
-        seriesOptions,
         hasZoomX,
-        axis,
     });
 
     switch (axis.order) {
@@ -588,17 +553,8 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
+    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
+        args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
@@ -611,7 +567,6 @@ const createScales = (args: Args) => {
                   boundsWidth,
                   rangeSliderState,
                   series: visibleSeries,
-                  seriesOptions,
                   zoomStateX: zoomState?.x,
               })
             : undefined,
@@ -637,17 +592,8 @@ const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
+    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
+        args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: (ChartScale | undefined)[] | undefined;
@@ -659,7 +605,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 boundsHeight,
                 rangeSliderState,
                 series,
-                seriesOptions,
                 split,
                 xAxis,
                 yAxis,
@@ -668,15 +613,5 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    ]);
+    }, [boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState]);
 };

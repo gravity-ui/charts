@@ -132,7 +132,6 @@ export function useChartInnerProps(props: Props) {
         boundsHeight,
         rangeSliderState,
         series: preparedSeries,
-        seriesOptions: preparedSeriesOptions,
         split: preparedSplit,
         xAxis,
         yAxis,
