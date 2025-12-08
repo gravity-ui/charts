@@ -202,7 +202,7 @@ export const prepareAreaData = async (args: {
                     if (yPointValue !== null) {
                         accumulatedYValues.set(x, yMin - yPointValue);
                     }
-                    if (s.nullMode === 'skip' && yPointValue === null) {
+                    if (s.nullMode === 'connect' && yPointValue === null) {
                         return pointsAcc;
                     }
                     pointsAcc.push({
