@@ -18,7 +18,7 @@ import {
 } from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
-test.describe.only('Area series', () => {
+test.describe('Area series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={areaBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
