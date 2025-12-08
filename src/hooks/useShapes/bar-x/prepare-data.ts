@@ -1,15 +1,16 @@
-import {ascending, descending, max, sort} from 'd3';
+import {ascending, descending, sort} from 'd3';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
 import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales';
-import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../useSeries/types';
+import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../useSeries/types';
+import {getSeriesStackId} from '../../useSeries/utils';
 import type {PreparedSplit} from '../../useSplit/types';
+import {getBarXLayout} from '../../utils/bar-x';
 
 import type {PreparedBarXData} from './types';
 
@@ -86,10 +87,7 @@ export const prepareBarXData = async (args: {
         split,
     } = args;
     const stackGap: number = seriesOptions['bar-x'].stackGap;
-    const categories = get(xAxis, 'categories', [] as string[]);
-    const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
-    const barPadding = get(seriesOptions, 'bar-x.barPadding');
-    const groupPadding = get(seriesOptions, 'bar-x.groupPadding');
+    const categories = xAxis?.categories ?? [];
     const sortingOptions = get(seriesOptions, 'bar-x.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
     const sortKey = (() => {
@@ -122,64 +120,42 @@ export const prepareBarXData = async (args: {
             if (!isSeriesDataValid(d)) {
                 return;
             }
-            const xValue =
+            const key =
                 xAxis.type === 'category'
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
                     : d.x;
 
-            if (typeof xValue !== 'undefined') {
-                if (!data[xValue]) {
-                    data[xValue] = {};
+            if (key !== undefined) {
+                if (!data[key]) {
+                    data[key] = {};
                 }
 
-                const xGroup = data[xValue];
-
-                if (!xGroup[s.stackId]) {
-                    xGroup[s.stackId] = [];
+                const stackId = getSeriesStackId(s as StackedSeries);
+                if (!data[key][stackId]) {
+                    data[key][stackId] = [];
                 }
 
-                xGroup[s.stackId].push({data: d, series: s});
+                data[key][stackId].push({data: d, series: s});
             }
         });
     });
-
-    let bandWidth = Infinity;
-
-    if (xAxis.type === 'category') {
-        const xBandScale = xScale as ScaleBand<string>;
-        bandWidth = xBandScale.bandwidth();
-    } else {
-        const xLinearScale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
-        const xValues = series.reduce<number[]>((acc, s) => {
-            s.data.forEach((dataItem) => acc.push(Number(dataItem.x)));
-            return acc;
-        }, []);
-
-        xValues.sort().forEach((xValue, index) => {
-            if (index > 0 && xValue !== xValues[index - 1]) {
-                const dist = xLinearScale(xValue) - xLinearScale(xValues[index - 1]);
-                if (dist < bandWidth) {
-                    bandWidth = dist;
-                }
-            }
-        });
-    }
 
     const result: PreparedBarXData[] = [];
 
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
         const data = dataByPlots.get(plotIndexes[plotDataIndex]) ?? {};
-        const maxGroupSize = max(Object.values(data), (d) => Object.values(d).length) || 1;
-        const groupGap = Math.max(bandWidth * groupPadding, MIN_BAR_GROUP_GAP);
-        const groupWidth = bandWidth - groupGap;
-        const rectGap = Math.max(bandWidth * barPadding, MIN_BAR_GAP);
-        const rectWidth = Math.max(
-            MIN_BAR_WIDTH,
-            Math.min(groupWidth / maxGroupSize - rectGap, barMaxWidth),
-        );
-
         const groupedData = Object.entries(data);
+        const {
+            bandSize,
+            barGap: rectGap,
+            barSize: rectWidth,
+        } = getBarXLayout({
+            groupedData: data,
+            seriesOptions,
+            scale: xScale,
+        });
+
         for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
             const [xValue, val] = groupedData[groupedDataIndex];
             const stacks = Object.values(val);
@@ -216,12 +192,12 @@ export const prepareBarXData = async (args: {
                             continue;
                         }
 
-                        xCenter = (xBandScale(xValue as string) || 0) + xBandScale.bandwidth() / 2;
+                        xCenter = (xBandScale(xValue as string) || 0) + bandSize / 2;
                     } else {
-                        const xLinearScale = xScale as
+                        const scale = xScale as
                             | ScaleLinear<number, number>
                             | ScaleTime<number, number>;
-                        xCenter = xLinearScale(Number(xValue));
+                        xCenter = scale(Number(xValue));
                     }
 
                     const x =
