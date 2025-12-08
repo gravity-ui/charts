@@ -202,6 +202,9 @@ export const prepareAreaData = async (args: {
                     if (yPointValue !== null) {
                         accumulatedYValues.set(x, yMin - yPointValue);
                     }
+                    if (s.nullMode === 'connect' && yPointValue === null) {
+                        return pointsAcc;
+                    }
                     pointsAcc.push({
                         y0: yAxisTop + yMin - accumulatedYValue,
                         x: xValue,
@@ -211,7 +214,6 @@ export const prepareAreaData = async (args: {
                     });
                     return pointsAcc;
                 }, []);
-
                 const labels: LabelData[] = [];
                 const htmlElements: HtmlItem[] = [];
 
@@ -275,6 +277,5 @@ export const prepareAreaData = async (args: {
             result.push(...seriesStackData);
         }
     }
-
     return result;
 };

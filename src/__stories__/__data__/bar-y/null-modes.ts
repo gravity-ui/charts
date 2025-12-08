@@ -8,6 +8,14 @@ const dataWithNullsLinearX: BarYSeriesData[] = [
     {x: 30, y: 30},
 ];
 
+const dataWithNullsCategoryY: BarYSeriesData[] = [
+    {x: 10, y: 0},
+    {x: 15, y: 1},
+    {x: null, y: 2},
+    {x: 25, y: 3},
+    {x: 30, y: 4},
+];
+
 export const barYNullModeSkipLinearXData: ChartData = {
     series: {
         data: [
@@ -40,4 +48,50 @@ export const barYNullModeZeroLinearXData: ChartData = {
             },
         ],
     },
+};
+
+export const barYNullModeSkipCategoryYData: ChartData = {
+    series: {
+        data: [
+            {
+                type: 'bar-y',
+                name: 'Series',
+                data: dataWithNullsCategoryY,
+                nullMode: 'skip',
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                },
+            },
+        ],
+    },
+    yAxis: [
+        {
+            type: 'category',
+            categories: ['A', 'B', 'C', 'D', 'E'],
+        },
+    ],
+};
+
+export const barYNullModeZeroCategoryYData: ChartData = {
+    series: {
+        data: [
+            {
+                type: 'bar-y',
+                name: 'Series',
+                data: dataWithNullsCategoryY,
+                nullMode: 'zero',
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                },
+            },
+        ],
+    },
+    yAxis: [
+        {
+            type: 'category',
+            categories: ['A', 'B', 'C', 'D', 'E'],
+        },
+    ],
 };
