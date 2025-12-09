@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.25.0](https://github.com/gravity-ui/charts/compare/v1.24.2...v1.25.0) (2025-12-09)
+
+
+### Features
+
+* add legend grouping ([#292](https://github.com/gravity-ui/charts/issues/292)) ([4e33906](https://github.com/gravity-ui/charts/commit/4e33906153973babdea9acc242350899fb69571b))
+
+
+### Bug Fixes
+
+* **Area, Bar-x,Bar-y:** fix incorrect category axis behavior in case of nullMode="connect" and nullNode='skip' ([#300](https://github.com/gravity-ui/charts/issues/300)) ([46c2d9f](https://github.com/gravity-ui/charts/commit/46c2d9f788e47d2e3d446f5bcafcc0ec95196154))
+* bar-x with the similar data should be displayed the same for different types of axes ([#295](https://github.com/gravity-ui/charts/issues/295)) ([eb10f43](https://github.com/gravity-ui/charts/commit/eb10f4382020cd8ebdc5ce981286d2a4a41c6334))
+* legend position and symbol offset ([#302](https://github.com/gravity-ui/charts/issues/302)) ([9913c28](https://github.com/gravity-ui/charts/commit/9913c28edae63123735995ffef71fc0366a0888a))
+* series with a single point in the data ([#296](https://github.com/gravity-ui/charts/issues/296)) ([0554e7c](https://github.com/gravity-ui/charts/commit/0554e7c8364b09c647e3e63edead6f6ae4e2ab59))
+* **Waterfall:** fix calculation of yValue for total item ([#297](https://github.com/gravity-ui/charts/issues/297)) ([24eaa67](https://github.com/gravity-ui/charts/commit/24eaa67a66fae7d0cfc2281006945d4e058a3e7d))
+
 ## [1.24.2](https://github.com/gravity-ui/charts/compare/v1.24.1...v1.24.2) (2025-11-27)
 
 
