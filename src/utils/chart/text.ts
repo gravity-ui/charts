@@ -86,33 +86,6 @@ export function setEllipsisForOverflowTexts<T>(
     });
 }
 
-export function hasOverlappingLabels({
-    width,
-    labels,
-    padding = 0,
-    style,
-}: {
-    width: number;
-    labels: string[];
-    style?: BaseTextStyle;
-    padding?: number;
-}) {
-    const maxWidth = (width - padding * (labels.length - 1)) / labels.length;
-
-    const textElement = select(document.body)
-        .append('text')
-        .style('font-size', style?.fontSize || '');
-
-    const result = labels.some((label) => {
-        const textWidth = textElement.text(label).node()?.getBoundingClientRect()?.width || 0;
-        return textWidth > maxWidth;
-    });
-
-    textElement.remove();
-
-    return result;
-}
-
 function renderLabels(
     selection: Selection<SVGSVGElement, unknown, null, undefined>,
     {

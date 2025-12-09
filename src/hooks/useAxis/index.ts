@@ -49,9 +49,25 @@ export function useAxis(props: UseAxesProps) {
         (async function () {
             const currentRun = axesStateRunRef.current;
             const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+
+            const estimatedPreparedYAxis = await getPreparedYAxis({
+                height,
+                boundsHeight: height,
+                width,
+                seriesData,
+                yAxis,
+            });
+            const axesWidth = estimatedPreparedYAxis.reduce(
+                (acc, a) =>
+                    acc + a.title.height + a.title.margin + a.labels.margin + a.labels.width,
+                0,
+            );
+            const estimatedBoundsWidth =
+                width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right);
             const preparedXAxis = await getPreparedXAxis({
                 xAxis,
                 width,
+                boundsWidth: estimatedBoundsWidth,
                 seriesData,
             });
 

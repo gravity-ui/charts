@@ -5,9 +5,6 @@ import clamp from 'lodash/clamp';
 import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hooks';
 import type {ChartAxis} from '../../types';
 
-import {formatAxisTickLabel} from './format';
-import type {TextRow} from './text';
-import {wrapText} from './text';
 import type {AxisDirection} from './types';
 
 type Ticks = number[] | string[] | Date[];
@@ -92,11 +89,6 @@ export function getAxisItems({
     return values;
 }
 
-export function getMaxTickCount({axis, width}: {axis: PreparedAxis; width: number}) {
-    const minTickWidth = parseInt(axis.labels.style.fontSize, 10) + axis.labels.padding;
-    return Math.floor(width / minTickWidth);
-}
-
 export function getAxisHeight(args: {split: PreparedSplit; boundsHeight: number}) {
     const {split, boundsHeight} = args;
 
@@ -105,28 +97,6 @@ export function getAxisHeight(args: {split: PreparedSplit; boundsHeight: number}
     }
 
     return boundsHeight;
-}
-
-export async function getAxisTitleRows(args: {axis: PreparedAxis; textMaxWidth: number}) {
-    const {axis, textMaxWidth} = args;
-    if (axis.title.maxRowCount < 1) {
-        return [];
-    }
-
-    const textRows = await wrapText({
-        text: axis.title.text,
-        style: axis.title.style,
-        width: textMaxWidth,
-    });
-
-    return textRows.reduce<TextRow[]>((acc, row, index) => {
-        if (index < axis.title.maxRowCount) {
-            acc.push(row);
-        } else {
-            acc[axis.title.maxRowCount - 1].text += row.text;
-        }
-        return acc;
-    }, []);
 }
 
 interface GetBandsPositionArgs {
@@ -191,23 +161,6 @@ export function getClosestPointsRange(axis: PreparedAxis, points: AxisDomain[]) 
     }
 
     return Math.abs((points[1] as number) - (points[0] as number));
-}
-
-export function getLabelFormatter({axis, scale}: {axis: PreparedAxis; scale: ChartScale}) {
-    const ticks = getScaleTicks(scale);
-    const tickStep = getClosestPointsRange(axis, ticks);
-
-    return (value: AxisDomain) => {
-        if (!axis.labels.enabled) {
-            return '';
-        }
-
-        return formatAxisTickLabel({
-            axis,
-            value,
-            step: tickStep,
-        });
-    };
 }
 
 function getNormalizedIndexMinMax(args: {max?: number; min?: number}) {

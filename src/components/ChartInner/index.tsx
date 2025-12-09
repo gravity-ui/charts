@@ -9,8 +9,10 @@ import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
 import {EventType, block, getDispatcher, isBandScale, isTimeScale} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
+import {prepareXAxisData} from '../AxisX/prepare-axis-data';
+import type {AxisXData} from '../AxisX/types';
 import {AxisY} from '../AxisY/AxisY';
-import {prepareAxisData} from '../AxisY/prepare-axis-data';
+import {prepareAxisData as prepareYAxisData} from '../AxisY/prepare-axis-data';
 import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
@@ -86,7 +88,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         prevWidth,
         shapes,
         shapesData,
-        svgXPos,
         title,
         xAxis,
         xScale,
@@ -179,7 +180,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             const axis = yAxis[i];
             const scale = yScale?.[i];
             if (scale) {
-                const axisData = await prepareAxisData({
+                const axisData = await prepareYAxisData({
                     axis,
                     scale,
                     top: boundsOffsetTop,
@@ -194,6 +195,24 @@ export const ChartInner = (props: ChartInnerProps) => {
         return items;
     }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSeries, preparedSplit, yAxis, yScale]);
     const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems);
+
+    const setXAxisDataItems = React.useCallback(async () => {
+        const items: AxisXData[] = [];
+        const axis = xAxis;
+        const scale = xScale;
+        if (axis && scale) {
+            const axisData = await prepareXAxisData({
+                axis,
+                scale,
+                boundsWidth,
+                boundsOffsetRight: width - boundsWidth - boundsOffsetLeft,
+                height: boundsHeight,
+            });
+            items.push(axisData);
+        }
+        return items;
+    }, [boundsHeight, boundsOffsetLeft, boundsWidth, width, xAxis, xScale]);
+    const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
 
     React.useEffect(() => {
         if (!initialized && xScale) {
@@ -266,22 +285,15 @@ export const ChartInner = (props: ChartInnerProps) => {
                 transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
                 ref={plotRef}
             >
-                {xScale && xAxis && (
-                    <g transform={`translate(0, ${boundsHeight})`}>
-                        <AxisX
-                            axis={xAxis}
-                            boundsOffsetLeft={boundsOffsetLeft}
-                            boundsOffsetTop={boundsOffsetTop}
-                            height={boundsHeight}
-                            htmlLayout={htmlLayout}
-                            leftmostLimit={svgXPos}
-                            plotAfterRef={plotAfterRef}
-                            plotBeforeRef={plotBeforeRef}
-                            scale={xScale}
-                            split={preparedSplit}
-                            width={boundsWidth}
-                        />
-                    </g>
+                {xScale && xAxisDataItems.length && (
+                    // <g transform={`translate(0, ${boundsHeight})`}>
+                    <AxisX
+                        htmlLayout={htmlLayout}
+                        plotAfterRef={plotAfterRef}
+                        plotBeforeRef={plotBeforeRef}
+                        preparedAxisData={xAxisDataItems[0]}
+                    />
+                    // </g>
                 )}
                 {Boolean(yAxisDataItems.length) && (
                     <React.Fragment>
