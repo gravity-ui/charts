@@ -79,7 +79,7 @@ export interface ChartLegend extends ChartLegendItem {
      *
      * @default 'bottom'
      * */
-    position?: 'top' | 'bottom';
+    position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 export interface BaseLegendSymbol {

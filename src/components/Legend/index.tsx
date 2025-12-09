@@ -1,7 +1,7 @@
 import React from 'react';
 
-import {line as lineGenerator, scaleLinear, select, symbol} from 'd3';
 import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
+import {line as lineGenerator, scaleLinear, select, symbol} from 'd3';
 
 import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
 import type {
@@ -39,24 +39,32 @@ type Props = {
     onUpdate?: () => void;
 };
 
-const getLegendPosition = (args: {
+const getLegendItemPosition = (args: {
     align: PreparedLegend['align'];
     contentWidth: number;
     width: number;
     offsetLeft?: number;
 }) => {
-    const {align, offsetLeft = 0, width, contentWidth} = args;
-    const top = 0;
-
-    if (align === 'left') {
-        return {top, left: offsetLeft};
-    }
+    const {align, width, contentWidth} = args;
 
     if (align === 'right') {
-        return {top, left: offsetLeft + width - contentWidth};
+        return {left: width - contentWidth};
+    } else if (align === 'left') {
+        return {left: 0};
+    } else {
+        return {left: width / 2 - contentWidth / 2};
     }
+};
 
-    return {top, left: offsetLeft + width / 2 - contentWidth / 2};
+const getLegendPosition = (args: {
+    contentWidth: number;
+    width: number;
+    offsetLeft: number;
+    offsetTop: number;
+}) => {
+    const {offsetLeft, offsetTop, contentWidth, width} = args;
+
+    return {top: offsetTop, left: offsetLeft + width / 2 - contentWidth / 2};
 };
 
 const appendPaginator = (args: {
@@ -235,6 +243,8 @@ export const Legend = (props: Props) => {
                 : null;
 
             let legendWidth = 0;
+            let legendLeft = 0;
+            let legendTop = 0;
             if (legend.type === 'discrete') {
                 const start = config.pagination?.pages[pageIndex]?.start;
                 const end = config.pagination?.pages[pageIndex]?.end;
@@ -339,11 +349,10 @@ export const Legend = (props: Props) => {
                     let left = 0;
                     switch (legend.justifyContent) {
                         case 'center': {
-                            const legendLinePostion = getLegendPosition({
+                            const legendLinePostion = getLegendItemPosition({
                                 align: legend.align,
                                 width: config.maxWidth,
                                 contentWidth,
-                                offsetLeft: config.offset.left,
                             });
                             left = legendLinePostion.left;
                             legendWidth = config.maxWidth;
@@ -374,7 +383,29 @@ export const Legend = (props: Props) => {
                         onArrowClick: setPageIndex,
                     });
                 }
+                const {left, top} = getLegendPosition({
+                    width: config.maxWidth,
+                    contentWidth: legendWidth,
+                    offsetLeft: config.offset.left,
+                    offsetTop: config.offset.top,
+                });
+
+                legendLeft = left;
+                legendTop = top;
             } else {
+                const {left} = getLegendItemPosition({
+                    align: legend.align,
+                    width: config.maxWidth,
+                    contentWidth: legend.width,
+                });
+                const {top} = getLegendPosition({
+                    width: config.maxWidth,
+                    contentWidth: legendWidth,
+                    offsetLeft: config.offset.left,
+                    offsetTop: config.offset.top,
+                });
+                legendLeft = left;
+                legendTop = top;
                 // gradient rect
                 const domain = legend.colorScale.domain ?? [];
                 const rectHeight = CONTINUOUS_LEGEND_SIZE.height;
@@ -459,16 +490,10 @@ export const Legend = (props: Props) => {
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();
             }
 
-            const {left} = getLegendPosition({
-                align: legend.align,
-                width: config.maxWidth,
-                contentWidth: legendWidth,
-            });
-
             svgElement
-                .attr('transform', `translate(${[left, config.offset.top].join(',')})`)
+                .attr('transform', `translate(${[legendLeft, legendTop].join(',')})`)
                 .style('opacity', 1);
-            htmlContainer?.style('transform', `translate(${left}px, ${config.offset.top}px)`);
+            htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
         }
 
         prepareLegend();
