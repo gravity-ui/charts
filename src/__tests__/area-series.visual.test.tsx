@@ -7,8 +7,11 @@ import set from 'lodash/set';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     areaBasicData,
+    areaNullModeConnectCategoryXData,
     areaNullModeConnectLinearXData,
+    areaNullModeSkipCategoryXData,
     areaNullModeSkipLinearXData,
+    areaNullModeZeroCategoryXData,
     areaNullModeZeroLinearXData,
     areaSplitData,
     areaStakingNormalData,
@@ -29,19 +32,52 @@ test.describe('Area series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('x null values, nullMode=connect', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={areaNullModeConnectLinearXData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
+    test.describe('Null modes', () => {
+        test.describe('Linear X-axis', () => {
+            test('nullMode=connect', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={areaNullModeConnectLinearXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
 
-    test('x null values, nullMode=skip', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={areaNullModeSkipLinearXData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
+            test('nullMode=skip', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={areaNullModeSkipLinearXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
 
-    test('x null values, nullMode=zero', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={areaNullModeZeroLinearXData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+            test('nullMode=zero', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={areaNullModeZeroLinearXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+
+        test.describe('Category X-axis', () => {
+            test('nullMode=connect', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={areaNullModeConnectCategoryXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('nullMode=skip', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={areaNullModeSkipCategoryXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('nullMode=zero', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={areaNullModeZeroCategoryXData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
     });
 
     test('Basic split', async ({mount}) => {
@@ -80,6 +116,24 @@ test.describe('Area series', () => {
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+    });
+
+    test('Single point (with marker enabled)', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'area',
+                        data: [{y: 10, x: 10, marker: {states: {normal: {enabled: true}}}}],
+                    },
+                ],
+            },
+            yAxis: [{maxPadding: 0}],
+            xAxis: {maxPadding: 0},
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 
     test('Two points with the same y value', async ({mount}) => {

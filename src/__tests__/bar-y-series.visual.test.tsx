@@ -9,7 +9,9 @@ import {
     barYBasicData,
     barYContinuousLegendData,
     barYGroupedColumnsData,
+    barYNullModeSkipCategoryYData,
     barYNullModeSkipLinearXData,
+    barYNullModeZeroCategoryYData,
     barYNullModeZeroLinearXData,
     barYPlotLinesData,
     barYStakingNormalData,
@@ -908,16 +910,36 @@ test.describe('Bar-y series', () => {
         });
     });
 
-    test('x null values, nullMode=skip', async ({mount}) => {
-        const data = cloneDeep(barYNullModeSkipLinearXData);
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
+    test.describe('Null modes', () => {
+        test.describe('Linear X-axis', () => {
+            test('nullMode=skip', async ({mount}) => {
+                const data = cloneDeep(barYNullModeSkipLinearXData);
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
 
-    test('x null values, nullMode=zero', async ({mount}) => {
-        const data = cloneDeep(barYNullModeZeroLinearXData);
-        const component = await mount(<ChartTestStory data={data} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+            test('nullMode=zero', async ({mount}) => {
+                const data = cloneDeep(barYNullModeZeroLinearXData);
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+
+        test.describe('Category Y-axis', () => {
+            test('nullMode=skip', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={barYNullModeSkipCategoryYData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('nullMode=zero', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={barYNullModeZeroCategoryYData} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
     });
 
     test('negative-values', async ({mount}) => {

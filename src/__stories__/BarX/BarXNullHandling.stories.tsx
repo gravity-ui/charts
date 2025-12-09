@@ -5,17 +5,26 @@ import type {StoryObj} from '@storybook/react-webpack5';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
-import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
-import {barXNullModeSkipLinearXData, barXNullModeZeroLinearXData} from '../__data__';
+import {
+    barXNullModeSkipCategoryXData,
+    barXNullModeSkipLinearXData,
+    barXNullModeZeroCategoryXData,
+    barXNullModeZeroLinearXData,
+} from '../__data__';
 
 const BarXNullHandlingComparison = () => {
-    const skipData: ChartData = cloneDeep(barXNullModeSkipLinearXData);
-    set(skipData, 'title', {text: 'nullMode: "skip" (default)'});
+    const skipData = cloneDeep(barXNullModeSkipLinearXData);
+    set(skipData, 'title', {text: 'nullMode: "skip" (default) - Linear X-axis'});
     set(skipData, 'series.data[0].dataLabels', {enabled: true, inside: true});
-    const zeroData: ChartData = cloneDeep(barXNullModeZeroLinearXData);
-    set(zeroData, 'title', {text: 'nullMode: "zero"'});
+    const zeroData = cloneDeep(barXNullModeZeroLinearXData);
+    set(zeroData, 'title', {text: 'nullMode: "zero" - Linear X-axis'});
     set(zeroData, 'series.data[0].dataLabels', {enabled: true, inside: true});
+
+    const skipDataCategory = cloneDeep(barXNullModeSkipCategoryXData);
+    set(skipDataCategory, 'title', {text: 'nullMode: "skip" (default) - Category X-axis'});
+    const zeroDataCategory = cloneDeep(barXNullModeZeroCategoryXData);
+    set(zeroDataCategory, 'title', {text: 'nullMode: "zero" - Category X-axis'});
 
     return (
         <Container spaceRow={5}>
@@ -25,6 +34,14 @@ const BarXNullHandlingComparison = () => {
                 </Col>
                 <Col s={12} m={6}>
                     <ChartStory data={zeroData} />
+                </Col>
+            </Row>
+            <Row space={3}>
+                <Col s={12} m={6}>
+                    <ChartStory data={skipDataCategory} />
+                </Col>
+                <Col s={12} m={6}>
+                    <ChartStory data={zeroDataCategory} />
                 </Col>
             </Row>
         </Container>
