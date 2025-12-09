@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/gravity-ui/charts/compare/v1.25.0...v1.26.0) (2025-12-09)
+
+
+### Features
+
+* **Legend:** add `left` and `right` options to `legend.position` config  ([#280](https://github.com/gravity-ui/charts/issues/280)) ([bef146b](https://github.com/gravity-ui/charts/commit/bef146b0ca9a5ed13a32898c74767e5d44e37227))
+
 ## [1.25.0](https://github.com/gravity-ui/charts/compare/v1.24.2...v1.25.0) (2025-12-09)
 
 
