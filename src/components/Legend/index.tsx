@@ -43,7 +43,7 @@ const getLegendPosition = (args: {
     align: PreparedLegend['align'];
     contentWidth: number;
     width: number;
-    offsetLeft: number;
+    offsetLeft?: number;
 }) => {
     const {align, offsetLeft = 0, width, contentWidth} = args;
     const top = 0;
@@ -183,7 +183,6 @@ function renderLegendSymbol(args: {
             }
             case 'symbol': {
                 const y = legendLineHeight / 2;
-                const translateX = x + d.symbol.width / 2;
 
                 element
                     .append('svg:path')
@@ -196,7 +195,9 @@ function renderLegendSymbol(args: {
                         // https://d3js.org/d3-shape/symbol#symbol
                         return symbol(scatterSymbol, d.symbol.width * d.symbol.width)();
                     })
-                    .attr('transform', () => {
+                    .attr('transform', (_d, _index, elements) => {
+                        const translateX =
+                            x + (elements[0] as SVGPathElement)?.getBBox()?.width / 2;
                         return 'translate(' + translateX + ',' + y + ')';
                     })
                     .attr('class', className)
@@ -462,7 +463,6 @@ export const Legend = (props: Props) => {
                 align: legend.align,
                 width: config.maxWidth,
                 contentWidth: legendWidth,
-                offsetLeft: config.offset.left,
             });
 
             svgElement
