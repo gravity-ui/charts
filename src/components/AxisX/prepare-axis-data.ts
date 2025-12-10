@@ -139,8 +139,6 @@ export async function prepareXAxisData({
 
     for (let i = 0; i < values.length; i++) {
         const tickValue = values[i];
-        const x = tickValue.x;
-        const y = 0;
 
         let svgLabel: AxisSvgLabelData | null = null;
         let htmlLabel: HtmlItem | null = null;
@@ -154,18 +152,11 @@ export async function prepareXAxisData({
                     style: axis.labels.style,
                 });
                 const size = {width: labelSize.maxWidth, height: labelSize.maxHeight};
-                const left = 0;
-                const top = y;
-
-                const x =
-                    axis.position === 'left'
-                        ? left - size.width - axis.labels.margin
-                        : left + axis.labels.margin;
 
                 htmlLabel = {
                     content,
-                    x,
-                    y: top - size.height / 2,
+                    x: tickValue.x - size.width / 2,
+                    y: height + axis.labels.margin,
                     size,
                     style: axis.labels.style,
                 };
@@ -176,7 +167,7 @@ export async function prepareXAxisData({
                     text,
                     axis,
                     top: height,
-                    left: x,
+                    left: tickValue.x,
                     labelMaxWidth,
                     axisWidth,
                     boundsOffsetRight,
@@ -187,8 +178,8 @@ export async function prepareXAxisData({
         const tickLine: AxisTickLine | null = axis.grid.enabled
             ? {
                   points: [
-                      [x, 0],
-                      [x, height],
+                      [tickValue.x, 0],
+                      [tickValue.x, height],
                   ],
               }
             : null;
