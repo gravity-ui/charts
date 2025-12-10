@@ -39,21 +39,21 @@ type Props = {
     onUpdate?: () => void;
 };
 
-const getLegendItemPosition = (args: {
+const getLegendItemLeftPosition = (args: {
     align: PreparedLegend['align'];
     contentWidth: number;
     width: number;
-    offsetLeft?: number;
 }) => {
     const {align, width, contentWidth} = args;
 
     if (align === 'right') {
-        return {left: width - contentWidth};
-    } else if (align === 'left') {
-        return {left: 0};
-    } else {
-        return {left: width / 2 - contentWidth / 2};
+        return width - contentWidth;
     }
+    if (align === 'left') {
+        return 0;
+    }
+
+    return width / 2 - contentWidth / 2;
 };
 
 const getLegendPosition = (args: {
@@ -349,12 +349,11 @@ export const Legend = (props: Props) => {
                     let left = 0;
                     switch (legend.justifyContent) {
                         case 'center': {
-                            const legendLinePostion = getLegendItemPosition({
+                            left = getLegendItemLeftPosition({
                                 align: legend.align,
                                 width: config.maxWidth,
                                 contentWidth,
                             });
-                            left = legendLinePostion.left;
                             legendWidth = config.maxWidth;
                             break;
                         }
@@ -393,11 +392,21 @@ export const Legend = (props: Props) => {
                 legendLeft = left;
                 legendTop = top;
             } else {
-                const {left} = getLegendItemPosition({
-                    align: legend.align,
-                    width: config.maxWidth,
-                    contentWidth: legend.width,
-                });
+                let left = 0;
+                switch (legend.align) {
+                    case 'right': {
+                        left = config.offset.left + config.maxWidth - legend.width;
+                        break;
+                    }
+                    case 'left': {
+                        left = config.offset.left;
+                        break;
+                    }
+                    case 'center': {
+                        left = config.offset.left + config.maxWidth / 2 - legend.width / 2;
+                        break;
+                    }
+                }
                 const {top} = getLegendPosition({
                     width: config.maxWidth,
                     contentWidth: legendWidth,

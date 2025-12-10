@@ -7,7 +7,7 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
-import type {ChartData} from '../types';
+import type {ChartData, ChartLegend} from '../types';
 
 const pieOverflowedLegendItemsData: ChartData = {
     legend: {
@@ -176,6 +176,41 @@ test.describe('Legend', () => {
             const legendItem = component.locator('.gcharts-legend__item text').first();
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
+    test.describe('Continuous', () => {
+        const legendAlign: ChartLegend['align'][] = ['left', 'right', 'center'];
+        legendAlign.forEach((align) => {
+            test(`Chart margin should be taken into account when positioning the legend (align="${align}")`, async ({
+                mount,
+            }) => {
+                const chartData: ChartData = {
+                    chart: {margin: {left: 10, right: 10}},
+                    legend: {
+                        enabled: true,
+                        type: 'continuous',
+                        align,
+                        colorScale: {
+                            colors: ['#348bdc', '#348bdc'],
+                        },
+                        width: 100,
+                    },
+                    series: {
+                        data: [
+                            {
+                                type: 'pie',
+                                dataLabels: {enabled: false},
+                                data: [{value: 10, name: 'Data'}],
+                            },
+                        ],
+                    },
+                };
+                const component = await mount(
+                    <ChartTestStory data={chartData} styles={{width: 200}} />,
+                );
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
         });
     });
 });
