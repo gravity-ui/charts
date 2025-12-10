@@ -63,7 +63,9 @@ async function setLabelSettings({
         }),
     );
     const labelMaxWidth =
-        getMinSpaceBetween<{x: number}>(tickValues, (d) => d.x) - axis.labels.padding * 2;
+        tickValues.length > 1
+            ? getMinSpaceBetween<{x: number}>(tickValues, (d) => d.x) - axis.labels.padding * 2
+            : width;
     const hasOverlappingLabels = async () => {
         for (let i = 0; i < labels.length; i++) {
             const size = await getTextSize(labels[i]);
