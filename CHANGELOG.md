@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/gravity-ui/charts/compare/v1.26.0...v1.26.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* continuous legend position ([#305](https://github.com/gravity-ui/charts/issues/305)) ([da26e8e](https://github.com/gravity-ui/charts/commit/da26e8e928e31f98a185831a8b3b7016fb7bc224))
+
 ## [1.26.0](https://github.com/gravity-ui/charts/compare/v1.25.0...v1.26.0) (2025-12-09)
 
 
