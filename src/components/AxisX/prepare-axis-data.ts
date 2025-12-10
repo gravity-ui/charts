@@ -49,18 +49,25 @@ async function getSvgAxisLabel({
     boundsOffsetLeft: number;
     boundsOffsetRight: number;
 }) {
-    const originalTextSize = await getTextSize(text);
     const rotation = axis.labels.rotation;
     const content: AxisSvgLabelData['content'] = [];
 
     let rowText = text;
-    let textSize = {...originalTextSize};
+    let textSize = await getTextSize(text);
     const a = (360 + rotation) % 90;
 
     const textMaxWidth =
         a === 0
-            ? Math.min(labelMaxWidth, labelMaxWidth / 2 + axisWidth + boundsOffsetRight - left)
-            : axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a);
+            ? Math.min(
+                  labelMaxWidth,
+                  // rightmost label
+                  labelMaxWidth / 2 + axisWidth + boundsOffsetRight - left,
+              )
+            : Math.min(
+                  axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
+                  // leftmostLabel
+                  (boundsOffsetLeft + left) / calculateSin(a),
+              );
 
     if (textSize.width > textMaxWidth) {
         rowText = await getTextWithElipsis({
@@ -74,7 +81,7 @@ async function getSvgAxisLabel({
     const actualTextWidth = a
         ? textSize.width * calculateSin(90 - a) + textSize.height * calculateSin(a)
         : textSize.width;
-    const xOffset = a ? textSize.height * calculateSin(90 - a) : 0;
+    const xOffset = a ? (textSize.width * calculateSin(90 - a)) / 2 : 0;
     const yOffset = textSize.width * calculateSin(a);
     content.push({
         text: rowText,
