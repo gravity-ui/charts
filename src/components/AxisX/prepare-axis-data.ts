@@ -36,6 +36,7 @@ async function getSvgAxisLabel({
     left,
     labelMaxWidth,
     axisWidth,
+    boundsOffsetLeft,
     boundsOffsetRight,
 }: {
     getTextSize: (str: string) => Promise<{width: number; height: number}>;
@@ -45,6 +46,7 @@ async function getSvgAxisLabel({
     left: number;
     labelMaxWidth: number;
     axisWidth: number;
+    boundsOffsetLeft: number;
     boundsOffsetRight: number;
 }) {
     const originalTextSize = await getTextSize(text);
@@ -73,10 +75,7 @@ async function getSvgAxisLabel({
         ? textSize.width * calculateSin(90 - a) + textSize.height * calculateSin(a)
         : textSize.width;
     const xOffset = a ? textSize.height * calculateSin(90 - a) : 0;
-    const actualTextHeight = a
-        ? textSize.width * calculateSin(a) + textSize.height * calculateSin(90 - a)
-        : textSize.height;
-    const yOffset = actualTextHeight - textSize.height;
+    const yOffset = textSize.width * calculateSin(a);
     content.push({
         text: rowText,
         x: 0,
@@ -84,7 +83,10 @@ async function getSvgAxisLabel({
         size: textSize,
     });
 
-    const x = Math.min(left - actualTextWidth / 2 - xOffset, axisWidth - actualTextWidth);
+    const x = Math.max(
+        -boundsOffsetLeft,
+        Math.min(left - actualTextWidth / 2 - xOffset, axisWidth - actualTextWidth),
+    );
     const y = top + yOffset + axis.labels.margin;
     const svgLabel: AxisSvgLabelData = {
         title: content[0]?.text === text ? undefined : text,
@@ -104,12 +106,14 @@ export async function prepareXAxisData({
     axis,
     scale,
     boundsWidth,
+    boundsOffsetLeft,
     boundsOffsetRight,
     height,
 }: {
     axis: PreparedAxis;
     scale: ChartScale;
     boundsWidth: number;
+    boundsOffsetLeft: number;
     boundsOffsetRight: number;
     height: number;
 }): Promise<AxisXData> {
@@ -170,6 +174,7 @@ export async function prepareXAxisData({
                     left: tickValue.x,
                     labelMaxWidth,
                     axisWidth,
+                    boundsOffsetLeft,
                     boundsOffsetRight,
                 });
             }

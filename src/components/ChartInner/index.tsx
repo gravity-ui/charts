@@ -205,6 +205,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 axis,
                 scale,
                 boundsWidth,
+                boundsOffsetLeft: boundsOffsetLeft,
                 boundsOffsetRight: width - boundsWidth - boundsOffsetLeft,
                 height: boundsHeight,
             });
