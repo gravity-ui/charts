@@ -33,7 +33,7 @@ function getData(args: {basicData: ChartData; extraData?: DeepPartial<ChartData>
 }
 
 test.describe('Range slider - Zoom', () => {
-    test.only('Sync slider and zoom X', async ({mount, page}) => {
+    test('Sync slider and zoom X', async ({mount, page}) => {
         const data = getData({
             basicData: lineTwoYAxisData,
             extraData: {chart: {zoom: {enabled: true, type: 'x'}}},
