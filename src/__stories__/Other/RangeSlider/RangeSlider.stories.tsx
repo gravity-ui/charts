@@ -84,14 +84,27 @@ set(dateTimeDataWithPadding, 'xAxis.maxPadding', 0.2);
 set(dateTimeDataWithPadding, 'xAxis.rangeSlider', {enabled: true});
 set(dateTimeDataWithPadding, 'legend', {enabled: true});
 set(dateTimeDataWithPadding, 'title', {
-    text: 'With maxPadding 0.2',
+    text: 'Datetime with maxPadding 0.2',
+});
+
+const lineatDataWithPadding = cloneDeep(scatterLinearXAxisData);
+set(lineatDataWithPadding, 'xAxis.maxPadding', 0.2);
+set(lineatDataWithPadding, 'xAxis.rangeSlider', {enabled: true});
+set(lineatDataWithPadding, 'legend', {enabled: true});
+set(lineatDataWithPadding, 'title', {
+    text: 'Linear with maxPadding 0.2',
 });
 
 export const RangeSliderWithPadding = {
     name: 'With maxPadding',
     render: () => (
-        <div style={{height: 350}}>
-            <Chart data={dateTimeDataWithPadding} />
+        <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+            <div style={{height: 350}}>
+                <Chart data={dateTimeDataWithPadding} />
+            </div>
+            <div style={{height: 350}}>
+                <Chart data={lineatDataWithPadding} />
+            </div>
         </div>
     ),
 } satisfies Story;

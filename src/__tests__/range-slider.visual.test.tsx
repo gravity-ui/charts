@@ -154,4 +154,38 @@ test.describe('Range slider', () => {
         await page.mouse.click(x, y);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Overlay click with maxPadding (datetime)', async ({mount, page}) => {
+        const data = getData({
+            basicData: lineTwoYAxisData,
+            extraData: {xAxis: {maxPadding: 0.2}},
+        });
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        // Click on the overlay center right edge
+        const overlay = await getLocator({component, selector: '.gcharts-brush .overlay'});
+        const boundingBox = await getLocatorBoundingBox(overlay);
+        const x = boundingBox.x + boundingBox.width - 5;
+        const y = boundingBox.y + boundingBox.height / 2;
+        await page.mouse.click(x, y);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Overlay click with maxPadding (linear)', async ({mount, page}) => {
+        const data = getData({
+            basicData: scatterLinearXAxisData,
+            extraData: {xAxis: {maxPadding: 0.2}},
+        });
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        // Click on the overlay center right edge
+        const overlay = await getLocator({component, selector: '.gcharts-brush .overlay'});
+        const boundingBox = await getLocatorBoundingBox(overlay);
+        const x = boundingBox.x + boundingBox.width - 5;
+        const y = boundingBox.y + boundingBox.height / 2;
+        await page.mouse.click(x, y);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

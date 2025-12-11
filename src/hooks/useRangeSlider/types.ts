@@ -4,7 +4,6 @@ import type {ChartScale} from '../useAxisScales';
 import type {BrushSelection, UseBrushProps} from '../useBrush/types';
 import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
-import type {ZoomState} from '../useZoom/types';
 
 export type RangeSliderState = {
     max: number;
@@ -16,7 +15,7 @@ export interface RangeSliderProps {
     boundsWidth: number;
     height: number;
     htmlLayout: HTMLElement | null;
-    onUpdate: (nextRangeSliderState?: RangeSliderState) => void;
+    onUpdate: (nextRangeSliderState?: RangeSliderState, syncZoom?: boolean) => void;
     preparedChart: PreparedChart;
     preparedLegend: PreparedLegend | null;
     preparedRangeSlider: PreparedRangeSlider;
@@ -26,7 +25,6 @@ export interface RangeSliderProps {
     rangeSliderState?: RangeSliderState;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
-    zoomState?: Partial<ZoomState>;
 }
 
 export interface UseRangeSliderProps extends RangeSliderProps {
@@ -34,6 +32,7 @@ export interface UseRangeSliderProps extends RangeSliderProps {
 }
 
 export interface PreparedRangeSliderProps extends Omit<PreparedRangeSlider, 'enabled'> {
+    filteredPreparedSeries: PreparedSeries[];
     htmlLayout: HTMLElement | null;
     offsetLeft: number;
     offsetTop: number;

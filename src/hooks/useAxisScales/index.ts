@@ -29,12 +29,18 @@ import {
 import type {AxisDirection} from '../../utils';
 import {getBandSize} from '../utils/get-band-size';
 
-import {checkIsPointDomain, getMinMaxPropsOrState, hasOnlyMarkerSeries} from './utils';
+import {
+    checkIsPointDomain,
+    getMinMaxPropsOrState,
+    getXMaxDomainResult,
+    hasOnlyMarkerSeries,
+} from './utils';
 
-export type ChartScale =
-    | ScaleLinear<number, number>
-    | ScaleBand<string>
-    | ScaleTime<number, number>;
+type ChartScaleExtended = {niceOffsetMax?: number};
+type ChartScaleBand = ScaleBand<string>;
+export type ChartScaleLinear = ScaleLinear<number, number> & ChartScaleExtended;
+export type ChartScaleTime = ScaleTime<number, number> & ChartScaleExtended;
+export type ChartScale = ChartScaleBand | ChartScaleLinear | ChartScaleTime;
 
 type Args = {
     boundsWidth: number;
@@ -446,6 +452,7 @@ export function createXScale(args: {
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
+                const xMaxDomainBefore = scale.domain()[1];
 
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
@@ -454,6 +461,9 @@ export function createXScale(args: {
                         Math.max(nicedDomain[1], domainWithOffset[1]),
                     ]);
                 }
+
+                const xMaxDomainAfter = scale.domain()[1];
+                (scale as ChartScaleLinear).niceOffsetMax = xMaxDomainAfter - xMaxDomainBefore;
 
                 return scale;
             }
@@ -499,12 +509,12 @@ export function createXScale(args: {
                     !isPointDomain
                         ? xMinPropsOrState
                         : xMinTimestamp;
-                const xMax =
-                    typeof xMaxPropsOrState === 'number' &&
-                    xMaxPropsOrState < xMaxTimestamp &&
-                    !isPointDomain
-                        ? xMaxPropsOrState
-                        : xMaxTimestamp;
+                const xMax = getXMaxDomainResult({
+                    xMaxDomain: xMaxTimestamp,
+                    xMaxProps: get(axis, 'max'),
+                    xMaxRangeSlider: rangeSliderState?.max,
+                    xMaxZoom: zoomStateX?.[1],
+                });
                 domain = [xMin, xMax];
 
                 const scale = scaleUtc().domain(domain).range(range);

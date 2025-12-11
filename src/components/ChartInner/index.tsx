@@ -1,13 +1,14 @@
 import React from 'react';
 
-import {duration} from '@gravity-ui/date-utils';
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair} from '../../hooks';
 import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
+import {getPreparedChart} from '../../hooks/useChartOptions/chart';
+import {getPreparedTitle} from '../../hooks/useChartOptions/title';
 import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
-import {EventType, block, getDispatcher, isBandScale, isTimeScale} from '../../utils';
+import {EventType, block, getDispatcher, isBandScale} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
 import type {AxisXData} from '../AxisX/types';
@@ -17,8 +18,10 @@ import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
 import {RangeSlider} from '../RangeSlider';
+import type {RangeSliderHandle} from '../RangeSlider';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
+import {getInitialRangeSliderState} from '../utils';
 
 import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
@@ -40,8 +43,19 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotRef = React.useRef<SVGGElement | null>(null);
     const plotBeforeRef = React.useRef<SVGGElement | null>(null);
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
+    const rangeSliderRef = React.useRef<RangeSliderHandle | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
+    const preparedTitle = React.useMemo(() => {
+        return getPreparedTitle({title: data.title});
+    }, [data.title]);
+    const preparedChart = React.useMemo(() => {
+        return getPreparedChart({
+            chart: data.chart,
+            seriesData: data.series.data,
+            preparedTitle,
+        });
+    }, [data.chart, data.series.data, preparedTitle]);
     const preparedTooltip = React.useMemo(() => {
         return getPreparedTooltip({
             tooltip: data.tooltip,
@@ -65,8 +79,9 @@ export const ChartInner = (props: ChartInnerProps) => {
         zoomState,
     } = useChartInnerState({
         dispatcher,
-        tooltip: preparedTooltip,
+        preparedChart,
         preparedRangeSlider,
+        tooltip: preparedTooltip,
     });
     const {
         allPreparedSeries,
@@ -78,17 +93,14 @@ export const ChartInner = (props: ChartInnerProps) => {
         isOutsideBounds,
         legendConfig,
         legendItems,
-        preparedChart,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
         preparedSplit,
-        preparedZoom,
         prevHeight,
         prevWidth,
         shapes,
         shapesData,
-        title,
         xAxis,
         xScale,
         yAxis,
@@ -99,6 +111,8 @@ export const ChartInner = (props: ChartInnerProps) => {
         dispatcher,
         htmlLayout,
         plotNode: plotRef.current,
+        preparedChart,
+        rangeSliderDomain: rangeSliderRef.current?.getDomain(),
         rangeSliderState,
         svgContainer: svgRef.current,
         updateZoomState,
@@ -216,54 +230,31 @@ export const ChartInner = (props: ChartInnerProps) => {
     const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
 
     React.useEffect(() => {
-        if (!initialized && xScale) {
-            const defaultRange = preparedRangeSlider.defaultRange;
-
-            if (isBandScale(xScale)) {
+        if (!initialized && xScale && xAxis) {
+            if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
                 setInitialized(true);
                 return;
             }
 
-            if (isTimeScale(xScale)) {
-                const domain = xScale.domain();
-                const minDomainMs = domain[0].valueOf();
-                const maxDomainMs = domain[1].valueOf();
-                let minRangeMs = minDomainMs;
+            const defaultRange = preparedRangeSlider.defaultRange;
+            const initialRangeSliderState = getInitialRangeSliderState({
+                defaultRange,
+                preparedSeries,
+                preparedXAxis: xAxis,
+                xScale,
+            });
 
-                try {
-                    if (defaultRange?.size) {
-                        const durationMs = duration(defaultRange.size).asMilliseconds();
-                        const minDefaultRangeMs = maxDomainMs - durationMs;
-
-                        if (minDefaultRangeMs < maxDomainMs) {
-                            minRangeMs = minDefaultRangeMs;
-                        }
-                    }
-                } catch {}
-
-                updateRangeSliderState({min: minRangeMs, max: maxDomainMs});
-                setInitialized(true);
-            } else {
-                const [minDomain, maxDomain] = xScale.domain();
-                let minRange = minDomain;
-
-                if (typeof defaultRange?.size === 'number') {
-                    const minDefaultRange = maxDomain - defaultRange.size;
-                    if (minDefaultRange < maxDomain) {
-                        minRange = minDefaultRange;
-                    }
-                }
-
-                updateRangeSliderState({min: minRange, max: maxDomain});
-                setInitialized(true);
-            }
+            updateRangeSliderState(initialRangeSliderState);
+            setInitialized(true);
         }
     }, [
         initialized,
         preparedRangeSlider.defaultRange,
+        preparedRangeSlider.enabled,
         preparedSeries,
         setInitialized,
         updateRangeSliderState,
+        xAxis,
         xScale,
     ]);
 
@@ -274,13 +265,14 @@ export const ChartInner = (props: ChartInnerProps) => {
                     <rect x={0} y={0} width={boundsWidth} height={boundsHeight} />
                 </clipPath>
             </defs>
-            {title && <Title {...title} chartWidth={width} />}
+            {preparedTitle && <Title {...preparedTitle} chartWidth={width} />}
             <g transform={`translate(0, ${boundsOffsetTop})`}>
                 {preparedSplit.plots.map((plot, index) => {
                     return <PlotTitle key={`plot-${index}`} title={plot.title} />;
                 })}
             </g>
             <g
+                className={b('content')}
                 width={boundsWidth}
                 height={boundsHeight}
                 transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
@@ -330,10 +322,10 @@ export const ChartInner = (props: ChartInnerProps) => {
                     preparedSeriesOptions={preparedSeriesOptions}
                     preparedRangeSlider={xAxis.rangeSlider}
                     rangeSliderState={rangeSliderState}
+                    ref={rangeSliderRef}
                     width={width}
                     xAxis={data.xAxis}
                     yAxis={data.yAxis}
-                    zoomState={zoomState}
                 />
             )}
             {preparedLegend?.enabled && legendConfig && (
@@ -374,9 +366,13 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {Object.keys(zoomState).length > 0 && preparedZoom && (
+            {Object.keys(zoomState).length > 0 && preparedChart.zoom && (
                 <Button
-                    onClick={() => updateZoomState({})}
+                    className={b('reset-zoom-button')}
+                    onClick={() => {
+                        updateZoomState({});
+                        rangeSliderRef.current?.resetState();
+                    }}
                     ref={resetZoomButtonRef}
                     style={getResetZoomButtonStyle({
                         boundsHeight,
@@ -384,8 +380,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                         boundsOffsetTop,
                         boundsWidth,
                         node: resetZoomButtonRef.current,
-                        titleHeight: title?.height,
-                        ...preparedZoom.resetButton,
+                        titleHeight: preparedTitle?.height,
+                        ...preparedChart.zoom.resetButton,
                     })}
                 >
                     <ButtonIcon>

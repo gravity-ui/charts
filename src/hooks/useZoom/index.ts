@@ -19,6 +19,7 @@ interface UseZoomProps {
     plotContainerWidth: number;
     preparedSplit: PreparedSplit;
     preparedZoom: PreparedZoom | null;
+    rangeSliderDomain?: [number, number];
     xAxis: PreparedXAxis | null;
     xScale?: ChartScale;
     yAxis: PreparedYAxis[];
@@ -33,6 +34,7 @@ export function useZoom(props: UseZoomProps) {
         plotContainerWidth,
         preparedSplit,
         preparedZoom,
+        rangeSliderDomain,
         xAxis,
         xScale,
         yAxis,
@@ -78,11 +80,25 @@ export function useZoom(props: UseZoomProps) {
                     yScales: yScale,
                     zoomType: preparedZoom.type,
                 });
+
+                if (rangeSliderDomain && nextZoomState?.x) {
+                    const [minRangeSlider, maxRangeSlider] = rangeSliderDomain;
+                    const [minZoom, maxZoom] = nextZoomState.x;
+
+                    if (minZoom < minRangeSlider) {
+                        nextZoomState.x[0] = minRangeSlider;
+                    }
+
+                    if (maxZoom > maxRangeSlider) {
+                        nextZoomState.x[1] = maxRangeSlider;
+                    }
+                }
+
                 onUpdate(nextZoomState);
                 brushInstance.clear(select(this));
             }
         },
-        [onUpdate, preparedZoom?.type, xAxis, xScale, yAxis, yScale],
+        [onUpdate, preparedZoom?.type, rangeSliderDomain, xAxis, xScale, yAxis, yScale],
     );
 
     // Chart brush for manual zoom handling
