@@ -12,7 +12,7 @@ import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
 import type {AxisXData} from '../AxisX/types';
 import {AxisY} from '../AxisY/AxisY';
-import {prepareAxisData as prepareYAxisData} from '../AxisY/prepare-axis-data';
+import {prepareYAxisData} from '../AxisY/prepare-axis-data';
 import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
@@ -287,14 +287,12 @@ export const ChartInner = (props: ChartInnerProps) => {
                 ref={plotRef}
             >
                 {xScale && xAxisDataItems.length && (
-                    // <g transform={`translate(0, ${boundsHeight})`}>
                     <AxisX
                         htmlLayout={htmlLayout}
                         plotAfterRef={plotAfterRef}
                         plotBeforeRef={plotBeforeRef}
                         preparedAxisData={xAxisDataItems[0]}
                     />
-                    // </g>
                 )}
                 {Boolean(yAxisDataItems.length) && (
                     <React.Fragment>

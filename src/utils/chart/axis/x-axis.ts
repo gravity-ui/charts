@@ -1,17 +1,9 @@
-import type {ChartScale, PreparedAxis} from '../../hooks';
-import {getMinSpaceBetween, getTicksCount, isBandScale} from '../../utils';
+import type {ChartScale, PreparedAxis} from '../../../hooks';
+import {getMinSpaceBetween} from '../array';
 
-function thinOut<T>(items: T[], delta: number) {
-    const arr: T[] = [];
+import {getTicksCount, isBandScale, thinOut} from './common';
 
-    for (let i = 0; i < items.length; i = i + delta) {
-        arr.push(items[i]);
-    }
-
-    return arr;
-}
-
-export function getTickValues({
+export function getXAxisTickValues({
     scale,
     axis,
     labelLineHeight,
@@ -27,12 +19,8 @@ export function getTickValues({
             return [];
         }
 
-        const getScaleTicks = () => {
-            const ticksCount = getTicksCount({axis, range: height});
-            return scale.ticks(ticksCount);
-        };
-
-        const scaleTicks = getScaleTicks();
+        const scaleTicksCount = getTicksCount({axis, range: height});
+        const scaleTicks = scale.ticks(scaleTicksCount);
 
         const originalTickValues = scaleTicks.map((t) => ({
             x: scale(t),

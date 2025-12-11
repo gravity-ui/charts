@@ -2,10 +2,9 @@ import {ascending, descending, reverse, sort} from 'd3';
 import type {AxisDomain, AxisScale, ScaleBand, ScaleTime} from 'd3';
 import clamp from 'lodash/clamp';
 
-import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../hooks';
-import type {ChartAxis} from '../../types';
-
-import type {AxisDirection} from './types';
+import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../../hooks';
+import type {ChartAxis} from '../../../types';
+import type {AxisDirection} from '../types';
 
 type Ticks = number[] | string[] | Date[];
 
@@ -220,4 +219,14 @@ export function getAxisCategories({
     }
 
     return originalCategories;
+}
+
+export function thinOut<T>(items: T[], delta: number) {
+    const arr: T[] = [];
+
+    for (let i = 0; i < items.length; i = i + delta) {
+        arr.push(items[i]);
+    }
+
+    return arr;
 }

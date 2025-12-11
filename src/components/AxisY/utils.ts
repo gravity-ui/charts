@@ -1,16 +1,12 @@
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
 import type {ChartSeries} from '../../types';
-import {getDomainDataYBySeries, getMinSpaceBetween, getTicksCount, isBandScale} from '../../utils';
-
-function thinOut<T>(items: T[], delta: number) {
-    const arr: T[] = [];
-
-    for (let i = 0; i < items.length; i = i + delta) {
-        arr.push(items[i]);
-    }
-
-    return arr;
-}
+import {
+    getDomainDataYBySeries,
+    getMinSpaceBetween,
+    getTicksCount,
+    isBandScale,
+    thinOut,
+} from '../../utils';
 
 export function getTickValues({
     scale,

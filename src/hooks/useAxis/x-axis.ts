@@ -1,6 +1,5 @@
 import get from 'lodash/get';
 
-import {getTickValues} from '../../components/AxisX/utils';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
@@ -23,6 +22,7 @@ import {
     isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
+import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
 import {createXScale} from '../useAxisScales';
 
 import {getPreparedRangeSlider} from './range-slider';
@@ -50,7 +50,7 @@ async function setLabelSettings({
 
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
-    const tickValues = getTickValues({axis, scale, labelLineHeight});
+    const tickValues = getXAxisTickValues({axis, scale, labelLineHeight});
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
     if (axis.type === 'datetime' && !axis.labels.dateFormat) {
         axis.labels.dateFormat = getDefaultDateFormat(tickStep);

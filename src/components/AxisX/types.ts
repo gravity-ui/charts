@@ -1,6 +1,6 @@
 import type {DashStyle} from 'src/constants';
 
-import type {BaseTextStyle, HtmlItem, PlotLayerPlacement} from '../../types';
+import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';
 
 export type TextRowData = {
     text: string;
@@ -20,7 +20,7 @@ export type AxisSvgLabelData = {
 };
 
 export type AxisTickLine = {
-    points: [number, number][];
+    points: PointPosition[];
 };
 
 export type AxisTickData = {

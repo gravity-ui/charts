@@ -13,6 +13,7 @@ import {
     getTextWithElipsis,
     wrapText,
 } from '../../utils';
+import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
 
 import type {
     AxisDomainData,
@@ -26,7 +27,6 @@ import type {
     AxisXData,
     TextRowData,
 } from './types';
-import {getTickValues} from './utils';
 
 async function getSvgAxisLabel({
     getTextSize,
@@ -140,7 +140,7 @@ export async function prepareXAxisData({
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
 
-    const values = getTickValues({scale, axis, labelLineHeight});
+    const values = getXAxisTickValues({scale, axis, labelLineHeight});
     const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
 
     const labelMaxWidth =
