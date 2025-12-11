@@ -11,7 +11,7 @@ import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 import {getWaterfallPointSubtotal} from './series/waterfall';
 import type {AxisDirection} from './types';
 
-export * from './axis';
+export * from './axis/common';
 export * from './array';
 export * from './color';
 export * from './format';

@@ -2,7 +2,7 @@ import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
 import {path, select} from 'd3';
 
 import type {BaseTextStyle, DeepRequired, MeaningfulAny} from '../../../types';
-import {getAxisItems, getXAxisOffset, getXTickPosition} from '../axis';
+import {getAxisItems, getXAxisOffset, getXTickPosition} from '../axis/common';
 import {calculateCos, calculateSin} from '../math';
 import {getLabelsSize, setEllipsisForOverflowText} from '../text';
 

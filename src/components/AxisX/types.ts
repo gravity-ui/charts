@@ -41,6 +41,7 @@ export type AxisTitleData = {
 
 export type AxisPlotLineLabel = {
     text: string;
+    rotate: number;
     style: BaseTextStyle;
     x: number;
     y: number;
@@ -76,7 +77,7 @@ export type AxisDomainData = {
     lineColor: string;
 };
 
-export type AxisYData = {
+export type AxisXData = {
     id: string;
     title: AxisTitleData | null;
     domain: AxisDomainData | null;

@@ -1,4 +1,3 @@
-import type {AxisDomain} from 'd3';
 import get from 'lodash/get';
 
 import {
@@ -14,18 +13,16 @@ import {
     calculateCos,
     calculateNumericProperty,
     formatAxisTickLabel,
-    getAxisItems,
-    getClosestPointsRange,
     getDefaultDateFormat,
     getHorizontalHtmlTextHeight,
     getHorizontalSvgTextHeight,
     getLabelsSize,
-    getMaxTickCount,
-    getTicksCount,
-    hasOverlappingLabels,
+    getMinSpaceBetween,
+    getTextSizeFn,
     isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
+import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
 import {createXScale} from '../useAxisScales';
 
 import {getPreparedRangeSlider} from './range-slider';
@@ -51,33 +48,36 @@ async function setLabelSettings({
         return;
     }
 
-    const tickCount = getTicksCount({axis, range: width});
-    const ticks = getAxisItems({
-        scale: scale,
-        count: tickCount,
-        maxCount: getMaxTickCount({width, axis}),
-    });
-    const step = getClosestPointsRange(axis, ticks);
+    const getTextSize = getTextSizeFn({style: axis.labels.style});
+    const labelLineHeight = (await getTextSize('Tmp')).height;
+    const tickValues = getXAxisTickValues({axis, scale, labelLineHeight});
+    const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
     if (axis.type === 'datetime' && !axis.labels.dateFormat) {
-        axis.labels.dateFormat = getDefaultDateFormat(step);
+        axis.labels.dateFormat = getDefaultDateFormat(tickStep);
     }
-
-    const labels = ticks.map((value: AxisDomain) => {
-        return formatAxisTickLabel({
+    const labels = tickValues.map((tick) =>
+        formatAxisTickLabel({
             axis,
-            value,
-            step,
-        });
-    });
-    const overlapping = axis.labels.html
-        ? false
-        : hasOverlappingLabels({
-              width,
-              labels,
-              padding: axis.labels.padding,
-              style: axis.labels.style,
-          });
+            value: tick.value,
+            step: tickStep,
+        }),
+    );
+    const labelMaxWidth =
+        tickValues.length > 1
+            ? getMinSpaceBetween<{x: number}>(tickValues, (d) => d.x) - axis.labels.padding * 2
+            : width;
+    const hasOverlappingLabels = async () => {
+        for (let i = 0; i < labels.length; i++) {
+            const size = await getTextSize(labels[i]);
+            if (size.width > labelMaxWidth) {
+                return true;
+            }
+        }
 
+        return false;
+    };
+
+    const overlapping = axis.labels.html ? false : await hasOverlappingLabels();
     const defaultRotation = overlapping && autoRotation ? -45 : 0;
     const rotation = axis.labels.html ? 0 : axis.labels.rotation || defaultRotation;
     const labelsHeight =
@@ -109,10 +109,12 @@ export const getPreparedXAxis = async ({
     xAxis,
     seriesData,
     width,
+    boundsWidth,
 }: {
     xAxis?: ChartXAxis;
     seriesData: ChartSeries[];
     width: number;
+    boundsWidth: number;
 }): Promise<PreparedXAxis | null> => {
     const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
     if (!hasAxisRelatedSeries) {
@@ -232,7 +234,7 @@ export const getPreparedXAxis = async ({
     await setLabelSettings({
         axis: preparedXAxis,
         seriesData,
-        width,
+        width: boundsWidth,
         autoRotation: xAxis?.labels?.autoRotation,
     });
 

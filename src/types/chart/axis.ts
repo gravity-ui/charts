@@ -17,7 +17,7 @@ export interface ChartAxisLabels {
      */
     margin?: number;
     /** The pixel padding for axis labels, to ensure white space between them.
-     * @default 5
+     * @default 4
      */
     padding?: number;
     dateFormat?: string;
