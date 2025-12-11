@@ -1,337 +1,260 @@
 import React from 'react';
 
 import {line, select} from 'd3';
-import type {AxisDomain, AxisScale, Selection} from 'd3';
+import type {Selection} from 'd3';
 
-import type {
-    ChartScale,
-    PreparedAxisPlotBand,
-    PreparedAxisPlotLine,
-    PreparedSplit,
-    PreparedXAxis,
-} from '../../hooks';
-import type {AxisPlotBand} from '../../types';
-import {
-    block,
-    getAxisTitleRows,
-    getBandsPosition,
-    getLabelFormatter,
-    getLineDashArray,
-    getMaxTickCount,
-    getTicksCount,
-    handleOverflowingText,
-} from '../../utils';
-import {axisBottom} from '../../utils/chart/axis-generators';
+import {HtmlLayer} from '../../hooks/useShapes/HtmlLayer';
+import type {HtmlItem} from '../../types';
+import {block, getLineDashArray} from '../../utils';
+
+import type {AxisPlotBandData, AxisPlotLineData, AxisTickData, AxisXData} from './types';
 
 import './styles.scss';
 
-const b = block('axis');
+const b = block('x-axis');
 
-type Props = {
-    axis: PreparedXAxis;
-    boundsOffsetLeft: number;
-    boundsOffsetTop: number;
-    height: number;
+interface Props {
+    preparedAxisData: AxisXData;
     htmlLayout: HTMLElement | null;
-    scale: ChartScale;
-    split: PreparedSplit;
-    width: number;
-    leftmostLimit?: number;
     plotBeforeRef?: React.MutableRefObject<SVGGElement | null>;
     plotAfterRef?: React.MutableRefObject<SVGGElement | null>;
-};
-
-export function getTitlePosition(args: {axis: PreparedXAxis; width: number; rowCount: number}) {
-    const {axis, width, rowCount} = args;
-    if (rowCount < 1) {
-        return {x: 0, y: 0};
-    }
-
-    let x;
-    const y =
-        axis.title.height / rowCount + axis.title.margin + axis.labels.height + axis.labels.margin;
-
-    switch (axis.title.align) {
-        case 'left': {
-            x = axis.title.width / 2;
-            break;
-        }
-        case 'right': {
-            x = width - axis.title.width / 2;
-            break;
-        }
-        case 'center': {
-            x = width / 2;
-            break;
-        }
-    }
-
-    return {x, y};
 }
 
-export const AxisX = React.memo(function AxisX(props: Props) {
-    const {
-        axis,
-        boundsOffsetLeft,
-        boundsOffsetTop,
-        height: totalHeight,
-        htmlLayout,
-        leftmostLimit,
-        plotAfterRef,
-        plotBeforeRef,
-        split,
-        scale,
-        width,
-    } = props;
+export const AxisX = (props: Props) => {
+    const {htmlLayout, plotBeforeRef, plotAfterRef, preparedAxisData} = props;
     const ref = React.useRef<SVGGElement | null>(null);
+    const lineGenerator = line();
+
+    const htmlLabels = preparedAxisData.ticks.map((d) => d.htmlLabel).filter(Boolean) as HtmlItem[];
 
     React.useEffect(() => {
-        (async () => {
-            if (!ref.current || !htmlLayout) {
-                return;
+        if (!ref.current) {
+            return;
+        }
+
+        const svgElement = select(ref.current);
+        svgElement.selectAll('*').remove();
+
+        let plotBeforeContainer = null;
+        let plotAfterContainer = null;
+        const plotDataAttr = 'data-plot-x';
+
+        if (plotBeforeRef?.current) {
+            plotBeforeContainer = select(plotBeforeRef.current);
+            plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
+        }
+
+        if (plotAfterRef?.current) {
+            plotAfterContainer = select(plotAfterRef.current);
+            plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
+        }
+
+        if (preparedAxisData.title) {
+            svgElement
+                .append('g')
+                .attr('class', b('title'))
+                .append('text')
+                .attr('text-anchor', 'start')
+                .style('dominant-baseline', 'text-after-edge')
+                .style(
+                    'transform',
+                    `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
+                )
+                .attr('font-size', preparedAxisData.title.style.fontSize)
+                .selectAll('tspan')
+                .data(preparedAxisData.title.content)
+                .join('tspan')
+                .html((d) => d.text)
+                .attr('x', (d) => d.x)
+                .attr('y', (d) => d.y)
+                .attr('text-anchor', 'start');
+        }
+
+        if (preparedAxisData.domain) {
+            svgElement
+                .append('path')
+                .attr('class', b('domain'))
+                .attr(
+                    'd',
+                    lineGenerator([preparedAxisData.domain.start, preparedAxisData.domain.end]),
+                )
+                .style('stroke', preparedAxisData.domain.lineColor);
+        }
+
+        const tickClassName = b('tick');
+        const ticks = svgElement
+            .selectAll(`.${tickClassName}`)
+            .remove()
+            .data(preparedAxisData.ticks)
+            .join('g')
+            .attr('class', tickClassName);
+
+        const labelClassName = b('label');
+        ticks.each(function () {
+            const tickSelection = select(this);
+            const tickData = tickSelection.datum() as AxisTickData;
+
+            if (tickData.line) {
+                tickSelection.append('path').attr('d', lineGenerator(tickData.line.points));
             }
 
-            const svgElement = select(ref.current);
-            svgElement.selectAll('*').remove();
-
-            if (!axis.visible) {
-                return;
-            }
-
-            let tickItems: [number, number][] = [];
-            if (axis.grid.enabled) {
-                tickItems = new Array(split.plots.length || 1).fill(null).map((_, index) => {
-                    const top = split.plots[index]?.top || 0;
-                    const height = split.plots[index]?.height || totalHeight;
-
-                    return [-top, -(top + height)];
-                });
-            }
-
-            const axisScale = scale as AxisScale<AxisDomain>;
-            const xAxisGenerator = await axisBottom({
-                boundsOffsetLeft,
-                boundsOffsetTop,
-                domain: {
-                    size: width,
-                    color: axis.lineColor,
-                },
-                htmlLayout,
-                leftmostLimit,
-                scale: axisScale,
-                ticks: {
-                    count: getTicksCount({axis, range: width}),
-                    labelsHtml: axis.labels.html,
-                    items: tickItems,
-                    labelFormat: getLabelFormatter({axis, scale}),
-                    labelsHeight: axis.labels.height,
-                    labelsLineHeight: axis.labels.lineHeight,
-                    labelsMargin: axis.labels.margin,
-                    labelsMaxWidth: axis.labels.maxWidth,
-                    labelsPaddings: axis.labels.padding,
-                    labelsStyle: axis.labels.style,
-                    maxTickCount: getMaxTickCount({axis, width}),
-                    rotation: axis.labels.rotation,
-                },
-            });
-
-            svgElement.call(xAxisGenerator).attr('class', b());
-
-            // add an axis header if necessary
-            if (axis.title.text) {
-                const titleRows = await getAxisTitleRows({axis, textMaxWidth: width});
-                const titleClassName = b('title');
-                svgElement.selectAll(`.${titleClassName}`).remove();
-                svgElement
+            if (tickData.svgLabel) {
+                const label = tickData.svgLabel;
+                const textSelection = tickSelection
                     .append('text')
-                    .attr('class', titleClassName)
-                    .attr('transform', () => {
-                        const {x, y} = getTitlePosition({axis, width, rowCount: titleRows.length});
-                        return `translate(${x}, ${y})`;
-                    })
-                    .attr('font-size', axis.title.style.fontSize)
-                    .attr('text-anchor', 'middle')
+                    .style(
+                        'transform',
+                        [
+                            `translate(${label.x}px, ${label.y}px)`,
+                            label.angle ? `rotate(${label.angle}deg)` : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' '),
+                    );
+
+                if (label.title) {
+                    textSelection.append('title').html(label.title);
+                }
+
+                textSelection
                     .selectAll('tspan')
-                    .data(titleRows)
+                    .data(label.content)
                     .join('tspan')
-                    .attr('x', 0)
+                    .html((d) => d.text)
+                    .attr('x', (d) => d.x)
                     .attr('y', (d) => d.y)
-                    .text((d) => d.text)
-                    .each((_d, index, nodes) => {
-                        if (index === axis.title.maxRowCount - 1) {
-                            handleOverflowingText(nodes[index] as SVGTSpanElement, width);
-                        }
-                    });
+                    .attr('text-anchor', 'start')
+                    .attr('class', labelClassName)
+                    .style('dominant-baseline', 'text-before-edge')
+                    .style('font-size', label.style.fontSize)
+                    .style('fill', label.style.fontColor ?? '');
             }
+        });
 
-            const plotDataAttr = 'data-plot-x';
+        if (preparedAxisData.plotBands.length > 0) {
+            const plotBandDataAttr = `data-plot-x-band-${preparedAxisData.id}`;
 
-            let plotBeforeContainer = null;
-            let plotAfterContainer = null;
+            const setPlotBands = (
+                plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                plotBands: AxisPlotBandData[],
+            ) => {
+                if (!plotContainer || !plotBands.length) {
+                    return;
+                }
 
-            if (plotBeforeRef?.current) {
-                plotBeforeContainer = select(plotBeforeRef.current);
-                plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
-            }
+                const plotBandsSelection = plotContainer
+                    .selectAll(`[${plotBandDataAttr}]`)
+                    .remove()
+                    .data(plotBands)
+                    .join('g')
+                    .attr(plotDataAttr, 1)
+                    .attr(plotBandDataAttr, 1)
+                    .style('transform', (d) => `translate(${d.x}px, ${d.y}px)`);
 
-            if (plotAfterRef?.current) {
-                plotAfterContainer = select(plotAfterRef.current);
-                plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
-            }
+                plotBandsSelection
+                    .append('rect')
+                    .attr('width', (d) => d.width)
+                    .attr('height', (d) => d.height)
+                    .attr('fill', (d) => d.color)
+                    .attr('opacity', (d) => d.opacity);
 
-            // add plot bands
-            if (axis.plotBands.length > 0) {
-                const plotBandDataAttr = 'plot-x-band';
-                const setPlotBands = (
-                    plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
-                    plotBands: Required<AxisPlotBand>[],
-                ) => {
-                    if (!plotContainer || !plotBands.length) {
-                        return;
-                    }
+                plotBandsSelection.each(function () {
+                    const plotBandSelection = select(this);
+                    const band = plotBandSelection.datum() as AxisPlotBandData;
+                    const label = band.label;
 
-                    const plotBandsSelection = plotContainer
-                        .selectAll(`[${plotBandDataAttr}]`)
-                        .remove()
-                        .data(plotBands)
-                        .join('g')
-                        .attr(plotDataAttr, 1)
-                        .attr(plotBandDataAttr, 1);
-
-                    plotBandsSelection.each(function () {
-                        const plotBandSelection = select(this);
-                        const band = plotBandSelection.datum() as PreparedAxisPlotBand;
-                        const {from, to} = getBandsPosition({band, axisScale, axis: 'x'});
-                        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
-                        const startPos = halfBandwidth + Math.min(from, to);
-                        const x = Math.max(0, startPos);
-
+                    if (label) {
                         plotBandSelection
-                            .append('rect')
-                            .attr('x', x)
-                            .attr('width', () => {
-                                const endPos = Math.min(
-                                    Math.abs(to - from),
-                                    width - Math.min(from, to),
-                                );
-
-                                return Math.min(endPos, width);
-                            })
-                            .attr('y', 0)
-                            .attr('height', totalHeight)
-                            .attr('fill', () => band.color)
-                            .attr('opacity', () => band.opacity);
-
-                        if (band.label.text) {
-                            const labelPadding = band.label?.padding ?? 0;
-                            plotBandSelection
-                                .append('text')
-                                .text(band.label.text)
-                                .style('fill', () => band.label.style?.fontColor ?? null)
-                                .style('font-size', () => band.label.style?.fontSize ?? null)
-                                .style('font-weight', () => band.label.style?.fontWeight ?? null)
-                                .style('dominant-baseline', 'text-before-edge')
-                                .style('text-anchor', 'end')
-                                .style(
-                                    'transform',
-                                    `translate(${x + labelPadding}px, ${labelPadding}px) rotate(-90deg)`,
-                                );
-                        }
-                    });
-                };
-
-                setPlotBands(
-                    plotBeforeContainer,
-                    axis.plotBands.filter((d) => d.layerPlacement === 'before'),
-                );
-                setPlotBands(
-                    plotAfterContainer,
-                    axis.plotBands.filter((d) => d.layerPlacement === 'after'),
-                );
-            }
-
-            // add plot lines
-            if (axis.plotLines.length > 0) {
-                const plotLineDataAttr = 'plot-x-line';
-
-                const setPlotLines = (
-                    plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
-                    plotLines: PreparedAxisPlotLine[],
-                ) => {
-                    if (!plotContainer || !plotLines.length) {
-                        return;
+                            .append('text')
+                            .html(label.text)
+                            .style('fill', label.style.fontColor ?? '')
+                            .style('font-size', label.style.fontSize)
+                            .style('font-weight', label.style.fontWeight ?? '')
+                            .style('dominant-baseline', 'text-before-edge')
+                            .style('text-anchor', 'start')
+                            .style(
+                                'transform',
+                                `translate(${label.x}px, ${label.y}px) rotate(${label.rotate}deg)`,
+                            );
                     }
+                });
+            };
 
-                    const plotLinesSelection = plotContainer
-                        .selectAll(`[${plotLineDataAttr}]`)
-                        .remove()
-                        .data(plotLines)
-                        .join('g')
-                        .attr(plotDataAttr, 1)
-                        .attr(plotLineDataAttr, 1);
+            setPlotBands(
+                plotBeforeContainer,
+                preparedAxisData.plotBands.filter((item) => item.layerPlacement === 'before'),
+            );
+            setPlotBands(
+                plotAfterContainer,
+                preparedAxisData.plotBands.filter((item) => item.layerPlacement === 'after'),
+            );
+        }
 
-                    const lineGenerator = line();
-                    plotLinesSelection.each(function () {
-                        const itemSelection = select(this);
-                        const plotLine = itemSelection.datum() as PreparedAxisPlotLine;
+        if (preparedAxisData.plotLines.length > 0) {
+            const plotLineDataAttr = `data-plot-x-line-${preparedAxisData.id}`;
 
-                        const plotLineValue = Number(axisScale(plotLine.value));
-                        const points: [number, number][] = [
-                            [plotLineValue, 0],
-                            [plotLineValue, totalHeight],
-                        ];
+            const setPlotLines = (
+                plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                plotLines: AxisPlotLineData[],
+            ) => {
+                if (!plotContainer || !plotLines.length) {
+                    return;
+                }
 
+                const plotLinesSelection = plotContainer
+                    .selectAll(`[${plotLineDataAttr}]`)
+                    .remove()
+                    .data(plotLines)
+                    .join('g')
+                    .attr(plotDataAttr, 1)
+                    .attr(plotLineDataAttr, 1)
+                    .style('transform', (d) => `translate(${d.x}px, ${d.y}px)`);
+
+                plotLinesSelection
+                    .append('path')
+                    .attr('d', (d) => lineGenerator(d.points))
+                    .attr('stroke', (d) => d.color)
+                    .attr('stroke-width', (d) => d.lineWidth)
+                    .attr('stroke-dasharray', (d) => getLineDashArray(d.dashStyle, d.lineWidth))
+                    .attr('opacity', (d) => d.opacity);
+
+                plotLinesSelection.each(function () {
+                    const itemSelection = select(this);
+                    const plotLine = itemSelection.datum() as AxisPlotLineData;
+                    const label = plotLine.label;
+
+                    if (label) {
                         itemSelection
-                            .append('path')
-                            .attr('d', lineGenerator(points))
-                            .attr('stroke', plotLine.color)
-                            .attr('stroke-width', plotLine.width)
-                            .attr(
-                                'stroke-dasharray',
-                                getLineDashArray(plotLine.dashStyle, plotLine.width),
-                            )
-                            .attr('opacity', plotLine.opacity);
+                            .append('text')
+                            .text(label.text)
+                            .style('fill', label.style.fontColor ?? '')
+                            .style('font-size', label.style.fontSize)
+                            .style('font-weight', label.style.fontWeight ?? '')
+                            .style('dominant-baseline', 'text-before-edge')
+                            .style('text-anchor', 'start')
+                            .style(
+                                'transform',
+                                `translate(${label.x}px, ${label.y}px) rotate(${label.rotate}deg)`,
+                            );
+                    }
+                });
+            };
 
-                        if (plotLine.label.text) {
-                            itemSelection
-                                .append('text')
-                                .text(plotLine.label.text)
-                                .style('fill', () => plotLine.label.style.fontColor ?? null)
-                                .attr('font-size', plotLine.label.style.fontSize)
-                                .style('font-weight', () => plotLine.label.style.fontWeight ?? null)
-                                .style('dominant-baseline', 'text-after-edge')
-                                .style('text-anchor', 'end')
-                                .style(
-                                    'transform',
-                                    `translate(${plotLineValue - plotLine.label.padding}px, ${plotLine.label.padding}px) rotate(-90deg)`,
-                                );
-                        }
-                    });
-                };
+            setPlotLines(
+                plotBeforeContainer,
+                preparedAxisData.plotLines.filter((item) => item.layerPlacement === 'before'),
+            );
+            setPlotLines(
+                plotAfterContainer,
+                preparedAxisData.plotLines.filter((item) => item.layerPlacement === 'after'),
+            );
+        }
+    }, [lineGenerator, plotAfterRef, plotBeforeRef, preparedAxisData]);
 
-                setPlotLines(
-                    plotBeforeContainer,
-                    axis.plotLines.filter((d) => d.layerPlacement === 'before'),
-                );
-                setPlotLines(
-                    plotAfterContainer,
-                    axis.plotLines.filter((d) => d.layerPlacement === 'after'),
-                );
-            }
-        })();
-    }, [
-        axis,
-        boundsOffsetLeft,
-        boundsOffsetTop,
-        htmlLayout,
-        leftmostLimit,
-        plotAfterRef,
-        plotBeforeRef,
-        scale,
-        split,
-        totalHeight,
-        width,
-    ]);
-
-    return <g ref={ref} />;
-});
+    return (
+        <React.Fragment>
+            <HtmlLayer preparedData={{htmlElements: htmlLabels}} htmlLayout={htmlLayout} />
+            <g ref={ref} className={b()} />
+        </React.Fragment>
+    );
+};

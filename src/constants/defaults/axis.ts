@@ -3,7 +3,7 @@ import {DASH_STYLE} from '../line-styles';
 
 export const axisLabelsDefaults = {
     margin: 10,
-    padding: 10,
+    padding: 4,
     fontSize: 11,
     maxWidth: 80,
 };

@@ -172,7 +172,7 @@ async function getSvgAxisLabel({
 }
 
 // eslint-disable-next-line complexity
-export async function prepareAxisData({
+export async function prepareYAxisData({
     axis,
     split,
     scale,

@@ -1,25 +1,20 @@
-.gcharts-axis {
-    & .domain {
+.gcharts-x-axis {
+    &__domain {
         stroke: var(--g-color-line-generic-active);
     }
 
-    & .tick text {
-        color: var(--g-color-text-secondary);
-        dominant-baseline: text-after-edge;
+    &__label {
+        fill: var(--g-color-text-secondary);
+        stroke: none;
     }
 
-    & .tick line,
-    & .tick path {
+    &__tick {
         stroke: var(--g-color-line-generic);
     }
 
     &__title {
-        dominant-baseline: text-after-edge;
+        dominant-baseline: text-before-edge;
 
         fill: var(--g-color-text-secondary);
-    }
-
-    &__title tspan {
-        dominant-baseline: text-after-edge;
     }
 }
