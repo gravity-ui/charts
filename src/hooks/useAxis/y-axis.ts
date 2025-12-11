@@ -107,6 +107,7 @@ export const getPreparedYAxis = ({
     }
 
     return Promise.all(
+        // eslint-disable-next-line complexity
         axisItems.map(async (axisItem, axisIndex) => {
             const plotIndex = get(axisItem, 'plotIndex', 0);
             const firstPlotAxis = !axisByPlot[plotIndex];
@@ -115,6 +116,7 @@ export const getPreparedYAxis = ({
             }
             axisByPlot[plotIndex].push(axisItem);
             const defaultAxisPosition = firstPlotAxis ? 'left' : 'right';
+            const axisPosition = get(axisItem, 'position', defaultAxisPosition);
 
             const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === axisIndex);
 
@@ -144,7 +146,19 @@ export const getPreparedYAxis = ({
                     width: height,
                 })
             ).slice(0, titleMaxRowsCount);
+            const titleRotation = axisItem.title?.rotation ?? (axisPosition === 'left' ? -90 : 90);
+            const titleMaxWidth =
+                titleRotation === 0
+                    ? calculateNumericProperty({
+                          value: axisItem.title?.maxWidth ?? '20%',
+                          base: width,
+                      })
+                    : calculateNumericProperty({
+                          value: axisItem.title?.maxWidth ?? '100%',
+                          base: height,
+                      });
             const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
+
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
             const shouldHideGrid =
                 axisItem.visible === false ||
@@ -176,10 +190,12 @@ export const getPreparedYAxis = ({
                     text: titleText,
                     margin: get(axisItem, 'title.margin', yAxisTitleDefaults.margin),
                     style: titleStyle,
-                    width: titleSize.maxWidth,
+                    width: Math.min(titleSize.maxWidth, titleMaxWidth ?? Infinity),
                     height: titleSize.maxHeight * estimatedTitleRows.length,
                     align: get(axisItem, 'title.align', yAxisTitleDefaults.align),
                     maxRowCount: titleMaxRowsCount,
+                    maxWidth: titleMaxWidth ?? Infinity,
+                    rotation: titleRotation,
                 },
                 min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(axisSeriesData),
                 max: get(axisItem, 'max'),
@@ -206,7 +222,7 @@ export const getPreparedYAxis = ({
                           })
                         : axisItem.ticks?.pixelInterval,
                 },
-                position: get(axisItem, 'position', defaultAxisPosition),
+                position: axisPosition,
                 plotIndex: get(axisItem, 'plotIndex', 0),
                 plotLines: get(axisItem, 'plotLines', []).map((d) => ({
                     value: get(d, 'value', 0),

@@ -175,6 +175,7 @@ export const getPreparedXAxis = async ({
             width: titleSize.maxWidth,
             align: get(xAxis, 'title.align', xAxisTitleDefaults.align),
             maxRowCount: get(xAxis, 'title.maxRowCount', xAxisTitleDefaults.maxRowCount),
+            rotation: 0,
         },
         min: get(xAxis, 'min'),
         max: get(xAxis, 'max'),

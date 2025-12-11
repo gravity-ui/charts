@@ -22,7 +22,13 @@ export function getYAxisWidth(axis: PreparedYAxis | undefined) {
 
     let result = 0;
     if (axis?.title.text) {
-        result += axis.title.height + axis.title.margin;
+        result += axis.title.margin;
+
+        if (axis.title.rotation === 0) {
+            result += axis.title.width;
+        } else {
+            result += axis.title.height;
+        }
     }
 
     if (axis?.labels.enabled) {
