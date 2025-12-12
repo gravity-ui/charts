@@ -85,6 +85,15 @@ function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
     return 0.05;
 }
 
+const VALID_Y_AXIS_TITLE_ROTATION = [0, -90, 90];
+
+function getAxisTitleRotation(value: number | undefined, axisPosition: ChartYAxis['position']) {
+    if (typeof value !== 'undefined' && VALID_Y_AXIS_TITLE_ROTATION.includes(value)) {
+        return value;
+    }
+    return axisPosition === 'left' ? -90 : 90;
+}
+
 export const getPreparedYAxis = ({
     height,
     boundsHeight,
@@ -146,7 +155,7 @@ export const getPreparedYAxis = ({
                     width: height,
                 })
             ).slice(0, titleMaxRowsCount);
-            const titleRotation = axisItem.title?.rotation ?? (axisPosition === 'left' ? -90 : 90);
+            const titleRotation = getAxisTitleRotation(axisItem.title?.rotation, axisPosition);
             const titleMaxWidth =
                 titleRotation === 0
                     ? calculateNumericProperty({
