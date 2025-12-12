@@ -7,7 +7,7 @@ type Props = PreparedTitle & {
 };
 
 export const Title = (props: Props) => {
-    const {chartWidth, text, height, style} = props;
+    const {chartWidth, text, height, style, qa} = props;
 
     return (
         <text
@@ -21,6 +21,7 @@ export const Title = (props: Props) => {
                 fontWeight: style?.fontWeight,
                 lineHeight: `${height}px`,
             }}
+            data-qa={qa}
         >
             <tspan dangerouslySetInnerHTML={{__html: text}}></tspan>
         </text>
