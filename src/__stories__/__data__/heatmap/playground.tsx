@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {dateTime} from '@gravity-ui/date-utils';
+import {dateTimeUtc} from '@gravity-ui/date-utils';
 import {interpolateRgb} from 'd3';
 
 import {Chart} from '../../../components';
@@ -13,7 +13,9 @@ function prepareData(): ChartData {
     const months = Array.from(
         new Set(
             data.map((d) => {
-                return dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).format('MMMM');
+                return dateTimeUtc({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).format(
+                    'MMMM',
+                );
             }),
         ),
     );
@@ -23,7 +25,7 @@ function prepareData(): ChartData {
     const getColor = interpolateRgb(colors[0], colors[1]);
 
     const seriesData: HeatmapSeriesData[] = data.map((d) => {
-        const date = dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'});
+        const date = dateTimeUtc({input: d.terrestrial_date, format: 'YYYY-MM-DD'});
         const colorValue = -d.max_temp / maxTemp;
         return {
             x: date.date(),
@@ -40,7 +42,7 @@ function prepareData(): ChartData {
 
     return {
         title: {
-            text: `Mars max temperature in ${dateTime({input: data[0].terrestrial_date, format: 'YYYY-MM-DD'}).format('YYYY')}`,
+            text: `Mars max temperature in ${dateTimeUtc({input: data[0].terrestrial_date, format: 'YYYY-MM-DD'}).format('YYYY')}`,
         },
         series: {
             data: [
@@ -78,7 +80,7 @@ function prepareData(): ChartData {
                 const cellData = hovered[0]?.data as HeatmapSeriesData;
                 const itemChartData: ChartData = {
                     title: {
-                        text: dateTime({
+                        text: dateTimeUtc({
                             input: cellData.custom.terrestrial_date,
                             format: 'YYYY-MM-DD',
                         }).format('DD MMM'),

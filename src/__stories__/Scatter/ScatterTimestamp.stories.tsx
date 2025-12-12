@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {dateTime} from '@gravity-ui/date-utils';
+import {dateTimeUtc} from '@gravity-ui/date-utils';
 import type {Meta, StoryObj} from '@storybook/react-webpack5';
 import random from 'lodash/random';
 import range from 'lodash/range';
@@ -79,7 +79,9 @@ function prepareData({startDate, endDate}: DataDateProps): ChartData<string> {
         tooltip: {
             renderer: ({hovered}) => {
                 const d = hovered[0].data as ScatterSeriesData<string>;
-                return <div style={{color: d.custom}}>{dateTime({input: d.x}).format('LL')}</div>;
+                return (
+                    <div style={{color: d.custom}}>{dateTimeUtc({input: d.x}).format('LL')}</div>
+                );
             },
         },
     };

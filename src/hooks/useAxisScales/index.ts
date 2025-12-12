@@ -29,12 +29,17 @@ import {
 import type {AxisDirection} from '../../utils';
 import {getBandSize} from '../utils/get-band-size';
 
-import {checkIsPointDomain, getMinMaxPropsOrState, hasOnlyMarkerSeries} from './utils';
+import {
+    checkIsPointDomain,
+    getMinMaxPropsOrState,
+    getXMaxDomainResult,
+    hasOnlyMarkerSeries,
+} from './utils';
 
-export type ChartScale =
-    | ScaleLinear<number, number>
-    | ScaleBand<string>
-    | ScaleTime<number, number>;
+type ChartScaleBand = ScaleBand<string>;
+export type ChartScaleLinear = ScaleLinear<number, number>;
+export type ChartScaleTime = ScaleTime<number, number>;
+export type ChartScale = ChartScaleBand | ChartScaleLinear | ChartScaleTime;
 
 type Args = {
     boundsWidth: number;
@@ -364,7 +369,7 @@ export function createXScale(args: {
             order: axis.order,
         });
     }
-    const maxPadding = rangeSliderState ? 0 : get(axis, 'maxPadding', 0);
+    const maxPadding = get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
@@ -499,12 +504,12 @@ export function createXScale(args: {
                     !isPointDomain
                         ? xMinPropsOrState
                         : xMinTimestamp;
-                const xMax =
-                    typeof xMaxPropsOrState === 'number' &&
-                    xMaxPropsOrState < xMaxTimestamp &&
-                    !isPointDomain
-                        ? xMaxPropsOrState
-                        : xMaxTimestamp;
+                const xMax = getXMaxDomainResult({
+                    xMaxDomain: xMaxTimestamp,
+                    xMaxProps: get(axis, 'max'),
+                    xMaxRangeSlider: rangeSliderState?.max,
+                    xMaxZoom: zoomStateX?.[1],
+                });
                 domain = [xMin, xMax];
 
                 const scale = scaleUtc().domain(domain).range(range);
