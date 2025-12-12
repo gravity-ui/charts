@@ -20,7 +20,6 @@ function getData(args: {basicData: ChartData; extraData?: DeepPartial<ChartData>
         tooltip: {enabled: false},
         xAxis: {
             labels: {enabled: false},
-            maxPadding: 0,
             rangeSlider: {enabled: true},
             title: {text: ''},
             type: 'datetime',

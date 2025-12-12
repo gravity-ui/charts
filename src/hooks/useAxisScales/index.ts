@@ -36,10 +36,9 @@ import {
     hasOnlyMarkerSeries,
 } from './utils';
 
-type ChartScaleExtended = {niceOffsetMax?: number};
 type ChartScaleBand = ScaleBand<string>;
-export type ChartScaleLinear = ScaleLinear<number, number> & ChartScaleExtended;
-export type ChartScaleTime = ScaleTime<number, number> & ChartScaleExtended;
+export type ChartScaleLinear = ScaleLinear<number, number>;
+export type ChartScaleTime = ScaleTime<number, number>;
 export type ChartScale = ChartScaleBand | ChartScaleLinear | ChartScaleTime;
 
 type Args = {
@@ -370,7 +369,7 @@ export function createXScale(args: {
             order: axis.order,
         });
     }
-    const maxPadding = rangeSliderState ? 0 : get(axis, 'maxPadding', 0);
+    const maxPadding = get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
@@ -452,7 +451,6 @@ export function createXScale(args: {
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
-                const xMaxDomainBefore = scale.domain()[1];
 
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
@@ -461,9 +459,6 @@ export function createXScale(args: {
                         Math.max(nicedDomain[1], domainWithOffset[1]),
                     ]);
                 }
-
-                const xMaxDomainAfter = scale.domain()[1];
-                (scale as ChartScaleLinear).niceOffsetMax = xMaxDomainAfter - xMaxDomainBefore;
 
                 return scale;
             }

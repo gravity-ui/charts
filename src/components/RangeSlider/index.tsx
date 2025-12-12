@@ -24,7 +24,6 @@ function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<R
     const {
         brush,
         defaultRange,
-        filteredPreparedSeries,
         height,
         onBrushEnd,
         onOverlayClick,
@@ -63,10 +62,8 @@ function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<R
                 return xScale.domain().map(Number) as [number, number];
             },
             resetState: () => {
-                if (preparedXAxis && xScale && !isBandScale(xScale)) {
+                if (xScale && !isBandScale(xScale)) {
                     const initialRangeSliderState = getInitialRangeSliderState({
-                        preparedSeries: filteredPreparedSeries,
-                        preparedXAxis,
                         xScale,
                         defaultRange,
                     });
@@ -74,7 +71,7 @@ function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<R
                 }
             },
         }),
-        [defaultRange, filteredPreparedSeries, onUpdate, preparedXAxis, xScale],
+        [defaultRange, onUpdate, xScale],
     );
     const areas: BrushArea[] = React.useMemo(() => {
         if (!preparedXAxis || !preparedYAxis?.length) {

@@ -230,7 +230,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
 
     React.useEffect(() => {
-        if (!initialized && xScale && xAxis) {
+        if (!initialized && xScale) {
             if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
                 setInitialized(true);
                 return;
@@ -239,8 +239,6 @@ export const ChartInner = (props: ChartInnerProps) => {
             const defaultRange = preparedRangeSlider.defaultRange;
             const initialRangeSliderState = getInitialRangeSliderState({
                 defaultRange,
-                preparedSeries,
-                preparedXAxis: xAxis,
                 xScale,
             });
 
@@ -251,10 +249,8 @@ export const ChartInner = (props: ChartInnerProps) => {
         initialized,
         preparedRangeSlider.defaultRange,
         preparedRangeSlider.enabled,
-        preparedSeries,
         setInitialized,
         updateRangeSliderState,
-        xAxis,
         xScale,
     ]);
 

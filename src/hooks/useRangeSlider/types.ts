@@ -32,7 +32,6 @@ export interface UseRangeSliderProps extends RangeSliderProps {
 }
 
 export interface PreparedRangeSliderProps extends Omit<PreparedRangeSlider, 'enabled'> {
-    filteredPreparedSeries: PreparedSeries[];
     htmlLayout: HTMLElement | null;
     offsetLeft: number;
     offsetTop: number;

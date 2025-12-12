@@ -2,7 +2,7 @@ import React from 'react';
 
 import type {Meta, StoryObj} from '@storybook/react-webpack5';
 import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import merge from 'lodash/merge';
 
 import {Chart} from '../../../components';
 import {ChartStory} from '../../ChartStory';
@@ -20,19 +20,17 @@ export default meta;
 type Story = StoryObj<typeof ChartStory>;
 
 const dateTimeData = cloneDeep(lineTwoYAxisData);
-set(dateTimeData, 'xAxis.maxPadding', 0);
-set(dateTimeData, 'xAxis.rangeSlider', {enabled: true});
-set(dateTimeData, 'legend', {enabled: true});
-set(dateTimeData, 'title', {
-    text: 'Without default range',
+merge(dateTimeData, {
+    xAxis: {rangeSlider: {enabled: true}},
+    legend: {enabled: true},
+    title: {text: 'Without default range'},
 });
 
 const dateTimeDataWithRange = cloneDeep(lineTwoYAxisData);
-set(dateTimeDataWithRange, 'xAxis.maxPadding', 0);
-set(dateTimeDataWithRange, 'xAxis.rangeSlider', {enabled: true, defaultRange: {size: 'P1M'}});
-set(dateTimeDataWithRange, 'legend', {enabled: true});
-set(dateTimeDataWithRange, 'title', {
-    text: 'With default range (1 month)',
+merge(dateTimeDataWithRange, {
+    xAxis: {rangeSlider: {enabled: true, defaultRange: {size: 'P1M'}}},
+    legend: {enabled: true},
+    title: {text: 'With default range (1 month)'},
 });
 
 export const RangeSliderDateTime = {
@@ -50,19 +48,17 @@ export const RangeSliderDateTime = {
 } satisfies Story;
 
 const linearData = cloneDeep(scatterLinearXAxisData);
-set(linearData, 'xAxis.maxPadding', 0);
-set(linearData, 'xAxis.rangeSlider', {enabled: true});
-set(linearData, 'legend', {enabled: true});
-set(linearData, 'title', {
-    text: 'Without default range',
-});
+merge(
+    linearData,
+    {xAxis: {rangeSlider: {enabled: true}}},
+    {legend: {enabled: true}, title: {text: 'Without default range'}},
+);
 
 const linearDataWithRange = cloneDeep(scatterLinearXAxisData);
-set(linearDataWithRange, 'xAxis.maxPadding', 0);
-set(linearDataWithRange, 'xAxis.rangeSlider', {enabled: true, defaultRange: {size: 1000}});
-set(linearDataWithRange, 'legend', {enabled: true});
-set(linearDataWithRange, 'title', {
-    text: 'With default range (1000)',
+merge(linearDataWithRange, {
+    xAxis: {rangeSlider: {enabled: true, defaultRange: {size: 1000}}},
+    legend: {enabled: true},
+    title: {text: 'With default range (1000)'},
 });
 
 export const RangeSliderLinear = {
@@ -74,36 +70,6 @@ export const RangeSliderLinear = {
             </div>
             <div style={{height: 350}}>
                 <Chart data={linearDataWithRange} />
-            </div>
-        </div>
-    ),
-} satisfies Story;
-
-const dateTimeDataWithPadding = cloneDeep(lineTwoYAxisData);
-set(dateTimeDataWithPadding, 'xAxis.maxPadding', 0.2);
-set(dateTimeDataWithPadding, 'xAxis.rangeSlider', {enabled: true});
-set(dateTimeDataWithPadding, 'legend', {enabled: true});
-set(dateTimeDataWithPadding, 'title', {
-    text: 'Datetime with maxPadding 0.2',
-});
-
-const lineatDataWithPadding = cloneDeep(scatterLinearXAxisData);
-set(lineatDataWithPadding, 'xAxis.maxPadding', 0.2);
-set(lineatDataWithPadding, 'xAxis.rangeSlider', {enabled: true});
-set(lineatDataWithPadding, 'legend', {enabled: true});
-set(lineatDataWithPadding, 'title', {
-    text: 'Linear with maxPadding 0.2',
-});
-
-export const RangeSliderWithPadding = {
-    name: 'With maxPadding',
-    render: () => (
-        <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
-            <div style={{height: 350}}>
-                <Chart data={dateTimeDataWithPadding} />
-            </div>
-            <div style={{height: 350}}>
-                <Chart data={lineatDataWithPadding} />
             </div>
         </div>
     ),

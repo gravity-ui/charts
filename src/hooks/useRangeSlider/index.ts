@@ -167,7 +167,6 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
 
     return {
         ...preparedRangeSlider,
-        filteredPreparedSeries,
         htmlLayout,
         onBrushEnd,
         offsetLeft: boundsOffsetLeft,
