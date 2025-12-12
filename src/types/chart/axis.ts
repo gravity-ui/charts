@@ -153,7 +153,11 @@ export interface ChartAxis {
     };
     /** Padding of the max value relative to the length of the axis.
      * A padding of 0.05 will make a 100px axis 5px longer.
-     * Does not apply for series with data normalization along on a specific axis (stacking: 'percent').
+     *
+     * Does not apply:
+     * - for series with data normalization along on a specific axis (stacking: 'percent')
+     * - to the X axis when rangeSlider is used
+     *
      * @default 0.05 for Y axis, 0.01 for X axis
      */
     maxPadding?: number;
