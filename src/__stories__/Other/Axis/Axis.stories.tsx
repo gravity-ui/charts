@@ -3,7 +3,7 @@ import React from 'react';
 import {Col, Container, Row, Text} from '@gravity-ui/uikit';
 import type {Meta, StoryObj} from '@storybook/react-webpack5';
 
-import type {ChartAxis, ChartData} from '../../../types';
+import type {ChartData, ChartYAxis} from '../../../types';
 import {ChartStory} from '../../ChartStory';
 
 const meta: Meta<typeof ChartStory> = {
@@ -21,7 +21,7 @@ const AxisTitle = () => {
     the grocer and the vegetable man and the butcher until one's cheeks burned with the silent
     imputation of parsimony that such close dealing implied. Three times Della counted it.
     One dollar and eighty - seven cents.`;
-    const getWidgetData = (title: ChartAxis['title']): ChartData => ({
+    const getWidgetData = (title: ChartYAxis['title']): ChartData => ({
         yAxis: [
             {
                 title,
@@ -77,6 +77,27 @@ const AxisTitle = () => {
                         data={{
                             ...getWidgetData({text: longText, maxRowCount: 3}),
                             title: {text: 'multiline'},
+                        }}
+                    />
+                </Col>
+            </Row>
+            <Row space={1}>
+                <Text variant="subheader-3">Title rotation</Text>
+            </Row>
+            <Row space={3}>
+                <Col s={6}>
+                    <ChartStory
+                        data={{
+                            ...getWidgetData({text: longText, rotation: 0}),
+                            title: {text: 'rotation = 0'},
+                        }}
+                    />
+                </Col>
+                <Col s={6}>
+                    <ChartStory
+                        data={{
+                            ...getWidgetData({text: longText, rotation: 0, maxRowCount: 3}),
+                            title: {text: 'rotation = 0 + multiline'},
                         }}
                     />
                 </Col>

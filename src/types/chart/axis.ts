@@ -96,13 +96,6 @@ export interface ChartAxisTitle {
      * @default 1
      */
     maxRowCount?: number;
-    /**
-     * Allows to use any html-tags to display the content.
-     * The element will be displayed outside the box of the SVG element.
-     *
-     * @default false
-     * */
-    html?: boolean;
 }
 
 export interface ChartAxis {
@@ -252,9 +245,32 @@ export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label'> {
     enabled?: boolean;
 }
 
+interface ChartYAxisTitle extends ChartAxisTitle {
+    /** Rotation of the title in degrees.
+     * Currently, the available values are only for rotation in multiples of 90 degrees.
+     *
+     * The default values are -90 for the left axis and 90 for the right.
+     */
+    rotation?: 0 | 90 | -90;
+    /** Interval of the tick marks(absolute or relative to the chart area).
+     *
+     * For a title with rotation = 0, the relative value is calculated based on the chart width, otherwise on the chart height.
+     * The default value for the title with rotation: 0 is 20%, for the rest - not defined.
+     */
+    maxWidth?: number | string;
+    /**
+     * Allows to use any html-tags to display the content.
+     * The element will be displayed outside the box of the SVG element.
+     *
+     * @default false
+     * */
+    html?: boolean;
+}
+
 export interface ChartYAxis extends ChartAxis {
     /** Axis location. */
     position?: 'left' | 'right';
     /** Property for splitting charts. Determines which area the axis is located in. */
     plotIndex?: number;
+    title?: ChartYAxisTitle;
 }

@@ -145,8 +145,11 @@ export const getPreparedXAxis = async ({
     const labelsLineHeight = labelsHtml
         ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
         : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
-
     const shouldHideGrid = seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
+    const preparedRangeSlider = getPreparedRangeSlider({xAxis});
+    const maxPadding = preparedRangeSlider.enabled
+        ? 0
+        : get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData}));
 
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
@@ -177,10 +180,13 @@ export const getPreparedXAxis = async ({
             width: titleSize.maxWidth,
             align: get(xAxis, 'title.align', xAxisTitleDefaults.align),
             maxRowCount: get(xAxis, 'title.maxRowCount', xAxisTitleDefaults.maxRowCount),
+            rotation: 0,
+            maxWidth: Infinity,
+            html: false,
         },
         min: get(xAxis, 'min'),
         max: get(xAxis, 'max'),
-        maxPadding: get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData})),
+        maxPadding,
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },
@@ -226,7 +232,7 @@ export const getPreparedXAxis = async ({
         },
         visible: get(xAxis, 'visible', true),
         order: xAxis?.order,
-        rangeSlider: getPreparedRangeSlider({xAxis}),
+        rangeSlider: preparedRangeSlider,
     };
 
     await setLabelSettings({
