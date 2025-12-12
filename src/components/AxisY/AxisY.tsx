@@ -25,7 +25,14 @@ export const AxisY = (props: Props) => {
     const ref = React.useRef<SVGGElement | null>(null);
     const lineGenerator = line();
 
-    const htmlLabels = preparedAxisData.ticks.map((d) => d.htmlLabel).filter(Boolean) as HtmlItem[];
+    const htmlElements: HtmlItem[] = [];
+    htmlElements.push(
+        ...(preparedAxisData.ticks.map((d) => d.htmlLabel).filter(Boolean) as HtmlItem[]),
+    );
+
+    if (preparedAxisData.title?.html) {
+        htmlElements.push(preparedAxisData.title);
+    }
 
     React.useEffect(() => {
         if (!ref.current) {
@@ -49,7 +56,7 @@ export const AxisY = (props: Props) => {
             plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
         }
 
-        if (preparedAxisData.title) {
+        if (preparedAxisData.title?.html === false) {
             svgElement
                 .append('g')
                 .attr('class', b('title'))
@@ -247,7 +254,7 @@ export const AxisY = (props: Props) => {
 
     return (
         <React.Fragment>
-            <HtmlLayer preparedData={{htmlElements: htmlLabels}} htmlLayout={htmlLayout} />
+            <HtmlLayer preparedData={{htmlElements}} htmlLayout={htmlLayout} />
             <g ref={ref} className={b()} />
         </React.Fragment>
     );

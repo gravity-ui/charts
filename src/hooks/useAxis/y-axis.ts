@@ -144,7 +144,11 @@ export const getPreparedYAxis = ({
                     width: height,
                 })
             ).slice(0, titleMaxRowsCount);
-            const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
+            const titleSize = await getLabelsSize({
+                labels: [titleText],
+                style: titleStyle,
+                html: axisItem.title?.html,
+            });
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
             const shouldHideGrid =
                 axisItem.visible === false ||
@@ -180,6 +184,7 @@ export const getPreparedYAxis = ({
                     height: titleSize.maxHeight * estimatedTitleRows.length,
                     align: get(axisItem, 'title.align', yAxisTitleDefaults.align),
                     maxRowCount: titleMaxRowsCount,
+                    html: axisItem.title?.html ?? false,
                 },
                 min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(axisSeriesData),
                 max: get(axisItem, 'max'),

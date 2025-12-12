@@ -81,6 +81,19 @@ const AxisTitle = () => {
                     />
                 </Col>
             </Row>
+            <Row space={3}>
+                <Col s={6}>
+                    <Text variant="subheader-3">Html title</Text>
+                    <ChartStory
+                        data={{
+                            ...getWidgetData({
+                                text: '<span style="background: var(--g-color-text-info); border-radius: 4px;">Html title</span>',
+                                html: true,
+                            }),
+                        }}
+                    />
+                </Col>
+            </Row>
         </Container>
     );
 };

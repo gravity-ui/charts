@@ -82,6 +82,29 @@ export interface ChartAxisRangeSlider {
     margin?: number;
 }
 
+export interface ChartAxisTitle {
+    text?: string;
+    /** CSS styles for the title */
+    style?: Partial<BaseTextStyle>;
+    /** The pixel distance between the axis labels or line and the title.
+     * @default 4 for horizontal axes, 8 for vertical
+     */
+    margin?: number;
+    /** Alignment of the title. */
+    align?: ChartAxisTitleAlignment;
+    /** Allows limiting of the contents of a title block to the specified number of lines.
+     * @default 1
+     */
+    maxRowCount?: number;
+    /**
+     * Allows to use any html-tags to display the content.
+     * The element will be displayed outside the box of the SVG element.
+     *
+     * @default false
+     * */
+    html?: boolean;
+}
+
 export interface ChartAxis {
     categories?: string[];
     /** Configure a crosshair that follows either the mouse pointer or the hovered point. */
@@ -92,21 +115,7 @@ export interface ChartAxis {
     labels?: ChartAxisLabels;
     /** The color of the line marking the axis itself. */
     lineColor?: string;
-    title?: {
-        text?: string;
-        /** CSS styles for the title */
-        style?: Partial<BaseTextStyle>;
-        /** The pixel distance between the axis labels or line and the title.
-         * @default 4 for horizontal axes, 8 for vertical
-         */
-        margin?: number;
-        /** Alignment of the title. */
-        align?: ChartAxisTitleAlignment;
-        /** Allows limiting of the contents of a title block to the specified number of lines.
-         * @default 1
-         */
-        maxRowCount?: number;
-    };
+    title?: ChartAxisTitle;
     /**
      * The minimum value of the axis. If undefined the min value is automatically calculated.
      *
