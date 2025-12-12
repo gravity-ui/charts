@@ -161,41 +161,52 @@ export async function prepareHtmlYAxisTitle({
     }
 
     const content = axis.title.text;
-    const rotateAngle = axis.position === 'left' ? -90 : 90;
+    const rotateAngle = axis.title.rotation;
+    const titleMaxWidth = rotateAngle === 0 ? axis.title.maxWidth : axisHeight;
 
     const labelSize = await getLabelsSize({
         labels: [content],
         html: true,
-        style: axis.labels.style,
+        style: {
+            ...axis.title.style,
+            whiteSpace: 'nowrap',
+        },
     });
     const size = {width: labelSize.maxWidth, height: labelSize.maxHeight};
+    const rotatedTitleSize = rotateAngle === 0 ? size : {width: size.height, height: size.width};
 
     let y = 0;
     switch (axis.title.align) {
         case 'left': {
-            y = axisHeight;
+            const yOffset = rotateAngle === 0 ? -rotatedTitleSize.height : 0;
+            y = axisHeight + yOffset;
             break;
         }
         case 'center': {
-            y = axisHeight / 2 + size.height / 2;
+            const yOffset =
+                rotateAngle === 0 ? -rotatedTitleSize.height / 2 : rotatedTitleSize.height / 2;
+            y = axisHeight / 2 + yOffset;
             break;
         }
         case 'right': {
-            y = size.height;
+            y = rotateAngle === 0 ? 0 : rotatedTitleSize.height;
             break;
         }
     }
 
     const x =
         axis.position === 'left'
-            ? -axisLabelsWidth - axis.labels.margin - axis.title.margin - size.height
-            : axisWidth + axisLabelsWidth + axis.labels.margin + axis.title.margin + size.height;
+            ? -Math.min(titleMaxWidth, rotatedTitleSize.width) -
+              axisLabelsWidth -
+              axis.labels.margin -
+              axis.title.margin
+            : axisWidth + axisLabelsWidth + axis.labels.margin + axis.title.margin;
 
     return {
         html: true,
-        content: `<div style="white-space: nowrap; transform-origin: 0 0; transform: rotate(${rotateAngle}deg);">${content}</div>`,
+        content: `<div style="max-width: ${titleMaxWidth}px; overflow: hidden; white-space: nowrap; transform-origin: 0 0; transform: rotate(${rotateAngle}deg);">${content}</div>`,
         style: axis.title.style,
-        size,
+        size: rotatedTitleSize,
         x,
         y: axisTop + y,
     };

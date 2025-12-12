@@ -171,6 +171,7 @@ export const getPreparedYAxis = ({
                 style: titleStyle,
                 html: axisItem.title?.html,
             });
+
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
             const shouldHideGrid =
                 axisItem.visible === false ||

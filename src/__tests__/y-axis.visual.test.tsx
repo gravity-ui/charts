@@ -271,6 +271,55 @@ test.describe('Y-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Html title (default rotation)', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {
+                            text: '<span style="background: var(--g-color-text-info); border-radius: 4px;">Html title</span>',
+                            html: true,
+                        },
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Html title (0deg rotation)', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {
+                            text: '<span style="background: var(--g-color-text-info); border-radius: 4px;">Html title</span>',
+                            html: true,
+                            rotation: 0,
+                        },
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Split - few plots and axes', async ({mount}) => {

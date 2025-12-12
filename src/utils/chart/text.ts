@@ -155,6 +155,7 @@ export async function getLabelsSize({
             .style('font-weight', style?.fontWeight ?? '')
             .style('max-width', style?.maxWidth ?? '')
             .style('max-height', style?.maxHeight ?? '')
+            .style('white-space', style?.whiteSpace ?? '')
             .node();
 
         let height = 0;

@@ -362,8 +362,6 @@ export async function prepareYAxisData({
         });
     }
 
-    console.log({title});
-
     return {
         id: getUniqId(),
         title,
