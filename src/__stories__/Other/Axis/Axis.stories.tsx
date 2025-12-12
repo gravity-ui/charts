@@ -21,10 +21,14 @@ const AxisTitle = () => {
     the grocer and the vegetable man and the butcher until one's cheeks burned with the silent
     imputation of parsimony that such close dealing implied. Three times Della counted it.
     One dollar and eighty - seven cents.`;
+    const htmlTitleContent =
+        '<span style="display: flex; justify-content: center; align-items: center;height: 40px; width: 80px; background: var(--g-color-text-info); border-radius: 4px;">Html title</span>';
     const getWidgetData = (title: ChartYAxis['title']): ChartData => ({
         yAxis: [
             {
                 title,
+                maxPadding: 0,
+                min: 0,
             },
         ],
         xAxis: {
@@ -98,6 +102,34 @@ const AxisTitle = () => {
                         data={{
                             ...getWidgetData({text: longText, rotation: 0, maxRowCount: 3}),
                             title: {text: 'rotation = 0 + multiline'},
+                        }}
+                    />
+                </Col>
+            </Row>
+            <Row space={1}>
+                <Text variant="subheader-3">Html title</Text>
+            </Row>
+            <Row space={3}>
+                <Col s={6}>
+                    <ChartStory
+                        data={{
+                            ...getWidgetData({
+                                text: htmlTitleContent,
+                                html: true,
+                            }),
+                            title: {text: 'default rotation'},
+                        }}
+                    />
+                </Col>
+                <Col s={6}>
+                    <ChartStory
+                        data={{
+                            ...getWidgetData({
+                                text: htmlTitleContent,
+                                html: true,
+                                rotation: 0,
+                            }),
+                            title: {text: 'rotation = 0'},
                         }}
                     />
                 </Col>

@@ -29,7 +29,8 @@ export type AxisTickData = {
     htmlLabel: HtmlItem | null;
 };
 
-export type AxisTitleData = {
+export type SvgAxisTitleData = {
+    html: false;
     content: TextRowData[];
     style: BaseTextStyle;
     size: {width: number; height: number};
@@ -37,6 +38,15 @@ export type AxisTitleData = {
     y: number;
     rotate: number;
     offset: number;
+};
+
+export type HtmlAxisTitleData = {
+    html: true;
+    content: string;
+    style: BaseTextStyle & React.CSSProperties;
+    size: {width: number; height: number};
+    x: number;
+    y: number;
 };
 
 export type AxisPlotLineLabel = {
@@ -78,7 +88,7 @@ export type AxisDomainData = {
 
 export type AxisYData = {
     id: string;
-    title: AxisTitleData | null;
+    title: HtmlAxisTitleData | SvgAxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];
     plotLines: AxisPlotLineData[];

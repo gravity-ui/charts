@@ -62,6 +62,7 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
         maxRowCount: number;
         rotation: number;
         maxWidth: number;
+        html: boolean;
     };
     min?: number;
     grid: {
