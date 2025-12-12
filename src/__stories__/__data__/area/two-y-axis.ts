@@ -1,4 +1,4 @@
-import {dateTime} from '@gravity-ui/date-utils';
+import {dateTimeUtc} from '@gravity-ui/date-utils';
 
 import type {ChartData, MeaningfulAny} from '../../../types';
 import marsWeatherData from '../mars-weather';
@@ -6,12 +6,12 @@ import marsWeatherData from '../mars-weather';
 function prepareData(): ChartData {
     const data = marsWeatherData as MeaningfulAny[];
     const pressureData = data.map((d) => ({
-        x: dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),
+        x: dateTimeUtc({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),
         y: d.pressure,
     }));
 
     const tempData = data.map((d) => ({
-        x: dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),
+        x: dateTimeUtc({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),
         y: d.max_temp - d.min_temp,
     }));
 

@@ -2,12 +2,11 @@ import React from 'react';
 
 import type {Dispatch} from 'd3';
 
-import {SERIES_TYPE} from '../../constants';
+import {DEFAULT_PALETTE, SERIES_TYPE} from '../../constants';
 import {
     useAxis,
     useAxisScales,
     useChartDimensions,
-    useChartOptions,
     useNormalizedOriginalData,
     usePrevious,
     useSeries,
@@ -18,6 +17,7 @@ import {
 import type {
     ClipPathBySeriesType,
     PreparedAxis,
+    PreparedChart,
     PreparedLegend,
     RangeSliderState,
     ZoomState,
@@ -35,9 +35,11 @@ type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     plotNode: SVGGElement | null;
+    preparedChart: PreparedChart;
     svgContainer: SVGGElement | null;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
+    rangeSliderDomain?: [number, number];
     rangeSliderState?: RangeSliderState;
 };
 
@@ -94,6 +96,8 @@ export function useChartInnerProps(props: Props) {
         height,
         htmlLayout,
         plotNode,
+        preparedChart,
+        rangeSliderDomain,
         rangeSliderState,
         svgContainer,
         width,
@@ -102,17 +106,13 @@ export function useChartInnerProps(props: Props) {
     } = props;
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
+    const colors = React.useMemo(() => {
+        return data.colors ?? DEFAULT_PALETTE;
+    }, [data.colors]);
     const {normalizedSeriesData, normalizedXAxis, normalizedYAxis} = useNormalizedOriginalData({
         seriesData: data.series.data,
         xAxis: data.xAxis,
         yAxis: data.yAxis,
-    });
-    const {chart, colors, title} = useChartOptions({
-        chart: data.chart,
-        colors: data.colors,
-        seriesData: normalizedSeriesData,
-        title: data.title,
-        xAxis: data.xAxis,
     });
     const preparedSeriesOptions = React.useMemo(() => {
         return getPreparedOptions(data.series.options);
@@ -146,15 +146,15 @@ export function useChartInnerProps(props: Props) {
         return getLegendComponents({
             chartWidth: width,
             chartHeight: height,
-            chartMargin: chart.margin,
+            chartMargin: preparedChart.margin,
             series: preparedSeries,
             preparedLegend,
         });
-    }, [width, height, chart.margin, preparedSeries, preparedLegend]);
+    }, [width, height, preparedChart.margin, preparedSeries, preparedLegend]);
 
     const {xAxis, yAxis} = useAxis({
         height,
-        preparedChart: chart,
+        preparedChart,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
@@ -165,7 +165,7 @@ export function useChartInnerProps(props: Props) {
 
     const {boundsWidth, boundsHeight} = useChartDimensions({
         height,
-        margin: chart.margin,
+        margin: preparedChart.margin,
         preparedLegend,
         preparedSeries: preparedSeries,
         preparedYAxis: yAxis,
@@ -233,7 +233,8 @@ export function useChartInnerProps(props: Props) {
         plotContainerHeight: boundsHeight,
         plotContainerWidth: boundsWidth,
         preparedSplit,
-        preparedZoom: chart.zoom,
+        preparedZoom: preparedChart.zoom,
+        rangeSliderDomain,
         xAxis,
         xScale,
         yAxis,
@@ -241,13 +242,13 @@ export function useChartInnerProps(props: Props) {
     });
 
     const boundsOffsetTop = getBoundsOffsetTop({
-        chartMarginTop: chart.margin.top,
+        chartMarginTop: preparedChart.margin.top,
         preparedLegend,
     });
 
     // We need to calculate the width of each left axis because the first axis can be hidden
     const boundsOffsetLeft = getBoundsOffsetLeft({
-        chartMarginLeft: chart.margin.left,
+        chartMarginLeft: preparedChart.margin.left,
         preparedLegend,
         yAxis,
         getYAxisWidth,
@@ -265,18 +266,15 @@ export function useChartInnerProps(props: Props) {
         isOutsideBounds,
         legendConfig,
         legendItems,
-        preparedChart: chart,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
         preparedSplit,
-        preparedZoom: chart.zoom,
         prevHeight,
         prevWidth,
         shapes,
         shapesData,
         svgXPos: x,
-        title,
         xAxis,
         xScale,
         yAxis,

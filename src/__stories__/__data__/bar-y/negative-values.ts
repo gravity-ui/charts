@@ -1,11 +1,11 @@
-import {dateTime} from '@gravity-ui/date-utils';
+import {dateTimeUtc} from '@gravity-ui/date-utils';
 
 import type {ChartData} from '../../../types';
 import marsWeatherData from '../mars-weather';
 
 function prepareData(): ChartData {
     const data = marsWeatherData.map((d) => ({
-        y: dateTime({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),
+        y: dateTimeUtc({input: d.terrestrial_date, format: 'YYYY-MM-DD'}).valueOf(),
         x: d.min_temp,
     }));
 

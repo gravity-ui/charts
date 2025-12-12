@@ -52,3 +52,26 @@ export function checkIsPointDomain(domain: [number, number]) {
 export function hasOnlyMarkerSeries(series: (PreparedSeries | ChartSeries)[]): boolean {
     return series.every((s) => MARKER_SERIES_TYPES.includes(s.type));
 }
+
+export function getXMaxDomainResult(args: {
+    xMaxDomain: number;
+    xMaxProps?: number;
+    xMaxRangeSlider?: number;
+    xMaxZoom?: number;
+}) {
+    const {xMaxDomain, xMaxProps, xMaxRangeSlider, xMaxZoom} = args;
+    let xMaxDomainResult = xMaxDomain;
+
+    // When xMaxRangeSlider is provided, we use it directly without considering xMaxDomain.
+    // This is intentional: the range slider needs to display the chart's maxPadding area,
+    // which would be clipped if we constrained it to xMaxDomain.
+    if (typeof xMaxRangeSlider === 'number') {
+        xMaxDomainResult = xMaxRangeSlider;
+    } else if (typeof xMaxZoom === 'number' && xMaxZoom < xMaxDomain) {
+        xMaxDomainResult = xMaxZoom;
+    } else if (typeof xMaxProps === 'number' && xMaxProps < xMaxDomain) {
+        xMaxDomainResult = xMaxProps;
+    }
+
+    return xMaxDomainResult;
+}

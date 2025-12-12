@@ -19,7 +19,6 @@ function getData(args: {basicData: ChartData; extraData?: DeepPartial<ChartData>
         title: {text: ''},
         xAxis: {
             labels: {enabled: false},
-            maxPadding: 0,
             rangeSlider: {enabled: true},
             title: {text: ''},
             type: 'datetime',
@@ -152,6 +151,15 @@ test.describe('Range slider', () => {
         // Click on the overlay right edge
         x = boundingBox.x + boundingBox.width - 5;
         await page.mouse.click(x, y);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('maxPadding should not applied', async ({mount}) => {
+        const data = getData({
+            basicData: scatterLinearXAxisData,
+            extraData: {xAxis: {maxPadding: 0.2}},
+        });
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
