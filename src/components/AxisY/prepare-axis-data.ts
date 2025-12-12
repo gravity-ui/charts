@@ -3,6 +3,7 @@ import type {AxisDomain, AxisScale} from 'd3';
 
 import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
+import type {TextRow} from '../../utils';
 import {
     calculateCos,
     calculateSin,
@@ -282,24 +283,41 @@ export async function prepareYAxisData({
     let title: AxisTitleData | null = null;
     if (axis.title.text) {
         const getTitleTextSize = getTextSizeFn({style: axis.title.style});
-        const rotateAngle = axis.position === 'left' ? -90 : 90;
+        const rotateAngle = axis.title.rotation;
         const sin = Math.abs(calculateSin(rotateAngle));
         const cos = Math.abs(calculateCos(rotateAngle));
 
         const titleContent: TextRowData[] = [];
-        const titleMaxWidth = sin * axisHeight;
+        const titleMaxWidth = rotateAngle === 0 ? axis.title.maxWidth : sin * axisHeight;
 
         if (axis.title.maxRowCount > 1) {
-            const titleTextRows = await wrapText({
+            let titleTextRows = await wrapText({
                 text: axis.title.text,
                 style: axis.title.style,
                 width: titleMaxWidth,
                 getTextSize: getTitleTextSize,
             });
 
-            for (let i = 0; i < axis.title.maxRowCount && i < titleTextRows.length; i++) {
+            titleTextRows = titleTextRows.reduce<TextRow[]>((acc, row, index) => {
+                if (index < axis.title.maxRowCount) {
+                    acc.push(row);
+                } else {
+                    acc[axis.title.maxRowCount - 1].text += row.text;
+                }
+                return acc;
+            }, []);
+
+            for (let i = 0; i < titleTextRows.length; i++) {
                 const textRow = titleTextRows[i];
-                const textRowContent = textRow.text.trim();
+                let textRowContent = textRow.text.trim();
+
+                if (i === titleTextRows.length - 1) {
+                    textRowContent = await getTextWithElipsis({
+                        text: textRowContent,
+                        maxWidth: titleMaxWidth,
+                        getTextWidth: async (s) => (await getTitleTextSize(s)).width,
+                    });
+                }
                 const textRowSize = await getTitleTextSize(textRowContent);
 
                 titleContent.push({
@@ -331,10 +349,14 @@ export async function prepareYAxisData({
             },
             {width: 0, height: 0},
         );
-        const rotatedTitleSize = {
-            width: sin * originalTextSize.height + cos * originalTextSize.width,
-            height: sin * originalTextSize.width + cos * originalTextSize.height,
-        };
+
+        const rotatedTitleSize =
+            rotateAngle === 0
+                ? originalTextSize
+                : {
+                      width: sin * originalTextSize.height + cos * originalTextSize.width,
+                      height: sin * originalTextSize.width + cos * originalTextSize.height,
+                  };
 
         const bottom = Math.max(0, calculateSin(rotateAngle) * originalTextSize.width);
         let y = 0;
@@ -353,7 +375,10 @@ export async function prepareYAxisData({
             }
         }
 
-        const left = Math.min(0, calculateCos(rotateAngle) * originalTextSize.width);
+        const left =
+            rotateAngle === 0
+                ? Math.min(originalTextSize.width, axis.title.maxWidth)
+                : Math.min(0, calculateCos(rotateAngle) * originalTextSize.width);
         const x =
             axis.position === 'left'
                 ? -left - labelsWidth - axis.labels.margin - axis.title.margin

@@ -228,6 +228,49 @@ test.describe('Y-axis', () => {
             );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Rotated title (0deg)', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {text: 'Title text', rotation: 0},
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Multiline rotated title (0deg)', async ({mount}) => {
+            const text = `Oh, mournful season that delights the eyes, Your farewell beauty captivates my spirit.`;
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {text, rotation: 0, maxRowCount: 3},
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Split - few plots and axes', async ({mount}) => {

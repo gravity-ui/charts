@@ -82,6 +82,22 @@ export interface ChartAxisRangeSlider {
     margin?: number;
 }
 
+export interface ChartAxisTitle {
+    text?: string;
+    /** CSS styles for the title */
+    style?: Partial<BaseTextStyle>;
+    /** The pixel distance between the axis labels or line and the title.
+     * @default 4 for horizontal axes, 8 for vertical
+     */
+    margin?: number;
+    /** Alignment of the title. */
+    align?: ChartAxisTitleAlignment;
+    /** Allows limiting of the contents of a title block to the specified number of lines.
+     * @default 1
+     */
+    maxRowCount?: number;
+}
+
 export interface ChartAxis {
     categories?: string[];
     /** Configure a crosshair that follows either the mouse pointer or the hovered point. */
@@ -92,21 +108,7 @@ export interface ChartAxis {
     labels?: ChartAxisLabels;
     /** The color of the line marking the axis itself. */
     lineColor?: string;
-    title?: {
-        text?: string;
-        /** CSS styles for the title */
-        style?: Partial<BaseTextStyle>;
-        /** The pixel distance between the axis labels or line and the title.
-         * @default 4 for horizontal axes, 8 for vertical
-         */
-        margin?: number;
-        /** Alignment of the title. */
-        align?: ChartAxisTitleAlignment;
-        /** Allows limiting of the contents of a title block to the specified number of lines.
-         * @default 1
-         */
-        maxRowCount?: number;
-    };
+    title?: ChartAxisTitle;
     /**
      * The minimum value of the axis. If undefined the min value is automatically calculated.
      *
@@ -243,9 +245,25 @@ export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label'> {
     enabled?: boolean;
 }
 
+interface ChartYAxisTitle extends ChartAxisTitle {
+    /** Rotation of the title in degrees.
+     * Currently, the available values are only for rotation in multiples of 90 degrees.
+     *
+     * The default values are -90 for the left axis and 90 for the right.
+     */
+    rotation?: 0 | 90 | -90;
+    /** Interval of the tick marks(absolute or relative to the chart area).
+     *
+     * For a title with rotation = 0, the relative value is calculated based on the chart width, otherwise on the chart height.
+     * The default value for the title with rotation: 0 is 20%, for the rest - not defined.
+     */
+    maxWidth?: number | string;
+}
+
 export interface ChartYAxis extends ChartAxis {
     /** Axis location. */
     position?: 'left' | 'right';
     /** Property for splitting charts. Determines which area the axis is located in. */
     plotIndex?: number;
+    title?: ChartYAxisTitle;
 }
