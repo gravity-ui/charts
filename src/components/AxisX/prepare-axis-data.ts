@@ -97,8 +97,10 @@ async function getSvgAxisLabel({
         ? textSize.width * calculateSin(90 - a) + textSize.height * calculateSin(a)
         : textSize.width;
     let x = 0;
-    if (rotation <= 0) {
-        const xOffset = a ? (textSize.width * calculateSin(90 - a)) / 2 : 0;
+    if (rotation === 0) {
+        x = Math.min(left - actualTextWidth / 2, axisWidth - actualTextWidth);
+    } else if (rotation < 0) {
+        const xOffset = (textSize.width * calculateSin(90 - a)) / 2;
         x = left - actualTextWidth / 2 - xOffset;
     } else {
         const xOffset = (textSize.width * calculateSin(90 - a)) / 2;
