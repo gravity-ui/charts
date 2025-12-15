@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.27.0](https://github.com/gravity-ui/charts/compare/v1.26.1...v1.27.0) (2025-12-15)
+
+
+### Features
+
+* add title qa option ([#310](https://github.com/gravity-ui/charts/issues/310)) ([a2cc374](https://github.com/gravity-ui/charts/commit/a2cc37469abb3512081e3419eeb040f6b7ec8868))
+* html option for y-axis title ([#311](https://github.com/gravity-ui/charts/issues/311)) ([801cf07](https://github.com/gravity-ui/charts/commit/801cf07037423fe2756ea699a4dea0751fc183b4))
+* y-axis title rotation ([#307](https://github.com/gravity-ui/charts/issues/307)) ([9b452ed](https://github.com/gravity-ui/charts/commit/9b452ed23f87029f1e7f57858b09ade53d853c4a))
+
+
+### Bug Fixes
+
+* properly sync zoom state and range slider state ([#309](https://github.com/gravity-ui/charts/issues/309)) ([bfa8857](https://github.com/gravity-ui/charts/commit/bfa88571eae276acc0ec4d323fb99f7c4b8d925d))
+* x-axis labels position ([#304](https://github.com/gravity-ui/charts/issues/304)) ([1cfa59d](https://github.com/gravity-ui/charts/commit/1cfa59dbadb31c6499f004ecfa1d6ebcf559c009))
+
 ## [1.26.1](https://github.com/gravity-ui/charts/compare/v1.26.0...v1.26.1) (2025-12-10)
 
 
