@@ -262,6 +262,13 @@ interface ChartYAxisTitle extends ChartAxisTitle {
      * The default value for the title with rotation: 0 is 20%, for the rest - not defined.
      */
     maxWidth?: number | string;
+    /**
+     * Allows to use any html-tags to display the content.
+     * The element will be displayed outside the box of the SVG element.
+     *
+     * @default false
+     * */
+    html?: boolean;
 }
 
 export interface ChartYAxis extends ChartAxis {
