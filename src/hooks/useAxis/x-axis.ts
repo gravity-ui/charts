@@ -8,7 +8,7 @@ import {
     axisLabelsDefaults,
     xAxisTitleDefaults,
 } from '../../constants';
-import type {BaseTextStyle, ChartSeries, ChartXAxis} from '../../types';
+import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../../types';
 import {
     calculateCos,
     calculateNumericProperty,
@@ -33,12 +33,12 @@ async function setLabelSettings({
     axis,
     seriesData,
     width,
-    autoRotation = true,
+    axisLabels,
 }: {
     axis: PreparedXAxis;
     seriesData: ChartSeries[];
     width: number;
-    autoRotation?: boolean;
+    axisLabels?: ChartAxisLabels;
 }) {
     const scale = createXScale({axis, series: seriesData, boundsWidth: width});
 
@@ -77,9 +77,10 @@ async function setLabelSettings({
         return false;
     };
 
+    const autoRotation = axisLabels?.autoRotation ?? true;
     const overlapping = axis.labels.html ? false : await hasOverlappingLabels();
     const defaultRotation = overlapping && autoRotation ? -45 : 0;
-    const rotation = axis.labels.html ? 0 : (axis.labels.rotation ?? defaultRotation);
+    const rotation = axis.labels.html ? 0 : (axisLabels?.rotation ?? defaultRotation);
     const labelsHeight =
         rotation || axis.labels.html
             ? (
@@ -239,7 +240,7 @@ export const getPreparedXAxis = async ({
         axis: preparedXAxis,
         seriesData,
         width: boundsWidth,
-        autoRotation: xAxis?.labels?.autoRotation,
+        axisLabels: xAxis?.labels,
     });
 
     return preparedXAxis;
