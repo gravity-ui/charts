@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.27.1](https://github.com/gravity-ui/charts/compare/v1.27.0...v1.27.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* x-axis rotated labels (45deg) ([#318](https://github.com/gravity-ui/charts/issues/318)) ([b9059b5](https://github.com/gravity-ui/charts/commit/b9059b5eae2e224d16418b4aab03073bf1e13cc7))
+* x-axis ticks ([#320](https://github.com/gravity-ui/charts/issues/320)) ([7f19e9c](https://github.com/gravity-ui/charts/commit/7f19e9c23f9682e20d443e7c3eb3554e2209bfb6))
+
 ## [1.27.0](https://github.com/gravity-ui/charts/compare/v1.26.1...v1.27.0) (2025-12-15)
 
 
