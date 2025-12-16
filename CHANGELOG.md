@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/gravity-ui/charts/compare/v1.27.1...v1.27.2) (2025-12-16)
+
+
+### Bug Fixes
+
+* x-axis labels (chart with split) ([#321](https://github.com/gravity-ui/charts/issues/321)) ([ae91710](https://github.com/gravity-ui/charts/commit/ae91710b26dac7adb5c816d95a0c1031dbdcc6b2))
+
 ## [1.27.1](https://github.com/gravity-ui/charts/compare/v1.27.0...v1.27.1) (2025-12-16)
 
 
