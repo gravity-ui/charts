@@ -52,7 +52,7 @@ async function setLabelSettings({
     const labelLineHeight = (await getTextSize('Tmp')).height;
     const tickValues = getXAxisTickValues({axis, scale, labelLineHeight});
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
-    if (axis.type === 'datetime' && !axis.labels.dateFormat) {
+    if (axis.type === 'datetime' && !axisLabels?.dateFormat) {
         axis.labels.dateFormat = getDefaultDateFormat(tickStep);
     }
     const labels = tickValues.map((tick) =>

@@ -3,6 +3,7 @@ import React from 'react';
 import isEqual from 'lodash/isEqual';
 
 import type {ChartSeries, ChartXAxis, ChartYAxis} from '../../types';
+import {getWidthOccupiedByYAxis} from '../useChartDimensions/utils';
 import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 
@@ -57,11 +58,7 @@ export function useAxis(props: UseAxesProps) {
                 seriesData,
                 yAxis,
             });
-            const axesWidth = estimatedPreparedYAxis.reduce(
-                (acc, a) =>
-                    acc + a.title.height + a.title.margin + a.labels.margin + a.labels.width,
-                0,
-            );
+            const axesWidth = getWidthOccupiedByYAxis({preparedAxis: estimatedPreparedYAxis});
             const estimatedBoundsWidth =
                 width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right);
             const preparedXAxis = await getPreparedXAxis({
