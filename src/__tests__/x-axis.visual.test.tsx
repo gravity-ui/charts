@@ -136,4 +136,62 @@ test.describe('X-axis', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('Axis tick labels', () => {
+        test('Rotated labels (-45 deg)', async ({mount}) => {
+            const data: ChartData = {
+                xAxis: {
+                    type: 'category',
+                    categories: ['Long text (with ellipsis)', 'Short text'],
+                    labels: {
+                        rotation: -45,
+                    },
+                },
+
+                yAxis: [{visible: false}],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series 1',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 1, y: 5},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Rotated labels (45 deg)', async ({mount}) => {
+            const data: ChartData = {
+                xAxis: {
+                    type: 'category',
+                    categories: ['Long text (with ellipsis)', 'Short text'],
+                    labels: {
+                        rotation: 45,
+                    },
+                },
+
+                yAxis: [{visible: false}],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series 1',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 1, y: 5},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

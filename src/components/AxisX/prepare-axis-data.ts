@@ -56,18 +56,26 @@ async function getSvgAxisLabel({
     let textSize = await getTextSize(text);
     const a = (360 + rotation) % 90;
 
-    const textMaxWidth =
-        a === 0
-            ? Math.min(
-                  labelMaxWidth,
-                  // rightmost label
-                  labelMaxWidth / 2 + axisWidth + boundsOffsetRight - left,
-              )
-            : Math.min(
-                  axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
-                  // leftmostLabel
-                  (boundsOffsetLeft + left) / calculateSin(a),
-              );
+    let textMaxWidth = Infinity;
+    if (a === 0) {
+        textMaxWidth = Math.min(
+            labelMaxWidth,
+            // rightmost label
+            labelMaxWidth / 2 + axisWidth + boundsOffsetRight - left,
+        );
+    } else if (rotation > 0) {
+        textMaxWidth = Math.min(
+            axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
+            // rightmost label
+            (axisWidth - left) / calculateSin(a),
+        );
+    } else {
+        textMaxWidth = Math.min(
+            axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
+            // leftmostLabel
+            (boundsOffsetLeft + left) / calculateSin(a),
+        );
+    }
 
     if (textSize.width > textMaxWidth) {
         rowText = await getTextWithElipsis({
@@ -78,11 +86,6 @@ async function getSvgAxisLabel({
         textSize = await getTextSize(rowText);
     }
 
-    const actualTextWidth = a
-        ? textSize.width * calculateSin(90 - a) + textSize.height * calculateSin(a)
-        : textSize.width;
-    const xOffset = a ? (textSize.width * calculateSin(90 - a)) / 2 : 0;
-    const yOffset = textSize.width * calculateSin(a);
     content.push({
         text: rowText,
         x: 0,
@@ -90,17 +93,29 @@ async function getSvgAxisLabel({
         size: textSize,
     });
 
-    const x = Math.max(
-        -boundsOffsetLeft,
-        Math.min(left - actualTextWidth / 2 - xOffset, axisWidth - actualTextWidth),
-    );
+    const actualTextWidth = a
+        ? textSize.width * calculateSin(90 - a) + textSize.height * calculateSin(a)
+        : textSize.width;
+    let x = 0;
+    if (rotation === 0) {
+        x = Math.min(left - actualTextWidth / 2, axisWidth - actualTextWidth);
+    } else if (rotation < 0) {
+        const xOffset = (textSize.width * calculateSin(90 - a)) / 2;
+        x = left - actualTextWidth / 2 - xOffset;
+        x = Math.min(x, axisWidth - actualTextWidth);
+    } else {
+        const xOffset = (textSize.width * calculateSin(90 - a)) / 2;
+        x = left + actualTextWidth / 2 - xOffset;
+    }
+    const yOffset = rotation <= 0 ? textSize.width * calculateSin(a) : 0;
     const y = top + yOffset + axis.labels.margin;
+
     const svgLabel: AxisSvgLabelData = {
         title: content[0]?.text === text ? undefined : text,
         content,
         style: axis.labels.style,
         size: textSize,
-        x,
+        x: Math.max(-boundsOffsetLeft, x),
         y,
         angle: rotation,
     };
