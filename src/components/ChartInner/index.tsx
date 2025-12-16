@@ -217,16 +217,18 @@ export const ChartInner = (props: ChartInnerProps) => {
         if (axis && scale) {
             const axisData = await prepareXAxisData({
                 axis,
+                yAxis,
                 scale,
                 boundsWidth,
                 boundsOffsetLeft: boundsOffsetLeft,
                 boundsOffsetRight: width - boundsWidth - boundsOffsetLeft,
                 height: boundsHeight,
+                split: preparedSplit,
             });
-            items.push(axisData);
+            items.push(...axisData);
         }
         return items;
-    }, [boundsHeight, boundsOffsetLeft, boundsWidth, width, xAxis, xScale]);
+    }, [xAxis, xScale, yAxis, boundsWidth, boundsOffsetLeft, width, boundsHeight, preparedSplit]);
     const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
 
     React.useEffect(() => {
@@ -275,12 +277,19 @@ export const ChartInner = (props: ChartInnerProps) => {
                 ref={plotRef}
             >
                 {xScale && xAxisDataItems.length && (
-                    <AxisX
-                        htmlLayout={htmlLayout}
-                        plotAfterRef={plotAfterRef}
-                        plotBeforeRef={plotBeforeRef}
-                        preparedAxisData={xAxisDataItems[0]}
-                    />
+                    <React.Fragment>
+                        {xAxisDataItems.map((axisData) => {
+                            return (
+                                <AxisX
+                                    key={axisData.id}
+                                    htmlLayout={htmlLayout}
+                                    plotAfterRef={plotAfterRef}
+                                    plotBeforeRef={plotBeforeRef}
+                                    preparedAxisData={axisData}
+                                />
+                            );
+                        })}
+                    </React.Fragment>
                 )}
                 {Boolean(yAxisDataItems.length) && (
                     <React.Fragment>

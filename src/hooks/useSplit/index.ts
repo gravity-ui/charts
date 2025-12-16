@@ -1,6 +1,7 @@
 import React from 'react';
 
 import get from 'lodash/get';
+import isEmpty from 'lodash/isEmpty';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 import {calculateNumericProperty, getHorizontalSvgTextHeight} from '../../utils';
@@ -65,7 +66,11 @@ export const useSplit = (args: UseSplitArgs): PreparedSplit => {
     return React.useMemo(() => {
         const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
         const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
-        const plots = split?.plots || [];
+        const plots = split?.plots ?? [];
+        if (isEmpty(plots)) {
+            plots.push({});
+        }
+
         return {
             plots: plots.map<PreparedPlot>((p, index) => {
                 const title = preparePlotTitle({
