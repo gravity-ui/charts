@@ -14,12 +14,12 @@ export function getXAxisTickValues({
 }) {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
-        const height = Math.abs(range[0] - range[1]);
-        if (!height) {
+        const axisWidth = Math.abs(range[0] - range[1]);
+        if (!axisWidth) {
             return [];
         }
 
-        const scaleTicksCount = getTicksCount({axis, range: height});
+        const scaleTicksCount = getTicksCount({axis, range: axisWidth});
         const scaleTicks = scale.ticks(scaleTicksCount);
 
         const originalTickValues = scaleTicks.map((t) => ({
