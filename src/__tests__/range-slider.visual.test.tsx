@@ -97,6 +97,22 @@ test.describe('Range slider', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Default range size updating', async ({mount}) => {
+        const data = getData({
+            basicData: lineTwoYAxisData,
+            extraData: {xAxis: {rangeSlider: {defaultRange: {size: 'P1M'}}}},
+        });
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        const updatedData = getData({
+            basicData: lineTwoYAxisData,
+            extraData: {xAxis: {rangeSlider: {defaultRange: {size: 'P2M'}}}},
+        });
+        component.update(<ChartTestStory data={updatedData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Hide series', async ({mount}) => {
         const data = getData({
             basicData: lineTwoYAxisData,
