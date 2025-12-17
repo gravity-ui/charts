@@ -264,6 +264,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         initialized,
         preparedRangeSlider.defaultRange,
         preparedRangeSlider.enabled,
+        prevRangeSliderDefaultRange,
         setInitialized,
         updateRangeSliderState,
         xScale,
