@@ -77,6 +77,9 @@ export function useAxis(props: UseAxesProps) {
                         preparedXAxis.title.margin +
                         preparedXAxis.labels.margin +
                         preparedXAxis.labels.height +
+                        (preparedXAxis.rangeSlider.enabled
+                            ? preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin
+                            : 0) +
                         (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
                         preparedChart.margin.top +
                         preparedChart.margin.bottom);
