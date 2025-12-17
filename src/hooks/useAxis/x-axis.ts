@@ -139,20 +139,25 @@ export const getPreparedXAxis = async ({
         labels: [titleText],
         style: titleStyle,
     });
+
+    const isLabelsEnabled = xAxis?.labels?.enabled ?? true;
     const labelsStyle = {
         fontSize: get(xAxis, 'labels.style.fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE),
     };
-    const labelsHtml = get(xAxis, 'labels.html', false);
-    const labelsLineHeight = labelsHtml
-        ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
-        : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
+    const labelsHtml = xAxis?.labels?.html ?? false;
+    let labelsLineHeight = 0;
+    if (isLabelsEnabled) {
+        labelsLineHeight = labelsHtml
+            ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
+            : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
+    }
+
     const shouldHideGrid = seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
     const preparedRangeSlider = getPreparedRangeSlider({xAxis});
     const maxPadding = preparedRangeSlider.enabled
         ? 0
         : get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData}));
 
-    const isLabelsEnabled = xAxis?.labels?.enabled ?? true;
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
         labels: {
