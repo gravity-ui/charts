@@ -3,7 +3,7 @@ import React from 'react';
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
-import {useCrosshair} from '../../hooks';
+import {useCrosshair, usePrevious} from '../../hooks';
 import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getPreparedChart} from '../../hooks/useChartOptions/chart';
 import {getPreparedTitle} from '../../hooks/useChartOptions/title';
@@ -149,6 +149,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
+    const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);
 
     useCrosshair({
         split: preparedSplit,
@@ -246,11 +247,24 @@ export const ChartInner = (props: ChartInnerProps) => {
 
             updateRangeSliderState(initialRangeSliderState);
             setInitialized(true);
+        } else if (preparedRangeSlider.defaultRange !== prevRangeSliderDefaultRange && xScale) {
+            if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
+                return;
+            }
+
+            const defaultRange = preparedRangeSlider.defaultRange;
+            const initialRangeSliderState = getInitialRangeSliderState({
+                defaultRange,
+                xScale,
+            });
+
+            updateRangeSliderState(initialRangeSliderState);
         }
     }, [
         initialized,
         preparedRangeSlider.defaultRange,
         preparedRangeSlider.enabled,
+        prevRangeSliderDefaultRange,
         setInitialized,
         updateRangeSliderState,
         xScale,
