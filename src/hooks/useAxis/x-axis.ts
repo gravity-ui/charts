@@ -152,11 +152,12 @@ export const getPreparedXAxis = async ({
         ? 0
         : get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData}));
 
+    const isLabelsEnabled = xAxis?.labels?.enabled ?? true;
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
         labels: {
-            enabled: get(xAxis, 'labels.enabled', true),
-            margin: get(xAxis, 'labels.margin', axisLabelsDefaults.margin),
+            enabled: isLabelsEnabled,
+            margin: isLabelsEnabled ? get(xAxis, 'labels.margin', axisLabelsDefaults.margin) : 0,
             padding: get(xAxis, 'labels.padding', axisLabelsDefaults.padding),
             dateFormat: get(xAxis, 'labels.dateFormat'),
             numberFormat: get(xAxis, 'labels.numberFormat'),
@@ -236,12 +237,14 @@ export const getPreparedXAxis = async ({
         rangeSlider: preparedRangeSlider,
     };
 
-    await setLabelSettings({
-        axis: preparedXAxis,
-        seriesData,
-        width: boundsWidth,
-        axisLabels: xAxis?.labels,
-    });
+    if (isLabelsEnabled) {
+        await setLabelSettings({
+            axis: preparedXAxis,
+            seriesData,
+            width: boundsWidth,
+            axisLabels: xAxis?.labels,
+        });
+    }
 
     return preparedXAxis;
 };
