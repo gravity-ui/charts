@@ -139,13 +139,19 @@ export const getPreparedXAxis = async ({
         labels: [titleText],
         style: titleStyle,
     });
+
+    const isLabelsEnabled = xAxis?.labels?.enabled ?? true;
     const labelsStyle = {
         fontSize: get(xAxis, 'labels.style.fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE),
     };
-    const labelsHtml = get(xAxis, 'labels.html', false);
-    const labelsLineHeight = labelsHtml
-        ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
-        : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
+    const labelsHtml = xAxis?.labels?.html ?? false;
+    let labelsLineHeight = 0;
+    if (isLabelsEnabled) {
+        labelsLineHeight = labelsHtml
+            ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
+            : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
+    }
+
     const shouldHideGrid = seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
     const preparedRangeSlider = getPreparedRangeSlider({xAxis});
     const maxPadding = preparedRangeSlider.enabled
@@ -155,8 +161,8 @@ export const getPreparedXAxis = async ({
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
         labels: {
-            enabled: get(xAxis, 'labels.enabled', true),
-            margin: get(xAxis, 'labels.margin', axisLabelsDefaults.margin),
+            enabled: isLabelsEnabled,
+            margin: isLabelsEnabled ? get(xAxis, 'labels.margin', axisLabelsDefaults.margin) : 0,
             padding: get(xAxis, 'labels.padding', axisLabelsDefaults.padding),
             dateFormat: get(xAxis, 'labels.dateFormat'),
             numberFormat: get(xAxis, 'labels.numberFormat'),
@@ -236,12 +242,14 @@ export const getPreparedXAxis = async ({
         rangeSlider: preparedRangeSlider,
     };
 
-    await setLabelSettings({
-        axis: preparedXAxis,
-        seriesData,
-        width: boundsWidth,
-        axisLabels: xAxis?.labels,
-    });
+    if (isLabelsEnabled) {
+        await setLabelSettings({
+            axis: preparedXAxis,
+            seriesData,
+            width: boundsWidth,
+            axisLabels: xAxis?.labels,
+        });
+    }
 
     return preparedXAxis;
 };

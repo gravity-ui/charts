@@ -194,4 +194,28 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.describe('Axis title', () => {
+        test('With labels.enabled = false', async ({mount}) => {
+            const data: ChartData = {
+                xAxis: {
+                    title: {text: 'X-axis title'},
+                    labels: {
+                        enabled: false,
+                    },
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 1}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
