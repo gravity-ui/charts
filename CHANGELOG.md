@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.27.3](https://github.com/gravity-ui/charts/compare/v1.27.2...v1.27.3) (2025-12-17)
+
+
+### Bug Fixes
+
+* fix range slider default size updating ([#323](https://github.com/gravity-ui/charts/issues/323)) ([7017cf5](https://github.com/gravity-ui/charts/commit/7017cf59abb60279cdd6cf40ddcd1f64c8569b55))
+* x-axis title position with disabled axis labels ([#324](https://github.com/gravity-ui/charts/issues/324)) ([b641de5](https://github.com/gravity-ui/charts/commit/b641de5d6c811db8ee78fb9d2a25c18a2ac84877))
+
 ## [1.27.2](https://github.com/gravity-ui/charts/compare/v1.27.1...v1.27.2) (2025-12-16)
 
 
