@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.4](https://github.com/gravity-ui/charts/compare/v1.27.3...v1.27.4) (2025-12-19)
+
+
+### Bug Fixes
+
+* fix right y-axis rotated title position ([#328](https://github.com/gravity-ui/charts/issues/328)) ([7fb8617](https://github.com/gravity-ui/charts/commit/7fb8617e4ccdbe3ccd2ea4dbd121d6e5ca372d03))
+
 ## [1.27.3](https://github.com/gravity-ui/charts/compare/v1.27.2...v1.27.3) (2025-12-17)
 
 
