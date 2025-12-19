@@ -129,7 +129,7 @@ export async function prepareSvgYAxisTitle({
     const x =
         axis.position === 'left'
             ? -left - axisLabelsWidth - axis.labels.margin - axis.title.margin
-            : -left + axisWidth + axisLabelsWidth + axis.labels.margin + axis.title.margin;
+            : axisWidth + axisLabelsWidth + axis.labels.margin + axis.title.margin;
 
     return {
         html: false,
