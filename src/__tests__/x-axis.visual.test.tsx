@@ -218,4 +218,28 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test('Invisible axis (with labels, grid and title enabled)', async ({mount}) => {
+        const data: ChartData = {
+            xAxis: {
+                visible: false,
+                grid: {enabled: true},
+                labels: {
+                    enabled: true,
+                },
+                title: {text: 'X-axis'},
+            },
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [{x: 1, y: 1}],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
