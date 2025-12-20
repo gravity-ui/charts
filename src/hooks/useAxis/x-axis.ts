@@ -122,7 +122,9 @@ export const getPreparedXAxis = async ({
         return Promise.resolve(null);
     }
 
-    const titleText = get(xAxis, 'title.text', '');
+    const isAxisVisible = xAxis?.visible ?? true;
+
+    const titleText = isAxisVisible ? get(xAxis, 'title.text', '') : '';
     const titleStyle: BaseTextStyle = {
         ...xAxisTitleDefaults.style,
         ...get(xAxis, 'title.style'),
@@ -140,7 +142,7 @@ export const getPreparedXAxis = async ({
         style: titleStyle,
     });
 
-    const isLabelsEnabled = xAxis?.labels?.enabled ?? true;
+    const isLabelsEnabled = isAxisVisible && (xAxis?.labels?.enabled ?? true);
     const labelsStyle = {
         fontSize: get(xAxis, 'labels.style.fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE),
     };
@@ -152,7 +154,8 @@ export const getPreparedXAxis = async ({
             : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
     }
 
-    const shouldHideGrid = seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
+    const shouldHideGrid =
+        isAxisVisible === false || seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
     const preparedRangeSlider = getPreparedRangeSlider({xAxis});
     const maxPadding = preparedRangeSlider.enabled
         ? 0
@@ -237,7 +240,7 @@ export const getPreparedXAxis = async ({
             width: get(xAxis, 'crosshair.width', axisCrosshairDefaults.width),
             opacity: get(xAxis, 'crosshair.opacity', axisCrosshairDefaults.opacity),
         },
-        visible: get(xAxis, 'visible', true),
+        visible: isAxisVisible,
         order: xAxis?.order,
         rangeSlider: preparedRangeSlider,
     };
