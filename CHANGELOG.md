@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.5](https://github.com/gravity-ui/charts/compare/v1.27.4...v1.27.5) (2025-12-20)
+
+
+### Bug Fixes
+
+* fix the visibility of the X-axis with the grid and labels enabled ([#331](https://github.com/gravity-ui/charts/issues/331)) ([c58de08](https://github.com/gravity-ui/charts/commit/c58de08573991eb2012bd2e1b5026ef3ec000325))
+
 ## [1.27.4](https://github.com/gravity-ui/charts/compare/v1.27.3...v1.27.4) (2025-12-19)
 
 
