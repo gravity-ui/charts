@@ -35,7 +35,7 @@ test.describe('Plot Lines', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Should render plot lines for two y axis', async ({mount}) => {
+    test('Should render plot lines for two y axis', async ({mount}) => {
         const data = cloneDeep(lineTwoYAxisData);
         merge(data, {
             yAxis: [
