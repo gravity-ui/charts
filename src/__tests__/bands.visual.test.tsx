@@ -6,8 +6,12 @@ import {
     barXDatePlotBandsData,
     barXPlotBandsData,
     barXWithXAxisPlotBandsData,
+    barXWithXAxisPlotBandsInfinityData,
     barXWithYLinearAxisPlotBandsData,
+    barXWithYLinearAxisPlotBandsInfinityData,
     barYPlotBandsData,
+    barYWithXLinearAxisPlotBandsInfinityData,
+    barYWithYAxisPlotBandsInfinityData,
     lineDatetimePlotBandData,
 } from 'src/__stories__/__data__';
 
@@ -41,6 +45,30 @@ test.describe('Plot Bands', () => {
 
     test('Category X Plot Bands', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXWithXAxisPlotBandsData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Linear Y Infinity Plot Bands', async ({mount}) => {
+        const component = await mount(
+            <ChartTestStory data={barXWithYLinearAxisPlotBandsInfinityData} />,
+        );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Category X Infinity Plot Bands', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={barXWithXAxisPlotBandsInfinityData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Category Y Infinity Plot Bands', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={barYWithYAxisPlotBandsInfinityData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Linear X Infinity Plot Bands', async ({mount}) => {
+        const component = await mount(
+            <ChartTestStory data={barYWithXLinearAxisPlotBandsInfinityData} />,
+        );
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
