@@ -1,12 +1,15 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import merge from 'lodash/merge';
 
 import {
     barXDatePlotLineData,
     barXWithYAxisPlotLinesData,
     barYDatetimePlotLineData,
     barYPlotLinesData,
+    lineTwoYAxisData,
 } from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -29,6 +32,18 @@ test.describe('Plot Lines', () => {
 
     test('Datetime X Plot Lines', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXDatePlotLineData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.only('Should render plot lines for two y axis', async ({mount}) => {
+        const data = cloneDeep(lineTwoYAxisData);
+        merge(data, {
+            yAxis: [
+                {plotLines: [{value: -85.5, color: 'red', layerPlacement: 'after'}]},
+                {plotLines: [{value: -23, color: 'purple', layerPlacement: 'after'}]},
+            ],
+        });
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

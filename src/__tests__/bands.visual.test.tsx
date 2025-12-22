@@ -1,6 +1,8 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import merge from 'lodash/merge';
 
 import {
     barXDatePlotBandsData,
@@ -13,6 +15,7 @@ import {
     barYWithXLinearAxisPlotBandsInfinityData,
     barYWithYAxisPlotBandsInfinityData,
     lineDatetimePlotBandData,
+    lineTwoYAxisData,
 } from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -69,6 +72,32 @@ test.describe('Plot Bands', () => {
         const component = await mount(
             <ChartTestStory data={barYWithXLinearAxisPlotBandsInfinityData} />,
         );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Should render plot bands for two y axis', async ({mount}) => {
+        const data = cloneDeep(lineTwoYAxisData);
+        merge(data, {
+            yAxis: [
+                {
+                    plotBands: [
+                        {from: -87, to: -86, color: 'red', opacity: 0.5, layerPlacement: 'after'},
+                    ],
+                },
+                {
+                    plotBands: [
+                        {
+                            from: -26,
+                            to: -24,
+                            color: 'purple',
+                            opacity: 0.5,
+                            layerPlacement: 'after',
+                        },
+                    ],
+                },
+            ],
+        });
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
