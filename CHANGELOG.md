@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.28.0](https://github.com/gravity-ui/charts/compare/v1.27.5...v1.28.0) (2025-12-23)
+
+
+### Features
+
+* support -Infinity / Infinity for plot bands range values ([#333](https://github.com/gravity-ui/charts/issues/333)) ([1a81092](https://github.com/gravity-ui/charts/commit/1a810926332de07afdb9f8d1ae71773cce11981e))
+
+
+### Bug Fixes
+
+* ensure proper cleanup of axis plot bands and lines ([#334](https://github.com/gravity-ui/charts/issues/334)) ([3490a2b](https://github.com/gravity-ui/charts/commit/3490a2bad4d3567e0c0571dfbcaa60e37c2a6195))
+
 ## [1.27.5](https://github.com/gravity-ui/charts/compare/v1.27.4...v1.27.5) (2025-12-20)
 
 
