@@ -305,13 +305,18 @@ export async function prepareYAxisData({
         const startPos = halfBandwidth + Math.min(from, to);
         const endPos = Math.min(Math.abs(to - from), axisHeight - Math.min(from, to));
         const top = Math.max(0, startPos);
+        const plotBandHeight = Math.min(endPos, axisHeight);
+
+        if (plotBandHeight < 0) {
+            return;
+        }
 
         plotBands.push({
             layerPlacement: plotBand.layerPlacement,
             x: 0,
             y: axisPlotTopPosition + top,
             width,
-            height: Math.min(endPos, axisHeight),
+            height: plotBandHeight,
             color: plotBand.color,
             opacity: plotBand.opacity,
             label: plotBand.label.text
