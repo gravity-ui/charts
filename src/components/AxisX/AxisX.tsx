@@ -29,7 +29,7 @@ export const AxisX = (props: Props) => {
 
     React.useEffect(() => {
         if (!ref.current) {
-            return;
+            return () => {};
         }
 
         const svgElement = select(ref.current);
@@ -38,15 +38,15 @@ export const AxisX = (props: Props) => {
         let plotBeforeContainer = null;
         let plotAfterContainer = null;
         const plotDataAttr = 'data-plot-x';
+        const plotBandDataAttr = `data-plot-x-band-${preparedAxisData.id}`;
+        const plotLineDataAttr = `data-plot-x-line-${preparedAxisData.id}`;
 
         if (plotBeforeRef?.current) {
             plotBeforeContainer = select(plotBeforeRef.current);
-            plotBeforeContainer.selectAll(`[${plotDataAttr}]`).remove();
         }
 
         if (plotAfterRef?.current) {
             plotAfterContainer = select(plotAfterRef.current);
-            plotAfterContainer.selectAll(`[${plotDataAttr}]`).remove();
         }
 
         if (preparedAxisData.title) {
@@ -132,8 +132,6 @@ export const AxisX = (props: Props) => {
         });
 
         if (preparedAxisData.plotBands.length > 0) {
-            const plotBandDataAttr = `data-plot-x-band-${preparedAxisData.id}`;
-
             const setPlotBands = (
                 plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
                 plotBands: AxisPlotBandData[],
@@ -191,8 +189,6 @@ export const AxisX = (props: Props) => {
         }
 
         if (preparedAxisData.plotLines.length > 0) {
-            const plotLineDataAttr = `data-plot-x-line-${preparedAxisData.id}`;
-
             const setPlotLines = (
                 plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
                 plotLines: AxisPlotLineData[],
@@ -249,6 +245,17 @@ export const AxisX = (props: Props) => {
                 preparedAxisData.plotLines.filter((item) => item.layerPlacement === 'after'),
             );
         }
+        return () => {
+            if (plotBeforeContainer) {
+                plotBeforeContainer.selectAll(`[${plotBandDataAttr}]`).remove();
+                plotBeforeContainer.selectAll(`[${plotLineDataAttr}]`).remove();
+            }
+
+            if (plotAfterContainer) {
+                plotAfterContainer.selectAll(`[${plotBandDataAttr}]`).remove();
+                plotAfterContainer.selectAll(`[${plotLineDataAttr}]`).remove();
+            }
+        };
     }, [lineGenerator, plotAfterRef, plotBeforeRef, preparedAxisData]);
 
     return (
