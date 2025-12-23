@@ -115,8 +115,9 @@ export const getAxisPlotsPosition = (axis: PreparedAxis, split: PreparedSplit, w
 
 export function getBandsPosition(args: GetBandsPositionArgs): {from: number; to: number} {
     const {band, axisScale} = args;
-    const scalePosTo = axisScale(band.to);
-    const scalePosFrom = axisScale(band.from);
+    const range = axisScale.range();
+    const scalePosFrom = band.from === -Infinity ? range[0] : axisScale(band.from);
+    const scalePosTo = band.to === Infinity ? range[1] : axisScale(band.to);
     const isX = args.axis === 'x';
 
     if (scalePosTo !== undefined && scalePosFrom !== undefined) {

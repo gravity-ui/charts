@@ -6,8 +6,12 @@ import {
     barXDatePlotBandsData,
     barXPlotBandsData,
     barXWithXAxisPlotBandsData,
+    barXWithXAxisPlotBandsInfinityData,
     barXWithYLinearAxisPlotBandsData,
+    barXWithYLinearAxisPlotBandsInfinityData,
     barYPlotBandsData,
+    barYWithXLinearAxisPlotBandsInfinityData,
+    barYWithYAxisPlotBandsInfinityData,
     lineDatetimePlotBandData,
 } from '../../__data__';
 
@@ -61,5 +65,33 @@ export const BarXWithXAxisPlotBandsData = {
     name: 'Category X Plot Bands',
     args: {
         data: barXWithXAxisPlotBandsData,
+    },
+} satisfies Story;
+
+export const BarXWithYLinearAxisPlotBandsInfinityData = {
+    name: 'Linear Y Plot Bands Infinity',
+    args: {
+        data: barXWithYLinearAxisPlotBandsInfinityData,
+    },
+} satisfies Story;
+
+export const BarXWithXAxisPlotBandsInfinityData = {
+    name: 'Category X Plot Bands Infinity',
+    args: {
+        data: barXWithXAxisPlotBandsInfinityData,
+    },
+} satisfies Story;
+
+export const BarYWithYAxisPlotBandsInfinityData = {
+    name: 'Category Y Plot Bands Infinity',
+    args: {
+        data: barYWithYAxisPlotBandsInfinityData,
+    },
+} satisfies Story;
+
+export const BarYWithXLinearAxisPlotBandsInfinityData = {
+    name: 'Linear X Plot Bands Infinity',
+    args: {
+        data: barYWithXLinearAxisPlotBandsInfinityData,
     },
 } satisfies Story;
