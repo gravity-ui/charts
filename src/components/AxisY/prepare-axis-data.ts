@@ -329,8 +329,12 @@ export async function prepareYAxisData({
     for (let i = 0; i < axis.plotLines.length; i++) {
         const plotLine = axis.plotLines[i];
         const axisScale = scale as AxisScale<AxisDomain>;
-
         const plotLineValue = Number(axisScale(plotLine.value));
+
+        if (plotLineValue < 0 || plotLineValue > height) {
+            continue;
+        }
+
         const points: [number, number][] = [
             [0, plotLineValue],
             [width, plotLineValue],

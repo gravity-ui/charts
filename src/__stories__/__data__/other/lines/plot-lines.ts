@@ -11,8 +11,6 @@ function prepareData(): ChartData {
     })) as BarYSeriesData[];
     const categories = gamesByPlatform.map(([key]) => key);
     const series = [{data, name: 'Games released'}] as BarYSeries[];
-
-    // Calculate the average number of games
     const averageGames = data.reduce((sum, item) => sum + (item.x as number), 0) / data.length;
 
     return {
@@ -25,23 +23,22 @@ function prepareData(): ChartData {
         },
         xAxis: {
             title: {text: 'Number of games released'},
-            // Add a vertical line at the average number of games
             plotLines: [
                 {
                     value: averageGames,
-                    color: '#FF3D64', // Using a color from the DEFAULT_PALETTE
+                    color: '#FF3D64',
                     width: 2,
                     dashStyle: 'Dash',
                     opacity: 0.8,
-                    layerPlacement: 'after', // Line in front of the graph
+                    layerPlacement: 'after',
                 },
                 {
-                    value: averageGames / 2, // Half of the average
-                    color: '#4DA2F1', // Another color from the DEFAULT_PALETTE
+                    value: averageGames / 2,
+                    color: '#4DA2F1',
                     width: 2,
                     dashStyle: 'Dot',
                     opacity: 0.6,
-                    layerPlacement: 'before', // Line behind the graph
+                    layerPlacement: 'before',
                     label: {
                         text: 'plot line label',
                     },

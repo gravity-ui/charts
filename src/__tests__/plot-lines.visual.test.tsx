@@ -3,6 +3,7 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
+import set from 'lodash/set';
 
 import {
     barXDatePlotLineData,
@@ -43,6 +44,26 @@ test.describe('Plot Lines', () => {
                 {plotLines: [{value: -23, color: 'purple', layerPlacement: 'after'}]},
             ],
         });
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Should not render Y plot lines outside of plot area', async ({mount}) => {
+        const data = cloneDeep(barXWithYAxisPlotLinesData);
+        set(data, 'yAxis[0].plotLines', [
+            {color: 'red', value: -10},
+            {color: 'red', value: 500},
+        ]);
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Should not render X plot lines outside of plot area', async ({mount}) => {
+        const data = cloneDeep(barYPlotLinesData);
+        set(data, 'xAxis.plotLines', [
+            {color: 'red', value: -10},
+            {color: 'red', value: 500},
+        ]);
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
