@@ -228,18 +228,18 @@ export interface AxisPlotBand extends AxisPlot {
      * Can be a number, a string (e.g., a category), or a timestamp if representing a date.
      * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
      *
-     * If the value is `-Infinity`, it will be treated as the start of the axis.
+     * If the value is `-Infinity` or `null`, it will be treated as the start of the axis.
      */
-    from: number | string;
+    from: number | string | null;
     /**
      * The end position of the plot band in axis units.
      *
      * Can be a number, a string (e.g., a category), or a timestamp if representing a date.
      * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
      *
-     * If the value is `Infinity`, it will be treated as the end of the axis.
+     * If the value is `Infinity` or `null`, it will be treated as the end of the axis.
      */
-    to: number | string;
+    to: number | string | null;
 }
 
 export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label'> {
