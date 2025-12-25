@@ -27,6 +27,14 @@ export interface ChartLegend extends ChartLegendItem {
      * @default center
      * */
     align?: 'left' | 'center' | 'right';
+
+    /**
+     * The vertical alignment of the legend box within the chart area.
+     * Only applies when position is 'left' or 'right'.
+     *
+     * @default top
+     * */
+    alignVertical?: 'top' | 'center' | 'bottom';
     /**
      * Defines how items should be positioned in the legend when overflowing (moving to the next line).
      *

@@ -18,6 +18,7 @@ export const LegendPosition = {
         enabled: true,
         position: 'bottom',
         align: 'center',
+        alignVertical: 'top',
         justifyContent: 'center',
     },
     argTypes: {
@@ -32,6 +33,10 @@ export const LegendPosition = {
             control: 'inline-radio',
             options: ['left', 'center', 'right'],
         },
+        alignVertical: {
+            control: 'inline-radio',
+            options: ['top', 'center', 'bottom'],
+        },
         justifyContent: {
             control: 'inline-radio',
             options: ['start', 'center'],
@@ -41,6 +46,7 @@ export const LegendPosition = {
         enabled: boolean;
         position: 'top' | 'bottom' | 'left' | 'right';
         align: 'left' | 'center' | 'right';
+        alignVertical: 'top' | 'center' | 'bottom';
         justifyContent: 'start' | 'center';
     }) => {
         const data = {
@@ -49,6 +55,7 @@ export const LegendPosition = {
                 enabled: args.enabled,
                 position: args.position,
                 align: args.align,
+                alignVertical: args.alignVertical,
                 justifyContent: args.justifyContent,
             },
         };

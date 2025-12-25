@@ -2,6 +2,7 @@ import type {ChartLegend} from '../../types';
 
 export const legendDefaults = {
     align: 'center' as Required<ChartLegend>['align'],
+    alignVertical: 'top' as Required<ChartLegend>['alignVertical'],
     justifyContent: 'center' as Required<ChartLegend>['justifyContent'],
     itemDistance: 20,
     margin: 15,
