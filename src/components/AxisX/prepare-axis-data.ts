@@ -343,12 +343,17 @@ export async function prepareXAxisData({
             const labelSize = plotBand.label.text
                 ? await getPlotLabelSize(plotBand.label.text)
                 : null;
+            const plotBandWidth = Math.min(endPos, axisWidth);
+
+            if (plotBandWidth < 0) {
+                continue;
+            }
 
             plotBands.push({
                 layerPlacement: plotBand.layerPlacement,
                 x: Math.max(0, startPos),
                 y: 0,
-                width: Math.min(endPos, axisWidth),
+                width: plotBandWidth,
                 height: axisHeight,
                 color: plotBand.color,
                 opacity: plotBand.opacity,
