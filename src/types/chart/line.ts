@@ -32,30 +32,33 @@ export interface LineSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     };
 }
 
-export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
-    type: typeof SERIES_TYPE.Line;
-    data: LineSeriesData<T>[];
-    /** The name of the series (used in legend, tooltip etc) */
-    name: string;
+export interface LineSeriesLineStyle {
     /** The main color of the series (hex, rgba) */
     color?: string;
     /** Pixel width of the graph line.
      *
-     * @default 1
-     * */
+     * @default 1 (for series). For range slider series, there is no default value.
+     */
     lineWidth?: number;
-    /** Individual series legend options. Has higher priority than legend options in widget data */
-    legend?: BaseSeriesLegend & {
-        symbol?: RectLegendSymbolOptions;
-    };
-    /** Options for the point markers of line series */
-    marker?: PointMarkerOptions;
     /** Option for line stroke style */
     dashStyle?: DashStyle;
     /** Option for line cap style */
     linecap?: `${LineCap}`;
     /** Individual opacity for the line. */
     opacity?: number;
+}
+
+export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineStyle {
+    type: typeof SERIES_TYPE.Line;
+    data: LineSeriesData<T>[];
+    /** The name of the series (used in legend, tooltip etc) */
+    name: string;
+    /** Individual series legend options. Has higher priority than legend options in widget data */
+    legend?: BaseSeriesLegend & {
+        symbol?: RectLegendSymbolOptions;
+    };
+    /** Options for the point markers of line series */
+    marker?: PointMarkerOptions;
     /** Y-axis index (when using two axes) */
     yAxis?: number;
     /**
@@ -71,5 +74,5 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */
-    rangeSlider?: ChartSeriesRangeSliderOptions;
+    rangeSlider?: ChartSeriesRangeSliderOptions & LineSeriesLineStyle;
 }

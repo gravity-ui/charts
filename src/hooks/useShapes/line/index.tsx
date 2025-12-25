@@ -60,10 +60,10 @@ export const LineSeriesShapes = (args: Args) => {
             .attr('d', (d) => line(d.points))
             .attr('fill', 'none')
             .attr('stroke', (d) => d.color)
-            .attr('stroke-width', (d) => d.width)
+            .attr('stroke-width', (d) => d.lineWidth)
             .attr('stroke-linejoin', (d) => d.linecap)
             .attr('stroke-linecap', (d) => d.linecap)
-            .attr('stroke-dasharray', (d) => getLineDashArray(d.dashStyle, d.width))
+            .attr('stroke-dasharray', (d) => getLineDashArray(d.dashStyle, d.lineWidth))
             .attr('opacity', (d) => d.opacity)
             .attr('cursor', (d) => d.series.cursor);
 

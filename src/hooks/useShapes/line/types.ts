@@ -1,5 +1,4 @@
-import type {DashStyle, LineCap} from '../../../constants';
-import type {HtmlItem, LabelData, LineSeriesData} from '../../../types';
+import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineStyle} from '../../../types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 
 export type PointData = {
@@ -21,14 +20,9 @@ export type PreparedLineData = {
     id: string;
     points: PointData[];
     markers: MarkerData[];
-    color: string;
-    width: number;
     series: PreparedLineSeries;
     hovered: boolean;
     active: boolean;
     labels: LabelData[];
-    dashStyle: DashStyle;
-    linecap: LineCap;
-    opacity: number | null;
     htmlElements: HtmlItem[];
-};
+} & Required<LineSeriesLineStyle>;

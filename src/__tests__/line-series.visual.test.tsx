@@ -176,4 +176,54 @@ test.describe('Line series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.only('Should redifine line styles for range slider', async ({mount}) => {
+        const chartData: ChartData = {
+            chart: {
+                margin: {
+                    left: 10,
+                    right: 10,
+                    bottom: 10,
+                    top: 10,
+                },
+            },
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series',
+                        dashStyle: 'ShortDash',
+                        lineWidth: 3,
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 15},
+                            {x: 2, y: 12},
+                        ],
+                        rangeSlider: {
+                            color: 'red',
+                            lineWidth: 1,
+                            dashStyle: 'Solid',
+                        },
+                    },
+                ],
+            },
+            xAxis: {
+                labels: {
+                    enabled: false,
+                },
+                rangeSlider: {
+                    enabled: true,
+                },
+            },
+            yAxis: [
+                {
+                    labels: {
+                        enabled: false,
+                    },
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

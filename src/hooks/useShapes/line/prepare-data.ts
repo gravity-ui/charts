@@ -26,6 +26,7 @@ async function getHtmlLabel(
     };
 }
 
+// eslint-disable-next-line complexity
 export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
     xAxis: PreparedXAxis;
@@ -34,8 +35,9 @@ export const prepareLineData = async (args: {
     yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
+    isRangeSlider?: boolean;
 }): Promise<PreparedLineData[]> => {
-    const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds} = args;
+    const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds, isRangeSlider} = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
 
@@ -137,16 +139,16 @@ export const prepareLineData = async (args: {
             points,
             markers,
             labels,
-            color: s.color,
-            width: s.lineWidth,
             series: s,
             hovered: false,
             active: true,
             id: s.id,
-            dashStyle: s.dashStyle,
-            linecap: s.linecap,
-            opacity: s.opacity,
             htmlElements,
+            color: (isRangeSlider ? s.rangeSlider.color : undefined) ?? s.color,
+            lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
+            dashStyle: (isRangeSlider ? s.rangeSlider.dashStyle : undefined) ?? s.dashStyle,
+            linecap: (isRangeSlider ? s.rangeSlider.linecap : undefined) ?? s.linecap,
+            opacity: ((isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity) as number,
         };
 
         acc.push(result);
