@@ -5,14 +5,23 @@ import type {ChartAxis, ChartXAxis, ChartYAxis} from '../types';
 
 const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
 
+function validateCategories(axis: ChartAxis) {
+    if (!axis.categories || !Array.isArray(axis.categories) || axis.categories.length === 0) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-axis-categories'),
+        });
+    }
+}
+
 function validateDuplicateCategories({
-    categories,
-    key,
     axisIndex,
+    key,
+    categories = [],
 }: {
-    categories: string[];
-    key: 'x' | 'y';
     axisIndex: number;
+    key: 'x' | 'y';
+    categories?: string[];
 }) {
     const seen = new Set<string>();
 
@@ -72,7 +81,9 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     if (xAxis) {
         validateAxisType({axis: xAxis, key: 'x'});
         validateLabelsHtmlOptions({axis: xAxis});
-        if (xAxis?.type === 'category' && xAxis.categories) {
+
+        if (xAxis?.type === 'category') {
+            validateCategories(xAxis);
             validateDuplicateCategories({
                 categories: xAxis.categories,
                 key: 'x',
@@ -83,7 +94,8 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
 
     yAxis.forEach((axis, axisIndex) => {
         validateAxisType({axis, key: 'y'});
-        if (axis.type === 'category' && axis.categories) {
+        if (axis.type === 'category') {
+            validateCategories(axis);
             validateDuplicateCategories({
                 categories: axis.categories,
                 key: 'y',

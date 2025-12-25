@@ -103,6 +103,31 @@ describe('validation/validateAxes', () => {
 
         expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
     });
+    test.each<Args>([
+        {
+            xAxis: {
+                type: 'category',
+                categories: [] as unknown as string[],
+            },
+        },
+        {
+            yAxis: [
+                {
+                    type: 'category',
+                } as unknown as any,
+            ],
+        },
+    ])('validateAxes should throw an error in case of missing categories (data: %j)', (args) => {
+        let error: ChartError | null = null;
+
+        try {
+            validateAxes(args);
+        } catch (e) {
+            error = e as ChartError;
+        }
+
+        expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+    });
 
     test.each<Args>([
         {
