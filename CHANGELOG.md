@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.28.1](https://github.com/gravity-ui/charts/compare/v1.28.0...v1.28.1) (2025-12-25)
+
+
+### Bug Fixes
+
+* add validation for missing or empty categories in category axes ([#341](https://github.com/gravity-ui/charts/issues/341)) ([9bfc8f8](https://github.com/gravity-ui/charts/commit/9bfc8f8171ee0a0e60055b96f208425c52053cf2))
+* filter x and y axis plot lines that fall outside chart bounds ([#338](https://github.com/gravity-ui/charts/issues/338)) ([c2daa4b](https://github.com/gravity-ui/charts/commit/c2daa4bded5f8633b6120ab202a343dffebf651a))
+* prevent negative plot band width/height ([#336](https://github.com/gravity-ui/charts/issues/336)) ([c2e670c](https://github.com/gravity-ui/charts/commit/c2e670c6b819c9ae58e6d2d52acd3af86651caa5))
+* support null values for plot bands range ([#337](https://github.com/gravity-ui/charts/issues/337)) ([3200758](https://github.com/gravity-ui/charts/commit/32007589ca059c03855ccbb2f75ad08c11279c17))
+
 ## [1.28.0](https://github.com/gravity-ui/charts/compare/v1.27.5...v1.28.0) (2025-12-23)
 
 
