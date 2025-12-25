@@ -19,7 +19,8 @@
     "label_invalid-axis-type": "It seems you are trying to use inappropriate type for \"{{key}}\" axis. Available types: [{{values}}].",
     "label_invalid-axis-labels-html-type": "It seems you are trying to use inappropriate type for \"labels.html\" property. Only boolean is allowed.",
     "label_invalid-axis-labels-html-not-supported-axis-type": "It seems you are trying to use \"labels.html\" property for an axis with an unsupported type. This property is supported only for \"category\" axis.",
-    "label_duplicate-axis-categories": "It seems you have duplicate value \"{{duplicate}}\" found in {{key}}[{{axisIndex}}]."
+    "label_duplicate-axis-categories": "It seems you have duplicate value \"{{duplicate}}\" found in {{key}}[{{axisIndex}}].",
+    "label_invalid-axis-categories": "It seems you are trying to use inappropriate value for \"categories\", or defined it incorrectly. Categories must be a non-empty array for an axis with \"category\" type."
   },
   "tooltip": {
     "label_totals_sum": "Sum",
