@@ -229,7 +229,7 @@ describe('validation/validateData', () => {
                 },
             },
             {
-                yAxis: [{type: 'category'}],
+                yAxis: [{categories: ['A', 'B'], type: 'category'}],
                 series: {
                     data: [
                         {
