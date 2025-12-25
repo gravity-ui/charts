@@ -331,7 +331,7 @@ export async function prepareYAxisData({
         const axisScale = scale as AxisScale<AxisDomain>;
         const plotLineValue = Number(axisScale(plotLine.value));
 
-        if (plotLineValue < 0 || plotLineValue > height) {
+        if (plotLineValue < 0 || plotLineValue > axisHeight) {
             continue;
         }
 
