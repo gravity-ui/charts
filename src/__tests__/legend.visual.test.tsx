@@ -177,6 +177,26 @@ test.describe('Legend', () => {
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test.describe('Vertical alignment (position left)', () => {
+            const alignVerticalOptions: ChartLegend['alignVertical'][] = [
+                'top',
+                'center',
+                'bottom',
+            ];
+
+            alignVerticalOptions.forEach((alignVertical) => {
+                test(`alignVertical="${alignVertical}"`, async ({mount}) => {
+                    const data = cloneDeep(pieOverflowedLegendItemsData);
+                    set(data, 'legend.position', 'left');
+                    set(data, 'legend.alignVertical', alignVertical);
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: '270px'}} />,
+                    );
+                    await expect(component.locator('svg')).toHaveScreenshot();
+                });
+            });
+        });
     });
 
     test.describe('Continuous', () => {
