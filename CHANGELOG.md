@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.0](https://github.com/gravity-ui/charts/compare/v1.28.2...v1.29.0) (2025-12-26)
+
+
+### Features
+
+* allow line series to redefine styles for their representation in the range slider ([#343](https://github.com/gravity-ui/charts/issues/343)) ([04ec102](https://github.com/gravity-ui/charts/commit/04ec10258deef6dbb0b84c1824bd56672ec1d2cc))
+* **Legend:** add property `verticalAlign` to legend config ([#339](https://github.com/gravity-ui/charts/issues/339)) ([e369d7f](https://github.com/gravity-ui/charts/commit/e369d7f416b9588b7734ad01a0f035760c45aede))
+
 ## [1.28.2](https://github.com/gravity-ui/charts/compare/v1.28.1...v1.28.2) (2025-12-26)
 
 
