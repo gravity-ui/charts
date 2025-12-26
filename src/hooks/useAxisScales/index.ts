@@ -411,6 +411,8 @@ export function createXScale(args: {
 
                 if (typeof xMinPropsOrState === 'number' && !isPointDomain) {
                     xMin = xMinPropsOrState;
+                } else if (xType === 'logarithmic') {
+                    xMin = xMinDomain;
                 } else {
                     const xMinDefault = getDefaultMinXAxisValue(series);
                     xMin = xMinDefault ?? xMinDomain;

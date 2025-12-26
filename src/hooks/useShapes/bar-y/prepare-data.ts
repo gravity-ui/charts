@@ -33,6 +33,7 @@ export async function prepareBarYData(args: {
         boundsWidth,
         series,
         seriesOptions,
+        xAxis,
         yAxis,
         xScale,
         yScale: [yScale],
@@ -79,7 +80,8 @@ export async function prepareBarYData(args: {
         const stacks = Object.values(val);
         const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
         stacks.forEach((measureValues, groupItemIndex) => {
-            const base = xLinearScale(0) - measureValues[0].series.borderWidth;
+            const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
+            const base = baseValue - measureValues[0].series.borderWidth;
             let stackSum = base;
 
             const stackItems: PreparedBarYData[] = [];
