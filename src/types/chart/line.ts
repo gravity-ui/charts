@@ -43,7 +43,7 @@ export interface LineSeriesLineBaseStyle {
      *
      * For series within the range slider, values are inherited from the individual series by default.
      */
-    opacity?: number;
+    opacity?: number | null;
 }
 
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {

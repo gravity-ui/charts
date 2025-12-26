@@ -147,7 +147,7 @@ export const prepareLineData = async (args: {
             lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
             dashStyle: s.dashStyle,
             linecap: s.linecap,
-            opacity: ((isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity) as number,
+            opacity: (isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity,
         };
 
         acc.push(result);
