@@ -32,30 +32,37 @@ export interface LineSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     };
 }
 
-export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
+export interface LineSeriesLineBaseStyle {
+    /** Pixel width of the graph line.
+     *
+     * @default 1 (for individual series).
+     * For series within the range slider, values are inherited from the individual series by default.
+     */
+    lineWidth?: number;
+    /** Individual opacity for the line.
+     *
+     * For series within the range slider, values are inherited from the individual series by default.
+     */
+    opacity?: number | null;
+}
+
+export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
     type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
     /** The main color of the series (hex, rgba) */
     color?: string;
-    /** Pixel width of the graph line.
-     *
-     * @default 1
-     * */
-    lineWidth?: number;
+    /** Option for line stroke style */
+    dashStyle?: DashStyle;
+    /** Option for line cap style */
+    linecap?: `${LineCap}`;
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
     };
     /** Options for the point markers of line series */
     marker?: PointMarkerOptions;
-    /** Option for line stroke style */
-    dashStyle?: DashStyle;
-    /** Option for line cap style */
-    linecap?: `${LineCap}`;
-    /** Individual opacity for the line. */
-    opacity?: number;
     /** Y-axis index (when using two axes) */
     yAxis?: number;
     /**
@@ -71,5 +78,5 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */
-    rangeSlider?: ChartSeriesRangeSliderOptions;
+    rangeSlider?: ChartSeriesRangeSliderOptions & LineSeriesLineBaseStyle;
 }

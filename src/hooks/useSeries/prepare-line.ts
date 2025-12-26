@@ -146,7 +146,10 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
-            rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
+            rangeSlider: {
+                ...seriesRangeSliderOptionsDefaults,
+                ...series.rangeSlider,
+            },
         };
 
         return prepared;

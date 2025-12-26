@@ -89,6 +89,7 @@ type Args = {
     clipPathBySeriesType?: ClipPathBySeriesType;
     dispatcher?: Dispatch<object>;
     isOutsideBounds?: (x: number, y: number) => boolean;
+    isRangeSlider?: boolean;
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
 };
@@ -110,6 +111,7 @@ export const useShapes = (args: Args) => {
         dispatcher,
         htmlLayout,
         isOutsideBounds = IS_OUTSIDE_BOUNDS,
+        isRangeSlider,
         series,
         seriesOptions,
         split,
@@ -225,6 +227,7 @@ export const useShapes = (args: Args) => {
                                     yScale,
                                     split,
                                     isOutsideBounds,
+                                    isRangeSlider,
                                 });
                                 shapes.push(
                                     <LineSeriesShapes
@@ -433,6 +436,7 @@ export const useShapes = (args: Args) => {
         dispatcher,
         htmlLayout,
         isOutsideBounds,
+        isRangeSlider,
         series,
         seriesOptions,
         split,

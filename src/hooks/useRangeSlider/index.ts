@@ -78,6 +78,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         clipPathId,
         clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
         htmlLayout,
+        isRangeSlider: true,
         series: filteredPreparedSeries,
         seriesOptions: preparedSeriesOptions,
         split: EMPTY_PREPARED_SPLIT,

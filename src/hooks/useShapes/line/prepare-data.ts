@@ -34,8 +34,9 @@ export const prepareLineData = async (args: {
     yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
+    isRangeSlider?: boolean;
 }): Promise<PreparedLineData[]> => {
-    const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds} = args;
+    const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds, isRangeSlider} = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
 
@@ -137,16 +138,16 @@ export const prepareLineData = async (args: {
             points,
             markers,
             labels,
-            color: s.color,
-            width: s.lineWidth,
             series: s,
             hovered: false,
             active: true,
             id: s.id,
+            htmlElements,
+            color: s.color,
+            lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
             dashStyle: s.dashStyle,
             linecap: s.linecap,
-            opacity: s.opacity,
-            htmlElements,
+            opacity: (isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity,
         };
 
         acc.push(result);
