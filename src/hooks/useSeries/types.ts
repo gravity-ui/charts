@@ -24,7 +24,7 @@ import type {
     HeatmapSeriesData,
     LineSeries,
     LineSeriesData,
-    LineSeriesLineStyle,
+    LineSeriesLineBaseStyle,
     PathLegendSymbolOptions,
     PieSeries,
     PieSeriesData,
@@ -133,7 +133,7 @@ type BasePreparedSeries = {
 };
 
 type BasePreparedAxisRelatedSeries = {
-    rangeSlider: Required<ChartSeriesRangeSliderOptions> & Partial<LineSeriesLineStyle>;
+    rangeSlider: Required<ChartSeriesRangeSliderOptions> & Partial<LineSeriesLineBaseStyle>;
 };
 
 export type PreparedScatterSeries = {

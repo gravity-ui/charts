@@ -26,7 +26,6 @@ async function getHtmlLabel(
     };
 }
 
-// eslint-disable-next-line complexity
 export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
     xAxis: PreparedXAxis;
@@ -144,10 +143,10 @@ export const prepareLineData = async (args: {
             active: true,
             id: s.id,
             htmlElements,
-            color: (isRangeSlider ? s.rangeSlider.color : undefined) ?? s.color,
+            color: s.color,
             lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
-            dashStyle: (isRangeSlider ? s.rangeSlider.dashStyle : undefined) ?? s.dashStyle,
-            linecap: (isRangeSlider ? s.rangeSlider.linecap : undefined) ?? s.linecap,
+            dashStyle: s.dashStyle,
+            linecap: s.linecap,
             opacity: ((isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity) as number,
         };
 

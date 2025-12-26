@@ -32,27 +32,31 @@ export interface LineSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     };
 }
 
-export interface LineSeriesLineStyle {
-    /** The main color of the series (hex, rgba) */
-    color?: string;
+export interface LineSeriesLineBaseStyle {
     /** Pixel width of the graph line.
      *
-     * @default 1 (for series). For range slider series, there is no default value.
+     * @default 1 (for individual series).
+     * For series within the range slider, values are inherited from the individual series by default.
      */
     lineWidth?: number;
-    /** Option for line stroke style */
-    dashStyle?: DashStyle;
-    /** Option for line cap style */
-    linecap?: `${LineCap}`;
-    /** Individual opacity for the line. */
+    /** Individual opacity for the line.
+     *
+     * For series within the range slider, values are inherited from the individual series by default.
+     */
     opacity?: number;
 }
 
-export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineStyle {
+export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
     type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
+    /** The main color of the series (hex, rgba) */
+    color?: string;
+    /** Option for line stroke style */
+    dashStyle?: DashStyle;
+    /** Option for line cap style */
+    linecap?: `${LineCap}`;
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
@@ -74,5 +78,5 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */
-    rangeSlider?: ChartSeriesRangeSliderOptions & LineSeriesLineStyle;
+    rangeSlider?: ChartSeriesRangeSliderOptions & LineSeriesLineBaseStyle;
 }

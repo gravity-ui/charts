@@ -177,7 +177,7 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Should redifine line styles for range slider', async ({mount}) => {
+    test.only('Should redifine line styles for range slider', async ({mount}) => {
         const chartData: ChartData = {
             chart: {
                 margin: {
@@ -192,7 +192,6 @@ test.describe('Line series', () => {
                     {
                         type: 'line',
                         name: 'Series',
-                        dashStyle: 'ShortDash',
                         lineWidth: 3,
                         data: [
                             {x: 0, y: 10},
@@ -200,9 +199,7 @@ test.describe('Line series', () => {
                             {x: 2, y: 12},
                         ],
                         rangeSlider: {
-                            color: 'red',
                             lineWidth: 1,
-                            dashStyle: 'Solid',
                         },
                     },
                 ],

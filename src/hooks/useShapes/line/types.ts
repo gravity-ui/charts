@@ -1,4 +1,5 @@
-import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineStyle} from '../../../types';
+import type {DashStyle, LineCap} from '../../../constants';
+import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 
 export type PointData = {
@@ -25,4 +26,7 @@ export type PreparedLineData = {
     active: boolean;
     labels: LabelData[];
     htmlElements: HtmlItem[];
-} & Required<LineSeriesLineStyle>;
+    color: string;
+    dashStyle: DashStyle;
+    linecap: LineCap;
+} & Required<LineSeriesLineBaseStyle>;
