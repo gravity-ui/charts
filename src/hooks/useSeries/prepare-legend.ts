@@ -76,7 +76,7 @@ export async function getPreparedLegend(args: {
     }
     return {
         align: get(legend, 'align', legendDefaults.align),
-        alignVertical: get(legend, 'alignVertical', legendDefaults.alignVertical),
+        verticalAlign: get(legend, 'verticalAlign', legendDefaults.verticalAlign),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
         height,
@@ -225,7 +225,7 @@ function getPagination(args: {
 
 function getLegendOffset(args: {
     position: PreparedLegend['position'];
-    alignVertical: PreparedLegend['alignVertical'];
+    verticalAlign: PreparedLegend['verticalAlign'];
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
@@ -234,7 +234,7 @@ function getLegendOffset(args: {
 }): LegendConfig['offset'] {
     const {
         position,
-        alignVertical,
+        verticalAlign,
         chartWidth,
         chartHeight,
         chartMargin,
@@ -244,7 +244,7 @@ function getLegendOffset(args: {
 
     const getVerticalTop = () => {
         const availableHeight = chartHeight - chartMargin.top - chartMargin.bottom;
-        switch (alignVertical) {
+        switch (verticalAlign) {
             case 'bottom':
                 return chartMargin.top + availableHeight - legendHeight;
             case 'center':
@@ -368,7 +368,7 @@ export function getLegendComponents(args: {
 
     const offset = getLegendOffset({
         position: preparedLegend.position,
-        alignVertical: preparedLegend.alignVertical,
+        verticalAlign: preparedLegend.verticalAlign,
         chartWidth,
         chartHeight,
         chartMargin,

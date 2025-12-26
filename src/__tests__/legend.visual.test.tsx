@@ -179,17 +179,17 @@ test.describe('Legend', () => {
         });
 
         test.describe('Vertical alignment (position left)', () => {
-            const alignVerticalOptions: ChartLegend['alignVertical'][] = [
+            const verticalAlignOptions: ChartLegend['verticalAlign'][] = [
                 'top',
                 'center',
                 'bottom',
             ];
 
-            alignVerticalOptions.forEach((alignVertical) => {
-                test(`alignVertical="${alignVertical}"`, async ({mount}) => {
+            verticalAlignOptions.forEach((verticalAlign) => {
+                test(`verticalAlign="${verticalAlign}"`, async ({mount}) => {
                     const data = cloneDeep(pieOverflowedLegendItemsData);
                     set(data, 'legend.position', 'left');
-                    set(data, 'legend.alignVertical', alignVertical);
+                    set(data, 'legend.verticalAlign', verticalAlign);
                     const component = await mount(
                         <ChartTestStory data={data} styles={{width: '270px'}} />,
                     );

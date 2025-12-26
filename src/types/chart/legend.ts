@@ -34,7 +34,7 @@ export interface ChartLegend extends ChartLegendItem {
      *
      * @default top
      * */
-    alignVertical?: 'top' | 'center' | 'bottom';
+    verticalAlign?: 'top' | 'center' | 'bottom';
     /**
      * Defines how items should be positioned in the legend when overflowing (moving to the next line).
      *
