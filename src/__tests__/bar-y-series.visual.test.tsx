@@ -997,4 +997,30 @@ test.describe('Bar-y series', () => {
         const component = await mount(<ChartTestStory data={data} styles={{width: 600}} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Logarithmic X-axis', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {y: 0, x: 100},
+                            {y: 1, x: 5},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {type: 'logarithmic'},
+            yAxis: [
+                {
+                    categories: ['A', 'B'],
+                    type: 'category',
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
