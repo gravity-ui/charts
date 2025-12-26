@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.2](https://github.com/gravity-ui/charts/compare/v1.28.1...v1.28.2) (2025-12-26)
+
+
+### Bug Fixes
+
+* bar-y with a logarithmic x-axis ([#344](https://github.com/gravity-ui/charts/issues/344)) ([92b7c95](https://github.com/gravity-ui/charts/commit/92b7c95f30cca28e2a5200e2c1efba52eea8e2a6))
+
 ## [1.28.1](https://github.com/gravity-ui/charts/compare/v1.28.0...v1.28.1) (2025-12-25)
 
 
