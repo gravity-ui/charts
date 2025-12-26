@@ -76,6 +76,7 @@ export async function getPreparedLegend(args: {
     }
     return {
         align: get(legend, 'align', legendDefaults.align),
+        verticalAlign: get(legend, 'verticalAlign', legendDefaults.verticalAlign),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
         height,
@@ -224,13 +225,35 @@ function getPagination(args: {
 
 function getLegendOffset(args: {
     position: PreparedLegend['position'];
+    verticalAlign: PreparedLegend['verticalAlign'];
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
     legendWidth: number;
     legendHeight: number;
 }): LegendConfig['offset'] {
-    const {position, chartWidth, chartHeight, chartMargin, legendWidth, legendHeight} = args;
+    const {
+        position,
+        verticalAlign,
+        chartWidth,
+        chartHeight,
+        chartMargin,
+        legendWidth,
+        legendHeight,
+    } = args;
+
+    const getVerticalTop = () => {
+        const availableHeight = chartHeight - chartMargin.top - chartMargin.bottom;
+        switch (verticalAlign) {
+            case 'bottom':
+                return chartMargin.top + availableHeight - legendHeight;
+            case 'center':
+                return chartMargin.top + (availableHeight - legendHeight) / 2;
+            case 'top':
+            default:
+                return chartMargin.top;
+        }
+    };
 
     switch (position) {
         case 'top':
@@ -240,12 +263,12 @@ function getLegendOffset(args: {
             };
         case 'right':
             return {
-                top: chartMargin.top,
+                top: getVerticalTop(),
                 left: chartWidth - chartMargin.right - legendWidth,
             };
         case 'left':
             return {
-                top: chartMargin.top,
+                top: getVerticalTop(),
                 left: chartMargin.left,
             };
         case 'bottom':
@@ -345,6 +368,7 @@ export function getLegendComponents(args: {
 
     const offset = getLegendOffset({
         position: preparedLegend.position,
+        verticalAlign: preparedLegend.verticalAlign,
         chartWidth,
         chartHeight,
         chartMargin,
