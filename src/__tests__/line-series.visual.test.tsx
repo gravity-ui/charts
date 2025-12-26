@@ -177,7 +177,7 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Should redifine line styles for range slider', async ({mount}) => {
+    test('Should redifine line styles for range slider', async ({mount}) => {
         const chartData: ChartData = {
             chart: {
                 margin: {
