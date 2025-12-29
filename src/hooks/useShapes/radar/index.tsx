@@ -101,7 +101,7 @@ export function RadarSeriesShapes(args: PrepareRadarSeriesArgs) {
             .selectAll('text')
             .data((radarData) => radarData.labels)
             .join('text')
-            .text((d) => d.text)
+            .html((d) => d.text)
             .attr('class', b('label'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)

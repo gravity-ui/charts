@@ -140,6 +140,25 @@ test.describe('Line series', () => {
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Labels with escaped characters', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: '',
+                            type: 'line',
+                            data: [{x: 10, y: 10, label: '&gt;*'}],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                yAxis: [{maxPadding: 0}],
+                xAxis: {maxPadding: 0},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Basic split', async ({mount}) => {
