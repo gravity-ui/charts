@@ -6,7 +6,13 @@ meta:
 links:
   - title: Overview
     href: ./pages/overview.md
+    description: Introduction to the library, key features, and core concepts
   - title: Get started
     href: ./pages/get-started.md
+    description: Quick setup guide and basic chart creation
+  - title: Guides
+    href: ./pages/guides/tooltip.md
+    description: Step-by-step, practical instructions for building charts
   - title: API
     href: ./pages/api/overview.md
+    description: Complete reference for configuration options and component props
