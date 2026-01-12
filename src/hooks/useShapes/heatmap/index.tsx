@@ -54,7 +54,7 @@ export const HeatmapSeriesShapes = (args: Args) => {
             .selectAll('text')
             .data(preparedData.labels)
             .join('text')
-            .text((d) => d.text)
+            .html((d) => d.text)
             .attr('class', b('label'))
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y)
