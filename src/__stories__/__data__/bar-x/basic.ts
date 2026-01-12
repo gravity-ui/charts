@@ -90,26 +90,4 @@ export const barXDateTimeData = (function (): ChartData {
             },
         },
     };
-
-    // return {
-    //     series: {
-    //         data: [
-    //             {
-    //                 type: 'bar-x',
-    //                 name: 'Fruits',
-    //                 data: [
-    //                     {x: 1749254400000, y: 1},
-    //                     {x: 1751846400000, y: 5},
-    //                     {x: 1754524800000, y: 2},
-    //                     {x: 1757203200000, y: 8},
-    //                     {x: 1759795200000, y: 4},
-    //                 ],
-    //             },
-    //         ],
-    //     },
-    //     xAxis: {
-    //         type: 'datetime',
-    //         min: 1749513600000,
-    //     },
-    // };
 })();
