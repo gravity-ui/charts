@@ -14,8 +14,11 @@ We have already implemented support for the main chart types:
 - `Line`
 - `Pie`
 - `Scatter`
-- `Treemap` (partial support)
-- `Waterfall` (partial support)
+- `Treemap`
+- `Waterfall`
+- `Funnel`
+- `Heatmap`
+- `Radar`
 
 {% cut "Examples from Storybook" %}
 
@@ -23,6 +26,7 @@ We have already implemented support for the main chart types:
     src="https://preview.gravity-ui.com/charts/iframe.html?args=&globals=&id=showcase--g-charts-showcase-story&viewMode=story"
     width="100%"
     height="400"
+    style="border-width: 1px;"
     ></iframe>
 
 {% endcut %}
