@@ -11,7 +11,7 @@ links:
     href: ./pages/get-started.md
     description: Quick setup guide and basic chart creation
   - title: Guides
-    href: ./pages/guides/tooltip.md
+    href: ./pages/guides/data-labels.md
     description: Step-by-step, practical instructions for building charts
   - title: API
     href: ./pages/api/overview.md

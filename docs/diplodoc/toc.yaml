@@ -24,6 +24,10 @@ items:
     href: ./pages/get-started.md
   - name: Guides
     items:
+      - name: Data labels
+        href: ./pages/guides/data-labels.md
+      - name: Legend
+        href: ./pages/guides/legend.md
       - name: Tooltip
         href: ./pages/guides/tooltip.md
   - name: API
