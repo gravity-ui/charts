@@ -209,8 +209,15 @@ export function createYScale(args: {
                     }
                 }
 
-                const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
+                const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
+                const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
+
+                const domainOffsetMin = isMinSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                const domainOffsetMax = isMaxSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
                 return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
             }
@@ -292,12 +299,15 @@ export function createYScale(args: {
                         }
                     }
 
-                    const domainOffsetMin = Math.abs(
-                        scale.invert(offsetMin).getTime() - scale.invert(0).getTime(),
-                    );
-                    const domainOffsetMax = Math.abs(
-                        scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
-                    );
+                    const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
+                    const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
+
+                    const domainOffsetMin = isMinSpecified
+                        ? 0
+                        : Math.abs(scale.invert(offsetMin).getTime() - scale.invert(0).getTime());
+                    const domainOffsetMax = isMaxSpecified
+                        ? 0
+                        : Math.abs(scale.invert(offsetMax).getTime() - scale.invert(0).getTime());
 
                     return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
                 }
@@ -446,8 +456,15 @@ export function createXScale(args: {
                     }
                 }
 
-                const domainOffsetMin = Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                const domainOffsetMax = Math.abs(scale.invert(offsetMax) - scale.invert(0));
+                const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateX;
+                const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateX;
+
+                const domainOffsetMin = isMinSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                const domainOffsetMax = isMaxSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
                 // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
@@ -531,12 +548,15 @@ export function createXScale(args: {
                     }
                 }
 
-                const domainOffsetMin = Math.abs(
-                    scale.invert(offsetMin).getTime() - scale.invert(0).getTime(),
-                );
-                const domainOffsetMax = Math.abs(
-                    scale.invert(offsetMax).getTime() - scale.invert(0).getTime(),
-                );
+                const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateX;
+                const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateX;
+
+                const domainOffsetMin = isMinSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMin).getTime() - scale.invert(0).getTime());
+                const domainOffsetMax = isMaxSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMax).getTime() - scale.invert(0).getTime());
                 // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
