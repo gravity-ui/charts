@@ -26,10 +26,3 @@ We have already implemented support for the main chart types:
     ></iframe>
 
 {% endcut %}
-
-## Roadmap
-
-We are actively working on library development and continuously improving its features. Here is the list of the priority major features:
-
-- ⏳ Handling null data [#28](https://github.com/gravity-ui/charts/issues/28)
-- ⏳ Charts navigator [#35](https://github.com/gravity-ui/charts/issues/35)

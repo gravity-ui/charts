@@ -22,6 +22,10 @@ items:
     href: ./pages/overview.md
   - name: Get started
     href: ./pages/get-started.md
+  - name: Guides
+    items:
+      - name: Tooltip
+        href: ./pages/guides/tooltip.md
   - name: API
     href: ./pages/api
     autodoc: true
