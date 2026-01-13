@@ -57,6 +57,12 @@ export interface BaseSeries {
     tooltip?: {
         /** Formatting settings for tooltip value. */
         valueFormat?: ValueFormat;
+        /**
+         * Enable or disable the visibility of this series in the tooltip.
+         *
+         * @default true
+         */
+        enabled?: boolean;
     };
 }
 

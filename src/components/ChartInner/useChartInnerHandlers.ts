@@ -2,6 +2,7 @@ import type React from 'react';
 
 import {pointer} from 'd3';
 import type {Dispatch} from 'd3';
+import get from 'lodash/get';
 import throttle from 'lodash/throttle';
 
 import {IS_TOUCH_ENABLED} from '../../constants';
@@ -65,9 +66,13 @@ export function useChartInnerHandlers(props: Props) {
             return;
         }
 
+        const shapesDataWithTooltipEnabled = shapesData.filter((d) =>
+            get(d, 'series.tooltip.enabled', true),
+        );
+
         const closest = getClosestPoints({
             position: [x, y],
-            shapesData,
+            shapesData: shapesDataWithTooltipEnabled,
             boundsHeight,
             boundsWidth,
         });
