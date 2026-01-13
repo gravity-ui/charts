@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.30.0](https://github.com/gravity-ui/charts/compare/v1.29.0...v1.30.0) (2026-01-13)
+
+
+### Features
+
+* add tooltip.enabled setting for series ([#358](https://github.com/gravity-ui/charts/issues/358)) ([f90a1f9](https://github.com/gravity-ui/charts/commit/f90a1f98979f6d8d71c47c1a43e7abd02729c760))
+
+
+### Bug Fixes
+
+* fix offset datetime axis in case of min-max usage ([#354](https://github.com/gravity-ui/charts/issues/354)) ([e6a8b33](https://github.com/gravity-ui/charts/commit/e6a8b331c64725400be428cf5a18be3a23266859))
+
 ## [1.29.0](https://github.com/gravity-ui/charts/compare/v1.28.2...v1.29.0) (2026-01-12)
 
 
