@@ -44,3 +44,40 @@ tooltip: {
   }
 }
 ```
+
+## Hiding specific series from the tooltip
+
+There are scenarios where you might want to display a chart with multiple data series but exclude specific ones from the tooltip. This is useful for providing a cleaner, more focused user experience, especially when certain series are used for contextual or decorative purposes rather than for precise data reading.
+
+A common example is a chart combining a line series (e.g., representing an average or a target) with column series (e.g., representing actual values). The tooltip is most valuable for the actual values, while the average line provides context but doesn't require precise interaction.
+
+You can control the visibility of series in the tooltip by setting the `tooltip.enabled` property at the individual series level. Series where this property is set to false will not trigger or appear in the tooltip.
+
+**Example:** A chart showing monthly sales (columns) and a yearly average line. We want the tooltip to only display the sales data.
+
+```javascript
+series: {
+  data: [
+    // Series 1: Column series for actual sales (should show in tooltip)
+    {
+      name: 'Monthly Sales',
+      type: 'bar-x',
+      data: [ ... ],
+    },
+    // Series 2: Line series for average (should be hidden from tooltip)
+    {
+      name: 'Yearly Average',
+      type: 'line',
+      data: [ ... ],
+      tooltip: {
+        enabled: false
+      }
+    }
+  ];
+}
+```
+
+In this example:
+
+- Hovering over a column will display a tooltip with only the "Monthly Sales" data for that month.
+- Hovering directly over the "Yearly Average" line will not trigger a tooltip.

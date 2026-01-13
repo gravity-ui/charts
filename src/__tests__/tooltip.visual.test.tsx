@@ -57,4 +57,54 @@ test.describe('Tooltip', () => {
         await page.mouse.move(position.x + position.width / 2, 50);
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
+
+    test('Hiding specific series from the tooltip', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 7},
+                            {x: 2, y: 30},
+                        ],
+                        stacking: 'normal',
+                    },
+                    {
+                        type: 'bar-x',
+                        name: 'Series 2',
+                        data: [
+                            {x: 1, y: 3},
+                            {x: 2, y: 10},
+                        ],
+                        stacking: 'normal',
+                    },
+                    {
+                        type: 'line',
+                        name: 'Series 3',
+                        data: [
+                            {x: 1, y: 5},
+                            {x: 2, y: 20},
+                        ],
+                        tooltip: {enabled: false},
+                    },
+                ],
+            },
+            tooltip: {
+                totals: {
+                    enabled: true,
+                },
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-x').first();
+        const position = await bar.boundingBox();
+        if (position === null) {
+            throw Error('bar position is null');
+        }
+        await page.mouse.move(position.x + position.width / 2, 50);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
 });
