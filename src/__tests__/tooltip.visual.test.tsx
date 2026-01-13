@@ -104,6 +104,7 @@ test.describe('Tooltip', () => {
             throw Error('bar position is null');
         }
         await page.mouse.move(position.x + position.width / 2, 50);
-        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
     });
 });
