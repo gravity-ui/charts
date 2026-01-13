@@ -21,7 +21,6 @@ function prepareData(): ChartData {
                         y: median(games, (g) => g.user_score || 0),
                     })),
                     name: 'Median user score',
-                    tooltip: {enabled: false},
                 },
                 {
                     type: 'line',
