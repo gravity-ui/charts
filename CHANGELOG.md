@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.1](https://github.com/gravity-ui/charts/compare/v1.30.0...v1.30.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* fix x-axis plot bands and plot lines position ([#362](https://github.com/gravity-ui/charts/issues/362)) ([c43045b](https://github.com/gravity-ui/charts/commit/c43045b52b50cf009fa6899ca64b8040b55d0591))
+* line series tooltip color icon ([#360](https://github.com/gravity-ui/charts/issues/360)) ([8287487](https://github.com/gravity-ui/charts/commit/828748756e3ed0c92714167b13675555cf63fa8d))
+
 ## [1.30.0](https://github.com/gravity-ui/charts/compare/v1.29.0...v1.30.0) (2026-01-13)
 
 
