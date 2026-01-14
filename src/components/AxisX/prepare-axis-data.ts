@@ -352,7 +352,7 @@ export async function prepareXAxisData({
             plotBands.push({
                 layerPlacement: plotBand.layerPlacement,
                 x: Math.max(0, startPos),
-                y: 0,
+                y: axisTop,
                 width: plotBandWidth,
                 height: axisHeight,
                 color: plotBand.color,
@@ -400,7 +400,7 @@ export async function prepareXAxisData({
             plotLines.push({
                 layerPlacement: plotLine.layerPlacement,
                 x: 0,
-                y: 0,
+                y: axisTop,
                 width: axisWidth,
                 color: plotLine.color,
                 opacity: plotLine.opacity,
