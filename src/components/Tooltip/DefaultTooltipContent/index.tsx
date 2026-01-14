@@ -28,6 +28,7 @@ import {
     getHoveredValues,
     getMeasureValue,
     getPreparedAggregation,
+    getTooltipRowColorSymbol,
     getXRowData,
 } from './utils';
 
@@ -74,7 +75,8 @@ export const DefaultTooltipContent = ({
         striped,
         value,
         formattedValue,
-    }: ChartTooltipRowRendererArgs) => {
+        series,
+    }: ChartTooltipRowRendererArgs & {series?: TooltipDataChunk['series']}) => {
         if (typeof rowRenderer === 'function') {
             return rowRenderer({
                 id,
@@ -89,11 +91,18 @@ export const DefaultTooltipContent = ({
             });
         }
 
+        const colorSymbol = getTooltipRowColorSymbol({series, color});
+
         return (
             <Row
                 key={id}
                 active={active}
                 color={color}
+                colorSymbol={
+                    colorSymbol ? (
+                        <div dangerouslySetInnerHTML={{__html: colorSymbol.outerHTML}} />
+                    ) : undefined
+                }
                 label={<span dangerouslySetInnerHTML={{__html: name}} />}
                 striped={striped}
                 value={formattedValue}
@@ -196,6 +205,7 @@ export const DefaultTooltipContent = ({
                                 striped,
                                 value: hoveredValues[i],
                                 formattedValue,
+                                series,
                             });
                         }
                         case 'waterfall': {

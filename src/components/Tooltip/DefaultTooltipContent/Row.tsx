@@ -9,15 +9,28 @@ export function Row(props: {
     active?: boolean;
     className?: string;
     color?: string;
+    colorSymbol?: React.ReactNode;
     striped?: boolean;
     style?: React.CSSProperties;
     value?: React.ReactNode;
 }) {
-    const {label, value, active, color, className, striped, style} = props;
+    const {label, value, active, color, colorSymbol, className, striped, style} = props;
+
+    const colorItem = React.useMemo(() => {
+        if (colorSymbol) {
+            return colorSymbol;
+        }
+
+        if (color) {
+            return <div className={b('content-row-color')} style={{backgroundColor: color}} />;
+        }
+
+        return null;
+    }, [color, colorSymbol]);
 
     return (
         <div className={b('content-row', {active, striped}, className)} style={style}>
-            {color && <div className={b('content-row-color')} style={{backgroundColor: color}} />}
+            {colorItem}
             {label}
             {value && <span className={b('content-row-value')}>{value}</span>}
         </div>
