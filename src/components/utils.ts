@@ -46,6 +46,10 @@ export function getInitialRangeSliderState(args: {
     return {min: minRange, max: maxRange};
 }
 
+const legendSymbolGenerator = lineGenerator<{x: number; y: number}>()
+    .x((d) => d.x)
+    .y((d) => d.y);
+
 export function appendLinePathElement({
     svgRootElement,
     height,
@@ -66,9 +70,6 @@ export function appendLinePathElement({
     color?: string;
 }) {
     const rootELementSelection = select(svgRootElement);
-    const legendSymbolGenerator = lineGenerator<{x: number; y: number}>()
-        .x((d) => d.x)
-        .y((d) => d.y);
 
     const y = height / 2;
     const points = [
