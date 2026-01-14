@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
-import {line as lineGenerator, scaleLinear, select, symbol} from 'd3';
+import {scaleLinear, select, symbol} from 'd3';
 
 import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
 import type {
@@ -18,12 +18,12 @@ import {
     createGradientRect,
     getContinuesColorFn,
     getLabelsSize,
-    getLineDashArray,
     getSymbol,
     getUniqId,
     handleOverflowingText,
 } from '../../utils';
 import {axisBottom} from '../../utils/chart/axis-generators';
+import {appendLinePathElement} from '../utils';
 
 import './styles.scss';
 
@@ -120,10 +120,6 @@ const appendPaginator = (args: {
     paginationLine.attr('transform', transform);
 };
 
-const legendSymbolGenerator = lineGenerator<{x: number; y: number}>()
-    .x((d) => d.x)
-    .y((d) => d.y);
-
 function renderLegendSymbol(args: {
     selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
     legend: PreparedLegend;
@@ -152,26 +148,16 @@ function renderLegendSymbol(args: {
 
         switch (d.symbol.shape) {
             case 'path': {
-                const y = legendLineHeight / 2;
-                const points = [
-                    {x, y},
-                    {x: x + d.symbol.width, y},
-                ];
-
-                element
-                    .append('path')
-                    .attr('d', legendSymbolGenerator(points))
-                    .attr('fill', 'none')
-                    .attr('stroke-width', d.symbol.strokeWidth)
-                    .attr('class', className)
-                    .style('stroke', color);
-
-                if (d.dashStyle) {
-                    element.attr(
-                        'stroke-dasharray',
-                        getLineDashArray(d.dashStyle, d.symbol.strokeWidth),
-                    );
-                }
+                appendLinePathElement({
+                    svgRootElement: element.node(),
+                    x,
+                    height: legendLineHeight,
+                    width: d.symbol.width,
+                    color,
+                    className,
+                    dashStyle: d.dashStyle,
+                    lineWidth: d.symbol.strokeWidth,
+                });
 
                 break;
             }
