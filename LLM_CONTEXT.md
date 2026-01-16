@@ -11,9 +11,12 @@ This document provides essential context for Large Language Models (LLMs) to und
 - **Framework**: React (Functional Components, Hooks)
 - **Language**: TypeScript
 - **Visualization engine**: D3.js
+- **UI Components**: `@gravity-ui/uikit`
+- **Utilities**: `@gravity-ui/date-utils`, `@gravity-ui/i18n`
+- **Icons**: `@gravity-ui/icons`
 - **Styling**: SCSS (using BEM naming convention via `@bem-react/classname`)
 - **Documentation/UI Playground**: Storybook
-- **Testing**: Jest (Unit/Integration), Playwright (E2E/Visual Regression)
+- **Testing**: Jest (Unit/Integration), Playwright (Visual Regression)
 - **Build System**: Gulp, TypeScript
 
 ## Directory Structure
@@ -43,7 +46,9 @@ This document provides essential context for Large Language Models (LLMs) to und
 
 - `npm run start`: Runs Storybook at `http://localhost:7007`.
 - `npm test`: Executes **Jest** unit tests.
-- `npm run playwright`: Runs **Playwright** visual regression tests.
+- `npm run playwright:docker`: Runs **visual regression tests** inside a Docker container (standard for CI/CD consistency).
+- `npm run playwright:docker:update`: Updates visual snapshots using Docker.
+- `npm run playwright:docker:clear-cache`: Clears Playwright/Docker cache (useful if tests fail unexpectedly).
 - `npm run typecheck`: Runs TypeScript compiler for type checking.
 - `npm run lint`: Performs linting for JS/TS and styles.
 - `npm run build`: Compiles the project using Gulp.
