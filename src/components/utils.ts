@@ -82,8 +82,8 @@ export function appendLinePathElement({
         .attr('d', legendSymbolGenerator(points))
         .attr('fill', 'none')
         .attr('stroke-width', lineWidth)
-        .attr('class', className ?? null)
-        .style('stroke', color ?? '');
+        .attr('stroke', color ?? '')
+        .attr('class', className ?? null);
 
     if (dashStyle) {
         pathElement.attr('stroke-dasharray', getLineDashArray(dashStyle, lineWidth));
