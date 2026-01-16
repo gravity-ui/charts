@@ -81,3 +81,28 @@ In this example:
 
 - Hovering over a column will display a tooltip with only the "Monthly Sales" data for that month.
 - Hovering directly over the "Yearly Average" line will not trigger a tooltip.
+
+## Value Formatting
+
+The tooltip displays values from your data series. While these can be of different types (strings, dates, etc.), numeric values are most common. By default, numbers are shown as-is, but you can customize their formatting using the `valueFormat` property, which accepts a [FormatNumberOptions](../api/Utilities/interfaces/FormatNumberOptions.md) object. This is useful for controlling decimal precision, formatting large numbers, percentages, and more.
+
+**Example:** For percentage values, use `type: 'number'` with `format: 'percent'`.The formatter automatically multiplies the value by 100 and adds the % symbol. Use precision to control the number of decimal places.
+
+```javascript
+series: {
+  data: [
+    {
+      type: 'line',
+      data: [{x: 1, y: 0.156}, {x: 2, y: 0.234}, {x: 3, y: 0.389}], // Values as decimal fractions
+      name: 'Conversion Rate',
+    },
+  ],
+},
+tooltip: {
+  valueFormat: {
+    type: 'number',
+    format: 'percent',
+    precision: 1, // Will display: 15.6%, 23.4%, 38.9%
+  },
+}
+```
