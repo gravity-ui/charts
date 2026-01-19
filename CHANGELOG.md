@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/gravity-ui/charts/compare/v1.30.1...v1.31.0) (2026-01-19)
+
+
+### Features
+
+* add plot band/line label qa ([#365](https://github.com/gravity-ui/charts/issues/365)) ([3d682c2](https://github.com/gravity-ui/charts/commit/3d682c2866880c71ddee253d0fa9ec39848cd440))
+
 ## [1.30.1](https://github.com/gravity-ui/charts/compare/v1.30.0...v1.30.1) (2026-01-14)
 
 
