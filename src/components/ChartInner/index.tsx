@@ -273,9 +273,7 @@ export const ChartInner = (props: ChartInnerProps) => {
 
     React.useEffect(() => {
         if (isChartReady) {
-            requestAnimationFrame(() => {
-                onReady?.({dimensions: {width, height}});
-            });
+            onReady?.({dimensions: {width, height}});
         }
     }, [height, isChartReady, onReady, width]);
 
