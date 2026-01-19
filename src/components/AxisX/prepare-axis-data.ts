@@ -364,6 +364,7 @@ export async function prepareXAxisData({
                           x: plotBand.label.padding,
                           y: plotBand.label.padding + (labelSize?.width ?? 0),
                           rotate: -90,
+                          qa: plotBand.label.qa,
                       }
                     : null,
             });
@@ -394,6 +395,7 @@ export async function prepareXAxisData({
                     x: plotLineValue - plotLine.label.padding - size.height,
                     y: plotLine.label.padding + size.width,
                     rotate: -90,
+                    qa: plotLine.label.qa,
                 };
             }
 
