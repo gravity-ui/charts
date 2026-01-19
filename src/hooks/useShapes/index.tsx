@@ -125,9 +125,12 @@ export const useShapes = (args: Args) => {
     const [shapesElemensData, setShapesElemensData] = React.useState<ShapeData[]>([]);
 
     const countedRef = React.useRef(0);
+    const isReadyRef = React.useRef(false);
 
     React.useEffect(() => {
         countedRef.current++;
+        isReadyRef.current = false;
+
         (async () => {
             const currentRun = countedRef.current;
 
@@ -426,6 +429,10 @@ export const useShapes = (args: Args) => {
             if (countedRef.current === currentRun) {
                 setShapesElements(shapes);
                 setShapesElemensData(shapesData);
+
+                if (shapes.length > 0) {
+                    isReadyRef.current = true;
+                }
             }
         })();
     }, [
@@ -446,5 +453,5 @@ export const useShapes = (args: Args) => {
         yScale,
     ]);
 
-    return {shapes: shapesElemens, shapesData: shapesElemensData};
+    return {shapes: shapesElemens, shapesData: shapesElemensData, ready: isReadyRef.current};
 };

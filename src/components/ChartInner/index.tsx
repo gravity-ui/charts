@@ -36,7 +36,7 @@ const b = block('chart');
 const DEBOUNCED_VALUE_DELAY = 10;
 
 export const ChartInner = (props: ChartInnerProps) => {
-    const {width, height, data} = props;
+    const {width, height, data, onReady} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const resetZoomButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
@@ -105,6 +105,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         yAxis,
         yScale,
+        ready: isChartReady,
     } = useChartInnerProps({
         ...props,
         clipPathId,
@@ -269,6 +270,14 @@ export const ChartInner = (props: ChartInnerProps) => {
         updateRangeSliderState,
         xScale,
     ]);
+
+    React.useEffect(() => {
+        if (isChartReady) {
+            requestAnimationFrame(() => {
+                onReady?.({dimensions: {width, height}});
+            });
+        }
+    }, [height, isChartReady, onReady, width]);
 
     const chartContent = (
         <React.Fragment>

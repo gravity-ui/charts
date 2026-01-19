@@ -45,7 +45,7 @@ export const ChartStory: StoryFn<ChartStoryProps> = ({data, style, onRender}: Ch
 
     return (
         <div style={styles}>
-            <Chart key="chart" data={data} onResize={handleResize} />
+            <Chart key="chart" data={data} onReady={handleResize} />
         </div>
     );
 };

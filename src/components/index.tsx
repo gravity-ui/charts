@@ -28,10 +28,11 @@ export interface ChartProps {
     data: ChartData;
     lang?: string;
     onResize?: ChartOnResize;
+    onReady?: ChartOnResize;
 }
 
 export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props, forwardedRef) {
-    const {data, lang, onResize} = props;
+    const {data, lang, onResize, onReady} = props;
     const validatedData = React.useRef<ChartData>();
     const ref = React.useRef<HTMLDivElement>(null);
     const debounced = React.useRef<DebouncedFunc<() => void> | undefined>();
@@ -105,7 +106,12 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
             }}
         >
             {dimensions?.height && dimensions?.width && (
-                <ChartInner height={dimensions?.height} width={dimensions?.width} data={data} />
+                <ChartInner
+                    height={dimensions?.height}
+                    width={dimensions?.width}
+                    data={data}
+                    onReady={onReady}
+                />
             )}
         </div>
     );
