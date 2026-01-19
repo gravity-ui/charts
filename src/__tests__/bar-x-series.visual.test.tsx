@@ -297,4 +297,60 @@ test.describe('Bar-x series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Stacking positive and negative values', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Positive 1',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Positive 2',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Negative 1',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: -5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Negative 2',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: -5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
