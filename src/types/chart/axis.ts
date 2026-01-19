@@ -205,6 +205,9 @@ export interface AxisPlot {
          * @default 5
          */
         padding?: number;
+        /** Can be used for the UI automated test.
+         * It is assigned as a data-qa attribute to an element. */
+        qa?: string;
     };
 }
 

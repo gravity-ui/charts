@@ -176,6 +176,7 @@ export const AxisY = (props: Props) => {
                             .style('font-size', label.style.fontSize)
                             .style('font-weight', label.style.fontWeight ?? '')
                             .style('dominant-baseline', 'text-before-edge')
+                            .attr('data-qa', label.qa ?? null)
                             .attr('x', label.x)
                             .attr('y', label.y);
                     }
@@ -231,6 +232,7 @@ export const AxisY = (props: Props) => {
                             .style('font-size', label.style.fontSize)
                             .style('font-weight', label.style.fontWeight ?? '')
                             .style('dominant-baseline', 'text-before-edge')
+                            .attr('data-qa', label.qa ?? null)
                             .attr('x', label.x)
                             .attr('y', label.y);
                     }

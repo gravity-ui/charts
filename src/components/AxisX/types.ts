@@ -45,6 +45,7 @@ export type AxisPlotLineLabel = {
     style: BaseTextStyle;
     x: number;
     y: number;
+    qa?: string;
 };
 
 export type AxisPlotLineData = {

@@ -173,7 +173,8 @@ export const AxisX = (props: Props) => {
                             .style(
                                 'transform',
                                 `translate(${label.x}px, ${label.y}px) rotate(${label.rotate}deg)`,
-                            );
+                            )
+                            .attr('data-qa', label.qa ?? null);
                     }
                 });
             };
@@ -231,7 +232,8 @@ export const AxisX = (props: Props) => {
                             .style(
                                 'transform',
                                 `translate(${label.x}px, ${label.y}px) rotate(${label.rotate}deg)`,
-                            );
+                            )
+                            .attr('data-qa', label.qa ?? null);
                     }
                 });
             };

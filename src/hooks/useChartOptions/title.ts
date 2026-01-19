@@ -23,7 +23,7 @@ export const getPreparedTitle = ({
         ? getHorizontalSvgTextHeight({text: titleText, style: titleStyle}) + TITLE_PADDINGS
         : 0;
     const preparedTitle: PreparedTitle | undefined = titleText
-        ? {text: titleText, style: titleStyle, height: titleHeight}
+        ? {text: titleText, style: titleStyle, height: titleHeight, qa: title?.qa}
         : undefined;
 
     return preparedTitle;

@@ -325,6 +325,7 @@ export async function prepareYAxisData({
                       style: plotBand.label.style,
                       x: plotBand.label.padding,
                       y: plotBand.label.padding,
+                      qa: plotBand.label.qa,
                   }
                 : null,
         });
@@ -354,6 +355,7 @@ export async function prepareYAxisData({
                 style: plotLine.label.style,
                 x: plotLine.label.padding,
                 y: Math.max(0, plotLineValue - size.height - plotLine.label.padding),
+                qa: plotLine.label.qa,
             };
         }
 

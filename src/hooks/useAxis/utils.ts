@@ -10,5 +10,6 @@ export function prepareAxisPlotLabel(d: AxisPlot) {
             ...d.label?.style,
         },
         padding: d.label?.padding ?? 5,
+        qa: d.label?.qa,
     };
 }

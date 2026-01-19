@@ -27,6 +27,7 @@ export type PreparedAxisPlotBand = Required<AxisPlotBand> & {
         text: string;
         style: BaseTextStyle;
         padding: number;
+        qa?: string;
     };
 };
 type PreparedAxisCrosshair = Required<AxisCrosshair>;
@@ -42,6 +43,7 @@ export type PreparedAxisPlotLine = {
         text: string;
         style: BaseTextStyle;
         padding: number;
+        qa?: string;
     };
 };
 
