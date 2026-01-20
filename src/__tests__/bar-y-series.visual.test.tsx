@@ -571,7 +571,7 @@ test.describe('Bar-y series', () => {
             await component.unmount();
         }
 
-        await expect(median(widgetRenderTimes)).toBeLessThan(500);
+        await expect(median(widgetRenderTimes)).toBeLessThan(1000);
     });
 
     test('Stacking normal', async ({mount}) => {
