@@ -6,6 +6,7 @@ import {
     DASH_STYLE,
     DEFAULT_DATALABELS_STYLE,
     LineCap,
+    LineJoin,
     seriesRangeSliderOptionsDefaults,
 } from '../../constants';
 import type {DashStyle} from '../../constants';
@@ -50,6 +51,17 @@ function prepareLinecap(
     const lineCapFromSeriesOptions = get(seriesOptions, 'line.linecap', defaultLineCap);
 
     return get(series, 'linecap', lineCapFromSeriesOptions);
+}
+
+function prepareLinejoin(
+    dashStyle: DashStyle,
+    series: LineSeries,
+    seriesOptions?: ChartSeriesOptions,
+) {
+    const defaultLinejoin = dashStyle === DASH_STYLE.Solid ? LineJoin.Round : LineJoin.None;
+    const linejoinFromSeriesOptions = seriesOptions?.line?.linejoin ?? defaultLinejoin;
+
+    return (series?.linejoin ?? linejoinFromSeriesOptions) as LineJoin;
 }
 
 function prepareLineLegendSymbol(
@@ -142,6 +154,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             marker: prepareMarker(series, seriesOptions),
             dashStyle: dashStyle,
             linecap: prepareLinecap(dashStyle, series, seriesOptions) as LineCap,
+            linejoin: prepareLinejoin(dashStyle, series, seriesOptions),
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),

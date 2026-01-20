@@ -61,7 +61,7 @@ export const LineSeriesShapes = (args: Args) => {
             .attr('fill', 'none')
             .attr('stroke', (d) => d.color)
             .attr('stroke-width', (d) => d.lineWidth)
-            .attr('stroke-linejoin', (d) => d.linecap)
+            .attr('stroke-linejoin', (d) => d.linejoin)
             .attr('stroke-linecap', (d) => d.linecap)
             .attr('stroke-dasharray', (d) => getLineDashArray(d.dashStyle, d.lineWidth))
             .attr('opacity', (d) => d.opacity)
