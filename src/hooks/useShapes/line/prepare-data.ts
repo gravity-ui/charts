@@ -69,7 +69,7 @@ export const prepareLineData = async (args: {
 
         const htmlElements: HtmlItem[] = [];
         const labels: LabelData[] = [];
-        if (s.dataLabels.enabled) {
+        if (s.dataLabels.enabled && !isRangeSlider) {
             if (s.dataLabels.html) {
                 const list = await Promise.all(
                     points.reduce<Promise<HtmlItem>[]>((result, p) => {
