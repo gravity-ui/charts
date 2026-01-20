@@ -233,22 +233,19 @@ export interface ChartSeriesOptions {
         };
         /** Options for the point markers of line series */
         marker?: PointMarkerOptions;
-
         /** Options for line style
          *
          * @default 'Solid'
          * */
         dashStyle?: DashStyle;
-
         /** Options for line cap style
          *
          * @default 'round' when dashStyle is not 'solid', 'none' when dashStyle is not 'solid'
          * */
         linecap?: `${LineCap}`;
-
-        /** Options for line join style
+        /** Defines the shape to be used at the corners of the line
          *
-         * @default 'round' when dashStyle is not 'solid', 'none' when dashStyle is not 'solid'
+         * @default 'round' when dashStyle is not 'solid', 'unset' when dashStyle is not 'solid'
          * */
         linejoin?: `${LineJoin}`;
     };
