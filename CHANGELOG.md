@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.32.0](https://github.com/gravity-ui/charts/compare/v1.31.0...v1.32.0) (2026-01-20)
+
+
+### Features
+
+* add linejoin setting for line series ([#372](https://github.com/gravity-ui/charts/issues/372)) ([f6c591a](https://github.com/gravity-ui/charts/commit/f6c591a4da7218afdcad507c56e15c8fb835dcd2))
+* add onReady chart prop ([#370](https://github.com/gravity-ui/charts/issues/370)) ([2a797ed](https://github.com/gravity-ui/charts/commit/2a797ed97d5ca80a310725598bb23feb79e64d3b))
+
+
+### Bug Fixes
+
+* fix bar-x chart with stacking positive and negative values ([#368](https://github.com/gravity-ui/charts/issues/368)) ([ab80386](https://github.com/gravity-ui/charts/commit/ab803865aac0c12c2cc5576e62f10d34790df568))
+* hide data labels for rangeSlider ([#373](https://github.com/gravity-ui/charts/issues/373)) ([ea5b41f](https://github.com/gravity-ui/charts/commit/ea5b41fdcf96f9d560320fa13ad912bf3ac97d46))
+
 ## [1.31.0](https://github.com/gravity-ui/charts/compare/v1.30.1...v1.31.0) (2026-01-19)
 
 
