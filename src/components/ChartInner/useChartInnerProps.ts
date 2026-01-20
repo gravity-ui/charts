@@ -192,11 +192,7 @@ export function useChartInnerProps(props: Props) {
         [boundsHeight, boundsWidth],
     );
 
-    const {
-        shapes,
-        shapesData,
-        ready: isShapesReady,
-    } = useShapes({
+    const {shapes, shapesData} = useShapes({
         boundsWidth,
         boundsHeight,
         clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
@@ -283,6 +279,5 @@ export function useChartInnerProps(props: Props) {
         xScale,
         yAxis,
         yScale,
-        ready: isShapesReady,
     };
 }
