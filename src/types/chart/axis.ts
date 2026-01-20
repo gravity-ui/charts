@@ -171,6 +171,31 @@ export interface ChartAxis {
      * the "reverse" value is needed to use the reverse order without sorting
      */
     order?: 'sortAsc' | 'sortDesc' | 'reverse';
+    /**
+     * Whether to force the axis to start on a tick.
+     *
+     * When enabled, the axis minimum is rounded to a "nice" value (e.g., round numbers)
+     * for better readability. This can create a visual gap at the beginning of the chart
+     * if the data minimum doesn't align with the tick.
+     *
+     * Use `startOnTick: false` to make the chart start exactly at the data minimum,
+     * preventing gaps at the chart start.
+     *
+     * @default true
+     */
+    startOnTick?: boolean;
+    /**
+     * Whether to force the axis to end on a tick.
+     *
+     * When enabled, the axis maximum is rounded to a "nice" value (e.g., round numbers)
+     * for better readability. This can create extra space at the end of the chart
+     * if the data maximum doesn't align with the tick.
+     *
+     * Use `endOnTick: false` to make the chart end closer to the data maximum.
+     *
+     * @default true
+     */
+    endOnTick?: boolean;
 }
 
 export interface ChartXAxis extends ChartAxis {

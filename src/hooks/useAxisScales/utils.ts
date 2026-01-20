@@ -75,3 +75,18 @@ export function getXMaxDomainResult(args: {
 
     return xMaxDomainResult;
 }
+
+type TickConfig = {startOnTick: boolean; endOnTick: boolean};
+
+/**
+ * Extracts tick configuration from axis options.
+ *
+ * @param startOnTick - Whether to force the axis to start on a tick (default: true)
+ * @param endOnTick - Whether to force the axis to end on a tick (default: true)
+ */
+export function getTickConfig(startOnTick?: boolean, endOnTick?: boolean): TickConfig {
+    return {
+        startOnTick: startOnTick ?? true,
+        endOnTick: endOnTick ?? true,
+    };
+}
