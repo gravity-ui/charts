@@ -153,6 +153,7 @@ export const useShapes = (args: Args) => {
                                     yScale,
                                     boundsHeight,
                                     split,
+                                    isRangeSlider,
                                 });
                                 shapes.push(
                                     <BarXSeriesShapes
@@ -255,6 +256,7 @@ export const useShapes = (args: Args) => {
                                     boundsHeight,
                                     split,
                                     isOutsideBounds,
+                                    isRangeSlider,
                                 });
                                 shapes.push(
                                     <AreaSeriesShapes

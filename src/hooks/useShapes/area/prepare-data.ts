@@ -115,6 +115,7 @@ export const prepareAreaData = async (args: {
     boundsHeight: number;
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
+    isRangeSlider?: boolean;
 }): Promise<PreparedAreaData[]> => {
     const {
         series,
@@ -125,6 +126,7 @@ export const prepareAreaData = async (args: {
         boundsHeight: plotHeight,
         split,
         isOutsideBounds,
+        isRangeSlider,
     } = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
@@ -217,7 +219,7 @@ export const prepareAreaData = async (args: {
                 const labels: LabelData[] = [];
                 const htmlElements: HtmlItem[] = [];
 
-                if (s.dataLabels.enabled) {
+                if (s.dataLabels.enabled && !isRangeSlider) {
                     const labelsData = await prepareDataLabels({series: s, points, xMax, yAxisTop});
                     labels.push(...labelsData.svgLabels);
                     htmlElements.push(...labelsData.htmlLabels);

@@ -75,6 +75,7 @@ export const prepareBarXData = async (args: {
     yScale: (ChartScale | undefined)[];
     boundsHeight: number;
     split: PreparedSplit;
+    isRangeSlider?: boolean;
 }): Promise<PreparedBarXData[]> => {
     const {
         series,
@@ -85,6 +86,7 @@ export const prepareBarXData = async (args: {
         yScale,
         boundsHeight: plotHeight,
         split,
+        isRangeSlider,
     } = args;
     const stackGap: number = seriesOptions['bar-x'].stackGap;
     const categories = xAxis?.categories ?? [];
@@ -263,7 +265,7 @@ export const prepareBarXData = async (args: {
     for (let i = 0; i < result.length; i++) {
         const barData = result[i];
 
-        if (barData.series.dataLabels.enabled) {
+        if (barData.series.dataLabels.enabled && !isRangeSlider) {
             const label = await getLabelData(barData);
             if (barData.series.dataLabels.html && label) {
                 barData.htmlElements.push({
