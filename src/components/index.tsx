@@ -69,8 +69,8 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
 
     React.useEffect(() => {
         // dimensions initialize
-        debuncedHandleResize();
-    }, [debuncedHandleResize]);
+        handleResize();
+    }, [handleResize]);
 
     React.useEffect(() => {
         const selection = select(window);
