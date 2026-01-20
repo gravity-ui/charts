@@ -243,7 +243,7 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Linejoin settings', async ({mount}) => {
+    test('Linejoin settings', async ({mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
