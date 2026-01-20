@@ -1,6 +1,6 @@
 {
   "name": "@gravity-ui/charts",
-  "version": "1.31.0",
+  "version": "1.32.0",
   "description": "A flexible JavaScript library for data visualization and chart rendering using React",
   "license": "MIT",
   "main": "dist/cjs/index.js",
