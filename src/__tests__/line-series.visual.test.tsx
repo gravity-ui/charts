@@ -242,4 +242,61 @@ test.describe('Line series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Linejoin settings', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Round',
+                        type: 'line',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 0, y: 5},
+                            {x: 5, y: 5},
+                        ],
+                        lineWidth: 10,
+                        linejoin: 'round',
+                    },
+                    {
+                        name: 'Bevel',
+                        type: 'line',
+                        data: [
+                            {x: 2, y: 2},
+                            {x: 2, y: 7},
+                            {x: 7, y: 7},
+                        ],
+                        lineWidth: 10,
+                        linejoin: 'bevel',
+                    },
+                    {
+                        name: 'Miter',
+                        type: 'line',
+                        data: [
+                            {x: 4, y: 4},
+                            {x: 4, y: 9},
+                            {x: 9, y: 9},
+                        ],
+                        lineWidth: 10,
+                        linejoin: 'miter',
+                    },
+                    {
+                        name: 'Unset',
+                        type: 'line',
+                        data: [
+                            {x: 6, y: 6},
+                            {x: 6, y: 11},
+                            {x: 11, y: 11},
+                        ],
+                        lineWidth: 10,
+                        linejoin: 'unset',
+                    },
+                ],
+            },
+            yAxis: [{min: -1, max: 12, visible: false}],
+            xAxis: {min: -1, max: 12, visible: false},
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

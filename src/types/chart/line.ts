@@ -1,4 +1,4 @@
-import type {DashStyle, LineCap, SERIES_TYPE} from '../../constants';
+import type {DashStyle, LineCap, LineJoin, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
@@ -57,6 +57,8 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
     dashStyle?: DashStyle;
     /** Option for line cap style */
     linecap?: `${LineCap}`;
+    /** Defines the shape to be used at the corners of the line */
+    linejoin?: `${LineJoin}`;
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;

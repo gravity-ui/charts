@@ -2,6 +2,7 @@ import type {
     DashStyle,
     LayoutAlgorithm,
     LineCap,
+    LineJoin,
     SeriesOptionsDefaults,
     SymbolType,
 } from '../../constants';
@@ -280,6 +281,7 @@ export type PreparedLineSeries = {
     };
     dashStyle: DashStyle;
     linecap: LineCap;
+    linejoin: LineJoin;
     opacity: number | null;
     yAxis: number;
 } & BasePreparedSeries &

@@ -20,3 +20,10 @@ export enum LineCap {
     Square = 'square',
     None = 'none',
 }
+
+export enum LineJoin {
+    Round = 'round',
+    Bevel = 'bevel',
+    Miter = 'miter',
+    None = 'unset',
+}
