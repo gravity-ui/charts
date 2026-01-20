@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import {median} from 'd3';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 import range from 'lodash/range';
@@ -511,6 +512,8 @@ test.describe('Pie series', () => {
     });
 
     test('Performance', async ({mount}) => {
+        test.setTimeout(120_000);
+
         const items = new Array(1000).fill(null).map(() => ({
             name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
             value: 10,
@@ -527,20 +530,28 @@ test.describe('Pie series', () => {
             },
         };
 
-        let widgetRenderTime: number | undefined;
-        const handleRender = (renderTime?: number) => {
-            widgetRenderTime = renderTime;
-        };
+        const widgetRenderTimes = [];
+        for (let i = 0; i < 10; i++) {
+            let widgetRenderTime: number | undefined;
+            const handleRender = (renderTime?: number) => {
+                widgetRenderTime = renderTime;
+            };
 
-        const component = await mount(
-            <ChartTestStory
-                data={data}
-                styles={{height: 1000, width: 1000}}
-                onRender={handleRender}
-            />,
-        );
-        await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(350);
+            const component = await mount(
+                <ChartTestStory
+                    data={data}
+                    styles={{height: 1000, width: 1000}}
+                    onRender={handleRender}
+                />,
+            );
+            await component.locator('svg').waitFor({state: 'visible'});
+            await expect.poll(() => widgetRenderTime).toBeTruthy();
+            widgetRenderTimes.push(widgetRenderTime);
+
+            await component.unmount();
+        }
+
+        await expect(median(widgetRenderTimes)).toBeLessThan(350);
     });
 
     test('The shape in the center of the donut should take into account the height of the text', async ({

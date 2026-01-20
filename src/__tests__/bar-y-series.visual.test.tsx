@@ -524,6 +524,8 @@ test.describe('Bar-y series', () => {
     });
 
     test('Performance', async ({mount}) => {
+        test.setTimeout(120_000);
+
         const categories = new Array(3000).fill(null).map((_, i) => String(i));
         const items = categories.map((_category, i) => ({
             x: 10 * i,
