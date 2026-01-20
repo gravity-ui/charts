@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import {median} from 'd3';
 
 import {treemapBasicData} from 'src/__stories__/__data__';
 import type {ChartData, TreemapSeries} from 'src/types';
@@ -181,6 +182,8 @@ test.describe('Treemap series', () => {
     });
 
     test('Performance', async ({mount}) => {
+        test.setTimeout(120_000);
+
         const items = new Array(1000).fill(null).map(() => ({
             name: randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz'),
             value: 10,
@@ -201,19 +204,27 @@ test.describe('Treemap series', () => {
             },
         };
 
-        let widgetRenderTime: number | undefined;
-        const handleRender = (renderTime?: number) => {
-            widgetRenderTime = renderTime;
-        };
+        const widgetRenderTimes = [];
+        for (let i = 0; i < 10; i++) {
+            let widgetRenderTime: number | undefined;
+            const handleRender = (renderTime?: number) => {
+                widgetRenderTime = renderTime;
+            };
 
-        const component = await mount(
-            <ChartTestStory
-                data={data}
-                styles={{height: 1000, width: 1000}}
-                onRender={handleRender}
-            />,
-        );
-        await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(400);
+            const component = await mount(
+                <ChartTestStory
+                    data={data}
+                    styles={{height: 1000, width: 1000}}
+                    onRender={handleRender}
+                />,
+            );
+            await component.locator('svg').waitFor({state: 'visible'});
+            await expect.poll(() => widgetRenderTime).toBeTruthy();
+            widgetRenderTimes.push(widgetRenderTime);
+
+            await component.unmount();
+        }
+
+        await expect(median(widgetRenderTimes)).toBeLessThan(400);
     });
 });

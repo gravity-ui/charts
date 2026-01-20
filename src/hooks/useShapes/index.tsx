@@ -128,6 +128,7 @@ export const useShapes = (args: Args) => {
 
     React.useEffect(() => {
         countedRef.current++;
+
         (async () => {
             const currentRun = countedRef.current;
 

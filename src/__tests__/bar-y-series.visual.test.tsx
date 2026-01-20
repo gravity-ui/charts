@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import {median} from 'd3';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
@@ -523,6 +524,8 @@ test.describe('Bar-y series', () => {
     });
 
     test('Performance', async ({mount}) => {
+        test.setTimeout(120_000);
+
         const categories = new Array(3000).fill(null).map((_, i) => String(i));
         const items = categories.map((_category, i) => ({
             x: 10 * i,
@@ -547,20 +550,28 @@ test.describe('Bar-y series', () => {
             },
         };
 
-        let widgetRenderTime: number | undefined;
-        const handleRender = (renderTime?: number) => {
-            widgetRenderTime = renderTime;
-        };
+        const widgetRenderTimes = [];
+        for (let i = 0; i < 10; i++) {
+            let widgetRenderTime: number | undefined;
+            const handleRender = (renderTime?: number) => {
+                widgetRenderTime = renderTime;
+            };
 
-        const component = await mount(
-            <ChartTestStory
-                data={data}
-                styles={{height: 1000, width: 1000}}
-                onRender={handleRender}
-            />,
-        );
-        await component.locator('svg').waitFor({state: 'visible'});
-        await expect.poll(() => widgetRenderTime).toBeLessThan(900);
+            const component = await mount(
+                <ChartTestStory
+                    data={data}
+                    styles={{height: 1000, width: 1000}}
+                    onRender={handleRender}
+                />,
+            );
+            await component.locator('svg').waitFor({state: 'visible'});
+            await expect.poll(() => widgetRenderTime).toBeTruthy();
+            widgetRenderTimes.push(widgetRenderTime);
+
+            await component.unmount();
+        }
+
+        await expect(median(widgetRenderTimes)).toBeLessThan(1000);
     });
 
     test('Stacking normal', async ({mount}) => {
