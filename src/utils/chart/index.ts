@@ -148,11 +148,9 @@ export function getDefaultMaxXAxisValue(series: UnknownSeries[]) {
 
 export function getDefaultMinXAxisValue(series: UnknownSeries[]) {
     if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_X_AXIS.includes(s.type))) {
-        return series.reduce((minValue, s) => {
-            // https://github.com/gravity-ui/charts/issues/160
-            // @ts-expect-error
-            const minXValue = s.data.reduce((res, d) => Math.min(res, get(d, 'x', 0)), 0);
-            return Math.min(minValue, minXValue);
+        const domainData = getDomainDataXBySeries(series) as number[];
+        return domainData.reduce((minValue, d) => {
+            return Math.min(minValue, d);
         }, 0);
     }
 

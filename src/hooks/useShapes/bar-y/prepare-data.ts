@@ -42,7 +42,6 @@ export async function prepareBarYData(args: {
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
-    const [baseRangeValue] = xLinearScale.range();
 
     if (!yLinearScale) {
         return {
@@ -82,7 +81,8 @@ export async function prepareBarYData(args: {
         stacks.forEach((measureValues, groupItemIndex) => {
             const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
             const base = baseValue - measureValues[0].series.borderWidth;
-            let stackSum = base;
+            let positiveStack = base;
+            let negativeStack = base;
 
             const stackItems: PreparedBarYData[] = [];
             const sortedData = sortKey
@@ -139,7 +139,9 @@ export async function prepareBarYData(args: {
                 const isLastStackItem = xValueIndex === sortedData.length - 1;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
-                let itemX = (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap;
+                // let itemX = (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap;
+                let itemX = xValue > 0 ? positiveStack : negativeStack - width;
+                itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
                 if (isFirstInStack && xValue > 0) {
@@ -167,7 +169,12 @@ export async function prepareBarYData(args: {
                 };
 
                 stackItems.push(item);
-                stackSum += width;
+
+                if (xValue > 0) {
+                    positiveStack += width;
+                } else {
+                    negativeStack -= width;
+                }
             });
 
             result.push(...stackItems);
