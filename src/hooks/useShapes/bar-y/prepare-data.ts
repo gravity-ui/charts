@@ -140,7 +140,6 @@ export async function prepareBarYData(args: {
                 const isLastStackItem = xValueIndex === sortedData.length - 1;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
-                // let itemX = (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap;
                 let itemX = xValue > baseRangeValue ? positiveStack : negativeStack - width;
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
