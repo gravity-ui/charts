@@ -242,4 +242,41 @@ test.describe('X-axis', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('startOnTick / endOnTick', () => {
+        const baseData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 2, y: 10},
+                            {x: 5, y: 20},
+                            {x: 8, y: 15},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'linear',
+            },
+            chart: {
+                margin: CHART_MARGIN,
+            },
+        };
+
+        test('default (startOnTick=true, endOnTick=true)', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('startOnTick=false, endOnTick=false', async ({mount}) => {
+            const data = cloneDeep(baseData);
+            set(data, 'xAxis.startOnTick', false);
+            set(data, 'xAxis.endOnTick', false);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

@@ -535,4 +535,39 @@ test.describe('Y-axis', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('startOnTick / endOnTick', () => {
+        const baseData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 12},
+                            {x: 2, y: 28},
+                            {x: 3, y: 18},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [{}],
+            chart: {
+                margin: CHART_MARGIN,
+            },
+        };
+
+        test('default (startOnTick=true, endOnTick=true)', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('startOnTick=false, endOnTick=false', async ({mount}) => {
+            const data = cloneDeep(baseData);
+            set(data, 'yAxis[0].startOnTick', false);
+            set(data, 'yAxis[0].endOnTick', false);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
