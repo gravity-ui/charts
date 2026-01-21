@@ -544,9 +544,9 @@ test.describe('Y-axis', () => {
                         type: 'line',
                         name: 'Series 1',
                         data: [
-                            {x: 1, y: 12},
-                            {x: 2, y: 28},
-                            {x: 3, y: 18},
+                            {x: 1, y: 17},
+                            {x: 2, y: 83},
+                            {x: 3, y: 50},
                         ],
                     },
                 ],

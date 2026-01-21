@@ -251,9 +251,9 @@ test.describe('X-axis', () => {
                         type: 'line',
                         name: 'Series 1',
                         data: [
-                            {x: 2, y: 10},
-                            {x: 5, y: 20},
-                            {x: 8, y: 15},
+                            {x: 17, y: 10},
+                            {x: 50, y: 20},
+                            {x: 83, y: 15},
                         ],
                     },
                 ],
