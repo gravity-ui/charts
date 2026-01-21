@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.32.1](https://github.com/gravity-ui/charts/compare/v1.32.0...v1.32.1) (2026-01-21)
+
+
+### Bug Fixes
+
+* fix bar-y chart with stacking positive and negative values ([#374](https://github.com/gravity-ui/charts/issues/374)) ([65ef4eb](https://github.com/gravity-ui/charts/commit/65ef4ebd4cbe235677abc3b536f43f8937b7efe6))
+
 ## [1.32.0](https://github.com/gravity-ui/charts/compare/v1.31.0...v1.32.0) (2026-01-20)
 
 
