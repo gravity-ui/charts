@@ -1,9 +1,10 @@
 import React from 'react';
 
 import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3';
-import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3';
 import get from 'lodash/get';
 
+import {getTickValues} from '../../components/AxisY/utils';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';
 import type {
     PreparedAxis,
@@ -29,17 +30,15 @@ import {
 import type {AxisDirection} from '../../utils';
 import {getBandSize} from '../utils/get-band-size';
 
+import type {ChartScale} from './types';
 import {
     checkIsPointDomain,
+    clusterYAxes,
+    getDomainSyncedToPrimaryTicks,
     getMinMaxPropsOrState,
     getXMaxDomainResult,
     hasOnlyMarkerSeries,
 } from './utils';
-
-type ChartScaleBand = ScaleBand<string>;
-export type ChartScaleLinear = ScaleLinear<number, number>;
-export type ChartScaleTime = ScaleTime<number, number>;
-export type ChartScale = ChartScaleBand | ChartScaleLinear | ChartScaleTime;
 
 type Args = {
     boundsWidth: number;
@@ -48,6 +47,7 @@ type Args = {
     xAxis: PreparedAxis | null;
     yAxis: PreparedAxis[];
     split: PreparedSplit;
+    isRangeSlider?: boolean;
     rangeSliderState?: RangeSliderState;
     zoomState?: Partial<ZoomState>;
 };
@@ -135,10 +135,11 @@ function isSeriesWithYAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
 export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
-    series: (PreparedSeries | ChartSeries)[];
+    series: PreparedSeries[] | ChartSeries[];
+    primaryTickPositions?: number[];
     zoomStateY?: [number, number];
 }) {
-    const {axis, boundsHeight, series, zoomStateY} = args;
+    const {axis, boundsHeight, series, primaryTickPositions, zoomStateY} = args;
     const [yMinPropsOrState, yMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
         maxValues: [zoomStateY?.[1]],
@@ -192,34 +193,47 @@ export function createYScale(args: {
                 }
 
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
-                const scale = scaleFn().domain([yMin, yMax]).range(range);
+                let scale = scaleFn().domain([yMin, yMax]).range(range);
 
-                let offsetMin = 0;
-                // We should ignore padding if we are drawing only one point on the plot.
-                let offsetMax = yMin === yMax ? 0 : boundsHeight * axis.maxPadding;
-                if (isSeriesWithYAxisOffset(series)) {
-                    if (domain.length > 1) {
-                        const bandWidth = getBandSize({
-                            scale: scale as AxisScale<AxisDomain>,
-                            domain: domain as AxisDomain[],
-                        });
+                if (primaryTickPositions) {
+                    const syncedDomain = getDomainSyncedToPrimaryTicks({
+                        primaryTickPositions,
+                        range,
+                        scaleFn,
+                        secondaryDomain: scale.domain(),
+                    });
 
-                        offsetMin += bandWidth / 2;
-                        offsetMax += bandWidth / 2;
+                    scale.domain(syncedDomain);
+                } else {
+                    let offsetMin = 0;
+                    // We should ignore padding if we are drawing only one point on the plot.
+                    let offsetMax = yMin === yMax ? 0 : boundsHeight * axis.maxPadding;
+                    if (isSeriesWithYAxisOffset(series)) {
+                        if (domain.length > 1) {
+                            const bandWidth = getBandSize({
+                                scale: scale as AxisScale<AxisDomain>,
+                                domain: domain as AxisDomain[],
+                            });
+
+                            offsetMin += bandWidth / 2;
+                            offsetMax += bandWidth / 2;
+                        }
                     }
+
+                    const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
+                    const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
+
+                    const domainOffsetMin = isMinSpecified
+                        ? 0
+                        : Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                    const domainOffsetMax = isMaxSpecified
+                        ? 0
+                        : Math.abs(scale.invert(offsetMax) - scale.invert(0));
+
+                    scale = scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
                 }
 
-                const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
-                const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
-
-                const domainOffsetMin = isMinSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                const domainOffsetMax = isMaxSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
-
-                return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+                return scale;
             }
 
             break;
@@ -580,12 +594,77 @@ export function createXScale(args: {
 }
 
 const createScales = (args: Args) => {
-    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
-        args;
+    const {
+        boundsWidth,
+        boundsHeight,
+        isRangeSlider,
+        rangeSliderState,
+        series,
+        split,
+        xAxis,
+        yAxis,
+        zoomState,
+    } = args;
     let visibleSeries = getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
     visibleSeries = visibleSeries.length === 0 ? series : visibleSeries;
+    const axisHeight = getAxisHeight({boundsHeight, split});
+    let index = 0;
+    const yScale = clusterYAxes(yAxis).reduce(
+        (acc, cluster) => {
+            const [primaryAxis, secondaryAxis] = cluster;
+            const mainAxisSeries = series.filter((s) => {
+                const seriesAxisIndex = get(s, 'yAxis', 0);
+                return seriesAxisIndex === index;
+            });
+            const visiblePrimaryAxisSeries = getOnlyVisibleSeries(mainAxisSeries);
+            const primaryAxisScale = createYScale({
+                axis: primaryAxis,
+                boundsHeight: axisHeight,
+                series: visiblePrimaryAxisSeries.length ? visiblePrimaryAxisSeries : mainAxisSeries,
+                zoomStateY: zoomState?.y?.[index],
+            });
+            acc.push(primaryAxisScale);
+            index += 1;
+
+            let primaryTickPositions: number[] | undefined;
+
+            if (primaryAxisScale && secondaryAxis && !isRangeSlider) {
+                primaryTickPositions = getTickValues({
+                    axis: primaryAxis,
+                    scale: primaryAxisScale,
+                    labelLineHeight: primaryAxis.labels.lineHeight,
+                    series: visiblePrimaryAxisSeries.length
+                        ? visiblePrimaryAxisSeries
+                        : mainAxisSeries,
+                }).map((t) => t.y);
+            }
+
+            const secondAxisSeries = series.filter((s) => {
+                const seriesAxisIndex = get(s, 'yAxis', 0);
+                return seriesAxisIndex === index;
+            });
+            const visibleSecondAxisSeries = getOnlyVisibleSeries(secondAxisSeries);
+            const secondaryAxisScale = secondaryAxis
+                ? createYScale({
+                      axis: secondaryAxis,
+                      boundsHeight: axisHeight,
+                      primaryTickPositions,
+                      series: visibleSecondAxisSeries.length
+                          ? visibleSecondAxisSeries
+                          : secondAxisSeries,
+                      zoomStateY: zoomState?.y?.[index],
+                  })
+                : undefined;
+            if (secondaryAxisScale) {
+                acc.push(secondaryAxisScale);
+                index += 1;
+            }
+            return acc;
+        },
+        [] as (ChartScale | undefined)[],
+    );
 
     return {
         xScale: xAxis
@@ -597,21 +676,7 @@ const createScales = (args: Args) => {
                   zoomStateX: zoomState?.x,
               })
             : undefined,
-        yScale: yAxis.map((axis, index) => {
-            const axisSeries = series.filter((s) => {
-                const seriesAxisIndex = get(s, 'yAxis', 0);
-                return seriesAxisIndex === index;
-            });
-            const visibleAxisSeries = getOnlyVisibleSeries(axisSeries);
-            const axisHeight = getAxisHeight({boundsHeight, split});
-            const zoomStateY = zoomState?.y?.[index];
-            return createYScale({
-                axis,
-                boundsHeight: axisHeight,
-                series: visibleAxisSeries.length ? visibleAxisSeries : axisSeries,
-                zoomStateY,
-            });
-        }),
+        yScale,
     };
 };
 
@@ -619,8 +684,17 @@ const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState} =
-        args;
+    const {
+        boundsWidth,
+        boundsHeight,
+        isRangeSlider,
+        rangeSliderState,
+        series,
+        split,
+        xAxis,
+        yAxis,
+        zoomState,
+    } = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: (ChartScale | undefined)[] | undefined;
@@ -630,6 +704,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
             ({xScale, yScale} = createScales({
                 boundsWidth,
                 boundsHeight,
+                isRangeSlider,
                 rangeSliderState,
                 series,
                 split,
@@ -640,5 +715,15 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [boundsWidth, boundsHeight, rangeSliderState, series, split, xAxis, yAxis, zoomState]);
+    }, [
+        boundsWidth,
+        boundsHeight,
+        isRangeSlider,
+        rangeSliderState,
+        series,
+        split,
+        xAxis,
+        yAxis,
+        zoomState,
+    ]);
 };

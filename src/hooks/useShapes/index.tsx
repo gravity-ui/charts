@@ -8,7 +8,7 @@ import type {SeriesType} from '../../constants';
 import {ChartError} from '../../libs';
 import {getOnlyVisibleSeries} from '../../utils';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
 import type {
     PreparedAreaSeries,
     PreparedBarXSeries,

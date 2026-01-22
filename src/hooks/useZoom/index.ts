@@ -3,7 +3,7 @@ import React from 'react';
 import {select} from 'd3';
 
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
 import {useBrush} from '../useBrush';
 import type {BrushArea, UseBrushProps} from '../useBrush/types';
 import type {PreparedZoom} from '../useChartOptions/types';

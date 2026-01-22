@@ -3,7 +3,7 @@ import get from 'lodash/get';
 import type {ScatterSeriesData} from '../../../types';
 import {getDataCategoryValue} from '../../../utils';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedScatterSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 

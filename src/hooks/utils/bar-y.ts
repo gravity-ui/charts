@@ -6,7 +6,7 @@ import type {BarYSeries, BarYSeriesData} from '../../types';
 import {getDataCategoryValue} from '../../utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
 import type {PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '../useSeries/types';
 import {getSeriesStackId} from '../useSeries/utils';
 

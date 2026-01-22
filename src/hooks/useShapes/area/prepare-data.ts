@@ -4,7 +4,7 @@ import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';

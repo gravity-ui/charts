@@ -2,7 +2,7 @@ import type {HtmlItem, LabelData} from '../../../types';
 import {getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
