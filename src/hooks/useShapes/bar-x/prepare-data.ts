@@ -6,7 +6,7 @@ import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../useSeries/types';
 import {getSeriesStackId} from '../../useSeries/utils';
 import type {PreparedSplit} from '../../useSplit/types';

@@ -1,6 +1,7 @@
 export * from './useAxis';
 export * from './useAxis/types';
 export * from './useAxisScales';
+export * from './useAxisScales/types';
 export * from './useBrush';
 export * from './useBrush/types';
 export * from './useChartDimensions';

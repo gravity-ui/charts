@@ -67,6 +67,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
     const {xScale, yScale} = useAxisScales({
         boundsHeight: preparedRangeSlider.height,
         boundsWidth,
+        isRangeSlider: true,
         series: preparedSeries,
         split: EMPTY_PREPARED_SPLIT,
         xAxis: preparedXAxis,

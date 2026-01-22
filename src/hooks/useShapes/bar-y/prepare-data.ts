@@ -12,7 +12,7 @@ import {
 } from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {getBarYLayout, groupBarYDataByYValue} from '../../utils';
 
