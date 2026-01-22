@@ -181,7 +181,7 @@ export interface ChartAxis {
      * Use `startOnTick: false` to make the chart start exactly at the data minimum,
      * preventing gaps at the chart start.
      *
-     * @default true
+     * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     startOnTick?: boolean;
     /**
@@ -193,7 +193,7 @@ export interface ChartAxis {
      *
      * Use `endOnTick: false` to make the chart end closer to the data maximum.
      *
-     * @default true
+     * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     endOnTick?: boolean;
 }

@@ -220,7 +220,28 @@ export function createYScale(args: {
                     ? 0
                     : Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
-                return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+                const nicedDomain = scale.copy().nice(Math.max(10, domain.length)).domain();
+
+                scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+
+                const tickConfig = getTickConfig(
+                    get(axis, 'startOnTick') ?? false,
+                    get(axis, 'endOnTick') ?? false,
+                );
+                const hasOffset = isSeriesWithYAxisOffset(series);
+                if (!zoomStateY && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        tickConfig.startOnTick
+                            ? Math.min(nicedDomain[0], domainWithOffset[0])
+                            : domainWithOffset[0],
+                        tickConfig.endOnTick
+                            ? Math.max(nicedDomain[1], domainWithOffset[1])
+                            : domainWithOffset[1],
+                    ]);
+                }
+
+                return scale;
             }
 
             break;
