@@ -220,10 +220,12 @@ export function createYScale(args: {
                     ? 0
                     : Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                 const nicedDomain = scale.copy().nice(Math.max(10, domain.length)).domain();
 
                 scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
 
+                // Change default values for backward compatibility
                 const tickConfig = getTickConfig(
                     get(axis, 'startOnTick') ?? false,
                     get(axis, 'endOnTick') ?? false,
