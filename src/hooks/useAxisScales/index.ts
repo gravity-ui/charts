@@ -517,6 +517,7 @@ export function createXScale(args: {
 
                 const startOnTick = get(axis, 'startOnTick', true);
                 const endOnTick = get(axis, 'endOnTick', true);
+
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
                     scale.domain([
