@@ -1,11 +1,11 @@
-import type {scaleLinear} from 'd3';
-import {ticks} from 'd3';
 import get from 'lodash/get';
 
 import {SERIES_TYPE} from '../../constants';
 import type {SeriesType} from '../../constants';
 import type {PreparedAxis, PreparedSeries, PreparedYAxis} from '../../hooks';
 import type {ChartAxis, ChartSeries} from '../../types';
+import {getDataCategoryValue, isSeriesWithCategoryValues} from '../../utils';
+import type {AxisDirection} from '../../utils';
 
 const MARKER_SERIES_TYPES: SeriesType[] = [SERIES_TYPE.Area, SERIES_TYPE.Line, SERIES_TYPE.Scatter];
 
@@ -55,29 +55,6 @@ export function hasOnlyMarkerSeries(series: (PreparedSeries | ChartSeries)[]): b
     return series.every((s) => MARKER_SERIES_TYPES.includes(s.type));
 }
 
-export function getXMaxDomainResult(args: {
-    xMaxDomain: number;
-    xMaxProps?: number;
-    xMaxRangeSlider?: number;
-    xMaxZoom?: number;
-}) {
-    const {xMaxDomain, xMaxProps, xMaxRangeSlider, xMaxZoom} = args;
-    let xMaxDomainResult = xMaxDomain;
-
-    // When xMaxRangeSlider is provided, we use it directly without considering xMaxDomain.
-    // This is intentional: the range slider needs to display the chart's maxPadding area,
-    // which would be clipped if we constrained it to xMaxDomain.
-    if (typeof xMaxRangeSlider === 'number') {
-        xMaxDomainResult = xMaxRangeSlider;
-    } else if (typeof xMaxZoom === 'number' && xMaxZoom < xMaxDomain) {
-        xMaxDomainResult = xMaxZoom;
-    } else if (typeof xMaxProps === 'number' && xMaxProps < xMaxDomain) {
-        xMaxDomainResult = xMaxProps;
-    }
-
-    return xMaxDomainResult;
-}
-
 export function clusterYAxes(yAxes: PreparedYAxis[]): [PreparedYAxis, PreparedYAxis?][] {
     if (yAxes.length <= 1) {
         return yAxes.map((axis) => [axis]);
@@ -108,71 +85,44 @@ export function clusterYAxes(yAxes: PreparedYAxis[]): [PreparedYAxis, PreparedYA
     });
 }
 
-export function getDomainSyncedToPrimaryTicks(args: {
-    primaryTickPositions: number[];
-    range: [number, number];
-    // Don't type this as `typeof scaleLinear | typeof scaleLog`.
-    // In this helper we don't care about the linear vs log differences — we only need
-    // the common API (`domain`/`range`/`invert`). To avoid the "union of overloaded functions
-    // is not callable" issue, we keep the factory type concrete (`typeof scaleLinear`) here.
-    // See: https://github.com/microsoft/TypeScript/issues/57400
-    scaleFn: typeof scaleLinear;
-    secondaryDomain: number[];
-}): [number, number] {
-    const {primaryTickPositions, range, scaleFn, secondaryDomain} = args;
-    const [dMin, dMax] = secondaryDomain;
-    const primaryPosBottom = primaryTickPositions[0];
-    const primaryPosTop = primaryTickPositions[primaryTickPositions.length - 1];
-    let secondaryTicks = ticks(dMin, dMax, primaryTickPositions.length);
-    let originalStep = 0;
+export function validateArrayData(data: unknown[]) {
+    let hasNumberAndNullValues: boolean | undefined;
+    let hasOnlyNullValues: boolean | undefined;
 
-    if (typeof secondaryTicks[0] === 'number' && typeof secondaryTicks[1] === 'number') {
-        originalStep = secondaryTicks[1] - secondaryTicks[0];
-    }
+    for (const d of data) {
+        const isNumber = typeof d === 'number';
+        const isNull = d === null;
+        hasNumberAndNullValues =
+            typeof hasNumberAndNullValues === 'undefined'
+                ? isNumber || isNull
+                : hasNumberAndNullValues && (isNumber || isNull);
+        hasOnlyNullValues =
+            typeof hasOnlyNullValues === 'undefined' ? isNull : hasOnlyNullValues && isNull;
 
-    let i = 1;
-
-    while (secondaryTicks.length > primaryTickPositions.length) {
-        secondaryTicks = ticks(dMin, dMax, primaryTickPositions.length - i);
-        i += 1;
-    }
-
-    let step = originalStep;
-
-    if (typeof secondaryTicks[0] === 'number' && typeof secondaryTicks[1] === 'number') {
-        step = secondaryTicks[1] - secondaryTicks[0];
-    }
-
-    let ticksCountDiff = primaryTickPositions.length - secondaryTicks.length;
-    let deltaMin = Math.abs(dMin - secondaryTicks[0]);
-    let deltaMax = Math.abs(dMax - secondaryTicks[secondaryTicks.length - 1]);
-
-    while (ticksCountDiff > 0) {
-        if (deltaMin > deltaMax) {
-            secondaryTicks.unshift(secondaryTicks[0] - step);
-            deltaMin -= step;
-        } else {
-            secondaryTicks.push(secondaryTicks[secondaryTicks.length - 1] + step);
-            deltaMax -= step;
+        if (!hasNumberAndNullValues) {
+            break;
         }
-
-        ticksCountDiff -= 1;
     }
 
-    let tmpScale = scaleFn()
-        .domain([secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]])
-        .range([primaryPosBottom, primaryPosTop]);
-    let dNewMin = tmpScale.invert(range[0]);
-    let dNewMax = tmpScale.invert(range[1]);
+    return {hasNumberAndNullValues, hasOnlyNullValues};
+}
 
-    if (dNewMin < dMin) {
-        secondaryTicks = secondaryTicks.map((st) => st + step);
-        tmpScale = scaleFn()
-            .domain([secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]])
-            .range([primaryPosBottom, primaryPosTop]);
-        dNewMin = tmpScale.invert(range[0]);
-        dNewMax = tmpScale.invert(range[1]);
-    }
+export function filterCategoriesByVisibleSeries(args: {
+    axisDirection: AxisDirection;
+    categories: string[];
+    series: (PreparedSeries | ChartSeries)[];
+}) {
+    const {axisDirection, categories, series} = args;
 
-    return [dNewMin, dNewMax];
+    const visibleCategories = new Set();
+    series.forEach((s) => {
+        if (isSeriesWithCategoryValues(s)) {
+            s.data.forEach((d) => {
+                visibleCategories.add(getDataCategoryValue({axisDirection, categories, data: d}));
+            });
+        }
+    });
+    const filteredCategories = categories.filter((c) => visibleCategories.has(c));
+
+    return filteredCategories.length > 0 ? filteredCategories : categories;
 }
