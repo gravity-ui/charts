@@ -8,7 +8,7 @@ import type {SeriesType} from '../../constants';
 import {ChartError} from '../../libs';
 import {getOnlyVisibleSeries} from '../../utils';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
 import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
@@ -128,6 +128,7 @@ export const useShapes = (args: Args) => {
 
     React.useEffect(() => {
         countedRef.current++;
+
         (async () => {
             const currentRun = countedRef.current;
 
@@ -152,6 +153,7 @@ export const useShapes = (args: Args) => {
                                     yScale,
                                     boundsHeight,
                                     split,
+                                    isRangeSlider,
                                 });
                                 shapes.push(
                                     <BarXSeriesShapes
@@ -254,6 +256,7 @@ export const useShapes = (args: Args) => {
                                     boundsHeight,
                                     split,
                                     isOutsideBounds,
+                                    isRangeSlider,
                                 });
                                 shapes.push(
                                     <AreaSeriesShapes

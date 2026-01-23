@@ -12,7 +12,7 @@ import {
 } from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {getBarYLayout, groupBarYDataByYValue} from '../../utils';
 
@@ -82,7 +82,8 @@ export async function prepareBarYData(args: {
         stacks.forEach((measureValues, groupItemIndex) => {
             const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
             const base = baseValue - measureValues[0].series.borderWidth;
-            let stackSum = base;
+            let positiveStack = base;
+            let negativeStack = base;
 
             const stackItems: PreparedBarYData[] = [];
             const sortedData = sortKey
@@ -139,7 +140,8 @@ export async function prepareBarYData(args: {
                 const isLastStackItem = xValueIndex === sortedData.length - 1;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
-                let itemX = (xValue > baseRangeValue ? stackSum : stackSum - width) + itemStackGap;
+                let itemX = xValue > baseRangeValue ? positiveStack : negativeStack - width;
+                itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
                 if (isFirstInStack && xValue > 0) {
@@ -167,7 +169,12 @@ export async function prepareBarYData(args: {
                 };
 
                 stackItems.push(item);
-                stackSum += width;
+
+                if (xValue > baseRangeValue) {
+                    positiveStack += width;
+                } else {
+                    negativeStack -= width;
+                }
             });
 
             result.push(...stackItems);

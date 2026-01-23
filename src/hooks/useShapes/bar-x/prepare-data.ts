@@ -6,7 +6,7 @@ import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../useSeries/types';
 import {getSeriesStackId} from '../../useSeries/utils';
 import type {PreparedSplit} from '../../useSplit/types';
@@ -75,6 +75,7 @@ export const prepareBarXData = async (args: {
     yScale: (ChartScale | undefined)[];
     boundsHeight: number;
     split: PreparedSplit;
+    isRangeSlider?: boolean;
 }): Promise<PreparedBarXData[]> => {
     const {
         series,
@@ -85,6 +86,7 @@ export const prepareBarXData = async (args: {
         yScale,
         boundsHeight: plotHeight,
         split,
+        isRangeSlider,
     } = args;
     const stackGap: number = seriesOptions['bar-x'].stackGap;
     const categories = xAxis?.categories ?? [];
@@ -163,7 +165,8 @@ export const prepareBarXData = async (args: {
 
             for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
                 const yValues = stacks[groupItemIndex];
-                let stackHeight = 0;
+                let positiveStackHeight = 0;
+                let negativeStackHeight = 0;
                 const stackItems: PreparedBarXData[] = [];
                 const sortedData = sortKey
                     ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
@@ -188,6 +191,7 @@ export const prepareBarXData = async (args: {
                         const xBandScale = xScale as ScaleBand<string>;
                         const xBandScaleDomain = xBandScale.domain();
 
+                        // eslint-disable-next-line max-depth
                         if (xBandScaleDomain.indexOf(xValue as string) === -1) {
                             continue;
                         }
@@ -220,7 +224,10 @@ export const prepareBarXData = async (args: {
 
                     const barData: PreparedBarXData = {
                         x,
-                        y: yAxisTop + (yDataValue > 0 ? y - stackHeight : base),
+                        y:
+                            yDataValue > 0
+                                ? yAxisTop + y - positiveStackHeight
+                                : yAxisTop + base + negativeStackHeight,
                         width: rectWidth,
                         height: shapeHeight,
                         opacity: get(yValue.data, 'opacity', null),
@@ -232,12 +239,16 @@ export const prepareBarXData = async (args: {
 
                     stackItems.push(barData);
 
-                    stackHeight += height;
+                    if (yDataValue > 0) {
+                        positiveStackHeight += height;
+                    } else {
+                        negativeStackHeight += height;
+                    }
                 }
 
                 if (series.some((s) => s.stacking === 'percent')) {
                     let acc = 0;
-                    const ratio = plotHeight / (stackHeight - stackItems.length);
+                    const ratio = plotHeight / (positiveStackHeight - stackItems.length);
                     stackItems.forEach((item) => {
                         item.height = item.height * ratio;
                         item.y = plotHeight - item.height - acc;
@@ -254,7 +265,7 @@ export const prepareBarXData = async (args: {
     for (let i = 0; i < result.length; i++) {
         const barData = result[i];
 
-        if (barData.series.dataLabels.enabled) {
+        if (barData.series.dataLabels.enabled && !isRangeSlider) {
             const label = await getLabelData(barData);
             if (barData.series.dataLabels.html && label) {
                 barData.htmlElements.push({

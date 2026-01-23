@@ -2,7 +2,7 @@ import type {HtmlItem, LabelData} from '../../../types';
 import {getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
@@ -69,7 +69,7 @@ export const prepareLineData = async (args: {
 
         const htmlElements: HtmlItem[] = [];
         const labels: LabelData[] = [];
-        if (s.dataLabels.enabled) {
+        if (s.dataLabels.enabled && !isRangeSlider) {
             if (s.dataLabels.html) {
                 const list = await Promise.all(
                     points.reduce<Promise<HtmlItem>[]>((result, p) => {
@@ -147,6 +147,7 @@ export const prepareLineData = async (args: {
             lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
             dashStyle: s.dashStyle,
             linecap: s.linecap,
+            linejoin: s.linejoin,
             opacity: (isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity,
         };
 

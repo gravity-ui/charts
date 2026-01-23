@@ -1,6 +1,6 @@
 import type React from 'react';
 
-import type {DashStyle, LineCap} from '../../constants';
+import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -233,18 +233,21 @@ export interface ChartSeriesOptions {
         };
         /** Options for the point markers of line series */
         marker?: PointMarkerOptions;
-
         /** Options for line style
          *
          * @default 'Solid'
          * */
         dashStyle?: DashStyle;
-
         /** Options for line cap style
          *
          * @default 'round' when dashStyle is not 'solid', 'none' when dashStyle is not 'solid'
          * */
         linecap?: `${LineCap}`;
+        /** Defines the shape to be used at the corners of the line
+         *
+         * @default 'round' when dashStyle is not 'solid', 'unset' when dashStyle is not 'solid'
+         * */
+        linejoin?: `${LineJoin}`;
     };
     area?: {
         /** Pixel width of the graph line.

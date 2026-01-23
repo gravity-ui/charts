@@ -612,4 +612,57 @@ test.describe('Y-axis', () => {
             });
         });
     });
+
+    test.describe('Dual Y axes', () => {
+        const baseData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1767225600000, y: 80},
+                            {x: 1769904000000, y: 50},
+                            {x: 1772323200000, y: 20},
+                            {x: 1775001600000, y: 120},
+                            {x: 1777593600000, y: 0},
+                        ],
+                        yAxis: 0,
+                    },
+                    {
+                        type: 'line',
+                        name: 'Series 2',
+                        data: [
+                            {x: 1767225600000, y: 0.1},
+                            {x: 1769904000000, y: 0.7},
+                            {x: 1772323200000, y: 0.3},
+                            {x: 1775001600000, y: 0.25},
+                            {x: 1777593600000, y: 0.5},
+                        ],
+                        yAxis: 1,
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'datetime',
+                ticks: {
+                    pixelInterval: 120,
+                },
+            },
+            yAxis: [{}, {}],
+        };
+
+        test('Primary ticks start from bottom', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Primary ticks start with gap from bottom', async ({mount}) => {
+            const data = cloneDeep(baseData);
+            set(data, 'series.data[0].data[4].y', 5);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

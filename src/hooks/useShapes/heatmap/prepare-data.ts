@@ -1,7 +1,7 @@
 import type {AxisDomain, AxisScale, ScaleLinear, ScaleTime} from 'd3';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../../hooks/useAxis/types';
-import type {ChartScale} from '../../../hooks/useAxisScales';
+import type {ChartScale} from '../../../hooks/useAxisScales/types';
 import {getBandSize} from '../../../hooks/utils/get-band-size';
 import type {BaseTextStyle, HtmlItem} from '../../../types';
 import {

@@ -74,7 +74,8 @@ function getDomainDataForStackedSeries(
     const acc: number[] = [];
     const stackedSeries = group(seriesList, getSeriesStackId);
     Array.from(stackedSeries).forEach(([_stackId, seriesStack]) => {
-        const values: Record<string, number> = {};
+        const positiveValues: Record<string, number> = {};
+        const negativeValues: Record<string, number> = {};
 
         seriesStack.forEach((singleSeries) => {
             const data = new Map();
@@ -99,11 +100,17 @@ function getDomainDataForStackedSeries(
             });
 
             Array.from(data).forEach(([key, value]) => {
-                values[key] = (values[key] || 0) + value;
+                if (value >= 0) {
+                    positiveValues[key] = (positiveValues[key] || 0) + value;
+                }
+
+                if (value < 0) {
+                    negativeValues[key] = (negativeValues[key] || 0) + value;
+                }
             });
         });
 
-        acc.push(...Object.values(values));
+        acc.push(...Object.values(negativeValues), ...Object.values(positiveValues));
     });
 
     return acc;
@@ -141,33 +148,9 @@ export function getDefaultMaxXAxisValue(series: UnknownSeries[]) {
 
 export function getDefaultMinXAxisValue(series: UnknownSeries[]) {
     if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_X_AXIS.includes(s.type))) {
-        return series.reduce((minValue, s) => {
-            // https://github.com/gravity-ui/charts/issues/160
-            // @ts-expect-error
-            const minXValue = s.data.reduce((res, d) => Math.min(res, get(d, 'x', 0)), 0);
-            return Math.min(minValue, minXValue);
-        }, 0);
-    }
-
-    return undefined;
-}
-
-export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
-    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
-        if (series.some((s) => s.type === SERIES_TYPE.Waterfall)) {
-            const seriesData = (series as PreparedWaterfallSeries[]).map((s) => s.data).flat();
-            const minSubTotal = seriesData.reduce(
-                (res, d) => Math.min(res, getWaterfallPointSubtotal(d, seriesData) || 0),
-                0,
-            );
-            return Math.min(0, minSubTotal);
-        }
-
-        return series.reduce((minValue, s) => {
-            // https://github.com/gravity-ui/charts/issues/160
-            // @ts-expect-error
-            const minYValue = s.data.reduce((res, d) => Math.min(res, get(d, 'y', 0)), 0);
-            return Math.min(minValue, minYValue);
+        const domainData = getDomainDataXBySeries(series) as number[];
+        return domainData.reduce((minValue, d) => {
+            return Math.min(minValue, d);
         }, 0);
     }
 
@@ -207,6 +190,26 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
 
     return Array.from(new Set(items));
 };
+
+export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
+    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
+        if (series.some((s) => s.type === SERIES_TYPE.Waterfall)) {
+            const seriesData = (series as PreparedWaterfallSeries[]).map((s) => s.data).flat();
+            const minSubTotal = seriesData.reduce(
+                (res, d) => Math.min(res, getWaterfallPointSubtotal(d, seriesData) || 0),
+                0,
+            );
+            return Math.min(0, minSubTotal);
+        }
+
+        const domainData = getDomainDataYBySeries(series) as number[];
+        return domainData.reduce((minValue, d) => {
+            return Math.min(minValue, d);
+        }, 0);
+    }
+
+    return undefined;
+}
 
 // Uses to get all series names array (except `pie` charts)
 export const getSeriesNames = (series: ChartSeries[]) => {

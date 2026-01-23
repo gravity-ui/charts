@@ -1,6 +1,6 @@
 import {isBandScale} from '../../utils';
 import type {PreparedRangeSlider} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
 import type {BrushSelection} from '../useBrush/types';
 import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend} from '../useSeries/types';

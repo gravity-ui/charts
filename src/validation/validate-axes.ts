@@ -75,6 +75,44 @@ function validateLabelsHtmlOptions(args: {axis: ChartAxis}) {
     }
 }
 
+function validateYAxesConsistency(yAxis: ChartYAxis[]) {
+    const axesByPlot: Record<number, ChartYAxis[]> = {};
+    yAxis.forEach((axis) => {
+        const plotIndex = axis.plotIndex || 0;
+        if (!axesByPlot[plotIndex]) {
+            axesByPlot[plotIndex] = [];
+        }
+        axesByPlot[plotIndex].push(axis);
+    });
+
+    Object.values(axesByPlot).forEach((axes) => {
+        const seenPositions = new Set<string>();
+        axes.forEach((axis, index) => {
+            const isFirstPlotAxis = index === 0;
+            const defaultAxisPosition = isFirstPlotAxis ? 'left' : 'right';
+            const position = axis.position || defaultAxisPosition;
+
+            if (seenPositions.has(position)) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_inconsistent-y-axis-configuration'),
+                });
+            }
+            seenPositions.add(position);
+        });
+
+        if (axes.length > 1) {
+            const hasCategoryAxis = axes.some((axis) => axis.type === 'category');
+            if (hasCategoryAxis) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_inconsistent-y-axis-configuration'),
+                });
+            }
+        }
+    });
+}
+
 export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {xAxis, yAxis = []} = args;
 
@@ -92,8 +130,11 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
         }
     }
 
+    validateYAxesConsistency(yAxis);
+
     yAxis.forEach((axis, axisIndex) => {
         validateAxisType({axis, key: 'y'});
+
         if (axis.type === 'category') {
             validateCategories(axis);
             validateDuplicateCategories({

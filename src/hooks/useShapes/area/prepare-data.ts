@@ -4,7 +4,7 @@ import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales';
+import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
 import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
@@ -115,6 +115,7 @@ export const prepareAreaData = async (args: {
     boundsHeight: number;
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
+    isRangeSlider?: boolean;
 }): Promise<PreparedAreaData[]> => {
     const {
         series,
@@ -125,6 +126,7 @@ export const prepareAreaData = async (args: {
         boundsHeight: plotHeight,
         split,
         isOutsideBounds,
+        isRangeSlider,
     } = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
@@ -152,9 +154,11 @@ export const prepareAreaData = async (args: {
 
             const xValues = getXValues(seriesStack, xAxis, xScale);
 
-            const accumulatedYValues = new Map<string, number>();
+            const positiveStackValues = new Map<string, number>();
+            const negativeStackValues = new Map<string, number>();
             xValues.forEach(([key]) => {
-                accumulatedYValues.set(key, 0);
+                positiveStackValues.set(key, 0);
+                negativeStackValues.set(key, 0);
             });
 
             const seriesStackData: PreparedAreaData[] = [];
@@ -190,25 +194,40 @@ export const prepareAreaData = async (args: {
                     return m.set(key, d);
                 }, new Map());
                 const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue]) => {
-                    const accumulatedYValue = accumulatedYValues.get(x) || 0;
                     const d =
                         seriesData.get(x) ??
                         ({
                             x,
                             y: 0,
                         } as AreaSeriesData);
+                    const yDataValue = d.y ?? null;
                     const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
-                    const yPointValue = yValue === null ? null : yValue - accumulatedYValue;
-                    if (yPointValue !== null) {
-                        accumulatedYValues.set(x, yMin - yPointValue);
+
+                    let y = null;
+                    let y0 = yAxisTop + yMin;
+                    if (typeof yDataValue === 'number' && yValue !== null) {
+                        if (yDataValue >= 0) {
+                            const positiveStackHeight = positiveStackValues.get(x) || 0;
+                            y = yAxisTop + yValue - positiveStackHeight;
+                            y0 -= positiveStackHeight;
+
+                            positiveStackValues.set(x, positiveStackHeight + (yMin - yValue));
+                        } else {
+                            const negativeStackHeight = negativeStackValues.get(x) || 0;
+                            y = yAxisTop + yValue + negativeStackHeight;
+                            y0 += negativeStackHeight;
+
+                            negativeStackValues.set(x, negativeStackHeight + (yValue - yMin));
+                        }
                     }
-                    if (s.nullMode === 'connect' && yPointValue === null) {
+
+                    if (s.nullMode === 'connect' && yDataValue === null) {
                         return pointsAcc;
                     }
                     pointsAcc.push({
-                        y0: yAxisTop + yMin - accumulatedYValue,
+                        y0,
                         x: xValue,
-                        y: yPointValue === null ? null : yAxisTop + (yPointValue ?? 0),
+                        y,
                         data: d,
                         series: s,
                     });
@@ -217,7 +236,7 @@ export const prepareAreaData = async (args: {
                 const labels: LabelData[] = [];
                 const htmlElements: HtmlItem[] = [];
 
-                if (s.dataLabels.enabled) {
+                if (s.dataLabels.enabled && !isRangeSlider) {
                     const labelsData = await prepareDataLabels({series: s, points, xMax, yAxisTop});
                     labels.push(...labelsData.svgLabels);
                     htmlElements.push(...labelsData.htmlLabels);
@@ -256,7 +275,7 @@ export const prepareAreaData = async (args: {
 
             if (series.some((s) => s.stacking === 'percent')) {
                 xValues.forEach(([x], index) => {
-                    const stackHeight = accumulatedYValues.get(x) || 0;
+                    const stackHeight = positiveStackValues.get(x) || 0;
                     let acc = 0;
                     const ratio = plotHeight / stackHeight;
 

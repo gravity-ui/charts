@@ -3,7 +3,7 @@ import type {BrushSelection, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import {ZOOM_TYPE} from '../../constants';
 import type {ZoomType} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
 
 import type {ZoomState} from './types';
 
