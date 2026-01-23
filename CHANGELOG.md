@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.33.0](https://github.com/gravity-ui/charts/compare/v1.32.1...v1.33.0) (2026-01-23)
+
+
+### Features
+
+* add startOnTick and endOnTick options for axis ([#371](https://github.com/gravity-ui/charts/issues/371)) ([fc5418a](https://github.com/gravity-ui/charts/commit/fc5418a988a719524fcd45ff8f14dc0f4d111cb5))
+
+
+### Bug Fixes
+
+* fix area chart with stacking positive and negative values ([#376](https://github.com/gravity-ui/charts/issues/376)) ([f6b47f1](https://github.com/gravity-ui/charts/commit/f6b47f1b45383c15ac50e6be4b1d9e2e9b12c12a))
+* sync primary and secondary axes ticks ([#367](https://github.com/gravity-ui/charts/issues/367)) ([2c24599](https://github.com/gravity-ui/charts/commit/2c245991bfe562398986f7e78ec693f992c321db))
+
 ## [1.32.1](https://github.com/gravity-ui/charts/compare/v1.32.0...v1.32.1) (2026-01-21)
 
 
