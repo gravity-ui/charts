@@ -36,7 +36,6 @@ import {
     clusterYAxes,
     getDomainSyncedToPrimaryTicks,
     getMinMaxPropsOrState,
-    getTickConfig,
     getXMaxDomainResult,
     hasOnlyMarkerSeries,
 } from './utils';
@@ -237,21 +236,17 @@ export function createYScale(args: {
                 // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                 const nicedDomain = scale.copy().nice(Math.max(10, domain.length)).domain();
 
-                scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
-
-                // Change default values for backward compatibility
-                const tickConfig = getTickConfig(
-                    get(axis, 'startOnTick') ?? false,
-                    get(axis, 'endOnTick') ?? false,
-                );
+                const startOnTick = get(axis, 'startOnTick', false);
+                const endOnTick = get(axis, 'endOnTick', false);
                 const hasOffset = isSeriesWithYAxisOffset(series);
+
                 if (!zoomStateY && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
                     scale.domain([
-                        tickConfig.startOnTick
+                        startOnTick
                             ? Math.min(nicedDomain[0], domainWithOffset[0])
                             : domainWithOffset[0],
-                        tickConfig.endOnTick
+                        endOnTick
                             ? Math.max(nicedDomain[1], domainWithOffset[1])
                             : domainWithOffset[1],
                     ]);
@@ -293,15 +288,14 @@ export function createYScale(args: {
                         ? yMaxPropsOrState
                         : yMaxTimestamp;
                 const scale = scaleUtc().domain([yMin, yMax]).range(range);
-                const tickConfig = getTickConfig(get(axis, 'startOnTick'), get(axis, 'endOnTick'));
-                if (tickConfig.startOnTick && tickConfig.endOnTick) {
-                    return scale.nice();
-                }
-                if (tickConfig.startOnTick || tickConfig.endOnTick) {
+                const startOnTick = get(axis, 'startOnTick', true);
+                const endOnTick = get(axis, 'endOnTick', true);
+
+                if (startOnTick || endOnTick) {
                     const nicedDomain = scale.copy().nice().domain();
                     return scale.domain([
-                        tickConfig.startOnTick ? Number(nicedDomain[0]) : yMin,
-                        tickConfig.endOnTick ? Number(nicedDomain[1]) : yMax,
+                        startOnTick ? Number(nicedDomain[0]) : yMin,
+                        endOnTick ? Number(nicedDomain[1]) : yMax,
                     ]);
                 }
                 return scale;
@@ -521,14 +515,15 @@ export function createXScale(args: {
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                const tickConfig = getTickConfig(get(axis, 'startOnTick'), get(axis, 'endOnTick'));
+                const startOnTick = get(axis, 'startOnTick', true);
+                const endOnTick = get(axis, 'endOnTick', true);
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
                     scale.domain([
-                        tickConfig.startOnTick
+                        startOnTick
                             ? Math.min(nicedDomain[0], domainWithOffset[0])
                             : domainWithOffset[0],
-                        tickConfig.endOnTick
+                        endOnTick
                             ? Math.max(nicedDomain[1], domainWithOffset[1])
                             : domainWithOffset[1],
                     ]);
@@ -617,14 +612,16 @@ export function createXScale(args: {
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
-                const tickConfig = getTickConfig(get(axis, 'startOnTick'), get(axis, 'endOnTick'));
+                const startOnTick = get(axis, 'startOnTick', true);
+                const endOnTick = get(axis, 'endOnTick', true);
+
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
                     scale.domain([
-                        tickConfig.startOnTick
+                        startOnTick
                             ? Math.min(Number(nicedDomain[0]), Number(domainWithOffset[0]))
                             : Number(domainWithOffset[0]),
-                        tickConfig.endOnTick
+                        endOnTick
                             ? Math.max(Number(nicedDomain[1]), Number(domainWithOffset[1]))
                             : Number(domainWithOffset[1]),
                     ]);
