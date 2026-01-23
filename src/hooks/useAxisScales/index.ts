@@ -233,6 +233,25 @@ export function createYScale(args: {
                     scale = scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
                 }
 
+                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                const nicedDomain = scale.copy().nice(Math.max(10, domain.length)).domain();
+
+                const startOnTick = get(axis, 'startOnTick', false);
+                const endOnTick = get(axis, 'endOnTick', false);
+                const hasOffset = isSeriesWithYAxisOffset(series);
+
+                if (!zoomStateY && !hasOffset && nicedDomain.length === 2) {
+                    const domainWithOffset = scale.domain();
+                    scale.domain([
+                        startOnTick
+                            ? Math.min(nicedDomain[0], domainWithOffset[0])
+                            : domainWithOffset[0],
+                        endOnTick
+                            ? Math.max(nicedDomain[1], domainWithOffset[1])
+                            : domainWithOffset[1],
+                    ]);
+                }
+
                 return scale;
             }
 
@@ -268,7 +287,18 @@ export function createYScale(args: {
                     yMaxPropsOrState < yMaxTimestamp
                         ? yMaxPropsOrState
                         : yMaxTimestamp;
-                return scaleUtc().domain([yMin, yMax]).range(range).nice();
+                const scale = scaleUtc().domain([yMin, yMax]).range(range);
+                const startOnTick = get(axis, 'startOnTick', true);
+                const endOnTick = get(axis, 'endOnTick', true);
+
+                if (startOnTick || endOnTick) {
+                    const nicedDomain = scale.copy().nice().domain();
+                    return scale.domain([
+                        startOnTick ? Number(nicedDomain[0]) : yMin,
+                        endOnTick ? Number(nicedDomain[1]) : yMax,
+                    ]);
+                }
+                return scale;
             } else {
                 const domain = getDomainDataYBySeries(series);
                 const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
@@ -485,11 +515,18 @@ export function createXScale(args: {
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
+                const startOnTick = get(axis, 'startOnTick', true);
+                const endOnTick = get(axis, 'endOnTick', true);
+
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
                     scale.domain([
-                        Math.min(nicedDomain[0], domainWithOffset[0]),
-                        Math.max(nicedDomain[1], domainWithOffset[1]),
+                        startOnTick
+                            ? Math.min(nicedDomain[0], domainWithOffset[0])
+                            : domainWithOffset[0],
+                        endOnTick
+                            ? Math.max(nicedDomain[1], domainWithOffset[1])
+                            : domainWithOffset[1],
                     ]);
                 }
 
@@ -576,11 +613,18 @@ export function createXScale(args: {
 
                 scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
 
+                const startOnTick = get(axis, 'startOnTick', true);
+                const endOnTick = get(axis, 'endOnTick', true);
+
                 if (!hasZoomX && !hasOffset && nicedDomain.length === 2) {
                     const domainWithOffset = scale.domain();
                     scale.domain([
-                        Math.min(Number(nicedDomain[0]), Number(domainWithOffset[0])),
-                        Math.max(Number(nicedDomain[1]), Number(domainWithOffset[1])),
+                        startOnTick
+                            ? Math.min(Number(nicedDomain[0]), Number(domainWithOffset[0]))
+                            : Number(domainWithOffset[0]),
+                        endOnTick
+                            ? Math.max(Number(nicedDomain[1]), Number(domainWithOffset[1]))
+                            : Number(domainWithOffset[1]),
                     ]);
                 }
                 return scale;

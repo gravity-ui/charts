@@ -242,4 +242,80 @@ test.describe('X-axis', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test.describe('startOnTick / endOnTick', () => {
+        test.describe('linear', () => {
+            const baseData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 17, y: 10},
+                                {x: 50, y: 20},
+                                {x: 83, y: 15},
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {
+                    type: 'linear',
+                },
+                chart: {
+                    margin: CHART_MARGIN,
+                },
+            };
+
+            test('default (startOnTick=true, endOnTick=true)', async ({mount}) => {
+                const component = await mount(<ChartTestStory data={baseData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('startOnTick=false, endOnTick=false', async ({mount}) => {
+                const data = cloneDeep(baseData);
+                set(data, 'xAxis.startOnTick', false);
+                set(data, 'xAxis.endOnTick', false);
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+
+        test.describe('datetime', () => {
+            const baseData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1704067200000, y: 10}, // 2024-01-01
+                                {x: 1706745600000, y: 20}, // 2024-02-01
+                                {x: 1709251200000, y: 15}, // 2024-03-01
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {
+                    type: 'datetime',
+                },
+                chart: {
+                    margin: CHART_MARGIN,
+                },
+            };
+
+            test('default (startOnTick=true, endOnTick=true)', async ({mount}) => {
+                const component = await mount(<ChartTestStory data={baseData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('startOnTick=false, endOnTick=false', async ({mount}) => {
+                const data = cloneDeep(baseData);
+                set(data, 'xAxis.startOnTick', false);
+                set(data, 'xAxis.endOnTick', false);
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+    });
 });

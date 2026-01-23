@@ -213,6 +213,8 @@ export const getPreparedYAxis = ({
                 },
                 min: get(axisItem, 'min') ?? getDefaultMinYAxisValue(axisSeriesData),
                 max: get(axisItem, 'max'),
+                startOnTick: get(axisItem, 'startOnTick'),
+                endOnTick: get(axisItem, 'endOnTick'),
                 maxPadding: get(
                     axisItem,
                     'maxPadding',

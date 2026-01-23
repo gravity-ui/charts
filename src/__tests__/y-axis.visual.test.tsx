@@ -536,6 +536,83 @@ test.describe('Y-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.describe('startOnTick / endOnTick', () => {
+        test.describe('linear', () => {
+            const baseData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: 17},
+                                {x: 2, y: 83},
+                                {x: 3, y: 50},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{}],
+                chart: {
+                    margin: CHART_MARGIN,
+                },
+            };
+
+            test('default (startOnTick=false, endOnTick=false)', async ({mount}) => {
+                const component = await mount(<ChartTestStory data={baseData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('startOnTick=true, endOnTick=true', async ({mount}) => {
+                const data = cloneDeep(baseData);
+                set(data, 'yAxis[0].startOnTick', true);
+                set(data, 'yAxis[0].endOnTick', true);
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+
+        test.describe('datetime', () => {
+            const baseData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: 1704153600000}, // 2024-01-02
+                                {x: 2, y: 1706832000000}, // 2024-02-02
+                                {x: 3, y: 1709337600000}, // 2024-03-02
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [
+                    {
+                        type: 'datetime',
+                        timestamps: [1704153600000, 1706832000000, 1709337600000],
+                    },
+                ],
+                chart: {
+                    margin: CHART_MARGIN,
+                },
+            };
+
+            test('default (startOnTick=true, endOnTick=true)', async ({mount}) => {
+                const component = await mount(<ChartTestStory data={baseData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('startOnTick=false, endOnTick=false', async ({mount}) => {
+                const data = cloneDeep(baseData);
+                set(data, 'yAxis[0].startOnTick', false);
+                set(data, 'yAxis[0].endOnTick', false);
+                const component = await mount(<ChartTestStory data={data} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+        });
+    });
+
     test.describe('Dual Y axes', () => {
         const baseData: ChartData = {
             legend: {enabled: false},
