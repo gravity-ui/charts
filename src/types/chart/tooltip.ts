@@ -146,8 +146,9 @@ export interface ChartTooltip<T = MeaningfulAny> {
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
     renderer?: (args: ChartTooltipRendererArgs<T>) => React.ReactElement | null;
     /** Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
-     * It is useful in cases where you need to display additional information, but keep the general format of the tooltip. */
-    rowRenderer?: (args: ChartTooltipRowRendererArgs) => React.ReactElement | null;
+     * It is useful in cases where you need to display additional information, but keep the general format of the tooltip.
+     * If a string is returned, it will be interpreted as raw HTML and inserted without escaping. */
+    rowRenderer?: ((args: ChartTooltipRowRendererArgs) => React.ReactElement | string) | null;
     pin?: {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';

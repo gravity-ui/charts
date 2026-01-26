@@ -78,7 +78,7 @@ export const DefaultTooltipContent = ({
         series,
     }: ChartTooltipRowRendererArgs & {series?: TooltipDataChunk['series']}) => {
         if (typeof rowRenderer === 'function') {
-            return rowRenderer({
+            const result = rowRenderer({
                 id,
                 name,
                 color,
@@ -89,6 +89,12 @@ export const DefaultTooltipContent = ({
                 className: b('content-row', {active, striped}),
                 hovered,
             });
+
+            if (typeof result === 'string') {
+                return <div key={id} dangerouslySetInnerHTML={{__html: result}} />;
+            }
+
+            return result;
         }
 
         const colorSymbol = getTooltipRowColorSymbol({series, color});
