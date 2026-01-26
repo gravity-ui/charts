@@ -1090,4 +1090,30 @@ test.describe('Bar-y series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Empty string category value should be displayed', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [
+                            {y: 0, x: 100},
+                            {y: 1, x: 150},
+                            {y: 2, x: 50},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['', 'Category 2', 'Category 3'],
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
