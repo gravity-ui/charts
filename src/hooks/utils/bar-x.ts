@@ -25,7 +25,7 @@ export function groupBarXDataByXValue<T extends BarXSeries | PreparedBarXSeries>
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
                     : d.x;
 
-            if (key) {
+            if (key !== undefined) {
                 if (!data[key]) {
                     data[key] = {};
                 }
