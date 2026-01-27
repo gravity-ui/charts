@@ -12,6 +12,7 @@ import {
     useSeries,
     useShapes,
     useSplit,
+    useYAxisLabelWidth,
     useZoom,
 } from '../../hooks';
 import type {
@@ -152,7 +153,7 @@ export function useChartInnerProps(props: Props) {
         });
     }, [width, height, preparedChart.margin, preparedSeries, preparedLegend]);
 
-    const {xAxis, yAxis} = useAxis({
+    const {xAxis, yAxis, setAxes} = useAxis({
         height,
         preparedChart,
         preparedLegend,
@@ -184,6 +185,8 @@ export function useChartInnerProps(props: Props) {
         yAxis,
         zoomState,
     });
+
+    useYAxisLabelWidth({seriesData: preparedSeries, setAxes, yAxis, yScale});
 
     const isOutsideBounds = React.useCallback(
         (x: number, y: number) => {
