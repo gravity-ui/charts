@@ -178,4 +178,27 @@ test.describe('Range slider', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Restore previous selection on out of bounds drag', async ({mount, page}) => {
+        const data = getData({
+            basicData: scatterLinearXAxisData,
+            extraData: {xAxis: {rangeSlider: {defaultRange: {size: 1000}}, type: 'linear'}},
+        });
+        const component = await mount(<ChartTestStory data={data} />);
+        const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
+        const brushBoundingBox = await getLocatorBoundingBox(brushLocator);
+        // Drag left brush handle to the right
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-brush .handle--w',
+            getDragOptions: ({boundingBox}) => {
+                const startX = boundingBox.x + boundingBox.width / 2;
+                const endX = brushBoundingBox.x + brushBoundingBox.width;
+                const y = boundingBox.y + boundingBox.height / 2;
+                return {from: [startX, y], to: [endX, y]};
+            },
+        });
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

@@ -126,6 +126,12 @@ export function useBrush(props: UseBrushProps) {
                     if (event.sourceEvent) {
                         onBrushEnd?.call(this, instance, event.selection);
                     }
+                    if (event.selection === null && selection) {
+                        groupSelection.call(
+                            instance.move,
+                            getNormalizedSelection({selection, width: brushWidth}),
+                        );
+                    }
                 });
 
             groupSelection.call(instance);
