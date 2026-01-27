@@ -44,7 +44,7 @@ export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>
                     ? getDataCategoryValue({axisDirection: 'y', categories, data: d})
                     : d.y;
 
-            if (key) {
+            if (key !== undefined) {
                 if (!data[key]) {
                     data[key] = {};
                 }

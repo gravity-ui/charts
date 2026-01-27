@@ -353,4 +353,28 @@ test.describe('Bar-x series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Empty string category value should be displayed', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 100},
+                            {x: 1, y: 150},
+                            {x: 2, y: 50},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['', 'Category 2', 'Category 3'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
