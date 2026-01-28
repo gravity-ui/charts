@@ -179,10 +179,7 @@ test.describe('Range slider', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Clamp to left boundary when dragging handle beyond minimum', async ({
-        mount,
-        page,
-    }) => {
+    test('Clamp to left boundary when dragging handle beyond minimum', async ({mount, page}) => {
         const data = getData({basicData: scatterLinearXAxisData});
         const component = await mount(<ChartTestStory data={data} />);
         const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
@@ -199,13 +196,11 @@ test.describe('Range slider', () => {
                 return {from: [startX, y], to: [endX, y]};
             },
         });
-        await expect(component.locator('svg')).toHaveScreenshot();
+        const rangeSliderLocator = await getLocator({component, selector: '.gcharts-range-slider'});
+        await expect(rangeSliderLocator).toHaveScreenshot();
     });
 
-    test.only('Clamp to right boundary when dragging handle beyond maximum', async ({
-        mount,
-        page,
-    }) => {
+    test('Clamp to right boundary when dragging handle beyond maximum', async ({mount, page}) => {
         const data = getData({basicData: scatterLinearXAxisData});
         const component = await mount(<ChartTestStory data={data} />);
         const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
@@ -222,6 +217,7 @@ test.describe('Range slider', () => {
                 return {from: [startX, y], to: [endX, y]};
             },
         });
-        await expect(component.locator('svg')).toHaveScreenshot();
+        const rangeSliderLocator = await getLocator({component, selector: '.gcharts-range-slider'});
+        await expect(rangeSliderLocator).toHaveScreenshot();
     });
 });
