@@ -1,12 +1,17 @@
 import React from 'react';
 
-import {brush, brushX, brushY, select} from 'd3';
+import {brush, brushX, brushY, pointer, select} from 'd3';
 import type {BrushBehavior, Selection} from 'd3';
 
 import {block} from '../../utils';
 
 import type {UseBrushProps} from './types';
-import {getNormalizedSelection, setBrushBorder, setBrushHandles} from './utils';
+import {
+    getDefaultSelection,
+    getNormalizedSelection,
+    setBrushBorder,
+    setBrushHandles,
+} from './utils';
 
 import './styles.scss';
 
@@ -18,6 +23,7 @@ export function useBrush(props: UseBrushProps) {
         brushOptions,
         disabled,
         node,
+        preventNullSelection = false,
         selection,
         type,
         onBrushStart,
@@ -124,7 +130,17 @@ export function useBrush(props: UseBrushProps) {
                         });
                     }
                     if (event.sourceEvent) {
-                        onBrushEnd?.call(this, instance, event.selection);
+                        let resultSelection = event.selection;
+
+                        if (preventNullSelection && !resultSelection) {
+                            const [pointerPositionX] = pointer(event, this);
+                            resultSelection = getDefaultSelection({
+                                brushWidth,
+                                pointerPositionX,
+                            });
+                        }
+
+                        onBrushEnd?.call(this, instance, resultSelection);
                     }
                 });
 
@@ -159,5 +175,16 @@ export function useBrush(props: UseBrushProps) {
                 groupSelection?.remove();
             });
         };
-    }, [areas, brushOptions, disabled, node, selection, type, onBrushStart, onBrush, onBrushEnd]);
+    }, [
+        areas,
+        brushOptions,
+        disabled,
+        node,
+        preventNullSelection,
+        selection,
+        type,
+        onBrushStart,
+        onBrush,
+        onBrushEnd,
+    ]);
 }
