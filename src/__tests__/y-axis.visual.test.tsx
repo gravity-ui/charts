@@ -8,6 +8,8 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {scatterBasicData} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
+import {lineDualAxesSplitData} from './__data__/line-dual-axes-split';
+
 const CHART_MARGIN: ChartMargin = {
     top: 20,
     left: 20,
@@ -626,7 +628,7 @@ test.describe('Y-axis', () => {
                             {x: 1769904000000, y: 50},
                             {x: 1772323200000, y: 20},
                             {x: 1775001600000, y: 120},
-                            {x: 1777593600000, y: 0},
+                            {x: 1777593600000, y: 5},
                         ],
                         yAxis: 0,
                     },
@@ -650,18 +652,34 @@ test.describe('Y-axis', () => {
                     pixelInterval: 120,
                 },
             },
-            yAxis: [{}, {}],
+            yAxis: [
+                {
+                    endOnTick: true,
+                    startOnTick: true,
+                },
+                {
+                    endOnTick: true,
+                    startOnTick: true,
+                },
+            ],
         };
 
-        test('Primary ticks start from bottom', async ({mount}) => {
+        test('Aligned linear axes', async ({mount}) => {
             const component = await mount(<ChartTestStory data={baseData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('Primary ticks start with gap from bottom', async ({mount}) => {
-            const data = cloneDeep(baseData);
-            set(data, 'series.data[0].data[4].y', 5);
-            const component = await mount(<ChartTestStory data={data} />);
+        test('Aligned linear axes, split, height=300px', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory data={lineDualAxesSplitData} styles={{height: '300px'}} />,
+            );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Aligned linear axes, split, height=900px', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory data={lineDualAxesSplitData} styles={{height: '900px'}} />,
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });

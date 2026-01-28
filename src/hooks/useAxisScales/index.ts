@@ -58,31 +58,33 @@ const createScales = (args: Args) => {
     const yScale = clusterYAxes(yAxis).reduce(
         (acc, cluster) => {
             const [primaryAxis, secondaryAxis] = cluster;
-            const mainAxisSeries = series.filter((s) => {
+            const primaryAxisSeries = series.filter((s) => {
                 const seriesAxisIndex = get(s, 'yAxis', 0);
                 return seriesAxisIndex === index;
             });
-            const visiblePrimaryAxisSeries = getOnlyVisibleSeries(mainAxisSeries);
+            const visiblePrimaryAxisSeries = getOnlyVisibleSeries(primaryAxisSeries);
             const primaryAxisScale = createYScale({
                 axis: primaryAxis,
                 boundsHeight: axisHeight,
-                series: visiblePrimaryAxisSeries.length ? visiblePrimaryAxisSeries : mainAxisSeries,
+                series: visiblePrimaryAxisSeries.length
+                    ? visiblePrimaryAxisSeries
+                    : primaryAxisSeries,
                 zoomStateY: zoomState?.y?.[index],
             });
             acc.push(primaryAxisScale);
             index += 1;
 
-            let primaryTickPositions: number[] | undefined;
+            let primaryTicksCount: number | undefined;
 
             if (primaryAxisScale && secondaryAxis && !isRangeSlider) {
-                primaryTickPositions = getTickValues({
+                primaryTicksCount = getTickValues({
                     axis: primaryAxis,
                     scale: primaryAxisScale,
                     labelLineHeight: primaryAxis.labels.lineHeight,
                     series: visiblePrimaryAxisSeries.length
                         ? visiblePrimaryAxisSeries
-                        : mainAxisSeries,
-                }).map((t) => t.y);
+                        : primaryAxisSeries,
+                }).length;
             }
 
             const secondAxisSeries = series.filter((s) => {
@@ -94,7 +96,8 @@ const createScales = (args: Args) => {
                 ? createYScale({
                       axis: secondaryAxis,
                       boundsHeight: axisHeight,
-                      primaryTickPositions,
+                      primaryAxis,
+                      primaryTicksCount,
                       series: visibleSecondAxisSeries.length
                           ? visibleSecondAxisSeries
                           : secondAxisSeries,

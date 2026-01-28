@@ -22,31 +22,24 @@ import {
     getMinSpaceBetween,
     getTextSizeFn,
     isAxisRelatedSeries,
+    shouldSyncAxisWithPrimary,
     wrapText,
 } from '../../utils';
 import {createYScale} from '../useAxisScales';
+import type {ChartScale} from '../useAxisScales/types';
+import type {PreparedSeries} from '../useSeries/types';
 
 import type {PreparedYAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
 
-const getAxisLabelMaxWidth = async (args: {
+export const getYAxisLabelMaxWidth = async (args: {
     axis: PreparedYAxis;
-    seriesData: ChartSeries[];
-    height: number;
+    seriesData: PreparedSeries[] | ChartSeries[];
+    scale?: ChartScale;
 }) => {
-    const {axis, seriesData, height} = args;
+    const {axis, scale, seriesData} = args;
 
-    if (!axis.labels.enabled) {
-        return {height: 0, width: 0};
-    }
-
-    const scale = createYScale({
-        axis,
-        boundsHeight: height,
-        series: seriesData,
-    });
-
-    if (!scale) {
+    if (!axis.labels.enabled || !scale) {
         return {height: 0, width: 0};
     }
 
@@ -176,6 +169,21 @@ export const getPreparedYAxis = ({
             const shouldHideGrid =
                 axisItem.visible === false ||
                 axisSeriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
+
+            let gridEnabled: boolean;
+
+            if (shouldHideGrid) {
+                gridEnabled = false;
+            } else {
+                const gridEnabledProp = get(axisItem, 'grid.enabled');
+                if (firstPlotAxis) {
+                    gridEnabled = gridEnabledProp ?? true;
+                } else {
+                    gridEnabled = shouldSyncAxisWithPrimary(axisItem, axisByPlot[plotIndex][0])
+                        ? false
+                        : !(axisByPlot[plotIndex][0].visible ?? true);
+                }
+            }
             const preparedAxis: PreparedYAxis = {
                 type: axisType,
                 labels: {
@@ -221,14 +229,7 @@ export const getPreparedYAxis = ({
                     getMaxPaddingBySeries({series: axisSeriesData}),
                 ),
                 grid: {
-                    enabled: shouldHideGrid
-                        ? false
-                        : get(
-                              axisItem,
-                              'grid.enabled',
-                              firstPlotAxis ||
-                                  (!firstPlotAxis && !(axisByPlot[plotIndex][0].visible ?? true)),
-                          ),
+                    enabled: gridEnabled,
                 },
                 ticks: {
                     pixelInterval: axisItem.ticks?.interval
@@ -279,10 +280,15 @@ export const getPreparedYAxis = ({
             };
 
             if (labelsEnabled) {
-                const {height: labelsHeight, width: labelsWidth} = await getAxisLabelMaxWidth({
+                const scale = createYScale({
+                    axis: preparedAxis,
+                    boundsHeight,
+                    series: axisSeriesData,
+                });
+                const {height: labelsHeight, width: labelsWidth} = await getYAxisLabelMaxWidth({
                     axis: preparedAxis,
                     seriesData: axisSeriesData,
-                    height: boundsHeight,
+                    scale,
                 });
 
                 preparedAxis.labels.height = labelsHeight;

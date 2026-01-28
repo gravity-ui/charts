@@ -17,5 +17,6 @@ export * from './useShapes';
 export * from './useSplit';
 export * from './useSplit/types';
 export * from './useTooltip';
+export * from './useYAxisLabelWidth';
 export * from './useZoom';
 export * from './useZoom/types';
