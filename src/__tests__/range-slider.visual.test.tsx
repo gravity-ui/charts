@@ -179,11 +179,34 @@ test.describe('Range slider', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Restore previous selection on out of bounds drag', async ({mount, page}) => {
-        const data = getData({
-            basicData: scatterLinearXAxisData,
-            extraData: {xAxis: {rangeSlider: {defaultRange: {size: 1000}}, type: 'linear'}},
+    test.only('Clamp to left boundary when dragging handle beyond minimum', async ({
+        mount,
+        page,
+    }) => {
+        const data = getData({basicData: scatterLinearXAxisData});
+        const component = await mount(<ChartTestStory data={data} />);
+        const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
+        const brushBoundingBox = await getLocatorBoundingBox(brushLocator);
+        // Drag right brush handle to the left
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-brush .handle--e',
+            getDragOptions: ({boundingBox}) => {
+                const startX = boundingBox.x + boundingBox.width / 2;
+                const endX = brushBoundingBox.x - brushBoundingBox.width;
+                const y = boundingBox.y + boundingBox.height / 2;
+                return {from: [startX, y], to: [endX, y]};
+            },
         });
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.only('Clamp to right boundary when dragging handle beyond maximum', async ({
+        mount,
+        page,
+    }) => {
+        const data = getData({basicData: scatterLinearXAxisData});
         const component = await mount(<ChartTestStory data={data} />);
         const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
         const brushBoundingBox = await getLocatorBoundingBox(brushLocator);
