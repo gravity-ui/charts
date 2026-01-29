@@ -92,6 +92,7 @@ function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<R
         brushOptions: brush,
         node: ref.current,
         onBrushEnd,
+        preventNullSelection: true,
         selection,
         type: 'x',
     });

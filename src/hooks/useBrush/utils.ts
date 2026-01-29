@@ -223,3 +223,12 @@ export function getNormalizedSelection(args: {selection: BrushSelection; width: 
 
     return resultSelection;
 }
+
+export function getDefaultSelection(args: {
+    brushWidth: number;
+    pointerPositionX: number;
+}): BrushSelection {
+    const {brushWidth, pointerPositionX} = args;
+
+    return pointerPositionX < 0 ? [0, 1] : [brushWidth - 1, brushWidth];
+}

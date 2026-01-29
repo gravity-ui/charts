@@ -178,4 +178,46 @@ test.describe('Range slider', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Clamp to left boundary when dragging handle beyond minimum', async ({mount, page}) => {
+        const data = getData({basicData: scatterLinearXAxisData});
+        const component = await mount(<ChartTestStory data={data} />);
+        const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
+        const brushBoundingBox = await getLocatorBoundingBox(brushLocator);
+        // Drag right brush handle to the left
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-brush .handle--e',
+            getDragOptions: ({boundingBox}) => {
+                const startX = boundingBox.x + boundingBox.width / 2;
+                const endX = brushBoundingBox.x - brushBoundingBox.width;
+                const y = boundingBox.y + boundingBox.height / 2;
+                return {from: [startX, y], to: [endX, y]};
+            },
+        });
+        const rangeSliderLocator = await getLocator({component, selector: '.gcharts-range-slider'});
+        await expect(rangeSliderLocator).toHaveScreenshot();
+    });
+
+    test('Clamp to right boundary when dragging handle beyond maximum', async ({mount, page}) => {
+        const data = getData({basicData: scatterLinearXAxisData});
+        const component = await mount(<ChartTestStory data={data} />);
+        const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
+        const brushBoundingBox = await getLocatorBoundingBox(brushLocator);
+        // Drag left brush handle to the right
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-brush .handle--w',
+            getDragOptions: ({boundingBox}) => {
+                const startX = boundingBox.x + boundingBox.width / 2;
+                const endX = brushBoundingBox.x + brushBoundingBox.width;
+                const y = boundingBox.y + boundingBox.height / 2;
+                return {from: [startX, y], to: [endX, y]};
+            },
+        });
+        const rangeSliderLocator = await getLocator({component, selector: '.gcharts-range-slider'});
+        await expect(rangeSliderLocator).toHaveScreenshot();
+    });
 });
