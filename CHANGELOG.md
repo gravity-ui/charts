@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.34.1](https://github.com/gravity-ui/charts/compare/v1.34.0...v1.34.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* fix vertical clipping path handling for line series ([#387](https://github.com/gravity-ui/charts/issues/387)) ([ff5a73c](https://github.com/gravity-ui/charts/commit/ff5a73cdeac53411c00b31bf40e0f2b3e4a6b72e))
+* properly restore range slider state ([#384](https://github.com/gravity-ui/charts/issues/384)) ([b8a4961](https://github.com/gravity-ui/charts/commit/b8a49619ab22aac298f5aff5185ca09e24c7d01b))
+
 ## [1.34.0](https://github.com/gravity-ui/charts/compare/v1.33.0...v1.34.0) (2026-01-28)
 
 
