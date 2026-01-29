@@ -684,7 +684,7 @@ test.describe('Y-axis', () => {
         });
     });
 
-    test.only('Should not use vertical clip path', async ({mount}) => {
+    test('Should not use vertical clip path', async ({mount}) => {
         const data: ChartData = {
             series: {
                 data: [
