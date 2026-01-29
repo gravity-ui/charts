@@ -683,4 +683,40 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.only('Should not use vertical clip path', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        lineWidth: 2,
+                        data: [
+                            {x: 0, y: 260},
+                            {x: 1, y: 50},
+                            {x: 2, y: -100},
+                            {x: 3, y: 190},
+                        ],
+                    },
+                    {
+                        type: 'line',
+                        name: 'Series 2',
+                        data: [
+                            {x: 0, y: 834},
+                            {x: 1, y: 100},
+                            {x: 2, y: 428},
+                            {x: 3, y: 1922},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['2014-04-01', '2014-02-01', '2014-01-01', '2014-03-01'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

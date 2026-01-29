@@ -8,6 +8,7 @@ import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getPreparedChart} from '../../hooks/useChartOptions/chart';
 import {getPreparedTitle} from '../../hooks/useChartOptions/title';
 import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
+import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
 import {EventType, block, getDispatcher, isBandScale} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
@@ -280,8 +281,11 @@ export const ChartInner = (props: ChartInnerProps) => {
     const chartContent = (
         <React.Fragment>
             <defs>
-                <clipPath id={clipPathId}>
+                <clipPath id={getClipPathIdByBounds({clipPathId})}>
                     <rect x={0} y={0} width={boundsWidth} height={boundsHeight} />
+                </clipPath>
+                <clipPath id={getClipPathIdByBounds({clipPathId, bounds: 'horizontal'})}>
+                    <rect x={0} y={-boundsHeight} width={boundsWidth} height={boundsHeight * 3} />
                 </clipPath>
             </defs>
             {preparedTitle && <Title {...preparedTitle} chartWidth={width} />}
