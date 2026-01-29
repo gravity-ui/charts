@@ -6,6 +6,7 @@ import type {BasicInactiveState} from '../../types';
 import {getDataCategoryValue} from '../../utils';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales/types';
+import type {ZoomState} from '../useZoom/types';
 
 import type {PreparedLineData} from './line/types';
 
@@ -243,4 +244,28 @@ export function getRectBorderPath(args: {
     }).toString();
 
     return `${outerPath} ${innerPath}`;
+}
+
+export function getClipPathIdByBounds(args: {clipPathId: string; bounds?: 'horizontal'}) {
+    const {bounds, clipPathId} = args;
+
+    return bounds ? `${clipPathId}-${bounds}` : clipPathId;
+}
+
+export function getSeriesClipPathId(args: {
+    clipPathId: string;
+    yAxis: PreparedYAxis[];
+    zoomState?: Partial<ZoomState>;
+}) {
+    const {clipPathId, yAxis, zoomState} = args;
+    const hasMinOrMax = yAxis.some((axis) => {
+        return typeof axis?.min === 'number' || typeof axis?.max === 'number';
+    });
+    const hasZoom = zoomState && Object.keys(zoomState).length > 0;
+
+    if (!hasZoom && !hasMinOrMax) {
+        return getClipPathIdByBounds({clipPathId, bounds: 'horizontal'});
+    }
+
+    return getClipPathIdByBounds({clipPathId});
 }

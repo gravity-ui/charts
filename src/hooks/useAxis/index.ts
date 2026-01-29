@@ -7,7 +7,7 @@ import {getWidthOccupiedByYAxis} from '../useChartDimensions/utils';
 import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 
-import type {PreparedXAxis, PreparedYAxis} from './types';
+import type {AxesState} from './types';
 import {getPreparedXAxis} from './x-axis';
 import {getPreparedYAxis} from './y-axis';
 
@@ -35,10 +35,7 @@ export function useAxis(props: UseAxesProps) {
         xAxis,
         yAxis,
     } = props;
-    const [axesState, setValue] = React.useState<{
-        xAxis: PreparedXAxis | null;
-        yAxis: PreparedYAxis[];
-    }>({xAxis: null, yAxis: []});
+    const [axesState, setAxes] = React.useState<AxesState>({xAxis: null, yAxis: []});
     const axesStateRunRef = React.useRef(0);
     const prevAxesStateValue = React.useRef(axesState);
     const axesStateReady = React.useRef(false);
@@ -97,7 +94,7 @@ export function useAxis(props: UseAxesProps) {
 
             if (axesStateRunRef.current === currentRun) {
                 if (!isEqual(prevAxesStateValue.current, newStateValue)) {
-                    setValue(newStateValue);
+                    setAxes(newStateValue);
                     prevAxesStateValue.current = newStateValue;
                 }
 
@@ -116,5 +113,5 @@ export function useAxis(props: UseAxesProps) {
         yAxis,
     ]);
 
-    return axesStateReady.current ? axesState : {xAxis: null, yAxis: []};
+    return axesStateReady.current ? {...axesState, setAxes} : {xAxis: null, yAxis: [], setAxes};
 }

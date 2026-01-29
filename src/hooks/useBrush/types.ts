@@ -19,6 +19,7 @@ export interface BrushArea {
 export interface UseBrushProps {
     areas: BrushArea[];
     node: SVGGElement | null;
+    preventNullSelection?: boolean;
     brushOptions?: DeepRequired<ChartBrush>;
     disabled?: boolean;
     onBrush?: (

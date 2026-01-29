@@ -26,6 +26,7 @@ import type {
     PreparedWaterfallSeries,
 } from '../useSeries/types';
 import type {PreparedSplit} from '../useSplit/types';
+import type {ZoomState} from '../useZoom/types';
 
 import {AreaSeriesShapes} from './area';
 import {prepareAreaData} from './area/prepare-data';
@@ -56,6 +57,7 @@ export type {PreparedBarXData} from './bar-x';
 export type {PreparedScatterData} from './scatter/types';
 import {TreemapSeriesShape} from './treemap';
 import {prepareTreemapData} from './treemap/prepare-data';
+import {getSeriesClipPathId} from './utils';
 import type {PreparedWaterfallData} from './waterfall';
 import {WaterfallSeriesShapes, prepareWaterfallData} from './waterfall';
 
@@ -92,6 +94,7 @@ type Args = {
     isRangeSlider?: boolean;
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
+    zoomState?: Partial<ZoomState>;
 };
 
 function IS_OUTSIDE_BOUNDS() {
@@ -119,6 +122,7 @@ export const useShapes = (args: Args) => {
         xScale,
         yAxis,
         yScale,
+        zoomState,
     } = args;
 
     const [shapesElemens, setShapesElements] = React.useState<React.ReactElement[]>([]);
@@ -231,6 +235,11 @@ export const useShapes = (args: Args) => {
                                     isOutsideBounds,
                                     isRangeSlider,
                                 });
+                                const resultClipPathId = getSeriesClipPathId({
+                                    clipPathId,
+                                    yAxis,
+                                    zoomState,
+                                });
                                 shapes.push(
                                     <LineSeriesShapes
                                         key={SERIES_TYPE.Line}
@@ -238,7 +247,7 @@ export const useShapes = (args: Args) => {
                                         seriesOptions={seriesOptions}
                                         preparedData={preparedData}
                                         htmlLayout={htmlLayout}
-                                        clipPathId={clipPathId}
+                                        clipPathId={resultClipPathId}
                                     />,
                                 );
                                 shapesData.push(...preparedData);
@@ -447,6 +456,7 @@ export const useShapes = (args: Args) => {
         xScale,
         yAxis,
         yScale,
+        zoomState,
     ]);
 
     return {shapes: shapesElemens, shapesData: shapesElemensData};

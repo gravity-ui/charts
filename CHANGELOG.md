@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.34.1](https://github.com/gravity-ui/charts/compare/v1.34.0...v1.34.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* fix vertical clipping path handling for line series ([#387](https://github.com/gravity-ui/charts/issues/387)) ([ff5a73c](https://github.com/gravity-ui/charts/commit/ff5a73cdeac53411c00b31bf40e0f2b3e4a6b72e))
+* properly restore range slider state ([#384](https://github.com/gravity-ui/charts/issues/384)) ([b8a4961](https://github.com/gravity-ui/charts/commit/b8a49619ab22aac298f5aff5185ca09e24c7d01b))
+
+## [1.34.0](https://github.com/gravity-ui/charts/compare/v1.33.0...v1.34.0) (2026-01-28)
+
+
+### Features
+
+* support tooltip.rowRenderer with HTML ([#380](https://github.com/gravity-ui/charts/issues/380)) ([2eccae4](https://github.com/gravity-ui/charts/commit/2eccae45a08722b8628c35a249d824f23954c1b1))
+
+
+### Bug Fixes
+
+* display bars with empty string category values ([#382](https://github.com/gravity-ui/charts/issues/382)) ([b315c93](https://github.com/gravity-ui/charts/commit/b315c93f3607b489ad7c8ab95fcb8bb481883123))
+* fix dual axes ticks sync ([#383](https://github.com/gravity-ui/charts/issues/383)) ([6ef84cf](https://github.com/gravity-ui/charts/commit/6ef84cfc1f4260217be65fe1fa11ed3bac220c9e))
+
 ## [1.33.0](https://github.com/gravity-ui/charts/compare/v1.32.1...v1.33.0) (2026-01-23)
 
 

@@ -1,13 +1,19 @@
-import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc, ticks} from 'd3';
+import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc, tickStep, ticks} from 'd3';
 import type {AxisDomain, AxisScale} from 'd3';
 import get from 'lodash/get';
 
+import {getTickValues} from '../../components/AxisY/utils';
 import {SERIES_TYPE} from '../../constants';
 import type {PreparedAxis, PreparedSeries} from '../../hooks';
 import type {ChartSeries} from '../../types';
-import {CHART_SERIES_WITH_VOLUME_ON_Y_AXIS, getDomainDataYBySeries} from '../../utils';
+import {
+    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
+    getDomainDataYBySeries,
+    shouldSyncAxisWithPrimary,
+} from '../../utils';
 import {getBandSize} from '../utils/get-band-size';
 
+import type {ChartScaleLinear} from './types';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
@@ -47,41 +53,31 @@ function isSeriesWithYAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
 }
 
 function getDomainSyncedToPrimaryTicks(args: {
-    primaryTickPositions: number[];
-    range: [number, number];
-    // Don't type this as `typeof scaleLinear | typeof scaleLog`.
-    // In this helper we don't care about the linear vs log differences — we only need
-    // the common API (`domain`/`range`/`invert`). To avoid the "union of overloaded functions
-    // is not callable" issue, we keep the factory type concrete (`typeof scaleLinear`) here.
-    // See: https://github.com/microsoft/TypeScript/issues/57400
-    scaleFn: typeof scaleLinear;
-    secondaryDomain: number[];
-}): [number, number] {
-    const {primaryTickPositions, range, scaleFn, secondaryDomain} = args;
-    const [dMin, dMax] = secondaryDomain;
-    const primaryPosBottom = primaryTickPositions[0];
-    const primaryPosTop = primaryTickPositions[primaryTickPositions.length - 1];
-    let secondaryTicks = ticks(dMin, dMax, primaryTickPositions.length);
-    let originalStep = 0;
-
-    if (typeof secondaryTicks[0] === 'number' && typeof secondaryTicks[1] === 'number') {
-        originalStep = secondaryTicks[1] - secondaryTicks[0];
-    }
-
+    scale: ChartScaleLinear;
+    primaryTicksCount: number;
+    yMin: number;
+    yMax: number;
+}) {
+    const {primaryTicksCount, scale, yMin, yMax} = args;
+    const [dMin, dMax] = scale.domain();
+    let secondaryTicks = ticks(dMin, dMax, primaryTicksCount);
     let i = 1;
 
-    while (secondaryTicks.length > primaryTickPositions.length) {
-        secondaryTicks = ticks(dMin, dMax, primaryTickPositions.length - i);
+    // Need to reduce the number of ticks to primaryTicksCount - 2, so that we can later
+    // add one tick each at the top and bottom edges of the chart
+    while (secondaryTicks.length > primaryTicksCount - 2) {
+        secondaryTicks = ticks(dMin, dMax, primaryTicksCount - i);
+
+        if (secondaryTicks.length === 0) {
+            secondaryTicks = ticks(dMin, dMax, primaryTicksCount - i + 1);
+            break;
+        }
+
         i += 1;
     }
 
-    let step = originalStep;
-
-    if (typeof secondaryTicks[0] === 'number' && typeof secondaryTicks[1] === 'number') {
-        step = secondaryTicks[1] - secondaryTicks[0];
-    }
-
-    let ticksCountDiff = primaryTickPositions.length - secondaryTicks.length;
+    const step = tickStep(dMin, dMax, secondaryTicks.length);
+    let ticksCountDiff = primaryTicksCount - secondaryTicks.length;
     let deltaMin = Math.abs(dMin - secondaryTicks[0]);
     let deltaMax = Math.abs(dMax - secondaryTicks[secondaryTicks.length - 1]);
 
@@ -97,22 +93,78 @@ function getDomainSyncedToPrimaryTicks(args: {
         ticksCountDiff -= 1;
     }
 
-    let tmpScale = scaleFn()
-        .domain([secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]])
-        .range([primaryPosBottom, primaryPosTop]);
-    let dNewMin = tmpScale.invert(range[0]);
-    let dNewMax = tmpScale.invert(range[1]);
-
-    if (dNewMin < dMin) {
-        secondaryTicks = secondaryTicks.map((st) => st + step);
-        tmpScale = scaleFn()
-            .domain([secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]])
-            .range([primaryPosBottom, primaryPosTop]);
-        dNewMin = tmpScale.invert(range[0]);
-        dNewMax = tmpScale.invert(range[1]);
+    if (secondaryTicks[secondaryTicks.length - 1] < yMax) {
+        secondaryTicks[secondaryTicks.length - 1] += step;
     }
 
-    return [dNewMin, dNewMax];
+    if (secondaryTicks[0] > yMin) {
+        secondaryTicks[0] -= step;
+    }
+
+    return [secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]];
+}
+
+function getDomainMinAlignedToStartTick(args: {
+    axis: PreparedAxis;
+    range: [number, number];
+    scale: ChartScaleLinear;
+    series: PreparedSeries[] | ChartSeries[];
+}) {
+    const {axis, range, scale, series} = args;
+    const [dMin, dMax] = scale.domain();
+    const tickValues = getTickValues({
+        axis,
+        scale,
+        labelLineHeight: axis.labels.lineHeight,
+        series,
+    }) as {y: number; value: number}[];
+    const isStartOnTick = tickValues[0].y === range[0];
+    let dNewMin = dMin;
+
+    if (!isStartOnTick) {
+        let step: number;
+
+        if (typeof tickValues[0]?.value === 'number' && typeof tickValues[1]?.value === 'number') {
+            step = tickValues[1].value - tickValues[0].value;
+        } else {
+            step = tickStep(dMin, dMax, 1);
+        }
+
+        dNewMin = tickValues[0].value - step;
+    }
+
+    return dNewMin;
+}
+
+function getDomainMaxAlignedToEndTick(args: {
+    axis: PreparedAxis;
+    range: [number, number];
+    scale: ChartScaleLinear;
+    series: PreparedSeries[] | ChartSeries[];
+}) {
+    const {axis, range, scale, series} = args;
+    const [dMin, dMax] = scale.domain();
+    const tickValues = getTickValues({
+        axis,
+        scale,
+        labelLineHeight: axis.labels.lineHeight,
+        series,
+    }) as {y: number; value: number}[];
+    const isEndOnTick = tickValues[tickValues.length - 1].y === range[1];
+    let dNewMax = dMax;
+
+    if (!isEndOnTick) {
+        let step: number;
+        if (typeof tickValues[0]?.value === 'number' && typeof tickValues[1]?.value === 'number') {
+            step = tickValues[1].value - tickValues[0].value;
+        } else {
+            step = tickStep(dMin, dMax, 1);
+        }
+
+        dNewMax = tickValues[tickValues.length - 1].value + step;
+    }
+
+    return dNewMax;
 }
 
 // eslint-disable-next-line complexity
@@ -120,10 +172,11 @@ export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
     series: PreparedSeries[] | ChartSeries[];
-    primaryTickPositions?: number[];
+    primaryAxis?: PreparedAxis;
+    primaryTicksCount?: number;
     zoomStateY?: [number, number];
 }) {
-    const {axis, boundsHeight, series, primaryTickPositions, zoomStateY} = args;
+    const {axis, boundsHeight, series, primaryAxis, primaryTicksCount, zoomStateY} = args;
     const [yMinPropsOrState, yMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
         maxValues: [zoomStateY?.[1]],
@@ -179,61 +232,63 @@ export function createYScale(args: {
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 
-                if (primaryTickPositions) {
-                    const syncedDomain = getDomainSyncedToPrimaryTicks({
-                        primaryTickPositions,
-                        range,
-                        scaleFn,
-                        secondaryDomain: scale.domain(),
-                    });
+                let offsetMin = 0;
+                // We should ignore padding if we are drawing only one point on the plot.
+                let offsetMax = yMin === yMax ? 0 : boundsHeight * axis.maxPadding;
+                if (isSeriesWithYAxisOffset(series)) {
+                    if (domain.length > 1) {
+                        const bandWidth = getBandSize({
+                            scale: scale as AxisScale<AxisDomain>,
+                            domain: domain as AxisDomain[],
+                        });
 
-                    scale.domain(syncedDomain);
-                } else {
-                    let offsetMin = 0;
-                    // We should ignore padding if we are drawing only one point on the plot.
-                    let offsetMax = yMin === yMax ? 0 : boundsHeight * axis.maxPadding;
-                    if (isSeriesWithYAxisOffset(series)) {
-                        if (domain.length > 1) {
-                            const bandWidth = getBandSize({
-                                scale: scale as AxisScale<AxisDomain>,
-                                domain: domain as AxisDomain[],
-                            });
-
-                            offsetMin += bandWidth / 2;
-                            offsetMax += bandWidth / 2;
-                        }
+                        offsetMin += bandWidth / 2;
+                        offsetMax += bandWidth / 2;
                     }
-
-                    const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
-                    const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
-
-                    const domainOffsetMin = isMinSpecified
-                        ? 0
-                        : Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                    const domainOffsetMax = isMaxSpecified
-                        ? 0
-                        : Math.abs(scale.invert(offsetMax) - scale.invert(0));
-
-                    scale = scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
                 }
 
-                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
-                const nicedDomain = scale.copy().nice(Math.max(10, domain.length)).domain();
+                const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
+                const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
+
+                const domainOffsetMin = isMinSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
+                const domainOffsetMax = isMaxSpecified
+                    ? 0
+                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
+
+                scale = scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
 
                 const startOnTick = get(axis, 'startOnTick', false);
                 const endOnTick = get(axis, 'endOnTick', false);
-                const hasOffset = isSeriesWithYAxisOffset(series);
+                const shouldBeSyncedWithPrimary = primaryAxis
+                    ? shouldSyncAxisWithPrimary(axis, primaryAxis)
+                    : false;
 
-                if (!zoomStateY && !hasOffset && nicedDomain.length === 2) {
-                    const domainWithOffset = scale.domain();
-                    scale.domain([
-                        startOnTick
-                            ? Math.min(nicedDomain[0], domainWithOffset[0])
-                            : domainWithOffset[0],
-                        endOnTick
-                            ? Math.max(nicedDomain[1], domainWithOffset[1])
-                            : domainWithOffset[1],
-                    ]);
+                if (
+                    shouldBeSyncedWithPrimary &&
+                    typeof primaryTicksCount === 'number' &&
+                    primaryTicksCount >= 2
+                ) {
+                    const newDomain = getDomainSyncedToPrimaryTicks({
+                        scale,
+                        primaryTicksCount,
+                        yMin,
+                        yMax,
+                    });
+                    scale.domain(newDomain);
+                }
+
+                if (startOnTick && (!primaryAxis || !shouldBeSyncedWithPrimary)) {
+                    const [_, dMax] = scale.domain();
+                    const dNewMin = getDomainMinAlignedToStartTick({axis, range, scale, series});
+                    scale.domain([dNewMin, dMax]);
+                }
+
+                if (endOnTick && (!primaryAxis || !shouldBeSyncedWithPrimary)) {
+                    const [dMin, _] = scale.domain();
+                    const dNewMax = getDomainMaxAlignedToEndTick({axis, range, scale, series});
+                    scale.domain([dMin, dNewMax]);
                 }
 
                 return scale;

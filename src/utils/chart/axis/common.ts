@@ -232,3 +232,11 @@ export function thinOut<T>(items: T[], delta: number) {
 
     return arr;
 }
+
+export function shouldSyncAxisWithPrimary(axis: ChartAxis, primaryAxis: ChartAxis) {
+    if (!axis || !primaryAxis) {
+        return false;
+    }
+
+    return axis.startOnTick && axis.endOnTick && primaryAxis.startOnTick && primaryAxis.endOnTick;
+}
