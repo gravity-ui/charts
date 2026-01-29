@@ -4,6 +4,7 @@ import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
     lineBasicData,
+    lineDatetimeYearlyData,
     lineHtmlLabelsData,
     linePlaygroundData,
     lineSplitData,
@@ -47,6 +48,13 @@ export const LineSplit = {
     args: {
         data: lineSplitData,
         style: {height: 560},
+    },
+} satisfies Story;
+
+export const LineDatetimeYearly = {
+    name: 'Datetime axis (yearly)',
+    args: {
+        data: lineDatetimeYearlyData,
     },
 } satisfies Story;
 

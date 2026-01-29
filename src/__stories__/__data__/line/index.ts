@@ -1,5 +1,6 @@
 export * from './basic';
 export * from './data-labels';
+export * from './datetime-yearly';
 export * from './html-labels';
 export * from './markers';
 export * from './null-modes';
