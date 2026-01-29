@@ -91,7 +91,7 @@ test.describe('Line series', () => {
             ],
         };
         const component = await mount(
-            <ChartTestStory data={chartData} styles={{width: 1280, height: 720}} />,
+            <ChartTestStory data={chartData} styles={{width: 1000, height: 600}} />,
         );
         await expect(component.locator('svg')).toHaveScreenshot();
     });

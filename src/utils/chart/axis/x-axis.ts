@@ -36,7 +36,7 @@ const TIME_INTERVALS: Array<{
 ];
 
 // Minimum desired number of ticks for good visual density
-const MIN_DESIRED_TICKS = 4;
+const MIN_DESIRED_TICKS = 1;
 
 /**
  * Determines the best time interval for datetime axis ticks based on:
