@@ -210,6 +210,7 @@ export function useChartInnerProps(props: Props) {
         htmlLayout,
         clipPathId,
         isOutsideBounds,
+        zoomState,
     });
 
     const handleAttemptToSetZoomState = React.useCallback(
