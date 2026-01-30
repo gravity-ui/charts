@@ -8,166 +8,140 @@ import {
     utcWeek,
     utcYear,
 } from 'd3';
-import type {CountableTimeInterval} from 'd3';
+import type {CountableTimeInterval, TimeInterval} from 'd3';
 
 import type {ChartScale, ChartScaleTime, PreparedAxis} from '../../../hooks';
 import {getMinSpaceBetween} from '../array';
-import {TIME_UNITS} from '../time';
+import {DATETIME_LABEL_FORMATS, TIME_UNITS} from '../time';
 
 import {getTicksCount, isBandScale, isTimeScale, thinOut} from './common';
 
+// Average character width as a fraction of font height (approximation for most fonts)
+const AVG_CHAR_WIDTH_RATIO = 0.6;
+
 /**
  * Time intervals ordered from largest to smallest.
- * Each entry contains the D3 interval and its approximate duration in milliseconds.
  */
 const TIME_INTERVALS: Array<{
     interval: CountableTimeInterval;
     unit: keyof typeof TIME_UNITS;
     duration: number;
+    labelCharCount: number;
 }> = [
-    {interval: utcYear, unit: 'year', duration: TIME_UNITS.year},
-    {interval: utcMonth, unit: 'month', duration: TIME_UNITS.month},
-    {interval: utcWeek, unit: 'week', duration: TIME_UNITS.week},
-    {interval: utcDay, unit: 'day', duration: TIME_UNITS.day},
-    {interval: utcHour, unit: 'hour', duration: TIME_UNITS.hour},
-    {interval: utcMinute, unit: 'minute', duration: TIME_UNITS.minute},
-    {interval: utcSecond, unit: 'second', duration: TIME_UNITS.second},
-    {interval: utcMillisecond, unit: 'millisecond', duration: TIME_UNITS.millisecond},
+    {
+        interval: utcYear,
+        unit: 'year',
+        duration: TIME_UNITS.year,
+        labelCharCount: DATETIME_LABEL_FORMATS.year.length,
+    },
+    {
+        interval: utcMonth,
+        unit: 'month',
+        duration: TIME_UNITS.month,
+        labelCharCount: DATETIME_LABEL_FORMATS.month.length,
+    },
+    {
+        interval: utcWeek,
+        unit: 'week',
+        duration: TIME_UNITS.week,
+        labelCharCount: DATETIME_LABEL_FORMATS.week.length,
+    },
+    {
+        interval: utcDay,
+        unit: 'day',
+        duration: TIME_UNITS.day,
+        labelCharCount: DATETIME_LABEL_FORMATS.day.length,
+    },
+    {
+        interval: utcHour,
+        unit: 'hour',
+        duration: TIME_UNITS.hour,
+        labelCharCount: DATETIME_LABEL_FORMATS.hour.length,
+    },
+    {
+        interval: utcMinute,
+        unit: 'minute',
+        duration: TIME_UNITS.minute,
+        labelCharCount: DATETIME_LABEL_FORMATS.minute.length,
+    },
+    {
+        interval: utcSecond,
+        unit: 'second',
+        duration: TIME_UNITS.second,
+        labelCharCount: DATETIME_LABEL_FORMATS.second.length,
+    },
+    {
+        interval: utcMillisecond,
+        unit: 'millisecond',
+        duration: TIME_UNITS.millisecond,
+        labelCharCount: DATETIME_LABEL_FORMATS.millisecond.length,
+    },
 ];
-
-// Minimum desired number of ticks for good visual density
-const MIN_DESIRED_TICKS = 1;
 
 /**
  * Determines the best time interval for datetime axis ticks based on:
  * - The total time range of the data
  * - The available pixel width
- * - The label width requirements
+ * - The label width requirements (estimated from date format)
+ * - Optional pixelInterval from axis configuration
  */
 function getBestDatetimeInterval(args: {
     domain: [Date, Date];
     axisWidth: number;
-    labelWidth: number;
+    fontHeight: number;
     padding: number;
+    pixelInterval?: number;
 }): {interval: CountableTimeInterval; step: number} {
-    const {domain, axisWidth, labelWidth, padding} = args;
+    const {domain, axisWidth, fontHeight, padding, pixelInterval} = args;
     const totalRange = domain[1].getTime() - domain[0].getTime();
 
-    // Minimum space needed between ticks to fit labels
-    const minTickSpacing = labelWidth + padding * 2;
-    // Maximum number of ticks that can fit
-    const maxTicks = Math.max(MIN_DESIRED_TICKS, Math.floor(axisWidth / minTickSpacing));
-
-    // Find the best interval - we want the smallest interval that:
-    // 1. Produces ticks that fit within maxTicks (with step if needed)
-    // 2. Produces at least MIN_DESIRED_TICKS ticks for good visual density
-    let bestResult: {interval: CountableTimeInterval; step: number; ticks: number} | null = null;
-
-    for (const {interval, duration} of TIME_INTERVALS) {
+    // Find the largest interval that produces at least 2 ticks and fits labels
+    for (const {interval, duration, labelCharCount} of TIME_INTERVALS) {
         const estimatedTicks = Math.ceil(totalRange / duration);
 
-        // Skip if this interval produces no meaningful ticks
         if (estimatedTicks < 2) {
             continue;
         }
 
-        // Calculate step needed to fit within maxTicks
+        const estimatedLabelWidth = labelCharCount * fontHeight * AVG_CHAR_WIDTH_RATIO;
+        const minTickSpacing = pixelInterval ?? estimatedLabelWidth + padding * 2;
+        const maxTicks = Math.max(2, Math.ceil(axisWidth / minTickSpacing));
+
         let step = 1;
         if (estimatedTicks > maxTicks) {
             step = Math.ceil(estimatedTicks / maxTicks);
         }
 
-        const ticksWithStep = Math.ceil(totalRange / (duration * step));
+        const ticksWithStep = Math.floor(totalRange / (duration * step));
 
-        // Skip if we can't get at least 2 ticks
-        if (ticksWithStep < 2) {
-            continue;
-        }
-
-        // Prefer this interval if:
-        // 1. We don't have a result yet, or
-        // 2. This produces more ticks (better density) while still fitting
-        if (!bestResult || ticksWithStep > bestResult.ticks) {
-            bestResult = {interval, step, ticks: ticksWithStep};
-        }
-
-        // If we've reached or exceeded our desired tick count, we can stop
-        // (since we're iterating from largest to smallest intervals)
-        if (ticksWithStep >= MIN_DESIRED_TICKS) {
-            break;
+        if (ticksWithStep >= 2) {
+            return {interval, step};
         }
     }
 
-    if (bestResult) {
-        return {interval: bestResult.interval, step: bestResult.step};
-    }
-
-    // Ultimate fallback to milliseconds
     return {interval: utcMillisecond, step: 1};
 }
 
-/**
- * Generates tick values for datetime axes using intelligent time interval selection.
- * This produces "nice" ticks aligned to calendar boundaries (start of year, month, etc.)
- */
-function getDatetimeAxisTickValues(args: {
+function getDatetimeAxisTimeInterval(args: {
     scale: ChartScaleTime;
     axis: PreparedAxis;
     axisWidth: number;
     labelLineHeight: number;
-}): Array<{x: number; value: Date}> {
+}): TimeInterval | null {
     const {scale, axis, axisWidth, labelLineHeight} = args;
 
     const domain = scale.domain();
-    if (!domain[0] || !domain[1]) {
-        return [];
-    }
 
-    // Find the best time interval based on data range and available space
     const {interval, step} = getBestDatetimeInterval({
         domain: domain as [Date, Date],
         axisWidth,
-        labelWidth: labelLineHeight,
+        fontHeight: labelLineHeight,
         padding: axis.labels.padding,
+        pixelInterval: axis.ticks.pixelInterval,
     });
 
-    // Generate ticks using D3's time interval
     // .every(step) creates an interval that skips values (e.g., every 2 years)
-    const timeInterval = step > 1 ? interval.every(step) : interval;
-    if (!timeInterval) {
-        return [];
-    }
-
-    const scaleTicks = scale.ticks(timeInterval);
-
-    const result = scaleTicks.map((t) => ({
-        x: scale(t),
-        value: t,
-    }));
-
-    // Additional check: if ticks still don't fit, thin them out
-    if (result.length > 1) {
-        let availableSpaceForLabel =
-            getMinSpaceBetween(result, (d: {x: number; value: Date}) => d.x) -
-            axis.labels.padding * 2;
-
-        if (availableSpaceForLabel < labelLineHeight) {
-            let thinnedResult = result;
-            let delta = 2;
-            while (availableSpaceForLabel < labelLineHeight && thinnedResult.length > 1) {
-                thinnedResult = thinOut(result, delta);
-                if (thinnedResult.length > 1) {
-                    delta += 1;
-                    availableSpaceForLabel =
-                        getMinSpaceBetween(thinnedResult, (d: {x: number; value: Date}) => d.x) -
-                        axis.labels.padding * 2;
-                }
-            }
-            return thinnedResult;
-        }
-    }
-
-    return result;
+    return interval.every(step) ?? interval;
 }
 
 export function getXAxisTickValues({
@@ -186,19 +160,20 @@ export function getXAxisTickValues({
             return [];
         }
 
-        // Special handling for datetime scales - use intelligent time interval selection
+        let scaleTicks: Date[] | number[];
+
         if (isTimeScale(scale)) {
-            return getDatetimeAxisTickValues({
+            const scaleTicksCount = getDatetimeAxisTimeInterval({
                 scale: scale as ChartScaleTime,
                 axis,
                 axisWidth,
                 labelLineHeight,
             });
+            scaleTicks = scaleTicksCount ? scale.ticks(scaleTicksCount) : scale.ticks();
+        } else {
+            const scaleTicksCount = getTicksCount({axis, range: axisWidth});
+            scaleTicks = scale.ticks(scaleTicksCount);
         }
-
-        // For non-datetime continuous scales (linear, logarithmic)
-        const scaleTicksCount = getTicksCount({axis, range: axisWidth});
-        const scaleTicks = scale.ticks(scaleTicksCount);
 
         const originalTickValues = scaleTicks.map((t) => ({
             x: scale(t),
