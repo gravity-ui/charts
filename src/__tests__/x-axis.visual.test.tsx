@@ -320,7 +320,6 @@ test.describe('X-axis', () => {
     });
 
     test.describe('pixelInterval for datetime axis', () => {
-        // Data spanning ~1 year for testing different tick intervals
         const yearData: ChartData = {
             series: {
                 data: [
@@ -328,11 +327,11 @@ test.describe('X-axis', () => {
                         type: 'line',
                         name: 'Series 1',
                         data: [
-                            {x: 1704067200000, y: 10}, // 2024-01-01
-                            {x: 1711929600000, y: 25}, // 2024-04-01
-                            {x: 1719792000000, y: 15}, // 2024-07-01
-                            {x: 1727740800000, y: 30}, // 2024-10-01
-                            {x: 1735689600000, y: 20}, // 2025-01-01
+                            {x: Date.UTC(2024, 0, 1), y: 10},
+                            {x: Date.UTC(2024, 3, 1), y: 25},
+                            {x: Date.UTC(2024, 6, 1), y: 15},
+                            {x: Date.UTC(2024, 9, 1), y: 30},
+                            {x: Date.UTC(2025, 0, 1), y: 20},
                         ],
                     },
                 ],

@@ -114,13 +114,13 @@ export function getXAxisTickValues({
         let scaleTicks: Date[] | number[];
 
         if (isTimeScale(scale)) {
-            const scaleTicksCount = getDatetimeAxisTimeInterval({
+            const timeInterval = getDatetimeAxisTimeInterval({
                 scale: scale as ChartScaleTime,
                 axis,
                 axisWidth,
                 labelLineHeight,
             });
-            scaleTicks = scaleTicksCount ? scale.ticks(scaleTicksCount) : scale.ticks();
+            scaleTicks = timeInterval ? scale.ticks(timeInterval) : scale.ticks();
         } else {
             const scaleTicksCount = getTicksCount({axis, range: axisWidth});
             scaleTicks = scale.ticks(scaleTicksCount);
