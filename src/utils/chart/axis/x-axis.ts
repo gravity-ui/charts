@@ -10,9 +10,6 @@ import {getTicksCount, isBandScale, isTimeScale, thinOut} from './common';
 const AVG_CHAR_WIDTH_RATIO = 0.6;
 const MIN_TICKS = 2;
 
-/**
- * Calculates the step multiplier for a time interval to fit within maxTicks
- */
 function calculateStep(estimatedTicks: number, maxTicks: number): number {
     let step = 1;
 
