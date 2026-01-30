@@ -1,4 +1,3 @@
-import {utcMillisecond} from 'd3';
 import type {CountableTimeInterval, TimeInterval} from 'd3';
 
 import type {ChartScale, ChartScaleTime, PreparedAxis} from '../../../hooks';
@@ -23,9 +22,13 @@ function getBestDatetimeInterval(args: {
     fontHeight: number;
     padding: number;
     pixelInterval?: number;
-}): {interval: CountableTimeInterval; step: number} {
+}): {interval: CountableTimeInterval; step: number} | null {
     const {domain, axisWidth, fontHeight, padding, pixelInterval} = args;
     const totalRange = domain[1].getTime() - domain[0].getTime();
+
+    if (!Number.isFinite(totalRange) || totalRange <= 0) {
+        return null;
+    }
 
     // Find the largest interval that produces at least 2 ticks and fits labels
     for (const {interval, duration, labelCharCount} of TIME_INTERVALS) {
@@ -53,7 +56,7 @@ function getBestDatetimeInterval(args: {
         }
     }
 
-    return {interval: utcMillisecond, step: 1};
+    return null;
 }
 
 function getDatetimeAxisTimeInterval(args: {
@@ -66,7 +69,7 @@ function getDatetimeAxisTimeInterval(args: {
 
     const domain = scale.domain();
 
-    const {interval, step} = getBestDatetimeInterval({
+    const result = getBestDatetimeInterval({
         domain: domain as [Date, Date],
         axisWidth,
         fontHeight: labelLineHeight,
@@ -74,8 +77,14 @@ function getDatetimeAxisTimeInterval(args: {
         pixelInterval: axis.ticks.pixelInterval,
     });
 
+    if (!result) {
+        return null;
+    }
+
+    const {interval, step} = result;
+
     // .every(step) creates an interval that skips values (e.g., every 2 years)
-    return interval.every(step) ?? interval;
+    return step > 1 ? interval.every(step) : interval;
 }
 
 export function getXAxisTickValues({
