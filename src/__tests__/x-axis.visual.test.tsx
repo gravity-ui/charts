@@ -318,4 +318,52 @@ test.describe('X-axis', () => {
             });
         });
     });
+
+    test.describe('pixelInterval for datetime axis', () => {
+        // Data spanning ~1 year for testing different tick intervals
+        const yearData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1704067200000, y: 10}, // 2024-01-01
+                            {x: 1711929600000, y: 25}, // 2024-04-01
+                            {x: 1719792000000, y: 15}, // 2024-07-01
+                            {x: 1727740800000, y: 30}, // 2024-10-01
+                            {x: 1735689600000, y: 20}, // 2025-01-01
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'datetime',
+            },
+            chart: {
+                margin: CHART_MARGIN,
+            },
+        };
+
+        test('pixelInterval=50 (dense ticks)', async ({mount}) => {
+            const data = cloneDeep(yearData);
+            set(data, 'xAxis.ticks.pixelInterval', 50);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('pixelInterval=100 (medium ticks)', async ({mount}) => {
+            const data = cloneDeep(yearData);
+            set(data, 'xAxis.ticks.pixelInterval', 100);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('pixelInterval=200 (sparse ticks)', async ({mount}) => {
+            const data = cloneDeep(yearData);
+            set(data, 'xAxis.ticks.pixelInterval', 200);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

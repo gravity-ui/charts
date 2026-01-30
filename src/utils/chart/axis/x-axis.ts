@@ -1,82 +1,14 @@
-import {
-    utcDay,
-    utcHour,
-    utcMillisecond,
-    utcMinute,
-    utcMonth,
-    utcSecond,
-    utcWeek,
-    utcYear,
-} from 'd3';
+import {utcMillisecond} from 'd3';
 import type {CountableTimeInterval, TimeInterval} from 'd3';
 
 import type {ChartScale, ChartScaleTime, PreparedAxis} from '../../../hooks';
 import {getMinSpaceBetween} from '../array';
-import {DATETIME_LABEL_FORMATS, TIME_UNITS} from '../time';
+import {TIME_INTERVALS} from '../time';
 
 import {getTicksCount, isBandScale, isTimeScale, thinOut} from './common';
 
 // Average character width as a fraction of font height (approximation for most fonts)
 const AVG_CHAR_WIDTH_RATIO = 0.6;
-
-/**
- * Time intervals ordered from largest to smallest.
- */
-const TIME_INTERVALS: Array<{
-    interval: CountableTimeInterval;
-    unit: keyof typeof TIME_UNITS;
-    duration: number;
-    labelCharCount: number;
-}> = [
-    {
-        interval: utcYear,
-        unit: 'year',
-        duration: TIME_UNITS.year,
-        labelCharCount: DATETIME_LABEL_FORMATS.year.length,
-    },
-    {
-        interval: utcMonth,
-        unit: 'month',
-        duration: TIME_UNITS.month,
-        labelCharCount: DATETIME_LABEL_FORMATS.month.length,
-    },
-    {
-        interval: utcWeek,
-        unit: 'week',
-        duration: TIME_UNITS.week,
-        labelCharCount: DATETIME_LABEL_FORMATS.week.length,
-    },
-    {
-        interval: utcDay,
-        unit: 'day',
-        duration: TIME_UNITS.day,
-        labelCharCount: DATETIME_LABEL_FORMATS.day.length,
-    },
-    {
-        interval: utcHour,
-        unit: 'hour',
-        duration: TIME_UNITS.hour,
-        labelCharCount: DATETIME_LABEL_FORMATS.hour.length,
-    },
-    {
-        interval: utcMinute,
-        unit: 'minute',
-        duration: TIME_UNITS.minute,
-        labelCharCount: DATETIME_LABEL_FORMATS.minute.length,
-    },
-    {
-        interval: utcSecond,
-        unit: 'second',
-        duration: TIME_UNITS.second,
-        labelCharCount: DATETIME_LABEL_FORMATS.second.length,
-    },
-    {
-        interval: utcMillisecond,
-        unit: 'millisecond',
-        duration: TIME_UNITS.millisecond,
-        labelCharCount: DATETIME_LABEL_FORMATS.millisecond.length,
-    },
-];
 
 /**
  * Determines the best time interval for datetime axis ticks based on:
@@ -103,8 +35,10 @@ function getBestDatetimeInterval(args: {
             continue;
         }
 
-        const estimatedLabelWidth = labelCharCount * fontHeight * AVG_CHAR_WIDTH_RATIO;
-        const minTickSpacing = pixelInterval ?? estimatedLabelWidth + padding * 2;
+        // Calculate label width based on format, use max of pixelInterval and estimated width
+        const estimatedLabelWidth =
+            labelCharCount * fontHeight * AVG_CHAR_WIDTH_RATIO + padding * 2;
+        const minTickSpacing = pixelInterval ?? estimatedLabelWidth;
         const maxTicks = Math.max(2, Math.ceil(axisWidth / minTickSpacing));
 
         let step = 1;
