@@ -8,21 +8,38 @@ import {getTicksCount, isBandScale, isTimeScale, thinOut} from './common';
 
 // Average character width as a fraction of font height (approximation for most fonts)
 const AVG_CHAR_WIDTH_RATIO = 0.6;
+const MIN_TICKS = 2;
 
 /**
- * Determines the best time interval for datetime axis ticks based on:
- * - The total time range of the data
- * - The available pixel width
- * - The label width requirements (estimated from date format)
- * - Optional pixelInterval from axis configuration
+ * Calculates the step multiplier for a time interval to fit within maxTicks
  */
+function calculateStep(estimatedTicks: number, maxTicks: number): number {
+    let step = 1;
+
+    if (estimatedTicks > maxTicks) {
+        step = Math.ceil(estimatedTicks / maxTicks);
+    }
+
+    // Ensure step doesn't exceed the maximum that still gives us MIN_TICKS
+    // This fixes rounding issues (e.g., ceil(27/2)=14, but floor(27/14)=1)
+    const maxStepForMinTicks = Math.floor(estimatedTicks / MIN_TICKS);
+    if (maxStepForMinTicks >= 1) {
+        step = Math.min(step, maxStepForMinTicks);
+    }
+
+    return step;
+}
+
 function getBestDatetimeInterval(args: {
     domain: [Date, Date];
     axisWidth: number;
     fontHeight: number;
     padding: number;
     pixelInterval?: number;
-}): {interval: CountableTimeInterval; step: number} | null {
+}): {
+    interval: CountableTimeInterval;
+    step: number;
+} | null {
     const {domain, axisWidth, fontHeight, padding, pixelInterval} = args;
     const totalRange = domain[1].getTime() - domain[0].getTime();
 
@@ -30,28 +47,22 @@ function getBestDatetimeInterval(args: {
         return null;
     }
 
-    // Find the largest interval that produces at least 2 ticks and fits labels
     for (const {interval, duration, labelCharCount} of TIME_INTERVALS) {
         const estimatedTicks = Math.ceil(totalRange / duration);
 
-        if (estimatedTicks < 2) {
+        if (estimatedTicks < MIN_TICKS) {
             continue;
         }
 
-        // Calculate label width based on format, use max of pixelInterval and estimated width
         const estimatedLabelWidth =
             labelCharCount * fontHeight * AVG_CHAR_WIDTH_RATIO + padding * 2;
         const minTickSpacing = pixelInterval ?? estimatedLabelWidth;
-        const maxTicks = Math.max(2, Math.ceil(axisWidth / minTickSpacing));
+        const maxTicks = Math.max(MIN_TICKS, Math.ceil(axisWidth / minTickSpacing));
 
-        let step = 1;
-        if (estimatedTicks > maxTicks) {
-            step = Math.ceil(estimatedTicks / maxTicks);
-        }
-
+        const step = calculateStep(estimatedTicks, maxTicks);
         const ticksWithStep = Math.floor(totalRange / (duration * step));
 
-        if (ticksWithStep >= 2) {
+        if (ticksWithStep >= MIN_TICKS) {
             return {interval, step};
         }
     }
