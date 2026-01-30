@@ -1630,9 +1630,6 @@ export const lineDualAxesSplitData: ChartData = {
         ],
     },
     xAxis: {
-        ticks: {
-            pixelInterval: 120,
-        },
         labels: {
             enabled: false,
         },

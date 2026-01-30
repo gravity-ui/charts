@@ -648,9 +648,6 @@ test.describe('Y-axis', () => {
             },
             xAxis: {
                 type: 'datetime',
-                ticks: {
-                    pixelInterval: 120,
-                },
             },
             yAxis: [
                 {
