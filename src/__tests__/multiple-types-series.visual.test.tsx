@@ -1,8 +1,11 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {otherLineAndBarData} from '../__stories__/__data__/other/line-and-bar';
 import type {ChartData} from '../types';
 
 test.describe('Multiple types of series on same chart', () => {
@@ -51,6 +54,13 @@ test.describe('Multiple types of series on same chart', () => {
             },
         };
         const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Line series should be placed after bar series', async ({mount}) => {
+        const data = cloneDeep(otherLineAndBarData);
+        set(data, 'series.data[0].dataLabels.enabled', true);
+        const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
