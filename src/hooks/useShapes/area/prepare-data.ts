@@ -162,7 +162,9 @@ export const prepareAreaData = async (args: {
             });
 
             const seriesStackData: PreparedAreaData[] = [];
-            for (let j = 0; j < seriesStack.length; j++) {
+            // Process series in reverse order so that the first series in input
+            // appears at the top of the stack (furthest from baseline)
+            for (let j = seriesStack.length - 1; j >= 0; j--) {
                 const s = seriesStack[j];
                 const yAxisIndex = s.yAxis;
                 const seriesYAxis = yAxis[yAxisIndex];
