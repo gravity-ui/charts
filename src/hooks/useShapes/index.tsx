@@ -143,7 +143,7 @@ export const useShapes = (args: Args) => {
 
             await Promise.all(
                 // eslint-disable-next-line complexity
-                Array.from(groupedSeries).map(async (item) => {
+                Array.from(groupedSeries).map(async (item, index) => {
                     const [seriesType, chartSeries] = item;
                     switch (seriesType) {
                         case SERIES_TYPE.BarX: {
@@ -159,7 +159,7 @@ export const useShapes = (args: Args) => {
                                     split,
                                     isRangeSlider,
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <BarXSeriesShapes
                                         key={SERIES_TYPE.BarX}
                                         dispatcher={dispatcher}
@@ -167,9 +167,9 @@ export const useShapes = (args: Args) => {
                                         preparedData={preparedData}
                                         htmlLayout={htmlLayout}
                                         clipPathId={clipPathId}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(...preparedData);
+                                shapesData.splice(index, 0, ...preparedData);
                             }
                             break;
                         }
@@ -185,7 +185,7 @@ export const useShapes = (args: Args) => {
                                     yAxis,
                                     yScale,
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <BarYSeriesShapes
                                         key={SERIES_TYPE.BarY}
                                         dispatcher={dispatcher}
@@ -193,9 +193,9 @@ export const useShapes = (args: Args) => {
                                         preparedData={preparedData}
                                         htmlLayout={htmlLayout}
                                         clipPathId={clipPathId}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(...preparedData.shapes);
+                                shapesData.splice(index, 0, ...preparedData.shapes);
                             }
                             break;
                         }
@@ -209,7 +209,7 @@ export const useShapes = (args: Args) => {
                                     yAxis,
                                     yScale,
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <WaterfallSeriesShapes
                                         key={SERIES_TYPE.Waterfall}
                                         dispatcher={dispatcher}
@@ -217,9 +217,9 @@ export const useShapes = (args: Args) => {
                                         preparedData={preparedData}
                                         htmlLayout={htmlLayout}
                                         clipPathId={clipPathId}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(...preparedData);
+                                shapesData.splice(index, 0, ...preparedData);
                             }
                             break;
                         }
@@ -240,7 +240,7 @@ export const useShapes = (args: Args) => {
                                     yAxis,
                                     zoomState,
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <LineSeriesShapes
                                         key={SERIES_TYPE.Line}
                                         dispatcher={dispatcher}
@@ -248,9 +248,9 @@ export const useShapes = (args: Args) => {
                                         preparedData={preparedData}
                                         htmlLayout={htmlLayout}
                                         clipPathId={resultClipPathId}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(...preparedData);
+                                shapesData.splice(index, 0, ...preparedData);
                             }
                             break;
                         }
@@ -267,7 +267,7 @@ export const useShapes = (args: Args) => {
                                     isOutsideBounds,
                                     isRangeSlider,
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <AreaSeriesShapes
                                         key={SERIES_TYPE.Area}
                                         dispatcher={dispatcher}
@@ -275,9 +275,9 @@ export const useShapes = (args: Args) => {
                                         preparedData={preparedData}
                                         htmlLayout={htmlLayout}
                                         clipPathId={clipPathId}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(...preparedData);
+                                shapesData.splice(index, 0, ...preparedData);
                             }
                             break;
                         }
@@ -291,7 +291,7 @@ export const useShapes = (args: Args) => {
                                     yScale,
                                     isOutsideBounds,
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <ScatterSeriesShape
                                         key={SERIES_TYPE.Scatter}
                                         clipPathId={
@@ -306,9 +306,9 @@ export const useShapes = (args: Args) => {
                                         preparedData={preparedData}
                                         seriesOptions={seriesOptions}
                                         htmlLayout={htmlLayout}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(...preparedData);
+                                shapesData.splice(index, 0, ...preparedData);
                             }
                             break;
                         }
@@ -318,16 +318,16 @@ export const useShapes = (args: Args) => {
                                 boundsWidth,
                                 boundsHeight,
                             });
-                            shapes.push(
+                            shapes[index] = (
                                 <PieSeriesShapes
                                     key={SERIES_TYPE.Pie}
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                />,
+                                />
                             );
-                            shapesData.push(...preparedData);
+                            shapesData.splice(index, 0, ...preparedData);
                             break;
                         }
                         case SERIES_TYPE.Treemap: {
@@ -338,16 +338,16 @@ export const useShapes = (args: Args) => {
                                 width: boundsWidth,
                                 height: boundsHeight,
                             });
-                            shapes.push(
+                            shapes[index] = (
                                 <TreemapSeriesShape
                                     key={SERIES_TYPE.Treemap}
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                />,
+                                />
                             );
-                            shapesData.push(preparedData as unknown as ShapeData);
+                            shapesData.splice(index, 0, preparedData as unknown as ShapeData);
                             break;
                         }
                         case SERIES_TYPE.Sankey: {
@@ -356,16 +356,16 @@ export const useShapes = (args: Args) => {
                                 width: boundsWidth,
                                 height: boundsHeight,
                             });
-                            shapes.push(
+                            shapes[index] = (
                                 <SankeySeriesShape
                                     key={SERIES_TYPE.Sankey}
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                />,
+                                />
                             );
-                            shapesData.push(preparedData);
+                            shapesData.splice(index, 0, preparedData);
                             break;
                         }
                         case SERIES_TYPE.Radar: {
@@ -374,16 +374,16 @@ export const useShapes = (args: Args) => {
                                 boundsWidth,
                                 boundsHeight,
                             });
-                            shapes.push(
+                            shapes[index] = (
                                 <RadarSeriesShapes
                                     key={SERIES_TYPE.Radar}
                                     dispatcher={dispatcher}
                                     series={preparedData}
                                     seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                />,
+                                />
                             );
-                            shapesData.push(...preparedData);
+                            shapesData.splice(index, 0, ...preparedData);
                             break;
                         }
                         case SERIES_TYPE.Heatmap: {
@@ -395,16 +395,16 @@ export const useShapes = (args: Args) => {
                                     yAxis: yAxis[0],
                                     yScale: yScale[0],
                                 });
-                                shapes.push(
+                                shapes[index] = (
                                     <HeatmapSeriesShapes
                                         key={SERIES_TYPE.Heatmap}
                                         dispatcher={dispatcher}
                                         preparedData={preparedData}
                                         seriesOptions={seriesOptions}
                                         htmlLayout={htmlLayout}
-                                    />,
+                                    />
                                 );
-                                shapesData.push(preparedData);
+                                shapesData.splice(index, 0, preparedData);
                             }
                             break;
                         }
@@ -414,16 +414,16 @@ export const useShapes = (args: Args) => {
                                 boundsWidth,
                                 boundsHeight,
                             });
-                            shapes.push(
+                            shapes[index] = (
                                 <FunnelSeriesShapes
                                     key="funnel"
                                     dispatcher={dispatcher}
                                     preparedData={preparedData}
                                     seriesOptions={seriesOptions}
                                     htmlLayout={htmlLayout}
-                                />,
+                                />
                             );
-                            shapesData.push(preparedData);
+                            shapesData.splice(index, 0, preparedData);
                             break;
                         }
                         default: {
