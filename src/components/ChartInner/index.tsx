@@ -102,6 +102,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         prevWidth,
         shapes,
         shapesData,
+        shapesReady,
         xAxis,
         xScale,
         yAxis,
@@ -271,12 +272,11 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
     ]);
 
-    const areShapesReady = shapes.length > 0;
     React.useEffect(() => {
-        if (areShapesReady) {
+        if (shapesReady) {
             onReady?.({dimensions: {width, height}});
         }
-    }, [height, areShapesReady, onReady, width]);
+    }, [height, shapesReady, onReady, width]);
 
     const chartContent = (
         <React.Fragment>
