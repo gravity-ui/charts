@@ -216,4 +216,85 @@ test.describe('Area series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Stacking with null values', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series1',
+                        type: 'area',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 10,
+                                x: 1,
+                            },
+                            {
+                                y: 5,
+                                x: 2,
+                            },
+                            {
+                                y: 10,
+                                x: 3,
+                            },
+                            {
+                                y: 7,
+                                x: 4,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Series2',
+                        type: 'area',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 10,
+                                x: 1,
+                            },
+                            {
+                                y: null,
+                                x: 2,
+                            },
+                            {
+                                y: 10,
+                                x: 3,
+                            },
+                            {
+                                y: 7,
+                                x: 4,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Series3',
+                        type: 'area',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 10,
+                                x: 1,
+                            },
+                            {
+                                y: 5,
+                                x: 2,
+                            },
+                            {
+                                y: 10,
+                                x: 3,
+                            },
+                            {
+                                y: 7,
+                                x: 4,
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

@@ -154,11 +154,11 @@ export const prepareAreaData = async (args: {
 
             const xValues = getXValues(seriesStack, xAxis, xScale);
 
-            const positiveStackValues = new Map<string, number>();
-            const negativeStackValues = new Map<string, number>();
+            const positiveStackValues = new Map<string, {prev: number; next: number}>();
+            const negativeStackValues = new Map<string, {prev: number; next: number}>();
             xValues.forEach(([key]) => {
-                positiveStackValues.set(key, 0);
-                negativeStackValues.set(key, 0);
+                positiveStackValues.set(key, {prev: 0, next: 0});
+                negativeStackValues.set(key, {prev: 0, next: 0});
             });
 
             const seriesStackData: PreparedAreaData[] = [];
@@ -195,7 +195,7 @@ export const prepareAreaData = async (args: {
                     );
                     return m.set(key, d);
                 }, new Map());
-                const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue]) => {
+                const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue], index) => {
                     const d =
                         seriesData.get(x) ??
                         ({
@@ -203,36 +203,102 @@ export const prepareAreaData = async (args: {
                             y: 0,
                         } as AreaSeriesData);
                     const yDataValue = d.y ?? null;
-                    const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
-
-                    let y = null;
-                    let y0 = yAxisTop + yMin;
-                    if (typeof yDataValue === 'number' && yValue !== null) {
-                        if (yDataValue >= 0) {
-                            const positiveStackHeight = positiveStackValues.get(x) || 0;
-                            y = yAxisTop + yValue - positiveStackHeight;
-                            y0 -= positiveStackHeight;
-
-                            positiveStackValues.set(x, positiveStackHeight + (yMin - yValue));
-                        } else {
-                            const negativeStackHeight = negativeStackValues.get(x) || 0;
-                            y = yAxisTop + yValue + negativeStackHeight;
-                            y0 += negativeStackHeight;
-
-                            negativeStackValues.set(x, negativeStackHeight + (yValue - yMin));
-                        }
-                    }
 
                     if (s.nullMode === 'connect' && yDataValue === null) {
                         return pointsAcc;
                     }
-                    pointsAcc.push({
-                        y0,
-                        x: xValue,
-                        y,
-                        data: d,
-                        series: s,
-                    });
+
+                    const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
+                    if (typeof yDataValue === 'number' && yValue !== null) {
+                        const prevPoint = seriesData.get(xValues[index - 1]?.[0]);
+                        const nextPoint = seriesData.get(xValues[index + 1]?.[0]);
+                        const currentPointStackHeight = Math.abs(yMin - yValue);
+
+                        if (yDataValue >= 0) {
+                            const positiveStackHeights = positiveStackValues.get(x);
+                            let prevSectionStackHeight = positiveStackHeights?.prev ?? 0;
+                            let nextSectionStackHeight = positiveStackHeights?.next ?? 0;
+
+                            pointsAcc.push({
+                                y0: yAxisTop + yMin - prevSectionStackHeight,
+                                x: xValue,
+                                y: yAxisTop + yValue - prevSectionStackHeight,
+                                data: d,
+                                series: s,
+                            });
+
+                            if (prevSectionStackHeight !== nextSectionStackHeight) {
+                                pointsAcc.push({
+                                    y0: yAxisTop + yMin - nextSectionStackHeight,
+                                    x: xValue,
+                                    y: yAxisTop + yValue - nextSectionStackHeight,
+                                    data: d,
+                                    series: s,
+                                });
+                            }
+
+                            if (prevPoint?.y !== null) {
+                                prevSectionStackHeight =
+                                    prevSectionStackHeight + currentPointStackHeight;
+                            }
+
+                            if (nextPoint?.y !== null) {
+                                nextSectionStackHeight =
+                                    nextSectionStackHeight + currentPointStackHeight;
+                            }
+
+                            positiveStackValues.set(x, {
+                                prev: prevSectionStackHeight,
+                                next: nextSectionStackHeight,
+                            });
+                        } else {
+                            const negativeStackHeights = negativeStackValues.get(x);
+                            let prevSectionStackHeight = negativeStackHeights?.prev ?? 0;
+                            let nextSectionStackHeight = negativeStackHeights?.next ?? 0;
+
+                            pointsAcc.push({
+                                y0: yAxisTop + yMin + prevSectionStackHeight,
+                                x: xValue,
+                                y: yAxisTop + yValue + prevSectionStackHeight,
+                                data: d,
+                                series: s,
+                            });
+
+                            if (prevSectionStackHeight !== nextSectionStackHeight) {
+                                pointsAcc.push({
+                                    y0: yAxisTop + yMin + nextSectionStackHeight,
+                                    x: xValue,
+                                    y: yAxisTop + yValue + nextSectionStackHeight,
+                                    data: d,
+                                    series: s,
+                                });
+                            }
+
+                            if (prevPoint?.y !== null) {
+                                prevSectionStackHeight =
+                                    prevSectionStackHeight + currentPointStackHeight;
+                            }
+
+                            if (nextPoint?.y !== null) {
+                                nextSectionStackHeight =
+                                    nextSectionStackHeight + currentPointStackHeight;
+                            }
+
+                            negativeStackValues.set(x, {
+                                prev: prevSectionStackHeight,
+                                next: nextSectionStackHeight,
+                            });
+                        }
+                    } else {
+                        pointsAcc.push({
+                            y0: yAxisTop + yMin,
+                            x: xValue,
+                            y: null,
+                            data: d,
+                            series: s,
+                        });
+                    }
+
                     return pointsAcc;
                 }, []);
                 const labels: LabelData[] = [];
@@ -277,7 +343,7 @@ export const prepareAreaData = async (args: {
 
             if (series.some((s) => s.stacking === 'percent')) {
                 xValues.forEach(([x], index) => {
-                    const stackHeight = positiveStackValues.get(x) || 0;
+                    const stackHeight = positiveStackValues.get(x)?.prev || 0;
                     let acc = 0;
                     const ratio = plotHeight / stackHeight;
 
