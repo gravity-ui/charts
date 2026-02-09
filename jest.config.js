@@ -11,9 +11,14 @@ const esModules = [
 module.exports = {
     ...createJsWithTsPreset(),
     transform: {
-        '^.+\\.(js|ts)?$': ['ts-jest', {useESM: true}],
+        '^.+\\.tsx?$': ['ts-jest', {useESM: true}],
+        '^.+\\.js$': ['babel-jest', {presets: ['@babel/preset-env']}],
     },
     transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
     testMatch: ['**/*.test.[jt]s?(x)'],
     testPathIgnorePatterns: ['.visual.'],
+    moduleNameMapper: {
+        '\\.(css|scss)$': '<rootDir>/src/__mocks__/styleMock.js',
+    },
+    setupFiles: ['<rootDir>/src/setup-jsdom.ts'],
 };

@@ -195,7 +195,7 @@ export function useChartInnerProps(props: Props) {
         [boundsHeight, boundsWidth],
     );
 
-    const {shapes, shapesData} = useShapes({
+    const {shapes, shapesData, shapesReady} = useShapes({
         boundsWidth,
         boundsHeight,
         clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
@@ -278,6 +278,7 @@ export function useChartInnerProps(props: Props) {
         prevWidth,
         shapes,
         shapesData,
+        shapesReady,
         svgXPos: x,
         xAxis,
         xScale,

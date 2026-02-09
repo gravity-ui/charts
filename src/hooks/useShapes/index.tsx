@@ -127,6 +127,7 @@ export const useShapes = (args: Args) => {
 
     const [shapesElemens, setShapesElements] = React.useState<React.ReactElement[]>([]);
     const [shapesElemensData, setShapesElemensData] = React.useState<ShapeData[]>([]);
+    const shapesReadyRef = React.useRef(false);
 
     const countedRef = React.useRef(0);
 
@@ -436,6 +437,7 @@ export const useShapes = (args: Args) => {
             );
 
             if (countedRef.current === currentRun) {
+                shapesReadyRef.current = true;
                 setShapesElements(shapes);
                 setShapesElemensData(shapesData);
             }
@@ -459,5 +461,9 @@ export const useShapes = (args: Args) => {
         zoomState,
     ]);
 
-    return {shapes: shapesElemens, shapesData: shapesElemensData};
+    return {
+        shapes: shapesElemens,
+        shapesData: shapesElemensData,
+        shapesReady: shapesReadyRef.current,
+    };
 };
