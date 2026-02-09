@@ -29,6 +29,50 @@ import {getPreparedRangeSlider} from './range-slider';
 import type {PreparedXAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
 
+function getDatetimeDataCount(seriesData: ChartSeries[]) {
+    const xValues = new Set<number>();
+    for (const series of seriesData) {
+        if (!isAxisRelatedSeries(series)) {
+            continue;
+        }
+        const data = (series as {data?: Array<{x?: unknown}>}).data;
+        if (!Array.isArray(data)) {
+            continue;
+        }
+        for (const point of data) {
+            const x = (point as {x?: unknown}).x;
+            if (typeof x === 'number' && Number.isFinite(x)) {
+                xValues.add(x);
+            } else if (x instanceof Date && Number.isFinite(x.getTime())) {
+                xValues.add(x.getTime());
+            }
+        }
+    }
+    return xValues.size || undefined;
+}
+
+function getDatetimeTimestamps(seriesData: ChartSeries[]) {
+    const xValues = new Set<number>();
+    for (const series of seriesData) {
+        if (!isAxisRelatedSeries(series)) {
+            continue;
+        }
+        const data = (series as {data?: Array<{x?: unknown}>}).data;
+        if (!Array.isArray(data)) {
+            continue;
+        }
+        for (const point of data) {
+            const x = (point as {x?: unknown}).x;
+            if (typeof x === 'number' && Number.isFinite(x)) {
+                xValues.add(x);
+            } else if (x instanceof Date && Number.isFinite(x.getTime())) {
+                xValues.add(x.getTime());
+            }
+        }
+    }
+    return xValues.size ? Array.from(xValues) : undefined;
+}
+
 async function setLabelSettings({
     axis,
     seriesData,
@@ -246,6 +290,15 @@ export const getPreparedXAxis = async ({
         order: xAxis?.order,
         rangeSlider: preparedRangeSlider,
     };
+
+    if (preparedXAxis.type === 'datetime') {
+        const providedTimestamps = preparedXAxis.timestamps;
+        const derivedTimestamps = providedTimestamps
+            ? undefined
+            : getDatetimeTimestamps(seriesData);
+        preparedXAxis.timestamps = providedTimestamps ?? derivedTimestamps;
+        preparedXAxis.ticks.dataCount = getDatetimeDataCount(seriesData);
+    }
 
     if (isLabelsEnabled) {
         await setLabelSettings({

@@ -75,6 +75,8 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
     maxPadding: number;
     ticks: {
         pixelInterval?: number;
+        // TODO: move?
+        dataCount?: number;
     };
     position: 'left' | 'right' | 'top' | 'bottom';
     plotIndex: number;

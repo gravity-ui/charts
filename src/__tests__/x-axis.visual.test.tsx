@@ -318,4 +318,54 @@ test.describe('X-axis', () => {
             });
         });
     });
+
+    test.describe('pixelInterval for datetime axis', () => {
+        const yearData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: Date.UTC(2024, 0, 1), y: 10},
+                            {x: Date.UTC(2024, 3, 1), y: 25},
+                            {x: Date.UTC(2024, 4, 1), y: 25},
+                            {x: Date.UTC(2024, 6, 13), y: 15},
+                            {x: Date.UTC(2024, 9, 1), y: 30},
+                            {x: Date.UTC(2024, 10, 2), y: 15},
+                            {x: Date.UTC(2024, 11, 12), y: 30},
+                            {x: Date.UTC(2025, 0, 1), y: 20},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'datetime',
+            },
+            chart: {
+                margin: CHART_MARGIN,
+            },
+        };
+
+        test('pixelInterval=40 (dense ticks)', async ({mount}) => {
+            const data = cloneDeep(yearData);
+            set(data, 'xAxis.ticks.pixelInterval', 40);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('pixelInterval=100 (medium ticks)', async ({mount}) => {
+            const data = cloneDeep(yearData);
+            set(data, 'xAxis.ticks.pixelInterval', 100);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('pixelInterval=200 (sparse ticks)', async ({mount}) => {
+            const data = cloneDeep(yearData);
+            set(data, 'xAxis.ticks.pixelInterval', 200);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

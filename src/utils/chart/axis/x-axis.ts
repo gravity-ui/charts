@@ -1,7 +1,8 @@
 import type {ChartScale, PreparedAxis} from '../../../hooks';
 import {getMinSpaceBetween} from '../array';
 
-import {getTicksCount, isBandScale, thinOut} from './common';
+import {getTicksCount, isBandScale, isTimeScale, thinOut} from './common';
+import {getDatetimeAxisTimeInterval} from './x-axis-datetime';
 
 export function getXAxisTickValues({
     scale,
@@ -19,8 +20,28 @@ export function getXAxisTickValues({
             return [];
         }
 
+        let scaleTicks: Date[] | number[];
         const scaleTicksCount = getTicksCount({axis, range: axisWidth});
-        const scaleTicks = scale.ticks(scaleTicksCount);
+
+        if (isTimeScale(scale) && axis.type === 'datetime') {
+            const [domainStart, domainEnd] = (scale.domain() as Date[]).map((d) => d.getTime());
+            const dateCount = Array.isArray(axis.timestamps)
+                ? new Set(
+                      axis.timestamps
+                          .map((value) => Number(value))
+                          .filter((value) => value >= domainStart && value <= domainEnd),
+                  ).size
+                : 0;
+
+            const timeInterval = getDatetimeAxisTimeInterval({axis, axisWidth, scale, dateCount});
+            if (timeInterval && typeof timeInterval !== 'number') {
+                scaleTicks = scale.ticks(timeInterval);
+            } else {
+                scaleTicks = scale.ticks(timeInterval ?? scaleTicksCount);
+            }
+        } else {
+            scaleTicks = scale.ticks(scaleTicksCount);
+        }
 
         const originalTickValues = scaleTicks.map((t) => ({
             x: scale(t),
