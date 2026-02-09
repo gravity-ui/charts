@@ -45,6 +45,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotBeforeRef = React.useRef<SVGGElement | null>(null);
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const rangeSliderRef = React.useRef<RangeSliderHandle | null>(null);
+    const onReadyFiredRef = React.useRef(false);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
     const preparedTitle = React.useMemo(() => {
@@ -273,8 +274,9 @@ export const ChartInner = (props: ChartInnerProps) => {
     ]);
 
     React.useEffect(() => {
-        if (shapesReady) {
+        if (shapesReady && !onReadyFiredRef.current) {
             onReady?.({dimensions: {width, height}});
+            onReadyFiredRef.current = true;
         }
     }, [height, shapesReady, onReady, width]);
 

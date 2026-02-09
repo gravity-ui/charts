@@ -3,19 +3,13 @@
  */
 import React from 'react';
 
-import {render, waitFor} from '@testing-library/react';
+import {ThemeProvider} from '@gravity-ui/uikit';
+import {waitFor} from '@testing-library/react';
 
 import type {ChartData} from '../../types';
 import {Chart} from '../index';
 
-function createSizedContainer(width: number, height: number) {
-    const container = document.createElement('div');
-    Object.defineProperty(container, 'clientWidth', {value: width, configurable: true});
-    Object.defineProperty(container, 'clientHeight', {value: height, configurable: true});
-    document.body.appendChild(container);
-
-    return container;
-}
+import {renderChart, timeout} from './utils';
 
 describe('Chart/onReady', () => {
     afterEach(() => {
@@ -39,8 +33,7 @@ describe('Chart/onReady', () => {
             },
         };
 
-        const container = createSizedContainer(800, 400);
-        render(<Chart data={data} onReady={onReady} />, {container});
+        renderChart(<Chart data={data} onReady={onReady} />);
 
         await waitFor(() => {
             expect(onReady).toHaveBeenCalledTimes(1);
@@ -68,11 +61,44 @@ describe('Chart/onReady', () => {
             },
         };
 
-        const container = createSizedContainer(800, 400);
-        render(<Chart data={data} onReady={onReady} />, {container});
+        renderChart(<Chart data={data} onReady={onReady} />);
 
         await waitFor(() => {
             expect(onReady).toHaveBeenCalledTimes(1);
         });
+    });
+
+    test('should call onReady only once after re-renders', async () => {
+        const onReady = jest.fn();
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Test Series',
+                        data: [
+                            {x: 0, y: 1},
+                            {x: 1, y: 2},
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const {rerender} = renderChart(<Chart data={data} onReady={onReady} />);
+
+        await waitFor(() => {
+            expect(onReady).toHaveBeenCalledTimes(1);
+        });
+
+        rerender(
+            <ThemeProvider theme="light">
+                <Chart data={data} onReady={onReady} />
+            </ThemeProvider>,
+        );
+
+        // Give time for any potential extra calls to settle
+        await timeout(200);
+        expect(onReady).toHaveBeenCalledTimes(1);
     });
 });
