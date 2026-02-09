@@ -1,16 +1,46 @@
-import type {ChartScale, PreparedAxis} from '../../../hooks';
+import type {ChartScale, PreparedAxis, PreparedSeries} from '../../../hooks';
 import {getMinSpaceBetween} from '../array';
+import {isSeriesWithNumericalXValues} from '../series-type-guards';
 
-import {getTicksCount, isBandScale, thinOut} from './common';
+import {getTicksCountByPixelInterval, isBandScale, thinOut} from './common';
+
+const DEFAULT_TICKS_COUNT = 10;
+
+function getTicksCount(args: {axis: PreparedAxis; axisWidth: number; series?: PreparedSeries[]}) {
+    const {axis, axisWidth, series} = args;
+    const result = getTicksCountByPixelInterval({axis, axisWidth});
+
+    if (typeof result === 'number') {
+        return result;
+    }
+
+    if (series) {
+        const xDataSet = new Set<number | string>();
+        series?.forEach((item) => {
+            if (isSeriesWithNumericalXValues(item)) {
+                item.data.forEach((data) => {
+                    xDataSet.add(data.x);
+                });
+            }
+        });
+
+        return xDataSet.size < DEFAULT_TICKS_COUNT ? xDataSet.size : undefined;
+    }
+
+    return undefined;
+}
 
 export function getXAxisTickValues({
-    scale,
     axis,
     labelLineHeight,
+    scale,
+    series,
 }: {
-    scale: ChartScale;
     axis: PreparedAxis;
     labelLineHeight: number;
+    scale: ChartScale;
+    series?: PreparedSeries[];
+    ticksCount?: number;
 }) {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
@@ -19,7 +49,7 @@ export function getXAxisTickValues({
             return [];
         }
 
-        const scaleTicksCount = getTicksCount({axis, range: axisWidth});
+        const scaleTicksCount = getTicksCount({axis, axisWidth, series});
         const scaleTicks = scale.ticks(scaleTicksCount);
 
         const originalTickValues = scaleTicks.map((t) => ({

@@ -3,7 +3,7 @@ import type {ChartSeries} from '../../types';
 import {
     getDomainDataYBySeries,
     getMinSpaceBetween,
-    getTicksCount,
+    getTicksCountByPixelInterval,
     isBandScale,
     thinOut,
 } from '../../utils';
@@ -34,11 +34,12 @@ export function getTickValues({
                     return domainData;
                 }
 
-                const ticksCount = getTicksCount({axis, range: height}) ?? domainData.length;
+                const ticksCount =
+                    getTicksCountByPixelInterval({axis, axisWidth: height}) ?? domainData.length;
                 return scale.ticks(Math.min(ticksCount, domainData.length));
             }
 
-            const ticksCount = getTicksCount({axis, range: height});
+            const ticksCount = getTicksCountByPixelInterval({axis, axisWidth: height});
             return scale.ticks(ticksCount);
         };
 
