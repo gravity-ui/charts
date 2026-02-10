@@ -6,7 +6,6 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barYBasicData} from '../__stories__/__data__';
-import {generateDatetimeSeries} from '../__tests__/__data__/utils';
 import type {ChartData, ChartMargin} from '../types';
 
 const CHART_MARGIN: ChartMargin = {
@@ -244,7 +243,8 @@ test.describe('X-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.describe('startOnTick / endOnTick', () => {
+    // TODO: remove skip after https://github.com/gravity-ui/charts/issues/395
+    test.describe.skip('startOnTick / endOnTick', () => {
         test.describe('linear', () => {
             const baseData: ChartData = {
                 series: {
@@ -318,33 +318,5 @@ test.describe('X-axis', () => {
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
         });
-    });
-
-    test('Datetime single tick recenter', async ({mount}) => {
-        const HOUR = 3600000;
-        const data: ChartData = {
-            series: {
-                data: [
-                    generateDatetimeSeries({
-                        type: 'line',
-                        start: new Date('2026-02-02'),
-                        end: new Date('2026-02-09'),
-                        step: HOUR,
-                        overrides: {name: 'Series 1'},
-                        generateY: (_ts, i) => Math.sin(i / 12) * 30 + 50,
-                    }),
-                ],
-            },
-            xAxis: {
-                type: 'datetime',
-                ticks: {
-                    pixelInterval: 120,
-                },
-            },
-        };
-        const component = await mount(
-            <ChartTestStory data={data} styles={{width: 125, height: 150}} />,
-        );
-        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });

@@ -1,10 +1,4 @@
-import type {
-    ChartScale,
-    ChartScaleLinear,
-    ChartScaleTime,
-    PreparedAxis,
-    PreparedSeries,
-} from '../../../hooks';
+import type {ChartScale, PreparedAxis, PreparedSeries} from '../../../hooks';
 import type {ChartSeries} from '../../../types';
 import {getMinSpaceBetween} from '../array';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
@@ -12,55 +6,8 @@ import {isSeriesWithNumericalXValues} from '../series-type-guards';
 import {getTicksCountByPixelInterval, isBandScale, thinOut} from './common';
 
 const DEFAULT_TICKS_COUNT = 10;
-const MAX_RECENTER_ATTEMPTS = 5;
 
 type TickValue = {x: number; value: number | string | Date};
-
-/**
- * When D3's scale.ticks() returns only one tick, it may be positioned far from center.
- * This function attempts to get more ticks by incrementally increasing the requested count,
- * then picks the tick closest to the axis center.
- */
-function recenterSingleTick(args: {
-    originalTick: TickValue;
-    scale: ChartScaleLinear | ChartScaleTime;
-    scaleTicksCount: number;
-    axisWidth: number;
-}): TickValue[] {
-    const {originalTick, scale, scaleTicksCount, axisWidth} = args;
-    const center = axisWidth / 2;
-    const originalDistance = Math.abs(originalTick.x - center);
-
-    // Already close enough to center — no need to search
-    if (originalDistance <= axisWidth * 0.1) {
-        return [originalTick];
-    }
-
-    let closestTick = originalTick;
-    let closestDistance = originalDistance;
-
-    for (let i = 1; i <= MAX_RECENTER_ATTEMPTS; i++) {
-        const ticks = scale.ticks(scaleTicksCount + i);
-
-        if (ticks.length <= 2) {
-            continue;
-        }
-
-        for (const t of ticks) {
-            const x = Number(scale(t));
-            const distance = Math.abs(x - center);
-
-            if (distance < closestDistance) {
-                closestTick = {x, value: t};
-                closestDistance = distance;
-            }
-        }
-
-        break;
-    }
-
-    return [closestTick];
-}
 
 function getTicksCount(args: {
     axis: PreparedAxis;
@@ -117,15 +64,6 @@ export function getXAxisTickValues({
         }));
 
         if (originalTickValues.length <= 1) {
-            if (originalTickValues.length === 1) {
-                return recenterSingleTick({
-                    originalTick: originalTickValues[0],
-                    scale,
-                    scaleTicksCount,
-                    axisWidth,
-                });
-            }
-
             return originalTickValues;
         }
 
