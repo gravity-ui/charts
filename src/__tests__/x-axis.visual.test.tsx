@@ -320,7 +320,7 @@ test.describe('X-axis', () => {
         });
     });
 
-    test.only('Datetime single tick recenter', async ({mount}) => {
+    test('Datetime single tick recenter', async ({mount}) => {
         const HOUR = 3600000;
         const data: ChartData = {
             series: {
