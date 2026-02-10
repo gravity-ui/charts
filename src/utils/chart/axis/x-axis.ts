@@ -5,6 +5,7 @@ import type {
     PreparedAxis,
     PreparedSeries,
 } from '../../../hooks';
+import type {ChartSeries} from '../../../types';
 import {getMinSpaceBetween} from '../array';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
 
@@ -61,7 +62,11 @@ function recenterSingleTick(args: {
     return [closestTick];
 }
 
-function getTicksCount(args: {axis: PreparedAxis; axisWidth: number; series?: PreparedSeries[]}) {
+function getTicksCount(args: {
+    axis: PreparedAxis;
+    axisWidth: number;
+    series?: ChartSeries[] | PreparedSeries[];
+}) {
     const {axis, axisWidth, series} = args;
     const result = getTicksCountByPixelInterval({axis, axisWidth});
 
@@ -94,7 +99,7 @@ export function getXAxisTickValues({
     axis: PreparedAxis;
     labelLineHeight: number;
     scale: ChartScale;
-    series?: PreparedSeries[];
+    series?: ChartSeries[] | PreparedSeries[];
 }): TickValue[] {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
