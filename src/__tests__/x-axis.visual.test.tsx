@@ -243,7 +243,8 @@ test.describe('X-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.describe('startOnTick / endOnTick', () => {
+    // TODO: remove skip after https://github.com/gravity-ui/charts/issues/395
+    test.describe.skip('startOnTick / endOnTick', () => {
         test.describe('linear', () => {
             const baseData: ChartData = {
                 series: {

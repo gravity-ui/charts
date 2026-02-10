@@ -220,18 +220,29 @@ export const ChartInner = (props: ChartInnerProps) => {
         if (axis && scale) {
             const axisData = await prepareXAxisData({
                 axis,
-                yAxis,
-                scale,
-                boundsWidth,
                 boundsOffsetLeft: boundsOffsetLeft,
                 boundsOffsetRight: width - boundsWidth - boundsOffsetLeft,
+                boundsWidth,
                 height: boundsHeight,
+                scale,
+                series: preparedSeries.filter((s) => s.visible),
                 split: preparedSplit,
+                yAxis,
             });
             items.push(...axisData);
         }
         return items;
-    }, [xAxis, xScale, yAxis, boundsWidth, boundsOffsetLeft, width, boundsHeight, preparedSplit]);
+    }, [
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsWidth,
+        preparedSeries,
+        preparedSplit,
+        width,
+        xAxis,
+        xScale,
+        yAxis,
+    ]);
     const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
 
     React.useEffect(() => {

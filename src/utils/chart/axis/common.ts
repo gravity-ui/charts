@@ -8,11 +8,17 @@ import type {AxisDirection} from '../types';
 
 type Ticks = number[] | string[] | Date[];
 
-export function getTicksCount({axis, range}: {axis: PreparedAxis; range: number}) {
+export function getTicksCountByPixelInterval({
+    axis,
+    axisWidth,
+}: {
+    axis: PreparedAxis;
+    axisWidth: number;
+}) {
     let ticksCount: number | undefined;
 
     if (axis.ticks.pixelInterval) {
-        ticksCount = Math.ceil(range / axis.ticks.pixelInterval);
+        ticksCount = Math.ceil(axisWidth / axis.ticks.pixelInterval);
     }
 
     return ticksCount;

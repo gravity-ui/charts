@@ -1,7 +1,7 @@
 import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3';
 
-import type {ChartScale, PreparedAxis, PreparedSplit} from '../../hooks';
+import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
 import {
     calculateSin,
@@ -126,22 +126,24 @@ async function getSvgAxisLabel({
 // eslint-disable-next-line complexity
 export async function prepareXAxisData({
     axis,
-    yAxis,
-    scale,
-    boundsWidth,
     boundsOffsetLeft,
     boundsOffsetRight,
+    boundsWidth,
     height,
+    scale,
+    series,
     split,
+    yAxis,
 }: {
     axis: PreparedAxis;
-    yAxis: PreparedAxis[];
-    scale: ChartScale;
-    boundsWidth: number;
     boundsOffsetLeft: number;
     boundsOffsetRight: number;
+    boundsWidth: number;
     height: number;
+    scale: ChartScale;
+    series: PreparedSeries[];
     split: PreparedSplit;
+    yAxis: PreparedAxis[];
 }): Promise<AxisXData[]> {
     const xAxisItems: AxisXData[] = [];
     for (let plotIndex = 0; plotIndex < split.plots.length; plotIndex++) {
@@ -172,7 +174,7 @@ export async function prepareXAxisData({
         const getTextSize = getTextSizeFn({style: axis.labels.style});
         const labelLineHeight = (await getTextSize('Tmp')).height;
 
-        const values = getXAxisTickValues({scale, axis, labelLineHeight});
+        const values = getXAxisTickValues({scale, axis, labelLineHeight, series});
         const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
 
         const labelMaxWidth =

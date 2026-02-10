@@ -9,6 +9,8 @@ import {getSeriesStackId} from '../../hooks/useSeries/utils';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 
 import {getWaterfallPointSubtotal} from './series/waterfall';
+import {isSeriesWithNumericalXValues, isSeriesWithNumericalYValues} from './series-type-guards';
+import type {UnknownSeries} from './series-type-guards';
 import type {AxisDirection} from './types';
 
 export * from './axis/common';
@@ -19,12 +21,12 @@ export * from './labels';
 export * from './legend';
 export * from './math';
 export * from './series';
+export * from './series-type-guards';
 export * from './symbol';
 export * from './text';
 export * from './time';
 export * from './zoom';
 
-const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar', 'funnel'];
 export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
     'bar-x',
     'area',
@@ -32,39 +34,6 @@ export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
 ];
 
 export const CHART_SERIES_WITH_VOLUME_ON_X_AXIS: ChartSeries['type'][] = ['bar-y'];
-
-type UnknownSeries = {type: ChartSeries['type']; data: unknown};
-
-/**
- * Checks whether the series should be drawn with axes.
- *
- * @param series - The series object to check.
- * @returns `true` if the series should be drawn with axes, `false` otherwise.
- */
-export function isAxisRelatedSeries(series: UnknownSeries) {
-    return !CHARTS_WITHOUT_AXIS.includes(series.type);
-}
-
-export function isSeriesWithNumericalXValues(series: UnknownSeries): series is {
-    type: ChartSeries['type'];
-    data: {x: number}[];
-} {
-    return isAxisRelatedSeries(series);
-}
-
-export function isSeriesWithNumericalYValues(series: UnknownSeries): series is {
-    type: ChartSeries['type'];
-    data: {y: number}[];
-} {
-    return isAxisRelatedSeries(series);
-}
-
-export function isSeriesWithCategoryValues(series: UnknownSeries): series is {
-    type: ChartSeries['type'];
-    data: {category: string}[];
-} {
-    return isAxisRelatedSeries(series);
-}
 
 function getDomainDataForStackedSeries(
     seriesList: StackedSeries[],
