@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.34.2](https://github.com/gravity-ui/charts/compare/v1.34.1...v1.34.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* fire onReady callback when all series are initially hidden ([#392](https://github.com/gravity-ui/charts/issues/392)) ([21b7cac](https://github.com/gravity-ui/charts/commit/21b7cac7339867cbc6af23dce486ac3e41c6a085))
+* fix area chart with null values in stack ([#393](https://github.com/gravity-ui/charts/issues/393)) ([84c0e64](https://github.com/gravity-ui/charts/commit/84c0e64d3a2f6552c98b2d5c27c05ee2b784ff62))
+* fix multiple series order rendering ([#389](https://github.com/gravity-ui/charts/issues/389)) ([171893a](https://github.com/gravity-ui/charts/commit/171893a5d62f3f04a13eaa7afb5de667a947301c))
+* limit default x-axis ticks count to actual data points when fewer than d3 default ([#394](https://github.com/gravity-ui/charts/issues/394)) ([fa5f4cd](https://github.com/gravity-ui/charts/commit/fa5f4cda1fd71ae3577fbc700ea1c5d69ee2b946))
+* process series in reverse order for correct stacking in area data preparation ([#390](https://github.com/gravity-ui/charts/issues/390)) ([839e71c](https://github.com/gravity-ui/charts/commit/839e71c7bffdfee170471b753f0ec8230327f214))
+
 ## [1.34.1](https://github.com/gravity-ui/charts/compare/v1.34.0...v1.34.1) (2026-01-29)
 
 
