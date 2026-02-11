@@ -208,7 +208,7 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test.only('Horizontal labels with explicit rotation=0 (datetime axis)', async ({mount}) => {
+        test('Horizontal labels with explicit rotation=0 (datetime axis)', async ({mount}) => {
             const data = cloneDeep(barXDateTimeData);
             set(data, 'xAxis.labels.rotation', 0);
             set(data, 'xAxis.title.text', '');
