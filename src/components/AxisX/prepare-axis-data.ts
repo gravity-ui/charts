@@ -13,7 +13,7 @@ import {
     getTextWithElipsis,
     wrapText,
 } from '../../utils';
-import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
+import {getEstimatedMaxSvgLabelWidth, getXAxisTickValues} from '../../utils/chart/axis/x-axis';
 
 import type {
     AxisDomainData,
@@ -174,7 +174,26 @@ export async function prepareXAxisData({
         const getTextSize = getTextSizeFn({style: axis.labels.style});
         const labelLineHeight = (await getTextSize('Tmp')).height;
 
-        const values = getXAxisTickValues({scale, axis, labelLineHeight, series});
+        // When labels are horizontal (rotation = 0), the minimum space between ticks
+        // should be based on the actual label width, not just the text height.
+        // Otherwise, too many ticks are kept and labels get truncated with ellipsis.
+        let minLabelSize = labelLineHeight;
+
+        if (
+            isBottomPlot &&
+            axis.labels.enabled &&
+            axis.labels.rotation === 0 &&
+            !axis.labels.html
+        ) {
+            minLabelSize = await getEstimatedMaxSvgLabelWidth({
+                scale,
+                axis,
+                getTextSize,
+                minSize: labelLineHeight,
+            });
+        }
+
+        const values = getXAxisTickValues({scale, axis, labelLineHeight: minLabelSize, series});
         const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
 
         const labelMaxWidth =

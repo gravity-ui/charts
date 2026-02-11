@@ -1,6 +1,7 @@
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../../hooks';
 import type {ChartSeries} from '../../../types';
 import {getMinSpaceBetween} from '../array';
+import {formatAxisTickLabel} from '../format';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
 
 import {getTicksCountByPixelInterval, isBandScale, thinOut} from './common';
@@ -35,6 +36,58 @@ function getTicksCount(args: {
     }
 
     return DEFAULT_TICKS_COUNT;
+}
+
+/**
+ * Estimates the maximum label width by measuring a sample of formatted tick labels.
+ * Used when labels are horizontal (rotation = 0) to determine the correct minimum
+ * spacing threshold for tick thinning, instead of using text height which is too small.
+ */
+export async function getEstimatedMaxSvgLabelWidth({
+    scale,
+    axis,
+    getTextSize,
+    minSize,
+}: {
+    scale: ChartScale;
+    axis: PreparedAxis;
+    getTextSize: (str: string) => Promise<{width: number; height: number}>;
+    minSize: number;
+}): Promise<number> {
+    if (isBandScale(scale)) {
+        const domain = scale.domain();
+
+        if (!domain.length) {
+            return minSize;
+        }
+
+        const longest = domain.reduce((a, b) => (String(b).length > String(a).length ? b : a));
+        const size = await getTextSize(String(longest));
+
+        return Math.max(minSize, size.width);
+    }
+
+    if ('ticks' in scale && typeof scale.ticks === 'function') {
+        const sampleTicks = scale.ticks(5);
+
+        if (sampleTicks.length < 2) {
+            return minSize;
+        }
+
+        const sampleValues = sampleTicks.map((t) => ({value: t}));
+        const sampleStep = getMinSpaceBetween(sampleValues, (d) => Number(d.value));
+        let maxWidth = 0;
+
+        for (const tick of sampleTicks) {
+            const label = formatAxisTickLabel({axis, value: tick, step: sampleStep});
+            const size = await getTextSize(label);
+            maxWidth = Math.max(maxWidth, size.width);
+        }
+
+        return Math.max(minSize, maxWidth);
+    }
+
+    return minSize;
 }
 
 export function getXAxisTickValues({

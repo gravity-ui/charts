@@ -22,7 +22,7 @@ import {
     isAxisRelatedSeries,
     wrapText,
 } from '../../utils';
-import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
+import {getEstimatedMaxSvgLabelWidth, getXAxisTickValues} from '../../utils/chart/axis/x-axis';
 import {createXScale} from '../useAxisScales';
 
 import {getPreparedRangeSlider} from './range-slider';
@@ -50,7 +50,29 @@ async function setLabelSettings({
 
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
-    const tickValues = getXAxisTickValues({axis, scale, labelLineHeight, series: seriesData});
+
+    // When we know rotation will be 0 (explicitly set or autoRotation disabled),
+    // use actual label width for thinning to prevent label truncation
+    const autoRotation = axisLabels?.autoRotation ?? true;
+    const willBeHorizontal =
+        axisLabels?.rotation === 0 || (axisLabels?.rotation === undefined && !autoRotation);
+    let minLabelSize = labelLineHeight;
+
+    if (willBeHorizontal && !axis.labels.html) {
+        minLabelSize = await getEstimatedMaxSvgLabelWidth({
+            scale,
+            axis,
+            getTextSize,
+            minSize: labelLineHeight,
+        });
+    }
+
+    const tickValues = getXAxisTickValues({
+        axis,
+        scale,
+        labelLineHeight: minLabelSize,
+        series: seriesData,
+    });
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
     if (axis.type === 'datetime' && !axisLabels?.dateFormat) {
         axis.labels.dateFormat = getDefaultDateFormat(tickStep);
@@ -76,8 +98,6 @@ async function setLabelSettings({
 
         return false;
     };
-
-    const autoRotation = axisLabels?.autoRotation ?? true;
     const overlapping = axis.labels.html ? false : await hasOverlappingLabels();
     const defaultRotation = overlapping && autoRotation ? -45 : 0;
     const rotation = axis.labels.html ? 0 : (axisLabels?.rotation ?? defaultRotation);

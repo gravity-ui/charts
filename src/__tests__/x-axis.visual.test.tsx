@@ -5,7 +5,12 @@ import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {barYBasicData} from '../__stories__/__data__';
+import {
+    barXBasicData,
+    barXDateTimeData,
+    barXLinearData,
+    barYBasicData,
+} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
 const CHART_MARGIN: ChartMargin = {
@@ -191,6 +196,31 @@ test.describe('X-axis', () => {
                 },
             };
             const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Horizontal labels with explicit rotation=0 (category axis)', async ({mount}) => {
+            const data = cloneDeep(barXBasicData);
+            set(data, 'xAxis.labels.rotation', 0);
+            set(data, 'xAxis.title.text', '');
+            set(data, 'yAxis[0].title.text', '');
+            const component = await mount(<ChartTestStory data={data} styles={{width: 175}} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test.only('Horizontal labels with explicit rotation=0 (datetime axis)', async ({mount}) => {
+            const data = cloneDeep(barXDateTimeData);
+            set(data, 'xAxis.labels.rotation', 0);
+            set(data, 'xAxis.title.text', '');
+            const component = await mount(<ChartTestStory data={data} styles={{width: 175}} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Horizontal labels with explicit rotation=0 (linear axis)', async ({mount}) => {
+            const data = cloneDeep(barXLinearData);
+            set(data, 'xAxis.labels.rotation', 0);
+            set(data, 'xAxis.title.text', '');
+            const component = await mount(<ChartTestStory data={data} styles={{width: 175}} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
