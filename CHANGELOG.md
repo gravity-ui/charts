@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.3](https://github.com/gravity-ui/charts/compare/v1.34.2...v1.34.3) (2026-02-12)
+
+
+### Bug Fixes
+
+* enhance datetime x-axis label handling ([#398](https://github.com/gravity-ui/charts/issues/398)) ([4a00759](https://github.com/gravity-ui/charts/commit/4a00759a82ccea7af9dcdd86846fccbf28dbdac7))
+
 ## [1.34.2](https://github.com/gravity-ui/charts/compare/v1.34.1...v1.34.2) (2026-02-10)
 
 
