@@ -174,8 +174,40 @@ export async function prepareXAxisData({
         const getTextSize = getTextSizeFn({style: axis.labels.style});
         const labelLineHeight = (await getTextSize('Tmp')).height;
 
-        const values = getXAxisTickValues({scale, axis, labelLineHeight, series});
-        const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
+        let values = getXAxisTickValues({scale, axis, labelLineHeight, series});
+        let tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
+
+        if (
+            axis.labels.enabled &&
+            axis.labels.rotation === 0 &&
+            !axis.labels.html &&
+            axis.type === 'datetime' &&
+            values.length > 1
+        ) {
+            let maxLabelWidth = 0;
+
+            for (let i = 0; i < values.length; i++) {
+                const label = formatAxisTickLabel({
+                    value: values[i].value,
+                    axis,
+                    step: tickStep,
+                });
+                const size = await getTextSize(label);
+                maxLabelWidth = Math.max(maxLabelWidth, size.width);
+            }
+
+            const currentSpacing = Math.abs(values[0].x - values[1].x) - axis.labels.padding * 2;
+
+            if (maxLabelWidth > currentSpacing) {
+                values = getXAxisTickValues({
+                    scale,
+                    axis,
+                    labelLineHeight: maxLabelWidth,
+                    series,
+                });
+                tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
+            }
+        }
 
         const labelMaxWidth =
             values.length > 1
