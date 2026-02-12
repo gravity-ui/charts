@@ -77,7 +77,7 @@ async function setLabelSettings({
         return false;
     };
 
-    const autoRotation = axisLabels?.autoRotation ?? true;
+    const autoRotation = axisLabels?.autoRotation ?? axis.type !== 'datetime';
     const overlapping = axis.labels.html ? false : await hasOverlappingLabels();
     const defaultRotation = overlapping && autoRotation ? -45 : 0;
     const rotation = axis.labels.html ? 0 : (axisLabels?.rotation ?? defaultRotation);

@@ -23,11 +23,14 @@ export interface ChartAxisLabels {
     dateFormat?: string;
     numberFormat?: FormatNumberOptions;
     style?: Partial<BaseTextStyle>;
-    /** For horizontal axes, enable label rotation to prevent overlapping labels.
+    /**
+     * For horizontal axes, enable label rotation to prevent overlapping labels.
      * If there is enough space, labels are not rotated.
      * As the chart gets narrower, it will start rotating the labels -45 degrees.
      *
      * Does not apply to html labels.
+     *
+     * @default true for all axis types except `datetime` (defaults to false)
      */
     autoRotation?: boolean;
     /** Rotation of the labels in degrees.
