@@ -65,7 +65,7 @@ async function prepareDataLabels({
         }
 
         const text = getFormattedValue({
-            value: point.data.label || point.data.y,
+            value: point.data.label ?? point.data.y,
             ...series.dataLabels,
         });
 

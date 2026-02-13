@@ -29,7 +29,7 @@ async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined>
     }
 
     const text = getFormattedValue({
-        value: d.data.label || d.data.y,
+        value: d.data.label ?? d.data.y,
         ...d.series.dataLabels,
     });
     const style = d.series.dataLabels.style;

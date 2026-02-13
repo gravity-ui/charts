@@ -142,7 +142,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             const d = series[i];
 
             const text = getFormattedValue({
-                value: d.data.label || d.data.value,
+                value: d.data.label ?? d.data.value,
                 ...d.dataLabels,
             });
 

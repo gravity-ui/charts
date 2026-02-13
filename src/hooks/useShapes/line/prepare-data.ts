@@ -14,7 +14,7 @@ async function getHtmlLabel(
     series: PreparedLineSeries,
     xMax: number,
 ): Promise<HtmlItem> {
-    const content = String(point.data.label || point.data.y);
+    const content = String(point.data.label ?? point.data.y);
     const size = await getLabelsSize({labels: [content], html: true});
 
     return {
@@ -87,7 +87,7 @@ export const prepareLineData = async (args: {
                     const point = points[index];
                     if (point.y !== null && point.x !== null) {
                         const text = getFormattedValue({
-                            value: point.data.label || point.data.y,
+                            value: point.data.label ?? point.data.y,
                             ...s.dataLabels,
                         });
                         const labelSize = await getTextSize(text);
