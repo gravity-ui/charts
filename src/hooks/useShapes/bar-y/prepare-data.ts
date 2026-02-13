@@ -191,7 +191,7 @@ export async function prepareBarYData(args: {
         const dataLabels = prepared.series.dataLabels;
         if (dataLabels.enabled) {
             const data = prepared.data;
-            const content = getFormattedValue({value: data.label || data.x, ...dataLabels});
+            const content = getFormattedValue({value: data.label ?? data.x, ...dataLabels});
 
             const y = prepared.y + prepared.height / 2;
             if (dataLabels.html) {
