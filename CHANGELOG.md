@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.4](https://github.com/gravity-ui/charts/compare/v1.34.3...v1.34.4) (2026-02-13)
+
+
+### Bug Fixes
+
+* an empty string as the value of the data label ([#400](https://github.com/gravity-ui/charts/issues/400)) ([22024cd](https://github.com/gravity-ui/charts/commit/22024cd79dc30f566497592398e8b6977c481710))
+
 ## [1.34.3](https://github.com/gravity-ui/charts/compare/v1.34.2...v1.34.3) (2026-02-12)
 
 
