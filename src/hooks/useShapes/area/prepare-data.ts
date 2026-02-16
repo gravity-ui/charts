@@ -301,14 +301,6 @@ export const prepareAreaData = async (args: {
 
                     return pointsAcc;
                 }, []);
-                const labels: LabelData[] = [];
-                const htmlElements: HtmlItem[] = [];
-
-                if (s.dataLabels.enabled && !isRangeSlider) {
-                    const labelsData = await prepareDataLabels({series: s, points, xMax, yAxisTop});
-                    labels.push(...labelsData.svgLabels);
-                    htmlElements.push(...labelsData.htmlLabels);
-                }
 
                 let markers: MarkerData[] = [];
                 if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
@@ -329,7 +321,7 @@ export const prepareAreaData = async (args: {
                 seriesStackData.push({
                     points,
                     markers,
-                    labels,
+                    labels: [],
                     color: s.color,
                     opacity: s.opacity,
                     width: s.lineWidth,
@@ -337,11 +329,11 @@ export const prepareAreaData = async (args: {
                     hovered: false,
                     active: true,
                     id: s.id,
-                    htmlElements,
+                    htmlElements: [],
                 });
             }
 
-            if (series.some((s) => s.stacking === 'percent')) {
+            if (seriesStack.some((s) => s.stacking === 'percent')) {
                 xValues.forEach(([x], index) => {
                     const stackHeight = positiveStackValues.get(x)?.prev || 0;
                     let acc = 0;
@@ -352,13 +344,37 @@ export const prepareAreaData = async (args: {
 
                         if (point.y !== null && point.y !== undefined) {
                             const height = (point.y0 - point.y) * ratio;
-                            point.y0 = plotHeight - height - acc;
-                            point.y = point.y0 + height;
+                            const nextAcc = acc + height;
+                            point.y0 = plotHeight - acc;
+                            point.y = plotHeight - nextAcc;
 
-                            acc += height;
+                            acc = nextAcc;
                         }
                     });
                 });
+
+                seriesStackData.forEach((item) => {
+                    item.markers.forEach((marker) => {
+                        marker.clipped = isOutsideBounds(marker.point.x, marker.point.y);
+                    });
+                });
+            }
+
+            for (let itemIndex = 0; itemIndex < seriesStackData.length; itemIndex++) {
+                const item = seriesStackData[itemIndex];
+                const currentYAxis = yAxis[item.series.yAxis];
+                const itemYAxisTop = split.plots[currentYAxis.plotIndex]?.top || 0;
+
+                if (item.series.dataLabels.enabled && !isRangeSlider) {
+                    const labelsData = await prepareDataLabels({
+                        series: item.series,
+                        points: item.points,
+                        xMax,
+                        yAxisTop: itemYAxisTop,
+                    });
+                    item.labels.push(...labelsData.svgLabels);
+                    item.htmlElements.push(...labelsData.htmlLabels);
+                }
             }
 
             result.push(...seriesStackData);
