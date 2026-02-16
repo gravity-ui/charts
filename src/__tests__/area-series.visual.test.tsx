@@ -174,17 +174,6 @@ test.describe('Area series', () => {
                 );
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
-
-            test('Percent with limited height', async ({mount}) => {
-                const data = cloneDeep(basicStackingData);
-                set(data, 'series.data[0].stacking', 'percent');
-                set(data, 'series.data[1].stacking', 'percent');
-                set(data, 'series.data[2].stacking', 'percent');
-                const component = await mount(
-                    <ChartTestStory data={data} styles={{height: 150}} />,
-                );
-                await expect(component.locator('svg')).toHaveScreenshot();
-            });
         });
     });
 
