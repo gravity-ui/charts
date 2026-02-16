@@ -117,7 +117,7 @@ test.describe('Area series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test.describe.only('Stacking', () => {
+        test.describe('Stacking', () => {
             const basicStackingData: ChartData = {
                 legend: {enabled: false},
                 series: {
