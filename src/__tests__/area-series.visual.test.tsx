@@ -86,6 +86,47 @@ test.describe('Area series', () => {
     });
 
     test.describe('Data labels', () => {
+        const basicStackingData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'area',
+                        stacking: 'normal',
+                        data: [
+                            {y: 10, x: 1},
+                            {y: 20, x: 2},
+                            {y: 15, x: 3},
+                        ],
+                        dataLabels: {enabled: true},
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'area',
+                        stacking: 'normal',
+                        data: [
+                            {y: 20, x: 1},
+                            {y: 40, x: 2},
+                            {y: 30, x: 3},
+                        ],
+                        dataLabels: {enabled: true},
+                    },
+                    {
+                        name: 'Series 3',
+                        type: 'area',
+                        stacking: 'normal',
+                        data: [
+                            {y: 50, x: 1},
+                            {y: 60, x: 2},
+                            {y: 70, x: 3},
+                        ],
+                        dataLabels: {enabled: true},
+                    },
+                ],
+            },
+        };
+
         test('Positioning of extreme point dataLabels', async ({mount}) => {
             const chartData: ChartData = {
                 series: {
@@ -117,63 +158,18 @@ test.describe('Area series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test.describe('Stacking', () => {
-            const basicStackingData: ChartData = {
-                legend: {enabled: false},
-                series: {
-                    data: [
-                        {
-                            name: 'Series 1',
-                            type: 'area',
-                            stacking: 'normal',
-                            data: [
-                                {y: 10, x: 1},
-                                {y: 20, x: 2},
-                                {y: 15, x: 3},
-                            ],
-                            dataLabels: {enabled: true},
-                        },
-                        {
-                            name: 'Series 2',
-                            type: 'area',
-                            stacking: 'normal',
-                            data: [
-                                {y: 20, x: 1},
-                                {y: 40, x: 2},
-                                {y: 30, x: 3},
-                            ],
-                            dataLabels: {enabled: true},
-                        },
-                        {
-                            name: 'Series 3',
-                            type: 'area',
-                            stacking: 'normal',
-                            data: [
-                                {y: 50, x: 1},
-                                {y: 60, x: 2},
-                                {y: 70, x: 3},
-                            ],
-                            dataLabels: {enabled: true},
-                        },
-                    ],
-                },
-            };
+        test('Positioning in normal stacking', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={basicStackingData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
 
-            test('Normal', async ({mount}) => {
-                const component = await mount(<ChartTestStory data={basicStackingData} />);
-                await expect(component.locator('svg')).toHaveScreenshot();
-            });
-
-            test('Percent', async ({mount}) => {
-                const data = cloneDeep(basicStackingData);
-                set(data, 'series.data[0].stacking', 'percent');
-                set(data, 'series.data[1].stacking', 'percent');
-                set(data, 'series.data[2].stacking', 'percent');
-                const component = await mount(
-                    <ChartTestStory data={data} styles={{height: 300}} />,
-                );
-                await expect(component.locator('svg')).toHaveScreenshot();
-            });
+        test('Positioning in percent stacking', async ({mount}) => {
+            const data = cloneDeep(basicStackingData);
+            set(data, 'series.data[0].stacking', 'percent');
+            set(data, 'series.data[1].stacking', 'percent');
+            set(data, 'series.data[2].stacking', 'percent');
+            const component = await mount(<ChartTestStory data={data} styles={{height: 300}} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
 
