@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.5](https://github.com/gravity-ui/charts/compare/v1.34.4...v1.34.5) (2026-02-17)
+
+
+### Bug Fixes
+
+* fix area stacking data labels positioning ([#402](https://github.com/gravity-ui/charts/issues/402)) ([957876d](https://github.com/gravity-ui/charts/commit/957876db7054ec80b533bc0825f0cdd960d9ae8c))
+
 ## [1.34.4](https://github.com/gravity-ui/charts/compare/v1.34.3...v1.34.4) (2026-02-13)
 
 
