@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.7](https://github.com/gravity-ui/charts/compare/v1.34.6...v1.34.7) (2026-02-19)
+
+
+### Bug Fixes
+
+* the number formatter  should be used only for numbers ([#406](https://github.com/gravity-ui/charts/issues/406)) ([7bcc6be](https://github.com/gravity-ui/charts/commit/7bcc6beaaeb2051f2975f31e62f392138abab4be))
+
 ## [1.34.6](https://github.com/gravity-ui/charts/compare/v1.34.5...v1.34.6) (2026-02-19)
 
 
