@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.6](https://github.com/gravity-ui/charts/compare/v1.34.5...v1.34.6) (2026-02-19)
+
+
+### Bug Fixes
+
+* fix html dataLabels position for line chart ([#404](https://github.com/gravity-ui/charts/issues/404)) ([61e428a](https://github.com/gravity-ui/charts/commit/61e428a0b97aca7fd0860cb063dea6c6b7fa2754))
+
 ## [1.34.5](https://github.com/gravity-ui/charts/compare/v1.34.4...v1.34.5) (2026-02-17)
 
 
