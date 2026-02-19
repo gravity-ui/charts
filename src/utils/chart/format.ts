@@ -38,7 +38,10 @@ export function getFormattedValue(args: {
 
     switch (format?.type) {
         case 'number': {
-            return formatNumber(Number(value), format);
+            if (typeof value === 'number') {
+                return formatNumber(Number(value), format);
+            }
+            break;
         }
         case 'date': {
             return getFormattedDate({value, format: format.format});

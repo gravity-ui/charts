@@ -86,8 +86,9 @@ export const prepareLineData = async (args: {
                 for (let index = 0; index < points.length; index++) {
                     const point = points[index];
                     if (point.y !== null && point.x !== null) {
+                        const labelValue = point.data.label ?? point.data.y;
                         const text = getFormattedValue({
-                            value: point.data.label ?? point.data.y,
+                            value: labelValue,
                             ...s.dataLabels,
                         });
                         const labelSize = await getTextSize(text);
