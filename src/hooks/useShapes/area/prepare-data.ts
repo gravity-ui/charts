@@ -47,11 +47,13 @@ async function prepareDataLabels({
     points,
     xMax,
     yAxisTop,
+    isOutsideBounds,
 }: {
     series: PreparedAreaSeries;
     points: PointData[];
     xMax: number;
     yAxisTop: number;
+    isOutsideBounds: (x: number, y: number) => boolean;
 }) {
     const svgLabels: LabelData[] = [];
     const htmlLabels: HtmlItem[] = [];
@@ -60,7 +62,7 @@ async function prepareDataLabels({
     for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
         const point = points[pointsIndex];
 
-        if (point.y === null) {
+        if (point.y === null || isOutsideBounds(point.x, point.y)) {
             continue;
         }
 
@@ -371,6 +373,7 @@ export const prepareAreaData = async (args: {
                         points: item.points,
                         xMax,
                         yAxisTop: itemYAxisTop,
+                        isOutsideBounds,
                     });
                     item.labels.push(...labelsData.svgLabels);
                     item.htmlElements.push(...labelsData.htmlLabels);

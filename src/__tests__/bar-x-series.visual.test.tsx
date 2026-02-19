@@ -18,6 +18,8 @@ import {
 } from '../__stories__/__data__';
 import type {BarXSeries, ChartData} from '../types';
 
+import {generateSeriesData} from './__data__/utils';
+
 test.describe('Bar-x series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXBasicData} />);
@@ -239,6 +241,32 @@ test.describe('Bar-x series', () => {
         set(data, 'xAxis.max', 10);
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Data labels', () => {
+        test('Labels for out-of-bounds points are hidden when min/max set on axes', async ({
+            mount,
+        }) => {
+            const yValues = [
+                12, 18, 9, 25, 31, 22, 14, 28, 35, 20, 16, 40, 33, 27, 19, 38, 29, 44, 36, 42,
+            ];
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        generateSeriesData({
+                            type: 'bar-x',
+                            pointCount: 20,
+                            generateY: (_x: number | string, i: number) => yValues[i],
+                            overrides: {dataLabels: {enabled: true}},
+                        }),
+                    ],
+                },
+                xAxis: {type: 'linear', min: 4, max: 14},
+                yAxis: [{min: 15, max: 35}],
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test.describe('Null modes', () => {

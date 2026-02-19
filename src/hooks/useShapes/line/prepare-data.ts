@@ -74,7 +74,7 @@ export const prepareLineData = async (args: {
             if (s.dataLabels.html) {
                 const list = await Promise.all(
                     points.reduce<Promise<HtmlItem>[]>((result, p) => {
-                        if (p.y === null) {
+                        if (p.y === null || p.x === null || isOutsideBounds(p.x, p.y)) {
                             return result;
                         }
                         result.push(getHtmlLabel(p as MarkerPointData, s, xMax));
@@ -86,8 +86,16 @@ export const prepareLineData = async (args: {
                 const getTextSize = getTextSizeFn({style: s.dataLabels.style});
                 for (let index = 0; index < points.length; index++) {
                     const point = points[index];
+<<<<<<< HEAD
                     if (point.y !== null && point.x !== null) {
                         const labelValue = point.data.label ?? point.data.y;
+=======
+                    if (
+                        point.y !== null &&
+                        point.x !== null &&
+                        !isOutsideBounds(point.x, point.y)
+                    ) {
+>>>>>>> b15b57c5 (fix: hide data labels for out-of-bounds points when axis min/max is set (area, bar-x, line))
                         const text = getFormattedValue({
                             value: labelValue,
                             ...s.dataLabels,
