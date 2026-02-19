@@ -12,6 +12,8 @@ import {
 } from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
+import {generateSeriesData} from './__data__/utils';
+
 test.describe('Line series', () => {
     test.beforeEach(async ({page}) => {
         // Cancel test with error when an uncaught exception happens within the page
@@ -218,6 +220,30 @@ test.describe('Line series', () => {
                         },
                     ],
                 },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Labels for out-of-bounds points are hidden when min/max set on axes', async ({
+            mount,
+        }) => {
+            const yValues = [
+                12, 18, 9, 25, 31, 22, 14, 28, 35, 20, 16, 40, 33, 27, 19, 38, 29, 44, 36, 42,
+            ];
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        generateSeriesData({
+                            type: 'line',
+                            pointCount: 20,
+                            generateY: (_x: number | string, i: number) => yValues[i],
+                            overrides: {dataLabels: {enabled: true}},
+                        }),
+                    ],
+                },
+                xAxis: {type: 'linear', min: 4, max: 14},
+                yAxis: [{min: 15, max: 35}],
             };
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();

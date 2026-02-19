@@ -23,7 +23,7 @@ const isSeriesDataValid = (
     d: BarXSeriesData | PreparedBarXSeriesData,
 ): d is PreparedBarXSeriesData => d.y !== null;
 
-async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined> {
+async function getLabelData(d: PreparedBarXData, xMax: number): Promise<LabelData | undefined> {
     if (!d.series.dataLabels.enabled) {
         return undefined;
     }
@@ -45,10 +45,10 @@ async function getLabelData(d: PreparedBarXData): Promise<LabelData | undefined>
         y = d.y + d.height / 2;
     }
 
-    const x = d.x + d.width / 2;
+    const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
     return {
         text,
-        x: html ? x - width / 2 : x,
+        x: html ? centerX - width / 2 : centerX,
         y: html ? y - height : y,
         style,
         size: {width, height},
@@ -262,11 +262,24 @@ export const prepareBarXData = async (args: {
         }
     }
 
+    const [_xMin, xRangeMax] = xScale.range();
+    const xMax = xRangeMax;
+
     for (let i = 0; i < result.length; i++) {
         const barData = result[i];
 
-        if (barData.series.dataLabels.enabled && !isRangeSlider) {
-            const label = await getLabelData(barData);
+        const isBarOutsideBounds =
+            barData.x + barData.width <= 0 ||
+            barData.x >= xMax ||
+            barData.y + barData.height <= 0 ||
+            barData.y >= plotHeight;
+        const isZeroValue = (barData.data.y ?? 0) === 0;
+        if (
+            barData.series.dataLabels.enabled &&
+            !isRangeSlider &&
+            (!isBarOutsideBounds || isZeroValue)
+        ) {
+            const label = await getLabelData(barData, xMax);
             if (barData.series.dataLabels.html && label) {
                 barData.htmlElements.push({
                     x: label.x,
