@@ -16,12 +16,13 @@ async function getHtmlLabel(
 ): Promise<HtmlItem> {
     const content = String(point.data.label ?? point.data.y);
     const size = await getLabelsSize({labels: [content], html: true});
+    const width = size.maxWidth;
 
     return {
-        x: Math.min(xMax - size.maxWidth, Math.max(0, point.x)),
+        x: Math.min(xMax - size.maxWidth, Math.max(0, point.x - width / 2)),
         y: Math.max(0, point.y - series.dataLabels.padding - size.maxHeight),
         content,
-        size: {width: size.maxWidth, height: size.maxHeight},
+        size: {width, height: size.maxHeight},
         style: series.dataLabels.style,
     };
 }

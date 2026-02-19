@@ -181,6 +181,27 @@ test.describe('Line series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
+        test('Html label position (center by default)', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: '',
+                            type: 'line',
+                            data: [
+                                {x: 1, y: 1, label: '***'},
+                                {x: 2, y: 2, label: '***'},
+                                {x: 3, y: 3, label: '***'},
+                            ],
+                            dataLabels: {enabled: true, html: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
         test('An empty string as label value (with defined format)', async ({mount}) => {
             const chartData: ChartData = {
                 series: {
