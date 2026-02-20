@@ -108,59 +108,13 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const result: TooltipDataChunk[] = [];
     const groups = groupBy(shapesData, getSeriesType);
 
+    const closestPointsByXValue: ShapePoint[] = [];
+
     // eslint-disable-next-line complexity
     Object.entries(groups).forEach(([seriesType, list]) => {
         switch (seriesType) {
-            case 'bar-x': {
-                const points = (list as PreparedBarXData[]).map<ShapePoint>((d) => ({
-                    data: d.data,
-                    series: d.series as BarXSeries,
-                    x: d.x + d.width / 2,
-                    y0: d.y,
-                    y1: d.y + d.height,
-                }));
-                result.push(
-                    ...(getClosestPointsByXValue(pointerX, pointerY, points) as TooltipDataChunk[]),
-                );
-
-                break;
-            }
-            case 'waterfall': {
-                const points = (list as PreparedWaterfallData[]).map<ShapePoint>((d) => ({
-                    data: d.data as WaterfallSeriesData,
-                    series: d.series as WaterfallSeries,
-                    x: d.x + d.width / 2,
-                    y0: d.y,
-                    y1: d.y + d.height,
-                    subTotal: d.subTotal,
-                }));
-                result.push(
-                    ...(getClosestPointsByXValue(pointerX, pointerY, points) as TooltipDataChunk[]),
-                );
-
-                break;
-            }
-            case 'area': {
-                const points = (list as PreparedAreaData[]).reduce<ShapePoint[]>((acc, d) => {
-                    Array.prototype.push.apply(
-                        acc,
-                        d.points.map((p) => ({
-                            data: p.data,
-                            series: p.series as AreaSeries,
-                            x: p.x,
-                            y0: p.y0,
-                            y1: p.y,
-                        })),
-                    );
-                    return acc;
-                }, []);
-                result.push(
-                    ...(getClosestPointsByXValue(pointerX, pointerY, points) as TooltipDataChunk[]),
-                );
-                break;
-            }
             case 'line': {
-                const points = (list as PreparedLineData[]).reduce<ShapePoint[]>((acc, d) => {
+                const linePoints = (list as PreparedLineData[]).reduce<ShapePoint[]>((acc, d) => {
                     acc.push(
                         ...d.points.reduce<ShapePoint[]>((accPoints, p) => {
                             if (p.y !== null && p.x !== null) {
@@ -177,9 +131,50 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     );
                     return acc;
                 }, []);
+                closestPointsByXValue.push(...linePoints);
+                break;
+            }
+            case 'area': {
+                const areaPoints = (list as PreparedAreaData[]).reduce<ShapePoint[]>((acc, d) => {
+                    Array.prototype.push.apply(
+                        acc,
+                        d.points.map((p) => ({
+                            data: p.data,
+                            series: p.series as AreaSeries,
+                            x: p.x,
+                            y0: p.y0,
+                            y1: p.y,
+                        })),
+                    );
+                    return acc;
+                }, []);
+                closestPointsByXValue.push(...areaPoints);
+                break;
+            }
+            case 'bar-x': {
+                const barXPoints = (list as PreparedBarXData[]).map<ShapePoint>((d) => ({
+                    data: d.data,
+                    series: d.series as BarXSeries,
+                    x: d.x + d.width / 2,
+                    y0: d.y,
+                    y1: d.y + d.height,
+                }));
+                closestPointsByXValue.push(...barXPoints);
+                break;
+            }
+            case 'waterfall': {
+                const points = (list as PreparedWaterfallData[]).map<ShapePoint>((d) => ({
+                    data: d.data as WaterfallSeriesData,
+                    series: d.series as WaterfallSeries,
+                    x: d.x + d.width / 2,
+                    y0: d.y,
+                    y1: d.y + d.height,
+                    subTotal: d.subTotal,
+                }));
                 result.push(
                     ...(getClosestPointsByXValue(pointerX, pointerY, points) as TooltipDataChunk[]),
                 );
+
                 break;
             }
             case 'bar-y': {
@@ -381,6 +376,16 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             }
         }
     });
+
+    if (closestPointsByXValue.length) {
+        result.push(
+            ...(getClosestPointsByXValue(
+                pointerX,
+                pointerY,
+                closestPointsByXValue,
+            ) as TooltipDataChunk[]),
+        );
+    }
 
     return result;
 }
