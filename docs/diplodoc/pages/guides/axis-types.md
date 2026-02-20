@@ -73,6 +73,7 @@ A category axis displays discrete, non-numeric labels. Each category occupies eq
 - Values are treated as discrete labels, not numbers
 - No mathematical interpolation between points
 - Order is determined by data order
+- Categories must be unique — duplicate values in the categories array will cause unexpected behavior
 
 ### Important Notes
 
