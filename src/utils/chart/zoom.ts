@@ -5,6 +5,7 @@ import type {
     PreparedXAxis,
     PreparedYAxis,
     PreparedZoomableSeries,
+    RangeSliderState,
 } from '../../hooks';
 import type {ZoomState} from '../../hooks/useZoom/types';
 import type {
@@ -182,4 +183,19 @@ export function getZoomedSeriesData(args: {
         preparedSeries: zoomedSeriesData,
         preparedShapesSeries: zoomedShapesSeriesData,
     };
+}
+
+export function getEffectiveXRange(
+    zoomStateX: [number, number] | undefined,
+    rangeSliderState: RangeSliderState | undefined,
+): [number, number] | undefined {
+    if (zoomStateX && rangeSliderState) {
+        return [
+            Math.max(zoomStateX[0], rangeSliderState.min),
+            Math.min(zoomStateX[1], rangeSliderState.max),
+        ];
+    }
+    return (
+        zoomStateX ?? (rangeSliderState ? [rangeSliderState.min, rangeSliderState.max] : undefined)
+    );
 }

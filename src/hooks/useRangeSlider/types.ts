@@ -15,7 +15,7 @@ export interface RangeSliderProps {
     boundsWidth: number;
     height: number;
     htmlLayout: HTMLElement | null;
-    onUpdate: (nextRangeSliderState?: RangeSliderState, syncZoom?: boolean) => void;
+    onUpdate: (nextRangeSliderState?: RangeSliderState) => void;
     preparedChart: PreparedChart;
     preparedLegend: PreparedLegend | null;
     preparedRangeSlider: PreparedRangeSlider;

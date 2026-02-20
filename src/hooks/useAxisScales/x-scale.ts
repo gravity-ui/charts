@@ -6,10 +6,10 @@ import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';
 import type {PreparedAxis, PreparedSeries, RangeSliderState} from '../../hooks';
 import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import {
-    getAxisCategories,
     getDefaultMaxXAxisValue,
     getDefaultMinXAxisValue,
     getDomainDataXBySeries,
+    getEffectiveXRange,
 } from '../../utils';
 import {getBandSize} from '../utils/get-band-size';
 
@@ -50,29 +50,6 @@ function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
     return series.some((s) => types.includes(s.type));
 }
 
-export function getXMaxDomainResult(args: {
-    xMaxDomain: number;
-    xMaxProps?: number;
-    xMaxRangeSlider?: number;
-    xMaxZoom?: number;
-}) {
-    const {xMaxDomain, xMaxProps, xMaxRangeSlider, xMaxZoom} = args;
-    let xMaxDomainResult = xMaxDomain;
-
-    // When xMaxRangeSlider is provided, we use it directly without considering xMaxDomain.
-    // This is intentional: the range slider needs to display the chart's maxPadding area,
-    // which would be clipped if we constrained it to xMaxDomain.
-    if (typeof xMaxRangeSlider === 'number') {
-        xMaxDomainResult = xMaxRangeSlider;
-    } else if (typeof xMaxZoom === 'number' && xMaxZoom < xMaxDomain) {
-        xMaxDomainResult = xMaxZoom;
-    } else if (typeof xMaxProps === 'number' && xMaxProps < xMaxDomain) {
-        xMaxDomainResult = xMaxProps;
-    }
-
-    return xMaxDomainResult;
-}
-
 function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?: boolean}) {
     const xAxisZoomPadding = boundsWidth * X_AXIS_ZOOM_PADDING;
     const xRange = [0, boundsWidth];
@@ -91,22 +68,19 @@ export function createXScale(args: {
     zoomStateX?: [number, number];
 }) {
     const {axis, boundsWidth, series, rangeSliderState, zoomStateX} = args;
+
+    const effectiveX = getEffectiveXRange(zoomStateX, rangeSliderState);
+    const effectiveXMin = effectiveX?.[0];
+    const effectiveXMax = effectiveX?.[1];
+
     const [xMinPropsOrState, xMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
-        maxValues: [zoomStateX?.[1], rangeSliderState?.max],
-        minValues: [zoomStateX?.[0], rangeSliderState?.min],
+        maxValues: [effectiveXMax],
+        minValues: [effectiveXMin],
     });
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const hasZoomX = Boolean(zoomStateX);
-    let xCategories = get(axis, 'categories');
-    if (rangeSliderState && xCategories) {
-        xCategories = getAxisCategories({
-            categories: xCategories,
-            min: rangeSliderState.min,
-            max: rangeSliderState.max,
-            order: axis.order,
-        });
-    }
+    const xCategories = get(axis, 'categories');
     const maxPadding = get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
@@ -258,12 +232,12 @@ export function createXScale(args: {
                     !isPointDomain
                         ? xMinPropsOrState
                         : xMinTimestamp;
-                const xMax = getXMaxDomainResult({
-                    xMaxDomain: xMaxTimestamp,
-                    xMaxProps: get(axis, 'max'),
-                    xMaxRangeSlider: rangeSliderState?.max,
-                    xMaxZoom: zoomStateX?.[1],
-                });
+                const xMax =
+                    typeof xMaxPropsOrState === 'number' &&
+                    xMaxPropsOrState < xMaxTimestamp &&
+                    !isPointDomain
+                        ? xMaxPropsOrState
+                        : xMaxTimestamp;
                 domain = [xMin, xMax];
 
                 const scale = scaleUtc().domain(domain).range(range);

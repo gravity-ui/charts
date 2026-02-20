@@ -26,7 +26,7 @@ import type {
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
 import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
-import {getZoomedSeriesData} from '../../utils';
+import {getEffectiveXRange, getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils';
@@ -40,7 +40,6 @@ type Props = ChartInnerProps & {
     svgContainer: SVGGElement | null;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
-    rangeSliderDomain?: [number, number];
     rangeSliderState?: RangeSliderState;
 };
 
@@ -98,7 +97,6 @@ export function useChartInnerProps(props: Props) {
         htmlLayout,
         plotNode,
         preparedChart,
-        rangeSliderDomain,
         rangeSliderState,
         svgContainer,
         width,
@@ -130,14 +128,29 @@ export function useChartInnerProps(props: Props) {
         seriesOptions: data.series.options,
     });
 
+    const effectiveZoomState = React.useMemo((): Partial<ZoomState> => {
+        const result: Partial<ZoomState> = {};
+        const effectiveX = getEffectiveXRange(zoomState.x, rangeSliderState);
+
+        if (effectiveX !== undefined) {
+            result.x = effectiveX;
+        }
+
+        if (zoomState.y !== undefined) {
+            result.y = zoomState.y;
+        }
+
+        return result;
+    }, [zoomState, rangeSliderState]);
+
     const {preparedSeries, preparedShapesSeries} = React.useMemo(() => {
         return getZoomedSeriesData({
             seriesData: allPreparedSeries,
             xAxis: normalizedXAxis,
             yAxis: normalizedYAxis,
-            zoomState,
+            zoomState: effectiveZoomState,
         });
-    }, [allPreparedSeries, normalizedXAxis, normalizedYAxis, zoomState]);
+    }, [allPreparedSeries, normalizedXAxis, normalizedYAxis, effectiveZoomState]);
 
     const {legendConfig, legendItems} = React.useMemo(() => {
         if (!preparedLegend) {
@@ -210,7 +223,7 @@ export function useChartInnerProps(props: Props) {
         htmlLayout,
         clipPathId,
         isOutsideBounds,
-        zoomState,
+        zoomState: effectiveZoomState,
     });
 
     const handleAttemptToSetZoomState = React.useCallback(
@@ -238,7 +251,6 @@ export function useChartInnerProps(props: Props) {
         plotContainerWidth: boundsWidth,
         preparedSplit,
         preparedZoom: preparedChart.zoom,
-        rangeSliderDomain,
         xAxis,
         xScale,
         yAxis,
