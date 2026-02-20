@@ -217,6 +217,26 @@ test.describe('X-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Multiline title (3 rows)', async ({mount}) => {
+            const text = `On seashore far a green oak towers, And to it with a gold chain bound, A learned cat whiles away the hours By walking slowly round and round. To right he walks, and sings a ditty; To left he walks, and tells a tale… A strange place! There a mermaid sits in A tree; there prowls a sprite; on trails Unknown to man move beasts unseen by His eyes; there stands on chicken feet, Without a door or e’en a window, A tiny hut, a hag’s retreat. Both wood and valley there are teeming With wondrous things…`;
+            const data: ChartData = {
+                xAxis: {
+                    title: {text, maxRowCount: 3},
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Invisible axis (with labels, grid and title enabled)', async ({mount}) => {

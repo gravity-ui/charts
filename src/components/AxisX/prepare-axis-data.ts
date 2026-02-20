@@ -11,9 +11,10 @@ import {
     getMinSpaceBetween,
     getTextSizeFn,
     getTextWithElipsis,
-    wrapText,
 } from '../../utils';
 import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
+import type {TextRowData} from '../types';
+import {getMultilineTitleContentRows} from '../utils/axis-title';
 
 import type {
     AxisDomainData,
@@ -25,7 +26,6 @@ import type {
     AxisTickLine,
     AxisTitleData,
     AxisXData,
-    TextRowData,
 } from './types';
 
 async function getSvgAxisLabel({
@@ -286,25 +286,7 @@ export async function prepareXAxisData({
             const titleMaxWidth = axisWidth;
 
             if (axis.title.maxRowCount > 1) {
-                const titleTextRows = await wrapText({
-                    text: axis.title.text,
-                    style: axis.title.style,
-                    width: titleMaxWidth,
-                    getTextSize: getTitleTextSize,
-                });
-
-                for (let i = 0; i < axis.title.maxRowCount && i < titleTextRows.length; i++) {
-                    const textRow = titleTextRows[i];
-                    const textRowContent = textRow.text.trim();
-                    const textRowSize = await getTitleTextSize(textRowContent);
-
-                    titleContent.push({
-                        text: textRowContent,
-                        x: 0,
-                        y: textRow.y,
-                        size: textRowSize,
-                    });
-                }
+                titleContent.push(...(await getMultilineTitleContentRows({axis, titleMaxWidth})));
             } else {
                 const text = await getTextWithElipsis({
                     text: axis.title.text,
@@ -349,12 +331,7 @@ export async function prepareXAxisData({
                 style: axis.title.style,
                 size: titleTextSize,
                 x,
-                y:
-                    height +
-                    axis.labels.margin +
-                    axis.labels.height +
-                    axis.title.margin +
-                    titleTextSize.height,
+                y: height + axis.labels.margin + axis.labels.height + axis.title.margin,
                 rotate: 0,
                 offset: 0,
             };

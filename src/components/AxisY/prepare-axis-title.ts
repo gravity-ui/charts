@@ -1,16 +1,16 @@
 import type {PreparedAxis} from 'src/hooks';
 
-import type {TextRow} from '../../utils';
 import {
     calculateCos,
     calculateSin,
     getLabelsSize,
     getTextSizeFn,
     getTextWithElipsis,
-    wrapText,
 } from '../../utils';
+import type {TextRowData} from '../types';
+import {getMultilineTitleContentRows} from '../utils/axis-title';
 
-import type {HtmlAxisTitleData, SvgAxisTitleData, TextRowData} from './types';
+import type {HtmlAxisTitleData, SvgAxisTitleData} from './types';
 
 export async function prepareSvgYAxisTitle({
     axis,
@@ -38,42 +38,7 @@ export async function prepareSvgYAxisTitle({
     const titleMaxWidth = rotateAngle === 0 ? axis.title.maxWidth : sin * axisHeight;
 
     if (axis.title.maxRowCount > 1) {
-        let titleTextRows = await wrapText({
-            text: axis.title.text,
-            style: axis.title.style,
-            width: titleMaxWidth,
-            getTextSize: getTitleTextSize,
-        });
-
-        titleTextRows = titleTextRows.reduce<TextRow[]>((acc, row, index) => {
-            if (index < axis.title.maxRowCount) {
-                acc.push(row);
-            } else {
-                acc[axis.title.maxRowCount - 1].text += row.text;
-            }
-            return acc;
-        }, []);
-
-        for (let i = 0; i < titleTextRows.length; i++) {
-            const textRow = titleTextRows[i];
-            let textRowContent = textRow.text.trim();
-
-            if (i === titleTextRows.length - 1) {
-                textRowContent = await getTextWithElipsis({
-                    text: textRowContent,
-                    maxWidth: titleMaxWidth,
-                    getTextWidth: async (s) => (await getTitleTextSize(s)).width,
-                });
-            }
-            const textRowSize = await getTitleTextSize(textRowContent);
-
-            titleContent.push({
-                text: textRowContent,
-                x: 0,
-                y: textRow.y,
-                size: textRowSize,
-            });
-        }
+        titleContent.push(...(await getMultilineTitleContentRows({axis, titleMaxWidth})));
     } else {
         const text = await getTextWithElipsis({
             text: axis.title.text,

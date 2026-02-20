@@ -55,7 +55,6 @@ export const AxisX = (props: Props) => {
                 .attr('class', b('title'))
                 .append('text')
                 .attr('text-anchor', 'start')
-                .style('dominant-baseline', 'text-after-edge')
                 .style(
                     'transform',
                     `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
