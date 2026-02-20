@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.34.8](https://github.com/gravity-ui/charts/compare/v1.34.7...v1.34.8) (2026-02-20)
+
+
+### Bug Fixes
+
+* fix incorrect behavior min/max if all values equals (line) ([#411](https://github.com/gravity-ui/charts/issues/411)) ([bc5bf75](https://github.com/gravity-ui/charts/commit/bc5bf75af51e5142b99b6b3a7cc71ae96e122ab1))
+* for series of different types, need to choose the only closest value ([#412](https://github.com/gravity-ui/charts/issues/412)) ([417a55f](https://github.com/gravity-ui/charts/commit/417a55f14427ec25203bee4ba80e421d0e6c0d6b))
+* hide data labels for out-of-bounds points when axis min/max is set (area, bar-x, line) ([#408](https://github.com/gravity-ui/charts/issues/408)) ([85028f0](https://github.com/gravity-ui/charts/commit/85028f08edbae835a26b7fbb84d65872f473d0d8))
+* overlapping html labels should not be displayed ([#410](https://github.com/gravity-ui/charts/issues/410)) ([3b63c4a](https://github.com/gravity-ui/charts/commit/3b63c4af5be7328977736af983a8e000143da6a3))
+
 ## [1.34.7](https://github.com/gravity-ui/charts/compare/v1.34.6...v1.34.7) (2026-02-19)
 
 
