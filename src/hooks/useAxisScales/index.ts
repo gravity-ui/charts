@@ -49,7 +49,9 @@ const createScales = (args: Args) => {
         yAxis,
         zoomState,
     } = args;
-    let visibleSeries = getOnlyVisibleSeries(series);
+    // For range slider: always use all series regardless of visibility so the slider domain
+    // stays stable when the user hides/shows series via the legend.
+    let visibleSeries = isRangeSlider ? series : getOnlyVisibleSeries(series);
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
     visibleSeries = visibleSeries.length === 0 ? series : visibleSeries;

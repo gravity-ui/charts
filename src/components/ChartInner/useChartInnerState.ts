@@ -3,28 +3,17 @@ import React from 'react';
 import type {Dispatch} from 'd3';
 import isEqual from 'lodash/isEqual';
 
-import {ZOOM_TYPE} from '../../constants';
-import type {ZoomType} from '../../constants';
-import type {
-    PreparedChart,
-    PreparedRangeSlider,
-    PreparedTooltip,
-    RangeSliderState,
-    ZoomState,
-} from '../../hooks';
+import type {PreparedRangeSlider, PreparedTooltip, RangeSliderState, ZoomState} from '../../hooks';
 import {EventType, isMacintosh} from '../../utils';
 
 type Props = {
     dispatcher: Dispatch<object>;
-    preparedChart: PreparedChart;
     preparedRangeSlider: PreparedRangeSlider;
     tooltip?: PreparedTooltip;
 };
 
-const RANGE_SLIDER_SYNC_ZOOM_TYPES: ZoomType[] = [ZOOM_TYPE.X, ZOOM_TYPE.XY];
-
 export function useChartInnerState(props: Props) {
-    const {dispatcher, preparedChart, preparedRangeSlider, tooltip} = props;
+    const {dispatcher, preparedRangeSlider, tooltip} = props;
     const [tooltipPinned, setTooltipPinned] = React.useState(false);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const [rangeSliderState, setRangeSliderState] = React.useState<RangeSliderState | undefined>();
@@ -32,7 +21,6 @@ export function useChartInnerState(props: Props) {
     const tooltipEnabled = tooltip?.enabled;
     const tooltipPinEnabled = tooltip?.pin?.enabled;
     const modifierKey = tooltip?.pin?.modifierKey;
-    const rangeSliderEnabled = preparedRangeSlider.enabled;
 
     const togglePinTooltip = React.useCallback(
         (value: boolean, event: React.MouseEvent) => {
@@ -65,20 +53,20 @@ export function useChartInnerState(props: Props) {
             if (!isEqual(zoomState, nextZoomState)) {
                 setZoomState(nextZoomState);
 
-                if (rangeSliderEnabled && nextZoomState?.x) {
-                    const [xMin, xMax] = nextZoomState.x;
-                    setRangeSliderState({
-                        max: xMax,
-                        min: xMin,
-                    });
+                // One-way sync: zoom → range slider. On full reset clear the slider state;
+                // on x-zoom change sync slider to the zoomed x range.
+                if (Object.keys(nextZoomState).length === 0) {
+                    setRangeSliderState(undefined);
+                } else if (nextZoomState.x !== undefined) {
+                    setRangeSliderState({min: nextZoomState.x[0], max: nextZoomState.x[1]});
                 }
             }
         },
-        [rangeSliderEnabled, zoomState],
+        [zoomState],
     );
 
     const updateRangeSliderState = React.useCallback(
-        (nextRangeSliderState?: RangeSliderState, syncZoom = true) => {
+        (nextRangeSliderState?: RangeSliderState) => {
             if (!isEqual(rangeSliderState, nextRangeSliderState)) {
                 setRangeSliderState(
                     nextRangeSliderState
@@ -88,21 +76,12 @@ export function useChartInnerState(props: Props) {
                           }
                         : undefined,
                 );
-
-                if (
-                    syncZoom &&
-                    nextRangeSliderState &&
-                    preparedChart.zoom &&
-                    Object.keys(zoomState || {}).length > 0 &&
-                    RANGE_SLIDER_SYNC_ZOOM_TYPES.includes(preparedChart.zoom.type)
-                ) {
-                    setZoomState({
-                        x: [nextRangeSliderState.min, nextRangeSliderState.max],
-                    });
-                }
+                // Moving the slider clears zoom so the slider is always the sole source of truth.
+                // Zoom stays active only until the user explicitly touches the slider.
+                setZoomState({});
             }
         },
-        [preparedChart.zoom, rangeSliderState, zoomState],
+        [rangeSliderState],
     );
 
     return {

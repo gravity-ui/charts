@@ -80,7 +80,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         zoomState,
     } = useChartInnerState({
         dispatcher,
-        preparedChart,
         preparedRangeSlider,
         tooltip: preparedTooltip,
     });
@@ -114,7 +113,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         htmlLayout,
         plotNode: plotRef.current,
         preparedChart,
-        rangeSliderDomain: rangeSliderRef.current?.getDomain(),
         rangeSliderState,
         svgContainer: svgRef.current,
         updateZoomState,

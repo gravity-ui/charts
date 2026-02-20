@@ -180,7 +180,10 @@ test.describe('Range slider', () => {
     });
 
     test('Clamp to left boundary when dragging handle beyond minimum', async ({mount, page}) => {
-        const data = getData({basicData: scatterLinearXAxisData});
+        const data = getData({
+            basicData: scatterLinearXAxisData,
+            extraData: {xAxis: {rangeSlider: {margin: 20}}},
+        });
         const component = await mount(<ChartTestStory data={data} />);
         const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
         const brushBoundingBox = await getLocatorBoundingBox(brushLocator);
@@ -201,7 +204,10 @@ test.describe('Range slider', () => {
     });
 
     test('Clamp to right boundary when dragging handle beyond maximum', async ({mount, page}) => {
-        const data = getData({basicData: scatterLinearXAxisData});
+        const data = getData({
+            basicData: scatterLinearXAxisData,
+            extraData: {xAxis: {rangeSlider: {margin: 20}}},
+        });
         const component = await mount(<ChartTestStory data={data} />);
         const brushLocator = await getLocator({component, selector: '.gcharts-brush'});
         const brushBoundingBox = await getLocatorBoundingBox(brushLocator);

@@ -14,7 +14,6 @@ import './styles.scss';
 const b = block('range-slider');
 
 export interface RangeSliderHandle {
-    getDomain: () => [number, number] | undefined;
     resetState: () => void;
 }
 
@@ -47,27 +46,19 @@ function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<R
      * in that case, the extra computations simply don't happen.
      *
      * Methods:
-     * - getDomain: returns the current X-axis domain (for synchronization with zoom)
      * - resetState: resets the slider state to its initial value (these calculations
      *   are only possible within the component since it has access to the prepared series data)
      */
     React.useImperativeHandle(
         forwardedRef,
         () => ({
-            getDomain: () => {
-                if (!xScale || isBandScale(xScale)) {
-                    return undefined;
-                }
-
-                return xScale.domain().map(Number) as [number, number];
-            },
             resetState: () => {
                 if (xScale && !isBandScale(xScale)) {
                     const initialRangeSliderState = getInitialRangeSliderState({
                         xScale,
                         defaultRange,
                     });
-                    onUpdate(initialRangeSliderState, false);
+                    onUpdate(initialRangeSliderState);
                 }
             },
         }),

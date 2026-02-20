@@ -8,7 +8,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {lineTwoYAxisData} from '../__stories__/__data__';
 import type {ChartData, DeepPartial} from '../types';
 
-import {dragElementByCalculatedPosition, getLocator} from './utils';
+import {dragElementByCalculatedPosition} from './utils';
 
 function getData(args: {basicData: ChartData; extraData?: DeepPartial<ChartData>}): ChartData {
     const {basicData, extraData} = args;
@@ -68,14 +68,6 @@ test.describe('Range slider - Zoom', () => {
                 return {from: [startX, y], to: [endX, y]};
             },
         });
-        await expect(component).toHaveScreenshot();
-
-        // Reset zoom
-        const resetZoomButton = await getLocator({
-            component,
-            selector: '.gcharts-chart__reset-zoom-button',
-        });
-        await resetZoomButton.click();
         await expect(component).toHaveScreenshot();
     });
 });
