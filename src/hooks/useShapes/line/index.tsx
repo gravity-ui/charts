@@ -36,6 +36,10 @@ export const LineSeriesShapes = (args: Args) => {
     const plotRef = React.useRef<SVGGElement>(null);
     const markersRef = React.useRef<SVGGElement>(null);
 
+    const allowOverlapDataLabels = React.useMemo(() => {
+        return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
+    }, [preparedData]);
+
     React.useEffect(() => {
         if (!plotRef.current || !markersRef.current) {
             return () => {};
@@ -71,7 +75,7 @@ export const LineSeriesShapes = (args: Args) => {
             return acc.concat(d.labels);
         }, [] as LabelData[]);
 
-        if (!preparedData[0]?.series.dataLabels.allowOverlap) {
+        if (!allowOverlapDataLabels) {
             dataLabels = filterOverlappingLabels(dataLabels);
         }
 
@@ -188,13 +192,22 @@ export const LineSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on('hover-shape.line', null);
         };
-    }, [dispatcher, preparedData, seriesOptions]);
+    }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
+
+    const htmlLayerData = React.useMemo(() => {
+        const items = preparedData.map((d) => d?.htmlElements).flat();
+        if (allowOverlapDataLabels) {
+            return {htmlElements: items};
+        }
+
+        return {htmlElements: filterOverlappingLabels(items)};
+    }, [allowOverlapDataLabels, preparedData]);
 
     return (
         <React.Fragment>
             <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
             <g ref={markersRef} />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
+            <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 };
