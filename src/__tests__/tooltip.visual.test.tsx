@@ -107,4 +107,41 @@ test.describe('Tooltip', () => {
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
+
+    test('For series of different types, need to choose the only closest value', async ({
+        page,
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 7},
+                            {x: 2, y: 30},
+                        ],
+                    },
+                    {
+                        type: 'bar-x',
+                        name: 'Series 2',
+                        data: [
+                            {x: 1, y: 3},
+                            {x: 2, y: 10},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-x').first();
+        const position = await bar.boundingBox();
+        if (position === null) {
+            throw Error('bar position is null');
+        }
+        await page.mouse.move(position.x + position.width / 2, 50);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
 });
