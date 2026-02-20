@@ -2,10 +2,10 @@ import {duration} from '@gravity-ui/date-utils';
 import {line as lineGenerator} from 'd3';
 import {select} from 'd3-selection';
 
-import type {DashStyle} from '../constants';
-import type {ChartScaleLinear, ChartScaleTime} from '../hooks';
-import type {ChartAxisRangeSlider} from '../types';
-import {getLineDashArray, isTimeScale} from '../utils';
+import type {DashStyle} from '../../constants';
+import type {ChartScaleLinear, ChartScaleTime} from '../../hooks';
+import type {ChartAxisRangeSlider} from '../../types';
+import {getLineDashArray, isTimeScale} from '../../utils';
 
 export function getInitialRangeSliderState(args: {
     xScale: ChartScaleLinear | ChartScaleTime;
