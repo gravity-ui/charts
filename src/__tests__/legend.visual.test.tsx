@@ -197,6 +197,34 @@ test.describe('Legend', () => {
                 });
             });
         });
+
+        test('The default legend display should take into account the series settings', async ({
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 'Not null data',
+                            type: 'line',
+                            dataLabels: {enabled: false},
+                            data: [{x: 10, y: 10}],
+                        },
+                        {
+                            name: 'Null data',
+                            type: 'line',
+                            dataLabels: {enabled: false},
+                            data: [{x: 10, y: null}],
+                            legend: {enabled: false},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={chartData} styles={{width: '270px'}} />,
+            );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test.describe('Continuous', () => {
