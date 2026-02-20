@@ -36,6 +36,10 @@ export const WaterfallSeriesShapes = (args: Args) => {
     const ref = React.useRef<SVGGElement | null>(null);
     const connectorSelector = `.${b('connector')}`;
 
+    const allowOverlapDataLabels = React.useMemo(() => {
+        return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
+    }, [preparedData]);
+
     React.useEffect(() => {
         if (!ref.current) {
             return () => {};
@@ -59,7 +63,7 @@ export const WaterfallSeriesShapes = (args: Args) => {
             .attr('cursor', (d) => d.series.cursor);
 
         let dataLabels = preparedData.map((d) => d.label).filter(Boolean) as LabelData[];
-        if (!preparedData[0]?.series.dataLabels.allowOverlap) {
+        if (!allowOverlapDataLabels) {
             dataLabels = filterOverlappingLabels(dataLabels);
         }
 
@@ -164,12 +168,21 @@ export const WaterfallSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on('hover-shape.waterfall', null);
         };
-    }, [connectorSelector, dispatcher, preparedData, seriesOptions]);
+    }, [allowOverlapDataLabels, connectorSelector, dispatcher, preparedData, seriesOptions]);
+
+    const htmlLayerData = React.useMemo(() => {
+        const items = preparedData.map((d) => d?.htmlElements).flat();
+        if (allowOverlapDataLabels) {
+            return {htmlElements: items};
+        }
+
+        return {htmlElements: filterOverlappingLabels(items)};
+    }, [allowOverlapDataLabels, preparedData]);
 
     return (
         <React.Fragment>
             <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
+            <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 };

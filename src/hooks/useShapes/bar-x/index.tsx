@@ -30,6 +30,10 @@ export const BarXSeriesShapes = (args: Args) => {
     const hoveredDataRef = React.useRef<PreparedBarXData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
+    const allowOverlapDataLabels = React.useMemo(() => {
+        return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
+    }, [preparedData]);
+
     React.useEffect(() => {
         if (!ref.current) {
             return () => {};
@@ -68,7 +72,7 @@ export const BarXSeriesShapes = (args: Args) => {
             .attr('cursor', (d) => d.series.cursor);
 
         let dataLabels = preparedData.map((d) => d.label).filter(Boolean) as LabelData[];
-        if (!preparedData[0]?.series.dataLabels.allowOverlap) {
+        if (!allowOverlapDataLabels) {
             dataLabels = filterOverlappingLabels(dataLabels);
         }
 
@@ -143,12 +147,21 @@ export const BarXSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on('hover-shape.bar-x', null);
         };
-    }, [dispatcher, preparedData, seriesOptions]);
+    }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
+
+    const htmlLayerData = React.useMemo(() => {
+        const items = preparedData.map((d) => d?.htmlElements).flat();
+        if (allowOverlapDataLabels) {
+            return {htmlElements: items};
+        }
+
+        return {htmlElements: filterOverlappingLabels(items)};
+    }, [allowOverlapDataLabels, preparedData]);
 
     return (
         <React.Fragment>
             <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
+            <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 };

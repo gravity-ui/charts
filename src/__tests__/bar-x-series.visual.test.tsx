@@ -267,6 +267,29 @@ test.describe('Bar-x series', () => {
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Overlapping html labels should not be displayed (by default)', async ({mount}) => {
+            const longLabel = 'On seashore far a green oak towers ...';
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: '',
+                            type: 'bar-x',
+                            data: [
+                                {x: 1, y: 1, label: ''},
+                                {x: 1.9, y: 2, label: longLabel},
+                                {x: 2.1, y: 2, label: longLabel},
+                                {x: 3, y: 3, label: ''},
+                            ],
+                            dataLabels: {enabled: true, html: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test.describe('Null modes', () => {
