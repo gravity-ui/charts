@@ -388,4 +388,29 @@ test.describe('Line series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Equals values with defined min/max', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'line',
+                        data: [
+                            {x: 1, y: 0.9},
+                            {x: 2, y: 0.9},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    min: 2,
+                    max: 3,
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

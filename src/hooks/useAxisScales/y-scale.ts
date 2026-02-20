@@ -210,17 +210,11 @@ export function createYScale(args: {
                     number,
                     number,
                 ];
-                const isPointDomain = hasOnlyMarkerSeries(series)
-                    ? checkIsPointDomain([yMinDomain, yMaxDomain])
-                    : false;
 
-                const yMin =
-                    typeof yMinPropsOrState === 'number' && !isPointDomain
-                        ? yMinPropsOrState
-                        : yMinDomain;
+                const yMin = typeof yMinPropsOrState === 'number' ? yMinPropsOrState : yMinDomain;
                 let yMax: number;
 
-                if (typeof yMaxPropsOrState === 'number' && !isPointDomain) {
+                if (typeof yMaxPropsOrState === 'number') {
                     yMax = yMaxPropsOrState;
                 } else {
                     const hasSeriesWithVolumeOnYAxis = series.some((s) =>
