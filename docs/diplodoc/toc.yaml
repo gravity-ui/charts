@@ -24,6 +24,8 @@ items:
     href: ./pages/get-started.md
   - name: Guides
     items:
+      - name: Axis types
+        href: ./pages/guides/axis-types.md
       - name: Data labels
         href: ./pages/guides/data-labels.md
       - name: Legend
