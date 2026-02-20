@@ -18,7 +18,7 @@ export async function getPreparedLegend(args: {
     series: ChartData['series']['data'];
 }): Promise<PreparedLegend> {
     const {legend, series} = args;
-    const seriesWithEnabledLegend = series.map((s) => s.legend?.enabled !== false);
+    const seriesWithEnabledLegend = series.filter((s) => s.legend?.enabled !== false);
     const enabled = Boolean(
         typeof legend?.enabled === 'boolean' ? legend?.enabled : seriesWithEnabledLegend.length > 1,
     );
