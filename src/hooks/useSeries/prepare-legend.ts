@@ -18,8 +18,9 @@ export async function getPreparedLegend(args: {
     series: ChartData['series']['data'];
 }): Promise<PreparedLegend> {
     const {legend, series} = args;
+    const seriesWithEnabledLegend = series.filter((s) => s.legend?.enabled !== false);
     const enabled = Boolean(
-        typeof legend?.enabled === 'boolean' ? legend?.enabled : series.length > 1,
+        typeof legend?.enabled === 'boolean' ? legend?.enabled : seriesWithEnabledLegend.length > 1,
     );
     const defaultItemStyle = clone(legendDefaults.itemStyle);
     const itemStyle = get(legend, 'itemStyle');
