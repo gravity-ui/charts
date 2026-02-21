@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.34.9](https://github.com/gravity-ui/charts/compare/v1.34.8...v1.34.9) (2026-02-21)
+
+
+### Bug Fixes
+
+* fix default legend visibility for multiple series ([#418](https://github.com/gravity-ui/charts/issues/418)) ([2204723](https://github.com/gravity-ui/charts/commit/2204723dbeb61a9a1cd4ba552d43e4c97cb19e46))
+* fix x-axis multiline title ([#415](https://github.com/gravity-ui/charts/issues/415)) ([787f38f](https://github.com/gravity-ui/charts/commit/787f38fcd9663df28be4d6996064cabb8d0fd62d))
+* rework range-slider data filtration logic ([#417](https://github.com/gravity-ui/charts/issues/417)) ([c2cac6d](https://github.com/gravity-ui/charts/commit/c2cac6d9c8701fcfe220621ab50ba680f2d18bed))
+
 ## [1.34.8](https://github.com/gravity-ui/charts/compare/v1.34.7...v1.34.8) (2026-02-20)
 
 
