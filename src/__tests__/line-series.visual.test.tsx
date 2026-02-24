@@ -486,6 +486,6 @@ test.describe('Line series', () => {
             await component.unmount();
         }
 
-        await expect(median(widgetRenderTimes)).toBeLessThan(100);
+        expect(median(widgetRenderTimes)).toBeLessThan(100);
     });
 });

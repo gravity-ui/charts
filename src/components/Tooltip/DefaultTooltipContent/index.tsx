@@ -172,10 +172,13 @@ export const DefaultTooltipContent = ({
     return (
         <div className={b('content')} data-qa={qa}>
             {formattedHeadValue && (
-                <div
-                    className={b('series-name')}
-                    dangerouslySetInnerHTML={{__html: formattedHeadValue}}
-                />
+                <div className={b('series-name')}>
+                    {/* Wrapper isolates ellipsis styles so they don't break flex layout and row count calculation */}
+                    <div
+                        className={b('series-name-text')}
+                        dangerouslySetInnerHTML={{__html: formattedHeadValue}}
+                    />
+                </div>
             )}
             <div
                 className={b('content-rows', {pinned})}

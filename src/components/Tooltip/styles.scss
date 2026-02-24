@@ -4,6 +4,8 @@
     box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
 
     &__popup-content {
+        max-width: 450px;
+
         text-wrap: nowrap;
 
         border-radius: 4px;
@@ -31,6 +33,14 @@
 
         font-size: 13px;
         font-weight: 600;
+    }
+
+    &__series-name-text {
+        display: block;
+        overflow: hidden;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 
     &__content-row {
