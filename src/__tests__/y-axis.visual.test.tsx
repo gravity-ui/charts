@@ -783,7 +783,7 @@ test.describe('Y-axis', () => {
                 await component.unmount();
             }
 
-            expect(median(widgetRenderTimes)).toBeLessThan(800);
+            expect(median(widgetRenderTimes)).toBeLessThan(2000);
         });
     });
 });

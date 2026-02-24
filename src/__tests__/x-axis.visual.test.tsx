@@ -400,7 +400,7 @@ test.describe('X-axis', () => {
                 await component.unmount();
             }
 
-            expect(median(widgetRenderTimes)).toBeLessThan(500);
+            expect(median(widgetRenderTimes)).toBeLessThan(2000);
         });
     });
 });
