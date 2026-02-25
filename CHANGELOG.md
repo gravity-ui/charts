@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.10](https://github.com/gravity-ui/charts/compare/v1.34.9...v1.34.10) (2026-02-25)
+
+
+### Bug Fixes
+
+* improve performance and layout for long category labels ([#419](https://github.com/gravity-ui/charts/issues/419)) ([7ae952f](https://github.com/gravity-ui/charts/commit/7ae952ffb98f46cf8ac6019fef378dc0bc226af6))
+
 ## [1.34.9](https://github.com/gravity-ui/charts/compare/v1.34.8...v1.34.9) (2026-02-21)
 
 
