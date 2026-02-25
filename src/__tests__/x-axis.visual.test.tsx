@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import {median} from 'd3';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
@@ -337,6 +338,69 @@ test.describe('X-axis', () => {
                 const component = await mount(<ChartTestStory data={data} />);
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
+        });
+    });
+
+    test.describe('Performance', () => {
+        test('Long category labels', async ({mount}) => {
+            test.setTimeout(120_000);
+
+            const CATEGORY_LENGTH = 35_000;
+            const CATEGORY_COUNT = 100;
+
+            const createLongCategory = (prefix: string, index: number) =>
+                (prefix + index).padEnd(CATEGORY_LENGTH, 'x');
+
+            const categories = Array.from({length: CATEGORY_COUNT}, (_, i) =>
+                createLongCategory('Category ', i + 1),
+            );
+            const dataItems = categories.map((_, i) => ({
+                x: i,
+                y: Math.floor(Math.random() * 300),
+            }));
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series',
+                            data: dataItems,
+                        },
+                    ],
+                },
+                xAxis: {
+                    type: 'category',
+                    categories,
+                },
+                yAxis: [{title: {text: ''}}],
+            };
+
+            const widgetRenderTimes: number[] = [];
+
+            for (let i = 0; i < 10; i++) {
+                let widgetRenderTime: number | undefined;
+                const handleRender = (renderTime?: number) => {
+                    widgetRenderTime = renderTime;
+                };
+
+                const component = await mount(
+                    <ChartTestStory
+                        data={data}
+                        styles={{height: 1000, width: 1000}}
+                        onRender={handleRender}
+                    />,
+                );
+                await component.locator('svg').waitFor({state: 'visible'});
+                await expect.poll(() => widgetRenderTime).toBeTruthy();
+
+                if (widgetRenderTime !== undefined) {
+                    widgetRenderTimes.push(widgetRenderTime);
+                }
+
+                await component.unmount();
+            }
+
+            expect(median(widgetRenderTimes)).toBeLessThan(2000);
         });
     });
 });

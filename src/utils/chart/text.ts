@@ -296,22 +296,27 @@ export async function getTextWithElipsis({
     getTextWidth: (s: string) => number | Promise<number>;
     maxWidth: number;
 }) {
-    let textWidth = Math.floor(await getTextWidth(originalText));
+    const textWidth = Math.floor(await getTextWidth(originalText));
     const textMaxWidth = Math.ceil(maxWidth);
 
     if (textWidth <= textMaxWidth) {
         return originalText;
     }
 
-    let text = originalText + '…';
-    while (textWidth > textMaxWidth && text.length > 2) {
-        text = text.slice(0, -2) + '…';
-        textWidth = Math.floor(await getTextWidth(text));
+    let low = 0;
+    let high = originalText.length;
+
+    while (low < high) {
+        const mid = Math.floor((low + high + 1) / 2);
+        const candidate = originalText.slice(0, mid) + '…';
+        const candidateWidth = Math.floor(await getTextWidth(candidate));
+
+        if (candidateWidth <= textMaxWidth) {
+            low = mid;
+        } else {
+            high = mid - 1;
+        }
     }
 
-    if (textWidth > textMaxWidth) {
-        text = '';
-    }
-
-    return text;
+    return low > 0 ? originalText.slice(0, low) + '…' : '';
 }

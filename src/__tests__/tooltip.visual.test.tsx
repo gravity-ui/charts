@@ -144,4 +144,36 @@ test.describe('Tooltip', () => {
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
+
+    test('Long category name in header', async ({page, mount}) => {
+        const longCategory =
+            'Very long category name for testing display in tooltip with ellipsis when overflowed '.repeat(
+                2,
+            );
+
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [{x: 0, y: 100}],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: [longCategory],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-x').first();
+        const position = await bar.boundingBox();
+        if (position === null) {
+            throw Error('bar position is null');
+        }
+        await page.mouse.move(position.x + position.width / 2, 50);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
 });
