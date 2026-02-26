@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.0](https://github.com/gravity-ui/charts/compare/v1.34.10...v1.35.0) (2026-02-26)
+
+
+### Features
+
+* **bar-x:** improve dataSorting setting for set stack data in reverse order ([#421](https://github.com/gravity-ui/charts/issues/421)) ([a7e1292](https://github.com/gravity-ui/charts/commit/a7e129251bb22ebea251bb8d86210aa8c7c7f8b6))
+
 ## [1.34.10](https://github.com/gravity-ui/charts/compare/v1.34.9...v1.34.10) (2026-02-25)
 
 
