@@ -134,6 +134,14 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Stacking normal with reverse data order', async ({mount}) => {
+        const chartData = cloneDeep(barXStakingNormalData);
+        set(chartData, 'series.options.bar-x.dataSorting.direction', 'desc');
+
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Stacking normal with zero y values', async ({mount}) => {
         const stacks = new Array(10).fill(null).map((_, index) => String(index));
         const chartData: ChartData = {
@@ -232,6 +240,62 @@ test.describe('Bar-x series', () => {
                 }}
             />,
         );
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Stacking positive and negative values', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Positive 1',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Positive 2',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: 5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Negative 1',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: -5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Negative 2',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {
+                                y: -5,
+                                x: 1,
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
@@ -345,62 +409,6 @@ test.describe('Bar-x series', () => {
             yAxis: [{maxPadding: 0}],
             xAxis: {maxPadding: 0},
         };
-        const component = await mount(<ChartTestStory data={chartData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
-    });
-
-    test('Stacking positive and negative values', async ({mount}) => {
-        const chartData: ChartData = {
-            series: {
-                data: [
-                    {
-                        name: 'Positive 1',
-                        type: 'bar-x',
-                        stacking: 'normal',
-                        data: [
-                            {
-                                y: 5,
-                                x: 1,
-                            },
-                        ],
-                    },
-                    {
-                        name: 'Positive 2',
-                        type: 'bar-x',
-                        stacking: 'normal',
-                        data: [
-                            {
-                                y: 5,
-                                x: 1,
-                            },
-                        ],
-                    },
-                    {
-                        name: 'Negative 1',
-                        type: 'bar-x',
-                        stacking: 'normal',
-                        data: [
-                            {
-                                y: -5,
-                                x: 1,
-                            },
-                        ],
-                    },
-                    {
-                        name: 'Negative 2',
-                        type: 'bar-x',
-                        stacking: 'normal',
-                        data: [
-                            {
-                                y: -5,
-                                x: 1,
-                            },
-                        ],
-                    },
-                ],
-            },
-        };
-
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
