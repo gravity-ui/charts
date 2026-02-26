@@ -18,7 +18,7 @@ import {
 } from '../marker';
 import {setActiveState} from '../utils';
 
-import type {MarkerData, PointData, PreparedAreaData} from './types';
+import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
 
 const b = block('area');
 
@@ -35,6 +35,7 @@ export const AreaSeriesShapes = (args: Args) => {
     const hoveredDataRef = React.useRef<TooltipDataChunkArea[] | null | undefined>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
     const markersRef = React.useRef<SVGGElement>(null);
+    const hoverMarkersRef = React.useRef<SVGGElement>(null);
 
     const allowOverlapDataLabels = React.useMemo(() => {
         return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
@@ -47,6 +48,7 @@ export const AreaSeriesShapes = (args: Args) => {
 
         const plotSvgElement = select(plotRef.current);
         const markersSvgElement = select(markersRef.current);
+        const hoverMarkersSvgElement = select(hoverMarkersRef.current);
         const hoverOptions = get(seriesOptions, 'area.states.hover');
         const inactiveOptions = get(seriesOptions, 'area.states.inactive');
 
@@ -196,6 +198,56 @@ export const AreaSeriesShapes = (args: Args) => {
                 }
                 return d;
             });
+
+            hoverMarkersSvgElement.selectAll('*').remove();
+
+            if (hoverEnabled && selected.length > 0) {
+                const hoverOnlyMarkers: MarkerData[] = [];
+
+                for (const chunk of selected) {
+                    const seriesData = preparedData.find((pd) => pd.id === chunk.series.id);
+
+                    if (!seriesData) {
+                        continue;
+                    }
+
+                    const {series} = seriesData;
+
+                    if (
+                        series.marker.states.normal.enabled ||
+                        !series.marker.states.hover.enabled
+                    ) {
+                        continue;
+                    }
+
+                    const point = seriesData.points.find((p) => p.data === chunk.data);
+
+                    if (!point || point.y === null) {
+                        continue;
+                    }
+
+                    hoverOnlyMarkers.push({
+                        point: point as MarkerPointData,
+                        active: true,
+                        hovered: true,
+                        clipped: false,
+                    });
+                }
+
+                if (hoverOnlyMarkers.length > 0) {
+                    hoverMarkersSvgElement
+                        .selectAll('g')
+                        .data(hoverOnlyMarkers)
+                        .join('g')
+                        .call(renderMarker)
+                        .each((_d, i, nodes) => {
+                            selectMarkerSymbol(select<BaseType, MarkerData>(nodes[i])).call(
+                                setMarker,
+                                'hover',
+                            );
+                        });
+                }
+            }
         }
 
         if (hoveredDataRef.current !== null) {
@@ -222,6 +274,7 @@ export const AreaSeriesShapes = (args: Args) => {
         <React.Fragment>
             <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
             <g ref={markersRef} />
+            <g ref={hoverMarkersRef} />
             <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

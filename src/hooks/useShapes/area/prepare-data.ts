@@ -305,17 +305,26 @@ export const prepareAreaData = async (args: {
                 }, []);
 
                 let markers: MarkerData[] = [];
-                if (s.marker.states.normal.enabled || s.marker.states.hover.enabled) {
+                const hasPerPointNormalMarkers = s.data.some(
+                    (d) => d.marker?.states?.normal?.enabled,
+                );
+
+                if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
                     markers = points.reduce<MarkerData[]>((markersAcc, p) => {
                         if (p.y === null) {
                             return markersAcc;
                         }
-                        markersAcc.push({
-                            point: p as MarkerPointData,
-                            active: true,
-                            hovered: false,
-                            clipped: isOutsideBounds(p.x, p.y),
-                        });
+                        const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
+
+                        if (s.marker.states.normal.enabled || pointNormalEnabled) {
+                            markersAcc.push({
+                                point: p as MarkerPointData,
+                                active: true,
+                                hovered: false,
+                                clipped: isOutsideBounds(p.x, p.y),
+                            });
+                        }
+
                         return markersAcc;
                     }, []);
                 }

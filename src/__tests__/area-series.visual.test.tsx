@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import {median} from 'd3';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
@@ -400,5 +401,45 @@ test.describe('Area series', () => {
 
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.only('Performance', async ({mount}) => {
+        test.setTimeout(120_000);
+
+        const pointCount = 50000;
+        const data: ChartData = {
+            series: {
+                data: [
+                    generateSeriesData({
+                        type: 'area',
+                        pointCount,
+                        generateY: (_x, i) => Math.sin(i / 50) * 100 + 200,
+                    }),
+                ],
+            },
+        };
+
+        const widgetRenderTimes = [];
+        for (let i = 0; i < 10; i++) {
+            let widgetRenderTime: number | undefined;
+            const handleRender = (renderTime?: number) => {
+                widgetRenderTime = renderTime;
+            };
+
+            const component = await mount(
+                <ChartTestStory
+                    data={data}
+                    styles={{height: 1000, width: 1000}}
+                    onRender={handleRender}
+                />,
+            );
+            await component.locator('svg').waitFor({state: 'visible'});
+            await expect.poll(() => widgetRenderTime).toBeTruthy();
+            widgetRenderTimes.push(widgetRenderTime);
+
+            await component.unmount();
+        }
+
+        expect(median(widgetRenderTimes)).toBeLessThan(500);
     });
 });
