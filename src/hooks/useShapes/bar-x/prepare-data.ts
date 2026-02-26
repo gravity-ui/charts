@@ -1,4 +1,4 @@
-import {ascending, descending, sort} from 'd3';
+import {ascending, descending, reverse, sort} from 'd3';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
 
@@ -168,9 +168,15 @@ export const prepareBarXData = async (args: {
                 let positiveStackHeight = 0;
                 let negativeStackHeight = 0;
                 const stackItems: PreparedBarXData[] = [];
-                const sortedData = sortKey
-                    ? sort(yValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
-                    : yValues;
+
+                let sortedData = yValues;
+                if (sortKey) {
+                    sortedData = sort(yValues, (a, b) =>
+                        comparator(get(a, sortKey), get(b, sortKey)),
+                    );
+                } else if (sortingOptions?.direction === 'desc') {
+                    sortedData = reverse(yValues);
+                }
 
                 for (let yValueIndex = 0; yValueIndex < sortedData.length; yValueIndex++) {
                     const yValue = sortedData[yValueIndex];
@@ -191,7 +197,6 @@ export const prepareBarXData = async (args: {
                         const xBandScale = xScale as ScaleBand<string>;
                         const xBandScaleDomain = xBandScale.domain();
 
-                        // eslint-disable-next-line max-depth
                         if (xBandScaleDomain.indexOf(xValue as string) === -1) {
                             continue;
                         }
