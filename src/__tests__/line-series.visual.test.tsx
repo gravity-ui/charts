@@ -438,54 +438,112 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Performance', async ({mount}) => {
-        test.setTimeout(120_000);
+    test.describe('Performance', () => {
+        test('Initial render with large dataset', async ({mount}) => {
+            test.setTimeout(120_000);
 
-        const categories = new Array(10000).fill(null).map((_, i) => String(i));
-        const items = categories.map((_category, i) => ({
-            x: 10 * i,
-            y: i,
-        }));
-        const data: ChartData = {
-            yAxis: [
-                {
-                    type: 'category',
-                    categories,
-                },
-            ],
-            series: {
-                data: [
+            const categories = new Array(10000).fill(null).map((_, i) => String(i));
+            const items = categories.map((_category, i) => ({
+                x: 10 * i,
+                y: i,
+            }));
+            const data: ChartData = {
+                yAxis: [
                     {
-                        type: 'line',
-                        name: '',
-                        data: items,
-                        dataLabels: {enabled: true, format: {type: 'number'}},
+                        type: 'category',
+                        categories,
                     },
                 ],
-            },
-        };
-
-        const widgetRenderTimes = [];
-        for (let i = 0; i < 10; i++) {
-            let widgetRenderTime: number | undefined;
-            const handleRender = (renderTime?: number) => {
-                widgetRenderTime = renderTime;
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: '',
+                            data: items,
+                            dataLabels: {enabled: true, format: {type: 'number'}},
+                        },
+                    ],
+                },
             };
 
-            const component = await mount(
-                <ChartTestStory
-                    data={data}
-                    styles={{height: 1000, width: 1000}}
-                    onRender={handleRender}
-                />,
-            );
-            await component.locator('svg').waitFor({state: 'visible'});
-            await expect.poll(() => widgetRenderTime).toBeTruthy();
-            widgetRenderTimes.push(widgetRenderTime);
+            const widgetRenderTimes = [];
+            for (let i = 0; i < 10; i++) {
+                let widgetRenderTime: number | undefined;
+                const handleRender = (renderTime?: number) => {
+                    widgetRenderTime = renderTime;
+                };
 
-            await component.unmount();
-        }
+                const component = await mount(
+                    <ChartTestStory
+                        data={data}
+                        styles={{height: 1000, width: 1000}}
+                        onRender={handleRender}
+                    />,
+                );
+                await component.locator('svg').waitFor({state: 'visible'});
+                await expect.poll(() => widgetRenderTime).toBeTruthy();
+                widgetRenderTimes.push(widgetRenderTime);
 
-        expect(median(widgetRenderTimes)).toBeLessThan(100);
+                await component.unmount();
+            }
+
+            expect(median(widgetRenderTimes)).toBeLessThan(100);
+        });
+
+        test('Markers should not degrade render performance on large datasets', async ({mount}) => {
+            test.setTimeout(120_000);
+
+            const pointCount = 25000;
+            const data: ChartData = {
+                series: {
+                    data: [
+                        generateSeriesData({
+                            type: 'line',
+                            pointCount,
+                            generateY: (_x, i) => Math.sin(i / 50) * 100 + 200,
+                            overrides: {name: 'Series 1'},
+                        }),
+                        generateSeriesData({
+                            type: 'line',
+                            pointCount,
+                            generateY: (_x, i) => Math.sin(i / 50) * 100 + 100,
+                            overrides: {name: 'Series 2'},
+                        }),
+                    ],
+                },
+            };
+
+            const widgetRenderTimes = [];
+            for (let i = 0; i < 10; i++) {
+                let widgetRenderTime: number | undefined;
+                const handleRender = (renderTime?: number) => {
+                    widgetRenderTime = renderTime;
+                };
+
+                const component = await mount(
+                    <ChartTestStory
+                        data={data}
+                        styles={{height: 1000, width: 1000}}
+                        onRender={handleRender}
+                    />,
+                );
+                await component.locator('svg').waitFor({state: 'visible'});
+                const legendItem = component.getByText('Series 1');
+                const seriesList = component.locator('.gcharts-line > path');
+
+                await legendItem.click();
+                await expect(seriesList).toHaveCount(1);
+
+                await legendItem.click();
+                await expect(seriesList).toHaveCount(2);
+
+                await expect.poll(() => widgetRenderTime).toBeTruthy();
+                widgetRenderTimes.push(widgetRenderTime);
+
+                await component.unmount();
+            }
+
+            expect(median(widgetRenderTimes)).toBeLessThan(500);
+        });
     });
 });
