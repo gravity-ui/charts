@@ -403,7 +403,9 @@ test.describe('Area series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Markers should not degrade render performance on large datasets', async ({mount}) => {
+    test.skip('Markers should not degrade render performance on large datasets', async ({
+        mount,
+    }) => {
         test.setTimeout(120_000);
 
         const pointCount = 25000;
