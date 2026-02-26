@@ -438,6 +438,57 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Initial render should not degrade performance on large datasets', async ({mount}) => {
+        test.setTimeout(120_000);
+
+        const categories = new Array(10000).fill(null).map((_, i) => String(i));
+        const items = categories.map((_category, i) => ({
+            x: 10 * i,
+            y: i,
+        }));
+        const data: ChartData = {
+            yAxis: [
+                {
+                    type: 'category',
+                    categories,
+                },
+            ],
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: '',
+                        data: items,
+                        dataLabels: {enabled: true, format: {type: 'number'}},
+                    },
+                ],
+            },
+        };
+
+        const widgetRenderTimes = [];
+        for (let i = 0; i < 10; i++) {
+            let widgetRenderTime: number | undefined;
+            const handleRender = (renderTime?: number) => {
+                widgetRenderTime = renderTime;
+            };
+
+            const component = await mount(
+                <ChartTestStory
+                    data={data}
+                    styles={{height: 1000, width: 1000}}
+                    onRender={handleRender}
+                />,
+            );
+            await component.locator('svg').waitFor({state: 'visible'});
+            await expect.poll(() => widgetRenderTime).toBeTruthy();
+            widgetRenderTimes.push(widgetRenderTime);
+
+            await component.unmount();
+        }
+
+        expect(median(widgetRenderTimes)).toBeLessThan(100);
+    });
+
     test('Markers should not degrade render performance on large datasets', async ({mount}) => {
         test.setTimeout(120_000);
 
