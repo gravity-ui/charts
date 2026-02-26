@@ -40,6 +40,7 @@ const config: PlaywrightTestConfig = {
     forbidOnly: Boolean(process.env.CI),
     /* Retry on CI only */
     retries: process.env.CI ? 1 : 0,
+    // TODO: return 8 workers after https://github.com/gravity-ui/charts/issues/424
     /* Opt out of parallel tests on CI. */
     workers: process.env.CI ? 4 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
