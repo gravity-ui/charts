@@ -489,9 +489,7 @@ test.describe('Line series', () => {
         expect(median(widgetRenderTimes)).toBeLessThan(100);
     });
 
-    test.skip('Markers should not degrade render performance on large datasets', async ({
-        mount,
-    }) => {
+    test('Markers should not degrade render performance on large datasets', async ({mount}) => {
         test.setTimeout(120_000);
 
         const pointCount = 25000;
