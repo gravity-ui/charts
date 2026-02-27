@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.1](https://github.com/gravity-ui/charts/compare/v1.35.0...v1.35.1) (2026-02-27)
+
+
+### Bug Fixes
+
+* render line/area markers lazily on hover ([#423](https://github.com/gravity-ui/charts/issues/423)) ([2cbbb3e](https://github.com/gravity-ui/charts/commit/2cbbb3e874bd597f297dd2d507793af902532137))
+
 ## [1.35.0](https://github.com/gravity-ui/charts/compare/v1.34.10...v1.35.0) (2026-02-26)
 
 
