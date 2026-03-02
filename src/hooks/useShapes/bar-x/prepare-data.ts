@@ -1,17 +1,17 @@
-import {ascending, descending, reverse, sort} from 'd3';
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import {ascending, descending, max, reverse, sort} from 'd3';
+import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
-import merge from 'lodash/merge';
 
 import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../useSeries/types';
 import {getSeriesStackId} from '../../useSeries/utils';
 import type {PreparedSplit} from '../../useSplit/types';
-import {getBarXLayout} from '../../utils/bar-x';
+import {getBandSize} from '../../utils/get-band-size';
 
 import type {PreparedBarXData} from './types';
 
@@ -107,6 +107,9 @@ export const prepareBarXData = async (args: {
         }
     })();
 
+    const domain = new Set<string | number>();
+    let maxGroupSize = 1;
+
     // series grouped by plotIndex > xValue > data[];
     const dataByPlots: GroupedSeries = new Map();
     series.forEach((s) => {
@@ -139,21 +142,32 @@ export const prepareBarXData = async (args: {
                 }
 
                 data[key][stackId].push({data: d, series: s});
+                domain.add(key);
             }
         });
+
+        maxGroupSize = Math.max(
+            maxGroupSize,
+            max(Object.values(data), (d) => Object.values(d).length) || 1,
+        );
     });
 
     const result: PreparedBarXData[] = [];
 
-    const {
-        bandSize,
-        barGap: rectGap,
-        barSize: rectWidth,
-    } = getBarXLayout({
-        groupedData: merge({}, ...Array.from(dataByPlots.values())),
-        seriesOptions,
-        scale: xScale,
+    const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
+    const barPadding = get(seriesOptions, 'bar-x.barPadding');
+    const groupPadding = get(seriesOptions, 'bar-x.groupPadding');
+    const bandSize = getBandSize({
+        domain: Array.from(domain),
+        scale: xScale as AxisScale<AxisDomain>,
     });
+    const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
+    const groupSize = bandSize - groupGap;
+    const rectGap = Math.max(bandSize * barPadding, MIN_BAR_GAP);
+    const rectWidth = Math.max(
+        MIN_BAR_WIDTH,
+        Math.min(groupSize / maxGroupSize - rectGap, barMaxWidth),
+    );
 
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
