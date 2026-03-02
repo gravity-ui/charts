@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.35.1](https://github.com/gravity-ui/charts/compare/v1.35.0...v1.35.1) (2026-03-02)
+
+
+### Bug Fixes
+
+* fix bar width for bar-x in split ([#426](https://github.com/gravity-ui/charts/issues/426)) ([ce199c9](https://github.com/gravity-ui/charts/commit/ce199c951aa0e701b85c2f6285bfec3fbe3f2cc0))
+* render line/area markers lazily on hover ([#423](https://github.com/gravity-ui/charts/issues/423)) ([2cbbb3e](https://github.com/gravity-ui/charts/commit/2cbbb3e874bd597f297dd2d507793af902532137))
+
 ## [1.35.0](https://github.com/gravity-ui/charts/compare/v1.34.10...v1.35.0) (2026-02-26)
 
 
