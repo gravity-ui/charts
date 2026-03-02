@@ -395,6 +395,52 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Split with unevenly distributed data - the bar width should be the same for all plots', async ({
+        page,
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-x',
+                        data: [
+                            {x: 2, y: 15},
+                            {x: 3, y: 5},
+                            {x: 4, y: 50},
+                            {x: 5, y: 25},
+                            {x: 10, y: 5},
+                        ],
+                        yAxis: 0,
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'bar-x',
+                        data: [{x: 1, y: 100}],
+                        yAxis: 1,
+                    },
+                ],
+            },
+            split: {
+                enable: true,
+                gap: '40px',
+                plots: [{title: {text: 'Plot title 1'}}, {title: {text: 'Plot title 2'}}],
+            },
+            yAxis: [
+                {
+                    plotIndex: 0,
+                },
+                {
+                    plotIndex: 1,
+                },
+            ],
+        };
+        await page.setViewportSize({width: 200, height: 280});
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Single point', async ({mount}) => {
         const chartData: ChartData = {
             series: {
