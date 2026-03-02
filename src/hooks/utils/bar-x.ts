@@ -3,49 +3,15 @@ import {max} from 'd3';
 import get from 'lodash/get';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
-import {getDataCategoryValue} from '../../utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
-import type {PreparedXAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales/types';
-import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../useSeries/types';
-import {getSeriesStackId} from '../useSeries/utils';
+import type {PreparedBarXSeries, PreparedSeriesOptions} from '../useSeries/types';
 
 import {getBandSize} from './get-band-size';
 
-export function groupBarXDataByXValue<T extends BarXSeries | PreparedBarXSeries>(
-    series: T[],
-    xAxis: PreparedXAxis,
-) {
-    const data: Record<string | number, Record<string, {data: BarXSeriesData; series: T}[]>> = {};
-    series.forEach((s) => {
-        s.data.forEach((d) => {
-            const categories = xAxis.categories ?? [];
-            const key =
-                xAxis.type === 'category'
-                    ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
-                    : d.x;
-
-            if (key !== undefined) {
-                if (!data[key]) {
-                    data[key] = {};
-                }
-
-                const stackId = getSeriesStackId(s as StackedSeries);
-                if (!data[key][stackId]) {
-                    data[key][stackId] = [];
-                }
-
-                data[key][stackId].push({data: d, series: s});
-            }
-        });
-    });
-
-    return data;
-}
-
-export function getBarXLayout(args: {
+export function getBarXLayout<T extends BarXSeries | PreparedBarXSeries>(args: {
     seriesOptions: PreparedSeriesOptions;
-    groupedData: ReturnType<typeof groupBarXDataByXValue>;
+    groupedData: Record<string | number, Record<string, {data: BarXSeriesData; series: T}[]>>;
     scale: ChartScale | undefined;
 }) {
     const {groupedData, seriesOptions, scale} = args;

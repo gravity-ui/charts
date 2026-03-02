@@ -1,6 +1,7 @@
 import {ascending, descending, reverse, sort} from 'd3';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
 import get from 'lodash/get';
+import merge from 'lodash/merge';
 
 import type {BarXSeriesData, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize} from '../../../utils';
@@ -144,19 +145,20 @@ export const prepareBarXData = async (args: {
 
     const result: PreparedBarXData[] = [];
 
+    const {
+        bandSize,
+        barGap: rectGap,
+        barSize: rectWidth,
+    } = getBarXLayout({
+        groupedData: merge({}, ...Array.from(dataByPlots.values())),
+        seriesOptions,
+        scale: xScale,
+    });
+
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
         const data = dataByPlots.get(plotIndexes[plotDataIndex]) ?? {};
         const groupedData = Object.entries(data);
-        const {
-            bandSize,
-            barGap: rectGap,
-            barSize: rectWidth,
-        } = getBarXLayout({
-            groupedData: data,
-            seriesOptions,
-            scale: xScale,
-        });
 
         for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
             const [xValue, val] = groupedData[groupedDataIndex];
