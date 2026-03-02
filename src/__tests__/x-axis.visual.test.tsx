@@ -264,6 +264,30 @@ test.describe('X-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('For the datetime axis, week ticks should start on monday', async ({mount}) => {
+        const data: ChartData = {
+            xAxis: {
+                type: 'datetime',
+            },
+            yAxis: [{visible: false}],
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: new Date('2022-06-20T00:00:00Z').getTime(), y: 10},
+                            {x: new Date('2022-07-04T00:00:00Z').getTime(), y: 5},
+                            {x: new Date('2022-07-11T00:00:00Z').getTime(), y: 5},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     // TODO: remove skip after https://github.com/gravity-ui/charts/issues/395
     test.describe.skip('startOnTick / endOnTick', () => {
         test.describe('linear', () => {
