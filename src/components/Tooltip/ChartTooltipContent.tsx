@@ -2,7 +2,13 @@ import React from 'react';
 
 import isNil from 'lodash/isNil';
 
-import type {ChartTooltip, ChartXAxis, ChartYAxis, TooltipDataChunk} from '../../types';
+import type {
+    ChartTooltip,
+    ChartTooltipRendererArgs,
+    ChartXAxis,
+    ChartYAxis,
+    TooltipDataChunk,
+} from '../../types';
 
 import {DefaultTooltipContent} from './DefaultTooltipContent';
 
@@ -13,6 +19,7 @@ export interface ChartTooltipContentProps {
     rowRenderer?: ChartTooltip['rowRenderer'];
     valueFormat?: ChartTooltip['valueFormat'];
     headerFormat?: ChartTooltip['headerFormat'];
+    hoveredPlots?: ChartTooltipRendererArgs['hoveredPlots'];
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
@@ -30,6 +37,7 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         headerFormat,
         totals,
         pinned,
+        hoveredPlots,
         qa,
     } = props;
 
@@ -37,7 +45,7 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         return null;
     }
 
-    const customTooltip = renderer?.({hovered, xAxis, yAxis});
+    const customTooltip = renderer?.({hovered, xAxis, yAxis, hoveredPlots});
 
     return isNil(customTooltip) ? (
         <DefaultTooltipContent

@@ -9,6 +9,9 @@ import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
+import {HoveredPlotsTestStory} from './components/HoveredPlotsTestStory';
+import {getLocator, getLocatorBoundingBox} from './utils';
+
 test.describe('Tooltip', () => {
     test('More points row', async ({mount, page}) => {
         await page.setViewportSize({width: 500, height: 280});
@@ -173,6 +176,58 @@ test.describe('Tooltip', () => {
             throw Error('bar position is null');
         }
         await page.mouse.move(position.x + position.width / 2, 50);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
+
+    test('Hovered plot band custom data in tooltip', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'S',
+                        data: [
+                            {x: 0, y: 1},
+                            {x: 1, y: 2},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                plotBands: [{from: -1, to: 2, custom: 'Test band'}],
+            },
+        };
+        const component = await mount(<HoveredPlotsTestStory data={chartData} />);
+        const bandRect = await getLocator({component, selector: '[data-plot-x] rect'});
+        await bandRect.hover();
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
+
+    test('Hovered plot line custom data in tooltip', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'S',
+                        data: [
+                            {x: 0, y: 1},
+                            {x: 1, y: 2},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                plotLines: [{value: 0.5, custom: 'Test line'}],
+            },
+        };
+        const component = await mount(<HoveredPlotsTestStory data={chartData} />);
+        const plotLine = component.locator('[data-plot-x] path').first();
+        await plotLine.waitFor({state: 'attached'});
+        const lineBox = await getLocatorBoundingBox(plotLine);
+        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + lineBox.height / 2);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
