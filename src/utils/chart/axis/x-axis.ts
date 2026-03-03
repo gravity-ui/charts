@@ -2,6 +2,7 @@ import type {ChartScale, PreparedAxis, PreparedSeries} from '../../../hooks';
 import type {ChartSeries} from '../../../types';
 import {getMinSpaceBetween} from '../array';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
+import {getScaleTicks} from '../ticks';
 
 import {getTicksCountByPixelInterval, isBandScale, thinOut} from './common';
 
@@ -56,10 +57,10 @@ export function getXAxisTickValues({
         }
 
         const scaleTicksCount = getTicksCount({axis, axisWidth, series});
-        const scaleTicks = scale.ticks(scaleTicksCount);
+        const scaleTicks = getScaleTicks({scale, ticksCount: scaleTicksCount});
 
         const originalTickValues = scaleTicks.map((t) => ({
-            x: scale(t),
+            x: scale(t as number | Date),
             value: t,
         }));
 
@@ -74,9 +75,9 @@ export function getXAxisTickValues({
         let ticksCount = result.length - 1;
         while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
             ticksCount = ticksCount ? ticksCount - 1 : result.length - 1;
-            const newScaleTicks = scale.ticks(ticksCount);
+            const newScaleTicks = getScaleTicks({scale, ticksCount});
             result = newScaleTicks.map((t) => ({
-                x: scale(t),
+                x: scale(t as number | Date),
                 value: t,
             }));
 
