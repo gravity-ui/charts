@@ -37,3 +37,15 @@ export function getDefaultDateFormat(range?: number) {
 
     return DATETIME_LABEL_FORMATS.day;
 }
+
+export function getDefaultTimeOnlyFormat(step: number): string {
+    if (step < TIME_UNITS.second) {
+        return 'HH:mm:ss.SSS';
+    }
+
+    if (step < TIME_UNITS.minute) {
+        return 'HH:mm:ss';
+    }
+
+    return 'HH:mm';
+}

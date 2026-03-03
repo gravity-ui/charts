@@ -9,7 +9,12 @@ import {formatNumber, getDefaultUnit} from '../../libs';
 import type {FormatOptions} from '../../libs/format-number/types';
 import type {CustomFormat, ValueFormat} from '../../types';
 
-import {getDefaultDateFormat} from './time';
+import {
+    DATETIME_LABEL_FORMATS,
+    TIME_UNITS,
+    getDefaultDateFormat,
+    getDefaultTimeOnlyFormat,
+} from './time';
 
 const LETTER_MOUNTH_AT_START_FORMAT_REGEXP = /^M{3,}/;
 
@@ -63,7 +68,23 @@ export function formatAxisTickLabel(args: {axis: PreparedAxis; value: AxisDomain
         }
         case 'datetime': {
             const date = value as number;
-            const format = axis.labels.dateFormat || getDefaultDateFormat(step);
+
+            let format: string;
+
+            if (axis.labels.dateFormat) {
+                format = axis.labels.dateFormat;
+            } else if (step !== undefined && step < TIME_UNITS.day) {
+                const d = dateTimeUtc({input: date});
+                const isMidnight =
+                    d.isValid() &&
+                    d.hour() === 0 &&
+                    d.minute() === 0 &&
+                    d.second() === 0 &&
+                    d.millisecond() === 0;
+                format = isMidnight ? DATETIME_LABEL_FORMATS.day : getDefaultTimeOnlyFormat(step);
+            } else {
+                format = getDefaultDateFormat(step);
+            }
 
             return getFormattedDate({value: date, format});
         }

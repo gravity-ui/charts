@@ -9,6 +9,8 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barYBasicData} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
+import {generateHourlyDatetimeSeries} from './__data__/utils';
+
 const CHART_MARGIN: ChartMargin = {
     top: 20,
     left: 20,
@@ -445,6 +447,31 @@ test.describe('X-axis', () => {
             }
 
             expect(median(widgetRenderTimes)).toBeLessThan(2000);
+        });
+    });
+
+    test.describe('Datetime sub-day labels', () => {
+        // 2024-01-15 00:00:00 UTC — starts at midnight so midnight ticks render as DD.MM.YY
+        const MIDNIGHT_JAN15 = 1705276800000;
+
+        const baseData: ChartData = {
+            series: {
+                data: [generateHourlyDatetimeSeries({startMs: MIDNIGHT_JAN15, hours: 49})],
+            },
+            xAxis: {type: 'datetime'},
+            chart: {margin: CHART_MARGIN},
+        };
+
+        test('hourly ticks spanning 2 days — midnight as date, others as time', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('custom dateFormat bypasses smart formatting', async ({mount}) => {
+            const data = cloneDeep(baseData);
+            set(data, 'xAxis.labels.dateFormat', 'DD.MM.YY HH:mm');
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
 });
