@@ -10,6 +10,7 @@ import {
 } from '../../constants';
 import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../../types';
 import {
+    TIME_UNITS,
     calculateCos,
     calculateNumericProperty,
     formatAxisTickLabel,
@@ -52,7 +53,7 @@ async function setLabelSettings({
     const labelLineHeight = (await getTextSize('Tmp')).height;
     const tickValues = getXAxisTickValues({axis, scale, labelLineHeight, series: seriesData});
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
-    if (axis.type === 'datetime' && !axisLabels?.dateFormat) {
+    if (axis.type === 'datetime' && !axisLabels?.dateFormat && tickStep >= TIME_UNITS.day) {
         axis.labels.dateFormat = getDefaultDateFormat(tickStep);
     }
     const labels = tickValues.map((tick) =>

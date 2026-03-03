@@ -5,6 +5,29 @@ import type {BarYSeries} from '../../types/chart/bar-y';
 import type {LineSeries} from '../../types/chart/line';
 import type {ScatterSeries} from '../../types/chart/scatter';
 
+const HOUR_MS = 3_600_000;
+
+/**
+ * Generates hourly line series data using a -cos wave:
+ * midnight = trough (y=20), noon = peak (y=80).
+ * Useful for testing sub-day datetime axis label formatting.
+ */
+export function generateHourlyDatetimeSeries(opts: {
+    startMs: number;
+    hours: number;
+    name?: string;
+}): LineSeries {
+    const {startMs, hours, name = 'Series 1'} = opts;
+    return {
+        type: 'line',
+        name,
+        data: Array.from({length: hours}, (_, i) => ({
+            x: startMs + i * HOUR_MS,
+            y: Math.round(50 - 30 * Math.cos((i * Math.PI) / 12)),
+        })),
+    };
+}
+
 type BaseSeries = LineSeries | AreaSeries | BarXSeries | BarYSeries | ScatterSeries;
 type SeriesOverrides<T extends BaseSeries> = Partial<Omit<T, 'type' | 'data'>>;
 
