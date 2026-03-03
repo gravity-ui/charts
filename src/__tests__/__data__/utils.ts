@@ -1,11 +1,10 @@
+import {HOUR} from '../../constants';
 import type {ChartAxisType} from '../../types';
 import type {AreaSeries} from '../../types/chart/area';
 import type {BarXSeries} from '../../types/chart/bar-x';
 import type {BarYSeries} from '../../types/chart/bar-y';
 import type {LineSeries} from '../../types/chart/line';
 import type {ScatterSeries} from '../../types/chart/scatter';
-
-const HOUR_MS = 3_600_000;
 
 /**
  * Generates hourly line series data using a -cos wave:
@@ -22,7 +21,7 @@ export function generateHourlyDatetimeSeries(opts: {
         type: 'line',
         name,
         data: Array.from({length: hours}, (_, i) => ({
-            x: startMs + i * HOUR_MS,
+            x: startMs + i * HOUR,
             y: Math.round(50 - 30 * Math.cos((i * Math.PI) / 12)),
         })),
     };
