@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.35.2](https://github.com/gravity-ui/charts/compare/v1.35.1...v1.35.2) (2026-03-03)
+
+
+### Bug Fixes
+
+* fix font weight and color in axis title ([#429](https://github.com/gravity-ui/charts/issues/429)) ([fe4e3ae](https://github.com/gravity-ui/charts/commit/fe4e3ae05783e64536c29ff500a4eb9703b50bfc))
+* for the datetime axis, week ticks should start on Monday ([#427](https://github.com/gravity-ui/charts/issues/427)) ([e6f3c95](https://github.com/gravity-ui/charts/commit/e6f3c954dd043e4835079e78d0a28c3ea1936829))
+
 ## [1.35.1](https://github.com/gravity-ui/charts/compare/v1.35.0...v1.35.1) (2026-03-02)
 
 
