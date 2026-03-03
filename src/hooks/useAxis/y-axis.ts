@@ -8,6 +8,7 @@ import {
     SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
+    axisTickMarksDefaults,
     yAxisTitleDefaults,
 } from '../../constants';
 import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
@@ -238,6 +239,13 @@ export const getPreparedYAxis = ({
                               value: axisItem.ticks?.interval,
                           })
                         : axisItem.ticks?.pixelInterval,
+                },
+                tickMarks: {
+                    enabled: get(axisItem, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
+                    color: get(axisItem, 'tickMarks.color', axisItem.lineColor ?? ''),
+                    width: get(axisItem, 'tickMarks.width', axisTickMarksDefaults.width),
+                    length: get(axisItem, 'tickMarks.length', axisTickMarksDefaults.length),
+                    position: get(axisItem, 'tickMarks.position', axisTickMarksDefaults.position),
                 },
                 position: axisPosition,
                 plotIndex: get(axisItem, 'plotIndex', 0),

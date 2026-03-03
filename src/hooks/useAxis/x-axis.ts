@@ -6,6 +6,7 @@ import {
     SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
+    axisTickMarksDefaults,
     xAxisTitleDefaults,
 } from '../../constants';
 import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../../types';
@@ -210,6 +211,13 @@ export const getPreparedXAxis = async ({
                       value: xAxis.ticks.interval,
                   })
                 : xAxis?.ticks?.pixelInterval,
+        },
+        tickMarks: {
+            enabled: get(xAxis, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
+            color: get(xAxis, 'tickMarks.color', xAxis?.lineColor ?? ''),
+            width: get(xAxis, 'tickMarks.width', axisTickMarksDefaults.width),
+            length: get(xAxis, 'tickMarks.length', axisTickMarksDefaults.length),
+            position: get(xAxis, 'tickMarks.position', axisTickMarksDefaults.position),
         },
         position: 'bottom',
         plotIndex: 0,

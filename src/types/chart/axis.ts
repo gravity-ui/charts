@@ -102,6 +102,31 @@ export interface ChartAxisTitle {
     maxRowCount?: number;
 }
 
+export interface ChartAxisTickMarks {
+    /** Enable or disable the tick marks on the axis.
+     * @default false
+     */
+    enabled?: boolean;
+    /** The color of the tick marks (hex, rgba, or CSS variable e.g. `var(--g-color-line-danger)`).
+     * Defaults to the axis line color if set, otherwise to the CSS variable.
+     */
+    color?: string;
+    /** The stroke width of the tick marks in pixels.
+     * @default 1
+     */
+    width?: number;
+    /** The length of the tick marks in pixels (perpendicular to the axis).
+     * @default 6
+     */
+    length?: number;
+    /** The position of the tick marks relative to the axis line.
+     * - 'outside': marks extend away from the plot area (default)
+     * - 'inside': marks extend into the plot area
+     * @default 'outside'
+     */
+    position?: 'inside' | 'outside';
+}
+
 export interface ChartAxis {
     categories?: string[];
     /** Configure a crosshair that follows either the mouse pointer or the hovered point. */
@@ -169,6 +194,8 @@ export interface ChartAxis {
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */
     plotBands?: AxisPlotBand[];
+    /** Small perpendicular marks on the axis line at each tick position. */
+    tickMarks?: ChartAxisTickMarks;
     /** Whether axis, including axis title, line, ticks and labels, should be visible. */
     visible?: boolean;
     /** Setting the order of the axis values. It is not applied by default.

@@ -13,6 +13,10 @@
         stroke: var(--g-color-line-generic);
     }
 
+    &__mark {
+        stroke: var(--g-color-line-generic-active);
+    }
+
     &__title {
         dominant-baseline: text-after-edge;
 

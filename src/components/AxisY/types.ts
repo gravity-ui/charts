@@ -17,8 +17,15 @@ export type AxisTickLine = {
     points: PointPosition[];
 };
 
+export type AxisTickMarkData = {
+    points: PointPosition[];
+    color: string;
+    width: number;
+};
+
 export type AxisTickData = {
     line: AxisTickLine | null;
+    mark: AxisTickMarkData | null;
     svgLabel: AxisSvgLabelData | null;
     htmlLabel: HtmlItem | null;
 };

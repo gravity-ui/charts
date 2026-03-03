@@ -474,4 +474,54 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.describe('Tick marks', () => {
+        const baseTickMarksData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 20},
+                            {x: 2, y: 15},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'linear',
+                tickMarks: {enabled: true},
+            },
+            chart: {margin: CHART_MARGIN},
+        };
+
+        test('enabled (default settings)', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseTickMarksData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('custom color and width', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'xAxis.tickMarks.color', 'red');
+            set(data, 'xAxis.tickMarks.width', 2);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('custom length', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'xAxis.tickMarks.length', 12);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('position inside', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'xAxis.tickMarks.position', 'inside');
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

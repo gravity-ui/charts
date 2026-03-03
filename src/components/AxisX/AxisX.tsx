@@ -99,6 +99,15 @@ export const AxisX = (props: Props) => {
                 tickSelection.append('path').attr('d', lineGenerator(tickData.line.points));
             }
 
+            if (tickData.mark) {
+                tickSelection
+                    .append('path')
+                    .attr('class', b('mark'))
+                    .attr('d', lineGenerator(tickData.mark.points))
+                    .style('stroke', tickData.mark.color)
+                    .style('stroke-width', tickData.mark.width);
+            }
+
             if (tickData.svgLabel) {
                 const label = tickData.svgLabel;
                 const textSelection = tickSelection

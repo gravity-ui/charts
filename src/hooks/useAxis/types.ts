@@ -56,6 +56,14 @@ export type PreparedRangeSlider = DeepRequired<Omit<ChartAxisRangeSlider, 'defau
     defaultRange?: ChartAxisRangeSlider['defaultRange'];
 };
 
+export type PreparedAxisTickMarks = {
+    enabled: boolean;
+    color: string;
+    width: number;
+    length: number;
+    position: 'inside' | 'outside';
+};
+
 type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotBands'> & {
     type: ChartAxisType;
     labels: PreparedAxisLabels;
@@ -79,6 +87,7 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
     ticks: {
         pixelInterval?: number;
     };
+    tickMarks: PreparedAxisTickMarks;
     position: 'left' | 'right' | 'top' | 'bottom';
     plotIndex: number;
     plotLines: PreparedAxisPlotLine[];
