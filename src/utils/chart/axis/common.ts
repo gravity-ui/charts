@@ -4,6 +4,7 @@ import clamp from 'lodash/clamp';
 
 import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../../hooks';
 import type {ChartAxis} from '../../../types';
+import {getScaleTicks} from '../ticks';
 import type {AxisDirection} from '../types';
 
 type Ticks = number[] | string[] | Date[];
@@ -40,21 +41,6 @@ export function isTimeScale(
     return scale.domain()[0] instanceof Date;
 }
 
-export function getScaleTicks(
-    scale: ChartScale | AxisScale<AxisDomain>,
-    ticksCount?: number,
-): Ticks {
-    if ('ticks' in scale && typeof scale.ticks === 'function') {
-        return scale.ticks(ticksCount);
-    }
-
-    if (isBandScale(scale)) {
-        return scale.domain();
-    }
-
-    return [];
-}
-
 export function getXAxisOffset() {
     return typeof window !== 'undefined' && window.devicePixelRatio > 1 ? 0 : 0.5;
 }
@@ -84,7 +70,7 @@ export function getAxisItems({
     count?: number;
     maxCount?: number;
 }) {
-    let values = getScaleTicks(scale, count);
+    let values = getScaleTicks({scale, ticksCount: count});
 
     if (maxCount && values.length > maxCount) {
         const step = Math.ceil(values.length / maxCount);
