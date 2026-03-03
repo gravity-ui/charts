@@ -88,6 +88,6 @@ export interface BaseSeriesLegend extends ChartLegendItem {
 
 export interface BaseTextStyle {
     fontSize: string;
-    fontWeight?: string;
+    fontWeight?: string | number;
     fontColor?: string;
 }

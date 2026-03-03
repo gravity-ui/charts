@@ -284,7 +284,7 @@ export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label'> {
     enabled?: boolean;
 }
 
-interface ChartYAxisTitle extends ChartAxisTitle {
+export interface ChartYAxisTitle extends ChartAxisTitle {
     /** Rotation of the title in degrees.
      * Currently, the available values are only for rotation in multiples of 90 degrees.
      *

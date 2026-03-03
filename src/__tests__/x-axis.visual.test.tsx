@@ -238,6 +238,26 @@ test.describe('X-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('The font weight and color can be changed in the svg axis title.', async ({mount}) => {
+            const data: ChartData = {
+                xAxis: {
+                    title: {text: 'Bold text', style: {fontWeight: 'bold', fontColor: 'red'}},
+                },
+
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('.gcharts-x-axis__title')).toHaveScreenshot();
+        });
     });
 
     test('Invisible axis (with labels, grid and title enabled)', async ({mount}) => {

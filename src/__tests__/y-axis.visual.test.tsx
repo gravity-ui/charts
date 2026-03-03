@@ -345,6 +345,57 @@ test.describe('Y-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('The font weight and color can be changed in the svg axis title.', async ({mount}) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {
+                            text: 'Bold red text',
+                            style: {fontWeight: 'bold', fontColor: 'red'},
+                        },
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('.gcharts-y-axis__title')).toHaveScreenshot();
+        });
+
+        test('The font weight and color can be changed in the html axis title.', async ({
+            mount,
+        }) => {
+            const data: ChartData = {
+                yAxis: [
+                    {
+                        title: {
+                            text: 'Bold red text',
+                            style: {fontWeight: 'bold', fontColor: 'red'},
+                            html: true,
+                        },
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [{x: 1, y: 10}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Split - few plots and axes', async ({mount}) => {
