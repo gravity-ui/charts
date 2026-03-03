@@ -68,6 +68,8 @@ export const AxisY = (props: Props) => {
                     `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
                 )
                 .attr('font-size', preparedAxisData.title.style.fontSize)
+                .attr('font-weight', preparedAxisData.title.style.fontWeight ?? null)
+                .attr('fill', preparedAxisData.title.style.fontColor ?? null)
                 .selectAll('tspan')
                 .data(preparedAxisData.title.content)
                 .join('tspan')
