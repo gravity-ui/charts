@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.0](https://github.com/gravity-ui/charts/compare/v1.36.0...v1.37.0) (2026-03-04)
+
+
+### Features
+
+* **tooltip:** pass headerFormat to tooltip renderer args ([#436](https://github.com/gravity-ui/charts/issues/436)) ([bc90707](https://github.com/gravity-ui/charts/commit/bc90707c5d805c8686b90f09880630059d0f9934))
+
 ## [1.36.0](https://github.com/gravity-ui/charts/compare/v1.35.2...v1.36.0) (2026-03-04)
 
 
