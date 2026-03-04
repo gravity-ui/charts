@@ -30,6 +30,8 @@ items:
         href: ./pages/guides/data-labels.md
       - name: Legend
         href: ./pages/guides/legend.md
+      - name: Theming
+        href: ./pages/guides/theming.md
       - name: Tooltip
         href: ./pages/guides/tooltip.md
   - name: API

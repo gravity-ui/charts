@@ -10,11 +10,11 @@
     }
 
     &__tick {
-        stroke: var(--g-color-line-generic);
+        stroke: var(--gcharts-axis-tick-color);
     }
 
     &__mark {
-        stroke: var(--g-color-line-generic-active);
+        stroke: var(--gcharts-axis-tick-color);
     }
 
     &__title {

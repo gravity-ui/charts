@@ -1,6 +1,7 @@
 .gcharts-chart {
     --gcharts-data-labels: var(--g-color-text-secondary);
     --gcharts-shape-border-color: var(--g-color-base-background);
+    --gcharts-axis-tick-color: var(--g-color-line-generic);
 
     position: absolute;
     inset-block-start: 0;
