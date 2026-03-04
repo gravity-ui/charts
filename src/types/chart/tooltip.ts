@@ -123,6 +123,8 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     hoveredPlotBands?: AxisPlotBand[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    /** Formatting settings for tooltip header row (includes computed default). */
+    headerFormat?: ValueFormat | CustomFormat;
 }
 
 export interface ChartTooltipTotalsAggregationArgs<T = MeaningfulAny>

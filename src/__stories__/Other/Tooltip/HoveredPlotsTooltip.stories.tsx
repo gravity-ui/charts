@@ -15,7 +15,7 @@ const meta: Meta = {
 export default meta;
 
 function TooltipRenderer(args: ChartTooltipRendererArgs) {
-    const {hovered, xAxis, yAxis, hoveredPlotLines, hoveredPlotBands} = args;
+    const {hovered, xAxis, yAxis, hoveredPlotLines, hoveredPlotBands, headerFormat} = args;
     const bands = hoveredPlotBands ?? [];
     const lines = hoveredPlotLines ?? [];
     const hasPlots = bands.length > 0 || lines.length > 0;
@@ -26,7 +26,7 @@ function TooltipRenderer(args: ChartTooltipRendererArgs) {
                 hovered={hovered}
                 xAxis={xAxis}
                 yAxis={yAxis}
-                headerFormat={{type: 'date'}}
+                headerFormat={headerFormat}
                 valueFormat={{type: 'number', precision: 2}}
             />
             {hasPlots && (
