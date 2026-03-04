@@ -79,6 +79,7 @@ export type AxisDomainData = {
 
 export type AxisXData = {
     id: string;
+    gridEnabled: boolean;
     title: AxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];

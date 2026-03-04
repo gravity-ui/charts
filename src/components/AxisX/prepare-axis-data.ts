@@ -439,6 +439,7 @@ export async function prepareXAxisData({
 
         xAxisItems.push({
             id: getUniqId(),
+            gridEnabled: axis.grid.enabled,
             title,
             ticks,
             domain,

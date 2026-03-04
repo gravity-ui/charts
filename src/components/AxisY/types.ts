@@ -88,6 +88,7 @@ export type AxisDomainData = {
 
 export type AxisYData = {
     id: string;
+    gridEnabled: boolean;
     title: HtmlAxisTitleData | SvgAxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];

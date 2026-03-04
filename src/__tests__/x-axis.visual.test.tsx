@@ -22,7 +22,7 @@ const HTML_CATEGORIES = [
     '<div style="height: 32px; background-color: #4fc4b7; border-radius: 4px; color: #fff; padding: 4px; display: flex; align-items: center;">1000</div>',
 ];
 
-test.describe('X-axis', () => {
+test.describe.only('X-axis', () => {
     test('min', async ({mount}) => {
         const data = cloneDeep(barYBasicData);
         set(data, 'xAxis.min', 60);
@@ -505,6 +505,13 @@ test.describe('X-axis', () => {
         test('custom length', async ({mount}) => {
             const data = cloneDeep(baseTickMarksData);
             set(data, 'xAxis.tickMarks.length', 12);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('with grid disabled (domain color)', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'xAxis.grid.enabled', false);
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });

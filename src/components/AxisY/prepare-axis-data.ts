@@ -390,6 +390,7 @@ export async function prepareYAxisData({
 
     return {
         id: getUniqId(),
+        gridEnabled: axis.grid.enabled,
         title,
         ticks,
         domain,

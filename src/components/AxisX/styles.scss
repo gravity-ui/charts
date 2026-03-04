@@ -13,7 +13,11 @@
     }
 
     &__mark {
-        stroke: var(--gcharts-axis-tick-color);
+        stroke: var(--gcharts-axis-tick-mark-color, var(--g-color-line-generic-active));
+
+        &_grid {
+            stroke: var(--gcharts-axis-tick-mark-color, var(--gcharts-axis-tick-color));
+        }
     }
 
     &__title {

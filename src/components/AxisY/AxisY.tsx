@@ -110,7 +110,7 @@ export const AxisY = (props: Props) => {
             if (tickData.mark) {
                 tickSelection
                     .append('path')
-                    .attr('class', b('mark'))
+                    .attr('class', b('mark', {grid: preparedAxisData.gridEnabled}))
                     .attr('d', lineGenerator(tickData.mark.points));
             }
 
