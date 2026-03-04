@@ -346,7 +346,9 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('The font weight and color can be changed in the svg axis title.', async ({mount}) => {
+        test('The font weight and color can be changed in the svg axis title @webkit', async ({
+            mount,
+        }) => {
             const data: ChartData = {
                 yAxis: [
                     {

@@ -20,9 +20,7 @@
         }
     }
 
-    &__title tspan {
-        dominant-baseline: text-before-edge;
-
+    &__title {
         fill: var(--g-color-text-secondary);
     }
 }

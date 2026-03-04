@@ -55,10 +55,6 @@ export const AxisX = (props: Props) => {
                 .attr('class', b('title'))
                 .append('text')
                 .attr('text-anchor', 'start')
-                .style(
-                    'transform',
-                    `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
-                )
                 .attr(
                     'transform',
                     `translate(${preparedAxisData.title.x},${preparedAxisData.title.y}) rotate(${preparedAxisData.title.rotate}) translate(0,${preparedAxisData.title.offset})`,
@@ -72,6 +68,7 @@ export const AxisX = (props: Props) => {
                 .html((d) => d.text)
                 .attr('x', (d) => d.x)
                 .attr('y', (d) => d.y)
+                .attr('dominant-baseline', 'text-before-edge')
                 .attr('text-anchor', 'start');
         }
 
