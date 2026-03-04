@@ -22,7 +22,7 @@ const HTML_CATEGORIES = [
     '<div style="height: 32px; background-color: #4fc4b7; border-radius: 4px; color: #fff; padding: 4px; display: flex; align-items: center;">1000</div>',
 ];
 
-test.describe.only('Y-axis', () => {
+test.describe('Y-axis', () => {
     test.beforeEach(async ({page}) => {
         // Cancel test with error when an uncaught exception happens within the page
         page.on('pageerror', (exception) => {
