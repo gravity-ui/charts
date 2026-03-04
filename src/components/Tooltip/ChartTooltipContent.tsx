@@ -47,7 +47,14 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         return null;
     }
 
-    const customTooltip = renderer?.({hovered, hoveredPlotLines, hoveredPlotBands, xAxis, yAxis});
+    const customTooltip = renderer?.({
+        headerFormat,
+        hovered,
+        hoveredPlotLines,
+        hoveredPlotBands,
+        xAxis,
+        yAxis,
+    });
 
     return isNil(customTooltip) ? (
         <DefaultTooltipContent
