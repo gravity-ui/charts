@@ -180,6 +180,43 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
+    test('Long series name truncation', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Very long series name that should be truncated with ellipsis in tooltip',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 100},
+                            {x: 1, y: 200},
+                        ],
+                    },
+                    {
+                        type: 'bar-x',
+                        name: 'Short',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 50},
+                            {x: 1, y: 150},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['A', 'B'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = await getLocator({component, selector: '.gcharts-bar-x'});
+        const position = await getLocatorBoundingBox(bar);
+        await page.mouse.move(position.x + position.width / 2, 50);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
+
     test('Plot band custom data in tooltip', async ({page, mount}) => {
         const chartData: ChartData = {
             series: {
