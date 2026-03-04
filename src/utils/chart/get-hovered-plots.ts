@@ -25,9 +25,8 @@ function getHoveredAxisPlotBands(args: {
 
     for (const band of plotBands) {
         const {from, to} = getBandsPosition({band, axisScale, axis});
-        const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
-        const startPx = halfBandwidth + Math.min(from, to);
-        const endPx = halfBandwidth + Math.max(from, to);
+        const startPx = Math.min(from, to);
+        const endPx = Math.max(from, to);
 
         if (pointerPx >= startPx && pointerPx <= endPx) {
             result.push(band);

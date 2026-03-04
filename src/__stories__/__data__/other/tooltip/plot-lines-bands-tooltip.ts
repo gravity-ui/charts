@@ -59,7 +59,6 @@ function prepareData(): ChartData {
         },
         yAxis: [
             {
-                title: {text: 'Value'},
                 plotLines: [
                     {
                         value: 200,
@@ -73,4 +72,4 @@ function prepareData(): ChartData {
     };
 }
 
-export const hoveredPlotsTooltipData = prepareData();
+export const plotLinesBandsTooltipData = prepareData();

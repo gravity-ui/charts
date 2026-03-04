@@ -117,11 +117,10 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
 
 export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     hovered: TooltipDataChunk<T>[];
-    /** Plot lines and bands that intersect with the current pointer position. */
-    hoveredPlots?: {
-        lines: AxisPlotLine[];
-        bands: AxisPlotBand[];
-    };
+    /** Plot lines that intersect with the current pointer position. */
+    hoveredPlotLines?: AxisPlotLine[];
+    /** Plot bands that contain the current pointer position. */
+    hoveredPlotBands?: AxisPlotBand[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 }

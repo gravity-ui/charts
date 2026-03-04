@@ -90,13 +90,13 @@ export function useChartInnerHandlers(props: Props) {
             xScale,
             yScale,
         });
-        const hoveredPlots = {lines: plotLines, bands: plotBands};
+        const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
         dispatcher.call(
             EventType.HOVER_SHAPE,
             event.target,
             closest,
             [pointerX, pointerY],
-            hoveredPlots,
+            hoveredPlotsArg,
         );
         dispatcher.call(
             EventType.POINTERMOVE_CHART,
@@ -105,7 +105,8 @@ export function useChartInnerHandlers(props: Props) {
                 hovered: closest,
                 xAxis,
                 yAxis: yAxis[0] as ChartYAxis,
-                hoveredPlots,
+                hoveredPlotLines: plotLines,
+                hoveredPlotBands: plotBands,
             } satisfies ChartTooltipRendererArgs,
             event,
         );
@@ -182,13 +183,13 @@ export function useChartInnerHandlers(props: Props) {
                 xScale,
                 yScale,
             });
-            const hoveredPlots = {lines: plotLines, bands: plotBands};
+            const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
             dispatcher.call(
                 EventType.HOVER_SHAPE,
                 event.target,
                 items,
                 [pointerX, pointerY],
-                hoveredPlots,
+                hoveredPlotsArg,
             );
             dispatcher.call(
                 EventType.POINTERMOVE_CHART,
@@ -197,7 +198,8 @@ export function useChartInnerHandlers(props: Props) {
                     hovered: items,
                     xAxis,
                     yAxis: yAxis[0] as ChartYAxis,
-                    hoveredPlots,
+                    hoveredPlotLines: plotLines,
+                    hoveredPlotBands: plotBands,
                 } satisfies ChartTooltipRendererArgs,
                 event,
             );

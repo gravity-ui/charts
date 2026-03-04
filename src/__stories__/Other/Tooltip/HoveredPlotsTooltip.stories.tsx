@@ -5,7 +5,7 @@ import type {Meta, StoryObj} from '@storybook/react-webpack5';
 import {Chart} from '../../../components';
 import {DefaultTooltipContent} from '../../../components/Tooltip/DefaultTooltipContent';
 import type {ChartData, ChartTooltipRendererArgs} from '../../../types';
-import {hoveredPlotsTooltipData} from '../../__data__';
+import {plotLinesBandsTooltipData} from '../../__data__';
 
 const meta: Meta = {
     title: 'Other/Tooltip',
@@ -15,9 +15,9 @@ const meta: Meta = {
 export default meta;
 
 function TooltipRenderer(args: ChartTooltipRendererArgs) {
-    const {hovered, xAxis, yAxis, hoveredPlots} = args;
-    const bands = hoveredPlots?.bands ?? [];
-    const lines = hoveredPlots?.lines ?? [];
+    const {hovered, xAxis, yAxis, hoveredPlotLines, hoveredPlotBands} = args;
+    const bands = hoveredPlotBands ?? [];
+    const lines = hoveredPlotLines ?? [];
     const hasPlots = bands.length > 0 || lines.length > 0;
 
     return (
@@ -101,9 +101,9 @@ function TooltipRenderer(args: ChartTooltipRendererArgs) {
 
 function prepareDataWithRenderer(): ChartData {
     return {
-        ...hoveredPlotsTooltipData,
+        ...plotLinesBandsTooltipData,
         tooltip: {
-            ...hoveredPlotsTooltipData.tooltip,
+            ...plotLinesBandsTooltipData.tooltip,
             renderer: TooltipRenderer,
         },
     };
@@ -119,7 +119,7 @@ const HoveredPlotsTooltipStory = () => {
     );
 };
 
-export const HoveredPlotsTooltip: StoryObj = {
-    name: 'Hovered Plots Tooltip',
+export const PlotLinesBandsTooltip: StoryObj = {
+    name: 'Plot Lines & Bands Tooltip',
     render: HoveredPlotsTooltipStory,
 };

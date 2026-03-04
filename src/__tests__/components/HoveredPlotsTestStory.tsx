@@ -3,9 +3,9 @@ import React from 'react';
 import {ChartStory} from '../../__stories__/ChartStory';
 import type {ChartData, ChartTooltipRendererArgs} from '../../types';
 
-function HoveredPlotsRenderer({hoveredPlots}: ChartTooltipRendererArgs) {
-    const bands = hoveredPlots?.bands ?? [];
-    const lines = hoveredPlots?.lines ?? [];
+function PlotDataTooltipRenderer({hoveredPlotLines, hoveredPlotBands}: ChartTooltipRendererArgs) {
+    const bands = hoveredPlotBands ?? [];
+    const lines = hoveredPlotLines ?? [];
     return (
         <div>
             {bands.map((b, i) => (
@@ -25,7 +25,7 @@ type Props = {
 export const HoveredPlotsTestStory = ({data}: Props) => {
     const chartData: ChartData = {
         ...data,
-        tooltip: {...data.tooltip, renderer: HoveredPlotsRenderer},
+        tooltip: {...data.tooltip, renderer: PlotDataTooltipRenderer},
     };
 
     return (

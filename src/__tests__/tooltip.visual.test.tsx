@@ -180,7 +180,7 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
-    test('Hovered plot band custom data in tooltip', async ({page, mount}) => {
+    test('Plot band custom data in tooltip', async ({page, mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
@@ -205,7 +205,7 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
-    test('Hovered plot line custom data in tooltip', async ({page, mount}) => {
+    test('Plot line custom data in tooltip', async ({page, mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [

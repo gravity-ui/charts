@@ -3,7 +3,13 @@ import React from 'react';
 import type {Dispatch} from 'd3';
 import isEqual from 'lodash/isEqual';
 
-import type {ChartTooltipRendererArgs, PointPosition, TooltipDataChunk} from '../../types';
+import type {
+    AxisPlotBand,
+    AxisPlotLine,
+    ChartTooltipRendererArgs,
+    PointPosition,
+    TooltipDataChunk,
+} from '../../types';
 import type {PreparedTooltip} from '../useChartOptions/types';
 
 type Args = {
@@ -13,12 +19,13 @@ type Args = {
 
 type TooltipState = {
     hovered?: TooltipDataChunk[];
-    hoveredPlots?: ChartTooltipRendererArgs['hoveredPlots'];
+    hoveredPlotLines?: ChartTooltipRendererArgs['hoveredPlotLines'];
+    hoveredPlotBands?: ChartTooltipRendererArgs['hoveredPlotBands'];
     pointerPosition?: PointPosition;
 };
 
 export const useTooltip = ({dispatcher, tooltip}: Args) => {
-    const [{hovered, hoveredPlots, pointerPosition}, setTooltipState] =
+    const [{hovered, hoveredPlotLines, hoveredPlotBands, pointerPosition}, setTooltipState] =
         React.useState<TooltipState>({});
     const prevHovered = React.useRef(hovered);
 
@@ -29,7 +36,7 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
                 (
                     nextHovered?: TooltipDataChunk[],
                     nextPointerPosition?: PointPosition,
-                    nextHoveredPlots?: ChartTooltipRendererArgs['hoveredPlots'],
+                    nextHoveredPlots?: {lines: AxisPlotLine[]; bands: AxisPlotBand[]},
                 ) => {
                     const filteredNextHovered = nextHovered?.filter((item) =>
                         'y' in item.data ? item.data.y !== null : true,
@@ -37,7 +44,8 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
                     const isHoveredChanged = !isEqual(prevHovered.current, filteredNextHovered);
                     const newTooltipState: TooltipState = {
                         hovered: isHoveredChanged ? filteredNextHovered : prevHovered.current,
-                        hoveredPlots: nextHoveredPlots,
+                        hoveredPlotLines: nextHoveredPlots?.lines,
+                        hoveredPlotBands: nextHoveredPlots?.bands,
                         pointerPosition: nextPointerPosition,
                     };
 
@@ -57,7 +65,8 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
     }, [dispatcher, tooltip]);
     return {
         hovered,
-        hoveredPlots,
+        hoveredPlotLines,
+        hoveredPlotBands,
         pointerPosition,
     };
 };
