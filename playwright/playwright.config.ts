@@ -67,6 +67,17 @@ const config: PlaywrightTestConfig = {
                 },
             },
         },
+        {
+            name: 'webkit',
+            use: {
+                ...devices['Desktop Safari'],
+                deviceScaleFactor: 2,
+                launchOptions: {
+                    ignoreDefaultArgs: ['--hide-scrollbars'],
+                },
+            },
+            grep: /@webkit/,
+        },
     ],
 };
 

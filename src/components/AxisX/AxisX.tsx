@@ -59,6 +59,10 @@ export const AxisX = (props: Props) => {
                     'transform',
                     `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
                 )
+                .attr(
+                    'transform',
+                    `translate(${preparedAxisData.title.x},${preparedAxisData.title.y}) rotate(${preparedAxisData.title.rotate}) translate(0,${preparedAxisData.title.offset})`,
+                )
                 .attr('font-size', preparedAxisData.title.style.fontSize)
                 .attr('font-weight', preparedAxisData.title.style.fontWeight ?? null)
                 .attr('fill', preparedAxisData.title.style.fontColor ?? null)
@@ -110,11 +114,11 @@ export const AxisX = (props: Props) => {
                 const label = tickData.svgLabel;
                 const textSelection = tickSelection
                     .append('text')
-                    .style(
+                    .attr(
                         'transform',
                         [
-                            `translate(${label.x}px, ${label.y}px)`,
-                            label.angle ? `rotate(${label.angle}deg)` : '',
+                            `translate(${label.x}, ${label.y})`,
+                            label.angle ? `rotate(${label.angle})` : '',
                         ]
                             .filter(Boolean)
                             .join(' '),
@@ -155,7 +159,7 @@ export const AxisX = (props: Props) => {
                     .join('g')
                     .attr(plotDataAttr, 1)
                     .attr(plotBandDataAttr, 1)
-                    .style('transform', (d) => `translate(${d.x}px, ${d.y}px)`);
+                    .attr('transform', (d) => `translate(${d.x}, ${d.y})`);
 
                 plotBandsSelection
                     .append('rect')
@@ -178,9 +182,9 @@ export const AxisX = (props: Props) => {
                             .style('font-weight', label.style.fontWeight ?? '')
                             .style('dominant-baseline', 'text-before-edge')
                             .style('text-anchor', 'start')
-                            .style(
+                            .attr(
                                 'transform',
-                                `translate(${label.x}px, ${label.y}px) rotate(${label.rotate}deg)`,
+                                `translate(${label.x}, ${label.y}) rotate(${label.rotate})`,
                             )
                             .attr('data-qa', label.qa ?? null);
                     }
@@ -213,7 +217,7 @@ export const AxisX = (props: Props) => {
                     .join('g')
                     .attr(plotDataAttr, 1)
                     .attr(plotLineDataAttr, 1)
-                    .style('transform', (d) => `translate(${d.x}px, ${d.y}px)`);
+                    .attr('transform', (d) => `translate(${d.x}, ${d.y})`);
 
                 plotLinesSelection
                     .append('path')
@@ -237,9 +241,9 @@ export const AxisX = (props: Props) => {
                             .style('font-weight', label.style.fontWeight ?? '')
                             .style('dominant-baseline', 'text-before-edge')
                             .style('text-anchor', 'start')
-                            .style(
+                            .attr(
                                 'transform',
-                                `translate(${label.x}px, ${label.y}px) rotate(${label.rotate}deg)`,
+                                `translate(${label.x}, ${label.y}) rotate(${label.rotate})`,
                             )
                             .attr('data-qa', label.qa ?? null);
                     }

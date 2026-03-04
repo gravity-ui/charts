@@ -23,7 +23,7 @@ test.describe('Line series', () => {
         });
     });
 
-    test('Basic', async ({mount}) => {
+    test('Basic @webkit', async ({mount}) => {
         const component = await mount(<ChartTestStory data={lineBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
