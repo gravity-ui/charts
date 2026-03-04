@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.1](https://github.com/gravity-ui/charts/compare/v1.37.0...v1.37.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* bump version to 1.37.1 ([#438](https://github.com/gravity-ui/charts/issues/438)) ([eed8ecb](https://github.com/gravity-ui/charts/commit/eed8ecbfbd3708e45e94f930057ada58e0f02fc6))
+
 ## [1.37.0](https://github.com/gravity-ui/charts/compare/v1.36.0...v1.37.0) (2026-03-04)
 
 
