@@ -63,8 +63,16 @@
         }
     }
 
+    &__content-row-label {
+        overflow: hidden;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     &__content-row-color {
         display: inline-block;
+        flex-shrink: 0;
 
         width: 16px;
         height: 8px;
@@ -74,6 +82,8 @@
     }
 
     &__content-row-value {
+        flex-shrink: 0;
+
         margin-inline-start: auto;
     }
 

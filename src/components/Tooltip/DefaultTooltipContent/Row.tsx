@@ -31,7 +31,7 @@ export function Row(props: {
     return (
         <div className={b('content-row', {active, striped}, className)} style={style}>
             {colorItem}
-            {label}
+            <span className={b('content-row-label')}>{label}</span>
             {value && <span className={b('content-row-value')}>{value}</span>}
         </div>
     );
