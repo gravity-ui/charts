@@ -2,6 +2,7 @@ import type {DurationInput} from '@gravity-ui/date-utils';
 
 import type {AXIS_TYPE, DashStyle} from '../../constants';
 import type {FormatNumberOptions} from '../formatter';
+import type {MeaningfulAny} from '../misc';
 
 import type {BaseTextStyle} from './base';
 import type {ChartBrush} from './brush';
@@ -237,6 +238,8 @@ export interface AxisPlot {
          * It is assigned as a data-qa attribute to an element. */
         qa?: string;
     };
+    /** Custom data associated with the plot line/band, accessible in tooltip renderer args. */
+    custom?: MeaningfulAny;
 }
 
 export interface AxisPlotLine extends AxisPlot {
@@ -273,7 +276,7 @@ export interface AxisPlotBand extends AxisPlot {
     to: number | string | null;
 }
 
-export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label'> {
+export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label' | 'custom'> {
     /** Whether the crosshair should snap to the point or follow the pointer independent of points.
      * @default true
      */

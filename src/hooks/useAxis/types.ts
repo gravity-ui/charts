@@ -11,6 +11,7 @@ import type {
     ChartAxisTitleAlignment,
     ChartAxisType,
     DeepRequired,
+    MeaningfulAny,
     PlotLayerPlacement,
 } from '../../types';
 
@@ -25,6 +26,7 @@ type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' 
     };
 
 export type PreparedAxisPlotBand = Required<AxisPlotBand> & {
+    custom?: MeaningfulAny;
     label: {
         text: string;
         style: BaseTextStyle;
@@ -41,6 +43,7 @@ export type PreparedAxisPlotLine = {
     dashStyle: DashStyle;
     opacity: number;
     layerPlacement: PlotLayerPlacement;
+    custom?: MeaningfulAny;
     label: {
         text: string;
         style: BaseTextStyle;

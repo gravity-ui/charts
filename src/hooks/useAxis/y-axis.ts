@@ -248,6 +248,7 @@ export const getPreparedYAxis = ({
                     dashStyle: get(d, 'dashStyle', DASH_STYLE.Solid),
                     opacity: get(d, 'opacity', 1),
                     layerPlacement: get(d, 'layerPlacement', 'before'),
+                    custom: d.custom,
                     label: prepareAxisPlotLabel(d),
                 })),
                 plotBands: get(axisItem, 'plotBands', []).map((d) => ({
@@ -256,6 +257,7 @@ export const getPreparedYAxis = ({
                     from: get(d, 'from', 0),
                     to: get(d, 'to', 0),
                     layerPlacement: get(d, 'layerPlacement', 'before'),
+                    custom: d.custom,
                     label: prepareAxisPlotLabel(d),
                 })),
                 crosshair: {

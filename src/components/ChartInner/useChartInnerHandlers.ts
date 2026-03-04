@@ -7,9 +7,11 @@ import throttle from 'lodash/throttle';
 
 import {IS_TOUCH_ENABLED} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis, ShapeData} from '../../hooks';
+import type {ChartScale} from '../../hooks/useAxisScales/types';
 import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
 import {EventType} from '../../utils';
 import {getClosestPoints} from '../../utils/chart/get-closest-data';
+import {getHoveredPlots} from '../../utils/chart/get-hovered-plots';
 
 import type {useChartInnerState} from './useChartInnerState';
 
@@ -28,6 +30,8 @@ type Props = {
     unpinTooltip: ChartInnerState['unpinTooltip'];
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
+    xScale?: ChartScale;
+    yScale?: (ChartScale | undefined)[];
     tooltipThrottle: number;
     isOutsideBounds: (x: number, y: number) => boolean;
 };
@@ -46,6 +50,8 @@ export function useChartInnerHandlers(props: Props) {
         unpinTooltip,
         xAxis,
         yAxis,
+        xScale,
+        yScale,
         tooltipThrottle,
         isOutsideBounds,
     } = props;
@@ -76,7 +82,22 @@ export function useChartInnerHandlers(props: Props) {
             boundsHeight,
             boundsWidth,
         });
-        dispatcher.call(EventType.HOVER_SHAPE, event.target, closest, [pointerX, pointerY]);
+        const {plotLines, plotBands} = getHoveredPlots({
+            pointerX: x,
+            pointerY: y,
+            xAxis,
+            yAxis,
+            xScale,
+            yScale,
+        });
+        const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
+        dispatcher.call(
+            EventType.HOVER_SHAPE,
+            event.target,
+            closest,
+            [pointerX, pointerY],
+            hoveredPlotsArg,
+        );
         dispatcher.call(
             EventType.POINTERMOVE_CHART,
             {},
@@ -84,6 +105,8 @@ export function useChartInnerHandlers(props: Props) {
                 hovered: closest,
                 xAxis,
                 yAxis: yAxis[0] as ChartYAxis,
+                hoveredPlotLines: plotLines,
+                hoveredPlotBands: plotBands,
             } satisfies ChartTooltipRendererArgs,
             event,
         );
@@ -152,7 +175,22 @@ export function useChartInnerHandlers(props: Props) {
         const nextTooltipFixed = !tooltipPinned;
 
         if (!nextTooltipFixed) {
-            dispatcher.call(EventType.HOVER_SHAPE, event.target, items, [pointerX, pointerY]);
+            const {plotLines, plotBands} = getHoveredPlots({
+                pointerX: x,
+                pointerY: y,
+                xAxis,
+                yAxis,
+                xScale,
+                yScale,
+            });
+            const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
+            dispatcher.call(
+                EventType.HOVER_SHAPE,
+                event.target,
+                items,
+                [pointerX, pointerY],
+                hoveredPlotsArg,
+            );
             dispatcher.call(
                 EventType.POINTERMOVE_CHART,
                 {},
@@ -160,6 +198,8 @@ export function useChartInnerHandlers(props: Props) {
                     hovered: items,
                     xAxis,
                     yAxis: yAxis[0] as ChartYAxis,
+                    hoveredPlotLines: plotLines,
+                    hoveredPlotBands: plotBands,
                 } satisfies ChartTooltipRendererArgs,
                 event,
             );

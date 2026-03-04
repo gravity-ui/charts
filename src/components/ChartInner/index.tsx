@@ -144,6 +144,8 @@ export const ChartInner = (props: ChartInnerProps) => {
             unpinTooltip,
             xAxis,
             yAxis,
+            xScale,
+            yScale,
             tooltipThrottle: preparedTooltip.throttle,
             isOutsideBounds,
         });

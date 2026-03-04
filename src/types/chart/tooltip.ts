@@ -2,7 +2,7 @@ import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
-import type {ChartXAxis, ChartYAxis} from './axis';
+import type {AxisPlotBand, AxisPlotLine, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {CustomFormat, ValueFormat} from './base';
@@ -117,6 +117,10 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
 
 export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     hovered: TooltipDataChunk<T>[];
+    /** Plot lines that intersect with the current pointer position. */
+    hoveredPlotLines?: AxisPlotLine[];
+    /** Plot bands that contain the current pointer position. */
+    hoveredPlotBands?: AxisPlotBand[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 }
