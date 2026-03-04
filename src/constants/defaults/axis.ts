@@ -46,9 +46,7 @@ export const yAxisTitleDefaults: AxisTitleDefaults = {
 
 export const axisTickMarksDefaults = {
     enabled: false,
-    width: 1,
     length: 6,
-    position: 'outside' as const,
 };
 
 export const DEFAULT_AXIS_TYPE: ChartAxisType = 'linear';

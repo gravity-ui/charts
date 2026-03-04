@@ -866,24 +866,9 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('custom color and width', async ({mount}) => {
-            const data = cloneDeep(baseTickMarksData);
-            set(data, 'yAxis[0].tickMarks.color', 'blue');
-            set(data, 'yAxis[0].tickMarks.width', 2);
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
         test('custom length', async ({mount}) => {
             const data = cloneDeep(baseTickMarksData);
             set(data, 'yAxis[0].tickMarks.length', 12);
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
-        test('position inside', async ({mount}) => {
-            const data = cloneDeep(baseTickMarksData);
-            set(data, 'yAxis[0].tickMarks.position', 'inside');
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
@@ -895,27 +880,10 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('right axis with custom color and width', async ({mount}) => {
-            const data = cloneDeep(baseTickMarksData);
-            set(data, 'yAxis[0].position', 'right');
-            set(data, 'yAxis[0].tickMarks.color', 'blue');
-            set(data, 'yAxis[0].tickMarks.width', 2);
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
         test('right axis with custom length', async ({mount}) => {
             const data = cloneDeep(baseTickMarksData);
             set(data, 'yAxis[0].position', 'right');
             set(data, 'yAxis[0].tickMarks.length', 12);
-            const component = await mount(<ChartTestStory data={data} />);
-            await expect(component.locator('svg')).toHaveScreenshot();
-        });
-
-        test('right axis with position inside', async ({mount}) => {
-            const data = cloneDeep(baseTickMarksData);
-            set(data, 'yAxis[0].position', 'right');
-            set(data, 'yAxis[0].tickMarks.position', 'inside');
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });

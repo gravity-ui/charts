@@ -273,21 +273,13 @@ export async function prepareXAxisData({
             }
 
             let mark: AxisTickMarkData | null = null;
-
             if (isBottomPlot && axis.tickMarks.enabled) {
                 const axisBottom = axisTop + axisHeight;
-                const markStart = axisBottom;
-                const markEnd =
-                    axis.tickMarks.position === 'outside'
-                        ? axisBottom + axis.tickMarks.length
-                        : axisBottom - axis.tickMarks.length;
                 mark = {
                     points: [
-                        [tickValue.x, markStart],
-                        [tickValue.x, markEnd],
+                        [tickValue.x, axisBottom],
+                        [tickValue.x, axisBottom + axis.tickMarks.length],
                     ],
-                    color: axis.tickMarks.color,
-                    width: axis.tickMarks.width,
                 };
             }
 

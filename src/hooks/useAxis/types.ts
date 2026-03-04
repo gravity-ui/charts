@@ -58,10 +58,7 @@ export type PreparedRangeSlider = DeepRequired<Omit<ChartAxisRangeSlider, 'defau
 
 export type PreparedAxisTickMarks = {
     enabled: boolean;
-    color: string;
-    width: number;
     length: number;
-    position: 'inside' | 'outside';
 };
 
 type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotBands'> & {

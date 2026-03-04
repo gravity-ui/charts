@@ -19,8 +19,6 @@ export type AxisTickLine = {
 
 export type AxisTickMarkData = {
     points: PointPosition[];
-    color: string;
-    width: number;
 };
 
 export type AxisTickData = {

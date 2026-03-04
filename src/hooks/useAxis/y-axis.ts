@@ -242,10 +242,7 @@ export const getPreparedYAxis = ({
                 },
                 tickMarks: {
                     enabled: get(axisItem, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
-                    color: get(axisItem, 'tickMarks.color', axisItem.lineColor ?? ''),
-                    width: get(axisItem, 'tickMarks.width', axisTickMarksDefaults.width),
                     length: get(axisItem, 'tickMarks.length', axisTickMarksDefaults.length),
-                    position: get(axisItem, 'tickMarks.position', axisTickMarksDefaults.position),
                 },
                 position: axisPosition,
                 plotIndex: get(axisItem, 'plotIndex', 0),

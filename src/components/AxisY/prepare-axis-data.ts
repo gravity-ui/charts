@@ -171,7 +171,6 @@ async function getSvgAxisLabel({
     return svgLabel;
 }
 
-// eslint-disable-next-line complexity
 export async function prepareYAxisData({
     axis,
     split,
@@ -267,19 +266,15 @@ export async function prepareYAxisData({
             : null;
 
         let mark: AxisTickMarkData | null = null;
-
         if (axis.tickMarks.enabled) {
             const isLeft = axis.position === 'left';
             const markX = isLeft ? 0 : width;
-            const outsideDir = isLeft ? -1 : 1;
-            const dir = axis.tickMarks.position === 'outside' ? outsideDir : -outsideDir;
+            const dir = isLeft ? -1 : 1;
             mark = {
                 points: [
                     [markX, y],
                     [markX + dir * axis.tickMarks.length, y],
                 ],
-                color: axis.tickMarks.color,
-                width: axis.tickMarks.width,
             };
         }
 

@@ -214,10 +214,7 @@ export const getPreparedXAxis = async ({
         },
         tickMarks: {
             enabled: get(xAxis, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
-            color: get(xAxis, 'tickMarks.color', xAxis?.lineColor ?? ''),
-            width: get(xAxis, 'tickMarks.width', axisTickMarksDefaults.width),
             length: get(xAxis, 'tickMarks.length', axisTickMarksDefaults.length),
-            position: get(xAxis, 'tickMarks.position', axisTickMarksDefaults.position),
         },
         position: 'bottom',
         plotIndex: 0,
