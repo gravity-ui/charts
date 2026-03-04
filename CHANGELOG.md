@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.36.0](https://github.com/gravity-ui/charts/compare/v1.35.2...v1.36.0) (2026-03-04)
+
+
+### Features
+
+* **axis:** add tickMarks configuration for X and Y axes ([#433](https://github.com/gravity-ui/charts/issues/433)) ([7295766](https://github.com/gravity-ui/charts/commit/7295766db5f3e7fd5aaf00c8d1c5a7f53c8a4137))
+* smart datetime axis labels for sub-day intervals ([#430](https://github.com/gravity-ui/charts/issues/430)) ([6d36a71](https://github.com/gravity-ui/charts/commit/6d36a71ab8ab578c636eb0c4e6fae819c4d2b21c))
+* support custom data on plot lines/bands and expose hovered plots in tooltip renderer ([#432](https://github.com/gravity-ui/charts/issues/432)) ([68c7fe3](https://github.com/gravity-ui/charts/commit/68c7fe3aed477745d3c393a151249e6562a18f61))
+
+
+### Bug Fixes
+
+* fix axis title and labels position (safari) ([#434](https://github.com/gravity-ui/charts/issues/434)) ([27b29d8](https://github.com/gravity-ui/charts/commit/27b29d81d0c623b96ed61e496e9f178800ba795e))
+* truncate long series names in tooltip rows ([#435](https://github.com/gravity-ui/charts/issues/435)) ([977eb6c](https://github.com/gravity-ui/charts/commit/977eb6c41cee26de87222e7838671fc6804be60c))
+
 ## [1.35.2](https://github.com/gravity-ui/charts/compare/v1.35.1...v1.35.2) (2026-03-03)
 
 
