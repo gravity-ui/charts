@@ -62,10 +62,9 @@ export const AxisY = (props: Props) => {
                 .attr('class', b('title'))
                 .append('text')
                 .attr('text-anchor', 'start')
-                .style('dominant-baseline', 'text-after-edge')
-                .style(
+                .attr(
                     'transform',
-                    `translate(${preparedAxisData.title.x}px, ${preparedAxisData.title.y}px) rotate(${preparedAxisData.title.rotate}deg) translate(0px, ${preparedAxisData.title.offset}px)`,
+                    `translate(${preparedAxisData.title.x}, ${preparedAxisData.title.y}) rotate(${preparedAxisData.title.rotate}) translate(0, ${preparedAxisData.title.offset})`,
                 )
                 .attr('font-size', preparedAxisData.title.style.fontSize)
                 .attr('font-weight', preparedAxisData.title.style.fontWeight ?? null)
@@ -76,6 +75,7 @@ export const AxisY = (props: Props) => {
                 .html((d) => d.text)
                 .attr('x', (d) => d.x)
                 .attr('y', (d) => d.y)
+                .attr('dominant-baseline', 'text-after-edge')
                 .attr('text-anchor', 'start');
         }
 
@@ -118,11 +118,11 @@ export const AxisY = (props: Props) => {
                 const label = tickData.svgLabel;
                 const textSelection = tickSelection
                     .append('text')
-                    .style(
+                    .attr(
                         'transform',
                         [
-                            `translate(${label.x}px, ${label.y}px)`,
-                            label.angle ? `rotate(${label.angle}deg)` : '',
+                            `translate(${label.x}, ${label.y})`,
+                            label.angle ? `rotate(${label.angle})` : '',
                         ]
                             .filter(Boolean)
                             .join(' '),
@@ -163,7 +163,7 @@ export const AxisY = (props: Props) => {
                     .join('g')
                     .attr(plotDataAttr, 1)
                     .attr(plotBandDataAttr, 1)
-                    .style('transform', (d) => `translate(${d.x}px, ${d.y}px)`);
+                    .attr('transform', (d) => `translate(${d.x}, ${d.y})`);
 
                 plotBandsSelection
                     .append('rect')
@@ -218,7 +218,7 @@ export const AxisY = (props: Props) => {
                     .join('g')
                     .attr(plotDataAttr, 1)
                     .attr(plotLineDataAttr, 1)
-                    .style('transform', (d) => `translate(${d.x}px, ${d.y}px)`);
+                    .attr('transform', (d) => `translate(${d.x}, ${d.y})`);
 
                 plotLinesSelection
                     .append('path')
