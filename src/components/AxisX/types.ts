@@ -17,8 +17,13 @@ export type AxisTickLine = {
     points: PointPosition[];
 };
 
+export type AxisTickMarkData = {
+    points: PointPosition[];
+};
+
 export type AxisTickData = {
     line: AxisTickLine | null;
+    mark: AxisTickMarkData | null;
     svgLabel: AxisSvgLabelData | null;
     htmlLabel: HtmlItem | null;
 };
@@ -74,6 +79,7 @@ export type AxisDomainData = {
 
 export type AxisXData = {
     id: string;
+    gridEnabled: boolean;
     title: AxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];

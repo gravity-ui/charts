@@ -837,4 +837,70 @@ test.describe('Y-axis', () => {
             expect(median(widgetRenderTimes)).toBeLessThan(2000);
         });
     });
+
+    test.describe('Tick marks', () => {
+        const baseTickMarksData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 20},
+                            {x: 2, y: 15},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    tickMarks: {enabled: true},
+                },
+            ],
+            chart: {margin: CHART_MARGIN},
+        };
+
+        test('enabled (default settings)', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseTickMarksData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('custom length', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].tickMarks.length', 12);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('right axis with tick marks', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].position', 'right');
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('right axis with custom length', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].position', 'right');
+            set(data, 'yAxis[0].tickMarks.length', 12);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('with grid disabled (domain color)', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].grid.enabled', false);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('right axis with grid disabled (domain color)', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].position', 'right');
+            set(data, 'yAxis[0].grid.enabled', false);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

@@ -24,6 +24,7 @@ import type {
     AxisSvgLabelData,
     AxisTickData,
     AxisTickLine,
+    AxisTickMarkData,
     AxisYData,
 } from './types';
 import {getTickValues} from './utils';
@@ -264,8 +265,22 @@ export async function prepareYAxisData({
               }
             : null;
 
+        let mark: AxisTickMarkData | null = null;
+        if (axis.tickMarks.enabled) {
+            const isLeft = axis.position === 'left';
+            const markX = isLeft ? 0 : width;
+            const dir = isLeft ? -1 : 1;
+            mark = {
+                points: [
+                    [markX, y],
+                    [markX + dir * axis.tickMarks.length, y],
+                ],
+            };
+        }
+
         ticks.push({
             line: tickLine,
+            mark,
             svgLabel,
             htmlLabel,
         });
@@ -375,6 +390,7 @@ export async function prepareYAxisData({
 
     return {
         id: getUniqId(),
+        gridEnabled: axis.grid.enabled,
         title,
         ticks,
         domain,

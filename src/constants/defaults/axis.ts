@@ -44,4 +44,9 @@ export const yAxisTitleDefaults: AxisTitleDefaults = {
     margin: 8,
 };
 
+export const axisTickMarksDefaults = {
+    enabled: false,
+    length: 6,
+};
+
 export const DEFAULT_AXIS_TYPE: ChartAxisType = 'linear';

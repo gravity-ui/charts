@@ -107,6 +107,13 @@ export const AxisY = (props: Props) => {
                 tickSelection.append('path').attr('d', lineGenerator(tickData.line.points));
             }
 
+            if (tickData.mark) {
+                tickSelection
+                    .append('path')
+                    .attr('class', b('mark', {grid: preparedAxisData.gridEnabled}))
+                    .attr('d', lineGenerator(tickData.mark.points));
+            }
+
             if (tickData.svgLabel) {
                 const label = tickData.svgLabel;
                 const textSelection = tickSelection
