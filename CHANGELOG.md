@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.38.0](https://github.com/gravity-ui/charts/compare/v1.37.2...v1.38.0) (2026-03-05)
+
+
+### Features
+
+* export getDefaultTooltipHeaderFormat ([#447](https://github.com/gravity-ui/charts/issues/447)) ([2ff675d](https://github.com/gravity-ui/charts/commit/2ff675d2b69a58cf5e11e4d1046348940cf7767c))
+
+
+### Bug Fixes
+
+* improve performance ([#449](https://github.com/gravity-ui/charts/issues/449)) ([4909901](https://github.com/gravity-ui/charts/commit/49099012f3c8835475b1e9a17713e70e974588c6))
+
 ## [1.37.2](https://github.com/gravity-ui/charts/compare/v1.37.1...v1.37.2) (2026-03-05)
 
 
