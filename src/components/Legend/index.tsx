@@ -327,10 +327,18 @@ export const Legend = (props: Props) => {
                             });
                     }
 
-                    const contentWidth =
-                        (legend.html
-                            ? getXPosition(line.length) - legend.itemDistance
-                            : legendLine.node()?.getBoundingClientRect().width) || 0;
+                    let contentWidth = 0;
+                    if (legend.html) {
+                        contentWidth = getXPosition(line.length) - legend.itemDistance;
+                    } else {
+                        contentWidth = line.reduce((sum, l, index) => {
+                            sum += l.textWidth + l.symbol.width + l.symbol.padding;
+                            if (index > 0) {
+                                sum += legend.itemDistance;
+                            }
+                            return sum;
+                        }, 0);
+                    }
 
                     let left = 0;
                     switch (legend.justifyContent) {
