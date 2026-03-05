@@ -140,7 +140,7 @@ function getGroupedLegendItems(args: {
                   .style('position', 'absolute')
                   .style('display', 'inline-block')
                   .style('white-space', 'nowrap')
-            : bodySelection.append('text').text(item.name).style('white-space', 'nowrap');
+            : bodySelection.append('text').html(item.name).style('white-space', 'nowrap');
         itemSelection
             .style('font-size', preparedLegend.itemStyle.fontSize)
             .each(function () {
