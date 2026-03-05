@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.2](https://github.com/gravity-ui/charts/compare/v1.37.1...v1.37.2) (2026-03-05)
+
+
+### Bug Fixes
+
+* improve performance (legend rendering) ([#440](https://github.com/gravity-ui/charts/issues/440)) ([ef015a7](https://github.com/gravity-ui/charts/commit/ef015a7f39fcc8d76347021f89cdc46fa7b77e7e))
+
 ## [1.37.1](https://github.com/gravity-ui/charts/compare/v1.37.0...v1.37.1) (2026-03-04)
 
 
