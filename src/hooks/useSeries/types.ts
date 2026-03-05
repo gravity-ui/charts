@@ -91,6 +91,7 @@ export type LegendItem = {
     color: string;
     height: number;
     name: string;
+    text: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
     dashStyle?: DashStyle;

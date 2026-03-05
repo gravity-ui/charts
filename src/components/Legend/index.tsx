@@ -20,7 +20,6 @@ import {
     getLabelsSize,
     getSymbol,
     getUniqId,
-    handleOverflowingText,
 } from '../../utils';
 import {axisBottom} from '../../utils/chart/axis-generators';
 import {appendLinePathElement} from '../utils';
@@ -298,9 +297,7 @@ export const Legend = (props: Props) => {
                                 onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
                                 onUpdate?.();
                             })
-                            [legend.html ? 'html' : 'text'](function (d) {
-                                return d.name;
-                            });
+                            .html((d) => d.text);
                     } else {
                         legendItemTemplate
                             .append('text')
@@ -316,15 +313,8 @@ export const Legend = (props: Props) => {
                                 const mods = {selected: d.visible, unselected: !d.visible};
                                 return b('item-text', mods);
                             })
-                            .html(function (d) {
-                                return ('name' in d && d.name) as string;
-                            })
-                            .style('font-size', legend.itemStyle.fontSize)
-                            .each((d, index, nodes) => {
-                                if (d.overflowed) {
-                                    handleOverflowingText(nodes[index], d.textWidth);
-                                }
-                            });
+                            .html((d) => d.text)
+                            .style('font-size', legend.itemStyle.fontSize);
                     }
 
                     let contentWidth = 0;

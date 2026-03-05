@@ -10,6 +10,7 @@ import {
     getDomainForContinuousColorScale,
     getLabelsSize,
     getTextSizeFn,
+    getTextWithElipsis,
 } from '../../utils';
 import type {PreparedChart} from '../useChartOptions/types';
 
@@ -116,6 +117,7 @@ function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: Prepare
                 ...s,
                 id: s.legend.groupId,
                 name: s.legend.itemText,
+                text: s.legend.itemText,
                 height: preparedLegend.lineHeight,
                 symbol: s.legend.symbol,
             });
@@ -139,29 +141,40 @@ async function getGroupedLegendItems(args: {
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const resultItem = clone(item) as LegendItem;
+        resultItem.text = item.name;
+
+        const maxTextWidth = maxLegendWidth - resultItem.symbol.width - resultItem.symbol.padding;
 
         let textHeight = 0;
         let textWidth = 0;
         if (preparedLegend.html) {
             const textSize = await getLabelsSize({
-                labels: [item.name],
+                labels: [resultItem.text],
                 html: true,
                 style: preparedLegend.itemStyle,
             });
             textHeight = textSize.maxHeight;
             textWidth = textSize.maxWidth;
         } else {
-            const textSize = await getLegendItemTextSize(item.name);
+            const textSize = await getLegendItemTextSize(resultItem.text);
             textHeight = textSize.height;
             textWidth = textSize.width;
         }
 
         resultItem.height = textHeight;
 
-        if (textWidth > maxLegendWidth - resultItem.symbol.width - resultItem.symbol.padding) {
-            resultItem.overflowed = true;
-            resultItem.textWidth =
-                maxLegendWidth - resultItem.symbol.width - resultItem.symbol.padding;
+        if (textWidth > maxTextWidth) {
+            if (preparedLegend.html) {
+                resultItem.overflowed = true;
+                resultItem.textWidth = maxTextWidth;
+            } else {
+                resultItem.text = await getTextWithElipsis({
+                    text: resultItem.text,
+                    getTextWidth: async (s: string) => (await getLegendItemTextSize(s)).width,
+                    maxWidth: maxTextWidth,
+                });
+                resultItem.textWidth = (await getLegendItemTextSize(resultItem.text)).width;
+            }
         } else {
             resultItem.textWidth = textWidth;
         }
