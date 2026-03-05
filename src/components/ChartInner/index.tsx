@@ -114,7 +114,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         plotNode: plotRef.current,
         preparedChart,
         rangeSliderState,
-        svgContainer: svgRef.current,
         updateZoomState,
         zoomState,
     });
