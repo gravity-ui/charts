@@ -5,7 +5,6 @@ import {scaleLinear, select, symbol} from 'd3';
 
 import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
 import type {
-    LegendConfig,
     LegendItem,
     OnLegendItemClick,
     PreparedLegend,
@@ -13,6 +12,7 @@ import type {
     SymbolLegendSymbol,
 } from '../../hooks';
 import {formatNumber} from '../../libs';
+import type {LegendConfig} from '../../types';
 import {
     block,
     createGradientRect,

@@ -98,20 +98,6 @@ export type LegendItem = {
     visible?: boolean;
 };
 
-export type LegendConfig = {
-    offset: {
-        left: number;
-        top: number;
-    };
-    maxWidth: number;
-    pagination?: {
-        pages: {
-            start: number;
-            end: number;
-        }[];
-    };
-};
-
 export type PreparedHaloOptions = {
     enabled: boolean;
     opacity: number;
