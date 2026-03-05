@@ -256,10 +256,6 @@ function unescapeHtml(str: string) {
     }, str);
 }
 
-function getCssStyle(prop: string, el: Element = document.body) {
-    return window.getComputedStyle(el, null).getPropertyValue(prop);
-}
-
 let measureCanvas: HTMLCanvasElement | null = null;
 export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
@@ -269,9 +265,10 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     }
 
     const element = document.getElementsByClassName(b())[0] ?? document.body;
-    const defaultFontFamily = getCssStyle('font-family', element);
-    const defaultFontSize = getCssStyle('font-size', element);
-    const defaultFontWeight = getCssStyle('font-weight', element);
+    const computedStyle = window.getComputedStyle(element, null);
+    const defaultFontFamily = computedStyle.getPropertyValue('font-family');
+    const defaultFontSize = computedStyle.getPropertyValue('font-size');
+    const defaultFontWeight = computedStyle.getPropertyValue('font-weight');
 
     return async (str: string) => {
         await document.fonts.ready;
