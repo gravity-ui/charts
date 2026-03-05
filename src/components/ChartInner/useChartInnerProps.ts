@@ -240,8 +240,8 @@ export function useChartInnerProps(props: Props) {
     const {xAxis, yAxis, setAxes} = useAxis({
         height,
         preparedChart,
-        legendHeight: legendConfig?.height ?? 0,
-        legendMargin: preparedLegend?.margin ?? 0,
+        legendConfig,
+        preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
         width,

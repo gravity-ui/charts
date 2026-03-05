@@ -2,10 +2,10 @@ import React from 'react';
 
 import isEqual from 'lodash/isEqual';
 
-import type {ChartSeries, ChartXAxis, ChartYAxis} from '../../types';
+import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 import {getWidthOccupiedByYAxis} from '../useChartDimensions/utils';
 import type {PreparedChart} from '../useChartOptions/types';
-import type {PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
+import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 
 import type {AxesState} from './types';
 import {getPreparedXAxis} from './x-axis';
@@ -14,8 +14,8 @@ import {getPreparedYAxis} from './y-axis';
 interface UseAxesProps {
     height: number;
     preparedChart: PreparedChart;
-    legendHeight: number;
-    legendMargin: number;
+    legendConfig: LegendConfig | undefined;
+    preparedLegend: PreparedLegend | null;
     preparedSeries: PreparedSeries[];
     preparedSeriesOptions: PreparedSeriesOptions;
     width: number;
@@ -29,8 +29,8 @@ export function useAxis(props: UseAxesProps) {
         boundsHeight,
         height,
         preparedChart,
-        legendHeight,
-        legendMargin,
+        legendConfig,
+        preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
         width,
@@ -43,6 +43,12 @@ export function useAxis(props: UseAxesProps) {
     const axesStateReady = React.useRef(false);
 
     React.useEffect(() => {
+        const shouldWaitForLegendReady =
+            !preparedLegend || (preparedLegend?.enabled && !legendConfig);
+        if (shouldWaitForLegendReady) {
+            return;
+        }
+
         axesStateRunRef.current++;
         axesStateReady.current = false;
 
@@ -79,8 +85,8 @@ export function useAxis(props: UseAxesProps) {
                         (preparedXAxis.rangeSlider.enabled
                             ? preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin
                             : 0) +
-                        legendHeight +
-                        legendMargin +
+                        (legendConfig?.height ?? 0) +
+                        (preparedLegend?.margin ?? 0) +
                         preparedChart.margin.top +
                         preparedChart.margin.bottom);
             }
@@ -108,8 +114,8 @@ export function useAxis(props: UseAxesProps) {
         boundsHeight,
         height,
         preparedChart.margin,
-        legendHeight,
-        legendMargin,
+        legendConfig,
+        preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
         width,
