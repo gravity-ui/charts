@@ -41,7 +41,6 @@ type Props = ChartInnerProps & {
     htmlLayout: HTMLElement | null;
     plotNode: SVGGElement | null;
     preparedChart: PreparedChart;
-    svgContainer: SVGGElement | null;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
     rangeSliderState?: RangeSliderState;
@@ -175,7 +174,6 @@ export function useChartInnerProps(props: Props) {
         plotNode,
         preparedChart,
         rangeSliderState,
-        svgContainer,
         width,
         updateZoomState,
         zoomState,
@@ -345,8 +343,6 @@ export function useChartInnerProps(props: Props) {
         legendConfig,
     });
 
-    const {x} = svgContainer?.getBoundingClientRect() ?? {};
-
     return {
         allPreparedSeries,
         boundsHeight,
@@ -366,7 +362,6 @@ export function useChartInnerProps(props: Props) {
         shapes,
         shapesData,
         shapesReady,
-        svgXPos: x,
         xAxis,
         xScale,
         yAxis,
