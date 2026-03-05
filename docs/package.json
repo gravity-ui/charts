@@ -12,7 +12,7 @@
     "@diplodoc/cli": "^4.53.11",
     "browser-sync": "^3.0.3",
     "gulp": "^5.0.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "typedoc": "^0.27.6",
     "typedoc-plugin-markdown": "^4.4.1",
     "yaml": "^2.7.0"
