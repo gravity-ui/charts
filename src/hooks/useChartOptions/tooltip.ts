@@ -6,7 +6,7 @@ import {getDomainDataXBySeries, getDomainDataYBySeries, getMinSpaceBetween} from
 
 import type {PreparedTooltip} from './types';
 
-function getDefaultHeaderFormat({
+export function getDefaultTooltipHeaderFormat({
     seriesData,
     yAxes,
     xAxis,
@@ -48,6 +48,7 @@ export const getPreparedTooltip = (args: {
         ...tooltip,
         enabled: get(tooltip, 'enabled', true),
         throttle: tooltip?.throttle ?? 0,
-        headerFormat: tooltip?.headerFormat ?? getDefaultHeaderFormat({seriesData, yAxes, xAxis}),
+        headerFormat:
+            tooltip?.headerFormat ?? getDefaultTooltipHeaderFormat({seriesData, yAxes, xAxis}),
     };
 };
