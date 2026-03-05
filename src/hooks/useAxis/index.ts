@@ -2,7 +2,7 @@ import React from 'react';
 
 import isEqual from 'lodash/isEqual';
 
-import type {ChartSeries, ChartXAxis, ChartYAxis} from '../../types';
+import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 import {getWidthOccupiedByYAxis} from '../useChartDimensions/utils';
 import type {PreparedChart} from '../useChartOptions/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
@@ -14,6 +14,7 @@ import {getPreparedYAxis} from './y-axis';
 interface UseAxesProps {
     height: number;
     preparedChart: PreparedChart;
+    legendConfig: LegendConfig | undefined;
     preparedLegend: PreparedLegend | null;
     preparedSeries: PreparedSeries[];
     preparedSeriesOptions: PreparedSeriesOptions;
@@ -28,6 +29,7 @@ export function useAxis(props: UseAxesProps) {
         boundsHeight,
         height,
         preparedChart,
+        legendConfig,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
@@ -41,6 +43,12 @@ export function useAxis(props: UseAxesProps) {
     const axesStateReady = React.useRef(false);
 
     React.useEffect(() => {
+        const shouldWaitForLegendReady =
+            !preparedLegend || (preparedLegend?.enabled && !legendConfig);
+        if (shouldWaitForLegendReady) {
+            return;
+        }
+
         axesStateRunRef.current++;
         axesStateReady.current = false;
 
@@ -77,7 +85,8 @@ export function useAxis(props: UseAxesProps) {
                         (preparedXAxis.rangeSlider.enabled
                             ? preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin
                             : 0) +
-                        (preparedLegend ? preparedLegend.height + preparedLegend.margin : 0) +
+                        (legendConfig?.height ?? 0) +
+                        (preparedLegend?.margin ?? 0) +
                         preparedChart.margin.top +
                         preparedChart.margin.bottom);
             }
@@ -105,6 +114,7 @@ export function useAxis(props: UseAxesProps) {
         boundsHeight,
         height,
         preparedChart.margin,
+        legendConfig,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,

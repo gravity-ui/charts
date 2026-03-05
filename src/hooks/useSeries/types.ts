@@ -91,25 +91,12 @@ export type LegendItem = {
     color: string;
     height: number;
     name: string;
+    text: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
     dashStyle?: DashStyle;
     overflowed?: boolean;
     visible?: boolean;
-};
-
-export type LegendConfig = {
-    offset: {
-        left: number;
-        top: number;
-    };
-    maxWidth: number;
-    pagination?: {
-        pages: {
-            start: number;
-            end: number;
-        }[];
-    };
 };
 
 export type PreparedHaloOptions = {

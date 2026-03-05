@@ -22,3 +22,19 @@ export interface HtmlItem {
 export interface ShapeDataWithHtmlItems {
     htmlElements: HtmlItem[];
 }
+
+export type LegendConfig = {
+    offset: {
+        left: number;
+        top: number;
+    };
+    pagination?: {
+        pages: {
+            start: number;
+            end: number;
+        }[];
+    };
+    maxWidth: number;
+    height: number;
+    width: number;
+};

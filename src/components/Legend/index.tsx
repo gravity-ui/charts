@@ -5,7 +5,6 @@ import {scaleLinear, select, symbol} from 'd3';
 
 import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
 import type {
-    LegendConfig,
     LegendItem,
     OnLegendItemClick,
     PreparedLegend,
@@ -13,6 +12,7 @@ import type {
     SymbolLegendSymbol,
 } from '../../hooks';
 import {formatNumber} from '../../libs';
+import type {LegendConfig} from '../../types';
 import {
     block,
     createGradientRect,
@@ -20,7 +20,6 @@ import {
     getLabelsSize,
     getSymbol,
     getUniqId,
-    handleOverflowingText,
 } from '../../utils';
 import {axisBottom} from '../../utils/chart/axis-generators';
 import {appendLinePathElement} from '../utils';
@@ -298,9 +297,7 @@ export const Legend = (props: Props) => {
                                 onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
                                 onUpdate?.();
                             })
-                            [legend.html ? 'html' : 'text'](function (d) {
-                                return d.name;
-                            });
+                            .html((d) => d.text);
                     } else {
                         legendItemTemplate
                             .append('text')
@@ -316,21 +313,22 @@ export const Legend = (props: Props) => {
                                 const mods = {selected: d.visible, unselected: !d.visible};
                                 return b('item-text', mods);
                             })
-                            .html(function (d) {
-                                return ('name' in d && d.name) as string;
-                            })
-                            .style('font-size', legend.itemStyle.fontSize)
-                            .each((d, index, nodes) => {
-                                if (d.overflowed) {
-                                    handleOverflowingText(nodes[index], d.textWidth);
-                                }
-                            });
+                            .html((d) => d.text)
+                            .style('font-size', legend.itemStyle.fontSize);
                     }
 
-                    const contentWidth =
-                        (legend.html
-                            ? getXPosition(line.length) - legend.itemDistance
-                            : legendLine.node()?.getBoundingClientRect().width) || 0;
+                    let contentWidth = 0;
+                    if (legend.html) {
+                        contentWidth = getXPosition(line.length) - legend.itemDistance;
+                    } else {
+                        contentWidth = line.reduce((sum, l, index) => {
+                            sum += l.textWidth + l.symbol.width + l.symbol.padding;
+                            if (index > 0) {
+                                sum += legend.itemDistance;
+                            }
+                            return sum;
+                        }, 0);
+                    }
 
                     let left = 0;
                     switch (legend.justifyContent) {

@@ -1,4 +1,4 @@
-import type {ChartXAxis, ChartYAxis} from '../../types';
+import type {ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 import type {PreparedRangeSlider, PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ChartScale} from '../useAxisScales/types';
 import type {BrushSelection, UseBrushProps} from '../useBrush/types';
@@ -18,6 +18,7 @@ export interface RangeSliderProps {
     onUpdate: (nextRangeSliderState?: RangeSliderState) => void;
     preparedChart: PreparedChart;
     preparedLegend: PreparedLegend | null;
+    legendConfig: LegendConfig | undefined;
     preparedRangeSlider: PreparedRangeSlider;
     preparedSeries: PreparedSeries[];
     preparedSeriesOptions: PreparedSeriesOptions;

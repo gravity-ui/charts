@@ -141,8 +141,10 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
                 let yValue = 0;
                 const points = (seriesList as PreparedWaterfallSeries[]).map((s) => s.data).flat();
                 sortBy(points, (p) => p.index).forEach((d) => {
-                    yValue += Number(d.y) || 0;
-                    acc.push(yValue);
+                    if (!d.total) {
+                        yValue += Number(d.y) || 0;
+                        acc.push(yValue);
+                    }
                 });
 
                 break;

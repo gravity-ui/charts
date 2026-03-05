@@ -367,6 +367,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     width={width}
                     xAxis={data.xAxis}
                     yAxis={data.yAxis}
+                    legendConfig={legendConfig}
                 />
             )}
             {preparedLegend?.enabled && legendConfig && (
