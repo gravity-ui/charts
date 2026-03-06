@@ -1,7 +1,6 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3';
-import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE, SERIES_TYPE} from '../../constants';
 import {
@@ -18,21 +17,19 @@ import {
 } from '../../hooks';
 import type {
     ClipPathBySeriesType,
-    LegendItem,
     PreparedAxis,
     PreparedChart,
     PreparedLegend,
-    PreparedSeries,
     RangeSliderState,
     ZoomState,
 } from '../../hooks';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
-import {getLegendComponents} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import type {LegendConfig} from '../../types';
 import {getEffectiveXRange, getZoomedSeriesData} from '../../utils';
 
 import type {ChartInnerProps} from './types';
+import {useLegend} from './useLegend';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils';
 
 type Props = ChartInnerProps & {
@@ -99,69 +96,6 @@ function getBoundsOffsetLeft(args: {
     }, 0);
 
     return chartMarginLeft + legendOffset + leftAxisWidth;
-}
-
-type LegendState = {
-    legendConfig?: LegendConfig;
-    legendItems: LegendItem[][];
-};
-
-export function useLegend({
-    preparedLegend,
-    preparedChart,
-    preparedSeries,
-    width,
-    height,
-}: {
-    preparedLegend: PreparedLegend | null;
-    preparedChart: PreparedChart;
-    preparedSeries: PreparedSeries[];
-    width: number;
-    height: number;
-}) {
-    const [legendState, setLegend] = React.useState<LegendState>({
-        legendConfig: undefined,
-        legendItems: [],
-    });
-    const legendStateRunRef = React.useRef(0);
-    const prevLegendStateValue = React.useRef(legendState);
-    const legendStateReady = React.useRef(false);
-
-    React.useEffect(() => {
-        legendStateRunRef.current++;
-        legendStateReady.current = false;
-
-        (async function () {
-            const currentRun = legendStateRunRef.current;
-            if (!preparedLegend) {
-                return;
-            }
-
-            const newStateValue = await getLegendComponents({
-                chartWidth: width,
-                chartHeight: height,
-                chartMargin: preparedChart.margin,
-                series: preparedSeries,
-                preparedLegend,
-            });
-
-            if (legendStateRunRef.current === currentRun) {
-                if (!isEqual(prevLegendStateValue.current, newStateValue)) {
-                    setLegend(newStateValue);
-                    prevLegendStateValue.current = newStateValue;
-                }
-
-                legendStateReady.current = true;
-            }
-        })();
-    }, [height, preparedChart.margin, preparedLegend, preparedSeries, width]);
-
-    return legendStateReady.current
-        ? legendState
-        : {
-              legendConfig: undefined,
-              legendItems: [],
-          };
 }
 
 export function useChartInnerProps(props: Props) {
