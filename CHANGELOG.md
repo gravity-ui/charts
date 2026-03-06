@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.2](https://github.com/gravity-ui/charts/compare/v1.38.1...v1.38.2) (2026-03-06)
+
+
+### Bug Fixes
+
+* fix the lag in legend display when switching series visibility ([#457](https://github.com/gravity-ui/charts/issues/457)) ([c532ea8](https://github.com/gravity-ui/charts/commit/c532ea88572cc6c53243c8f89982b08649c7f8d4))
+* hide tick marks and Y axis labels when axis visible is false ([#455](https://github.com/gravity-ui/charts/issues/455)) ([ad5a503](https://github.com/gravity-ui/charts/commit/ad5a503ecf21c94815e13f9fde655a9a5ad26fa4))
+
 ## [1.38.1](https://github.com/gravity-ui/charts/compare/v1.38.0...v1.38.1) (2026-03-06)
 
 
