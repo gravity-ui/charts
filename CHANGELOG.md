@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.1](https://github.com/gravity-ui/charts/compare/v1.38.0...v1.38.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* correct the calculation of the size of legend symbols ([#451](https://github.com/gravity-ui/charts/issues/451)) ([20fd3bd](https://github.com/gravity-ui/charts/commit/20fd3bd005770b0dd84624588cf2b33ec0fb608e))
+
 ## [1.38.0](https://github.com/gravity-ui/charts/compare/v1.37.2...v1.38.0) (2026-03-05)
 
 
