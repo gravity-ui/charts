@@ -517,5 +517,12 @@ test.describe('X-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('hidden when axis visible=false', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'xAxis.visible', false);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

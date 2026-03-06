@@ -104,6 +104,9 @@ export interface ChartAxisTitle {
 
 export interface ChartAxisTickMarks {
     /** Enable or disable the tick marks on the axis.
+     *
+     * Note: tick marks are always hidden when the axis `visible` is set to `false`.
+     *
      * @default false
      */
     enabled?: boolean;
@@ -180,9 +183,12 @@ export interface ChartAxis {
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */
     plotBands?: AxisPlotBand[];
-    /** Small perpendicular marks on the axis line at each tick position. */
+    /** Small perpendicular marks on the axis line at each tick position.
+     *
+     * Hidden when the axis `visible` is set to `false`.
+     */
     tickMarks?: ChartAxisTickMarks;
-    /** Whether axis, including axis title, line, ticks and labels, should be visible. */
+    /** Whether axis, including axis title, line, tick marks, and labels, should be visible. */
     visible?: boolean;
     /** Setting the order of the axis values. It is not applied by default.
      * the "reverse" value is needed to use the reverse order without sorting
