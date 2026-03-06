@@ -2,6 +2,7 @@ import memoize from 'lodash/memoize';
 
 import {SymbolType} from '../../constants';
 import type {RectLegendSymbolOptions} from '../../types';
+import {getSymbolBBoxWidth} from '../../utils';
 import {getUniqId} from '../../utils/misc';
 
 import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './constants';
@@ -26,11 +27,14 @@ export function prepareLegendSymbol(
     symbolType?: `${SymbolType}`,
 ): PreparedLegendSymbol {
     const symbolOptions = series.legend?.symbol || {};
+    const width = symbolOptions?.width || DEFAULT_LEGEND_SYMBOL_SIZE;
+    const type = symbolType || SymbolType.Circle;
 
     return {
         shape: 'symbol',
-        symbolType: symbolType || SymbolType.Circle,
-        width: symbolOptions?.width || DEFAULT_LEGEND_SYMBOL_SIZE,
+        symbolType: type,
+        width,
+        bboxWidth: getSymbolBBoxWidth({symbolSize: Math.pow(width, 2), symbolType: type}),
         padding: symbolOptions?.padding || DEFAULT_LEGEND_SYMBOL_PADDING,
     };
 }

@@ -143,7 +143,8 @@ async function getGroupedLegendItems(args: {
         const resultItem = clone(item) as LegendItem;
         resultItem.text = item.name;
 
-        const maxTextWidth = maxLegendWidth - resultItem.symbol.width - resultItem.symbol.padding;
+        const maxTextWidth =
+            maxLegendWidth - resultItem.symbol.bboxWidth - resultItem.symbol.padding;
 
         let textHeight = 0;
         let textWidth = 0;
@@ -188,7 +189,7 @@ async function getGroupedLegendItems(args: {
 
         result[lineIndex].push(resultItem);
         const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
-            return acc + symbol.width + symbol.padding;
+            return acc + symbol.bboxWidth + symbol.padding;
         }, 0);
         const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
         const isOverflowedAsOnlyItemInLine =
