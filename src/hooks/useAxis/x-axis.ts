@@ -213,7 +213,8 @@ export const getPreparedXAxis = async ({
                 : xAxis?.ticks?.pixelInterval,
         },
         tickMarks: {
-            enabled: get(xAxis, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
+            enabled:
+                isAxisVisible && get(xAxis, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
             length: get(xAxis, 'tickMarks.length', axisTickMarksDefaults.length),
         },
         position: 'bottom',

@@ -904,5 +904,12 @@ test.describe('Y-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('hidden when axis visible=false', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].visible', false);
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });

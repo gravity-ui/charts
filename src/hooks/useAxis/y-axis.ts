@@ -123,7 +123,8 @@ export const getPreparedYAxis = ({
 
             const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === axisIndex);
 
-            const labelsEnabled = get(axisItem, 'labels.enabled', true);
+            const isAxisVisible = axisItem.visible ?? true;
+            const labelsEnabled = isAxisVisible && get(axisItem, 'labels.enabled', true);
 
             const labelsStyle: BaseTextStyle = {
                 fontSize: get(axisItem, 'labels.style.fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE),
@@ -132,7 +133,7 @@ export const getPreparedYAxis = ({
             const labelsLineHeight = labelsHtml
                 ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
                 : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
-            const titleText = get(axisItem, 'title.text', '');
+            const titleText = isAxisVisible ? get(axisItem, 'title.text', '') : '';
             const titleStyle = {
                 ...yAxisTitleDefaults.style,
                 ...get(axisItem, 'title.style'),
@@ -168,8 +169,7 @@ export const getPreparedYAxis = ({
 
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
             const shouldHideGrid =
-                axisItem.visible === false ||
-                axisSeriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
+                !isAxisVisible || axisSeriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
 
             let gridEnabled: boolean;
 
@@ -241,7 +241,9 @@ export const getPreparedYAxis = ({
                         : axisItem.ticks?.pixelInterval,
                 },
                 tickMarks: {
-                    enabled: get(axisItem, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
+                    enabled:
+                        isAxisVisible &&
+                        get(axisItem, 'tickMarks.enabled', axisTickMarksDefaults.enabled),
                     length: get(axisItem, 'tickMarks.length', axisTickMarksDefaults.length),
                 },
                 position: axisPosition,
