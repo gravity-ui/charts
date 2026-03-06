@@ -59,7 +59,9 @@ export type SymbolLegendSymbol = {
     symbolType: `${SymbolType}`;
 } & Required<SymbolLegendSymbolOptions>;
 
-export type PreparedLegendSymbol = RectLegendSymbol | PathLegendSymbol | SymbolLegendSymbol;
+export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | SymbolLegendSymbol) & {
+    bboxWidth: number;
+};
 
 export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>> & {
     height: number;

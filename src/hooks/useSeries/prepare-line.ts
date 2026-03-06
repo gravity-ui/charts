@@ -70,10 +70,12 @@ function prepareLineLegendSymbol(
 ): PreparedLegendSymbol {
     const symbolOptions: RectLegendSymbolOptions = series.legend?.symbol || {};
     const defaultLineWidth = get(seriesOptions, 'line.lineWidth', DEFAULT_LINE_WIDTH);
+    const width = symbolOptions?.width || DEFAULT_LEGEND_SYMBOL_SIZE;
 
     return {
         shape: 'path',
-        width: symbolOptions?.width || DEFAULT_LEGEND_SYMBOL_SIZE,
+        width: width,
+        bboxWidth: width,
         padding: symbolOptions?.padding || DEFAULT_LEGEND_SYMBOL_PADDING,
         strokeWidth: get(series, 'lineWidth', defaultLineWidth),
     };

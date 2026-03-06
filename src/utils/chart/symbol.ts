@@ -39,3 +39,25 @@ export const getSymbol = (symbolType: `${SymbolType}`) => {
             return symbolCircle;
     }
 };
+
+export function getSymbolBBoxWidth({
+    symbolSize,
+    symbolType,
+}: {
+    symbolSize: number;
+    symbolType: `${SymbolType}`;
+}) {
+    switch (symbolType) {
+        case SymbolType.Diamond:
+            return Math.sqrt(symbolSize * 2);
+        case SymbolType.Circle:
+            return Math.sqrt(symbolSize / Math.PI) * 2;
+        case SymbolType.Square:
+            return Math.sqrt(symbolSize);
+        case SymbolType.Triangle:
+        case SymbolType.TriangleDown:
+            return Math.sqrt((4 * symbolSize * Math.sqrt(3)) / 3);
+        default:
+            return 0;
+    }
+}

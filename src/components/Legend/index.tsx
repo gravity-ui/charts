@@ -131,7 +131,7 @@ function renderLegendSymbol(args: {
         return line.slice(0, i).reduce((acc, legendItem) => {
             return (
                 acc +
-                legendItem.symbol.width +
+                legendItem.symbol.bboxWidth +
                 legendItem.symbol.padding +
                 legendItem.textWidth +
                 legend.itemDistance
@@ -144,6 +144,8 @@ function renderLegendSymbol(args: {
         const x = getXPosition(i);
         const className = b('item-symbol', {shape: d.symbol.shape, unselected: !d.visible});
         const color = d.visible ? d.color : '';
+        const symbolType = (d.symbol as SymbolLegendSymbol).symbolType;
+        const scatterSymbol = getSymbol(symbolType);
 
         switch (d.symbol.shape) {
             case 'path': {
@@ -151,7 +153,7 @@ function renderLegendSymbol(args: {
                     svgRootElement: element.node(),
                     x,
                     height: legendLineHeight,
-                    width: d.symbol.width,
+                    width: d.symbol.bboxWidth,
                     color,
                     className,
                     dashStyle: d.dashStyle,
@@ -166,7 +168,7 @@ function renderLegendSymbol(args: {
                     .append('rect')
                     .attr('x', x)
                     .attr('y', y)
-                    .attr('width', d.symbol.width)
+                    .attr('width', d.symbol.bboxWidth)
                     .attr('height', d.symbol.height)
                     .attr('rx', d.symbol.radius)
                     .attr('class', className)
@@ -175,22 +177,15 @@ function renderLegendSymbol(args: {
                 break;
             }
             case 'symbol': {
+                const symbolAreaSize = Math.pow(d.symbol.width, 2);
                 const y = legendLineHeight / 2;
+                const bboxWidth = d.symbol.bboxWidth;
 
                 element
                     .append('svg:path')
-                    .attr('d', () => {
-                        const scatterSymbol = getSymbol(
-                            (d.symbol as SymbolLegendSymbol).symbolType,
-                        );
-
-                        // D3 takes size as square pixels, so we need to make square pixels size by multiplying
-                        // https://d3js.org/d3-shape/symbol#symbol
-                        return symbol(scatterSymbol, d.symbol.width * d.symbol.width)();
-                    })
-                    .attr('transform', (_d, _index, elements) => {
-                        const translateX =
-                            x + (elements[0] as SVGPathElement)?.getBBox()?.width / 2;
+                    .attr('d', () => symbol(scatterSymbol, symbolAreaSize)())
+                    .attr('transform', () => {
+                        const translateX = x + bboxWidth / 2;
                         return 'translate(' + translateX + ',' + y + ')';
                     })
                     .attr('class', className)
@@ -258,7 +253,7 @@ export const Legend = (props: Props) => {
                         return line.slice(0, i).reduce((acc, legendItem) => {
                             return (
                                 acc +
-                                legendItem.symbol.width +
+                                legendItem.symbol.bboxWidth +
                                 legendItem.symbol.padding +
                                 legendItem.textWidth +
                                 legend.itemDistance
@@ -285,7 +280,7 @@ export const Legend = (props: Props) => {
                                 return `${d.textWidth}px`;
                             })
                             .style('left', function (d, i) {
-                                return `${getXPosition(i) + d.symbol.width + d.symbol.padding}px`;
+                                return `${getXPosition(i) + d.symbol.bboxWidth + d.symbol.padding}px`;
                             })
                             .style('top', function (d) {
                                 if (d.height < legendLineHeight) {
@@ -304,7 +299,7 @@ export const Legend = (props: Props) => {
                             .attr('x', function (legendItem, i) {
                                 return (
                                     getXPosition(i) +
-                                    legendItem.symbol.width +
+                                    legendItem.symbol.bboxWidth +
                                     legendItem.symbol.padding
                                 );
                             })
@@ -322,7 +317,7 @@ export const Legend = (props: Props) => {
                         contentWidth = getXPosition(line.length) - legend.itemDistance;
                     } else {
                         contentWidth = line.reduce((sum, l, index) => {
-                            sum += l.textWidth + l.symbol.width + l.symbol.padding;
+                            sum += l.textWidth + l.symbol.bboxWidth + l.symbol.padding;
                             if (index > 0) {
                                 sum += legend.itemDistance;
                             }
