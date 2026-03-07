@@ -108,6 +108,10 @@ export const useChartDimensions = (args: Args) => {
     } = args;
 
     return React.useMemo(() => {
+        if (!preparedLegend || (!legendConfig && preparedLegend?.enabled)) {
+            return {boundsWidth: 0, boundsHeight: 0};
+        }
+
         const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
         const boundsWidth = getBoundsWidth({chartWidth: width, chartMargin: margin, preparedYAxis});
         const bottomOffset = getBottomOffset({
