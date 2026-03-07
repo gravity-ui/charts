@@ -35,7 +35,7 @@ test.describe('Tooltip', () => {
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 
-    test.only('More points row with HTML labels', async ({mount, page}) => {
+    test('More points row with HTML labels', async ({mount, page}) => {
         await page.setViewportSize({width: 500, height: 280});
         const component = await mount(<ChartTestStory data={tooltipOverflowedRowsHtmlData} />);
         const bar = component.locator('.gcharts-bar-y').first();
