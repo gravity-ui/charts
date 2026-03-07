@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.38.3](https://github.com/gravity-ui/charts/compare/v1.38.2...v1.38.3) (2026-03-07)
+
+
+### Bug Fixes
+
+* fix chart infinite re-render loop (React 17) ([#460](https://github.com/gravity-ui/charts/issues/460)) ([a65a76b](https://github.com/gravity-ui/charts/commit/a65a76b03450c2add3f767f9dba35c017e4764db))
+
+
+### Performance Improvements
+
+* replace O(N) tooltip row measurement with O(1) scrollHeight ratio ([#459](https://github.com/gravity-ui/charts/issues/459)) ([406016d](https://github.com/gravity-ui/charts/commit/406016d04885a502faed5a1eb3a254fbd2384e38))
+
 ## [1.38.2](https://github.com/gravity-ui/charts/compare/v1.38.1...v1.38.2) (2026-03-06)
 
 
