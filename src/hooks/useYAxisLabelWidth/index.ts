@@ -56,7 +56,7 @@ export function useYAxisLabelWidth(props: UseYAxisLabelWidthProps) {
 
             if (runRef.current === currentRun && axisIndexesToRecalculateMap.size > 0) {
                 setAxes((prevState) => {
-                    prevState.yAxis = prevState.yAxis.map((axis, i) => {
+                    const newYAxis = prevState.yAxis.map((axis, i) => {
                         const width = axisIndexesToRecalculateMap.get(i);
 
                         if (width) {
@@ -71,7 +71,7 @@ export function useYAxisLabelWidth(props: UseYAxisLabelWidthProps) {
                         return axis;
                     });
 
-                    return prevState;
+                    return {...prevState, yAxis: newYAxis};
                 });
             }
         })();
