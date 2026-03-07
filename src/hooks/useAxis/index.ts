@@ -40,9 +40,11 @@ export function useAxis(props: UseAxesProps) {
     const [axesState, setAxes] = React.useState<AxesState>({xAxis: null, yAxis: []});
     const axesStateRunRef = React.useRef(0);
     const prevAxesStateValue = React.useRef(axesState);
+    const axesStateReady = React.useRef(false);
 
     React.useEffect(() => {
         axesStateRunRef.current++;
+        axesStateReady.current = false;
 
         const shouldWaitForLegendReady =
             !preparedLegend || (preparedLegend?.enabled && !legendConfig);
@@ -104,6 +106,8 @@ export function useAxis(props: UseAxesProps) {
                     setAxes(newStateValue);
                     prevAxesStateValue.current = newStateValue;
                 }
+
+                axesStateReady.current = true;
             }
         })();
     }, [
@@ -119,7 +123,11 @@ export function useAxis(props: UseAxesProps) {
         yAxis,
     ]);
 
+    const isAxesReady = axesStateReady.current;
     return React.useMemo(() => {
-        return {...axesState, setAxes};
-    }, [axesState]);
+        return isAxesReady
+            ? {...prevAxesStateValue.current, setAxes}
+            : {xAxis: null, yAxis: [], setAxes};
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAxesReady, axesState]);
 }
