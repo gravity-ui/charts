@@ -124,10 +124,10 @@ export function useAxis(props: UseAxesProps) {
     ]);
 
     const isAxesReady = axesStateReady.current;
-    return React.useMemo(() => {
-        return isAxesReady
-            ? {...prevAxesStateValue.current, setAxes}
-            : {xAxis: null, yAxis: [], setAxes};
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    const result = React.useMemo(() => {
+        return isAxesReady ? {...axesState, setAxes} : {xAxis: null, yAxis: [], setAxes};
     }, [isAxesReady, axesState]);
+    prevAxesStateValue.current = result;
+
+    return result;
 }
