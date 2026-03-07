@@ -18,7 +18,7 @@ import type {
     TreemapSeriesData,
     ValueFormat,
 } from '../../../types';
-import {block, hasVerticalScrollbar} from '../../../utils';
+import {block} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 
 import {Row} from './Row';
@@ -58,7 +58,6 @@ export const DefaultTooltipContent = ({
     qa,
 }: Props) => {
     const [visibleRows, setVisibleRows] = React.useState<number | undefined>();
-    const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
     const [scrollBarWidth, setScrollBarWidth] = React.useState<number>(0);
     const contentRowsRef = React.useRef<HTMLDivElement>(null);
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis, headerFormat});
@@ -128,33 +127,19 @@ export const DefaultTooltipContent = ({
             return;
         }
 
-        if (!hasVerticalScrollbar(contentRowsRef.current)) {
+        if (isEqual(hoveredValues, prevHoveredValues)) {
             return;
         }
 
-        if (!isEqual(hoveredValues, prevHoveredValues)) {
-            const {clientHeight} = contentRowsRef.current;
-            const {top: containerTop} = contentRowsRef.current.getBoundingClientRect();
-            const rows = contentRowsRef.current.querySelectorAll(`.${b('content-row')}`);
-            let nextVisibleRows = 0;
-            let nextMaxContentRowsHeight = 0;
+        const {scrollHeight, clientHeight} = contentRowsRef.current;
 
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const {top, height} = row.getBoundingClientRect();
-
-                if (top - containerTop + height <= clientHeight) {
-                    nextVisibleRows += 1;
-                    nextMaxContentRowsHeight += height;
-                } else {
-                    break;
-                }
-            }
-
-            setVisibleRows(nextVisibleRows - 1);
-            setMaxContentRowsHeight(nextMaxContentRowsHeight);
+        if (scrollHeight <= clientHeight) {
+            return;
         }
-    }, [hoveredValues, prevHoveredValues]);
+
+        const nextVisibleRows = Math.floor(hovered.length * (clientHeight / scrollHeight));
+        setVisibleRows(Math.max(nextVisibleRows - 1, 1));
+    }, [hovered.length, hoveredValues, prevHoveredValues]);
 
     React.useEffect(() => {
         if (!contentRowsRef.current) {
@@ -180,11 +165,7 @@ export const DefaultTooltipContent = ({
                     />
                 </div>
             )}
-            <div
-                className={b('content-rows', {pinned})}
-                ref={contentRowsRef}
-                style={{maxHeight: maxContentRowsHeight}}
-            >
+            <div className={b('content-rows', {pinned})} ref={contentRowsRef}>
                 {/* eslint-disable-next-line complexity */}
                 {visibleHovered.map((seriesItem, i) => {
                     const {data, series, closest} = seriesItem;

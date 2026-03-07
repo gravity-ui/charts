@@ -7,6 +7,7 @@ import {Chart} from '../../../components';
 import {ChartStory} from '../../ChartStory';
 import {
     tooltipOverflowedRowsData,
+    tooltipOverflowedRowsHtmlData,
     tooltipRowRendererHtmlData,
     tooltipTotalsSumData,
     tooltipWithDateFormat,
@@ -54,6 +55,13 @@ export const OverflowedRows = {
     name: 'Overflowed Rows',
     args: {
         data: tooltipOverflowedRowsData,
+    },
+} satisfies Story;
+
+export const OverflowedRowsHtml = {
+    name: 'Overflowed Rows (HTML labels)',
+    args: {
+        data: tooltipOverflowedRowsHtmlData,
     },
 } satisfies Story;
 
