@@ -134,6 +134,10 @@ export const useShapes = (args: Args) => {
     React.useEffect(() => {
         countedRef.current++;
 
+        if (!boundsHeight || !boundsWidth) {
+            return;
+        }
+
         (async () => {
             const currentRun = countedRef.current;
 
