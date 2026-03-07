@@ -4,7 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
-import {tooltipOverflowedRowsData} from 'src/__stories__/__data__';
+import {tooltipOverflowedRowsData, tooltipOverflowedRowsHtmlData} from 'src/__stories__/__data__';
 import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -33,6 +33,17 @@ test.describe('Tooltip', () => {
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
         await bar.click();
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
+    test('More points row with HTML labels', async ({mount, page}) => {
+        await page.setViewportSize({width: 500, height: 280});
+        const component = await mount(<ChartTestStory data={tooltipOverflowedRowsHtmlData} />);
+        const bar = component.locator('.gcharts-bar-y').first();
+        await bar.hover();
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+        await bar.click();
+        await expect(tooltip).toHaveScreenshot();
     });
 
     test('Default date format', async ({page, mount}) => {

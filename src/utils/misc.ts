@@ -30,11 +30,3 @@ export function measurePerformance() {
         },
     };
 }
-
-export function hasVerticalScrollbar(node: HTMLElement | null) {
-    if (!node) {
-        return false;
-    }
-
-    return node.scrollHeight > node.clientHeight;
-}
