@@ -11,7 +11,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Core Dependencies
 
 - **d3** - Data visualization library
-
   - Used for scales (`scaleLinear`, `scaleBand`, `scaleUtc`, `scaleLog`, `scaleOrdinal`)
   - Shape generators (`d3.line()`, `d3.arc()`, `d3.area()`)
   - Data transformations (`d3.extent()`, `d3.group()`)
@@ -19,12 +18,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - DOM selections for shape rendering
 
 - **d3-sankey** - Sankey diagram layout algorithm
-
   - Used specifically for Sankey chart type
   - Computes node positions and link paths
 
 - **@gravity-ui/uikit** - Peer dependency
-
   - UI components library from Gravity UI ecosystem
   - Provides theming and base component primitives
   - Required for proper styling and interactions
@@ -266,19 +263,16 @@ The library uses a composable hook architecture where data flows through a serie
 To add a new chart type `foo`:
 
 1. **Define Types:** `src/types/chart/foo.ts`
-
    - Define `FooSeries<T>` interface with `type: 'foo'`
    - Add to `ChartSeries` union in `series.ts`
    - Add `FooSeriesOptions` to `ChartSeriesOptions`
 
 2. **Series Preparation:** `src/hooks/useSeries/prepare-foo.ts`
-
    - Implement `prepareFooSeries()` function
    - Add `PreparedFoo` type to `types.ts`
    - Add case to `prepareSeries()` in `prepareSeries.ts`
 
 3. **Shape Rendering:** `src/hooks/useShapes/foo/`
-
    - Create `index.tsx` with component
    - Create `prepare-data.ts` for calculations
    - Create `types.ts` for shape-specific types
