@@ -108,7 +108,7 @@ export const useChartDimensions = (args: Args) => {
     } = args;
 
     return React.useMemo(() => {
-        if (!preparedLegend || (!legendConfig && preparedLegend?.enabled)) {
+        if (!preparedLegend || !legendConfig) {
             return {boundsWidth: 0, boundsHeight: 0};
         }
 
