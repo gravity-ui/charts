@@ -125,9 +125,13 @@ export function useAxis(props: UseAxesProps) {
 
     const isAxesReady = axesStateReady.current;
     const result = React.useMemo(() => {
-        return isAxesReady ? {...axesState, setAxes} : {xAxis: null, yAxis: [], setAxes};
+        if (isAxesReady) {
+            return {...axesState, setAxes};
+        }
+
+        prevAxesStateValue.current = {xAxis: null, yAxis: []};
+        return {...prevAxesStateValue.current, setAxes};
     }, [isAxesReady, axesState]);
-    prevAxesStateValue.current = result;
 
     return result;
 }
