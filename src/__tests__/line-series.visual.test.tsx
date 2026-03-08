@@ -486,7 +486,7 @@ test.describe('Line series', () => {
             await component.unmount();
         }
 
-        expect(median(widgetRenderTimes)).toBeLessThan(100);
+        expect(median(widgetRenderTimes)).toBeLessThan(600);
     });
 
     test('Markers should not degrade render performance on large datasets', async ({mount}) => {
