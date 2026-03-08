@@ -25,18 +25,17 @@ export interface BaseDataLabels {
     style?: Partial<BaseTextStyle>;
     /**
      * @default 5
-     * */
+     */
     padding?: number;
     /**
      * @default false
-     * */
+     */
     allowOverlap?: boolean;
     /**
      * Allows to use any html-tags to display the content.
      * The element will be displayed outside the box of the SVG element.
-     *
      * @default false
-     * */
+     */
     html?: boolean;
     /** Formatting settings for labels. */
     format?: ValueFormat;
@@ -47,7 +46,7 @@ export interface BaseSeries {
     visible?: boolean;
     /**
      * Options for the series data labels, appearing next to each data point.
-     * */
+     */
     dataLabels?: BaseDataLabels;
     /** You can set the cursor to "pointer" if you have click events attached to the series, to signal to the user that the points and lines can be clicked. */
     cursor?: string;
@@ -59,7 +58,6 @@ export interface BaseSeries {
         valueFormat?: ValueFormat;
         /**
          * Enable or disable the visibility of this series in the tooltip.
-         *
          * @default true
          */
         enabled?: boolean;
@@ -78,7 +76,8 @@ export interface BaseSeriesData<T = MeaningfulAny> {
 }
 
 export interface BaseSeriesLegend extends ChartLegendItem {
-    /** For multiple series with the same groupId, only one label in the legend will be displayed.
+    /**
+     * For multiple series with the same groupId, only one label in the legend will be displayed.
      * The legend element uses the name and symbol from the first series of the group.
      */
     groupId?: string;

@@ -69,6 +69,7 @@
     "@gravity-ui/i18n": "^1.6.0",
     "@gravity-ui/icons": "^2.15.0",
     "d3": "^7.9.0",
+    "d3-selection": "^3.0.0",
     "d3-sankey": "^0.12.3",
     "lodash": "^4.17.21",
     "tslib": "^2.6.2"
@@ -99,6 +100,7 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "eslint": "^9.39.4",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-storybook": "^10.2.16",
     "eslint-plugin-testing-library": "^6.2.2",
     "globals": "^17.4.0",

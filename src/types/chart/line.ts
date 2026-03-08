@@ -33,13 +33,14 @@ export interface LineSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface LineSeriesLineBaseStyle {
-    /** Pixel width of the graph line.
-     *
+    /**
+     * Pixel width of the graph line.
      * @default 1 (for individual series).
      * For series within the range slider, values are inherited from the individual series by default.
      */
     lineWidth?: number;
-    /** Individual opacity for the line.
+    /**
+     * Individual opacity for the line.
      *
      * For series within the range slider, values are inherited from the individual series by default.
      */
@@ -73,7 +74,6 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
      * - `'connect'`: Connect points across null values (skip nulls in rendering)
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit the data point (creates gap in line)
-     *
      * @default 'skip'
      */
     nullMode?: 'connect' | 'zero' | 'skip';

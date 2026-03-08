@@ -1,4 +1,3 @@
-import globals from 'globals';
 import gravityBase from '@gravity-ui/eslint-config';
 import gravityClient from '@gravity-ui/eslint-config/client';
 import gravityImportOrder from '@gravity-ui/eslint-config/import-order';
@@ -6,11 +5,21 @@ import gravityPrettier from '@gravity-ui/eslint-config/prettier';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import storybook from 'eslint-plugin-storybook';
 import testingLibrary from 'eslint-plugin-testing-library';
+import globals from 'globals';
 
 export default [
     // Ignores (from former .eslintignore)
     {
-        ignores: ['storybook-static/**', 'dist/**'],
+        ignores: [
+            '**/node_modules/**',
+            'storybook-static/**',
+            'dist/**',
+            'playwright/.cache/**',
+            'playwright/.cache-docker/**',
+            'playwright-report/**',
+            'playwright-report-docker/**',
+            'test-results/**',
+        ],
     },
 
     // Gravity UI base configs
@@ -35,8 +44,7 @@ export default [
                     message: "Please use import React from 'react' instead.",
                 },
                 {
-                    selector:
-                        "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
+                    selector: "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
                     message: "Don't use React.FC",
                 },
             ],
@@ -58,9 +66,9 @@ export default [
         },
     },
 
-    // CJS root-level config files (gulpfile.js, jest.config.js, etc.)
+    // CJS files outside src/ (gulpfile.js, docs scripts, jest.config.js, etc.)
     {
-        files: ['*.js'],
+        files: ['**/*.js', '!src/**/*'],
         languageOptions: {
             sourceType: 'script',
             globals: {
@@ -72,9 +80,20 @@ export default [
         },
     },
 
-    // Allow devDependencies for root config files
+    // CJS mocks inside src/
     {
-        files: ['*.js', '*.mjs', '*.cjs'],
+        files: ['src/__mocks__/**/*.js'],
+        languageOptions: {
+            sourceType: 'script',
+            globals: {
+                ...globals.node,
+            },
+        },
+    },
+
+    // Allow devDependencies for config files
+    {
+        files: ['*.js', '*.mjs', '*.cjs', 'docs/**/*.js'],
         rules: {
             'import/no-extraneous-dependencies': ['error', {devDependencies: true}],
         },

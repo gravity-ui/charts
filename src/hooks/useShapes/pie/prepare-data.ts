@@ -229,7 +229,6 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
              * on the left side (x < 0) and shifts up by the label height when above the
              * horizontal center (y < 0). For SVG text, only the vertical shift is applied
              * to compensate for text baseline.
-             *
              * @param {number} angle - Angle in radians at which the label should be placed.
              * @returns {[number, number]} A tuple [x, y] relative to the pie center.
              */

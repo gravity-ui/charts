@@ -31,9 +31,8 @@ export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
             normal?: {
                 /**
                  * Enable or disable the point marker.
-                 *
                  * @default false
-                 * */
+                 */
                 enabled: boolean;
             };
         };
@@ -51,25 +50,25 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     data: AreaSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
-    /** Whether to stack the values of each series on top of each other.
+    /**
+     * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
-     *
      * @default undefined
-     * */
+     */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
     /** The main color of the series (hex, rgba) */
     color?: string;
-    /** Fill opacity for the area
-     *
+    /**
+     * Fill opacity for the area
      * @default 0.75
-     * */
+     */
     opacity?: number;
-    /** Pixel width of the graph line.
-     *
+    /**
+     * Pixel width of the graph line.
      * @default 1
-     * */
+     */
     lineWidth?: number;
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {
@@ -85,7 +84,6 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
      * - `'connect'`: Connect points across null values (skip nulls in rendering)
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit the data point (creates gap in area)
-     *
      * @default 'skip'
      */
     nullMode?: 'connect' | 'zero' | 'skip';

@@ -66,28 +66,24 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     dataLabels?: BaseSeries['dataLabels'] & {
         /**
          * The distance of the data label from the pie's edge.
-         *
          * @default 30
-         * */
+         */
         distance?: number;
         /**
          * The distance from the data label to the connector.
-         *
          * @default 5
-         * */
+         */
         connectorPadding?: number;
         /**
          * The method that is used to generate the connector path.
-         *
          * @default 'polyline'
-         * */
+         */
         connectorShape?: ConnectorShape;
         /**
          * How to interpolate between two-dimensional [x, y] points for a connector.
          * Works only if connectorShape equals to 'polyline'
-         *
          * @default 'basic'
-         * */
+         */
         connectorCurve?: ConnectorCurve;
     };
     /** Individual series legend options. Has higher priority than legend options in chart data */
@@ -96,16 +92,14 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     };
     /**
      * Function for adding custom svg nodes for a series
-     *
-     * @return BaseType
-     * */
+     * @returns BaseType
+     */
     renderCustomShape?: (args: {series: {innerRadius: number}}) => BaseType | Promise<BaseType>;
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit segments with null values (don't render them)
-     *
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';

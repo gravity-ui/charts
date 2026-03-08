@@ -10,11 +10,10 @@ const isStringValueInPixel = (value = '') => {
 
 /**
  * Calculates a numeric property based on the given arguments.
- *
- * @param {Object} args - The arguments for the calculation.
+ * @param {object} args - The arguments for the calculation.
  * @param {string | number | null} args.value - The value to calculate the property for.
  * @param {number} args.base - The base value to use in the calculation.
- * @return {number | undefined} The calculated numeric property, or undefined if the value is invalid.
+ * @returns {number | undefined} The calculated numeric property, or undefined if the value is invalid.
  * @example
  * const result1 = calculateNumericProperty({value: 1});
  * console.log(result1); // Output: 1
