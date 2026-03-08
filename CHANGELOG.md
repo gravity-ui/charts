@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.4](https://github.com/gravity-ui/charts/compare/v1.38.3...v1.38.4) (2026-03-08)
+
+
+### Bug Fixes
+
+* resolve chart white screen by adding legendConfig readiness check ([#464](https://github.com/gravity-ui/charts/issues/464)) ([f380798](https://github.com/gravity-ui/charts/commit/f380798b09d6f263e8e4e3cb814abf956622e644))
+
 ## [1.38.3](https://github.com/gravity-ui/charts/compare/v1.38.2...v1.38.3) (2026-03-07)
 
 
