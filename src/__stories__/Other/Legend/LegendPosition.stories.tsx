@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {Meta} from '@storybook/react-webpack5';
+import type {Meta} from '@storybook/react';
 
 import {ChartStory} from '../../ChartStory';
 import {legendPositionData} from '../../__data__';

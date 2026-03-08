@@ -1,4 +1,4 @@
-import type {Meta, StoryObj} from '@storybook/react-webpack5';
+import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import type {ChartData} from '../../types';

@@ -85,6 +85,7 @@
     "@gravity-ui/uikit": "^7.4.0",
     "@playwright/experimental-ct-react": "^1.56.1",
     "@playwright/test": "^1.56.1",
+    "@storybook/react": "^10.2.16",
     "@storybook/addon-a11y": "^10.2.16",
     "@storybook/addon-docs": "^10.2.16",
     "@storybook/react-vite": "^10.2.16",

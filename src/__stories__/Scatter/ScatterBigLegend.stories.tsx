@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {Meta, StoryObj} from '@storybook/react-webpack5';
+import type {Meta, StoryObj} from '@storybook/react';
 import random from 'lodash/random';
 import range from 'lodash/range';
 
