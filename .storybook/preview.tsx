@@ -2,7 +2,7 @@ import React from 'react';
 
 import {Lang, configure} from '@gravity-ui/uikit';
 import {Controls, Description, Primary, Subtitle, Title} from '@storybook/addon-docs/blocks';
-import type {Preview} from '@storybook/react-webpack5';
+import type {Preview} from '@storybook/react-vite';
 import {MINIMAL_VIEWPORTS} from 'storybook/viewport';
 
 import {WithContext} from './decorators/withContext';

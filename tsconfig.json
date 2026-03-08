@@ -7,7 +7,7 @@
     "jsx": "react",
     "baseUrl": ".",
     "importHelpers": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "paths": {
       "~playwright/*": ["playwright/*"]

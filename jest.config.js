@@ -11,7 +11,7 @@ const esModules = [
 module.exports = {
     ...createJsWithTsPreset(),
     transform: {
-        '^.+\\.tsx?$': ['ts-jest', {useESM: true}],
+        '^.+\\.tsx?$': ['ts-jest', {useESM: true, tsconfig: 'tsconfig.jest.json'}],
         '^.+\\.js$': ['babel-jest', {presets: ['@babel/preset-env']}],
     },
     transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],

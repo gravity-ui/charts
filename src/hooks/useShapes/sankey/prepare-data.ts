@@ -22,7 +22,7 @@ export function prepareSankeyData(args: {
 
     const sankeyGenerator = sankey<SankeySeriesData, SankeyItemLink>()
         .nodeId((d) => d.name)
-        .nodeSort((d) => d.index)
+        .nodeSort((a, b) => (a.index ?? 0) - (b.index ?? 0))
         .nodeWidth(15)
         .nodePadding(10)
         .extent([
