@@ -43,6 +43,7 @@ export type ShapePoint = {
     data: ChartSeriesData;
     series: ChartSeries;
     subTotal?: number;
+    sourceX?: number;
 };
 
 function getClosestYIndex(items: ShapePoint[], y: number) {
@@ -86,6 +87,24 @@ function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     );
 
     const closestPoints = sort(groupedBySeries, (p) => p.y0);
+
+    const pointsWithSourceX = closestPoints.filter((p) => p.sourceX !== undefined);
+    const uniqueSourceX = new Set(pointsWithSourceX.map((p) => p.sourceX));
+
+    if (pointsWithSourceX.length > 1 && uniqueSourceX.size > 1) {
+        const sortedBySourceX = sort(pointsWithSourceX, (p) => p.sourceX!);
+        const closestSourceXIdx = bisector<ShapePoint, number>((p) => p.sourceX!).center(
+            sortedBySourceX,
+            x,
+        );
+        const closestSourceX = sortedBySourceX[closestSourceXIdx]?.sourceX;
+
+        return closestPoints.map((p) => ({
+            ...p,
+            closest: p.sourceX === closestSourceX,
+        }));
+    }
+
     const closestYIndex = getClosestYIndex(closestPoints, y);
     return closestPoints.map((p, i) => ({
         ...p,
@@ -152,13 +171,23 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 break;
             }
             case 'bar-x': {
-                const barXPoints = (list as PreparedBarXData[]).map<ShapePoint>((d) => ({
-                    data: d.data,
-                    series: d.series as BarXSeries,
-                    x: d.x + d.width / 2,
-                    y0: d.y,
-                    y1: d.y + d.height,
-                }));
+                const barXList = list as PreparedBarXData[];
+                const barXGroups = groupBy(barXList, (d) => String(d.data.x));
+                const barXPoints: ShapePoint[] = [];
+                Object.values(barXGroups).forEach((group) => {
+                    const groupCenterX =
+                        group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
+                    group.forEach((d) => {
+                        barXPoints.push({
+                            data: d.data,
+                            series: d.series as BarXSeries,
+                            x: groupCenterX,
+                            y0: d.y,
+                            y1: d.y + d.height,
+                            sourceX: d.x + d.width / 2,
+                        });
+                    });
+                });
                 closestPointsByXValue.push(...barXPoints);
                 break;
             }
