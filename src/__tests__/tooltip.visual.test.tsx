@@ -284,7 +284,7 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
-    test.only('Grouped bar-x with line series', async ({mount, page}) => {
+    test('Grouped bar-x with line series', async ({mount, page}) => {
         const data = cloneDeep(barXGroupedColumnsData);
         data.series.data.push({
             type: 'line',
