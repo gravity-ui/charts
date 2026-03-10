@@ -161,7 +161,7 @@ export function useChartInnerProps(props: Props) {
         });
     }, [allPreparedSeries, normalizedXAxis, normalizedYAxis, effectiveZoomState]);
 
-    const {legendConfig, legendItems, legendReady} = useLegend({
+    const {legendConfig, legendItems} = useLegend({
         width,
         height,
         preparedChart,
@@ -287,7 +287,6 @@ export function useChartInnerProps(props: Props) {
         isOutsideBounds,
         legendConfig,
         legendItems,
-        legendReady,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
