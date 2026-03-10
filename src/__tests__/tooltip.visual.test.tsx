@@ -4,7 +4,11 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
-import {tooltipOverflowedRowsData, tooltipOverflowedRowsHtmlData} from 'src/__stories__/__data__';
+import {
+    barXGroupedColumnsData,
+    tooltipOverflowedRowsData,
+    tooltipOverflowedRowsHtmlData,
+} from 'src/__stories__/__data__';
 import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -277,6 +281,27 @@ test.describe('Tooltip', () => {
         const lineBox = await getLocatorBoundingBox(plotLine);
         await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + lineBox.height / 2);
         const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
+
+    test.only('Grouped bar-x with line series', async ({mount, page}) => {
+        const data = cloneDeep(barXGroupedColumnsData);
+        data.series.data.push({
+            type: 'line',
+            name: 'Average',
+            data: [
+                {x: 0, y: 15},
+                {x: 1, y: 18},
+                {x: 2, y: 20},
+                {x: 3, y: 17},
+                {x: 4, y: 12},
+            ],
+        });
+
+        const component = await mount(<ChartTestStory data={data} />);
+        const bars = component.locator('.gcharts-bar-x__segment');
+        const tooltip = page.locator('.gcharts-tooltip');
+        await bars.nth(1).hover();
         await expect(tooltip).toHaveScreenshot();
     });
 });

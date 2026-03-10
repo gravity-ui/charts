@@ -92,16 +92,23 @@ function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     const uniqueSourceX = new Set(pointsWithSourceX.map((p) => p.sourceX));
 
     if (pointsWithSourceX.length > 1 && uniqueSourceX.size > 1) {
-        const sortedBySourceX = sort(pointsWithSourceX, (p) => p.sourceX!);
-        const closestSourceXIdx = bisector<ShapePoint, number>((p) => p.sourceX!).center(
+        const sortedBySourceX = sort(pointsWithSourceX, (p) => p.sourceX ?? 0);
+        const closestSourceXIdx = bisector<ShapePoint, number>((p) => p.sourceX ?? 0).center(
             sortedBySourceX,
             x,
         );
         const closestSourceX = sortedBySourceX[closestSourceXIdx]?.sourceX;
 
+        const candidates = closestPoints.filter(
+            (p) => p.sourceX === undefined || p.sourceX === closestSourceX,
+        );
+        const sortedCandidates = sort(candidates, (p) => p.y0);
+        const winnerIdx = getClosestYIndex(sortedCandidates, y);
+        const winner = sortedCandidates[winnerIdx === -1 ? 0 : winnerIdx];
+
         return closestPoints.map((p) => ({
             ...p,
-            closest: p.sourceX === closestSourceX,
+            closest: p === winner,
         }));
     }
 
