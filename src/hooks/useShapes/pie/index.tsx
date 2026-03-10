@@ -185,8 +185,8 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
                             state: inactiveOptions,
                             active: Boolean(
                                 !inactiveEnabled ||
-                                    !selectedSeriesId ||
-                                    selectedSeriesId === d.data.series.id,
+                                !selectedSeriesId ||
+                                selectedSeriesId === d.data.series.id,
                             ),
                             datum: d.data,
                         });
@@ -205,8 +205,8 @@ export function PieSeriesShapes(args: PreparePieSeriesArgs) {
                         state: inactiveOptions,
                         active: Boolean(
                             !inactiveEnabled ||
-                                !selectedSeriesId ||
-                                selectedSeriesId === d.series.id,
+                            !selectedSeriesId ||
+                            selectedSeriesId === d.series.id,
                         ),
                         datum: d,
                     });

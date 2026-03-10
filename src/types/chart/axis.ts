@@ -13,11 +13,13 @@ export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export interface ChartAxisLabels {
     /** Enable or disable the axis labels. */
     enabled?: boolean;
-    /** The label's pixel distance from the perimeter of the plot area.
+    /**
+     * The label's pixel distance from the perimeter of the plot area.
      * @default 10
      */
     margin?: number;
-    /** The pixel padding for axis labels, to ensure white space between them.
+    /**
+     * The pixel padding for axis labels, to ensure white space between them.
      * @default 4
      */
     padding?: number;
@@ -30,11 +32,11 @@ export interface ChartAxisLabels {
      * As the chart gets narrower, it will start rotating the labels -45 degrees.
      *
      * Does not apply to html labels.
-     *
      * @default true for all axis types except `datetime` (defaults to false)
      */
     autoRotation?: boolean;
-    /** Rotation of the labels in degrees.
+    /**
+     * Rotation of the labels in degrees.
      *
      * Does not apply to html labels.
      * @default 0
@@ -43,11 +45,12 @@ export interface ChartAxisLabels {
     /**
      * Allows to use any html-tags to display labels content. Supports only for axis with type "category".
      * @default false
-     * */
+     */
     html?: boolean;
-    /** The maximum width of the axis labels(absolute or relative to the chart area).
+    /**
+     * The maximum width of the axis labels(absolute or relative to the chart area).
      * If more than that, it collapses into three points.
-     * */
+     */
     maxWidth?: number | string;
 }
 
@@ -90,27 +93,30 @@ export interface ChartAxisTitle {
     text?: string;
     /** CSS styles for the title */
     style?: Partial<BaseTextStyle>;
-    /** The pixel distance between the axis labels or line and the title.
+    /**
+     * The pixel distance between the axis labels or line and the title.
      * @default 4 for horizontal axes, 8 for vertical
      */
     margin?: number;
     /** Alignment of the title. */
     align?: ChartAxisTitleAlignment;
-    /** Allows limiting of the contents of a title block to the specified number of lines.
+    /**
+     * Allows limiting of the contents of a title block to the specified number of lines.
      * @default 1
      */
     maxRowCount?: number;
 }
 
 export interface ChartAxisTickMarks {
-    /** Enable or disable the tick marks on the axis.
+    /**
+     * Enable or disable the tick marks on the axis.
      *
      * Note: tick marks are always hidden when the axis `visible` is set to `false`.
-     *
      * @default false
      */
     enabled?: boolean;
-    /** The length of the tick marks in pixels (perpendicular to the axis).
+    /**
+     * The length of the tick marks in pixels (perpendicular to the axis).
      * @default 6
      */
     length?: number;
@@ -149,33 +155,38 @@ export interface ChartAxis {
      * Note: min/max is not supported for category axes in waterfall and heatmap visualizations.
      */
     max?: number;
-    /** The grid lines settings.
+    /**
+     * The grid lines settings.
      * Unavailable for some visualizations, such as a heatmap.
      */
     grid?: {
-        /** Enable or disable the grid lines.
+        /**
+         * Enable or disable the grid lines.
          * @default true
          */
         enabled?: boolean;
     };
     ticks?: {
-        /** Pixel interval of the tick marks. Not applicable to categorized axis.
+        /**
+         * Pixel interval of the tick marks. Not applicable to categorized axis.
          * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
-         *
          * @deprecated use `interval` instead
-         * */
+         */
         pixelInterval?: number;
-        /** Interval of the tick marks(absolute or relative to the chart area). Not applicable to categorized axis.
-         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data. */
+        /**
+         * Interval of the tick marks(absolute or relative to the chart area). Not applicable to categorized axis.
+         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
+         */
         interval?: number | string;
     };
-    /** Padding of the max value relative to the length of the axis.
+    /**
+     * Padding of the max value relative to the length of the axis.
      * A padding of 0.05 will make a 100px axis 5px longer.
+     *
      *
      * Does not apply:
      * - for series with data normalization along on a specific axis (stacking: 'percent')
      * - to the X axis when rangeSlider is used
-     *
      * @default 0.05 for Y axis, 0.01 for X axis
      */
     maxPadding?: number;
@@ -183,14 +194,16 @@ export interface ChartAxis {
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */
     plotBands?: AxisPlotBand[];
-    /** Small perpendicular marks on the axis line at each tick position.
+    /**
+     * Small perpendicular marks on the axis line at each tick position.
      *
      * Hidden when the axis `visible` is set to `false`.
      */
     tickMarks?: ChartAxisTickMarks;
     /** Whether axis, including axis title, line, tick marks, and labels, should be visible. */
     visible?: boolean;
-    /** Setting the order of the axis values. It is not applied by default.
+    /**
+     * Setting the order of the axis values. It is not applied by default.
      * the "reverse" value is needed to use the reverse order without sorting
      */
     order?: 'sortAsc' | 'sortDesc' | 'reverse';
@@ -203,7 +216,6 @@ export interface ChartAxis {
      *
      * Use `startOnTick: false` to make the chart start exactly at the data minimum,
      * preventing gaps at the chart start.
-     *
      * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     startOnTick?: boolean;
@@ -215,7 +227,6 @@ export interface ChartAxis {
      * if the data maximum doesn't align with the tick.
      *
      * Use `endOnTick: false` to make the chart end closer to the data maximum.
-     *
      * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     endOnTick?: boolean;
@@ -243,18 +254,21 @@ export interface AxisPlot {
     /**
      * Individual opacity for the line.
      * @default 1
-     * */
+     */
     opacity?: number;
     /* Text labels for the plot line/band */
     label?: {
         text: string;
         style?: Partial<BaseTextStyle>;
-        /** The pixel padding for label.
+        /**
+         * The pixel padding for label.
          * @default 5
          */
         padding?: number;
-        /** Can be used for the UI automated test.
-         * It is assigned as a data-qa attribute to an element. */
+        /**
+         * Can be used for the UI automated test.
+         * It is assigned as a data-qa attribute to an element.
+         */
         qa?: string;
     };
     /** Custom data associated with the plot line/band, accessible in tooltip renderer args. */
@@ -266,9 +280,10 @@ export interface AxisPlotLine extends AxisPlot {
     value?: number;
     /** The color of the plot line (hex, rgba). */
     color?: string;
-    /** Pixel width of the plot line.
+    /**
+     * Pixel width of the plot line.
      * @default 1
-     * */
+     */
     width?: number;
     /** Option for line stroke style. */
     dashStyle?: DashStyle;
@@ -296,24 +311,28 @@ export interface AxisPlotBand extends AxisPlot {
 }
 
 export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label' | 'custom'> {
-    /** Whether the crosshair should snap to the point or follow the pointer independent of points.
+    /**
+     * Whether the crosshair should snap to the point or follow the pointer independent of points.
      * @default true
      */
     snap?: boolean;
-    /** Enable or disable the axis crosshair.
+    /**
+     * Enable or disable the axis crosshair.
      * @default false
      */
     enabled?: boolean;
 }
 
 export interface ChartYAxisTitle extends ChartAxisTitle {
-    /** Rotation of the title in degrees.
+    /**
+     * Rotation of the title in degrees.
      * Currently, the available values are only for rotation in multiples of 90 degrees.
      *
      * The default values are -90 for the left axis and 90 for the right.
      */
     rotation?: 0 | 90 | -90;
-    /** Interval of the tick marks(absolute or relative to the chart area).
+    /**
+     * Interval of the tick marks(absolute or relative to the chart area).
      *
      * For a title with rotation = 0, the relative value is calculated based on the chart width, otherwise on the chart height.
      * The default value for the title with rotation: 0 is 20%, for the rest - not defined.
@@ -322,9 +341,8 @@ export interface ChartYAxisTitle extends ChartAxisTitle {
     /**
      * Allows to use any html-tags to display the content.
      * The element will be displayed outside the box of the SVG element.
-     *
      * @default false
-     * */
+     */
     html?: boolean;
 }
 

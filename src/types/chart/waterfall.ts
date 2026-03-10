@@ -54,7 +54,6 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
      *
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit data points with null values (don't render them)
-     *
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';

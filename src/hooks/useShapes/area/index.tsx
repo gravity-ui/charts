@@ -149,8 +149,8 @@ export const AreaSeriesShapes = (args: Args) => {
                     state: inactiveOptions,
                     active: Boolean(
                         !inactiveEnabled ||
-                            !selectedSeriesIds.length ||
-                            selectedSeriesIds.includes(d.id),
+                        !selectedSeriesIds.length ||
+                        selectedSeriesIds.includes(d.id),
                     ),
                     datum: d,
                 });
@@ -162,8 +162,8 @@ export const AreaSeriesShapes = (args: Args) => {
                     state: inactiveOptions,
                     active: Boolean(
                         !inactiveEnabled ||
-                            !selectedSeriesIds.length ||
-                            selectedSeriesIds.includes(d.series.id),
+                        !selectedSeriesIds.length ||
+                        selectedSeriesIds.includes(d.series.id),
                     ),
                     datum: d,
                 });
@@ -186,8 +186,8 @@ export const AreaSeriesShapes = (args: Args) => {
                 if (d.point.series.marker.states.normal.enabled) {
                     const isActive = Boolean(
                         !inactiveEnabled ||
-                            !selectedSeriesIds.length ||
-                            selectedSeriesIds.includes(d.point.series.id),
+                        !selectedSeriesIds.length ||
+                        selectedSeriesIds.includes(d.point.series.id),
                     );
                     setActiveState<MarkerData>({
                         element: list[index],

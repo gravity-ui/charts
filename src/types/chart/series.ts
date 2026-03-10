@@ -53,16 +53,14 @@ export interface DataLabelRendererData<T = MeaningfulAny> {
 export interface BasicHoverState {
     /**
      * Enable separate styles for the hovered series.
-     *
      * @default true
-     * */
+     */
     enabled?: boolean;
     /**
      * How much to brighten/darken the point on hover. Use positive to brighten, negative to darken.
      * The behavior of this property is dependent on the implementing color space ([more details](https://d3js.org/d3-color#color_brighter)).
      * For example in case of using rgb color you can use floating point number from `-5.0` to `5.0`.
      * Rgb color space is used by default.
-     *
      * @default 0.3
      */
     brightness?: number;
@@ -71,15 +69,13 @@ export interface BasicHoverState {
 export interface BasicInactiveState {
     /**
      * Enable separate styles for the inactive series.
-     *
      * @default true
-     * */
+     */
     enabled?: boolean;
     /**
      * Opacity of series elements (bars, data labels)
-     *
      * @default 0.5
-     * */
+     */
     opacity?: number;
 }
 
@@ -92,19 +88,19 @@ export interface ChartSeriesOptions {
         renderer?: (args: DataLabelRendererData) => React.SVGTextElementAttributes<SVGTextElement>;
     };
     'bar-x'?: {
-        /** The maximum allowed pixel width for a column.
+        /**
+         * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
-         *
          * @default 50
          */
         barMaxWidth?: number;
-        /** Padding between each column or bar, in x axis units.
-         *
+        /**
+         * Padding between each column or bar, in x axis units.
          * @default 0.1
-         * */
+         */
         barPadding?: number;
-        /** Padding between each value groups, in x axis units
-         *
+        /**
+         * Padding between each value groups, in x axis units
          * @default 0.2
          */
         groupPadding?: number;
@@ -119,16 +115,16 @@ export interface ChartSeriesOptions {
          */
         stackGap?: number;
         dataSorting?: {
-            /** Determines what data value should be used to sort by.
+            /**
+             * Determines what data value should be used to sort by.
              * Possible values are undefined to disable, "name" to sort by series name or "y"
-             *
              * @default undefined
-             * */
+             */
             key?: 'name' | 'y' | undefined;
-            /** Sorting direction.
-             *
+            /**
+             * Sorting direction.
              * @default 'asc'
-             * */
+             */
             direction?: 'asc' | 'desc';
         };
         /** Options for the series states that provide additional styling information to the series. */
@@ -138,25 +134,24 @@ export interface ChartSeriesOptions {
         };
     };
     'bar-y'?: {
-        /** The maximum allowed pixel width for a column.
+        /**
+         * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
-         *
          * @default 50
          */
         barMaxWidth?: number;
-        /** Padding between each column or bar, in x axis units.
-         *
+        /**
+         * Padding between each column or bar, in x axis units.
          * @default 0.1
-         * */
+         */
         barPadding?: number;
-        /** Padding between each value groups, in x axis units
-         *
+        /**
+         * Padding between each value groups, in x axis units
          * @default 0.2
          */
         groupPadding?: number;
         /**
          * The width of the border surrounding each bar.
-         *
          * @default 0
          */
         borderWidth?: number;
@@ -175,16 +170,16 @@ export interface ChartSeriesOptions {
          */
         stackGap?: number;
         dataSorting?: {
-            /** Determines what data value should be used to sort by.
+            /**
+             * Determines what data value should be used to sort by.
              * Possible values are undefined to disable, "name" to sort by series name or "x"
-             *
              * @default undefined
-             * */
+             */
             key?: 'name' | 'x' | undefined;
-            /** Sorting direction.
-             *
+            /**
+             * Sorting direction.
              * @default 'asc'
-             * */
+             */
             direction?: 'asc' | 'desc';
         };
         /** Options for the series states that provide additional styling information to the series. */
@@ -216,10 +211,10 @@ export interface ChartSeriesOptions {
         };
     };
     line?: {
-        /** Pixel width of the graph line.
-         *
+        /**
+         * Pixel width of the graph line.
          * @default 1
-         * */
+         */
         lineWidth?: number;
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
@@ -233,27 +228,27 @@ export interface ChartSeriesOptions {
         };
         /** Options for the point markers of line series */
         marker?: PointMarkerOptions;
-        /** Options for line style
-         *
+        /**
+         * Options for line style
          * @default 'Solid'
-         * */
+         */
         dashStyle?: DashStyle;
-        /** Options for line cap style
-         *
+        /**
+         * Options for line cap style
          * @default 'round' when dashStyle is not 'solid', 'none' when dashStyle is not 'solid'
-         * */
+         */
         linecap?: `${LineCap}`;
-        /** Defines the shape to be used at the corners of the line
-         *
+        /**
+         * Defines the shape to be used at the corners of the line
          * @default 'round' when dashStyle is not 'solid', 'unset' when dashStyle is not 'solid'
-         * */
+         */
         linejoin?: `${LineJoin}`;
     };
     area?: {
-        /** Pixel width of the graph line.
-         *
+        /**
+         * Pixel width of the graph line.
          * @default 1
-         * */
+         */
         lineWidth?: number;
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
@@ -276,16 +271,16 @@ export interface ChartSeriesOptions {
         };
     };
     waterfall?: {
-        /** The maximum allowed pixel width for a column.
+        /**
+         * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
-         *
          * @default 50
          */
         barMaxWidth?: number;
-        /** Padding between each column or bar, in x axis units.
-         *
+        /**
+         * Padding between each column or bar, in x axis units.
          * @default 0.1
-         * */
+         */
         barPadding?: number;
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
@@ -314,7 +309,6 @@ export interface ChartSeriesOptions {
         };
         /**
          * The width of the border surrounding each cell.
-         *
          * @default 0
          */
         borderWidth?: number;
@@ -334,7 +328,6 @@ export interface ChartSeriesOptions {
 export type ChartSeriesRangeSliderOptions = {
     /**
      * Enable or disable the visibility of this series in the Range Slider.
-     *
      * @default true
      */
     visible?: boolean;

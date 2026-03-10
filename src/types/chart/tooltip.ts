@@ -127,8 +127,9 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     headerFormat?: ValueFormat | CustomFormat;
 }
 
-export interface ChartTooltipTotalsAggregationArgs<T = MeaningfulAny>
-    extends ChartTooltipRendererArgs<T> {}
+export interface ChartTooltipTotalsAggregationArgs<
+    T = MeaningfulAny,
+> extends ChartTooltipRendererArgs<T> {}
 
 export type ChartTooltipTotalsBuiltInAggregation =
     (typeof TOOLTIP_TOTALS_BUILT_IN_AGGREGATION)[keyof typeof TOOLTIP_TOTALS_BUILT_IN_AGGREGATION];
@@ -151,9 +152,11 @@ export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
     renderer?: (args: ChartTooltipRendererArgs<T>) => React.ReactElement | null;
-    /** Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
+    /**
+     * Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
      * It is useful in cases where you need to display additional information, but keep the general format of the tooltip.
-     * If a string is returned, it will be interpreted as raw HTML and inserted without escaping. */
+     * If a string is returned, it will be interpreted as raw HTML and inserted without escaping.
+     */
     rowRenderer?: ((args: ChartTooltipRowRendererArgs) => React.ReactElement | string) | null;
     pin?: {
         enabled?: boolean;
@@ -185,7 +188,9 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /** Formatting settings for totals tooltip value. */
         valueFormat?: ValueFormat;
     };
-    /** Can be used for the UI automated test.
-     * It is assigned as a data-qa attribute to an element. */
+    /**
+     * Can be used for the UI automated test.
+     * It is assigned as a data-qa attribute to an element.
+     */
     qa?: string;
 }

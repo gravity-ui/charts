@@ -22,7 +22,6 @@ export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
     y?: string | number | null;
     /**
      * Corresponding value of axis category.
-     *
      * @deprecated use `x` or `y` instead
      */
     category?: string;
@@ -52,7 +51,6 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
      *
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit data points with null values (don't render them)
-     *
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';

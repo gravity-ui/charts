@@ -66,7 +66,6 @@ type GroupedSeries = Map<
     Record<XValue, Record<StackId, {data: PreparedBarXSeriesData; series: PreparedBarXSeries}[]>>
 >;
 
-// eslint-disable-next-line complexity
 export const prepareBarXData = async (args: {
     series: PreparedBarXSeries[];
     seriesOptions: PreparedSeriesOptions;

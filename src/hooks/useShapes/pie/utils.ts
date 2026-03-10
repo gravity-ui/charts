@@ -26,7 +26,6 @@ export function getCurveFactory(data: PreparedPieData): CurveFactory | undefined
  * Inscribed angle at vertex A (opposite side/chord BC): the angle between rays AB and AC.
  *
  * The order of B and C does not affect the result.
- *
  * @see: https://en.wikipedia.org/wiki/Inscribed_angle
  * @returns The angle in degrees, in the range [0, 180].
  */

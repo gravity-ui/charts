@@ -39,7 +39,6 @@ export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
     };
     /**
      * The width of the border surrounding each cell.
-     *
      * @default 0
      */
     borderWidth?: number;
@@ -52,7 +51,6 @@ export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
      *
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit data points with null values (show gaps)
-     *
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';

@@ -22,7 +22,6 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     y?: string | number | null;
     /**
      * Corresponding value of axis category.
-     *
      * @deprecated use `x` or `y` instead
      */
     category?: string;
@@ -44,27 +43,26 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 0
      */
     borderRadius?: number;
-    /** Whether to stack the values of each series on top of each other.
+    /**
+     * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
-     *
      * @default undefined
-     * */
+     */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
-    /** Whether to group non-stacked columns or to let them render independent of each other.
+    /**
+     * Whether to group non-stacked columns or to let them render independent of each other.
      * When false columns will be laid out individually and overlap each other.
-     *
      * @default true
-     * */
+     */
     grouping?: boolean;
     dataLabels?: BaseSeries['dataLabels'] &
         ChartSeriesOptions['dataLabels'] & {
             /**
              * Whether to align the data label inside or outside the box
-             *
              * @default false
-             * */
+             */
             inside?: boolean;
         };
     /** Individual series legend options. Has higher priority than legend options in widget data */
@@ -78,7 +76,6 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
      *
      * - `'skip'`: Omit data points with null values (no bar shown)
      * - `'zero'`: Treat null values as zero
-     *
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';

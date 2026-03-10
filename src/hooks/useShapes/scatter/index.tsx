@@ -84,8 +84,8 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
                 if (d.point.series.marker.states.normal.enabled) {
                     const isActive = Boolean(
                         !inactiveEnabled ||
-                            !selectedSeriesId ||
-                            selectedSeriesId === d.point.series.id,
+                        !selectedSeriesId ||
+                        selectedSeriesId === d.point.series.id,
                     );
                     setActiveState<MarkerData>({
                         element: list[index],
