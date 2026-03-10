@@ -41,24 +41,26 @@ export function hasAtLeastOneSeriesDataPerPlot(
     return [...hasDataMap.values()].every((hasData) => hasData);
 }
 
-export function useAsyncState<T>(value: T, setState: () => Promise<T>) {
+export function useAsyncState<T>(value: T, setState: () => Promise<T>, isReady = true) {
     const [stateValue, setValue] = React.useState<T>(value);
     const countedRef = React.useRef(0);
     const prevValue = React.useRef(value);
-    const ready = React.useRef(false);
     React.useEffect(() => {
+        // Always increment to invalidate any in-flight run from the previous cycle.
         countedRef.current++;
+        if (!isReady) {
+            return;
+        }
+        const currentRun = countedRef.current;
         (async function () {
-            const currentRun = countedRef.current;
             const newValue = await setState();
 
-            ready.current = true;
             if (countedRef.current === currentRun && !isEqual(prevValue.current, newValue)) {
                 setValue(newValue);
                 prevValue.current = newValue;
             }
         })();
-    }, [setState]);
+    }, [setState, isReady]);
 
     return stateValue;
 }

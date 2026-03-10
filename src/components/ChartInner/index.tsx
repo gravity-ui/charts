@@ -210,7 +210,11 @@ export const ChartInner = (props: ChartInnerProps) => {
         }
         return items;
     }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSeries, preparedSplit, yAxis, yScale]);
-    const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems);
+    // Gate axis data computation until the legend has been computed at least once.
+    // Using legendConfig (undefined → value, never reverts) avoids false→true toggling
+    // on every zoom/range-slider interaction that would otherwise stall axis rendering.
+    const axisDataReady = !preparedLegend?.enabled || Boolean(legendConfig);
+    const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems, axisDataReady);
 
     const setXAxisDataItems = React.useCallback(async () => {
         const items: AxisXData[] = [];
@@ -242,7 +246,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         yAxis,
     ]);
-    const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
+    const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems, axisDataReady);
 
     React.useEffect(() => {
         if (!initialized && xScale) {
@@ -311,7 +315,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
                 ref={plotRef}
             >
-                {xScale && xAxisDataItems.length && (
+                {Boolean(xScale && xAxisDataItems.length) && (
                     <React.Fragment>
                         {xAxisDataItems.map((axisData) => {
                             return (

@@ -30,18 +30,16 @@ export function useLegend({
     });
     const legendStateRunRef = React.useRef(0);
     const prevLegendStateValue = React.useRef(legendState);
-    const legendStateReady = React.useRef(false);
 
     React.useEffect(() => {
         legendStateRunRef.current++;
-        legendStateReady.current = false;
+        const currentRun = legendStateRunRef.current;
+
+        if (!preparedLegend) {
+            return;
+        }
 
         (async function () {
-            const currentRun = legendStateRunRef.current;
-            if (!preparedLegend) {
-                return;
-            }
-
             const newStateValue = await getLegendComponents({
                 chartWidth: width,
                 chartHeight: height,
@@ -55,8 +53,6 @@ export function useLegend({
                     setLegend(newStateValue);
                     prevLegendStateValue.current = newStateValue;
                 }
-
-                legendStateReady.current = true;
             }
         })();
     }, [height, preparedChart.margin, preparedLegend, preparedSeries, width]);
