@@ -7,6 +7,7 @@ import set from 'lodash/set';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     barXBasicData,
+    barXGroupedColumnsData,
     barXLinearData,
     barXNullModeSkipCategoryXData,
     barXNullModeSkipLinearXData,
@@ -481,5 +482,22 @@ test.describe('Bar-x series', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Tooltip', () => {
+        test('Grouped series tooltip', async ({mount, page}) => {
+            const component = await mount(<ChartTestStory data={barXGroupedColumnsData} />);
+            const bars = component.locator('.gcharts-bar-x__segment');
+            const tooltip = page.locator('.gcharts-tooltip');
+
+            await bars.nth(0).hover();
+            await expect(tooltip).toHaveScreenshot();
+
+            await bars.nth(1).hover();
+            await expect(tooltip).toHaveScreenshot();
+
+            await bars.nth(2).hover();
+            await expect(tooltip).toHaveScreenshot();
+        });
     });
 });
