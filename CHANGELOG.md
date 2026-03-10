@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.5](https://github.com/gravity-ui/charts/compare/v1.38.4...v1.38.5) (2026-03-10)
+
+
+### Bug Fixes
+
+* resolve async legend race condition causing blank chart on load ([#470](https://github.com/gravity-ui/charts/issues/470)) ([86756dc](https://github.com/gravity-ui/charts/commit/86756dcdce4b4626ec24f45b2b61453bebeed5d1))
+* show all series in grouped bar-x tooltip and highlight the hovered one ([#468](https://github.com/gravity-ui/charts/issues/468)) ([ab7ca49](https://github.com/gravity-ui/charts/commit/ab7ca4958f62a06d68336479d2fd6d80f98c3f51))
+
 ## [1.38.4](https://github.com/gravity-ui/charts/compare/v1.38.3...v1.38.4) (2026-03-08)
 
 
