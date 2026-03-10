@@ -93,11 +93,15 @@ export const useSeries = (args: Args) => {
     const [preparedLegend, setPreparedLegend] = React.useState<PreparedLegend | null>(
         preparedLegendProps,
     );
+    const legendRunRef = React.useRef(0);
     React.useEffect(() => {
         if (!preparedLegendProps) {
-            getPreparedLegend({legend, series: seriesData}).then((value) =>
-                setPreparedLegend(value),
-            );
+            const currentRun = ++legendRunRef.current;
+            getPreparedLegend({legend, series: seriesData}).then((value) => {
+                if (legendRunRef.current === currentRun) {
+                    setPreparedLegend(value);
+                }
+            });
         }
     }, [legend, preparedLegendProps, seriesData]);
 
@@ -106,7 +110,9 @@ export const useSeries = (args: Args) => {
         getActiveLegendItems(preparedSeries),
     );
 
+    const seriesRunRef = React.useRef(0);
     React.useEffect(() => {
+        const currentRun = ++seriesRunRef.current;
         (async () => {
             const items = await getPreparedSeries({
                 seriesData,
@@ -115,8 +121,10 @@ export const useSeries = (args: Args) => {
                 colors,
             });
 
-            setPreparedSeries(items);
-            setActiveLegendItems(getActiveLegendItems(items));
+            if (seriesRunRef.current === currentRun) {
+                setPreparedSeries(items);
+                setActiveLegendItems(getActiveLegendItems(items));
+            }
         })();
     }, [seriesData, seriesOptions, preparedLegend, colors]);
 

@@ -93,6 +93,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         isOutsideBounds,
         legendConfig,
         legendItems,
+        legendReady,
         preparedLegend,
         preparedSeries,
         preparedSeriesOptions,
@@ -210,7 +211,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         }
         return items;
     }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSeries, preparedSplit, yAxis, yScale]);
-    const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems);
+    const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems, legendReady);
 
     const setXAxisDataItems = React.useCallback(async () => {
         const items: AxisXData[] = [];
@@ -242,7 +243,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         yAxis,
     ]);
-    const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems);
+    const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems, legendReady);
 
     React.useEffect(() => {
         if (!initialized && xScale) {
@@ -311,7 +312,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
                 ref={plotRef}
             >
-                {xScale && xAxisDataItems.length && (
+                {Boolean(xScale && xAxisDataItems.length) && (
                     <React.Fragment>
                         {xAxisDataItems.map((axisData) => {
                             return (

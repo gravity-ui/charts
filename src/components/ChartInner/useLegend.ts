@@ -28,20 +28,23 @@ export function useLegend({
         legendConfig: undefined,
         legendItems: [],
     });
+    const [legendReady, setLegendReady] = React.useState(false);
     const legendStateRunRef = React.useRef(0);
     const prevLegendStateValue = React.useRef(legendState);
-    const legendStateReady = React.useRef(false);
 
     React.useEffect(() => {
         legendStateRunRef.current++;
-        legendStateReady.current = false;
+        const currentRun = legendStateRunRef.current;
+
+        if (!preparedLegend) {
+            // No legend computation needed — bounds are already stable.
+            setLegendReady(true);
+            return;
+        }
+
+        setLegendReady(false);
 
         (async function () {
-            const currentRun = legendStateRunRef.current;
-            if (!preparedLegend) {
-                return;
-            }
-
             const newStateValue = await getLegendComponents({
                 chartWidth: width,
                 chartHeight: height,
@@ -56,10 +59,10 @@ export function useLegend({
                     prevLegendStateValue.current = newStateValue;
                 }
 
-                legendStateReady.current = true;
+                setLegendReady(true);
             }
         })();
     }, [height, preparedChart.margin, preparedLegend, preparedSeries, width]);
 
-    return legendState;
+    return {...legendState, legendReady};
 }
