@@ -60,35 +60,40 @@ export function getPlotHeight(args: {
     return boundsHeight;
 }
 
+export function getSplit(args: UseSplitArgs) {
+    const {split, boundsHeight, chartWidth} = args;
+    const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
+    const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
+    const plots = split?.plots ?? [];
+    if (isEmpty(plots)) {
+        plots.push({});
+    }
+
+    return {
+        plots: plots.map<PreparedPlot>((p, index) => {
+            const title = preparePlotTitle({
+                title: p.title,
+                plotIndex: index,
+                gap: splitGap,
+                plotHeight,
+                chartWidth,
+            });
+            const top = index * (plotHeight + splitGap);
+
+            return {
+                top: top + title.height,
+                height: plotHeight - title.height,
+                title,
+            };
+        }),
+        gap: splitGap,
+    };
+}
+
 export const useSplit = (args: UseSplitArgs): PreparedSplit => {
     const {split, boundsHeight, chartWidth} = args;
 
     return React.useMemo(() => {
-        const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
-        const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
-        const plots = split?.plots ?? [];
-        if (isEmpty(plots)) {
-            plots.push({});
-        }
-
-        return {
-            plots: plots.map<PreparedPlot>((p, index) => {
-                const title = preparePlotTitle({
-                    title: p.title,
-                    plotIndex: index,
-                    gap: splitGap,
-                    plotHeight,
-                    chartWidth,
-                });
-                const top = index * (plotHeight + splitGap);
-
-                return {
-                    top: top + title.height,
-                    height: plotHeight - title.height,
-                    title,
-                };
-            }),
-            gap: splitGap,
-        };
+        return getSplit({split, boundsHeight, chartWidth});
     }, [split, boundsHeight, chartWidth]);
 };

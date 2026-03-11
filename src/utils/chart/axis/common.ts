@@ -96,8 +96,12 @@ interface GetBandsPositionArgs {
     axis: AxisDirection;
 }
 
-export const getAxisPlotsPosition = (axis: PreparedAxis, split: PreparedSplit, width = 0) => {
-    const top = split.plots[axis.plotIndex]?.top || 0;
+export const getAxisPlotsPosition = (
+    axis: PreparedAxis,
+    split: PreparedSplit | undefined,
+    width = 0,
+) => {
+    const top = split?.plots[axis.plotIndex]?.top || 0;
     if (axis.position === 'left') {
         return [0, top];
     }

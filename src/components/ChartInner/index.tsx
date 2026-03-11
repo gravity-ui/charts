@@ -97,8 +97,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         preparedSeries,
         preparedSeriesOptions,
         preparedSplit,
-        prevHeight,
-        prevWidth,
         shapes,
         shapesData,
         shapesReady,
@@ -117,6 +115,8 @@ export const ChartInner = (props: ChartInnerProps) => {
         updateZoomState,
         zoomState,
     });
+    const prevWidth = usePrevious(width);
+    const prevHeight = usePrevious(height);
     const debouncedBoundsWidth = useDebouncedValue({
         value: boundsWidth,
         delay: DEBOUNCED_VALUE_DELAY,
@@ -304,7 +304,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             </defs>
             {preparedTitle && <Title {...preparedTitle} chartWidth={width} />}
             <g transform={`translate(0, ${boundsOffsetTop})`}>
-                {preparedSplit.plots.map((plot, index) => {
+                {preparedSplit?.plots.map((plot, index) => {
                     return <PlotTitle key={`plot-${index}`} title={plot.title} />;
                 })}
             </g>
@@ -353,26 +353,29 @@ export const ChartInner = (props: ChartInnerProps) => {
                 {shapes}
                 <g ref={plotAfterRef} />
             </g>
-            {xAxis?.rangeSlider?.enabled && (
-                <RangeSlider
-                    boundsOffsetLeft={debouncedOffsetLeft}
-                    boundsWidth={debouncedBoundsWidth}
-                    height={height}
-                    htmlLayout={htmlLayout}
-                    onUpdate={updateRangeSliderState}
-                    preparedChart={preparedChart}
-                    preparedLegend={preparedLegend}
-                    preparedSeries={debouncedAllPreparedSeries}
-                    preparedSeriesOptions={preparedSeriesOptions}
-                    preparedRangeSlider={xAxis.rangeSlider}
-                    rangeSliderState={rangeSliderState}
-                    ref={rangeSliderRef}
-                    width={width}
-                    xAxis={data.xAxis}
-                    yAxis={data.yAxis}
-                    legendConfig={legendConfig}
-                />
-            )}
+            {xAxis?.rangeSlider?.enabled &&
+                preparedLegend &&
+                debouncedAllPreparedSeries &&
+                preparedSeriesOptions && (
+                    <RangeSlider
+                        boundsOffsetLeft={debouncedOffsetLeft}
+                        boundsWidth={debouncedBoundsWidth}
+                        height={height}
+                        htmlLayout={htmlLayout}
+                        onUpdate={updateRangeSliderState}
+                        preparedChart={preparedChart}
+                        preparedLegend={preparedLegend}
+                        preparedSeries={debouncedAllPreparedSeries}
+                        preparedSeriesOptions={preparedSeriesOptions}
+                        preparedRangeSlider={xAxis.rangeSlider}
+                        rangeSliderState={rangeSliderState}
+                        ref={rangeSliderRef}
+                        width={width}
+                        xAxis={data.xAxis}
+                        yAxis={data.yAxis}
+                        legendConfig={legendConfig}
+                    />
+                )}
             {preparedLegend?.enabled && legendConfig && (
                 <Legend
                     chartSeries={preparedSeries}
@@ -386,6 +389,7 @@ export const ChartInner = (props: ChartInnerProps) => {
             )}
         </React.Fragment>
     );
+
     return (
         <div className={b()}>
             <svg

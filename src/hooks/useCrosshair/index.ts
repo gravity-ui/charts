@@ -16,7 +16,7 @@ type Props = {
     height: number;
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
-    split: PreparedSplit;
+    split: PreparedSplit | undefined;
     plotElement: SVGGElement | null;
     dispatcher: Dispatch<object>;
     boundsOffsetLeft: number;

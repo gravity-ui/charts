@@ -20,7 +20,26 @@ type Args = {
     preparedLegend?: PreparedLegend;
 };
 
-const useVisibleSeries = ({
+export const getVisibleSeries = ({
+    preparedSeries,
+    activeLegendItems,
+}: {
+    preparedSeries: PreparedSeries[];
+    activeLegendItems: string[];
+}) => {
+    return preparedSeries.map((singleSeries) => {
+        if (singleSeries.legend.enabled) {
+            return {
+                ...singleSeries,
+                visible: activeLegendItems.includes(singleSeries.legend.groupId),
+            };
+        }
+
+        return singleSeries;
+    });
+};
+
+export const useVisibleSeries = ({
     preparedSeries,
     activeLegendItems,
 }: {
@@ -28,20 +47,14 @@ const useVisibleSeries = ({
     activeLegendItems: string[];
 }) => {
     return React.useMemo<PreparedSeries[]>(() => {
-        return preparedSeries.map((singleSeries) => {
-            if (singleSeries.legend.enabled) {
-                return {
-                    ...singleSeries,
-                    visible: activeLegendItems.includes(singleSeries.legend.groupId),
-                };
-            }
-
-            return singleSeries;
+        return getVisibleSeries({
+            preparedSeries,
+            activeLegendItems,
         });
     }, [preparedSeries, activeLegendItems]);
 };
 
-const getPreparedSeries = async ({
+export const getPreparedSeries = async ({
     seriesData,
     seriesOptions,
     colors,

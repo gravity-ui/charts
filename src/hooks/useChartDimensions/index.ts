@@ -95,6 +95,36 @@ const getLeftOffset = ({
     return 0;
 };
 
+export function getChartDimensions(args: Args) {
+    const {
+        height,
+        margin,
+        preparedLegend,
+        preparedSeries,
+        preparedXAxis,
+        preparedYAxis,
+        width,
+        legendConfig,
+    } = args;
+
+    const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
+    const boundsWidth = getBoundsWidth({chartWidth: width, chartMargin: margin, preparedYAxis});
+    const bottomOffset = getBottomOffset({
+        hasAxisRelatedSeries,
+        preparedLegend,
+        preparedXAxis,
+        legendConfig,
+    });
+    const topOffset = getTopOffset({preparedLegend, legendConfig});
+    const rightOffset = getRightOffset({preparedLegend, legendConfig});
+    const leftOffset = getLeftOffset({preparedLegend, legendConfig});
+
+    const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
+    const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
+
+    return {boundsWidth: adjustedBoundsWidth, boundsHeight};
+}
+
 export const useChartDimensions = (args: Args) => {
     const {
         height,
@@ -112,22 +142,7 @@ export const useChartDimensions = (args: Args) => {
             return {boundsWidth: 0, boundsHeight: 0};
         }
 
-        const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
-        const boundsWidth = getBoundsWidth({chartWidth: width, chartMargin: margin, preparedYAxis});
-        const bottomOffset = getBottomOffset({
-            hasAxisRelatedSeries,
-            preparedLegend,
-            preparedXAxis,
-            legendConfig,
-        });
-        const topOffset = getTopOffset({preparedLegend, legendConfig});
-        const rightOffset = getRightOffset({preparedLegend, legendConfig});
-        const leftOffset = getLeftOffset({preparedLegend, legendConfig});
-
-        const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
-        const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
-
-        return {boundsWidth: adjustedBoundsWidth, boundsHeight};
+        return getChartDimensions(args);
     }, [
         height,
         margin,

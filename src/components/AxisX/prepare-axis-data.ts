@@ -143,16 +143,17 @@ export async function prepareXAxisData({
     height: number;
     scale: ChartScale;
     series: PreparedSeries[];
-    split: PreparedSplit;
+    split: PreparedSplit | undefined;
     yAxis: PreparedAxis[];
 }): Promise<AxisXData[]> {
     const xAxisItems: AxisXData[] = [];
-    for (let plotIndex = 0; plotIndex < split.plots.length; plotIndex++) {
-        const plot = split.plots[plotIndex];
+    const splitPlots = split?.plots ?? [];
+    for (let plotIndex = 0; plotIndex < splitPlots.length; plotIndex++) {
+        const plot = splitPlots[plotIndex];
         const axisTop = plot.top;
         const axisHeight = plot.height;
         const axisWidth = boundsWidth;
-        const isBottomPlot = plotIndex === split.plots.length - 1;
+        const isBottomPlot = plotIndex === splitPlots.length - 1;
 
         const plotYAxes = yAxis.filter((a) => a.plotIndex === plotIndex);
         const yDomainLeftPosition = plotYAxes.find((a) => a.position === 'left')?.visible

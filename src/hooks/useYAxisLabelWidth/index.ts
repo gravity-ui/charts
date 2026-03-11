@@ -14,6 +14,57 @@ type UseYAxisLabelWidthProps = {
     yScale?: (ChartScale | undefined)[];
 };
 
+export async function recalculateYAxisLabelsWidth(props: {
+    seriesData: PreparedSeries[];
+    yAxis: PreparedYAxis[];
+    yScale?: (ChartScale | undefined)[];
+}) {
+    const {seriesData, yAxis, yScale} = props;
+    const axisIndexesToRecalculateMap: Map<number, number> = new Map();
+
+    for (let i = 0; i < yAxis.length; i++) {
+        const axis = yAxis[i];
+        const scale = yScale?.[i];
+
+        if (!scale) {
+            continue;
+        }
+
+        if (axis.startOnTick || axis.endOnTick) {
+            const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === i && s.visible);
+
+            if (axisSeriesData.length === 0) {
+                continue;
+            }
+
+            const res = await getYAxisLabelMaxWidth({
+                axis,
+                seriesData: axisSeriesData,
+                scale,
+            });
+
+            if (res.width > axis.labels.width) {
+                axisIndexesToRecalculateMap.set(i, res.width);
+            }
+        }
+    }
+
+    return yAxis.map((axis, i) => {
+        const width = axisIndexesToRecalculateMap.get(i);
+
+        if (width) {
+            const axisWithRecalculatedLabels = {
+                ...axis,
+                labels: {...axis.labels, width},
+            };
+
+            return axisWithRecalculatedLabels;
+        }
+
+        return axis;
+    });
+}
+
 export function useYAxisLabelWidth(props: UseYAxisLabelWidthProps) {
     const {seriesData, setAxes, yAxis, yScale} = props;
     const runRef = React.useRef(0);

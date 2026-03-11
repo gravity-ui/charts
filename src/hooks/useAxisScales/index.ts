@@ -37,7 +37,7 @@ type ReturnValue = {
     yScale?: (ChartScale | undefined)[];
 };
 
-const createScales = (args: Args) => {
+export const createScales = (args: Args) => {
     const {
         boundsWidth,
         boundsHeight,

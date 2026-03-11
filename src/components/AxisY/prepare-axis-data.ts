@@ -181,15 +181,15 @@ export async function prepareYAxisData({
     series,
 }: {
     axis: PreparedAxis;
-    split: PreparedSplit;
+    split: PreparedSplit | undefined;
     scale: ChartScale;
     top: number;
     width: number;
     height: number;
     series: PreparedSeries[];
 }): Promise<AxisYData> {
-    const axisPlotTopPosition = split.plots[axis.plotIndex]?.top || 0;
-    const axisHeight = split.plots[axis.plotIndex]?.height || height;
+    const axisPlotTopPosition = split?.plots[axis.plotIndex]?.top || 0;
+    const axisHeight = split?.plots[axis.plotIndex]?.height || height;
 
     const domainX = axis.position === 'left' ? 0 : width;
     let domain: AxisDomainData | null = null;

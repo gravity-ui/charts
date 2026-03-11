@@ -1,35 +1,52 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3';
+import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE, SERIES_TYPE} from '../../constants';
 import {
-    useAxis,
-    useAxisScales,
-    useChartDimensions,
-    useNormalizedOriginalData,
-    usePrevious,
-    useSeries,
-    useShapes,
-    useSplit,
-    useYAxisLabelWidth,
+    createScales,
+    getAxes,
+    getChartDimensions,
+    getNormalizedXAxis,
+    getNormalizedYAxis,
+    getPreparedSeries,
+    getShapes,
+    getSplit,
+    getVisibleSeries,
+    recalculateYAxisLabelsWidth,
     useZoom,
 } from '../../hooks';
 import type {
+    ChartScale,
     ClipPathBySeriesType,
+    LegendItem,
+    OnLegendItemClick,
     PreparedAxis,
     PreparedChart,
     PreparedLegend,
+    PreparedSeries,
+    PreparedSeriesOptions,
+    PreparedSplit,
+    PreparedXAxis,
+    PreparedYAxis,
     RangeSliderState,
+    ShapeData,
     ZoomState,
 } from '../../hooks';
 import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
+import {getLegendComponents, getPreparedLegend} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
-import type {LegendConfig} from '../../types';
-import {getEffectiveXRange, getZoomedSeriesData} from '../../utils';
+import {getActiveLegendItems, getAllLegendItems} from '../../hooks/useSeries/utils';
+import type {ChartData, LegendConfig} from '../../types';
+import {
+    getEffectiveXRange,
+    getSortedSeriesData,
+    getZoomedSeriesData,
+    isAxisRelatedSeries,
+} from '../../utils';
 
 import type {ChartInnerProps} from './types';
-import {useLegend} from './useLegend';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils';
 
 type Props = ChartInnerProps & {
@@ -98,6 +115,29 @@ function getBoundsOffsetLeft(args: {
     return chartMarginLeft + legendOffset + leftAxisWidth;
 }
 
+type ChartState = {
+    allPreparedSeries: PreparedSeries[];
+    boundsHeight: number;
+    boundsOffsetLeft: number;
+    boundsOffsetTop: number;
+    boundsWidth: number;
+    isOutsideBounds: (x: number, y: number) => boolean;
+    legendConfig: LegendConfig;
+    legendItems: LegendItem[][];
+    preparedLegend: PreparedLegend;
+    preparedSeries: PreparedSeries[];
+    preparedSeriesOptions: PreparedSeriesOptions;
+    preparedSplit: PreparedSplit;
+    shapes: React.ReactElement[];
+    shapesData: ShapeData[];
+    xAxis: PreparedXAxis | null;
+    xScale: ChartScale | undefined;
+    yAxis: PreparedYAxis[];
+    yScale: (ChartScale | undefined)[] | undefined;
+    activeLegendItems: string[];
+};
+
+// eslint-disable-next-line complexity
 export function useChartInnerProps(props: Props) {
     const {
         clipPathId,
@@ -112,193 +152,292 @@ export function useChartInnerProps(props: Props) {
         updateZoomState,
         zoomState,
     } = props;
-    const prevWidth = usePrevious(width);
-    const prevHeight = usePrevious(height);
-    const colors = React.useMemo(() => {
-        return data.colors ?? DEFAULT_PALETTE;
-    }, [data.colors]);
-    const {normalizedSeriesData, normalizedXAxis, normalizedYAxis} = useNormalizedOriginalData({
-        seriesData: data.series.data,
-        xAxis: data.xAxis,
-        yAxis: data.yAxis,
-    });
-    const preparedSeriesOptions = React.useMemo(() => {
-        return getPreparedOptions(data.series.options);
-    }, [data.series.options]);
-    const {
-        preparedSeries: allPreparedSeries,
-        preparedLegend,
-        handleLegendItemClick,
-    } = useSeries({
-        colors,
-        legend: data.legend,
-        originalSeriesData: normalizedSeriesData,
-        seriesData: normalizedSeriesData,
-        seriesOptions: data.series.options,
-    });
 
-    const effectiveZoomState = React.useMemo((): Partial<ZoomState> => {
-        const result: Partial<ZoomState> = {};
-        const effectiveX = getEffectiveXRange(zoomState.x, rangeSliderState);
+    const [selectedLegendItems, setSelectedLegendItems] = React.useState<string[] | null>(null);
 
-        if (effectiveX !== undefined) {
-            result.x = effectiveX;
-        }
+    const [chartState, setState] = React.useState<ChartState | null>(null);
+    const prevStateValue = React.useRef(chartState);
+    const previousChartData = React.useRef<ChartData | null>(null);
+    const currentRunRef = React.useRef(0);
+    React.useEffect(() => {
+        currentRunRef.current++;
+        const currentRun = currentRunRef.current;
 
-        if (zoomState.y !== undefined) {
-            result.y = zoomState.y;
-        }
+        (async function () {
+            const chartDataChanged = !(
+                previousChartData.current && isEqual(previousChartData.current, data)
+            );
 
-        return result;
-    }, [zoomState, rangeSliderState]);
-
-    const {preparedSeries, preparedShapesSeries} = React.useMemo(() => {
-        return getZoomedSeriesData({
-            seriesData: allPreparedSeries,
-            xAxis: normalizedXAxis,
-            yAxis: normalizedYAxis,
-            zoomState: effectiveZoomState,
-        });
-    }, [allPreparedSeries, normalizedXAxis, normalizedYAxis, effectiveZoomState]);
-
-    const {legendConfig, legendItems} = useLegend({
-        width,
-        height,
-        preparedChart,
-        preparedSeries,
-        preparedLegend,
-    });
-
-    const {xAxis, yAxis, setAxes} = useAxis({
-        height,
-        preparedChart,
-        legendConfig,
-        preparedLegend,
-        preparedSeries,
-        preparedSeriesOptions,
-        width,
-        xAxis: normalizedXAxis,
-        yAxis: normalizedYAxis,
-    });
-
-    const {boundsWidth, boundsHeight} = useChartDimensions({
-        height,
-        margin: preparedChart.margin,
-        preparedLegend,
-        preparedSeries: preparedSeries,
-        preparedYAxis: yAxis,
-        preparedXAxis: xAxis,
-        width,
-        legendConfig,
-    });
-
-    const preparedSplit = useSplit({split: data.split, boundsHeight, chartWidth: width});
-    const {xScale, yScale} = useAxisScales({
-        boundsWidth,
-        boundsHeight,
-        rangeSliderState,
-        series: preparedSeries,
-        split: preparedSplit,
-        xAxis,
-        yAxis,
-        zoomState,
-    });
-
-    useYAxisLabelWidth({seriesData: preparedSeries, setAxes, yAxis, yScale});
-
-    const isOutsideBounds = React.useCallback(
-        (x: number, y: number) => {
-            return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
-        },
-        [boundsHeight, boundsWidth],
-    );
-
-    const {shapes, shapesData, shapesReady} = useShapes({
-        boundsWidth,
-        boundsHeight,
-        clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
-        dispatcher,
-        series: preparedShapesSeries,
-        seriesOptions: preparedSeriesOptions,
-        xAxis,
-        xScale,
-        yAxis,
-        yScale,
-        split: preparedSplit,
-        htmlLayout,
-        clipPathId,
-        isOutsideBounds,
-        zoomState: effectiveZoomState,
-    });
-
-    const handleAttemptToSetZoomState = React.useCallback(
-        (nextZoomState: Partial<ZoomState>) => {
-            const {preparedSeries: nextZoomedSeriesData} = getZoomedSeriesData({
-                seriesData: preparedSeries,
-                xAxis,
-                yAxis,
-                zoomState: nextZoomState,
+            const colors = data.colors ?? DEFAULT_PALETTE;
+            const normalizedSeriesData = getSortedSeriesData({
+                seriesData: data.series.data,
+                xAxis: data.xAxis,
+                yAxis: data.yAxis,
+            });
+            const normalizedXAxis = getNormalizedXAxis({xAxis: data.xAxis});
+            const normalizedYAxis = getNormalizedYAxis({yAxis: data.yAxis});
+            const preparedSeriesOptions = getPreparedOptions(data.series.options);
+            const preparedLegend = await getPreparedLegend({
+                legend: data.legend,
+                series: normalizedSeriesData,
             });
 
-            const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, yAxis);
-
-            if (hasData) {
-                updateZoomState(nextZoomState);
+            let allPreparedSeries: PreparedSeries[];
+            if (chartDataChanged) {
+                allPreparedSeries = await getPreparedSeries({
+                    seriesData: normalizedSeriesData,
+                    seriesOptions: data.series.options,
+                    preparedLegend,
+                    colors,
+                });
+            } else {
+                allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];
             }
-        },
-        [xAxis, yAxis, preparedSeries, updateZoomState],
+
+            const activeLegendItems =
+                selectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
+            const visiblePreparedSeries = getVisibleSeries({
+                preparedSeries: allPreparedSeries,
+                activeLegendItems,
+            });
+
+            const effectiveZoomState: Partial<ZoomState> = {};
+            const effectiveX = getEffectiveXRange(zoomState.x, rangeSliderState);
+
+            if (effectiveX !== undefined) {
+                effectiveZoomState.x = effectiveX;
+            }
+
+            if (zoomState.y !== undefined) {
+                effectiveZoomState.y = zoomState.y;
+            }
+
+            const {preparedSeries, preparedShapesSeries} = getZoomedSeriesData({
+                seriesData: visiblePreparedSeries,
+                xAxis: normalizedXAxis,
+                yAxis: normalizedYAxis,
+                zoomState: effectiveZoomState,
+            });
+
+            const {legendConfig, legendItems} = await getLegendComponents({
+                chartWidth: width,
+                chartHeight: height,
+                chartMargin: preparedChart.margin,
+                series: preparedSeries,
+                preparedLegend,
+            });
+
+            const axes = await getAxes({
+                height,
+                preparedChart,
+                legendConfig,
+                preparedLegend,
+                preparedSeries,
+                preparedSeriesOptions,
+                width,
+                xAxis: normalizedXAxis,
+                yAxis: normalizedYAxis,
+            });
+            const xAxis = axes.xAxis;
+            let yAxis = axes.yAxis;
+
+            const {boundsWidth, boundsHeight} = getChartDimensions({
+                height,
+                margin: preparedChart.margin,
+                preparedLegend,
+                preparedSeries: preparedSeries,
+                preparedYAxis: yAxis,
+                preparedXAxis: xAxis,
+                width,
+                legendConfig,
+            });
+
+            const preparedSplit = getSplit({split: data.split, boundsHeight, chartWidth: width});
+
+            let xScale: ChartScale | undefined;
+            let yScale: (ChartScale | undefined)[] | undefined;
+            const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
+
+            if (hasAxisRelatedSeries) {
+                ({xScale, yScale} = createScales({
+                    boundsWidth,
+                    boundsHeight,
+                    isRangeSlider: false,
+                    rangeSliderState,
+                    series: preparedSeries,
+                    split: preparedSplit,
+                    xAxis,
+                    yAxis,
+                    zoomState,
+                }));
+            }
+
+            yAxis = await recalculateYAxisLabelsWidth({seriesData: preparedSeries, yAxis, yScale});
+
+            const isOutsideBounds = (x: number, y: number) => {
+                return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
+            };
+
+            const {shapes, shapesData} = await getShapes({
+                boundsWidth,
+                boundsHeight,
+                clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
+                dispatcher,
+                series: preparedShapesSeries,
+                seriesOptions: preparedSeriesOptions,
+                xAxis,
+                xScale,
+                yAxis,
+                yScale,
+                split: preparedSplit,
+                htmlLayout,
+                clipPathId,
+                isOutsideBounds,
+                zoomState: effectiveZoomState,
+            });
+
+            const boundsOffsetTop = getBoundsOffsetTop({
+                chartMarginTop: preparedChart.margin.top,
+                preparedLegend,
+                legendConfig,
+            });
+
+            // We need to calculate the width of each left axis because the first axis can be hidden
+            const boundsOffsetLeft = getBoundsOffsetLeft({
+                chartMarginLeft: preparedChart.margin.left,
+                preparedLegend,
+                yAxis,
+                getYAxisWidth,
+                legendConfig,
+            });
+
+            //end
+
+            const newStateValue = {
+                allPreparedSeries,
+                boundsHeight,
+                boundsOffsetLeft,
+                boundsOffsetTop,
+                boundsWidth,
+                isOutsideBounds,
+                legendConfig,
+                legendItems,
+                preparedLegend,
+                preparedSeries,
+                preparedSeriesOptions,
+                preparedSplit,
+                shapes,
+                shapesData,
+                xAxis,
+                xScale,
+                yAxis,
+                yScale,
+                activeLegendItems,
+            };
+
+            if (currentRunRef.current === currentRun) {
+                if (!isEqual(prevStateValue.current, newStateValue)) {
+                    setState(newStateValue);
+                    prevStateValue.current = newStateValue;
+                }
+                previousChartData.current = data;
+            }
+        })();
+    }, [
+        height,
+        width,
+        data,
+        selectedLegendItems,
+        zoomState,
+        rangeSliderState,
+        preparedChart,
+        dispatcher,
+        htmlLayout,
+        clipPathId,
+    ]);
+
+    // additional start
+
+    const preparedSeries = React.useMemo(
+        () => chartState?.preparedSeries ?? [],
+        [chartState?.preparedSeries],
     );
+    const activeLegendItems = React.useMemo(
+        () => chartState?.activeLegendItems ?? [],
+        [chartState?.activeLegendItems],
+    );
+    const boundsHeight = chartState?.boundsHeight ?? 0;
+    const boundsWidth = chartState?.boundsWidth ?? 0;
+
+    const handleLegendItemClick: OnLegendItemClick = React.useCallback(
+        ({id, metaKey}) => {
+            const allItems = getAllLegendItems(preparedSeries);
+            const onlyItemSelected =
+                (selectedLegendItems ?? []).length === 1 && activeLegendItems.includes(id);
+            let nextActiveLegendItems: string[];
+
+            if (metaKey && activeLegendItems.includes(id)) {
+                nextActiveLegendItems = activeLegendItems.filter((item) => item !== id);
+            } else if (metaKey && !activeLegendItems.includes(id)) {
+                nextActiveLegendItems = activeLegendItems.concat(id);
+            } else if (onlyItemSelected && allItems.length === 1) {
+                nextActiveLegendItems = [];
+            } else if (onlyItemSelected) {
+                nextActiveLegendItems = allItems;
+            } else {
+                nextActiveLegendItems = [id];
+            }
+
+            setSelectedLegendItems(nextActiveLegendItems);
+        },
+        [preparedSeries, selectedLegendItems, activeLegendItems],
+    );
+
+    const xAxis = chartState?.xAxis ?? null;
+    const yAxis = chartState?.yAxis ?? [];
+
+    const handleAttemptToSetZoomState = (nextZoomState: Partial<ZoomState>) => {
+        const {preparedSeries: nextZoomedSeriesData} = getZoomedSeriesData({
+            seriesData: chartState?.preparedSeries ?? [],
+            xAxis,
+            yAxis,
+            zoomState: nextZoomState,
+        });
+
+        const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, yAxis);
+
+        if (hasData) {
+            updateZoomState(nextZoomState);
+        }
+    };
 
     useZoom({
         node: plotNode,
         onUpdate: handleAttemptToSetZoomState,
         plotContainerHeight: boundsHeight,
         plotContainerWidth: boundsWidth,
-        preparedSplit,
+        preparedSplit: chartState?.preparedSplit,
         preparedZoom: preparedChart.zoom,
         xAxis,
-        xScale,
+        xScale: chartState?.xScale,
         yAxis,
-        yScale,
+        yScale: chartState?.yScale,
     });
 
-    const boundsOffsetTop = getBoundsOffsetTop({
-        chartMarginTop: preparedChart.margin.top,
-        preparedLegend,
-        legendConfig,
-    });
-
-    // We need to calculate the width of each left axis because the first axis can be hidden
-    const boundsOffsetLeft = getBoundsOffsetLeft({
-        chartMarginLeft: preparedChart.margin.left,
-        preparedLegend,
-        yAxis,
-        getYAxisWidth,
-        legendConfig,
-    });
+    // additional end
 
     return {
-        allPreparedSeries,
-        boundsHeight,
-        boundsOffsetLeft,
-        boundsOffsetTop,
-        boundsWidth,
-        handleLegendItemClick,
-        isOutsideBounds,
-        legendConfig,
-        legendItems,
-        preparedLegend,
+        ...chartState,
         preparedSeries,
-        preparedSeriesOptions,
-        preparedSplit,
-        prevHeight,
-        prevWidth,
-        shapes,
-        shapesData,
-        shapesReady,
+        boundsOffsetLeft: chartState?.boundsOffsetLeft ?? 0,
+        boundsOffsetTop: chartState?.boundsOffsetTop ?? 0,
+        boundsHeight,
+        boundsWidth,
         xAxis,
-        xScale,
         yAxis,
-        yScale,
+        shapesData: chartState?.shapesData ?? [],
+        shapesReady: Boolean(chartState),
+        handleLegendItemClick,
+        isOutsideBounds: chartState?.isOutsideBounds ?? (() => false),
     };
 }
