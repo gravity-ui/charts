@@ -46,9 +46,7 @@ export function useAxis(props: UseAxesProps) {
         axesStateRunRef.current++;
         axesStateReady.current = false;
 
-        const shouldWaitForLegendReady =
-            !preparedLegend || (preparedLegend?.enabled && !legendConfig);
-        if (shouldWaitForLegendReady) {
+        if (!preparedLegend || !legendConfig) {
             return;
         }
 
