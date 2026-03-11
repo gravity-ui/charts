@@ -1,12 +1,10 @@
-import React from 'react';
-
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 import {calculateNumericProperty, getHorizontalSvgTextHeight} from '../../utils';
 
-import type {PreparedPlot, PreparedPlotTitle, PreparedSplit} from './types';
+import type {PreparedPlot, PreparedPlotTitle} from './types';
 
 type UseSplitArgs = {
     split?: ChartSplit;
@@ -89,11 +87,3 @@ export function getSplit(args: UseSplitArgs) {
         gap: splitGap,
     };
 }
-
-export const useSplit = (args: UseSplitArgs): PreparedSplit => {
-    const {split, boundsHeight, chartWidth} = args;
-
-    return React.useMemo(() => {
-        return getSplit({split, boundsHeight, chartWidth});
-    }, [split, boundsHeight, chartWidth]);
-};

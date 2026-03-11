@@ -114,52 +114,19 @@ export function useAxis(props: UseAxesProps) {
 
         (async function () {
             const currentRun = axesStateRunRef.current;
-            const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
 
-            const estimatedPreparedYAxis = await getPreparedYAxis({
+            const newStateValue = await getAxes({
+                boundsHeight,
                 height,
-                boundsHeight: height,
+                preparedChart,
+                legendConfig,
+                preparedLegend,
+                preparedSeries,
+                preparedSeriesOptions,
                 width,
-                seriesData,
-                yAxis,
-            });
-            const axesWidth = getWidthOccupiedByYAxis({preparedAxis: estimatedPreparedYAxis});
-            const estimatedBoundsWidth =
-                width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right);
-            const preparedXAxis = await getPreparedXAxis({
                 xAxis,
-                width,
-                boundsWidth: estimatedBoundsWidth,
-                seriesData,
-            });
-
-            let estimatedBoundsHeight = boundsHeight ?? height;
-
-            if (preparedXAxis && typeof boundsHeight !== 'number') {
-                estimatedBoundsHeight =
-                    height -
-                    (preparedXAxis.title.height +
-                        preparedXAxis.title.margin +
-                        preparedXAxis.labels.margin +
-                        preparedXAxis.labels.height +
-                        (preparedXAxis.rangeSlider.enabled
-                            ? preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin
-                            : 0) +
-                        (legendConfig?.height ?? 0) +
-                        (preparedLegend?.margin ?? 0) +
-                        preparedChart.margin.top +
-                        preparedChart.margin.bottom);
-            }
-
-            const preparedYAxis = await getPreparedYAxis({
-                height,
-                boundsHeight: estimatedBoundsHeight,
-                width,
-                seriesData,
                 yAxis,
             });
-
-            const newStateValue = {xAxis: preparedXAxis, yAxis: preparedYAxis};
 
             if (axesStateRunRef.current === currentRun) {
                 if (!isEqual(prevAxesStateValue.current, newStateValue)) {
@@ -173,7 +140,7 @@ export function useAxis(props: UseAxesProps) {
     }, [
         boundsHeight,
         height,
-        preparedChart.margin,
+        preparedChart,
         legendConfig,
         preparedLegend,
         preparedSeries,
@@ -186,11 +153,11 @@ export function useAxis(props: UseAxesProps) {
     const isAxesReady = axesStateReady.current;
     const result = React.useMemo(() => {
         if (isAxesReady) {
-            return {...axesState, setAxes};
+            return axesState;
         }
 
         prevAxesStateValue.current = {xAxis: null, yAxis: []};
-        return {...prevAxesStateValue.current, setAxes};
+        return prevAxesStateValue.current;
     }, [isAxesReady, axesState]);
 
     return result;

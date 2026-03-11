@@ -1,5 +1,3 @@
-import React from 'react';
-
 import type {PreparedLegend, PreparedSeries, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartMargin, LegendConfig} from '../../types';
 import {isAxisRelatedSeries} from '../../utils';
@@ -124,33 +122,3 @@ export function getChartDimensions(args: Args) {
 
     return {boundsWidth: adjustedBoundsWidth, boundsHeight};
 }
-
-export const useChartDimensions = (args: Args) => {
-    const {
-        height,
-        margin,
-        preparedLegend,
-        preparedSeries,
-        preparedXAxis,
-        preparedYAxis,
-        width,
-        legendConfig,
-    } = args;
-
-    return React.useMemo(() => {
-        if (!preparedLegend || !legendConfig) {
-            return {boundsWidth: 0, boundsHeight: 0};
-        }
-
-        return getChartDimensions(args);
-    }, [
-        height,
-        margin,
-        preparedLegend,
-        legendConfig,
-        preparedSeries,
-        preparedXAxis,
-        preparedYAxis,
-        width,
-    ]);
-};
