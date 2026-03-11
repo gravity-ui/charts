@@ -2,11 +2,16 @@ import React from 'react';
 
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
+import get from 'lodash/get';
 
 import {useCrosshair, usePrevious} from '../../hooks';
 import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
+import type {ChartTooltipRendererArgs, ChartYAxis} from '../../types';
 import {EventType, block, getDispatcher, isBandScale} from '../../utils';
+import {getClosestPoints} from '../../utils/chart/get-closest-data';
+import {getHoveredPlots} from '../../utils/chart/get-hovered-plots';
+import {calculateNumericProperty} from '../../utils/chart/math';
 import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
 import type {AxisXData} from '../AxisX/types';
@@ -49,6 +54,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotBeforeRef = React.useRef<SVGGElement | null>(null);
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
     const rangeSliderRef = React.useRef<RangeSliderHandle | null>(null);
+    const defaultStateAppliedRef = React.useRef(false);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
     const preparedTitle = React.useMemo(() => {
@@ -293,6 +299,93 @@ export const ChartInner = (props: ChartInnerProps) => {
             onReady?.({dimensions: {width, height}});
         }
     }, [height, shapesReady, onReady, width]);
+
+    React.useEffect(() => {
+        const hoveredPosition = data.defaultState?.hoveredPosition;
+
+        if (defaultStateAppliedRef.current || !shapesReady || !hoveredPosition) {
+            return;
+        }
+
+        defaultStateAppliedRef.current = true;
+
+        // Defer dispatch so shape components (Area, Line, etc.) register their hover-shape.*
+        // listeners first; parent effects run before child effects in React.
+        queueMicrotask(() => {
+            const x = calculateNumericProperty({value: hoveredPosition.x, base: boundsWidth});
+            const y = calculateNumericProperty({value: hoveredPosition.y, base: boundsHeight});
+
+            if (x === undefined || y === undefined) {
+                return;
+            }
+
+            const shapesDataWithTooltipEnabled = shapesData.filter((d) =>
+                get(d, 'series.tooltip.enabled', true),
+            );
+
+            const closest = getClosestPoints({
+                position: [x, y],
+                shapesData: shapesDataWithTooltipEnabled,
+                boundsHeight,
+                boundsWidth,
+            });
+
+            const {plotLines, plotBands} = getHoveredPlots({
+                pointerX: x,
+                pointerY: y,
+                xAxis,
+                yAxis,
+                xScale,
+                yScale,
+            });
+
+            const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
+            const svgPointerX = x + boundsOffsetLeft;
+            const svgPointerY = y + boundsOffsetTop;
+
+            dispatcher.call(
+                EventType.HOVER_SHAPE,
+                undefined,
+                closest,
+                [svgPointerX, svgPointerY],
+                hoveredPlotsArg,
+            );
+
+            const rect = svgRef.current?.getBoundingClientRect();
+            const syntheticEvent =
+                rect &&
+                new PointerEvent('pointermove', {
+                    bubbles: true,
+                    clientX: rect.left + svgPointerX,
+                    clientY: rect.top + svgPointerY,
+                });
+            dispatcher.call(
+                EventType.POINTERMOVE_CHART,
+                {},
+                {
+                    hovered: closest,
+                    xAxis,
+                    yAxis: yAxis[0] as ChartYAxis,
+                    hoveredPlotLines: plotLines,
+                    hoveredPlotBands: plotBands,
+                } satisfies ChartTooltipRendererArgs,
+                syntheticEvent,
+            );
+        });
+    }, [
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        boundsWidth,
+        data.defaultState,
+        dispatcher,
+        shapesData,
+        shapesReady,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+    ]);
 
     const chartContent = (
         <React.Fragment>
