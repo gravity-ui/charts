@@ -181,7 +181,7 @@ test.describe('Treemap series', () => {
         await expect(chart.locator('svg')).toHaveScreenshot();
     });
 
-    test('Performance', async ({mount}) => {
+    test('Performance @perf', async ({mount}) => {
         test.setTimeout(120_000);
 
         const items = new Array(1000).fill(null).map(() => ({

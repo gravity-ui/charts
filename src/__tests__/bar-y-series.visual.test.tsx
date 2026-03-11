@@ -523,7 +523,7 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Performance', async ({mount}) => {
+    test('Performance @perf', async ({mount}) => {
         test.setTimeout(120_000);
 
         const categories = new Array(3000).fill(null).map((_, i) => String(i));

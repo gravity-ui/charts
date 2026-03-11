@@ -57,6 +57,8 @@
     "docs:build": "cd ./docs && npm run docs:build",
     "playwright:install": "playwright install chromium webkit --with-deps",
     "playwright": "playwright test --config=playwright/playwright.config.ts",
+    "playwright:visual": "playwright test --project=chromium --project=webkit --config=playwright/playwright.config.ts",
+    "playwright:perf": "playwright test --project=chromium-perf --workers=1 --no-deps --config=playwright/playwright.config.ts",
     "playwright:update": "npm run playwright -- -u",
     "playwright:clear-cache": "rm -rf ./playwright/.cache",
     "playwright:docker": "./scripts/playwright-docker.sh 'npm run playwright'",

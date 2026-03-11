@@ -66,6 +66,19 @@ const config: PlaywrightTestConfig = {
                     ignoreDefaultArgs: ['--hide-scrollbars'],
                 },
             },
+            grepInvert: /@perf/,
+        },
+        {
+            name: 'chromium-perf',
+            use: {
+                ...devices['Desktop Chrome'],
+                deviceScaleFactor: 2,
+                launchOptions: {
+                    ignoreDefaultArgs: ['--hide-scrollbars'],
+                },
+            },
+            grep: /@perf/,
+            workers: 1,
         },
         {
             name: 'webkit',

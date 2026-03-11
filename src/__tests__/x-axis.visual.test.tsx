@@ -389,7 +389,7 @@ test.describe('X-axis', () => {
         });
     });
 
-    test.describe('Performance', () => {
+    test.describe('Performance @perf', () => {
         test('Long category labels', async ({mount}) => {
             test.setTimeout(120_000);
 

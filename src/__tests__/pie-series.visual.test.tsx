@@ -511,7 +511,7 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Performance', async ({mount}) => {
+    test('Performance @perf', async ({mount}) => {
         test.setTimeout(120_000);
 
         const items = new Array(1000).fill(null).map(() => ({

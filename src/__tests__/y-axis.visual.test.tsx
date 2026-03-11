@@ -774,7 +774,7 @@ test.describe('Y-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.describe('Performance', () => {
+    test.describe('Performance @perf', () => {
         test('Long category labels', async ({mount}) => {
             test.setTimeout(120_000);
 
