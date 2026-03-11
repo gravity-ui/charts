@@ -1,79 +1,57 @@
-import React from 'react';
-
 import get from 'lodash/get';
 
-import type {PreparedYAxis, SetAxes} from '../useAxis/types';
+import type {PreparedYAxis} from '../useAxis/types';
 import {getYAxisLabelMaxWidth} from '../useAxis/y-axis';
 import type {ChartScale} from '../useAxisScales/types';
 import type {PreparedSeries} from '../useSeries/types';
 
-type UseYAxisLabelWidthProps = {
+export async function recalculateYAxisLabelsWidth(props: {
     seriesData: PreparedSeries[];
-    setAxes: SetAxes;
     yAxis: PreparedYAxis[];
     yScale?: (ChartScale | undefined)[];
-};
+}) {
+    const {seriesData, yAxis, yScale} = props;
+    const axisIndexesToRecalculateMap: Map<number, number> = new Map();
 
-export function useYAxisLabelWidth(props: UseYAxisLabelWidthProps) {
-    const {seriesData, setAxes, yAxis, yScale} = props;
-    const runRef = React.useRef(0);
+    for (let i = 0; i < yAxis.length; i++) {
+        const axis = yAxis[i];
+        const scale = yScale?.[i];
 
-    React.useEffect(() => {
-        runRef.current++;
+        if (!scale) {
+            continue;
+        }
 
-        (async function () {
-            const currentRun = runRef.current;
-            const axisIndexesToRecalculateMap: Map<number, number> = new Map();
+        if (axis.startOnTick || axis.endOnTick) {
+            const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === i && s.visible);
 
-            for (let i = 0; i < yAxis.length; i++) {
-                const axis = yAxis[i];
-                const scale = yScale?.[i];
-
-                if (!scale) {
-                    continue;
-                }
-
-                if (axis.startOnTick || axis.endOnTick) {
-                    const axisSeriesData = seriesData.filter(
-                        (s) => get(s, 'yAxis', 0) === i && s.visible,
-                    );
-
-                    if (axisSeriesData.length === 0) {
-                        continue;
-                    }
-
-                    const res = await getYAxisLabelMaxWidth({
-                        axis,
-                        seriesData: axisSeriesData,
-                        scale,
-                    });
-
-                    if (res.width > axis.labels.width) {
-                        axisIndexesToRecalculateMap.set(i, res.width);
-                    }
-                }
+            if (axisSeriesData.length === 0) {
+                continue;
             }
 
-            if (runRef.current === currentRun && axisIndexesToRecalculateMap.size > 0) {
-                setAxes((prevState) => {
-                    const newYAxis = prevState.yAxis.map((axis, i) => {
-                        const width = axisIndexesToRecalculateMap.get(i);
+            const res = await getYAxisLabelMaxWidth({
+                axis,
+                seriesData: axisSeriesData,
+                scale,
+            });
 
-                        if (width) {
-                            const axisWithRecalculatedLabels = {
-                                ...axis,
-                                labels: {...axis.labels, width},
-                            };
-
-                            return axisWithRecalculatedLabels;
-                        }
-
-                        return axis;
-                    });
-
-                    return {...prevState, yAxis: newYAxis};
-                });
+            if (res.width > axis.labels.width) {
+                axisIndexesToRecalculateMap.set(i, res.width);
             }
-        })();
-    }, [seriesData, setAxes, yAxis, yScale]);
+        }
+    }
+
+    return yAxis.map((axis, i) => {
+        const width = axisIndexesToRecalculateMap.get(i);
+
+        if (width) {
+            const axisWithRecalculatedLabels = {
+                ...axis,
+                labels: {...axis.labels, width},
+            };
+
+            return axisWithRecalculatedLabels;
+        }
+
+        return axis;
+    });
 }

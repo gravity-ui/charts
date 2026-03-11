@@ -105,6 +105,325 @@ function shouldUseClipPathId(seriesType: SeriesType, clipPathBySeriesType?: Clip
     return clipPathBySeriesType?.[seriesType] ?? true;
 }
 
+export async function getShapes(args: Args) {
+    const {
+        boundsWidth,
+        boundsHeight,
+        clipPathId,
+        clipPathBySeriesType,
+        dispatcher,
+        htmlLayout,
+        isOutsideBounds = IS_OUTSIDE_BOUNDS,
+        isRangeSlider,
+        series,
+        seriesOptions,
+        split,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        zoomState,
+    } = args;
+
+    const visibleSeries = getOnlyVisibleSeries(series);
+    const groupedSeries = group(visibleSeries, (item) => item.type);
+    const shapesData: ShapeData[] = [];
+    const shapes: React.ReactElement[] = [];
+
+    await Promise.all(
+        // eslint-disable-next-line complexity
+        Array.from(groupedSeries).map(async (item, index) => {
+            const [seriesType, chartSeries] = item;
+            switch (seriesType) {
+                case SERIES_TYPE.BarX: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = await prepareBarXData({
+                            series: chartSeries as PreparedBarXSeries[],
+                            seriesOptions,
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                            boundsHeight,
+                            split,
+                            isRangeSlider,
+                        });
+                        shapes[index] = (
+                            <BarXSeriesShapes
+                                key={SERIES_TYPE.BarX}
+                                dispatcher={dispatcher}
+                                seriesOptions={seriesOptions}
+                                preparedData={preparedData}
+                                htmlLayout={htmlLayout}
+                                clipPathId={clipPathId}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData);
+                    }
+                    break;
+                }
+                case SERIES_TYPE.BarY: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = await prepareBarYData({
+                            boundsHeight,
+                            boundsWidth,
+                            series: chartSeries as PreparedBarYSeries[],
+                            seriesOptions,
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                        });
+                        shapes[index] = (
+                            <BarYSeriesShapes
+                                key={SERIES_TYPE.BarY}
+                                dispatcher={dispatcher}
+                                seriesOptions={seriesOptions}
+                                preparedData={preparedData}
+                                htmlLayout={htmlLayout}
+                                clipPathId={clipPathId}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData.shapes);
+                    }
+                    break;
+                }
+                case SERIES_TYPE.Waterfall: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = await prepareWaterfallData({
+                            series: chartSeries as PreparedWaterfallSeries[],
+                            seriesOptions,
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                        });
+                        shapes[index] = (
+                            <WaterfallSeriesShapes
+                                key={SERIES_TYPE.Waterfall}
+                                dispatcher={dispatcher}
+                                seriesOptions={seriesOptions}
+                                preparedData={preparedData}
+                                htmlLayout={htmlLayout}
+                                clipPathId={clipPathId}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData);
+                    }
+                    break;
+                }
+                case SERIES_TYPE.Line: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = await prepareLineData({
+                            series: chartSeries as PreparedLineSeries[],
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                            split,
+                            isOutsideBounds,
+                            isRangeSlider,
+                        });
+                        const resultClipPathId = getSeriesClipPathId({
+                            clipPathId,
+                            yAxis,
+                            zoomState,
+                        });
+                        shapes[index] = (
+                            <LineSeriesShapes
+                                key={SERIES_TYPE.Line}
+                                dispatcher={dispatcher}
+                                seriesOptions={seriesOptions}
+                                preparedData={preparedData}
+                                htmlLayout={htmlLayout}
+                                clipPathId={resultClipPathId}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData);
+                    }
+                    break;
+                }
+                case SERIES_TYPE.Area: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = await prepareAreaData({
+                            series: chartSeries as PreparedAreaSeries[],
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                            boundsHeight,
+                            split,
+                            isOutsideBounds,
+                            isRangeSlider,
+                        });
+                        shapes[index] = (
+                            <AreaSeriesShapes
+                                key={SERIES_TYPE.Area}
+                                dispatcher={dispatcher}
+                                seriesOptions={seriesOptions}
+                                preparedData={preparedData}
+                                htmlLayout={htmlLayout}
+                                clipPathId={clipPathId}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData);
+                    }
+                    break;
+                }
+                case SERIES_TYPE.Scatter: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = prepareScatterData({
+                            series: chartSeries as PreparedScatterSeries[],
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                            isOutsideBounds,
+                        });
+                        shapes[index] = (
+                            <ScatterSeriesShape
+                                key={SERIES_TYPE.Scatter}
+                                clipPathId={
+                                    shouldUseClipPathId(SERIES_TYPE.Scatter, clipPathBySeriesType)
+                                        ? clipPathId
+                                        : undefined
+                                }
+                                dispatcher={dispatcher}
+                                preparedData={preparedData}
+                                seriesOptions={seriesOptions}
+                                htmlLayout={htmlLayout}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData);
+                    }
+                    break;
+                }
+                case SERIES_TYPE.Pie: {
+                    const preparedData = await preparePieData({
+                        series: chartSeries as PreparedPieSeries[],
+                        boundsWidth,
+                        boundsHeight,
+                    });
+                    shapes[index] = (
+                        <PieSeriesShapes
+                            key={SERIES_TYPE.Pie}
+                            dispatcher={dispatcher}
+                            preparedData={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />
+                    );
+                    shapesData.splice(index, 0, ...preparedData);
+                    break;
+                }
+                case SERIES_TYPE.Treemap: {
+                    const preparedData = await prepareTreemapData({
+                        // We should have exactly one series with "treemap" type
+                        // Otherwise data validation should emit an error
+                        series: chartSeries[0] as PreparedTreemapSeries,
+                        width: boundsWidth,
+                        height: boundsHeight,
+                    });
+                    shapes[index] = (
+                        <TreemapSeriesShape
+                            key={SERIES_TYPE.Treemap}
+                            dispatcher={dispatcher}
+                            preparedData={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />
+                    );
+                    shapesData.splice(index, 0, preparedData as unknown as ShapeData);
+                    break;
+                }
+                case SERIES_TYPE.Sankey: {
+                    const preparedData = prepareSankeyData({
+                        series: chartSeries[0] as PreparedSankeySeries,
+                        width: boundsWidth,
+                        height: boundsHeight,
+                    });
+                    shapes[index] = (
+                        <SankeySeriesShape
+                            key={SERIES_TYPE.Sankey}
+                            dispatcher={dispatcher}
+                            preparedData={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />
+                    );
+                    shapesData.splice(index, 0, preparedData);
+                    break;
+                }
+                case SERIES_TYPE.Radar: {
+                    const preparedData = await prepareRadarData({
+                        series: chartSeries as PreparedRadarSeries[],
+                        boundsWidth,
+                        boundsHeight,
+                    });
+                    shapes[index] = (
+                        <RadarSeriesShapes
+                            key={SERIES_TYPE.Radar}
+                            dispatcher={dispatcher}
+                            series={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />
+                    );
+                    shapesData.splice(index, 0, ...preparedData);
+                    break;
+                }
+                case SERIES_TYPE.Heatmap: {
+                    if (xAxis && xScale && yScale?.[0]) {
+                        const preparedData = await prepareHeatmapData({
+                            series: chartSeries[0] as PreparedHeatmapSeries,
+                            xAxis,
+                            xScale,
+                            yAxis: yAxis[0],
+                            yScale: yScale[0],
+                        });
+                        shapes[index] = (
+                            <HeatmapSeriesShapes
+                                key={SERIES_TYPE.Heatmap}
+                                dispatcher={dispatcher}
+                                preparedData={preparedData}
+                                seriesOptions={seriesOptions}
+                                htmlLayout={htmlLayout}
+                            />
+                        );
+                        shapesData.splice(index, 0, preparedData);
+                    }
+                    break;
+                }
+                case 'funnel': {
+                    const preparedData = await prepareFunnelData({
+                        series: chartSeries as PreparedFunnelSeries[],
+                        boundsWidth,
+                        boundsHeight,
+                    });
+                    shapes[index] = (
+                        <FunnelSeriesShapes
+                            key="funnel"
+                            dispatcher={dispatcher}
+                            preparedData={preparedData}
+                            seriesOptions={seriesOptions}
+                            htmlLayout={htmlLayout}
+                        />
+                    );
+                    shapesData.splice(index, 0, preparedData);
+                    break;
+                }
+                default: {
+                    throw new ChartError({
+                        message: `The display method is not defined for a series with type "${seriesType}"`,
+                    });
+                }
+            }
+        }),
+    );
+
+    return {shapes, shapesData};
+}
+
 export const useShapes = (args: Args) => {
     const {
         boundsWidth,
@@ -141,304 +460,7 @@ export const useShapes = (args: Args) => {
         (async () => {
             const currentRun = countedRef.current;
 
-            const visibleSeries = getOnlyVisibleSeries(series);
-            const groupedSeries = group(visibleSeries, (item) => item.type);
-            const shapesData: ShapeData[] = [];
-            const shapes: React.ReactElement[] = [];
-
-            await Promise.all(
-                // eslint-disable-next-line complexity
-                Array.from(groupedSeries).map(async (item, index) => {
-                    const [seriesType, chartSeries] = item;
-                    switch (seriesType) {
-                        case SERIES_TYPE.BarX: {
-                            if (xAxis && xScale && yScale?.length) {
-                                const preparedData = await prepareBarXData({
-                                    series: chartSeries as PreparedBarXSeries[],
-                                    seriesOptions,
-                                    xAxis,
-                                    xScale,
-                                    yAxis,
-                                    yScale,
-                                    boundsHeight,
-                                    split,
-                                    isRangeSlider,
-                                });
-                                shapes[index] = (
-                                    <BarXSeriesShapes
-                                        key={SERIES_TYPE.BarX}
-                                        dispatcher={dispatcher}
-                                        seriesOptions={seriesOptions}
-                                        preparedData={preparedData}
-                                        htmlLayout={htmlLayout}
-                                        clipPathId={clipPathId}
-                                    />
-                                );
-                                shapesData.splice(index, 0, ...preparedData);
-                            }
-                            break;
-                        }
-                        case SERIES_TYPE.BarY: {
-                            if (xAxis && xScale && yScale?.length) {
-                                const preparedData = await prepareBarYData({
-                                    boundsHeight,
-                                    boundsWidth,
-                                    series: chartSeries as PreparedBarYSeries[],
-                                    seriesOptions,
-                                    xAxis,
-                                    xScale,
-                                    yAxis,
-                                    yScale,
-                                });
-                                shapes[index] = (
-                                    <BarYSeriesShapes
-                                        key={SERIES_TYPE.BarY}
-                                        dispatcher={dispatcher}
-                                        seriesOptions={seriesOptions}
-                                        preparedData={preparedData}
-                                        htmlLayout={htmlLayout}
-                                        clipPathId={clipPathId}
-                                    />
-                                );
-                                shapesData.splice(index, 0, ...preparedData.shapes);
-                            }
-                            break;
-                        }
-                        case SERIES_TYPE.Waterfall: {
-                            if (xAxis && xScale && yScale?.length) {
-                                const preparedData = await prepareWaterfallData({
-                                    series: chartSeries as PreparedWaterfallSeries[],
-                                    seriesOptions,
-                                    xAxis,
-                                    xScale,
-                                    yAxis,
-                                    yScale,
-                                });
-                                shapes[index] = (
-                                    <WaterfallSeriesShapes
-                                        key={SERIES_TYPE.Waterfall}
-                                        dispatcher={dispatcher}
-                                        seriesOptions={seriesOptions}
-                                        preparedData={preparedData}
-                                        htmlLayout={htmlLayout}
-                                        clipPathId={clipPathId}
-                                    />
-                                );
-                                shapesData.splice(index, 0, ...preparedData);
-                            }
-                            break;
-                        }
-                        case SERIES_TYPE.Line: {
-                            if (xAxis && xScale && yScale?.length) {
-                                const preparedData = await prepareLineData({
-                                    series: chartSeries as PreparedLineSeries[],
-                                    xAxis,
-                                    xScale,
-                                    yAxis,
-                                    yScale,
-                                    split,
-                                    isOutsideBounds,
-                                    isRangeSlider,
-                                });
-                                const resultClipPathId = getSeriesClipPathId({
-                                    clipPathId,
-                                    yAxis,
-                                    zoomState,
-                                });
-                                shapes[index] = (
-                                    <LineSeriesShapes
-                                        key={SERIES_TYPE.Line}
-                                        dispatcher={dispatcher}
-                                        seriesOptions={seriesOptions}
-                                        preparedData={preparedData}
-                                        htmlLayout={htmlLayout}
-                                        clipPathId={resultClipPathId}
-                                    />
-                                );
-                                shapesData.splice(index, 0, ...preparedData);
-                            }
-                            break;
-                        }
-                        case SERIES_TYPE.Area: {
-                            if (xAxis && xScale && yScale?.length) {
-                                const preparedData = await prepareAreaData({
-                                    series: chartSeries as PreparedAreaSeries[],
-                                    xAxis,
-                                    xScale,
-                                    yAxis,
-                                    yScale,
-                                    boundsHeight,
-                                    split,
-                                    isOutsideBounds,
-                                    isRangeSlider,
-                                });
-                                shapes[index] = (
-                                    <AreaSeriesShapes
-                                        key={SERIES_TYPE.Area}
-                                        dispatcher={dispatcher}
-                                        seriesOptions={seriesOptions}
-                                        preparedData={preparedData}
-                                        htmlLayout={htmlLayout}
-                                        clipPathId={clipPathId}
-                                    />
-                                );
-                                shapesData.splice(index, 0, ...preparedData);
-                            }
-                            break;
-                        }
-                        case SERIES_TYPE.Scatter: {
-                            if (xAxis && xScale && yScale?.length) {
-                                const preparedData = prepareScatterData({
-                                    series: chartSeries as PreparedScatterSeries[],
-                                    xAxis,
-                                    xScale,
-                                    yAxis,
-                                    yScale,
-                                    isOutsideBounds,
-                                });
-                                shapes[index] = (
-                                    <ScatterSeriesShape
-                                        key={SERIES_TYPE.Scatter}
-                                        clipPathId={
-                                            shouldUseClipPathId(
-                                                SERIES_TYPE.Scatter,
-                                                clipPathBySeriesType,
-                                            )
-                                                ? clipPathId
-                                                : undefined
-                                        }
-                                        dispatcher={dispatcher}
-                                        preparedData={preparedData}
-                                        seriesOptions={seriesOptions}
-                                        htmlLayout={htmlLayout}
-                                    />
-                                );
-                                shapesData.splice(index, 0, ...preparedData);
-                            }
-                            break;
-                        }
-                        case SERIES_TYPE.Pie: {
-                            const preparedData = await preparePieData({
-                                series: chartSeries as PreparedPieSeries[],
-                                boundsWidth,
-                                boundsHeight,
-                            });
-                            shapes[index] = (
-                                <PieSeriesShapes
-                                    key={SERIES_TYPE.Pie}
-                                    dispatcher={dispatcher}
-                                    preparedData={preparedData}
-                                    seriesOptions={seriesOptions}
-                                    htmlLayout={htmlLayout}
-                                />
-                            );
-                            shapesData.splice(index, 0, ...preparedData);
-                            break;
-                        }
-                        case SERIES_TYPE.Treemap: {
-                            const preparedData = await prepareTreemapData({
-                                // We should have exactly one series with "treemap" type
-                                // Otherwise data validation should emit an error
-                                series: chartSeries[0] as PreparedTreemapSeries,
-                                width: boundsWidth,
-                                height: boundsHeight,
-                            });
-                            shapes[index] = (
-                                <TreemapSeriesShape
-                                    key={SERIES_TYPE.Treemap}
-                                    dispatcher={dispatcher}
-                                    preparedData={preparedData}
-                                    seriesOptions={seriesOptions}
-                                    htmlLayout={htmlLayout}
-                                />
-                            );
-                            shapesData.splice(index, 0, preparedData as unknown as ShapeData);
-                            break;
-                        }
-                        case SERIES_TYPE.Sankey: {
-                            const preparedData = prepareSankeyData({
-                                series: chartSeries[0] as PreparedSankeySeries,
-                                width: boundsWidth,
-                                height: boundsHeight,
-                            });
-                            shapes[index] = (
-                                <SankeySeriesShape
-                                    key={SERIES_TYPE.Sankey}
-                                    dispatcher={dispatcher}
-                                    preparedData={preparedData}
-                                    seriesOptions={seriesOptions}
-                                    htmlLayout={htmlLayout}
-                                />
-                            );
-                            shapesData.splice(index, 0, preparedData);
-                            break;
-                        }
-                        case SERIES_TYPE.Radar: {
-                            const preparedData = await prepareRadarData({
-                                series: chartSeries as PreparedRadarSeries[],
-                                boundsWidth,
-                                boundsHeight,
-                            });
-                            shapes[index] = (
-                                <RadarSeriesShapes
-                                    key={SERIES_TYPE.Radar}
-                                    dispatcher={dispatcher}
-                                    series={preparedData}
-                                    seriesOptions={seriesOptions}
-                                    htmlLayout={htmlLayout}
-                                />
-                            );
-                            shapesData.splice(index, 0, ...preparedData);
-                            break;
-                        }
-                        case SERIES_TYPE.Heatmap: {
-                            if (xAxis && xScale && yScale?.[0]) {
-                                const preparedData = await prepareHeatmapData({
-                                    series: chartSeries[0] as PreparedHeatmapSeries,
-                                    xAxis,
-                                    xScale,
-                                    yAxis: yAxis[0],
-                                    yScale: yScale[0],
-                                });
-                                shapes[index] = (
-                                    <HeatmapSeriesShapes
-                                        key={SERIES_TYPE.Heatmap}
-                                        dispatcher={dispatcher}
-                                        preparedData={preparedData}
-                                        seriesOptions={seriesOptions}
-                                        htmlLayout={htmlLayout}
-                                    />
-                                );
-                                shapesData.splice(index, 0, preparedData);
-                            }
-                            break;
-                        }
-                        case 'funnel': {
-                            const preparedData = await prepareFunnelData({
-                                series: chartSeries as PreparedFunnelSeries[],
-                                boundsWidth,
-                                boundsHeight,
-                            });
-                            shapes[index] = (
-                                <FunnelSeriesShapes
-                                    key="funnel"
-                                    dispatcher={dispatcher}
-                                    preparedData={preparedData}
-                                    seriesOptions={seriesOptions}
-                                    htmlLayout={htmlLayout}
-                                />
-                            );
-                            shapesData.splice(index, 0, preparedData);
-                            break;
-                        }
-                        default: {
-                            throw new ChartError({
-                                message: `The display method is not defined for a series with type "${seriesType}"`,
-                            });
-                        }
-                    }
-                }),
-            );
+            const {shapes, shapesData} = await getShapes(args);
 
             if (countedRef.current === currentRun) {
                 shapesReadyRef.current = true;

@@ -17,7 +17,7 @@ interface UseZoomProps {
     onUpdate: (zoomState: Partial<ZoomState>) => void;
     plotContainerHeight: number;
     plotContainerWidth: number;
-    preparedSplit: PreparedSplit;
+    preparedSplit: PreparedSplit | undefined;
     preparedZoom: PreparedZoom | null;
     rangeSliderDomain?: [number, number];
     xAxis: PreparedXAxis | null;
@@ -48,7 +48,7 @@ export function useZoom(props: UseZoomProps) {
             return result;
         }
 
-        if (preparedSplit.plots.length > 1) {
+        if (preparedSplit && preparedSplit.plots.length > 1) {
             preparedSplit.plots.forEach((plot) => {
                 result.push({
                     extent: [
@@ -67,7 +67,7 @@ export function useZoom(props: UseZoomProps) {
         }
 
         return result;
-    }, [plotContainerHeight, plotContainerWidth, preparedSplit.plots, preparedZoom]);
+    }, [plotContainerHeight, plotContainerWidth, preparedSplit, preparedZoom]);
 
     const handleChartBrushEnd = React.useCallback<NonNullable<UseBrushProps['onBrushEnd']>>(
         function (brushInstance, selection) {

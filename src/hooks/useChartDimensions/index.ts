@@ -1,5 +1,3 @@
-import React from 'react';
-
 import type {PreparedLegend, PreparedSeries, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartMargin, LegendConfig} from '../../types';
 import {isAxisRelatedSeries} from '../../utils';
@@ -95,7 +93,7 @@ const getLeftOffset = ({
     return 0;
 };
 
-export const useChartDimensions = (args: Args) => {
+export function getChartDimensions(args: Args) {
     const {
         height,
         margin,
@@ -107,35 +105,20 @@ export const useChartDimensions = (args: Args) => {
         legendConfig,
     } = args;
 
-    return React.useMemo(() => {
-        if (!preparedLegend || !legendConfig) {
-            return {boundsWidth: 0, boundsHeight: 0};
-        }
-
-        const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
-        const boundsWidth = getBoundsWidth({chartWidth: width, chartMargin: margin, preparedYAxis});
-        const bottomOffset = getBottomOffset({
-            hasAxisRelatedSeries,
-            preparedLegend,
-            preparedXAxis,
-            legendConfig,
-        });
-        const topOffset = getTopOffset({preparedLegend, legendConfig});
-        const rightOffset = getRightOffset({preparedLegend, legendConfig});
-        const leftOffset = getLeftOffset({preparedLegend, legendConfig});
-
-        const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
-        const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
-
-        return {boundsWidth: adjustedBoundsWidth, boundsHeight};
-    }, [
-        height,
-        margin,
+    const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
+    const boundsWidth = getBoundsWidth({chartWidth: width, chartMargin: margin, preparedYAxis});
+    const bottomOffset = getBottomOffset({
+        hasAxisRelatedSeries,
         preparedLegend,
-        legendConfig,
-        preparedSeries,
         preparedXAxis,
-        preparedYAxis,
-        width,
-    ]);
-};
+        legendConfig,
+    });
+    const topOffset = getTopOffset({preparedLegend, legendConfig});
+    const rightOffset = getRightOffset({preparedLegend, legendConfig});
+    const leftOffset = getLeftOffset({preparedLegend, legendConfig});
+
+    const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
+    const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
+
+    return {boundsWidth: adjustedBoundsWidth, boundsHeight};
+}

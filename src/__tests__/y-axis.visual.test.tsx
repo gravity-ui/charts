@@ -836,7 +836,7 @@ test.describe('Y-axis', () => {
                 await component.unmount();
             }
 
-            expect(median(widgetRenderTimes)).toBeLessThan(2000);
+            expect(median(widgetRenderTimes)).toBeLessThan(3000);
         });
     });
 

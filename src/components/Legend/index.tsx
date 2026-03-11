@@ -31,7 +31,7 @@ const b = block('legend');
 type Props = {
     chartSeries: PreparedSeries[];
     legend: PreparedLegend;
-    items: LegendItem[][];
+    items: LegendItem[][] | undefined;
     config: LegendConfig;
     htmlLayout: HTMLElement | null;
     onItemClick: OnLegendItemClick;
@@ -198,7 +198,7 @@ function renderLegendSymbol(args: {
 }
 
 export const Legend = (props: Props) => {
-    const {chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} = props;
+    const {chartSeries, legend, items = [], config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
     const [pageIndex, setPageIndex] = React.useState(0);
 

@@ -1,12 +1,10 @@
-import React from 'react';
-
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 import {calculateNumericProperty, getHorizontalSvgTextHeight} from '../../utils';
 
-import type {PreparedPlot, PreparedPlotTitle, PreparedSplit} from './types';
+import type {PreparedPlot, PreparedPlotTitle} from './types';
 
 type UseSplitArgs = {
     split?: ChartSplit;
@@ -60,35 +58,32 @@ export function getPlotHeight(args: {
     return boundsHeight;
 }
 
-export const useSplit = (args: UseSplitArgs): PreparedSplit => {
+export function getSplit(args: UseSplitArgs) {
     const {split, boundsHeight, chartWidth} = args;
+    const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
+    const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
+    const plots = split?.plots ?? [];
+    if (isEmpty(plots)) {
+        plots.push({});
+    }
 
-    return React.useMemo(() => {
-        const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
-        const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
-        const plots = split?.plots ?? [];
-        if (isEmpty(plots)) {
-            plots.push({});
-        }
+    return {
+        plots: plots.map<PreparedPlot>((p, index) => {
+            const title = preparePlotTitle({
+                title: p.title,
+                plotIndex: index,
+                gap: splitGap,
+                plotHeight,
+                chartWidth,
+            });
+            const top = index * (plotHeight + splitGap);
 
-        return {
-            plots: plots.map<PreparedPlot>((p, index) => {
-                const title = preparePlotTitle({
-                    title: p.title,
-                    plotIndex: index,
-                    gap: splitGap,
-                    plotHeight,
-                    chartWidth,
-                });
-                const top = index * (plotHeight + splitGap);
-
-                return {
-                    top: top + title.height,
-                    height: plotHeight - title.height,
-                    title,
-                };
-            }),
-            gap: splitGap,
-        };
-    }, [split, boundsHeight, chartWidth]);
-};
+            return {
+                top: top + title.height,
+                height: plotHeight - title.height,
+                title,
+            };
+        }),
+        gap: splitGap,
+    };
+}
