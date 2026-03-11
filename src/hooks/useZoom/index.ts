@@ -67,7 +67,7 @@ export function useZoom(props: UseZoomProps) {
         }
 
         return result;
-    }, [plotContainerHeight, plotContainerWidth, preparedSplit?.plots, preparedZoom]);
+    }, [plotContainerHeight, plotContainerWidth, preparedSplit, preparedZoom]);
 
     const handleChartBrushEnd = React.useCallback<NonNullable<UseBrushProps['onBrushEnd']>>(
         function (brushInstance, selection) {

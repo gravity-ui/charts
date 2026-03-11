@@ -60,9 +60,11 @@ export function useChartInnerState(props: Props) {
                 } else if (nextZoomState.x !== undefined) {
                     setRangeSliderState({min: nextZoomState.x[0], max: nextZoomState.x[1]});
                 }
+
+                dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
             }
         },
-        [zoomState],
+        [dispatcher, zoomState],
     );
 
     const updateRangeSliderState = React.useCallback(

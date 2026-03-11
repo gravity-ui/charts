@@ -1,5 +1,3 @@
-import type React from 'react';
-
 import type {DashStyle} from '../../constants';
 import type {
     AxisCrosshair,
@@ -104,5 +102,3 @@ export type AxesState = {
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
 };
-
-export type SetAxes = React.Dispatch<React.SetStateAction<AxesState>>;
