@@ -5,7 +5,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
-test.describe.only('Default state', () => {
+test.describe('Default state', () => {
     test.describe('hoveredPosition', () => {
         test('number (pixels)', async ({mount}) => {
             const data: ChartData = {
