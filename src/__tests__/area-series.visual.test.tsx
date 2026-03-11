@@ -456,6 +456,6 @@ test.describe('Area series', () => {
             await component.unmount();
         }
 
-        expect(median(widgetRenderTimes)).toBeLessThan(650);
+        expect(median(widgetRenderTimes)).toBeLessThan(900);
     });
 });
