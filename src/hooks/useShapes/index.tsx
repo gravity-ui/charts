@@ -131,7 +131,6 @@ export async function getShapes(args: Args) {
     const shapes: React.ReactElement[] = [];
 
     await Promise.all(
-        // eslint-disable-next-line complexity
         Array.from(groupedSeries).map(async (item, index) => {
             const [seriesType, chartSeries] = item;
             switch (seriesType) {

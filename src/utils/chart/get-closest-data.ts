@@ -136,7 +136,6 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
     const closestPointsByXValue: ShapePoint[] = [];
 
-    // eslint-disable-next-line complexity
     Object.entries(groups).forEach(([seriesType, list]) => {
         switch (seriesType) {
             case 'line': {

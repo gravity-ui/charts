@@ -110,7 +110,6 @@ export const getPreparedYAxis = ({
     }
 
     return Promise.all(
-        // eslint-disable-next-line complexity
         axisItems.map(async (axisItem, axisIndex) => {
             const plotIndex = get(axisItem, 'plotIndex', 0);
             const firstPlotAxis = !axisByPlot[plotIndex];

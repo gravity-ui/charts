@@ -59,7 +59,6 @@ function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?
     return range;
 }
 
-// eslint-disable-next-line complexity
 export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;

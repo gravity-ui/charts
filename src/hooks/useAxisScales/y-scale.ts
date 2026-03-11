@@ -167,7 +167,6 @@ function getDomainMaxAlignedToEndTick(args: {
     return dNewMax;
 }
 
-// eslint-disable-next-line complexity
 export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;

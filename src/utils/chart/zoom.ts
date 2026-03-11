@@ -18,7 +18,6 @@ import type {
 
 const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SERIES_TYPE.Area, SERIES_TYPE.Line];
 
-// eslint-disable-next-line complexity
 function isValueInRange(args: {
     axis?: ChartXAxis | ChartYAxis | PreparedAxis | null;
     value?: number | string;
@@ -108,7 +107,6 @@ export function getZoomedSeriesData(args: {
             return;
         }
 
-        // eslint-disable-next-line complexity
         seriesItem.data.forEach((point, i) => {
             const prevPoint = seriesItem.data[i - 1];
             const isFirstPoint = i === 0;
