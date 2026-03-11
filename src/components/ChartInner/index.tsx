@@ -5,9 +5,6 @@ import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {useCrosshair, usePrevious} from '../../hooks';
 import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
-import {getPreparedChart} from '../../hooks/useChartOptions/chart';
-import {getPreparedTitle} from '../../hooks/useChartOptions/title';
-import {getPreparedTooltip} from '../../hooks/useChartOptions/tooltip';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
 import {EventType, block, getDispatcher, isBandScale} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
@@ -28,7 +25,14 @@ import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
-import {getResetZoomButtonStyle, useAsyncState, useDebouncedValue} from './utils';
+import {
+    getPreparedChart,
+    getPreparedTitle,
+    getPreparedTooltip,
+    getResetZoomButtonStyle,
+    useAsyncState,
+    useDebouncedValue,
+} from './utils';
 
 import './styles.scss';
 
@@ -90,7 +94,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         boundsOffsetTop,
         boundsWidth,
         handleLegendItemClick,
-        isOutsideBounds,
         legendConfig,
         legendItems,
         preparedLegend,
@@ -146,7 +149,6 @@ export const ChartInner = (props: ChartInnerProps) => {
             xScale,
             yScale,
             tooltipThrottle: preparedTooltip.throttle,
-            isOutsideBounds,
         });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;

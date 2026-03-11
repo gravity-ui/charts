@@ -1,4 +1,4 @@
-import type {ChartBrush, ChartData, ChartMargin, ChartZoom, DeepRequired} from '../../types';
+import type {ChartBrush, ChartData, ChartMargin, ChartZoom, DeepRequired} from '../types';
 
 export type PreparedZoom = DeepRequired<Omit<ChartZoom, 'enabled' | 'brush'>> &
     DeepRequired<{brush: ChartBrush}>;

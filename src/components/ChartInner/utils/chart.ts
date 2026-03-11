@@ -1,8 +1,8 @@
 import get from 'lodash/get';
 
-import type {ChartData, ChartSeries} from '../../types';
+import type {PreparedChart, PreparedTitle} from '../../../hooks/types';
+import type {ChartData, ChartSeries} from '../../../types';
 
-import type {PreparedChart, PreparedTitle} from './types';
 import {getPreparedZoom} from './zoom';
 
 const getMarginTop = (args: {chart: ChartData['chart']; preparedTitle?: PreparedTitle}) => {

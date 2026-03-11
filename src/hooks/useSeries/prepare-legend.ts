@@ -12,7 +12,7 @@ import {
     getTextSizeFn,
     getTextWithElipsis,
 } from '../../utils';
-import type {PreparedChart} from '../useChartOptions/types';
+import type {PreparedChart} from '../types';
 
 import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
 

@@ -1,11 +1,10 @@
 import intersection from 'lodash/intersection';
 import merge from 'lodash/merge';
 
-import {SERIES_TYPE, ZOOM_TYPE, brushDefaults} from '../../constants';
-import type {ZoomType} from '../../constants';
-import type {ChartBrush, ChartSeries, ChartZoom} from '../../types';
-
-import type {PreparedZoom} from './types';
+import {SERIES_TYPE, ZOOM_TYPE, brushDefaults} from '../../../constants';
+import type {ZoomType} from '../../../constants';
+import type {PreparedZoom} from '../../../hooks/types';
+import type {ChartBrush, ChartSeries, ChartZoom} from '../../../types';
 
 function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
     switch (seriesType) {

@@ -460,7 +460,24 @@ export const useShapes = (args: Args) => {
         (async () => {
             const currentRun = countedRef.current;
 
-            const {shapes, shapesData} = await getShapes(args);
+            const {shapes, shapesData} = await getShapes({
+                boundsHeight,
+                boundsWidth,
+                clipPathId,
+                clipPathBySeriesType,
+                dispatcher,
+                htmlLayout,
+                isOutsideBounds,
+                isRangeSlider,
+                series,
+                seriesOptions,
+                split,
+                xAxis,
+                xScale,
+                yAxis,
+                yScale,
+                zoomState,
+            });
 
             if (countedRef.current === currentRun) {
                 shapesReadyRef.current = true;

@@ -1,9 +1,8 @@
 import get from 'lodash/get';
 
-import type {BaseTextStyle, ChartData} from '../../types';
-import {getHorizontalSvgTextHeight} from '../../utils';
-
-import type {PreparedTitle} from './types';
+import type {PreparedTitle} from '../../../hooks/types';
+import type {BaseTextStyle, ChartData} from '../../../types';
+import {getHorizontalSvgTextHeight} from '../../../utils';
 
 const DEFAULT_TITLE_FONT_SIZE = '15px';
 const TITLE_PADDINGS = 8 * 2;

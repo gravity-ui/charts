@@ -3,8 +3,8 @@ import React from 'react';
 import isEqual from 'lodash/isEqual';
 
 import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
-import {getWidthOccupiedByYAxis} from '../useChartDimensions/utils';
-import type {PreparedChart} from '../useChartOptions/types';
+import {getWidthOccupiedByYAxis} from '../../utils';
+import type {PreparedChart} from '../types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 
 import type {AxesState} from './types';

@@ -1,5 +1,5 @@
-import type {ChartData} from '../../types';
-import {getAxisCategories} from '../../utils';
+import type {ChartData} from '../../../types';
+import {getAxisCategories} from '../../../utils';
 
 export function getNormalizedXAxis(props: {xAxis: ChartData['xAxis']}) {
     let categories = props.xAxis?.categories;
