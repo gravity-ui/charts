@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.6](https://github.com/gravity-ui/charts/compare/v1.38.5...v1.38.6) (2026-03-11)
+
+
+### Bug Fixes
+
+* fix the display of a blank screen instead of a chart ([#471](https://github.com/gravity-ui/charts/issues/471)) ([0ef8bd3](https://github.com/gravity-ui/charts/commit/0ef8bd3366c8a643b6dd1a51f75da471adc4246f))
+
 ## [1.38.5](https://github.com/gravity-ui/charts/compare/v1.38.4...v1.38.5) (2026-03-10)
 
 
