@@ -241,38 +241,53 @@ export function useChartInnerProps(props: Props) {
             const xAxis = axes.xAxis;
             let yAxis = axes.yAxis;
 
-            const {boundsWidth, boundsHeight} = getChartDimensions({
-                height,
-                margin: preparedChart.margin,
-                preparedLegend,
-                preparedSeries: preparedSeries,
-                preparedYAxis: yAxis,
-                preparedXAxis: xAxis,
-                width,
-                legendConfig,
-            });
-
-            const preparedSplit = getSplit({split: data.split, boundsHeight, chartWidth: width});
-
+            let preparedSplit: PreparedSplit = {plots: [], gap: 0};
             let xScale: ChartScale | undefined;
             let yScale: (ChartScale | undefined)[] | undefined;
-            const hasAxisRelatedSeries = preparedSeries.some(isAxisRelatedSeries);
+            let boundsWidth = 0;
+            let boundsHeight = 0;
 
-            if (hasAxisRelatedSeries) {
-                ({xScale, yScale} = createScales({
-                    boundsWidth,
-                    boundsHeight,
-                    isRangeSlider: false,
-                    rangeSliderState,
-                    series: preparedSeries,
-                    split: preparedSplit,
-                    xAxis,
-                    yAxis,
-                    zoomState,
-                }));
+            const calculateAxisBasedProps = () => {
+                const chartDimensions = getChartDimensions({
+                    height,
+                    margin: preparedChart.margin,
+                    preparedLegend,
+                    preparedSeries: preparedSeries,
+                    preparedYAxis: yAxis,
+                    preparedXAxis: xAxis,
+                    width,
+                    legendConfig,
+                });
+                boundsHeight = chartDimensions.boundsHeight;
+                boundsWidth = chartDimensions.boundsWidth;
+
+                preparedSplit = getSplit({split: data.split, boundsHeight, chartWidth: width});
+
+                if (preparedSeries.some(isAxisRelatedSeries)) {
+                    ({xScale, yScale} = createScales({
+                        boundsWidth,
+                        boundsHeight,
+                        isRangeSlider: false,
+                        rangeSliderState,
+                        series: preparedSeries,
+                        split: preparedSplit,
+                        xAxis,
+                        yAxis,
+                        zoomState,
+                    }));
+                }
+            };
+
+            calculateAxisBasedProps();
+            const newYAxis = await recalculateYAxisLabelsWidth({
+                seriesData: preparedSeries,
+                yAxis,
+                yScale,
+            });
+            if (!isEqual(yAxis, newYAxis)) {
+                yAxis = newYAxis;
+                calculateAxisBasedProps();
             }
-
-            yAxis = await recalculateYAxisLabelsWidth({seriesData: preparedSeries, yAxis, yScale});
 
             const isOutsideBounds = (x: number, y: number) => {
                 return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
