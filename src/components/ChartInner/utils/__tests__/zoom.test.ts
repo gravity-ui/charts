@@ -1,5 +1,5 @@
-import {SERIES_TYPE, ZOOM_TYPE} from '../../../constants';
-import type {ChartSeries} from '../../../types';
+import {SERIES_TYPE, ZOOM_TYPE} from '../../../../constants';
+import type {ChartSeries} from '../../../../types';
 import {getZoomType} from '../zoom';
 
 const AREA_SERIES: ChartSeries = {
@@ -61,7 +61,7 @@ const WATERFALL_SERIES: ChartSeries = {
     type: SERIES_TYPE.Waterfall,
 };
 
-describe('useChartOptions/zoom/getZoomType', () => {
+describe('zoom/getZoomType', () => {
     test.each([
         {seriesData: [AREA_SERIES], expected: ZOOM_TYPE.X},
         {seriesData: [LINE_SERIES], expected: ZOOM_TYPE.X},

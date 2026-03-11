@@ -1,10 +1,8 @@
-import get from 'lodash/get';
-
 import {getDefaultValueFormat} from '../../components/Tooltip/DefaultTooltipContent/utils';
-import type {ChartData, ChartSeries, ChartXAxis, ChartYAxis} from '../../types';
-import {getDomainDataXBySeries, getDomainDataYBySeries, getMinSpaceBetween} from '../../utils';
+import type {ChartSeries, ChartXAxis, ChartYAxis} from '../../types';
 
-import type {PreparedTooltip} from './types';
+import {getMinSpaceBetween} from './array';
+import {getDomainDataXBySeries, getDomainDataYBySeries} from './common';
 
 export function getDefaultTooltipHeaderFormat({
     seriesData,
@@ -35,20 +33,3 @@ export function getDefaultTooltipHeaderFormat({
     const closestPointsRange = getMinSpaceBetween(domainData, (d) => d);
     return getDefaultValueFormat({axis: xAxis, closestPointsRange});
 }
-
-export const getPreparedTooltip = (args: {
-    tooltip: ChartData['tooltip'];
-    seriesData: ChartSeries[];
-    yAxes?: ChartYAxis[];
-    xAxis?: ChartXAxis;
-}): PreparedTooltip => {
-    const {tooltip, seriesData, yAxes, xAxis} = args;
-
-    return {
-        ...tooltip,
-        enabled: get(tooltip, 'enabled', true),
-        throttle: tooltip?.throttle ?? 0,
-        headerFormat:
-            tooltip?.headerFormat ?? getDefaultTooltipHeaderFormat({seriesData, yAxes, xAxis}),
-    };
-};

@@ -3,7 +3,8 @@ import React from 'react';
 import debounce from 'lodash/debounce';
 import isEqual from 'lodash/isEqual';
 
-import type {PreparedAxis, PreparedSeries, PreparedZoom} from '../../hooks';
+import type {PreparedAxis, PreparedSeries} from '../../../hooks';
+import type {PreparedZoom} from '../../../hooks/types';
 
 export function hasAtLeastOneSeriesDataPerPlot(
     seriesData: PreparedSeries[],
@@ -65,6 +66,7 @@ export function useAsyncState<T>(value: T, setState: () => Promise<T>, isReady =
     return stateValue;
 }
 
+// eslint-disable-next-line complexity
 export function getResetZoomButtonStyle(
     args: {
         boundsHeight: number;

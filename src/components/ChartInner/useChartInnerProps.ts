@@ -7,14 +7,10 @@ import {DEFAULT_PALETTE, SERIES_TYPE} from '../../constants';
 import {
     createScales,
     getAxes,
-    getChartDimensions,
-    getNormalizedXAxis,
-    getNormalizedYAxis,
     getPreparedSeries,
     getShapes,
     getSplit,
     getVisibleSeries,
-    recalculateYAxisLabelsWidth,
     useZoom,
 } from '../../hooks';
 import type {
@@ -23,7 +19,6 @@ import type {
     LegendItem,
     OnLegendItemClick,
     PreparedAxis,
-    PreparedChart,
     PreparedLegend,
     PreparedSeries,
     PreparedSeriesOptions,
@@ -34,20 +29,23 @@ import type {
     ShapeData,
     ZoomState,
 } from '../../hooks';
-import {getYAxisWidth} from '../../hooks/useChartDimensions/utils';
+import type {PreparedChart} from '../../hooks/types';
 import {getLegendComponents, getPreparedLegend} from '../../hooks/useSeries/prepare-legend';
 import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '../../hooks/useSeries/utils';
 import type {ChartData, LegendConfig} from '../../types';
 import {
+    getChartDimensions,
     getEffectiveXRange,
     getSortedSeriesData,
+    getYAxisWidth,
     getZoomedSeriesData,
     isAxisRelatedSeries,
 } from '../../utils';
 
 import type {ChartInnerProps} from './types';
-import {hasAtLeastOneSeriesDataPerPlot} from './utils';
+import {getNormalizedXAxis, getNormalizedYAxis, recalculateYAxisLabelsWidth} from './utils';
+import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
 
 type Props = ChartInnerProps & {
     clipPathId: string;
@@ -121,7 +119,6 @@ type ChartState = {
     boundsOffsetLeft: number;
     boundsOffsetTop: number;
     boundsWidth: number;
-    isOutsideBounds: (x: number, y: number) => boolean;
     legendConfig: LegendConfig;
     legendItems: LegendItem[][];
     preparedLegend: PreparedLegend;
@@ -137,7 +134,6 @@ type ChartState = {
     activeLegendItems: string[];
 };
 
-// eslint-disable-next-line complexity
 export function useChartInnerProps(props: Props) {
     const {
         clipPathId,
@@ -289,10 +285,6 @@ export function useChartInnerProps(props: Props) {
                 calculateAxisBasedProps();
             }
 
-            const isOutsideBounds = (x: number, y: number) => {
-                return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
-            };
-
             const {shapes, shapesData} = await getShapes({
                 boundsWidth,
                 boundsHeight,
@@ -307,7 +299,9 @@ export function useChartInnerProps(props: Props) {
                 split: preparedSplit,
                 htmlLayout,
                 clipPathId,
-                isOutsideBounds,
+                isOutsideBounds: (x: number, y: number) => {
+                    return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
+                },
                 zoomState: effectiveZoomState,
             });
 
@@ -334,7 +328,6 @@ export function useChartInnerProps(props: Props) {
                 boundsOffsetLeft,
                 boundsOffsetTop,
                 boundsWidth,
-                isOutsideBounds,
                 legendConfig,
                 legendItems,
                 preparedLegend,
@@ -384,6 +377,9 @@ export function useChartInnerProps(props: Props) {
     const boundsHeight = chartState?.boundsHeight ?? 0;
     const boundsWidth = chartState?.boundsWidth ?? 0;
 
+    const xAxis = chartState?.xAxis ?? null;
+    const yAxis = React.useMemo(() => chartState?.yAxis ?? [], [chartState?.yAxis]);
+
     const handleLegendItemClick: OnLegendItemClick = React.useCallback(
         ({id, metaKey}) => {
             const allItems = getAllLegendItems(preparedSeries);
@@ -408,23 +404,23 @@ export function useChartInnerProps(props: Props) {
         [preparedSeries, selectedLegendItems, activeLegendItems],
     );
 
-    const xAxis = chartState?.xAxis ?? null;
-    const yAxis = chartState?.yAxis ?? [];
+    const handleAttemptToSetZoomState = React.useCallback(
+        (nextZoomState: Partial<ZoomState>) => {
+            const {preparedSeries: nextZoomedSeriesData} = getZoomedSeriesData({
+                seriesData: chartState?.preparedSeries ?? [],
+                xAxis,
+                yAxis,
+                zoomState: nextZoomState,
+            });
 
-    const handleAttemptToSetZoomState = (nextZoomState: Partial<ZoomState>) => {
-        const {preparedSeries: nextZoomedSeriesData} = getZoomedSeriesData({
-            seriesData: chartState?.preparedSeries ?? [],
-            xAxis,
-            yAxis,
-            zoomState: nextZoomState,
-        });
+            const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, yAxis);
 
-        const hasData = hasAtLeastOneSeriesDataPerPlot(nextZoomedSeriesData, yAxis);
-
-        if (hasData) {
-            updateZoomState(nextZoomState);
-        }
-    };
+            if (hasData) {
+                updateZoomState(nextZoomState);
+            }
+        },
+        [chartState?.preparedSeries, updateZoomState, xAxis, yAxis],
+    );
 
     useZoom({
         node: plotNode,
@@ -453,6 +449,5 @@ export function useChartInnerProps(props: Props) {
         shapesData: chartState?.shapesData ?? [],
         shapesReady: Boolean(chartState),
         handleLegendItemClick,
-        isOutsideBounds: chartState?.isOutsideBounds ?? (() => false),
     };
 }

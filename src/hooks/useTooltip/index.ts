@@ -10,7 +10,7 @@ import type {
     PointPosition,
     TooltipDataChunk,
 } from '../../types';
-import type {PreparedTooltip} from '../useChartOptions/types';
+import type {PreparedTooltip} from '../types';
 
 type Args = {
     dispatcher: Dispatch<object>;
