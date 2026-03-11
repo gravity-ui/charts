@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.7](https://github.com/gravity-ui/charts/compare/v1.38.6...v1.38.7) (2026-03-11)
+
+
+### Bug Fixes
+
+* refactor useChartInnerProps ([#473](https://github.com/gravity-ui/charts/issues/473)) ([e4a09f2](https://github.com/gravity-ui/charts/commit/e4a09f2d9542cacf327e42c12fba04e9524a6416))
+
 ## [1.38.6](https://github.com/gravity-ui/charts/compare/v1.38.5...v1.38.6) (2026-03-11)
 
 
