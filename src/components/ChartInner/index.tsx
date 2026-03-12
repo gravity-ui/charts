@@ -25,6 +25,7 @@ import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
+import {useDefaultState} from './useDefaultState';
 import {
     getPreparedChart,
     getPreparedTitle,
@@ -150,6 +151,21 @@ export const ChartInner = (props: ChartInnerProps) => {
             yScale,
             tooltipThrottle: preparedTooltip.throttle,
         });
+    useDefaultState({
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        boundsWidth,
+        defaultState: data.defaultState,
+        dispatcher,
+        shapesData,
+        shapesReady,
+        svgRef,
+        xAxis,
+        yAxis,
+        xScale,
+        yScale,
+    });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
     const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);

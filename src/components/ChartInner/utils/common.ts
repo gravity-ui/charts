@@ -66,7 +66,6 @@ export function useAsyncState<T>(value: T, setState: () => Promise<T>, isReady =
     return stateValue;
 }
 
-// eslint-disable-next-line complexity
 export function getResetZoomButtonStyle(
     args: {
         boundsHeight: number;

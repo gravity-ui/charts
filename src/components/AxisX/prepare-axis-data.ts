@@ -124,7 +124,6 @@ async function getSvgAxisLabel({
     return svgLabel;
 }
 
-// eslint-disable-next-line complexity
 export async function prepareXAxisData({
     axis,
     boundsOffsetLeft,

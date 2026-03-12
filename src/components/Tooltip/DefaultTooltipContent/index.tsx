@@ -172,7 +172,6 @@ export const DefaultTooltipContent = ({
                 ref={contentRowsRef}
                 style={pinned ? {maxHeight: maxContentRowsHeight} : undefined}
             >
-                {/* eslint-disable-next-line complexity */}
                 {visibleHovered.map((seriesItem, i) => {
                     const {data, series, closest} = seriesItem;
                     const id = `${get(series, 'id')}_${i}`;

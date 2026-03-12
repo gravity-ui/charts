@@ -212,7 +212,6 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
         let shouldStopLabelPlacement = false;
-        // eslint-disable-next-line complexity
         series.forEach((d, index) => {
             const prevLabel = labels[labels.length - 1];
             const {text = '', size: labelSize} = labelsData[d.id];

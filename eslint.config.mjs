@@ -52,6 +52,7 @@ export default [
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
             'valid-jsdoc': 'off',
             'no-param-reassign': 'off',
+            complexity: 'off',
         },
     },
 
