@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.39.1](https://github.com/gravity-ui/charts/compare/v1.39.0...v1.39.1) (2026-03-12)
+
+
+### Bug Fixes
+
+* **crosshair:** correct position for category axis with numeric indices ([e586d89](https://github.com/gravity-ui/charts/commit/e586d89cd942a8be19890140013a6958ca181664))
+* **crosshair:** correct position for category axis with numeric indices ([#480](https://github.com/gravity-ui/charts/issues/480)) ([aef129d](https://github.com/gravity-ui/charts/commit/aef129d89eb5c35c90791daf6609230aa06adb20))
+
 ## [1.39.0](https://github.com/gravity-ui/charts/compare/v1.38.7...v1.39.0) (2026-03-12)
 
 
