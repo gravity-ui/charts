@@ -525,4 +525,34 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.describe('Crosshair', () => {
+        const baseData: ChartData = {
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [{x: 0, y: 10}],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['A'],
+                crosshair: {enabled: true},
+            },
+            yAxis: [{visible: false}],
+            defaultState: {
+                hoveredPosition: {x: '50%', y: '50%'},
+            },
+        };
+
+        test('category axis with numeric index in data', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });

@@ -6,6 +6,7 @@ import type {AxisDomain, AxisScale, Dispatch} from 'd3';
 import type {ChartScale, PreparedSplit, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {PointPosition, TooltipDataChunk} from '../../types';
 import {getAxisPlotsPosition, getLineDashArray} from '../../utils';
+import {getXValue, getYValue} from '../useShapes/utils';
 
 import {useCrosshairHover} from './useCrosshairHover';
 
@@ -56,7 +57,7 @@ export const useCrosshair = (props: Props) => {
         const lineGenerator = line();
 
         if (xAxis?.crosshair.enabled && hovered?.length) {
-            const xAxisScale = xScale as AxisScale<AxisDomain>;
+            const xAxisScale = xScale;
             const crosshairDataAttr = 'data-crosshair-x-line';
 
             const crosshairSelection = svgElement
@@ -70,12 +71,18 @@ export const useCrosshair = (props: Props) => {
                 .append('path')
                 .attr('d', (hoveredElement) => {
                     let lineValue = 0;
-                    if (xAxis.crosshair.snap) {
-                        const offset = (xAxisScale.bandwidth?.() ?? 0) / 2;
-                        if (typeof hoveredElement.data === 'object' && 'x' in hoveredElement.data) {
-                            lineValue = Number(xAxisScale(hoveredElement.data.x ?? 0)) + offset;
-                        }
-                    } else {
+                    if (
+                        xAxis.crosshair.snap &&
+                        typeof hoveredElement.data === 'object' &&
+                        'x' in hoveredElement.data
+                    ) {
+                        const xVal = getXValue({
+                            point: hoveredElement.data,
+                            xAxis,
+                            xScale: xAxisScale,
+                        });
+                        lineValue = xVal !== null && !Number.isNaN(xVal) ? xVal : lineValue;
+                    } else if (!xAxis.crosshair.snap) {
                         lineValue = pointerXPos - boundsOffsetLeft;
                     }
 
@@ -145,15 +152,18 @@ export const useCrosshair = (props: Props) => {
                     .append('path')
                     .attr('d', (hoveredElement) => {
                         let lineValue = 0;
-                        if (yAxis.crosshair.snap) {
-                            const offset = (yAxisScale.bandwidth?.() ?? 0) / 2;
-                            if (
-                                typeof hoveredElement.data === 'object' &&
-                                'y' in hoveredElement.data
-                            ) {
-                                lineValue = Number(yAxisScale(hoveredElement.data.y ?? 0)) + offset;
-                            }
-                        } else {
+                        if (
+                            yAxis.crosshair.snap &&
+                            typeof hoveredElement.data === 'object' &&
+                            'y' in hoveredElement.data
+                        ) {
+                            const yVal = getYValue({
+                                point: hoveredElement.data,
+                                yAxis,
+                                yScale: yAxisScale as ChartScale,
+                            });
+                            lineValue = yVal !== null && !Number.isNaN(yVal) ? yVal : lineValue;
+                        } else if (!yAxis.crosshair.snap) {
                             lineValue = pointerYPos - boundsOffsetTop;
                         }
                         const points: [number, number][] = [

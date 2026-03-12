@@ -912,4 +912,36 @@ test.describe('Y-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.describe('Crosshair', () => {
+        const baseData: ChartData = {
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Series 1',
+                        data: [{x: 10, y: 0}],
+                    },
+                ],
+            },
+            xAxis: {visible: false},
+            yAxis: [
+                {
+                    type: 'category',
+                    categories: ['A'],
+                    crosshair: {enabled: true},
+                },
+            ],
+            defaultState: {
+                hoveredPosition: {x: '50%', y: '50%'},
+            },
+        };
+
+        test('category axis with numeric index in data', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
