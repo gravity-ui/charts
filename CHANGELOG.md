@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.0](https://github.com/gravity-ui/charts/compare/v1.38.7...v1.39.0) (2026-03-12)
+
+
+### Features
+
+* **chart:** add defaultState.hoveredPosition for initial hover on first render ([#475](https://github.com/gravity-ui/charts/issues/475)) ([9366ba3](https://github.com/gravity-ui/charts/commit/9366ba3bff1b62b74b43786b5a856a122c563624))
+
 ## [1.38.7](https://github.com/gravity-ui/charts/compare/v1.38.6...v1.38.7) (2026-03-11)
 
 
