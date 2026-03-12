@@ -18,7 +18,6 @@ import type {
     ClipPathBySeriesType,
     LegendItem,
     OnLegendItemClick,
-    PreparedAxis,
     PreparedLegend,
     PreparedSeries,
     PreparedSeriesOptions,
@@ -82,8 +81,8 @@ function getBoundsOffsetTop({
 function getBoundsOffsetLeft(args: {
     chartMarginLeft: number;
     preparedLegend: PreparedLegend | null;
-    yAxis: PreparedAxis[];
-    getYAxisWidth: (axis: PreparedAxis) => number;
+    yAxis: PreparedYAxis[];
+    getYAxisWidth: (axis: PreparedYAxis) => number;
     legendConfig: LegendConfig | undefined;
 }): number {
     const {

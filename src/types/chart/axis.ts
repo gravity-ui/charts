@@ -9,6 +9,7 @@ import type {ChartBrush} from './brush';
 
 export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
+export type ChartAxisTitleRotation = 0 | 90 | -90;
 
 export interface ChartAxisLabels {
     /** Enable or disable the axis labels. */
@@ -330,7 +331,7 @@ export interface ChartYAxisTitle extends ChartAxisTitle {
      *
      * The default values are -90 for the left axis and 90 for the right.
      */
-    rotation?: 0 | 90 | -90;
+    rotation?: ChartAxisTitleRotation;
     /**
      * Interval of the tick marks(absolute or relative to the chart area).
      *

@@ -1,4 +1,4 @@
-import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
+import type {TOOLTIP_SORT_PRESET, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -148,6 +148,13 @@ export type ChartTooltipRowRendererArgs = {
     className?: string;
 };
 
+export type ChartTooltipSortPreset = (typeof TOOLTIP_SORT_PRESET)[keyof typeof TOOLTIP_SORT_PRESET];
+
+export type ChartTooltipSortComparator<T = MeaningfulAny> = (
+    a: TooltipDataChunk<T>,
+    b: TooltipDataChunk<T>,
+) => number;
+
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
@@ -193,4 +200,10 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * It is assigned as a data-qa attribute to an element.
      */
     qa?: string;
+    /**
+     * Sort order for tooltip rows. Applied to `hovered` before passing to renderer.
+     * Presets: valueAsc, valueDesc.
+     * Custom comparator receives (a, b) and should return negative/zero/positive.
+     */
+    sort?: ChartTooltipSortPreset | ChartTooltipSortComparator<T>;
 }

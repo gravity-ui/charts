@@ -3,6 +3,7 @@ import React from 'react';
 import type {Dispatch} from 'd3';
 import isEqual from 'lodash/isEqual';
 
+import {getSortedHovered} from '../../components/Tooltip/DefaultTooltipContent/utils';
 import type {
     AxisPlotBand,
     AxisPlotLine,
@@ -11,10 +12,13 @@ import type {
     TooltipDataChunk,
 } from '../../types';
 import type {PreparedTooltip} from '../types';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 
 type Args = {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
+    xAxis?: PreparedXAxis | null;
+    yAxis?: PreparedYAxis;
 };
 
 type TooltipState = {
@@ -24,7 +28,7 @@ type TooltipState = {
     pointerPosition?: PointPosition;
 };
 
-export const useTooltip = ({dispatcher, tooltip}: Args) => {
+export const useTooltip = ({dispatcher, tooltip, xAxis, yAxis}: Args) => {
     const [{hovered, hoveredPlotLines, hoveredPlotBands, pointerPosition}, setTooltipState] =
         React.useState<TooltipState>({});
     const prevHovered = React.useRef(hovered);
@@ -41,16 +45,22 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
                     const filteredNextHovered = nextHovered?.filter((item) =>
                         'y' in item.data ? item.data.y !== null : true,
                     );
-                    const isHoveredChanged = !isEqual(prevHovered.current, filteredNextHovered);
+                    const sortedHovered = getSortedHovered({
+                        hovered: filteredNextHovered ?? [],
+                        sort: tooltip?.sort,
+                        xAxis,
+                        yAxis,
+                    });
+                    const isHoveredChanged = !isEqual(prevHovered.current, sortedHovered);
                     const newTooltipState: TooltipState = {
-                        hovered: isHoveredChanged ? filteredNextHovered : prevHovered.current,
+                        hovered: isHoveredChanged ? sortedHovered : prevHovered.current,
                         hoveredPlotLines: nextHoveredPlots?.lines,
                         hoveredPlotBands: nextHoveredPlots?.bands,
                         pointerPosition: nextPointerPosition,
                     };
 
                     if (isHoveredChanged) {
-                        prevHovered.current = filteredNextHovered;
+                        prevHovered.current = sortedHovered;
                     }
                     setTooltipState(newTooltipState);
                 },
@@ -62,7 +72,7 @@ export const useTooltip = ({dispatcher, tooltip}: Args) => {
                 dispatcher.on('hover-shape.tooltip', null);
             }
         };
-    }, [dispatcher, tooltip]);
+    }, [dispatcher, tooltip, xAxis, yAxis]);
     return {
         hovered,
         hoveredPlotLines,

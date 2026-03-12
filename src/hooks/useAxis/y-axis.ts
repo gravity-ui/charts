@@ -11,7 +11,7 @@ import {
     axisTickMarksDefaults,
     yAxisTitleDefaults,
 } from '../../constants';
-import type {BaseTextStyle, ChartSeries, ChartYAxis} from '../../types';
+import type {BaseTextStyle, ChartAxisTitleRotation, ChartSeries, ChartYAxis} from '../../types';
 import {
     calculateNumericProperty,
     formatAxisTickLabel,
@@ -81,9 +81,12 @@ function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
 
 const VALID_Y_AXIS_TITLE_ROTATION = [0, -90, 90];
 
-function getAxisTitleRotation(value: number | undefined, axisPosition: ChartYAxis['position']) {
+function getAxisTitleRotation(
+    value: number | undefined,
+    axisPosition: ChartYAxis['position'],
+): ChartAxisTitleRotation {
     if (typeof value !== 'undefined' && VALID_Y_AXIS_TITLE_ROTATION.includes(value)) {
-        return value;
+        return value as ChartAxisTitleRotation;
     }
     return axisPosition === 'left' ? -90 : 90;
 }

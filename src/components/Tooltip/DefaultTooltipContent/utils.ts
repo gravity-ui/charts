@@ -1,11 +1,14 @@
 import {create} from 'd3-selection';
 import get from 'lodash/get';
 
+import {TOOLTIP_SORT_PRESET} from '../../../constants';
 import type {PreparedPieSeries} from '../../../hooks';
 import {i18n} from '../../../i18n';
 import type {
     ChartSeriesData,
     ChartTooltip,
+    ChartTooltipSortComparator,
+    ChartTooltipSortPreset,
     ChartTooltipTotalsAggregationValue,
     ChartTooltipTotalsBuiltInAggregation,
     ChartXAxis,
@@ -206,6 +209,54 @@ export function getPreparedAggregation(args: {
     }
 
     return 'sum';
+}
+
+export function getSortedHovered(args: {
+    hovered: TooltipDataChunk[];
+    sort?: ChartTooltipSortPreset | ChartTooltipSortComparator;
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis;
+}): TooltipDataChunk[] {
+    const {hovered, sort, xAxis, yAxis} = args;
+
+    if (!sort) {
+        return hovered;
+    }
+
+    if (typeof sort === 'function') {
+        return [...hovered].sort(sort);
+    }
+
+    const values = getHoveredValues({hovered, xAxis, yAxis});
+
+    const compareValue = (a: HoveredValue, b: HoveredValue): number => {
+        const numA = typeof a === 'number' ? a : 0;
+        const numB = typeof b === 'number' ? b : 0;
+
+        if (numA !== numB) {
+            return numA - numB;
+        }
+
+        const strA = String(a ?? '');
+        const strB = String(b ?? '');
+
+        return strA.localeCompare(strB);
+    };
+
+    const indices = hovered.map((_, i) => i);
+
+    indices.sort((i, j) => {
+        switch (sort) {
+            case TOOLTIP_SORT_PRESET.VALUE_ASC:
+                return compareValue(values[i], values[j]);
+            case TOOLTIP_SORT_PRESET.VALUE_DESC:
+                return compareValue(values[j], values[i]);
+            default:
+                return 0;
+        }
+    });
+
+    return indices.map((i) => hovered[i]);
 }
 
 export function getTooltipRowColorSymbol({
