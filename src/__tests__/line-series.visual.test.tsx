@@ -438,7 +438,9 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Initial render should not degrade performance on large datasets', async ({mount}) => {
+    test('Initial render should not degrade performance on large datasets @perf', async ({
+        mount,
+    }) => {
         test.setTimeout(120_000);
 
         const categories = new Array(10000).fill(null).map((_, i) => String(i));
@@ -489,7 +491,9 @@ test.describe('Line series', () => {
         expect(median(widgetRenderTimes)).toBeLessThan(1100);
     });
 
-    test('Markers should not degrade render performance on large datasets', async ({mount}) => {
+    test('Markers should not degrade render performance on large datasets @perf', async ({
+        mount,
+    }) => {
         test.setTimeout(120_000);
 
         const pointCount = 25000;

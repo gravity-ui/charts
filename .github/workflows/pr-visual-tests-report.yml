@@ -38,7 +38,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
           AWS_DEFAULT_REGION: ru-central1
           AWS_EC2_METADATA_DISABLED: true
-        run: aws s3 cp playwright-report s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id}}/ --endpoint-url=https://storage.yandexcloud.net  --recursive
+        run: |
+          aws s3 cp playwright-report s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/ --endpoint-url=https://storage.yandexcloud.net --recursive
+          if [ -d playwright-report-perf ]; then
+            aws s3 cp playwright-report-perf s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/perf/ --endpoint-url=https://storage.yandexcloud.net --recursive
+          fi
         shell: bash
       - name: Create Comment
         uses: marocchino/sticky-pull-request-comment@v2
@@ -46,4 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           number: ${{ steps.pr.outputs.id }}
           header: visual tests report
-          message: '[Visual Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/index.html) is ready.'
+          message: |
+            [Visual Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/index.html) is ready.
+            [Performance Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/perf/index.html) is ready.
