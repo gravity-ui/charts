@@ -262,8 +262,9 @@ export function getSortedHovered(args: {
 
             return indices.map((i) => hovered[i]);
         }
-        default:
+        default: {
             return hovered;
+        }
     }
 }
 
