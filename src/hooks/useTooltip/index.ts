@@ -47,7 +47,7 @@ export const useTooltip = ({dispatcher, tooltip, xAxis, yAxis}: Args) => {
                     );
                     const sortedHovered = getSortedHovered({
                         hovered: filteredNextHovered ?? [],
-                        sort: tooltip?.sort,
+                        sorting: tooltip?.sorting,
                         xAxis,
                         yAxis,
                     });

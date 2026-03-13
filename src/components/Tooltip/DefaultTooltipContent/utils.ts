@@ -1,14 +1,11 @@
 import {create} from 'd3-selection';
 import get from 'lodash/get';
 
-import {TOOLTIP_SORT_PRESET} from '../../../constants';
 import type {PreparedPieSeries} from '../../../hooks';
 import {i18n} from '../../../i18n';
 import type {
     ChartSeriesData,
     ChartTooltip,
-    ChartTooltipSortComparator,
-    ChartTooltipSortPreset,
     ChartTooltipTotalsAggregationValue,
     ChartTooltipTotalsBuiltInAggregation,
     ChartXAxis,
@@ -213,56 +210,61 @@ export function getPreparedAggregation(args: {
 
 export function getSortedHovered(args: {
     hovered: TooltipDataChunk[];
-    sort?: ChartTooltipSortPreset | ChartTooltipSortComparator;
+    sorting?: ChartTooltip['sorting'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 }): TooltipDataChunk[] {
-    const {hovered, sort, xAxis, yAxis} = args;
+    const {hovered, sorting, xAxis, yAxis} = args;
 
-    if (!sort) {
+    if (!sorting) {
         return hovered;
     }
 
-    if (typeof sort === 'function') {
-        return [...hovered].sort(sort);
+    if (typeof sorting === 'function') {
+        return [...hovered].sort(sorting);
     }
 
-    const values = getHoveredValues({hovered, xAxis, yAxis});
+    switch (sorting.key) {
+        case 'value': {
+            const values = getHoveredValues({hovered, xAxis, yAxis});
+            const direction = sorting.direction ?? 'asc';
 
-    const compareValue = (a: HoveredValue, b: HoveredValue): number => {
-        if (a === null && b === null) {
-            return 0;
+            const compareValue = (a: HoveredValue, b: HoveredValue): number => {
+                const aNil = a === null || a === undefined;
+                const bNil = b === null || b === undefined;
+
+                if (aNil && bNil) {
+                    return 0;
+                }
+
+                if (aNil) {
+                    return -1;
+                }
+
+                if (bNil) {
+                    return 1;
+                }
+
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return a - b;
+                }
+
+                return String(a).localeCompare(String(b));
+            };
+
+            const indices = hovered.map((_, i) => i);
+
+            indices.sort((i, j) =>
+                direction === 'asc'
+                    ? compareValue(values[i], values[j])
+                    : compareValue(values[j], values[i]),
+            );
+
+            return indices.map((i) => hovered[i]);
         }
-
-        if (a === null) {
-            return -1;
-        }
-
-        if (b === null) {
-            return 1;
-        }
-
-        if (typeof a === 'number' && typeof b === 'number') {
-            return a - b;
-        }
-
-        return String(a).localeCompare(String(b));
-    };
-
-    const indices = hovered.map((_, i) => i);
-
-    indices.sort((i, j) => {
-        switch (sort) {
-            case TOOLTIP_SORT_PRESET.VALUE_ASC:
-                return compareValue(values[i], values[j]);
-            case TOOLTIP_SORT_PRESET.VALUE_DESC:
-                return compareValue(values[j], values[i]);
-            default:
-                return 0;
-        }
-    });
-
-    return indices.map((i) => hovered[i]);
+        default:
+            return hovered;
+    }
 }
 
 export function getTooltipRowColorSymbol({

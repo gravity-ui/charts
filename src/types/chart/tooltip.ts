@@ -1,4 +1,4 @@
-import type {TOOLTIP_SORT_PRESET, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
+import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -148,8 +148,6 @@ export type ChartTooltipRowRendererArgs = {
     className?: string;
 };
 
-export type ChartTooltipSortPreset = (typeof TOOLTIP_SORT_PRESET)[keyof typeof TOOLTIP_SORT_PRESET];
-
 export type ChartTooltipSortComparator<T = MeaningfulAny> = (
     a: TooltipDataChunk<T>,
     b: TooltipDataChunk<T>,
@@ -201,9 +199,24 @@ export interface ChartTooltip<T = MeaningfulAny> {
      */
     qa?: string;
     /**
-     * Sort order for tooltip rows. Applied to `hovered` before passing to renderer.
-     * Presets: valueAsc, valueDesc.
-     * Custom comparator receives (a, b) and should return negative/zero/positive.
+     * Controls the order of tooltip rows. Applied to `hovered` before rendering.
+     * Use a custom comparator `(a, b) => number` for arbitrary ordering.
      */
-    sort?: ChartTooltipSortPreset | ChartTooltipSortComparator<T>;
+    sorting?:
+        | {
+              /**
+               * Determines what data should be used to sort by.
+               * `'value'` uses the numeric value of each series point: `y` for most series
+               * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
+               * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
+               * @default undefined (sorting disabled)
+               */
+              key?: 'value' | undefined;
+              /**
+               * Sorting direction.
+               * @default 'asc'
+               */
+              direction?: 'asc' | 'desc';
+          }
+        | ChartTooltipSortComparator<T>;
 }
