@@ -92,7 +92,7 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
 
 export type PreparedXAxis = PreparedBaseAxis & {
     rangeSlider: PreparedRangeSlider;
-    position: 'top' | 'bottom';
+    position: 'bottom';
 };
 
 export type PreparedYAxis = PreparedBaseAxis & {
