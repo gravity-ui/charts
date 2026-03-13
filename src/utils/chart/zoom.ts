@@ -93,10 +93,11 @@ export function getZoomedSeriesData(args: {
 
     const zoomedSeriesData: PreparedSeries[] = [];
     const zoomedShapesSeriesData: PreparedSeries[] = [];
-    let prevPointInRange = false;
-    let currentPointInRange = false;
 
     seriesData.forEach((seriesItem) => {
+        let prevPointInRange = false;
+        let currentPointInRange = false;
+
         const filteredData: ChartSeriesData[] = [];
         const filteredShapesData: ChartSeriesData[] | undefined =
             SERIES_TYPE_WITH_HIDDEN_POINTS.includes(seriesItem.type) && xAxis?.type !== 'category'
