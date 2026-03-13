@@ -90,7 +90,7 @@ test.describe('Bar-x series', () => {
     });
 
     test.describe('Stacking percent', () => {
-        test('Linear X-axis ', async ({mount}) => {
+        test('Linear X-axis', async ({mount}) => {
             const chartData: ChartData = {
                 series: {
                     data: [
@@ -121,6 +121,36 @@ test.describe('Bar-x series', () => {
                 },
             };
             const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Initial height of the bars is less than 1px', async ({mount}) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            name: 's2',
+                            type: 'bar-x',
+                            stacking: 'percent',
+                            data: [
+                                {
+                                    y: 3,
+                                    x: 1,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                chart: {
+                    margin: {
+                        top: 50,
+                    },
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={chartData} styles={{height: 100}} />,
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
