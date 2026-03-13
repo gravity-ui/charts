@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.40.0](https://github.com/gravity-ui/charts/compare/v1.39.1...v1.40.0) (2026-03-13)
+
+
+### Features
+
+* **tooltip:** add sort option for tooltip rows ([#481](https://github.com/gravity-ui/charts/issues/481)) ([1b6b393](https://github.com/gravity-ui/charts/commit/1b6b3936bc454443afd172197c5d1c338ec5e573))
+
+
+### Bug Fixes
+
+* fix displaying the stacked area chart with the range slider enabled ([#482](https://github.com/gravity-ui/charts/issues/482)) ([18e37f6](https://github.com/gravity-ui/charts/commit/18e37f6e3f03b25a7b4968573abf6ac7a1be8cc5))
+* percent stacking bar-x with small height ([#484](https://github.com/gravity-ui/charts/issues/484)) ([06a9c63](https://github.com/gravity-ui/charts/commit/06a9c63e2d4b056067f000309882db8d4fdbd76d))
+
 ## [1.39.1](https://github.com/gravity-ui/charts/compare/v1.39.0...v1.39.1) (2026-03-12)
 
 
