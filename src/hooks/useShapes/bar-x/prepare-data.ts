@@ -268,7 +268,8 @@ export const prepareBarXData = async (args: {
 
                 if (series.some((s) => s.stacking === 'percent')) {
                     let acc = 0;
-                    const ratio = plotHeight / (positiveStackHeight - stackItems.length);
+                    const ratio =
+                        plotHeight / (positiveStackHeight - (stackItems.length - 1) * stackGap);
                     stackItems.forEach((item) => {
                         item.height = item.height * ratio;
                         item.y = plotHeight - item.height - acc;
