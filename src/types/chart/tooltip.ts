@@ -148,6 +148,11 @@ export type ChartTooltipRowRendererArgs = {
     className?: string;
 };
 
+export type ChartTooltipSortComparator<T = MeaningfulAny> = (
+    a: TooltipDataChunk<T>,
+    b: TooltipDataChunk<T>,
+) => number;
+
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
@@ -193,4 +198,25 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * It is assigned as a data-qa attribute to an element.
      */
     qa?: string;
+    /**
+     * Controls the order of tooltip rows. Applied to `hovered` before rendering.
+     * Use a custom comparator `(a, b) => number` for arbitrary ordering.
+     */
+    sorting?:
+        | {
+              /**
+               * Determines what data should be used to sort by.
+               * `'value'` uses the numeric value of each series point: `y` for most series
+               * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
+               * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
+               * @default undefined (sorting disabled)
+               */
+              key?: 'value' | undefined;
+              /**
+               * Sorting direction.
+               * @default 'asc'
+               */
+              direction?: 'asc' | 'desc';
+          }
+        | ChartTooltipSortComparator<T>;
 }

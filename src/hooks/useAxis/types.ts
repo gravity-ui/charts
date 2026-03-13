@@ -7,6 +7,7 @@ import type {
     ChartAxisLabels,
     ChartAxisRangeSlider,
     ChartAxisTitleAlignment,
+    ChartAxisTitleRotation,
     ChartAxisType,
     DeepRequired,
     MeaningfulAny,
@@ -70,7 +71,7 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
         style: BaseTextStyle;
         align: ChartAxisTitleAlignment;
         maxRowCount: number;
-        rotation: number;
+        rotation: ChartAxisTitleRotation;
         maxWidth: number;
         html: boolean;
     };
@@ -83,7 +84,6 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
         pixelInterval?: number;
     };
     tickMarks: PreparedAxisTickMarks;
-    position: 'left' | 'right' | 'top' | 'bottom';
     plotIndex: number;
     plotLines: PreparedAxisPlotLine[];
     plotBands: PreparedAxisPlotBand[];
@@ -92,9 +92,12 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
 
 export type PreparedXAxis = PreparedBaseAxis & {
     rangeSlider: PreparedRangeSlider;
+    position: 'bottom';
 };
 
-export type PreparedYAxis = PreparedBaseAxis;
+export type PreparedYAxis = PreparedBaseAxis & {
+    position: 'left' | 'right';
+};
 
 export type PreparedAxis = PreparedXAxis | PreparedYAxis;
 

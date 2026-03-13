@@ -208,6 +208,66 @@ export function getPreparedAggregation(args: {
     return 'sum';
 }
 
+export function getSortedHovered(args: {
+    hovered: TooltipDataChunk[];
+    sorting?: ChartTooltip['sorting'];
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis;
+}): TooltipDataChunk[] {
+    const {hovered, sorting, xAxis, yAxis} = args;
+
+    if (!sorting) {
+        return hovered;
+    }
+
+    if (typeof sorting === 'function') {
+        return [...hovered].sort(sorting);
+    }
+
+    switch (sorting.key) {
+        case 'value': {
+            const values = getHoveredValues({hovered, xAxis, yAxis});
+            const direction = sorting.direction ?? 'asc';
+
+            const compareValue = (a: HoveredValue, b: HoveredValue): number => {
+                const aNil = a === null || a === undefined;
+                const bNil = b === null || b === undefined;
+
+                if (aNil && bNil) {
+                    return 0;
+                }
+
+                if (aNil) {
+                    return -1;
+                }
+
+                if (bNil) {
+                    return 1;
+                }
+
+                if (typeof a === 'number' && typeof b === 'number') {
+                    return a - b;
+                }
+
+                return String(a).localeCompare(String(b));
+            };
+
+            const indices = hovered.map((_, i) => i);
+
+            indices.sort((i, j) =>
+                direction === 'asc'
+                    ? compareValue(values[i], values[j])
+                    : compareValue(values[j], values[i]),
+            );
+
+            return indices.map((i) => hovered[i]);
+        }
+        default: {
+            return hovered;
+        }
+    }
+}
+
 export function getTooltipRowColorSymbol({
     series,
     color,

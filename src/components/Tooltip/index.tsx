@@ -30,6 +30,8 @@ export const Tooltip = (props: TooltipProps) => {
     const {hovered, hoveredPlotLines, hoveredPlotBands, pointerPosition} = useTooltip({
         dispatcher,
         tooltip,
+        xAxis,
+        yAxis,
     });
     const containerRect = svgContainer?.getBoundingClientRect() || {left: 0, top: 0};
     const left = (pointerPosition?.[0] || 0) + containerRect.left;

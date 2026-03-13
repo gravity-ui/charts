@@ -7,6 +7,7 @@ import type {
     PreparedAxis,
     PreparedSeries,
     PreparedSplit,
+    PreparedYAxis,
     RangeSliderState,
     ZoomState,
 } from '../../hooks';
@@ -25,7 +26,7 @@ type Args = {
     boundsHeight: number;
     series: PreparedSeries[];
     xAxis: PreparedAxis | null;
-    yAxis: PreparedAxis[];
+    yAxis: PreparedYAxis[];
     split: PreparedSplit;
     isRangeSlider?: boolean;
     rangeSliderState?: RangeSliderState;
