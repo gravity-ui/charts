@@ -230,17 +230,23 @@ export function getSortedHovered(args: {
     const values = getHoveredValues({hovered, xAxis, yAxis});
 
     const compareValue = (a: HoveredValue, b: HoveredValue): number => {
-        const numA = typeof a === 'number' ? a : 0;
-        const numB = typeof b === 'number' ? b : 0;
-
-        if (numA !== numB) {
-            return numA - numB;
+        if (a === null && b === null) {
+            return 0;
         }
 
-        const strA = String(a ?? '');
-        const strB = String(b ?? '');
+        if (a === null) {
+            return -1;
+        }
 
-        return strA.localeCompare(strB);
+        if (b === null) {
+            return 1;
+        }
+
+        if (typeof a === 'number' && typeof b === 'number') {
+            return a - b;
+        }
+
+        return String(a).localeCompare(String(b));
     };
 
     const indices = hovered.map((_, i) => i);

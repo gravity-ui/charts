@@ -2,7 +2,7 @@ import {TOOLTIP_SORT_PRESET} from '../../../../constants';
 import type {TooltipDataChunk, TooltipDataChunkBarY} from '../../../../types';
 import {getHoveredValues, getSortedHovered} from '../utils';
 
-const createLineChunk = (name: string, value: number): TooltipDataChunk => ({
+const createLineChunk = (name: string, value: number | null): TooltipDataChunk => ({
     data: {x: 1, y: value},
     series: {type: 'line', id: name, name},
 });
@@ -89,6 +89,34 @@ describe('getSortedHovered', () => {
         const originalOrder = hovered.map((c) => c.series.name);
         getSortedHovered({hovered, sort: TOOLTIP_SORT_PRESET.VALUE_ASC, yAxis: {type: 'linear'}});
         expect(hovered.map((c) => c.series.name)).toEqual(originalOrder);
+    });
+
+    it('places null values last when sorting valueDesc', () => {
+        const hovered: TooltipDataChunk[] = [
+            createLineChunk('A', 10),
+            createLineChunk('Null', null),
+            createLineChunk('B', 5),
+        ];
+        const result = getSortedHovered({
+            hovered,
+            sort: TOOLTIP_SORT_PRESET.VALUE_DESC,
+            yAxis: {type: 'linear'},
+        });
+        expect(result.map((c) => c.series.name)).toEqual(['A', 'B', 'Null']);
+    });
+
+    it('places null values first when sorting valueAsc', () => {
+        const hovered: TooltipDataChunk[] = [
+            createLineChunk('A', 10),
+            createLineChunk('Null', null),
+            createLineChunk('B', 5),
+        ];
+        const result = getSortedHovered({
+            hovered,
+            sort: TOOLTIP_SORT_PRESET.VALUE_ASC,
+            yAxis: {type: 'linear'},
+        });
+        expect(result.map((c) => c.series.name)).toEqual(['Null', 'B', 'A']);
     });
 
     it('handles bar-y series with xAxis for value extraction', () => {
