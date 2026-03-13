@@ -13,8 +13,12 @@ import {ChartInner} from './ChartInner';
 
 export * from './Tooltip/ChartTooltipContent';
 
+export interface ChartReflowOptions {
+    immediate?: boolean;
+}
+
 export interface ChartRef {
-    reflow: () => void;
+    reflow: (options?: ChartReflowOptions) => void;
 }
 
 export interface ChartDimentions {
@@ -60,11 +64,15 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     React.useImperativeHandle(
         forwardedRef,
         () => ({
-            reflow() {
-                debuncedHandleResize();
+            reflow(options?: ChartReflowOptions) {
+                if (options?.immediate) {
+                    handleResize();
+                } else {
+                    debuncedHandleResize();
+                }
             },
         }),
-        [debuncedHandleResize],
+        [debuncedHandleResize, handleResize],
     );
 
     React.useEffect(() => {
