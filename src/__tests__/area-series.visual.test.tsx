@@ -460,4 +460,36 @@ test.describe('Area series', () => {
 
         expect(median(widgetRenderTimes)).toBeLessThan(900);
     });
+
+    test('Stacking with range slider (defaultRange defined)', async ({mount}) => {
+        const points = [
+            {x: 0, y: 1},
+            {x: 1, y: 3},
+            {x: 2, y: 2},
+            {x: 3, y: 2},
+        ];
+        const chartData: ChartData = {
+            title: {text: 'datetime x-axis'},
+            series: {
+                data: [
+                    {
+                        type: 'area',
+                        name: 's1',
+                        stacking: 'percent',
+                        data: points,
+                    },
+                    {
+                        type: 'area',
+                        name: 's2',
+                        stacking: 'percent',
+                        data: points,
+                    },
+                ],
+            },
+            xAxis: {rangeSlider: {enabled: true, defaultRange: {size: 1}}},
+        };
+
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
