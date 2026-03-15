@@ -2,11 +2,9 @@
 
 ## About Gravity UI Charts
 
-**Gravity UI Charts** is a charting library built with [D3](https://d3js.org/) and [React](https://react.dev/). It's designed as part of the [Gravity UI](https://gravity-ui.com/) ecosystem and provides powerful data visualization capabilities for modern web applications through simple configuration objects.
+**Gravity UI Charts** is a React charting library built on [D3](https://d3js.org/), designed as part of the [Gravity UI](https://gravity-ui.com/) ecosystem. Charts are configured through plain JavaScript objects, making it easy to integrate into any React application.
 
-## What you can already do with Gravity UI Charts
-
-We have already implemented support for the main chart types:
+## Chart types
 
 - `Area`
 - `Bar-X`
