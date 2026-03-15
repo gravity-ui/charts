@@ -29,10 +29,11 @@ mkdir -p .claude
 ln -s "$(pwd)/.agents/skills" .claude/skills
 ```
 
-If the symlink does not work (e.g. on some Windows setups), copy the skills instead:
+If the symlink does not work (e.g. on some Windows setups), copy the skills instead. Prefer symlink — it picks up updates automatically; with copy you must delete and re-copy to update:
 
 ```bash
 mkdir -p .claude
+rm -rf .claude/skills  # remove old copy before updating
 cp -r .agents/skills .claude/
 ```
 
