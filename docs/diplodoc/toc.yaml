@@ -22,6 +22,8 @@ items:
     href: ./pages/overview.md
   - name: Get started
     href: ./pages/get-started.md
+  - name: Development
+    href: ./pages/development.md
   - name: Guides
     items:
       - name: Axis types
