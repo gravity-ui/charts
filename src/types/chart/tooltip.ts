@@ -145,6 +145,10 @@ export type ChartTooltipRowRendererArgs = {
     value: string | number | null | undefined;
     formattedValue?: string;
     hovered?: TooltipDataChunk<unknown>[];
+    /**
+     * CSS class name pre-built with active/striped modifiers.
+     * Apply it to the root `<tr>` element of the returned row: `<tr className={className}>`.
+     */
     className?: string;
 };
 
@@ -160,7 +164,26 @@ export interface ChartTooltip<T = MeaningfulAny> {
     /**
      * Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
      * It is useful in cases where you need to display additional information, but keep the general format of the tooltip.
-     * If a string is returned, it will be interpreted as raw HTML and inserted without escaping.
+     *
+     * The returned React element must be a `<tr>` so that it fits into the table layout used by the tooltip.
+     * Apply the `className` arg to the root `<tr>` to get the correct active/striped styles.
+     *
+     * If a string is returned, it will be parsed as HTML and rendered as-is — the string must be a complete
+     * `<tr>...</tr>` element.
+     * @example React element
+     * ```tsx
+     * rowRenderer: ({id, name, value, className}) => (
+     *   <tr key={id} className={className}>
+     *     <td>{name}</td>
+     *     <td>{value}</td>
+     *   </tr>
+     * )
+     * ```
+     * @example Raw HTML string
+     * ```ts
+     * rowRenderer: ({name, value, className}) =>
+     *   `<tr class="${className}"><td>${name}</td><td>${value}</td></tr>`
+     * ```
      */
     rowRenderer?: ((args: ChartTooltipRowRendererArgs) => React.ReactElement | string) | null;
     pin?: {

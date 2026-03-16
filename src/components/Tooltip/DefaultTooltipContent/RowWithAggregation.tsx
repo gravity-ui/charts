@@ -8,7 +8,6 @@ import type {
 import {block} from '../../../utils';
 import {getFormattedValue} from '../../../utils/chart/format';
 
-import {Row} from './Row';
 import {getBuiltInAggregatedValue, getBuiltInAggregationLabel} from './utils';
 import type {HoveredValue} from './utils';
 
@@ -41,11 +40,11 @@ export function RowWithAggregation(props: {
             : resultValue;
 
     return (
-        <Row
-            className={b('content-row-totals')}
-            label={resultLabel}
-            style={style}
-            value={formattedResultValue}
-        />
+        <div className={b('content-row', {totals: true})} style={style}>
+            <span className={b('content-row-totals-label')}>{resultLabel}</span>
+            {formattedResultValue && (
+                <span className={b('content-row-totals-value')}>{formattedResultValue}</span>
+            )}
+        </div>
     );
 }
