@@ -1,4 +1,4 @@
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 import sortBy from 'lodash/sortBy';
 

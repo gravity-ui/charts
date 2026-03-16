@@ -1,5 +1,6 @@
-import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3';
-import type {AxisDomain, AxisScale} from 'd3';
+import {extent} from 'd3-array';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../../constants';

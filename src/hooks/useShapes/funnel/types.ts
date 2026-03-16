@@ -1,4 +1,4 @@
-import type {Path} from 'd3';
+import type {Path} from 'd3-path';
 
 import type {DashStyle} from 'src/constants';
 

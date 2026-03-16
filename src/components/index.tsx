@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {select} from 'd3';
+import {select} from 'd3-selection';
 import type {DebouncedFunc} from 'lodash';
 import debounce from 'lodash/debounce';
 

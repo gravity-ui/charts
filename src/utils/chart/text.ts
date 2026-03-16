@@ -1,4 +1,4 @@
-import type {Selection} from 'd3';
+import type {Selection} from 'd3-selection';
 import {select} from 'd3-selection';
 
 import type {BaseTextStyle, MeaningfulAny} from '../../types';

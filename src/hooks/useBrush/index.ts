@@ -1,7 +1,9 @@
 import React from 'react';
 
-import {brush, brushX, brushY, pointer, select} from 'd3';
-import type {BrushBehavior, Selection} from 'd3';
+import {brush, brushX, brushY} from 'd3-brush';
+import type {BrushBehavior} from 'd3-brush';
+import {pointer, select} from 'd3-selection';
+import type {Selection} from 'd3-selection';
 
 import {block} from '../../utils';
 

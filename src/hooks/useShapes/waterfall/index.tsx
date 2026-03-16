@@ -1,7 +1,9 @@
 import React from 'react';
 
-import {color, line as lineGenerator, select} from 'd3';
-import type {Dispatch} from 'd3';
+import {color} from 'd3-color';
+import type {Dispatch} from 'd3-dispatch';
+import {select} from 'd3-selection';
+import {line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
 import {DASH_STYLE} from '../../../constants';

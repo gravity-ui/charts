@@ -1,5 +1,5 @@
-import type {BaseType, Selection} from 'd3';
-import {symbol} from 'd3';
+import type {BaseType, Selection} from 'd3-selection';
+import {symbol} from 'd3-shape';
 import get from 'lodash/get';
 
 import {SymbolType} from '../../constants';

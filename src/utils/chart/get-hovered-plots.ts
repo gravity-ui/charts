@@ -1,4 +1,4 @@
-import type {AxisDomain, AxisScale} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3-axis';
 
 import type {
     PreparedAxisPlotBand,

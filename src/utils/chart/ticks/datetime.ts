@@ -1,6 +1,5 @@
+import {bisector, tickStep} from 'd3-array';
 import {
-    bisector,
-    tickStep,
     utcDay,
     utcHour,
     utcMillisecond,
@@ -9,8 +8,8 @@ import {
     utcSecond,
     utcMonday as utcWeek,
     utcYear,
-} from 'd3';
-import type {CountableTimeInterval} from 'd3';
+} from 'd3-time';
+import type {CountableTimeInterval} from 'd3-time';
 
 import {DAY, HOUR, MINUTE, MONTH, SECOND, WEEK, YEAR} from '../../../constants';
 

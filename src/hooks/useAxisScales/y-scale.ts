@@ -1,5 +1,6 @@
-import {extent, scaleBand, scaleLinear, scaleLog, scaleUtc, tickStep, ticks} from 'd3';
-import type {AxisDomain, AxisScale} from 'd3';
+import {extent, tickStep, ticks} from 'd3-array';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
 import {getTickValues} from '../../components/AxisY/utils';

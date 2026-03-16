@@ -1,7 +1,5 @@
+import {ascending, descending, sort} from 'd3-array';
 import {
-    ascending,
-    descending,
-    sort,
     stratify,
     treemap,
     treemapBinary,
@@ -9,8 +7,8 @@ import {
     treemapSlice,
     treemapSliceDice,
     treemapSquarify,
-} from 'd3';
-import type {HierarchyRectangularNode} from 'd3';
+} from 'd3-hierarchy';
+import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
 import {LayoutAlgorithm} from '../../../constants';
 import type {HtmlItem, TreemapSeriesData} from '../../../types';

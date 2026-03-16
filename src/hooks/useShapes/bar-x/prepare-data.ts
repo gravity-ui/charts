@@ -1,5 +1,6 @@
-import {ascending, descending, max, reverse, sort} from 'd3';
-import type {AxisDomain, AxisScale, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import {ascending, descending, max, reverse, sort} from 'd3-array';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
 import type {BarXSeriesData, LabelData} from '../../../types';

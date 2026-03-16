@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {pointer} from 'd3';
+import {pointer} from 'd3-selection';
 import {isEqual} from 'lodash';
 
 import {SERIES_TYPE} from '../../constants';

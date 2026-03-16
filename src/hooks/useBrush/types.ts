@@ -1,4 +1,4 @@
-import type {BrushBehavior} from 'd3';
+import type {BrushBehavior} from 'd3-brush';
 
 import type {ZoomType} from '../../constants';
 import type {ChartBrush, DeepRequired} from '../../types';

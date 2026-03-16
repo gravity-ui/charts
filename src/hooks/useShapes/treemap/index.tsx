@@ -1,7 +1,10 @@
 import React from 'react';
 
-import {color, select} from 'd3';
-import type {BaseType, Dispatch, HierarchyRectangularNode} from 'd3';
+import {color} from 'd3-color';
+import type {Dispatch} from 'd3-dispatch';
+import type {HierarchyRectangularNode} from 'd3-hierarchy';
+import {select} from 'd3-selection';
+import type {BaseType} from 'd3-selection';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkTreemap, TreemapSeriesData} from '../../../types';

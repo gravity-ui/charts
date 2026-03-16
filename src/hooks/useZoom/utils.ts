@@ -1,4 +1,5 @@
-import type {BrushSelection, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {BrushSelection} from 'd3-brush';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 
 import {ZOOM_TYPE} from '../../constants';
 import type {ZoomType} from '../../constants';

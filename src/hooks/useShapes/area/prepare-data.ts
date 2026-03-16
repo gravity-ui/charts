@@ -1,4 +1,4 @@
-import {group} from 'd3';
+import {group} from 'd3-array';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';

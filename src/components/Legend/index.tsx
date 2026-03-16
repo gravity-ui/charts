@@ -1,7 +1,10 @@
 import React from 'react';
 
-import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
-import {scaleLinear, select, symbol} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import {scaleLinear} from 'd3-scale';
+import type {BaseType, Selection} from 'd3-selection';
+import {select} from 'd3-selection';
+import {symbol} from 'd3-shape';
 
 import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
 import type {

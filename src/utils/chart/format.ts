@@ -1,6 +1,6 @@
 import {dateTimeUtc} from '@gravity-ui/date-utils';
 import type {DateTimeInput} from '@gravity-ui/date-utils';
-import type {AxisDomain} from 'd3';
+import type {AxisDomain} from 'd3-axis';
 import capitalize from 'lodash/capitalize';
 
 import {DEFAULT_DATE_FORMAT} from '../../constants';

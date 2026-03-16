@@ -1,4 +1,4 @@
-import {dispatch} from 'd3';
+import {dispatch} from 'd3-dispatch';
 
 export const EventType = {
     CLICK_CHART: 'click-chart',

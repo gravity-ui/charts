@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {Dispatch} from 'd3';
+import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE, SERIES_TYPE} from '../../constants';

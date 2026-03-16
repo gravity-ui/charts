@@ -2,7 +2,7 @@ import React from 'react';
 
 import {Popup, useVirtualElement} from '@gravity-ui/uikit';
 import type {PopupProps} from '@gravity-ui/uikit';
-import type {Dispatch} from 'd3';
+import type {Dispatch} from 'd3-dispatch';
 
 import type {PreparedTooltip, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import {useTooltip} from '../../hooks';

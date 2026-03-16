@@ -1,4 +1,4 @@
-import {path} from 'd3';
+import {path} from 'd3-path';
 
 import {calculateNumericProperty, getFormattedValue, getTextSizeFn} from '../../../utils';
 import type {PreparedFunnelSeries} from '../../useSeries/types';

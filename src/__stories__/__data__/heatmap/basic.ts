@@ -1,4 +1,4 @@
-import {interpolateRgb} from 'd3';
+import {interpolateRgb} from 'd3-interpolate';
 
 import {DEFAULT_PALETTE} from '../../../constants';
 import type {ChartData, HeatmapSeriesData} from '../../../types';

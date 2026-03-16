@@ -1,4 +1,4 @@
-import type {HierarchyRectangularNode} from 'd3';
+import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
 import type {HtmlItem, TreemapSeriesData} from '../../../types';
 import type {PreparedTreemapSeries} from '../../useSeries/types';

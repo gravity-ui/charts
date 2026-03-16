@@ -1,4 +1,5 @@
-import {Delaunay, bisector, sort} from 'd3';
+import {bisector, sort} from 'd3-array';
+import {Delaunay} from 'd3-delaunay';
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 

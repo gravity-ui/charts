@@ -1,5 +1,6 @@
-import {ascending, descending, reverse, sort} from 'd3';
-import type {AxisDomain, AxisScale, ScaleBand, ScaleTime} from 'd3';
+import {ascending, descending, reverse, sort} from 'd3-array';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import type {ScaleBand, ScaleTime} from 'd3-scale';
 import clamp from 'lodash/clamp';
 
 import type {ChartScale, PreparedAxis, PreparedAxisPlotBand, PreparedSplit} from '../../../hooks';

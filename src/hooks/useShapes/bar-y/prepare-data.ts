@@ -1,5 +1,5 @@
-import {ascending, descending, sort} from 'd3';
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import {ascending, descending, sort} from 'd3-array';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
 import type {HtmlItem, LabelData} from '../../../types';

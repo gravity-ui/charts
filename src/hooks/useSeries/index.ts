@@ -1,4 +1,5 @@
-import {group, scaleOrdinal} from 'd3';
+import {group} from 'd3-array';
+import {scaleOrdinal} from 'd3-scale';
 
 import type {ChartData} from '../../types';
 import {getSeriesNames} from '../../utils';

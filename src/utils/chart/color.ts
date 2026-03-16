@@ -1,4 +1,5 @@
-import {range, scaleLinear} from 'd3';
+import {range} from 'd3-array';
+import {scaleLinear} from 'd3-scale';
 
 import type {ChartData} from '../../types';
 

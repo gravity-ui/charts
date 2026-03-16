@@ -1,5 +1,6 @@
-import type {PieArcDatum} from 'd3';
-import {arc, group, line as lineGenerator, max} from 'd3';
+import {group, max} from 'd3-array';
+import type {PieArcDatum} from 'd3-shape';
+import {arc, line as lineGenerator} from 'd3-shape';
 import merge from 'lodash/merge';
 
 import {DEFAULT_DATALABELS_STYLE} from '../../../constants';

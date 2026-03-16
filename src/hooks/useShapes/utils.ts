@@ -1,5 +1,7 @@
-import type {BaseType, ScaleBand, ScaleLinear, ScaleTime} from 'd3';
-import {path, select} from 'd3';
+import {path} from 'd3-path';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
+import type {BaseType} from 'd3-selection';
+import {select} from 'd3-selection';
 import get from 'lodash/get';
 
 import type {BasicInactiveState} from '../../types';
