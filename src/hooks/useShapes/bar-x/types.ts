@@ -11,4 +11,9 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     label?: LabelData;
     htmlElements: HtmlItem[];
     isLastStackItem: boolean;
+    /**
+     * the utility field for storing the original height (for recalculations, etc.)
+     * should not be used for displaying
+     */
+    _height: number;
 };

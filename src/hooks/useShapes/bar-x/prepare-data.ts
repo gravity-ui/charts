@@ -250,6 +250,7 @@ export const prepareBarXData = async (args: {
                                 : yAxisTop + base + negativeStackHeight,
                         width: rectWidth,
                         height: shapeHeight,
+                        _height: height,
                         opacity: get(yValue.data, 'opacity', null),
                         data: yValue.data,
                         series: yValue.series,
@@ -268,10 +269,9 @@ export const prepareBarXData = async (args: {
 
                 if (series.some((s) => s.stacking === 'percent')) {
                     let acc = 0;
-                    const ratio =
-                        plotHeight / (positiveStackHeight - (stackItems.length - 1) * stackGap);
+                    const ratio = plotHeight / positiveStackHeight;
                     stackItems.forEach((item) => {
-                        item.height = item.height * ratio;
+                        item.height = item._height * ratio;
                         item.y = plotHeight - item.height - acc;
 
                         acc += item.height + 1;
