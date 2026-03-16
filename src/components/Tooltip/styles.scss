@@ -4,9 +4,13 @@
     background-color: var(--g-color-infographics-tooltip-bg);
     box-shadow: 0 2px 12px var(--g-color-sfx-shadow);
 
-    &__popup-content {
-        max-width: 450px;
+    @at-root tr.gcharts-tooltip__content-row {
+        display: table-row;
 
+        padding: 0;
+    }
+
+    &__popup-content {
         text-wrap: nowrap;
 
         border-radius: 4px;
@@ -28,7 +32,15 @@
         }
     }
 
+    &__content-rows-table {
+        width: 100%;
+        padding: 0;
+
+        border-collapse: collapse;
+    }
+
     &__series-name {
+        max-width: 450px;
         padding: 2px 14px 6px;
 
         font-size: 13px;
@@ -61,10 +73,32 @@
 
             background-color: var(--g-color-base-info-medium);
         }
+
+        &_totals {
+            color: var(--g-color-text-complementary);
+        }
     }
 
-    &__content-row-label {
+    &__content-row-totals-label {
         overflow: hidden;
+
+        max-width: 400px;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__content-row-totals-value {
+        flex-shrink: 0;
+
+        margin-inline-start: auto;
+    }
+
+    &__content-row-label-cell {
+        overflow: hidden;
+
+        max-width: 400px;
+        padding: 2px 4px;
 
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -81,14 +115,15 @@
         background-color: #dddddd;
     }
 
-    &__content-row-value {
-        flex-shrink: 0;
-
-        margin-inline-start: auto;
+    &__content-row-color-cell {
+        width: 16px;
+        padding: 2px 4px 2px 14px;
     }
 
-    &__content-row-totals {
-        color: var(--g-color-text-complementary);
+    &__content-row-value-cell {
+        padding: 2px 14px 2px 4px;
+
+        text-align: end;
     }
 
     &__content-row-totals-divider {

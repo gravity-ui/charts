@@ -6,6 +6,7 @@ import set from 'lodash/set';
 
 import {
     barXGroupedColumnsData,
+    barXStakingPercentData,
     tooltipOverflowedRowsData,
     tooltipOverflowedRowsHtmlData,
 } from 'src/__stories__/__data__';
@@ -14,6 +15,7 @@ import type {ChartData} from 'src/types';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
 import {HoveredPlotsTestStory} from './components/HoveredPlotsTestStory';
+import {StackingPercentRowRendererTestStory} from './components/StackingPercentRowRendererTestStory';
 import {getLocator, getLocatorBoundingBox} from './utils';
 
 test.describe('Tooltip', () => {
@@ -201,7 +203,7 @@ test.describe('Tooltip', () => {
                 data: [
                     {
                         type: 'bar-x',
-                        name: 'Very long series name that should be truncated with ellipsis in tooltip',
+                        name: 'Very long series name that should be truncated with ellipsis in tooltip row',
                         stacking: 'normal',
                         data: [
                             {x: 0, y: 100},
@@ -303,5 +305,66 @@ test.describe('Tooltip', () => {
         const tooltip = page.locator('.gcharts-tooltip');
         await bars.nth(1).hover();
         await expect(tooltip).toHaveScreenshot();
+    });
+
+    test.describe('rowRenderer', () => {
+        const FLEX_SNAPSHOT_NAME = 'Tooltip-row-renderer-flex-layout.png';
+        const TABLE_SNAPSHOT_NAME = 'Tooltip-row-renderer-table-layout.png';
+
+        test('flex layout, JSX renderer', async ({mount, page}) => {
+            await page.setViewportSize({width: 800, height: 400});
+            const component = await mount(
+                <StackingPercentRowRendererTestStory
+                    data={barXStakingPercentData}
+                    rendererType="flex-jsx"
+                />,
+            );
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await bar.hover();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toHaveScreenshot(FLEX_SNAPSHOT_NAME);
+        });
+
+        test('flex layout, HTML string renderer', async ({mount, page}) => {
+            await page.setViewportSize({width: 800, height: 400});
+            const component = await mount(
+                <StackingPercentRowRendererTestStory
+                    data={barXStakingPercentData}
+                    rendererType="flex-html"
+                />,
+            );
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await bar.hover();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toHaveScreenshot(FLEX_SNAPSHOT_NAME);
+        });
+
+        test('table layout, JSX renderer', async ({mount, page}) => {
+            await page.setViewportSize({width: 800, height: 400});
+            const component = await mount(
+                <StackingPercentRowRendererTestStory
+                    data={barXStakingPercentData}
+                    rendererType="table-jsx"
+                />,
+            );
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await bar.hover();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toHaveScreenshot(TABLE_SNAPSHOT_NAME);
+        });
+
+        test('table layout, HTML string renderer', async ({mount, page}) => {
+            await page.setViewportSize({width: 800, height: 400});
+            const component = await mount(
+                <StackingPercentRowRendererTestStory
+                    data={barXStakingPercentData}
+                    rendererType="table-html"
+                />,
+            );
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await bar.hover();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toHaveScreenshot(TABLE_SNAPSHOT_NAME);
+        });
     });
 });
