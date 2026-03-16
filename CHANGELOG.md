@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.41.0](https://github.com/gravity-ui/charts/compare/v1.40.0...v1.41.0) (2026-03-16)
+
+
+### Features
+
+* add immediate option to reflow ([#485](https://github.com/gravity-ui/charts/issues/485)) ([71255ca](https://github.com/gravity-ui/charts/commit/71255cacbfa3f144b6ee00c62d78cce4ec4a62d9))
+* **tooltip:** switch row layout from flex to table ([#487](https://github.com/gravity-ui/charts/issues/487)) ([36a19ae](https://github.com/gravity-ui/charts/commit/36a19aea802a69caa01c02804a5333f4d0b1c00e))
+
+
+### Bug Fixes
+
+* fix negative radius error for bar-x percent stacking chart ([#492](https://github.com/gravity-ui/charts/issues/492)) ([9e49de1](https://github.com/gravity-ui/charts/commit/9e49de1928db3ded519c67395e08e4eb496bc110))
+
 ## [1.40.0](https://github.com/gravity-ui/charts/compare/v1.39.1...v1.40.0) (2026-03-13)
 
 
