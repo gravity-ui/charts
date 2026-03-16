@@ -6,7 +6,7 @@ import type {BarXSeriesData, BarYSeriesData, ChartData, ChartTooltip} from '../.
 
 type Props = {
     data: ChartData;
-    rendererType: 'flex-jsx' | 'flex-html';
+    rendererType: 'flex-jsx' | 'flex-html' | 'table-jsx' | 'table-html';
 };
 
 const getStackedPercentRowRenderer = ({
@@ -107,9 +107,98 @@ const getStackedPercentRowRendererHtml = ({
     };
 };
 
+const getStackedPercentRowRendererTable = ({
+    valueKey,
+}: {
+    valueKey: 'x' | 'y';
+}): ChartTooltip['rowRenderer'] => {
+    return function barXYWithPercentRowRendererTable({
+        name,
+        value,
+        formattedValue,
+        hovered,
+        className,
+        color,
+    }) {
+        const total =
+            hovered?.reduce(
+                (acc, item) =>
+                    acc + Number((item.data as BarXSeriesData | BarYSeriesData)[valueKey] ?? 0),
+                0,
+            ) ?? 0;
+        const numericValue = Number(value);
+        const ratio = total === 0 ? 0 : numericValue / total;
+        const percentage = Number.isFinite(numericValue)
+            ? formatNumber(ratio, {format: 'percent', precision: 1})
+            : '';
+
+        return (
+            <tr className={className}>
+                <td style={{padding: '0 4px', width: '20px'}}>
+                    <span
+                        style={{
+                            backgroundColor: color,
+                            alignSelf: 'center',
+                            borderRadius: '1px',
+                            display: 'inline-block',
+                            height: '6px',
+                            width: '12px',
+                        }}
+                    />
+                </td>
+                <td
+                    style={{
+                        maxWidth: '400px',
+                        overflow: 'hidden',
+                        padding: '0 4px',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                    }}
+                    dangerouslySetInnerHTML={{__html: name}}
+                />
+                <td style={{padding: '0 4px', textAlign: 'end'}}>
+                    <span style={{marginRight: 12}}>{percentage}</span>
+                    {formattedValue}
+                </td>
+            </tr>
+        );
+    };
+};
+
+const getStackedPercentRowRendererTableHtml = ({
+    valueKey,
+}: {
+    valueKey: 'x' | 'y';
+}): ChartTooltip['rowRenderer'] => {
+    return function barXYWithPercentRowRendererTableHtml({
+        name,
+        value,
+        formattedValue,
+        hovered,
+        className,
+        color,
+    }) {
+        const total =
+            hovered?.reduce(
+                (acc, item) =>
+                    acc + Number((item.data as BarXSeriesData | BarYSeriesData)[valueKey] ?? 0),
+                0,
+            ) ?? 0;
+        const numericValue = Number(value);
+        const ratio = total === 0 ? 0 : numericValue / total;
+        const percentage = Number.isFinite(numericValue)
+            ? formatNumber(ratio, {format: 'percent', precision: 1})
+            : '';
+
+        return `<tr class="${className ?? ''}"><td style="padding:0 4px;width:20px"><span style="background-color:${color};align-self:center;border-radius:1px;display:inline-block;height:6px;width:12px"></span></td><td style="max-width:400px;overflow:hidden;padding:0 4px;text-overflow:ellipsis;white-space:nowrap">${name}</td><td style="padding:0 4px;text-align:end"><span style="margin-right:12px">${percentage}</span>${formattedValue}</td></tr>`;
+    };
+};
+
 const renderers = {
     'flex-jsx': getStackedPercentRowRenderer({valueKey: 'y'}),
     'flex-html': getStackedPercentRowRendererHtml({valueKey: 'y'}),
+    'table-jsx': getStackedPercentRowRendererTable({valueKey: 'y'}),
+    'table-html': getStackedPercentRowRendererTableHtml({valueKey: 'y'}),
 };
 
 export const StackingPercentRowRendererTestStory = ({data, rendererType}: Props) => {

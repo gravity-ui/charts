@@ -29,10 +29,10 @@ export function Row(props: {
     }, [color, colorSymbol]);
 
     return (
-        <div className={b('content-row', {active, striped}, className)} style={style}>
-            {colorItem}
-            <span className={b('content-row-label')}>{label}</span>
-            {value && <span className={b('content-row-value')}>{value}</span>}
-        </div>
+        <tr className={b('content-row', {active, striped}, className)} style={style}>
+            {colorItem && <td className={b('content-row-color-cell')}>{colorItem}</td>}
+            <td className={b('content-row-label-cell')}>{label}</td>
+            {value && <td className={b('content-row-value-cell')}>{value}</td>}
+        </tr>
     );
 }
