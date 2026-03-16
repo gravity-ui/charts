@@ -73,6 +73,25 @@
 
             background-color: var(--g-color-base-info-medium);
         }
+
+        &_totals {
+            color: var(--g-color-text-complementary);
+        }
+    }
+
+    &__content-row-totals-label {
+        overflow: hidden;
+
+        max-width: 400px;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__content-row-totals-value {
+        flex-shrink: 0;
+
+        margin-inline-start: auto;
     }
 
     &__content-row-label-cell {
@@ -105,10 +124,6 @@
         padding: 2px 14px 2px 4px;
 
         text-align: end;
-    }
-
-    &__content-row-totals {
-        color: var(--g-color-text-complementary);
     }
 
     &__content-row-totals-divider {

@@ -134,11 +134,17 @@ const getStackedPercentRowRendererTable = ({
 
         return (
             <tr className={className}>
-                <td style={{padding: '0 4px', width: '20px'}}>
+                <td
+                    style={{
+                        padding: '0 4px 0 14px',
+                        width: '1px',
+                        whiteSpace: 'nowrap',
+                        verticalAlign: 'middle',
+                    }}
+                >
                     <span
                         style={{
                             backgroundColor: color,
-                            alignSelf: 'center',
                             borderRadius: '1px',
                             display: 'inline-block',
                             height: '6px',
@@ -156,10 +162,8 @@ const getStackedPercentRowRendererTable = ({
                     }}
                     dangerouslySetInnerHTML={{__html: name}}
                 />
-                <td style={{padding: '0 4px', textAlign: 'end'}}>
-                    <span style={{marginRight: 12}}>{percentage}</span>
-                    {formattedValue}
-                </td>
+                <td style={{padding: '0 4px', textAlign: 'end'}}>{percentage}</td>
+                <td style={{padding: '0 14px 0 4px', textAlign: 'end'}}>{formattedValue}</td>
             </tr>
         );
     };
@@ -190,7 +194,7 @@ const getStackedPercentRowRendererTableHtml = ({
             ? formatNumber(ratio, {format: 'percent', precision: 1})
             : '';
 
-        return `<tr class="${className ?? ''}"><td style="padding:0 4px;width:20px"><span style="background-color:${color};align-self:center;border-radius:1px;display:inline-block;height:6px;width:12px"></span></td><td style="max-width:400px;overflow:hidden;padding:0 4px;text-overflow:ellipsis;white-space:nowrap">${name}</td><td style="padding:0 4px;text-align:end"><span style="margin-right:12px">${percentage}</span>${formattedValue}</td></tr>`;
+        return `<tr class="${className ?? ''}"><td style="padding:0 4px 0 14px;width:1px;white-space:nowrap;vertical-align:middle"><span style="background-color:${color};border-radius:1px;display:inline-block;height:6px;width:12px"></span></td><td style="max-width:400px;overflow:hidden;padding:0 4px;text-overflow:ellipsis;white-space:nowrap">${name}</td><td style="padding:0 4px;text-align:end">${percentage}</td><td style="padding:0 14px 0 4px;text-align:end">${formattedValue}</td></tr>`;
     };
 };
 

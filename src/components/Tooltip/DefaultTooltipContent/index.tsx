@@ -327,22 +327,18 @@ export const DefaultTooltipContent = ({
             {totals?.enabled && hovered.length > 1 && (
                 <React.Fragment>
                     <Divider className={b('content-row-totals-divider')} />
-                    <table className={b('content-rows-table')}>
-                        <tbody>
-                            <RowWithAggregation
-                                aggregation={getPreparedAggregation({
-                                    hovered,
-                                    totals,
-                                    xAxis,
-                                    yAxis,
-                                })}
-                                label={totals.label}
-                                style={{marginRight: scrollBarWidth}}
-                                values={hoveredValues}
-                                valueFormat={totals.valueFormat ?? valueFormat}
-                            />
-                        </tbody>
-                    </table>
+                    <RowWithAggregation
+                        aggregation={getPreparedAggregation({
+                            hovered,
+                            totals,
+                            xAxis,
+                            yAxis,
+                        })}
+                        label={totals.label}
+                        style={{marginRight: scrollBarWidth}}
+                        values={hoveredValues}
+                        valueFormat={totals.valueFormat ?? valueFormat}
+                    />
                 </React.Fragment>
             )}
         </div>
