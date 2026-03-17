@@ -1,4 +1,5 @@
 import {group} from 'd3-array';
+import isNil from 'lodash/isNil';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';
@@ -114,22 +115,11 @@ export const prepareAreaData = async (args: {
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
-    boundsHeight: number;
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
 }): Promise<PreparedAreaData[]> => {
-    const {
-        series,
-        xAxis,
-        xScale,
-        yAxis,
-        yScale,
-        boundsHeight: plotHeight,
-        split,
-        isOutsideBounds,
-        isRangeSlider,
-    } = args;
+    const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
 
@@ -155,6 +145,46 @@ export const prepareAreaData = async (args: {
             const [_stackId, seriesStack] = list[i];
 
             const xValues = getXValues(seriesStack, xAxis, xScale);
+
+            const isPercentStacking = seriesStack.some((s) => s.stacking === 'percent');
+            const stackValues = Object.fromEntries(xValues.map(([key]) => [key, 0]));
+            const ratio = Object.fromEntries(xValues.map(([key]) => [key, 1]));
+
+            if (isPercentStacking) {
+                seriesStack.forEach((s) => {
+                    const yAxisIndex = s.yAxis;
+                    const seriesYScale = yScale[yAxisIndex];
+
+                    if (!seriesYScale) {
+                        return;
+                    }
+
+                    s.data.forEach((d, index) => {
+                        const x = String(
+                            xAxis.type === 'category'
+                                ? getDataCategoryValue({
+                                      axisDirection: 'x',
+                                      categories: xAxis.categories || [],
+                                      data: d,
+                                  })
+                                : d.x,
+                        );
+                        const yDataValue = d.y ?? null;
+                        if (
+                            yDataValue &&
+                            !(isNil(s.data[index - 1]?.y) && isNil(s.data[index + 1]?.y))
+                        ) {
+                            stackValues[x] += Number(yDataValue);
+                        }
+                    }, new Map());
+                });
+
+                xValues.forEach(([x]) => {
+                    if (stackValues[x]) {
+                        ratio[x] = 100 / stackValues[x];
+                    }
+                });
+            }
 
             const positiveStackValues = new Map<string, {prev: number; next: number}>();
             const negativeStackValues = new Map<string, {prev: number; next: number}>();
@@ -204,13 +234,24 @@ export const prepareAreaData = async (args: {
                             x,
                             y: 0,
                         } as AreaSeriesData);
-                    const yDataValue = d.y ?? null;
+                    let yDataValue = d.y ?? null;
 
                     if (s.nullMode === 'connect' && yDataValue === null) {
                         return pointsAcc;
                     }
 
-                    const yValue = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
+                    if (yDataValue && isPercentStacking) {
+                        yDataValue = Number(yDataValue) * ratio[x];
+                    }
+
+                    const yValue = getYValue({
+                        point: {
+                            y: yDataValue,
+                        },
+                        yAxis: seriesYAxis,
+                        yScale: seriesYScale,
+                    });
+
                     if (typeof yDataValue === 'number' && yValue !== null) {
                         const prevPoint = seriesData.get(xValues[index - 1]?.[0]);
                         const nextPoint = seriesData.get(xValues[index + 1]?.[0]);
@@ -221,22 +262,34 @@ export const prepareAreaData = async (args: {
                             let prevSectionStackHeight = positiveStackHeights?.prev ?? 0;
                             let nextSectionStackHeight = positiveStackHeights?.next ?? 0;
 
-                            pointsAcc.push({
+                            const point = {
                                 y0: yAxisTop + yMin - prevSectionStackHeight,
                                 x: xValue,
                                 y: yAxisTop + yValue - prevSectionStackHeight,
                                 data: d,
                                 series: s,
-                            });
+                            };
+
+                            pointsAcc.push(point);
 
                             if (prevSectionStackHeight !== nextSectionStackHeight) {
-                                pointsAcc.push({
+                                const point2 = {
                                     y0: yAxisTop + yMin - nextSectionStackHeight,
                                     x: xValue,
                                     y: yAxisTop + yValue - nextSectionStackHeight,
                                     data: d,
                                     series: s,
-                                });
+                                };
+                                pointsAcc.push(point2);
+
+                                if (isPercentStacking) {
+                                    const newYValue =
+                                        yAxisTop +
+                                        yValue -
+                                        Math.max(prevSectionStackHeight, nextSectionStackHeight);
+                                    point.y = newYValue;
+                                    point2.y = newYValue;
+                                }
                             }
 
                             if (prevPoint?.y !== null) {
@@ -344,33 +397,6 @@ export const prepareAreaData = async (args: {
                 });
             }
 
-            if (seriesStack.some((s) => s.stacking === 'percent')) {
-                xValues.forEach(([x], index) => {
-                    const stackHeight = positiveStackValues.get(x)?.prev || 0;
-                    let acc = 0;
-                    const ratio = plotHeight / stackHeight;
-
-                    seriesStackData.forEach((item) => {
-                        const point = item.points[index];
-
-                        if (point.y !== null && point.y !== undefined) {
-                            const height = (point.y0 - point.y) * ratio;
-                            const nextAcc = acc + height;
-                            point.y0 = plotHeight - acc;
-                            point.y = plotHeight - nextAcc;
-
-                            acc = nextAcc;
-                        }
-                    });
-                });
-
-                seriesStackData.forEach((item) => {
-                    item.markers.forEach((marker) => {
-                        marker.clipped = isOutsideBounds(marker.point.x, marker.point.y);
-                    });
-                });
-            }
-
             for (let itemIndex = 0; itemIndex < seriesStackData.length; itemIndex++) {
                 const item = seriesStackData[itemIndex];
                 const currentYAxis = yAxis[item.series.yAxis];
@@ -392,5 +418,6 @@ export const prepareAreaData = async (args: {
             result.push(...seriesStackData);
         }
     }
+
     return result;
 };

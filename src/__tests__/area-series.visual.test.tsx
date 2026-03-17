@@ -81,6 +81,44 @@ test.describe('Area series', () => {
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
         });
+
+        test.only('Percent stacking', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 's2',
+                            type: 'area',
+                            stacking: 'percent',
+                            data: [
+                                {x: 1, y: 1},
+                                {x: 2, y: 1},
+                                {x: 3, y: 1},
+                                {x: 4, y: 1},
+                                {x: 5, y: 1},
+                                {x: 6, y: 1},
+                            ],
+                        },
+                        {
+                            name: 's1',
+                            type: 'area',
+                            stacking: 'percent',
+                            data: [
+                                {x: 1, y: null},
+                                {x: 2, y: 1},
+                                {x: 3, y: 1},
+                                {x: 4, y: null},
+                                {x: 5, y: 0},
+                                {x: 6, y: 1},
+                            ],
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Basic split', async ({mount}) => {
