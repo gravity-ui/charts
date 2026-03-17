@@ -1,5 +1,6 @@
 import {group} from 'd3-array';
 import isNil from 'lodash/isNil';
+import round from 'lodash/round';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';
@@ -244,7 +245,7 @@ export const prepareAreaData = async (args: {
                         yDataValue = Number(yDataValue) * ratio[x];
                     }
 
-                    const yValue = getYValue({
+                    let yValue = getYValue({
                         point: {
                             y: yDataValue,
                         },
@@ -253,6 +254,7 @@ export const prepareAreaData = async (args: {
                     });
 
                     if (typeof yDataValue === 'number' && yValue !== null) {
+                        yValue = round(yValue, 2);
                         const prevPoint = seriesData.get(xValues[index - 1]?.[0]);
                         const nextPoint = seriesData.get(xValues[index + 1]?.[0]);
                         const currentPointStackHeight = Math.abs(yMin - yValue);

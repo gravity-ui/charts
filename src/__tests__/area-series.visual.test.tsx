@@ -82,7 +82,7 @@ test.describe('Area series', () => {
             });
         });
 
-        test.only('Percent stacking', async ({mount}) => {
+        test('Percent stacking', async ({mount}) => {
             const chartData: ChartData = {
                 series: {
                     data: [
