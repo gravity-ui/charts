@@ -28,6 +28,7 @@ const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
 
 export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderProps {
     const {
+        activeLegendItems,
         boundsWidth,
         boundsOffsetLeft,
         clipPathId,
@@ -47,13 +48,17 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
     } = props;
     const filteredPreparedSeries = React.useMemo(() => {
         return preparedSeries.filter((s) => {
+            if (s.legend.enabled && !activeLegendItems.includes(s.legend.groupId)) {
+                return false;
+            }
+
             if ('rangeSlider' in s && !s.rangeSlider.visible) {
                 return false;
             }
 
             return true;
         });
-    }, [preparedSeries]);
+    }, [preparedSeries, activeLegendItems]);
     const {xAxis: preparedXAxis, yAxis: preparedYAxis} = useAxis({
         boundsHeight: preparedRangeSlider.height,
         height,

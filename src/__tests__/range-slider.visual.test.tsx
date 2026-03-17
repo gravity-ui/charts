@@ -275,4 +275,19 @@ test.describe('Range slider', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test('Hide series via legend', async ({mount}) => {
+        const data = getData({
+            basicData: scatterLinearXAxisData,
+            extraData: {
+                legend: {enabled: true},
+                xAxis: {type: 'linear'},
+            },
+        });
+        const component = await mount(<ChartTestStory data={data} />);
+        const legendItem = component.locator('.gcharts-legend__item text').first();
+        // Click on the first legend item to hide the series
+        await legendItem.click();
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });

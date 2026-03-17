@@ -11,6 +11,7 @@ export type RangeSliderState = {
 };
 
 export interface RangeSliderProps {
+    activeLegendItems: string[];
     boundsOffsetLeft: number;
     boundsWidth: number;
     height: number;
