@@ -226,4 +226,53 @@ test.describe('Range slider', () => {
         const rangeSliderLocator = await getLocator({component, selector: '.gcharts-range-slider'});
         await expect(rangeSliderLocator).toHaveScreenshot();
     });
+
+    test.describe('With rotated x-axis labels', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series',
+                        data: [
+                            {x: new Date('2024-01-07').getTime(), y: 10},
+                            {x: new Date('2024-01-14').getTime(), y: 20},
+                            {x: new Date('2024-01-21').getTime(), y: 15},
+                            {x: new Date('2024-01-28').getTime(), y: 25},
+                            {x: new Date('2024-02-04').getTime(), y: 18},
+                            {x: new Date('2024-02-11').getTime(), y: 30},
+                        ],
+                    },
+                ],
+            },
+            legend: {enabled: false},
+            xAxis: {
+                type: 'datetime',
+                rangeSlider: {enabled: true},
+            },
+        };
+
+        test('Rotation -45', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory
+                    data={{...data, xAxis: {...data.xAxis, labels: {rotation: -45}}}}
+                />,
+            );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Rotation 45', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory data={{...data, xAxis: {...data.xAxis, labels: {rotation: 45}}}} />,
+            );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Rotation 90', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory data={{...data, xAxis: {...data.xAxis, labels: {rotation: 90}}}} />,
+            );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
