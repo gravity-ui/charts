@@ -14,6 +14,7 @@ import {
     TIME_UNITS,
     calculateCos,
     calculateNumericProperty,
+    calculateSin,
     formatAxisTickLabel,
     getDefaultDateFormat,
     getHorizontalHtmlTextHeight,
@@ -94,7 +95,10 @@ async function setLabelSettings({
                   })
               ).maxHeight
             : axis.labels.lineHeight;
-    const maxHeight = rotation ? calculateCos(rotation) * axis.labels.maxWidth : labelsHeight;
+    const maxHeight = rotation
+        ? Math.abs(calculateSin(rotation)) * axis.labels.maxWidth +
+          Math.abs(calculateCos(rotation)) * axis.labels.lineHeight
+        : labelsHeight;
 
     axis.labels.height = Math.min(maxHeight, labelsHeight);
     axis.labels.rotation = rotation;
