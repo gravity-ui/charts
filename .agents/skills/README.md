@@ -12,9 +12,10 @@ Skills for AI agents (Cursor, Claude Code, etc.) when working with the gravity-u
 
 ## Available skills
 
-| Skill                           | Description                                                                                           |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [test-to-story](test-to-story/) | Create a Storybook story from a visual test case, or delete it. Stories go to the "From Tests" scope. |
+| Skill                             | Description                                                                                           | Setup required                                   |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [test-to-story](test-to-story/)   | Create a Storybook story from a visual test case, or delete it. Stories go to the "From Tests" scope. | —                                                |
+| [stand-to-story](stand-to-story/) | Extract ChartData from a live stand via CDP and create a Storybook reproduction story.                | [Browser setup](stand-to-story/browser-setup.md) |
 
 Skills live in subdirectories. Each skill is a directory with `SKILL.md`.
 
