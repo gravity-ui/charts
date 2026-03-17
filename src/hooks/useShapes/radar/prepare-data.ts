@@ -1,4 +1,6 @@
-import {curveLinearClosed, line, range, scaleLinear} from 'd3';
+import {range} from 'd3-array';
+import {scaleLinear} from 'd3-scale';
+import {curveLinearClosed, line} from 'd3-shape';
 
 import type {HtmlItem} from '../../../types';
 import {getLabelsSize} from '../../../utils';

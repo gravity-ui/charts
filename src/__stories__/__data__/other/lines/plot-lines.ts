@@ -1,4 +1,4 @@
-import {groups} from 'd3';
+import {groups} from 'd3-array';
 
 import type {BarYSeries, BarYSeriesData, ChartData} from '../../../../types';
 import nintendoGames from '../../nintendoGames';

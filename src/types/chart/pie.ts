@@ -1,4 +1,4 @@
-import type {BaseType} from 'd3';
+import type {BaseType} from 'd3-selection';
 
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import {median} from 'd3';
+import {median} from 'd3-array';
 
 import {treemapBasicData} from 'src/__stories__/__data__';
 import type {ChartData, TreemapSeries} from 'src/types';

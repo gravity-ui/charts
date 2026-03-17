@@ -1,4 +1,4 @@
-import {max} from 'd3';
+import {max} from 'd3-array';
 import get from 'lodash/get';
 
 import type {ChartData, RadarSeriesCategory, RadarSeriesData} from '../../../types';

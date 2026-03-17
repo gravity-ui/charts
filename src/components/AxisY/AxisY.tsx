@@ -1,7 +1,8 @@
 import React from 'react';
 
-import {line, select} from 'd3';
-import type {Selection} from 'd3';
+import {select} from 'd3-selection';
+import type {Selection} from 'd3-selection';
+import {line} from 'd3-shape';
 
 import {HtmlLayer} from '../../hooks/useShapes/HtmlLayer';
 import type {HtmlItem} from '../../types';

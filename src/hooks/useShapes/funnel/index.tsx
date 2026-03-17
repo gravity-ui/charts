@@ -1,7 +1,8 @@
 import React from 'react';
 
-import {color, select} from 'd3';
-import type {Dispatch} from 'd3';
+import {color} from 'd3-color';
+import type {Dispatch} from 'd3-dispatch';
+import {select} from 'd3-selection';
 
 import type {TooltipDataChunkFunnel} from '../../../types';
 import {block, getLineDashArray} from '../../../utils';

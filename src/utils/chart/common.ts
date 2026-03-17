@@ -1,4 +1,5 @@
-import {group, select} from 'd3';
+import {group} from 'd3-array';
+import {select} from 'd3-selection';
 import get from 'lodash/get';
 import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';

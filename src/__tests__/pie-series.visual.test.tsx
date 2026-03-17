@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import {median} from 'd3';
+import {median} from 'd3-array';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 import range from 'lodash/range';

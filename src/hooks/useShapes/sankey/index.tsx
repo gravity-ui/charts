@@ -1,7 +1,7 @@
 import React from 'react';
 
-import {select} from 'd3';
-import type {Dispatch} from 'd3';
+import type {Dispatch} from 'd3-dispatch';
+import {select} from 'd3-selection';
 
 import type {TooltipDataChunkTreemap} from '../../../types';
 import {block} from '../../../utils';

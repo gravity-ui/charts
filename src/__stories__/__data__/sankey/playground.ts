@@ -1,4 +1,4 @@
-import {groups, sort} from 'd3';
+import {groups, sort} from 'd3-array';
 
 import type {ChartData} from '../../../types';
 import nintendoGames from '../nintendoGames';

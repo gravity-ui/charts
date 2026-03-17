@@ -1,7 +1,11 @@
 import React from 'react';
 
-import {arc, color, select} from 'd3';
-import type {BaseType, Dispatch, PieArcDatum} from 'd3';
+import {color} from 'd3-color';
+import type {Dispatch} from 'd3-dispatch';
+import {select} from 'd3-selection';
+import type {BaseType} from 'd3-selection';
+import type {PieArcDatum} from 'd3-shape';
+import {arc} from 'd3-shape';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkPie} from '../../../types';

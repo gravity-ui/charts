@@ -1,7 +1,9 @@
 import React from 'react';
 
-import {line, select} from 'd3';
-import type {AxisDomain, AxisScale, Dispatch} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import type {Dispatch} from 'd3-dispatch';
+import {select} from 'd3-selection';
+import {line} from 'd3-shape';
 
 import type {ChartScale, PreparedSplit, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {PointPosition, TooltipDataChunk} from '../../types';

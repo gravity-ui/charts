@@ -1,5 +1,5 @@
-import type {CurveFactory} from 'd3';
-import {curveBasis, curveLinear, pie} from 'd3';
+import type {CurveFactory} from 'd3-shape';
+import {curveBasis, curveLinear, pie} from 'd3-shape';
 
 import type {PointPosition} from '../../../types';
 

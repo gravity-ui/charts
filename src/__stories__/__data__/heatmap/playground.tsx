@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {dateTimeUtc} from '@gravity-ui/date-utils';
-import {interpolateRgb} from 'd3';
+import {interpolateRgb} from 'd3-interpolate';
 
 import {Chart} from '../../../components';
 import {DEFAULT_PALETTE} from '../../../constants';

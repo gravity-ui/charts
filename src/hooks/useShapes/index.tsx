@@ -1,7 +1,7 @@
 import React from 'react';
 
-import type {Dispatch} from 'd3';
-import {group} from 'd3';
+import {group} from 'd3-array';
+import type {Dispatch} from 'd3-dispatch';
 
 import {SERIES_TYPE} from '../../constants';
 import type {SeriesType} from '../../constants';

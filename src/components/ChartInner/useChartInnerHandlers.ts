@@ -1,7 +1,7 @@
 import React from 'react';
 
-import {pointer} from 'd3';
-import type {Dispatch} from 'd3';
+import type {Dispatch} from 'd3-dispatch';
+import {pointer} from 'd3-selection';
 import get from 'lodash/get';
 import throttle from 'lodash/throttle';
 

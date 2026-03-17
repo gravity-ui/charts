@@ -1,4 +1,4 @@
-import {scaleOrdinal} from 'd3';
+import {scaleOrdinal} from 'd3-scale';
 
 import {DEFAULT_PALETTE} from '../../../constants';
 import type {LineSeries} from '../../../types';

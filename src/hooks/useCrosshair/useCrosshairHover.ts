@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {Dispatch} from 'd3';
+import type {Dispatch} from 'd3-dispatch';
 
 import type {PointPosition, TooltipDataChunk} from '../../types';
 import {EventType} from '../../utils';

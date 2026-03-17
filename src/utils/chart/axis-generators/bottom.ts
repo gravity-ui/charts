@@ -1,5 +1,7 @@
-import type {AxisDomain, AxisScale, BaseType, Selection} from 'd3';
-import {path, select} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import {path} from 'd3-path';
+import type {BaseType, Selection} from 'd3-selection';
+import {select} from 'd3-selection';
 
 import type {BaseTextStyle, DeepRequired, MeaningfulAny} from '../../../types';
 import {getAxisItems, getXAxisOffset, getXTickPosition} from '../axis/common';

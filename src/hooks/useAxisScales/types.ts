@@ -1,4 +1,4 @@
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 
 type ChartScaleBand = ScaleBand<string>;
 export type ChartScaleLinear = ScaleLinear<number, number>;

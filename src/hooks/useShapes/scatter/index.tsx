@@ -1,7 +1,8 @@
 import React from 'react';
 
-import {select} from 'd3';
-import type {BaseType, Dispatch} from 'd3';
+import type {Dispatch} from 'd3-dispatch';
+import type {BaseType} from 'd3-selection';
+import {select} from 'd3-selection';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkScatter} from '../../../types';

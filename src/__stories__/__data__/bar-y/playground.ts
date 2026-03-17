@@ -1,4 +1,4 @@
-import {groups} from 'd3';
+import {groups} from 'd3-array';
 import {action} from 'storybook/actions';
 
 import type {ChartData} from '../../../types';

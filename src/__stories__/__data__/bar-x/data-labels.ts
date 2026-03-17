@@ -1,4 +1,4 @@
-import {groups, sort} from 'd3';
+import {groups, sort} from 'd3-array';
 
 import type {BarXSeries, BarXSeriesData, ChartData, MeaningfulAny} from '../../../types';
 import nintendoGames from '../nintendoGames';

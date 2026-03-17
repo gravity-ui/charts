@@ -1,4 +1,5 @@
-import type {AxisDomain, AxisScale, ScaleLinear, ScaleTime} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import type {ScaleLinear, ScaleTime} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../../hooks/useAxis/types';
 import type {ChartScale} from '../../../hooks/useAxisScales/types';

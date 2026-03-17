@@ -1,4 +1,4 @@
-import type {ScaleOrdinal} from 'd3';
+import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 

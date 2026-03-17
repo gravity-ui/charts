@@ -1,4 +1,4 @@
-import type {PieArcDatum} from 'd3';
+import type {PieArcDatum} from 'd3-shape';
 
 import type {ConnectorCurve, HtmlItem, LabelData} from '../../../types';
 import type {PreparedPieSeries} from '../../useSeries/types';

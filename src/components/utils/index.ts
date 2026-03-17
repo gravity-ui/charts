@@ -1,6 +1,6 @@
 import {duration} from '@gravity-ui/date-utils';
-import {line as lineGenerator} from 'd3';
 import {select} from 'd3-selection';
+import {line as lineGenerator} from 'd3-shape';
 
 import type {DashStyle} from '../../constants';
 import type {ChartScaleLinear, ChartScaleTime} from '../../hooks';

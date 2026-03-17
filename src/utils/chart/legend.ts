@@ -1,4 +1,4 @@
-import type {Selection} from 'd3';
+import type {Selection} from 'd3-selection';
 
 export function createGradientRect(
     container: Selection<SVGGElement, unknown, null, undefined>,

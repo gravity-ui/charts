@@ -1,4 +1,4 @@
-import {path} from 'd3';
+import {path} from 'd3-path';
 
 export function getFramedPath(args: {height: number; strokeWidth: number; width: number}) {
     const {height, strokeWidth, width} = args;

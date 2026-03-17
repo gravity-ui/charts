@@ -1,4 +1,4 @@
-import {symbolCircle, symbolDiamond2, symbolSquare, symbolTriangle2} from 'd3';
+import {symbolCircle, symbolDiamond2, symbolSquare, symbolTriangle2} from 'd3-shape';
 
 import {SymbolType} from '../../constants';
 

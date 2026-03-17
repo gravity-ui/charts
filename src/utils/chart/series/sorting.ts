@@ -1,4 +1,4 @@
-import {sort} from 'd3';
+import {sort} from 'd3-array';
 import {isEmpty} from 'lodash';
 import get from 'lodash/get';
 

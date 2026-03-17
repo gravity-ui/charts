@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {StoryObj} from '@storybook/react';
-import {randomNormal} from 'd3';
+import {randomNormal} from 'd3-random';
 
 import type {ChartData} from '../../types';
 import {randomString} from '../../utils';

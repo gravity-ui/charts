@@ -1,4 +1,4 @@
-import {descending, groups, sort} from 'd3';
+import {descending, groups, sort} from 'd3-array';
 import {action} from 'storybook/actions';
 
 import type {ChartData} from '../../../types';

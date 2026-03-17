@@ -2,7 +2,7 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
-import {randomNormal} from 'd3';
+import {randomNormal} from 'd3-random';
 
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';

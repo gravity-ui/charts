@@ -1,5 +1,5 @@
-import type {AxisDomain, AxisScale} from 'd3';
-import {max} from 'd3';
+import {max} from 'd3-array';
+import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';

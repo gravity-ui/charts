@@ -1,5 +1,5 @@
 import {getUniqId} from '@gravity-ui/uikit';
-import type {AxisDomain, AxisScale} from 'd3';
+import type {AxisDomain, AxisScale} from 'd3-axis';
 
 import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
