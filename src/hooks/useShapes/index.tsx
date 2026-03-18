@@ -250,7 +250,6 @@ export async function getShapes(args: Args) {
                             xScale,
                             yAxis,
                             yScale,
-                            boundsHeight,
                             split,
                             isOutsideBounds,
                             isRangeSlider,
