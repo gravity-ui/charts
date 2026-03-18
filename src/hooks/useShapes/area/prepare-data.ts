@@ -161,23 +161,23 @@ export const prepareAreaData = async (args: {
                     }
 
                     s.data.forEach((d, index) => {
-                        const x = String(
-                            xAxis.type === 'category'
-                                ? getDataCategoryValue({
-                                      axisDirection: 'x',
-                                      categories: xAxis.categories || [],
-                                      data: d,
-                                  })
-                                : d.x,
-                        );
                         const yDataValue = d.y ?? null;
                         if (
                             yDataValue &&
                             !(isNil(s.data[index - 1]?.y) && isNil(s.data[index + 1]?.y))
                         ) {
+                            const x = String(
+                                xAxis.type === 'category'
+                                    ? getDataCategoryValue({
+                                          axisDirection: 'x',
+                                          categories: xAxis.categories || [],
+                                          data: d,
+                                      })
+                                    : d.x,
+                            );
                             stackValues[x] += Number(yDataValue);
                         }
-                    }, new Map());
+                    });
                 });
 
                 xValues.forEach(([x]) => {
