@@ -89,6 +89,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         tooltip: preparedTooltip,
     });
     const {
+        activeLegendItems,
         allPreparedSeries,
         boundsHeight,
         boundsOffsetLeft,
@@ -376,6 +377,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 debouncedAllPreparedSeries &&
                 preparedSeriesOptions && (
                     <RangeSlider
+                        activeLegendItems={activeLegendItems ?? []}
                         boundsOffsetLeft={debouncedOffsetLeft}
                         boundsWidth={debouncedBoundsWidth}
                         height={height}
