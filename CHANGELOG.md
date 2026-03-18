@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.41.1](https://github.com/gravity-ui/charts/compare/v1.41.0...v1.41.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* fix percent stacking area with null values ([#497](https://github.com/gravity-ui/charts/issues/497)) ([b5224bb](https://github.com/gravity-ui/charts/commit/b5224bb765c023f6fbd23a7846df19d1913351c5))
+* fix x-axis labels with rotation 90 overlapping range slider ([#494](https://github.com/gravity-ui/charts/issues/494)) ([2290d24](https://github.com/gravity-ui/charts/commit/2290d240bef5b8a75b6394c75c41e7b2edb9a592))
+
 ## [1.41.0](https://github.com/gravity-ui/charts/compare/v1.40.0...v1.41.0) (2026-03-16)
 
 
