@@ -277,17 +277,41 @@ test.describe('Range slider', () => {
     });
 
     test('Hide series via legend', async ({mount}) => {
-        const data = getData({
-            basicData: scatterLinearXAxisData,
-            extraData: {
-                legend: {enabled: true},
-                xAxis: {type: 'linear'},
+        const data: ChartData = {
+            legend: {enabled: true},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: new Date('2024-01-01').getTime(), y: 1},
+                            {x: new Date('2024-01-02').getTime(), y: 10},
+                            {x: new Date('2024-01-03').getTime(), y: 5},
+                        ],
+                    },
+                    {
+                        type: 'line',
+                        name: 'Series 2',
+                        data: [
+                            {x: new Date('2024-01-01').getTime(), y: 5},
+                            {x: new Date('2024-01-02').getTime(), y: 2},
+                            {x: new Date('2024-01-03').getTime(), y: 8},
+                        ],
+                    },
+                ],
             },
-        });
+            xAxis: {
+                labels: {enabled: false},
+                rangeSlider: {enabled: true},
+                type: 'datetime',
+            },
+        };
         const component = await mount(<ChartTestStory data={data} />);
+        await expect(component).toHaveScreenshot();
         const legendItem = component.locator('.gcharts-legend__item text').first();
         // Click on the first legend item to hide the series
         await legendItem.click();
-        await expect(component.locator('svg')).toHaveScreenshot();
+        await expect(component).toHaveScreenshot();
     });
 });
