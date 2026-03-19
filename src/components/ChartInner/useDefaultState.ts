@@ -105,6 +105,11 @@ export function useDefaultState(props: Props) {
                     clientX: rect.left + svgPointerX,
                     clientY: rect.top + svgPointerY,
                 });
+
+            if (syntheticEvent) {
+                svgRef.current?.dispatchEvent(syntheticEvent);
+            }
+
             dispatcher.call(
                 EventType.POINTERMOVE_CHART,
                 {},
