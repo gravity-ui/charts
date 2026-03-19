@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.41.2](https://github.com/gravity-ui/charts/compare/v1.41.1...v1.41.2) (2026-03-19)
+
+
+### Bug Fixes
+
+* dispatch synthetic pointermove event to svg element on default state hover ([#499](https://github.com/gravity-ui/charts/issues/499)) ([20df086](https://github.com/gravity-ui/charts/commit/20df08643ef6df0afcce6673e8a2057a96d75f18))
+* **Range slider:** hide legend-deactivated series from range slider ([#496](https://github.com/gravity-ui/charts/issues/496)) ([46239c1](https://github.com/gravity-ui/charts/commit/46239c170075300f30d57bea6c818a327fe88713))
+
 ## [1.41.1](https://github.com/gravity-ui/charts/compare/v1.41.0...v1.41.1) (2026-03-18)
 
 
