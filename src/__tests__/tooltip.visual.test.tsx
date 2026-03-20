@@ -11,6 +11,7 @@ import {
     tooltipOverflowedRowsHtmlData,
 } from 'src/__stories__/__data__';
 import type {ChartData} from 'src/types';
+import {TIME_UNITS} from 'src/utils/chart/time';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -70,12 +71,43 @@ test.describe('Tooltip', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-y').first();
-        const position = await bar.boundingBox();
-        if (position === null) {
-            throw Error('bar position is null');
-        }
+        const position = await getLocatorBoundingBox(bar);
         await page.mouse.move(position.x + position.width / 2, 50);
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
+    test('Tooltip header uses tooltip.dateTimeLabelFormats for default datetime header', async ({
+        page,
+        mount,
+    }) => {
+        const t0 = new Date('2025-10-20T12:00:00.000Z').getTime();
+        const t1 = t0 + TIME_UNITS.day;
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: t0, y: 10},
+                            {x: t1, y: 20},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {type: 'datetime'},
+            tooltip: {
+                dateTimeLabelFormats: {
+                    day: 'YYYY',
+                },
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-x').first();
+        const position = await getLocatorBoundingBox(bar);
+        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip.getByText('2025', {exact: true})).toBeVisible();
     });
 
     test('Hiding specific series from the tooltip', async ({page, mount}) => {
@@ -119,10 +151,7 @@ test.describe('Tooltip', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
-        const position = await bar.boundingBox();
-        if (position === null) {
-            throw Error('bar position is null');
-        }
+        const position = await getLocatorBoundingBox(bar);
         await page.mouse.move(position.x + position.width / 2, 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
@@ -156,10 +185,7 @@ test.describe('Tooltip', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
-        const position = await bar.boundingBox();
-        if (position === null) {
-            throw Error('bar position is null');
-        }
+        const position = await getLocatorBoundingBox(bar);
         await page.mouse.move(position.x + position.width / 2, 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
@@ -188,10 +214,7 @@ test.describe('Tooltip', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
-        const position = await bar.boundingBox();
-        if (position === null) {
-            throw Error('bar position is null');
-        }
+        const position = await getLocatorBoundingBox(bar);
         await page.mouse.move(position.x + position.width / 2, 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();

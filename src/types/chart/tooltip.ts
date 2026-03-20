@@ -1,4 +1,5 @@
 import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
+import type {DateTimeLabelFormats} from '../../utils/chart/time';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -242,4 +243,36 @@ export interface ChartTooltip<T = MeaningfulAny> {
               direction?: 'asc' | 'desc';
           }
         | ChartTooltipSortComparator<T>;
+    /**
+     * Per-granularity display formats for the default datetime tooltip header.
+     * Ignored when `headerFormat` is set.
+     *
+     * Each value is a format string in the same form as the `format` argument to
+     * [`DateTime#format`](https://gravity-ui.github.io/date-utils/pages/api/DateTime/overview.html) in `@gravity-ui/date-utils`
+     * (see the **`FormatInput`** type there): Day.js–style tokens, e.g. `YYYY`, `MM`, `DD`, `HH`, `mm`, `ss`, `SSS`, `MMM`.
+     *
+     * Partial objects are merged with the built-in `DATETIME_LABEL_FORMATS`; omitted keys keep defaults.
+     * @example ISO-like date and time
+     * ```ts
+     * dateTimeLabelFormats: { day: 'YYYY-MM-DD', hour: 'YYYY-MM-DD HH:mm', minute: 'YYYY-MM-DD HH:mm' }
+     * ```
+     * @example US-style calendar date
+     * ```ts
+     * dateTimeLabelFormats: { day: 'MM/DD/YYYY', week: 'MM/DD/YYYY' }
+     * ```
+     * @example Only sub-day precision (other units stay defaults)
+     * ```ts
+     * dateTimeLabelFormats: { hour: 'HH:mm', minute: 'HH:mm', second: 'HH:mm:ss' }
+     * ```
+     * @example Coarse ranges: short month and full year
+     * ```ts
+     * dateTimeLabelFormats: { month: 'YYYY-MM', year: 'YYYY' }
+     * ```
+     * @example Localized-style month label with day precision unchanged
+     * ```ts
+     * dateTimeLabelFormats: { month: 'MMMM YYYY' }
+     * ```
+     * @see https://gravity-ui.github.io/date-utils/pages/api/DateTime/overview.html
+     */
+    dateTimeLabelFormats?: DateTimeLabelFormats;
 }
