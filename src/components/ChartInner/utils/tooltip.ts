@@ -17,6 +17,12 @@ export const getPreparedTooltip = (args: {
         enabled: get(tooltip, 'enabled', true),
         throttle: tooltip?.throttle ?? 0,
         headerFormat:
-            tooltip?.headerFormat ?? getDefaultTooltipHeaderFormat({seriesData, yAxes, xAxis}),
+            tooltip?.headerFormat ??
+            getDefaultTooltipHeaderFormat({
+                dateTimeLabelFormats: tooltip?.dateTimeLabelFormats,
+                seriesData,
+                yAxes,
+                xAxis,
+            }),
     };
 };

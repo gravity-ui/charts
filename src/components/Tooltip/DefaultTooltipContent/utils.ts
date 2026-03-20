@@ -50,9 +50,11 @@ function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
 export function getDefaultValueFormat({
     axis,
     closestPointsRange,
+    dateTimeLabelFormats,
 }: {
     axis?: ChartXAxis | ChartYAxis | null;
     closestPointsRange?: number;
+    dateTimeLabelFormats?: ChartTooltip['dateTimeLabelFormats'];
 }): ValueFormat | undefined {
     switch (axis?.type) {
         case 'linear':
@@ -64,7 +66,7 @@ export function getDefaultValueFormat({
         case 'datetime': {
             return {
                 type: 'date',
-                format: getDefaultDateFormat(closestPointsRange),
+                format: getDefaultDateFormat(closestPointsRange, dateTimeLabelFormats),
             };
         }
         default:

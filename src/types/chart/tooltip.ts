@@ -1,4 +1,5 @@
 import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
+import type {DateTimeLabelFormats} from '../../utils/chart/time';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -242,4 +243,10 @@ export interface ChartTooltip<T = MeaningfulAny> {
               direction?: 'asc' | 'desc';
           }
         | ChartTooltipSortComparator<T>;
+    /**
+     * Per-unit date format strings for the default datetime tooltip header.
+     * Merged with the library default; omitted keys keep defaults.
+     * Ignored when `headerFormat` is set.
+     */
+    dateTimeLabelFormats?: DateTimeLabelFormats;
 }

@@ -2,6 +2,9 @@ import {expect} from '@playwright/experimental-ct-react';
 import type {MountResult} from '@playwright/experimental-ct-react';
 import type {Locator, Page} from '@playwright/test';
 
+/** Same shape as Playwright `locator.boundingBox()` (not `DOMRect`: no top/left/right/bottom). */
+export type LocatorBoundingBox = {x: number; y: number; width: number; height: number};
+
 export async function getLocator(args: {component: MountResult; selector: string}) {
     const {component, selector} = args;
     const locator = component.locator(selector);
@@ -10,8 +13,8 @@ export async function getLocator(args: {component: MountResult; selector: string
     return locator;
 }
 
-export async function getLocatorBoundingBox(locator: Locator) {
-    const boundingBox = await locator.evaluate((el) => el.getBoundingClientRect());
+export async function getLocatorBoundingBox(locator: Locator): Promise<LocatorBoundingBox> {
+    const boundingBox = await locator.boundingBox();
 
     if (!boundingBox) {
         throw new Error('Bounding box not found');
@@ -33,7 +36,7 @@ async function simulateDrag(args: {from: [number, number]; page: Page; to: [numb
 
 export async function dragElementByCalculatedPosition(args: {
     component: MountResult;
-    getDragOptions: (args: {boundingBox: DOMRect}) => {
+    getDragOptions: (args: {boundingBox: LocatorBoundingBox}) => {
         from: [number, number];
         to: [number, number];
     };
