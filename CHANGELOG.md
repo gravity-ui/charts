@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.0](https://github.com/gravity-ui/charts/compare/v1.41.2...v1.42.0) (2026-03-20)
+
+
+### Features
+
+* **tooltip:** add dateTimeLabelFormats merged with default date formats ([#500](https://github.com/gravity-ui/charts/issues/500)) ([90cc586](https://github.com/gravity-ui/charts/commit/90cc5861dd2940a91928283c344bdebb8e19a00b))
+
 ## [1.41.2](https://github.com/gravity-ui/charts/compare/v1.41.1...v1.41.2) (2026-03-19)
 
 
