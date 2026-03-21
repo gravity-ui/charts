@@ -58,10 +58,20 @@ try {
         process.exit(1);
     }
 
-    // Find page by URL substring if provided, otherwise use first page
+    /** Prefer real document tabs; DevTools UI is also a "page" in CDP order. */
+    const contentPages = allPages.filter((p) => {
+        const url = p.url();
+        return (
+            !url.startsWith('devtools://') &&
+            !url.startsWith('chrome://') &&
+            !url.startsWith('chrome-extension://')
+        );
+    });
+    const candidates = contentPages.length > 0 ? contentPages : allPages;
+
     const page = urlSubstring
-        ? (allPages.find((p) => p.url().includes(urlSubstring)) ?? allPages[0])
-        : allPages[0];
+        ? (candidates.find((p) => p.url().includes(urlSubstring)) ?? candidates[0])
+        : candidates[0];
 
     console.log(`Using page: ${page.url()}`);
     console.log(`Looking for element: [data-qa="${dataQaValue}"]`);
