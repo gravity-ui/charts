@@ -1,1 +1,1 @@
-export * from '../../../../src/types/chart/line';
+export * from '../../../../src/core/types/chart/line';

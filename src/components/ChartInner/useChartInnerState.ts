@@ -3,8 +3,9 @@ import React from 'react';
 import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
+import {EventType, isMacintosh} from '~core/utils';
+
 import type {PreparedRangeSlider, PreparedTooltip, RangeSliderState, ZoomState} from '../../hooks';
-import {EventType, isMacintosh} from '../../utils';
 
 type Props = {
     dispatcher: Dispatch<object>;

@@ -1,4 +1,5 @@
-import {DAY} from '../../../../constants/datetime';
+import {DAY} from '~core/constants/datetime';
+
 import type {ChartData, LineSeries, LineSeriesData} from '../../../../types';
 
 function prepareData(): ChartData {

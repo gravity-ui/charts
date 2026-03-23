@@ -4,10 +4,11 @@ import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
+import type {ChartScale} from '~core/scales/types';
+import {getDataCategoryValue} from '~core/utils';
+
 import type {BasicInactiveState} from '../../types';
-import {getDataCategoryValue} from '../../utils';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales/types';
 import type {ZoomState} from '../useZoom/types';
 
 import type {PreparedLineData} from './line/types';

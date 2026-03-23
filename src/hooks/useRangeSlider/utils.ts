@@ -1,7 +1,8 @@
-import {isBandScale} from '../../utils';
+import type {ChartScale} from '~core/scales/types';
+import {isBandScale} from '~core/utils';
+
 import type {PreparedChart} from '../types';
 import type {PreparedRangeSlider} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales/types';
 import type {BrushSelection} from '../useBrush/types';
 import type {PreparedLegend} from '../useSeries/types';
 

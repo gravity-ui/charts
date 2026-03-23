@@ -1,4 +1,4 @@
-import type {DashStyle} from 'src/constants';
+import type {DashStyle} from 'src/core/constants';
 
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';
 import type {TextRowData} from '../types';

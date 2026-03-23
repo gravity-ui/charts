@@ -2,13 +2,14 @@ import {group} from 'd3-array';
 import isNil from 'lodash/isNil';
 import round from 'lodash/round';
 
+import type {PreparedSplit} from '~core/layout/split-types';
+import type {ChartScale} from '~core/scales/types';
+import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
+
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
-import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
-import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';

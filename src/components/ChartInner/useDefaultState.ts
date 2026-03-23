@@ -3,13 +3,14 @@ import React from 'react';
 import type {Dispatch} from 'd3-dispatch';
 import get from 'lodash/get';
 
+import type {ChartScale} from '~core/scales/types';
+import {EventType} from '~core/utils';
+import {getClosestPoints} from '~core/utils/get-closest-data';
+import {getHoveredPlots} from '~core/utils/get-hovered-plots';
+import {calculateNumericProperty} from '~core/utils/math';
+
 import type {PreparedXAxis, PreparedYAxis, ShapeData} from '../../hooks';
-import type {ChartScale} from '../../hooks/useAxisScales/types';
 import type {ChartTooltipRendererArgs, ChartYAxis} from '../../types';
-import {EventType} from '../../utils';
-import {getClosestPoints} from '../../utils/chart/get-closest-data';
-import {getHoveredPlots} from '../../utils/chart/get-hovered-plots';
-import {calculateNumericProperty} from '../../utils/chart/math';
 
 type Props = {
     boundsHeight: number;

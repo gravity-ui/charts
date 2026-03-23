@@ -5,9 +5,11 @@ import parse from 'html-react-parser';
 import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 
+import {i18n} from '~core/i18n';
+import {getFormattedValue} from '~core/utils/format';
+
 import {usePrevious} from '../../../hooks';
 import type {PreparedFunnelSeries, PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
-import {i18n} from '../../../i18n';
 import type {
     ChartTooltip,
     ChartTooltipRowRendererArgs,
@@ -20,7 +22,6 @@ import type {
     ValueFormat,
 } from '../../../types';
 import {block} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
 
 import {Row} from './Row';
 import {RowWithAggregation} from './RowWithAggregation';

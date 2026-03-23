@@ -3,16 +3,17 @@ import type {PieArcDatum} from 'd3-shape';
 import {arc, line as lineGenerator} from 'd3-shape';
 import merge from 'lodash/merge';
 
-import {DEFAULT_DATALABELS_STYLE} from '../../../constants';
-import type {HtmlItem, PieSeries, PointPosition} from '../../../types';
+import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {
     calculateNumericProperty,
     getLabelsSize,
     getLeftPosition,
     getTextSizeFn,
     isLabelsOverlapping,
-} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
+} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
+
+import type {HtmlItem, PieSeries, PointPosition} from '../../../types';
 import type {PreparedPieSeries} from '../../useSeries/types';
 
 import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';

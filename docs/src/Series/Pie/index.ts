@@ -1,1 +1,1 @@
-export * from '../../../../src/types/chart/pie';
+export * from '../../../../src/core/types/chart/pie';

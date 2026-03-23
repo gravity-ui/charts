@@ -1,12 +1,13 @@
 import React from 'react';
 
+import {getFormattedValue} from '~core/utils/format';
+
 import type {
     ChartTooltipTotalsAggregationValue,
     ChartTooltipTotalsBuiltInAggregation,
     ValueFormat,
 } from '../../../types';
 import {block} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
 
 import {getBuiltInAggregatedValue, getBuiltInAggregationLabel} from './utils';
 import type {HoveredValue} from './utils';

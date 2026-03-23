@@ -2,8 +2,10 @@ import type {BaseType, Selection} from 'd3-selection';
 import {symbol} from 'd3-shape';
 import get from 'lodash/get';
 
-import {SymbolType} from '../../constants';
-import {block, getSymbol} from '../../utils';
+import {SymbolType} from '~core/constants';
+import {getSymbol} from '~core/utils';
+
+import {block} from '../../utils';
 
 import type {MarkerData as AreaMarkerData} from './area/types';
 import type {MarkerData as LineMarkerData} from './line/types';

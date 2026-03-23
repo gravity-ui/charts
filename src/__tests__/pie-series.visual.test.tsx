@@ -7,6 +7,8 @@ import merge from 'lodash/merge';
 import range from 'lodash/range';
 import set from 'lodash/set';
 
+import {randomString} from '~core/utils';
+
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     pieBasicData,
@@ -15,7 +17,6 @@ import {
     piePlaygroundData,
 } from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
-import {randomString} from '../utils';
 
 function getModifiedData(data: ChartData, pieSeries: Partial<PieSeries>) {
     const resultData = merge({}, data);

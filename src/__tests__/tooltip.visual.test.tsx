@@ -10,8 +10,8 @@ import {
     tooltipOverflowedRowsData,
     tooltipOverflowedRowsHtmlData,
 } from 'src/__stories__/__data__';
+import {TIME_UNITS} from 'src/core/utils/time';
 import type {ChartData} from 'src/types';
-import {TIME_UNITS} from 'src/utils/chart/time';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 

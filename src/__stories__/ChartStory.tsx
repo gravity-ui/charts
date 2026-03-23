@@ -2,10 +2,11 @@ import React from 'react';
 
 import type {StoryFn} from '@storybook/react';
 
+import {measurePerformance} from '~core/utils';
+
 import type {ChartProps} from '../components';
 import {Chart} from '../components';
 import type {ChartData} from '../types';
-import {measurePerformance} from '../utils';
 
 type ChartStoryProps = {
     data: ChartData;

@@ -1,8 +1,6 @@
 import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 
-import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
-import type {HtmlItem} from '../../types';
 import {
     calculateSin,
     formatAxisTickLabel,
@@ -11,8 +9,11 @@ import {
     getMinSpaceBetween,
     getTextSizeFn,
     getTextWithElipsis,
-} from '../../utils';
-import {getXAxisTickValues} from '../../utils/chart/axis/x-axis';
+} from '~core/utils';
+import {getXAxisTickValues} from '~core/utils/axis/x-axis';
+
+import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
+import type {HtmlItem} from '../../types';
 import type {TextRowData} from '../types';
 import {getMultilineTitleContentRows} from '../utils/axis-title';
 

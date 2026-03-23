@@ -1,5 +1,6 @@
+import {getContinuesColorFn} from '~core/utils';
+
 import type {ChartData, PieSeriesData} from '../../../types';
-import {getContinuesColorFn} from '../../../utils';
 
 function prepareData(): ChartData {
     const colors = ['rgb(255, 61, 100)', 'rgb(255, 198, 54)', 'rgb(84, 165, 32)'];

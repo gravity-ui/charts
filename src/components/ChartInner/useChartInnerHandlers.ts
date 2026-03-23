@@ -5,13 +5,14 @@ import {pointer} from 'd3-selection';
 import get from 'lodash/get';
 import throttle from 'lodash/throttle';
 
-import {IS_TOUCH_ENABLED} from '../../constants';
+import {IS_TOUCH_ENABLED} from '~core/constants';
+import type {ChartScale} from '~core/scales/types';
+import {EventType} from '~core/utils';
+import {getClosestPoints} from '~core/utils/get-closest-data';
+import {getHoveredPlots} from '~core/utils/get-hovered-plots';
+
 import type {PreparedXAxis, PreparedYAxis, ShapeData} from '../../hooks';
-import type {ChartScale} from '../../hooks/useAxisScales/types';
 import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
-import {EventType} from '../../utils';
-import {getClosestPoints} from '../../utils/chart/get-closest-data';
-import {getHoveredPlots} from '../../utils/chart/get-hovered-plots';
 
 import type {useChartInnerState} from './useChartInnerState';
 

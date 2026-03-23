@@ -1,5 +1,6 @@
+import {getFormattedValue} from '~core/utils';
+
 import type {ChartData} from '../../../../types';
-import {getFormattedValue} from '../../../../utils';
 
 export const tooltipWithNumberFormat: ChartData = {
     series: {

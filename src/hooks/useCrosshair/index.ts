@@ -5,9 +5,10 @@ import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 import {line} from 'd3-shape';
 
+import {getAxisPlotsPosition, getLineDashArray} from '~core/utils';
+
 import type {ChartScale, PreparedSplit, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {PointPosition, TooltipDataChunk} from '../../types';
-import {getAxisPlotsPosition, getLineDashArray} from '../../utils';
 import {getXValue, getYValue} from '../useShapes/utils';
 
 import {useCrosshairHover} from './useCrosshairHover';

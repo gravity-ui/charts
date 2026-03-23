@@ -1,9 +1,10 @@
 import get from 'lodash/get';
 
+import {getYAxisLabelMaxWidth} from '~core/axes/y-axis';
+import type {ChartScale} from '~core/scales/types';
+import type {PreparedSeries} from '~core/series/types';
+
 import type {PreparedYAxis} from '../../../hooks';
-import {getYAxisLabelMaxWidth} from '../../../hooks/useAxis/y-axis';
-import type {ChartScale} from '../../../hooks/useAxisScales/types';
-import type {PreparedSeries} from '../../../hooks/useSeries/types';
 
 export async function recalculateYAxisLabelsWidth(props: {
     seriesData: PreparedSeries[];

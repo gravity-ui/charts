@@ -5,8 +5,10 @@ import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
+import {filterOverlappingLabels} from '~core/utils';
+
 import type {LabelData} from '../../../types';
-import {block, filterOverlappingLabels} from '../../../utils';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {getRectPath} from '../utils';

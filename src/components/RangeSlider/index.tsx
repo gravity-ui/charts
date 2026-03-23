@@ -2,9 +2,11 @@ import React from 'react';
 
 import {useUniqId} from '@gravity-ui/uikit';
 
+import {isBandScale} from '~core/utils';
+
 import {useBrush, useRangeSlider} from '../../hooks';
 import type {BrushArea, RangeSliderProps} from '../../hooks';
-import {block, isBandScale} from '../../utils';
+import {block} from '../../utils';
 import {getInitialRangeSliderState} from '../utils';
 
 import {getFramedPath} from './utils';

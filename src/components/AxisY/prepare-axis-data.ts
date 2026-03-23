@@ -1,8 +1,6 @@
 import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 
-import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
-import type {HtmlItem} from '../../types';
 import {
     calculateCos,
     calculateSin,
@@ -13,7 +11,10 @@ import {
     getTextSizeFn,
     getTextWithElipsis,
     wrapText,
-} from '../../utils';
+} from '~core/utils';
+
+import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
+import type {HtmlItem} from '../../types';
 
 import {prepareHtmlYAxisTitle, prepareSvgYAxisTitle} from './prepare-axis-title';
 import type {

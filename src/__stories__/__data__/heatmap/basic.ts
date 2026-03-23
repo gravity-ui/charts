@@ -1,6 +1,7 @@
 import {interpolateRgb} from 'd3-interpolate';
 
-import {DEFAULT_PALETTE} from '../../../constants';
+import {DEFAULT_PALETTE} from '~core/constants';
+
 import type {ChartData, HeatmapSeriesData} from '../../../types';
 
 function prepareData(): ChartData {

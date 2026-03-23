@@ -5,9 +5,9 @@ import {median} from 'd3-array';
 
 import {treemapBasicData} from 'src/__stories__/__data__';
 import type {ChartData, TreemapSeries} from 'src/types';
+import {randomString} from '~core/utils';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {randomString} from '../utils';
 
 test.describe('Treemap series', () => {
     test('Basic', async ({mount}) => {

@@ -3,7 +3,18 @@ import React from 'react';
 import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
-import {DEFAULT_PALETTE, SERIES_TYPE} from '../../constants';
+import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
+import {getLegendComponents, getPreparedLegend} from '~core/series/prepare-legend';
+import {getPreparedOptions} from '~core/series/prepare-options';
+import {
+    getChartDimensions,
+    getEffectiveXRange,
+    getSortedSeriesData,
+    getYAxisWidth,
+    getZoomedSeriesData,
+    isAxisRelatedSeries,
+} from '~core/utils';
+
 import {
     createScales,
     getAxes,
@@ -29,18 +40,8 @@ import type {
     ZoomState,
 } from '../../hooks';
 import type {PreparedChart} from '../../hooks/types';
-import {getLegendComponents, getPreparedLegend} from '../../hooks/useSeries/prepare-legend';
-import {getPreparedOptions} from '../../hooks/useSeries/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '../../hooks/useSeries/utils';
 import type {ChartData, LegendConfig} from '../../types';
-import {
-    getChartDimensions,
-    getEffectiveXRange,
-    getSortedSeriesData,
-    getYAxisWidth,
-    getZoomedSeriesData,
-    isAxisRelatedSeries,
-} from '../../utils';
 
 import type {ChartInnerProps} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, recalculateYAxisLabelsWidth} from './utils';

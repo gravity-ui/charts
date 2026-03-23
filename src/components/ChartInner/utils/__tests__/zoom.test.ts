@@ -1,4 +1,5 @@
-import {SERIES_TYPE, ZOOM_TYPE} from '../../../../constants';
+import {SERIES_TYPE, ZOOM_TYPE} from '~core/constants';
+
 import type {ChartSeries} from '../../../../types';
 import {getZoomType} from '../zoom';
 

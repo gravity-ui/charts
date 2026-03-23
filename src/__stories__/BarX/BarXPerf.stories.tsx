@@ -3,8 +3,9 @@ import React from 'react';
 import type {StoryObj} from '@storybook/react';
 import {randomNormal} from 'd3-random';
 
+import {randomString} from '~core/utils';
+
 import type {ChartData} from '../../types';
-import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 
 const randomFn = randomNormal(0, 10);

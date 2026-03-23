@@ -1,1 +1,1 @@
-export * from '../../../../src/types/chart/bar-y';
+export * from '../../../../src/core/types/chart/bar-y';

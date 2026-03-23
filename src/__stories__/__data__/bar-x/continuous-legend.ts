@@ -1,7 +1,8 @@
 import {groups} from 'd3-array';
 
+import {getContinuesColorFn} from '~core/utils';
+
 import type {BarXSeriesData, ChartData} from '../../../types';
-import {getContinuesColorFn} from '../../../utils';
 import nintendoGames from '../nintendoGames';
 
 function prepareData(): ChartData {

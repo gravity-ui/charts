@@ -1,7 +1,8 @@
+import type {ChartScale} from '~core/scales/types';
+
 import type {ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 import type {PreparedChart} from '../types';
 import type {PreparedRangeSlider, PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales/types';
 import type {BrushSelection, UseBrushProps} from '../useBrush/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
 

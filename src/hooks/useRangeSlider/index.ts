@@ -3,15 +3,16 @@ import React from 'react';
 import {pointer} from 'd3-selection';
 import {isEqual} from 'lodash';
 
-import {SERIES_TYPE} from '../../constants';
-import {isBandScale} from '../../utils';
+import {SERIES_TYPE} from '~core/constants';
+import type {PreparedSplit} from '~core/layout/split-types';
+import {isBandScale} from '~core/utils';
+
 import {useAxis} from '../useAxis';
 import {useAxisScales} from '../useAxisScales';
 import type {UseBrushProps} from '../useBrush/types';
 import {getNormalizedSelection, isOneDimensionalSelection} from '../useBrush/utils';
 import {useShapes} from '../useShapes';
 import type {ClipPathBySeriesType} from '../useShapes';
-import type {PreparedSplit} from '../useSplit/types';
 import {selectionToZoomBounds} from '../useZoom/utils';
 
 import type {PreparedRangeSliderProps, UseRangeSliderProps} from './types';

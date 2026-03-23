@@ -1,6 +1,7 @@
 import {path} from 'd3-path';
 
-import {calculateNumericProperty, getFormattedValue, getTextSizeFn} from '../../../utils';
+import {calculateNumericProperty, getFormattedValue, getTextSizeFn} from '~core/utils';
+
 import type {PreparedFunnelSeries} from '../../useSeries/types';
 
 import type {PreparedFunnelData} from './types';

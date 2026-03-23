@@ -4,10 +4,11 @@ import {select} from 'd3-selection';
 import type {DebouncedFunc} from 'lodash';
 import debounce from 'lodash/debounce';
 
-import {i18nFactory} from '../i18n';
+import {i18nFactory} from '~core/i18n';
+import {getUniqId} from '~core/utils';
+import {validateData} from '~core/validation';
+
 import type {ChartData} from '../types';
-import {getUniqId} from '../utils';
-import {validateData} from '../validation';
 
 import {ChartInner} from './ChartInner';
 

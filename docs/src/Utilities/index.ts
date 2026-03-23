@@ -1,2 +1,2 @@
-export * from '../../../src/types/formatter';
-export {MeaningfulAny} from '../../../src/types/misc';
+export * from '../../../src/core/types/formatter';
+export {MeaningfulAny} from '../../../src/core/types/misc';
