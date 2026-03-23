@@ -6,14 +6,43 @@ import type {ChartLegendItem} from './legend';
 type NumberFormat = {
     type: 'number';
 } & FormatNumberOptions;
+
 type DateFormat = {
     type: 'date';
+    /**
+     * [Day.js format string](https://day.js.org/docs/en/display/format) used to render the date.
+     * When omitted, a default format is selected automatically based on the data range.
+     *
+     * @example 'DD MMMM YYYY'
+     * @example 'DD.MM.YY HH:mm'
+     */
     format?: string;
 };
+
 export type CustomFormat = {
     type: 'custom';
     formatter: (args: {value: unknown; formattedValue?: string}) => string;
 };
+
+/**
+ * Specifies how a value should be formatted for display in labels and tooltips.
+ *
+ * - `{ type: 'number' }` — numeric formatting with optional precision, units, percent display, etc.
+ *   See [FormatNumberOptions](https://gravity-ui.github.io/charts/pages/api/Utilities/interfaces/FormatNumberOptions.html) for all available options.
+ * - `{ type: 'date' }` — date/time formatting via a [Day.js format string](https://day.js.org/docs/en/display/format).
+ *
+ * @example
+ * // Two decimal places, shown as percent
+ * { type: 'number', precision: 2, format: 'percent' }
+ *
+ * @example
+ * // Compact thousands: 1 500 000 → "1.5M"
+ * { type: 'number', unit: 'auto', precision: 1 }
+ *
+ * @example
+ * // Date value (Unix ms) formatted as "17 October 2025"
+ * { type: 'date', format: 'DD MMMM YYYY' }
+ */
 export type ValueFormat = NumberFormat | DateFormat;
 
 export interface BaseDataLabels {
