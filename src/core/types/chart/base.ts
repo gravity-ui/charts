@@ -9,13 +9,6 @@ type NumberFormat = {
 
 type DateFormat = {
     type: 'date';
-    /**
-     * [Day.js format string](https://day.js.org/docs/en/display/format) used to render the date.
-     * When omitted, a default format is selected automatically based on the data range.
-     *
-     * @example 'DD MMMM YYYY'
-     * @example 'DD.MM.YY HH:mm'
-     */
     format?: string;
 };
 
@@ -29,7 +22,7 @@ export type CustomFormat = {
  *
  * - `{ type: 'number' }` — numeric formatting with optional precision, units, percent display, etc.
  *   See [FormatNumberOptions](https://gravity-ui.github.io/charts/pages/api/Utilities/interfaces/FormatNumberOptions.html) for all available options.
- * - `{ type: 'date' }` — date/time formatting via a [Day.js format string](https://day.js.org/docs/en/display/format).
+ * - `{ type: 'date' }` — date/time formatting
  *
  * @example
  * // Two decimal places, shown as percent
