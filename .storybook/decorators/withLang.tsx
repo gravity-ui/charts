@@ -5,7 +5,7 @@ import type {Lang} from '@gravity-ui/uikit';
 import {configure} from '@gravity-ui/uikit';
 import type {Decorator} from '@storybook/react-vite';
 
-import {i18nFactory} from '../../src/i18n';
+import {i18nFactory} from '../../src/core/i18n';
 
 export const WithLang: Decorator = (Story, context) => {
     const lang = context.globals.lang;

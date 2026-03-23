@@ -4,8 +4,10 @@ import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 
+import {getLineDashArray} from '~core/utils';
+
 import type {TooltipDataChunkFunnel} from '../../../types';
-import {block, getLineDashArray} from '../../../utils';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 
 import type {PreparedFunnelData} from './types';

@@ -1,8 +1,9 @@
 import random from 'lodash/random';
 import range from 'lodash/range';
 
+import {randomString} from '~core/utils';
+
 import type {ScatterSeries} from '../../types';
-import {randomString} from '../../utils';
 
 const TEMPLATE_STRING = '0123456789abcdefghijklmnopqrstuvwxyz';
 

@@ -4,8 +4,9 @@ import type {Meta, StoryObj} from '@storybook/react';
 import random from 'lodash/random';
 import range from 'lodash/range';
 
+import {randomString} from '~core/utils';
+
 import type {ChartLegend, ScatterSeries} from '../../types';
-import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 
 const TEMPLATE_STRING = '0123456789abcdefghijklmnopqrstuvwxyz';

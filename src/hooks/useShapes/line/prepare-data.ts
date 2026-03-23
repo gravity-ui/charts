@@ -1,10 +1,11 @@
+import type {PreparedSplit} from '~core/layout/split-types';
+import type {ChartScale} from '~core/scales/types';
+import {getLabelsSize, getTextSizeFn} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
+
 import type {HtmlItem, LabelData} from '../../../types';
-import {getLabelsSize, getTextSizeFn} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales/types';
 import type {PreparedLineSeries} from '../../useSeries/types';
-import type {PreparedSplit} from '../../useSplit/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PreparedLineData} from './types';

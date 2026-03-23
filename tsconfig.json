@@ -10,7 +10,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "paths": {
-      "~playwright/*": ["playwright/*"]
+      "~playwright/*": ["playwright/*"],
+      "~core/*": ["src/core/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "playwright/*"]

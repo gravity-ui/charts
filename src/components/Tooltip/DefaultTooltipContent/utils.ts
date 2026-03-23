@@ -1,8 +1,11 @@
 import {create} from 'd3-selection';
 import get from 'lodash/get';
 
+import {i18n} from '~core/i18n';
+import {getDataCategoryValue, getDefaultDateFormat} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
+
 import type {PreparedPieSeries} from '../../../hooks';
-import {i18n} from '../../../i18n';
 import type {
     ChartSeriesData,
     ChartTooltip,
@@ -17,8 +20,6 @@ import type {
     TreemapSeriesData,
     ValueFormat,
 } from '../../../types';
-import {getDataCategoryValue, getDefaultDateFormat} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
 import {appendLinePathElement} from '../../utils';
 
 export type HoveredValue = string | number | null | undefined;

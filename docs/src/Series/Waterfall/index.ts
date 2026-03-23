@@ -1,1 +1,1 @@
-export * from '../../../../src/types/chart/waterfall';
+export * from '../../../../src/core/types/chart/waterfall';

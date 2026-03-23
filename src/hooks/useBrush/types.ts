@@ -1,6 +1,6 @@
 import type {BrushBehavior} from 'd3-brush';
 
-import type {ZoomType} from '../../constants';
+import type {ZoomType} from '../../core/constants';
 import type {ChartBrush, DeepRequired} from '../../types';
 
 export type BrushSelection = [number, number] | [[number, number], [number, number]];

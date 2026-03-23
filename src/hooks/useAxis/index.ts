@@ -2,14 +2,14 @@ import React from 'react';
 
 import isEqual from 'lodash/isEqual';
 
-import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
-import {getWidthOccupiedByYAxis} from '../../utils';
-import type {PreparedChart} from '../types';
-import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../useSeries/types';
+import {getWidthOccupiedByYAxis} from '~core/utils';
 
-import type {AxesState} from './types';
-import {getPreparedXAxis} from './x-axis';
-import {getPreparedYAxis} from './y-axis';
+import type {AxesState} from '../../core/axes/types';
+import {getPreparedXAxis} from '../../core/axes/x-axis';
+import {getPreparedYAxis} from '../../core/axes/y-axis';
+import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../../core/series/types';
+import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
+import type {PreparedChart} from '../types';
 
 interface UseAxesProps {
     height: number;

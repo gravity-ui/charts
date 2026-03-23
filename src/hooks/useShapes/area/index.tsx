@@ -7,8 +7,10 @@ import {select} from 'd3-selection';
 import {area as areaGenerator, line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
+import {filterOverlappingLabels} from '~core/utils';
+
 import type {LabelData, TooltipDataChunkArea} from '../../../types';
-import {block, filterOverlappingLabels} from '../../../utils';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {

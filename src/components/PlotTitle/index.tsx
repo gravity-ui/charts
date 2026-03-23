@@ -1,6 +1,7 @@
 import React from 'react';
 
-import type {PreparedPlotTitle} from '../../hooks/useSplit/types';
+import type {PreparedPlotTitle} from '~core/layout/split-types';
+
 import {block} from '../../utils';
 
 import './styles.scss';

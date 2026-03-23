@@ -1,1 +1,1 @@
-export * from '../../../../src/types/chart/scatter';
+export * from '../../../../src/core/types/chart/scatter';

@@ -1,6 +1,7 @@
+import type {TextRow} from '~core/utils';
+import {getTextSizeFn, getTextWithElipsis, wrapText} from '~core/utils';
+
 import type {PreparedAxis} from '../../hooks';
-import type {TextRow} from '../../utils';
-import {getTextSizeFn, getTextWithElipsis, wrapText} from '../../utils';
 import type {TextRowData} from '../types';
 
 export async function getMultilineTitleContentRows({

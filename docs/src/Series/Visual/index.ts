@@ -1,2 +1,2 @@
-export * from '../../../../src/types/chart/halo';
-export * from '../../../../src/types/chart/marker';
+export * from '../../../../src/core/types/chart/halo';
+export * from '../../../../src/core/types/chart/marker';

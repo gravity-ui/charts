@@ -1,10 +1,10 @@
-import {HOUR} from '../../constants';
+import {HOUR} from '../../core/constants';
+import type {AreaSeries} from '../../core/types/chart/area';
+import type {BarXSeries} from '../../core/types/chart/bar-x';
+import type {BarYSeries} from '../../core/types/chart/bar-y';
+import type {LineSeries} from '../../core/types/chart/line';
+import type {ScatterSeries} from '../../core/types/chart/scatter';
 import type {ChartAxisType} from '../../types';
-import type {AreaSeries} from '../../types/chart/area';
-import type {BarXSeries} from '../../types/chart/bar-x';
-import type {BarYSeries} from '../../types/chart/bar-y';
-import type {LineSeries} from '../../types/chart/line';
-import type {ScatterSeries} from '../../types/chart/scatter';
 
 /**
  * Generates hourly line series data using a -cos wave:

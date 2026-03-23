@@ -1,8 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react';
 
+import {randomString} from '~core/utils';
+
 import {Chart} from '../../components';
 import type {ChartData} from '../../types';
-import {randomString} from '../../utils';
 import {ChartStory} from '../ChartStory';
 import {treemapBasicData, treemapHtmlLabelsData, treemapPlaygroundData} from '../__data__';
 

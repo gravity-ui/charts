@@ -1,5 +1,6 @@
+import {getContinuesColorFn, getFormattedValue} from '~core/utils';
+
 import type {ChartData, FunnelSeriesData} from '../../../types';
-import {getContinuesColorFn, getFormattedValue} from '../../../utils';
 
 function prepareData(): ChartData {
     const colors = ['rgb(255, 61, 100)', 'rgb(255, 198, 54)', 'rgb(84, 165, 32)'];

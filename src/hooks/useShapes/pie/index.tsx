@@ -8,8 +8,10 @@ import type {PieArcDatum} from 'd3-shape';
 import {arc} from 'd3-shape';
 import get from 'lodash/get';
 
+import {setEllipsisForOverflowTexts} from '~core/utils';
+
 import type {TooltipDataChunkPie} from '../../../types';
-import {block, setEllipsisForOverflowTexts} from '../../../utils';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import type {PreparedLineData} from '../line/types';

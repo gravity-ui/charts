@@ -1,1 +1,1 @@
-export * from '../../../../src/types/chart/treemap';
+export * from '../../../../src/core/types/chart/treemap';

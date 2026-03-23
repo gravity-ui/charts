@@ -1,10 +1,7 @@
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleLinear, ScaleTime} from 'd3-scale';
 
-import type {PreparedXAxis, PreparedYAxis} from '../../../hooks/useAxis/types';
-import type {ChartScale} from '../../../hooks/useAxisScales/types';
-import {getBandSize} from '../../../hooks/utils/get-band-size';
-import type {BaseTextStyle, HtmlItem} from '../../../types';
+import type {ChartScale} from '~core/scales/types';
 import {
     getDomainDataXBySeries,
     getDomainDataYBySeries,
@@ -13,7 +10,11 @@ import {
     getTextSizeFn,
     getTextWithElipsis,
     isBandScale,
-} from '../../../utils';
+} from '~core/utils';
+
+import type {PreparedXAxis, PreparedYAxis} from '../../../hooks/useAxis/types';
+import {getBandSize} from '../../../hooks/utils/get-band-size';
+import type {BaseTextStyle, HtmlItem} from '../../../types';
 import type {PreparedHeatmapSeries} from '../../useSeries/types';
 
 import type {HeatmapItem, HeatmapLabel, PreparedHeatmapData} from './types';

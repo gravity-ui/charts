@@ -2,7 +2,13 @@ import React from 'react';
 
 import get from 'lodash/get';
 
+import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
+
 import {getTickValues} from '../../components/AxisY/utils';
+import type {ChartScale} from '../../core/scales/types';
+import {clusterYAxes} from '../../core/scales/utils';
+import {createXScale} from '../../core/scales/x-scale';
+import {createYScale} from '../../core/scales/y-scale';
 import type {
     PreparedAxis,
     PreparedSeries,
@@ -11,15 +17,9 @@ import type {
     RangeSliderState,
     ZoomState,
 } from '../../hooks';
-import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '../../utils';
 
-import type {ChartScale} from './types';
-import {clusterYAxes} from './utils';
-import {createXScale} from './x-scale';
-import {createYScale} from './y-scale';
-
-export {createXScale} from './x-scale';
-export {createYScale} from './y-scale';
+export {createXScale} from '../../core/scales/x-scale';
+export {createYScale} from '../../core/scales/y-scale';
 
 type Args = {
     boundsWidth: number;

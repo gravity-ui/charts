@@ -2,11 +2,12 @@ import {max} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
+import {getDataCategoryValue} from '~core/utils';
+
+import type {ChartScale} from '../../core/scales/types';
 import type {BarYSeries, BarYSeriesData} from '../../types';
-import {getDataCategoryValue} from '../../utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
 import type {PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '../useSeries/types';
 import {getSeriesStackId} from '../useSeries/utils';
 

@@ -2,8 +2,9 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 
+import {EventType} from '~core/utils';
+
 import type {PointPosition, TooltipDataChunk} from '../../types';
-import {EventType} from '../../utils';
 
 type Args = {
     dispatcher: Dispatch<object>;

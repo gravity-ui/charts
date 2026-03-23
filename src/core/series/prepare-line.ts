@@ -1,0 +1,173 @@
+import type {ScaleOrdinal} from 'd3-scale';
+import get from 'lodash/get';
+import merge from 'lodash/merge';
+
+import {getUniqId} from '~core/utils';
+
+import type {
+    ChartSeriesOptions,
+    LineSeries,
+    LineSeriesData,
+    RectLegendSymbolOptions,
+} from '../../types';
+import {
+    DASH_STYLE,
+    DEFAULT_DATALABELS_STYLE,
+    LineCap,
+    LineJoin,
+    seriesRangeSliderOptionsDefaults,
+} from '../constants';
+import type {DashStyle} from '../constants';
+
+import {
+    DEFAULT_DATALABELS_PADDING,
+    DEFAULT_HALO_OPTIONS,
+    DEFAULT_LEGEND_SYMBOL_PADDING,
+    DEFAULT_POINT_MARKER_OPTIONS,
+} from './constants';
+import type {PreparedLegend, PreparedLegendSymbol, PreparedLineSeries} from './types';
+
+export const DEFAULT_LEGEND_SYMBOL_SIZE = 16;
+export const DEFAULT_LINE_WIDTH = 1;
+export const DEFAULT_DASH_STYLE = DASH_STYLE.Solid;
+
+export const DEFAULT_MARKER = {
+    ...DEFAULT_POINT_MARKER_OPTIONS,
+    enabled: false,
+};
+
+type PrepareLineSeriesArgs = {
+    colorScale: ScaleOrdinal<string, string>;
+    series: LineSeries[];
+    seriesOptions?: ChartSeriesOptions;
+    legend: PreparedLegend;
+};
+
+function prepareLinecap(
+    dashStyle: DashStyle,
+    series: LineSeries,
+    seriesOptions?: ChartSeriesOptions,
+) {
+    const defaultLineCap = dashStyle === DASH_STYLE.Solid ? LineCap.Round : LineCap.None;
+    const lineCapFromSeriesOptions = get(seriesOptions, 'line.linecap', defaultLineCap);
+
+    return get(series, 'linecap', lineCapFromSeriesOptions);
+}
+
+function prepareLinejoin(
+    dashStyle: DashStyle,
+    series: LineSeries,
+    seriesOptions?: ChartSeriesOptions,
+) {
+    const defaultLinejoin = dashStyle === DASH_STYLE.Solid ? LineJoin.Round : LineJoin.None;
+    const linejoinFromSeriesOptions = seriesOptions?.line?.linejoin ?? defaultLinejoin;
+
+    return (series?.linejoin ?? linejoinFromSeriesOptions) as LineJoin;
+}
+
+function prepareLineLegendSymbol(
+    series: LineSeries,
+    seriesOptions?: ChartSeriesOptions,
+): PreparedLegendSymbol {
+    const symbolOptions: RectLegendSymbolOptions = series.legend?.symbol || {};
+    const defaultLineWidth = get(seriesOptions, 'line.lineWidth', DEFAULT_LINE_WIDTH);
+    const width = symbolOptions?.width || DEFAULT_LEGEND_SYMBOL_SIZE;
+
+    return {
+        shape: 'path',
+        width: width,
+        bboxWidth: width,
+        padding: symbolOptions?.padding || DEFAULT_LEGEND_SYMBOL_PADDING,
+        strokeWidth: get(series, 'lineWidth', defaultLineWidth),
+    };
+}
+
+function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
+    const seriesHoverState = get(seriesOptions, 'line.states.hover');
+    const markerNormalState = Object.assign(
+        {},
+        DEFAULT_MARKER,
+        seriesOptions?.line?.marker,
+        series.marker,
+    );
+    const hoveredMarkerDefaultOptions = {
+        enabled: true,
+        radius: markerNormalState.radius,
+        borderWidth: 1,
+        borderColor: '#ffffff',
+        halo: DEFAULT_HALO_OPTIONS,
+    };
+
+    return {
+        states: {
+            normal: markerNormalState,
+            hover: merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker),
+        },
+    };
+}
+
+function prepareSeriesData(series: LineSeries): LineSeriesData[] {
+    const nullMode = series.nullMode ?? 'skip';
+    const data = series.data;
+    switch (nullMode) {
+        case 'zero':
+            return data.map((p) => ({...p, y: p.y ?? 0}));
+        case 'connect':
+            return data.filter((p) => p.y !== null);
+        case 'skip':
+        default:
+            return data;
+    }
+}
+
+export function prepareLineSeries(args: PrepareLineSeriesArgs) {
+    const {colorScale, series: seriesList, seriesOptions, legend} = args;
+
+    const defaultLineWidth = get(seriesOptions, 'line.lineWidth', DEFAULT_LINE_WIDTH);
+    const defaultDashStyle = get(seriesOptions, 'line.dashStyle', DEFAULT_DASH_STYLE);
+
+    return seriesList.map<PreparedLineSeries>((series) => {
+        const id = getUniqId();
+        const name = series.name || '';
+        const color = series.color || colorScale(name);
+        const dashStyle = get(series, 'dashStyle', defaultDashStyle);
+
+        const prepared: PreparedLineSeries = {
+            type: series.type,
+            color,
+            lineWidth: get(series, 'lineWidth', defaultLineWidth),
+            name,
+            id,
+            visible: get(series, 'visible', true),
+            legend: {
+                enabled: get(series, 'legend.enabled', legend.enabled),
+                symbol: prepareLineLegendSymbol(series, seriesOptions),
+                groupId: series.legend?.groupId ?? getUniqId(),
+                itemText: series.legend?.itemText ?? name,
+            },
+            data: prepareSeriesData(series),
+            dataLabels: {
+                enabled: series.dataLabels?.enabled || false,
+                style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
+                padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
+                allowOverlap: get(series, 'dataLabels.allowOverlap', false),
+                html: get(series, 'dataLabels.html', false),
+                format: series.dataLabels?.format,
+            },
+            marker: prepareMarker(series, seriesOptions),
+            dashStyle: dashStyle,
+            linecap: prepareLinecap(dashStyle, series, seriesOptions) as LineCap,
+            linejoin: prepareLinejoin(dashStyle, series, seriesOptions),
+            opacity: get(series, 'opacity', null),
+            cursor: get(series, 'cursor', null),
+            yAxis: get(series, 'yAxis', 0),
+            tooltip: series.tooltip,
+            rangeSlider: {
+                ...seriesRangeSliderOptionsDefaults,
+                ...series.rangeSlider,
+            },
+        };
+
+        return prepared;
+    }, []);
+}

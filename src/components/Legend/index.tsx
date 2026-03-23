@@ -6,7 +6,16 @@ import type {BaseType, Selection} from 'd3-selection';
 import {select} from 'd3-selection';
 import {symbol} from 'd3-shape';
 
-import {CONTINUOUS_LEGEND_SIZE} from '../../constants';
+import {CONTINUOUS_LEGEND_SIZE} from '~core/constants';
+import {
+    createGradientRect,
+    getContinuesColorFn,
+    getLabelsSize,
+    getSymbol,
+    getUniqId,
+} from '~core/utils';
+import {axisBottom} from '~core/utils/axis-generators';
+
 import type {
     LegendItem,
     OnLegendItemClick,
@@ -16,15 +25,7 @@ import type {
 } from '../../hooks';
 import {formatNumber} from '../../libs';
 import type {LegendConfig} from '../../types';
-import {
-    block,
-    createGradientRect,
-    getContinuesColorFn,
-    getLabelsSize,
-    getSymbol,
-    getUniqId,
-} from '../../utils';
-import {axisBottom} from '../../utils/chart/axis-generators';
+import {block} from '../../utils';
 import {appendLinePathElement} from '../utils';
 
 import './styles.scss';

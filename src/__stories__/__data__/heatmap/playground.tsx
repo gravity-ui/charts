@@ -4,7 +4,7 @@ import {dateTimeUtc} from '@gravity-ui/date-utils';
 import {interpolateRgb} from 'd3-interpolate';
 
 import {Chart} from '../../../components';
-import {DEFAULT_PALETTE} from '../../../constants';
+import {DEFAULT_PALETTE} from '../../../core/constants';
 import type {ChartData, HeatmapSeriesData, MeaningfulAny} from '../../../types';
 import marsWeatherData from '../mars-weather';
 

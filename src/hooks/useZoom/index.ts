@@ -2,12 +2,12 @@ import React from 'react';
 
 import {select} from 'd3-selection';
 
+import type {PreparedSplit} from '../../core/layout/split-types';
+import type {ChartScale} from '../../core/scales/types';
 import type {PreparedZoom} from '../types';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales/types';
 import {useBrush} from '../useBrush';
 import type {BrushArea, UseBrushProps} from '../useBrush/types';
-import type {PreparedSplit} from '../useSplit/types';
 
 import type {ZoomState} from './types';
 import {selectionToZoomBounds} from './utils';

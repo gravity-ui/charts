@@ -6,14 +6,11 @@ import {select} from 'd3-selection';
 import {line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
-import {DASH_STYLE} from '../../../constants';
+import {DASH_STYLE} from '~core/constants';
+import {filterOverlappingLabels, getLineDashArray, getWaterfallPointColor} from '~core/utils';
+
 import type {LabelData} from '../../../types';
-import {
-    block,
-    filterOverlappingLabels,
-    getLineDashArray,
-    getWaterfallPointColor,
-} from '../../../utils';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 

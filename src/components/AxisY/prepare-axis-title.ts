@@ -1,12 +1,12 @@
 import type {PreparedAxis} from 'src/hooks';
-
 import {
     calculateCos,
     calculateSin,
     getLabelsSize,
     getTextSizeFn,
     getTextWithElipsis,
-} from '../../utils';
+} from '~core/utils';
+
 import type {TextRowData} from '../types';
 import {getMultilineTitleContentRows} from '../utils/axis-title';
 

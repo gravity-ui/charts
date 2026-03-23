@@ -1,12 +1,13 @@
-import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
-import type {ChartSeries} from '../../types';
 import {
     getDomainDataYBySeries,
     getMinSpaceBetween,
     getTicksCountByPixelInterval,
     isBandScale,
     thinOut,
-} from '../../utils';
+} from '~core/utils';
+
+import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
+import type {ChartSeries} from '../../types';
 
 export function getTickValues({
     scale,

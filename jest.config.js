@@ -19,6 +19,7 @@ module.exports = {
     testPathIgnorePatterns: ['.visual.'],
     moduleNameMapper: {
         '\\.(css|scss)$': '<rootDir>/src/__mocks__/styleMock.js',
+        '^~core/(.*)$': '<rootDir>/src/core/$1',
     },
     setupFiles: ['<rootDir>/src/setup-jsdom.ts'],
 };

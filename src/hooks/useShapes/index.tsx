@@ -3,12 +3,14 @@ import React from 'react';
 import {group} from 'd3-array';
 import type {Dispatch} from 'd3-dispatch';
 
-import {SERIES_TYPE} from '../../constants';
-import type {SeriesType} from '../../constants';
+import {getOnlyVisibleSeries} from '~core/utils';
+
+import {SERIES_TYPE} from '../../core/constants';
+import type {SeriesType} from '../../core/constants';
+import type {PreparedSplit} from '../../core/layout/split-types';
+import type {ChartScale} from '../../core/scales/types';
 import {ChartError} from '../../libs';
-import {getOnlyVisibleSeries} from '../../utils';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ChartScale} from '../useAxisScales/types';
 import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
@@ -25,7 +27,6 @@ import type {
     PreparedTreemapSeries,
     PreparedWaterfallSeries,
 } from '../useSeries/types';
-import type {PreparedSplit} from '../useSplit/types';
 import type {ZoomState} from '../useZoom/types';
 
 import {AreaSeriesShapes} from './area';

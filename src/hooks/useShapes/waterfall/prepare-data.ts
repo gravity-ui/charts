@@ -2,12 +2,13 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 import sortBy from 'lodash/sortBy';
 
+import type {ChartScale} from '~core/scales/types';
+import {getLabelsSize} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
+
 import type {LabelData} from '../../../types';
-import {getLabelsSize} from '../../../utils';
-import {getFormattedValue} from '../../../utils/chart/format';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {ChartScale} from '../../useAxisScales/types';
 import type {
     PreparedSeriesOptions,
     PreparedWaterfallSeries,

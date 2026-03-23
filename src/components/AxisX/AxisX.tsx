@@ -4,9 +4,11 @@ import {select} from 'd3-selection';
 import type {Selection} from 'd3-selection';
 import {line} from 'd3-shape';
 
+import {getLineDashArray} from '~core/utils';
+
 import {HtmlLayer} from '../../hooks/useShapes/HtmlLayer';
 import type {HtmlItem} from '../../types';
-import {block, getLineDashArray} from '../../utils';
+import {block} from '../../utils';
 
 import type {AxisPlotBandData, AxisPlotLineData, AxisTickData, AxisXData} from './types';
 

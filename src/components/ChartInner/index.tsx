@@ -3,10 +3,12 @@ import React from 'react';
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
+import {getPreparedRangeSlider} from '~core/axes/range-slider';
+import {EventType, getDispatcher, isBandScale} from '~core/utils';
+
 import {useCrosshair, usePrevious} from '../../hooks';
-import {getPreparedRangeSlider} from '../../hooks/useAxis/range-slider';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
-import {EventType, block, getDispatcher, isBandScale} from '../../utils';
+import {block} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
 import type {AxisXData} from '../AxisX/types';
