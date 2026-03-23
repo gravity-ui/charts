@@ -18,7 +18,7 @@ export type CustomFormat = {
 };
 
 /**
- * Specifies how a value should be formatted for display in labels and tooltips.
+ * Specifies how a value should be formatted for display.
  *
  * - `{ type: 'number' }` — numeric formatting with optional precision, units, percent display, etc.
  *   See [FormatNumberOptions](https://gravity-ui.github.io/charts/pages/api/Utilities/interfaces/FormatNumberOptions.html) for all available options.
