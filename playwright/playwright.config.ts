@@ -48,6 +48,13 @@ const config: PlaywrightTestConfig = {
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         testIdAttribute: 'data-qa',
+        ctViteConfig: {
+            resolve: {
+                alias: {
+                    '~core': pathFromRoot('src/core'),
+                },
+            },
+        },
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
         trace: 'on',
         headless: true,
