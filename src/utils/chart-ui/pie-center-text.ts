@@ -1,8 +1,8 @@
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
-import {calculateNumericProperty} from '../../core/utils/math';
-import {getLabelsSize, handleOverflowingText} from '../../core/utils/text';
+import {calculateNumericProperty} from '~core/utils/math';
+import {getLabelsSize, handleOverflowingText} from '~core/utils/text';
 
 const MAX_FONT_SIZE = 64;
 const MIN_FONT_SIZE = 8;

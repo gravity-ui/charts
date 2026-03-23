@@ -1,1 +1,1 @@
-export * from '../../core/axes/types';
+export * from '~core/axes/types';

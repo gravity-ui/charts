@@ -2,9 +2,9 @@ import {max} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
+import type {ChartScale} from '~core/scales/types';
 import {getDataCategoryValue} from '~core/utils';
 
-import type {ChartScale} from '../../core/scales/types';
 import type {BarYSeries, BarYSeriesData} from '../../types';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
 import type {PreparedYAxis} from '../useAxis/types';

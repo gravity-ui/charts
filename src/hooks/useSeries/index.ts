@@ -1,10 +1,10 @@
 import {group} from 'd3-array';
 import {scaleOrdinal} from 'd3-scale';
 
+import {prepareSeries} from '~core/series/prepareSeries';
+import type {PreparedLegend, PreparedSeries} from '~core/series/types';
 import {getSeriesNames} from '~core/utils';
 
-import {prepareSeries} from '../../core/series/prepareSeries';
-import type {PreparedLegend, PreparedSeries} from '../../core/series/types';
 import type {ChartData} from '../../types';
 
 export const getVisibleSeries = ({

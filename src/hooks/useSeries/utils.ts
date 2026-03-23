@@ -1,1 +1,1 @@
-export * from '../../core/series/utils';
+export * from '~core/series/utils';

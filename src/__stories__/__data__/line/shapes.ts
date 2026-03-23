@@ -1,5 +1,6 @@
-import type {DashStyle} from '../../../core/constants';
-import {DASH_STYLE} from '../../../core/constants';
+import type {DashStyle} from '~core/constants';
+import {DASH_STYLE} from '~core/constants';
+
 import type {ChartData, LineSeries, LineSeriesData} from '../../../types';
 import nintendoGames from '../nintendoGames';
 

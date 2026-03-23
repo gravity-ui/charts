@@ -2,12 +2,12 @@ import React from 'react';
 
 import isEqual from 'lodash/isEqual';
 
+import type {AxesState} from '~core/axes/types';
+import {getPreparedXAxis} from '~core/axes/x-axis';
+import {getPreparedYAxis} from '~core/axes/y-axis';
+import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getWidthOccupiedByYAxis} from '~core/utils';
 
-import type {AxesState} from '../../core/axes/types';
-import {getPreparedXAxis} from '../../core/axes/x-axis';
-import {getPreparedYAxis} from '../../core/axes/y-axis';
-import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '../../core/series/types';
 import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 import type {PreparedChart} from '../types';
 

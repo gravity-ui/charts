@@ -1,6 +1,7 @@
 import get from 'lodash/get';
 
-import {getDefaultTooltipHeaderFormat} from '../../../core/utils/tooltip';
+import {getDefaultTooltipHeaderFormat} from '~core/utils/tooltip';
+
 import type {PreparedTooltip} from '../../../hooks/types';
 import type {ChartData, ChartSeries, ChartXAxis, ChartYAxis} from '../../../types';
 

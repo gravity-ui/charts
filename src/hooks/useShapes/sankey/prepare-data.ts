@@ -1,6 +1,7 @@
 import {sankey, sankeyLinkHorizontal} from 'd3-sankey';
 
-import {getFormattedValue} from '../../../core/utils/format';
+import {getFormattedValue} from '~core/utils/format';
+
 import type {HtmlItem, SankeySeriesData} from '../../../types';
 import type {PreparedSankeySeries} from '../../useSeries/types';
 

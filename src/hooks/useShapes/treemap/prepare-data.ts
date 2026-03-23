@@ -10,10 +10,10 @@ import {
 } from 'd3-hierarchy';
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
+import {LayoutAlgorithm} from '~core/constants';
 import {getLabelsSize, getTextSizeFn, getTextWithElipsis} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
 
-import {LayoutAlgorithm} from '../../../core/constants';
-import {getFormattedValue} from '../../../core/utils/format';
 import type {HtmlItem, TreemapSeriesData} from '../../../types';
 import type {PreparedTreemapSeries} from '../../useSeries/types';
 

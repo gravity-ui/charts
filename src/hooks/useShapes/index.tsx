@@ -3,12 +3,12 @@ import React from 'react';
 import {group} from 'd3-array';
 import type {Dispatch} from 'd3-dispatch';
 
+import {SERIES_TYPE} from '~core/constants';
+import type {SeriesType} from '~core/constants';
+import type {PreparedSplit} from '~core/layout/split-types';
+import type {ChartScale} from '~core/scales/types';
 import {getOnlyVisibleSeries} from '~core/utils';
 
-import {SERIES_TYPE} from '../../core/constants';
-import type {SeriesType} from '../../core/constants';
-import type {PreparedSplit} from '../../core/layout/split-types';
-import type {ChartScale} from '../../core/scales/types';
 import {ChartError} from '../../libs';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {

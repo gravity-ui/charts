@@ -1,1 +1,1 @@
-export * from '../../core/series/types';
+export * from '~core/series/types';

@@ -3,8 +3,8 @@ import {scaleLinear} from 'd3-scale';
 import {curveLinearClosed, line} from 'd3-shape';
 
 import {getLabelsSize} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
 
-import {getFormattedValue} from '../../../core/utils/format';
 import type {HtmlItem} from '../../../types';
 import type {PreparedRadarSeries} from '../../useSeries/types';
 

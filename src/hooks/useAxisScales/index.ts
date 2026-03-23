@@ -2,13 +2,13 @@ import React from 'react';
 
 import get from 'lodash/get';
 
+import type {ChartScale} from '~core/scales/types';
+import {clusterYAxes} from '~core/scales/utils';
+import {createXScale} from '~core/scales/x-scale';
+import {createYScale} from '~core/scales/y-scale';
 import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
 
 import {getTickValues} from '../../components/AxisY/utils';
-import type {ChartScale} from '../../core/scales/types';
-import {clusterYAxes} from '../../core/scales/utils';
-import {createXScale} from '../../core/scales/x-scale';
-import {createYScale} from '../../core/scales/y-scale';
 import type {
     PreparedAxis,
     PreparedSeries,
@@ -18,8 +18,8 @@ import type {
     ZoomState,
 } from '../../hooks';
 
-export {createXScale} from '../../core/scales/x-scale';
-export {createYScale} from '../../core/scales/y-scale';
+export {createXScale} from '~core/scales/x-scale';
+export {createYScale} from '~core/scales/y-scale';
 
 type Args = {
     boundsWidth: number;

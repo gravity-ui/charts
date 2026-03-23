@@ -1,4 +1,5 @@
-import type {DashStyle, LineCap, LineJoin} from '../../../core/constants';
+import type {DashStyle, LineCap, LineJoin} from '~core/constants';
+
 import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 

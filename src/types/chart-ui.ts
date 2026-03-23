@@ -1,4 +1,4 @@
-import type {BaseTextStyle} from '../core/types/chart/base';
+import type {BaseTextStyle} from '~core/types/chart/base';
 
 export interface LabelData {
     text: string;
