@@ -76,8 +76,8 @@ function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
         return [];
     }
 
-    const closestX = sorted[closestXIndex].x;
-    const filtered = points.filter((p) => p.x === closestX);
+    const closestX = Math.round(sorted[closestXIndex].x);
+    const filtered = points.filter((p) => Math.round(p.x) === closestX);
 
     const groupedBySeries = Object.values(groupBy(filtered, (p) => get(p.series, 'id'))).map(
         (items) => {
