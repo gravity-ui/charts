@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.1](https://github.com/gravity-ui/charts/compare/v1.42.0...v1.42.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* fix the display of selected points in the tooltip ([#506](https://github.com/gravity-ui/charts/issues/506)) ([76df978](https://github.com/gravity-ui/charts/commit/76df978704f9710de1ba7566496020b160e8cc7e))
+
 ## [1.42.0](https://github.com/gravity-ui/charts/compare/v1.41.2...v1.42.0) (2026-03-20)
 
 
