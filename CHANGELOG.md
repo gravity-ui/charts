@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.2](https://github.com/gravity-ui/charts/compare/v1.42.1...v1.42.2) (2026-03-24)
+
+
+### Bug Fixes
+
+* fix alias ([#508](https://github.com/gravity-ui/charts/issues/508)) ([728e5b8](https://github.com/gravity-ui/charts/commit/728e5b806282ec72c40b137518ac46e86aa9b2cd))
+
 ## [1.42.1](https://github.com/gravity-ui/charts/compare/v1.42.0...v1.42.1) (2026-03-24)
 
 
