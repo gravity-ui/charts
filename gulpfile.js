@@ -5,6 +5,7 @@ const sass = require('gulp-dart-sass');
 const replace = require('gulp-replace');
 const ts = require('gulp-typescript');
 const rimraf = require('rimraf');
+const {replaceTscAliasPaths} = require('tsc-alias');
 
 const BUILD_DIR = path.resolve('dist');
 
@@ -33,12 +34,27 @@ function compileTs(modules = false) {
         .pipe(dest(path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs')));
 }
 
+async function replaceAliases(modules = false) {
+    await replaceTscAliasPaths({
+        configFile: 'tsconfig.json',
+        outDir: path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs'),
+    });
+}
+
 task('compile-to-esm', () => {
     return compileTs(true);
 });
 
 task('compile-to-cjs', () => {
     return compileTs();
+});
+
+task('replace-aliases-esm', () => {
+    return replaceAliases(true);
+});
+
+task('replace-aliases-cjs', () => {
+    return replaceAliases();
 });
 
 task('copy-i18n', () => {
@@ -56,7 +72,13 @@ task('styles', () => {
 
 task(
     'build',
-    series(['clean', parallel(['compile-to-esm', 'compile-to-cjs']), 'copy-i18n', 'styles']),
+    series([
+        'clean',
+        parallel(['compile-to-esm', 'compile-to-cjs']),
+        parallel(['replace-aliases-esm', 'replace-aliases-cjs']),
+        'copy-i18n',
+        'styles',
+    ]),
 );
 
 task('default', series(['build']));
