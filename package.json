@@ -141,6 +141,7 @@
     "stylelint-use-logical": "^2.1.2",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   },
