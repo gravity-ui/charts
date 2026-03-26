@@ -330,6 +330,40 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
+    test('ValueFormat with HTML-escaped prefix', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 0.42},
+                            {x: 2, y: 0.75},
+                        ],
+                        tooltip: {
+                            valueFormat: {
+                                format: 'percent',
+                                labelMode: 'absolute',
+                                postfix: '',
+                                precision: 1,
+                                prefix: '&lt; ',
+                                showRankDelimiter: true,
+                                type: 'number',
+                            },
+                        },
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const line = component.locator('.gcharts-line');
+        const position = await getLocatorBoundingBox(line);
+        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
+
     test.describe('rowRenderer', () => {
         const FLEX_SNAPSHOT_NAME = 'Tooltip-row-renderer-flex-layout.png';
         const TABLE_SNAPSHOT_NAME = 'Tooltip-row-renderer-table-layout.png';

@@ -32,7 +32,15 @@ export function Row(props: {
         <tr className={b('content-row', {active, striped}, className)} style={style}>
             {colorItem && <td className={b('content-row-color-cell')}>{colorItem}</td>}
             <td className={b('content-row-label-cell')}>{label}</td>
-            {value && <td className={b('content-row-value-cell')}>{value}</td>}
+            {value && (
+                <td className={b('content-row-value-cell')}>
+                    {typeof value === 'string' ? (
+                        <span dangerouslySetInnerHTML={{__html: value}} />
+                    ) : (
+                        value
+                    )}
+                </td>
+            )}
         </tr>
     );
 }
