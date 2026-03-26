@@ -26,6 +26,7 @@ import type {
     PreparedSeriesOptions,
     PreparedTreemapSeries,
     PreparedWaterfallSeries,
+    PreparedXRangeSeries,
 } from '../useSeries/types';
 import type {ZoomState} from '../useZoom/types';
 
@@ -61,6 +62,8 @@ import {prepareTreemapData} from './treemap/prepare-data';
 import {getSeriesClipPathId} from './utils';
 import type {PreparedWaterfallData} from './waterfall';
 import {WaterfallSeriesShapes, prepareWaterfallData} from './waterfall';
+import {XRangeSeriesShapes, prepareXRangeData} from './x-range';
+import type {PreparedXRangeData} from './x-range';
 
 import './styles.scss';
 
@@ -75,7 +78,8 @@ export type ShapeData =
     | PreparedSankeyData
     | PreparedRadarData
     | PreparedHeatmapData
-    | PreparedFunnelData;
+    | PreparedFunnelData
+    | PreparedXRangeData;
 
 export type ClipPathBySeriesType = Partial<Record<SeriesType, boolean>>;
 
@@ -409,6 +413,28 @@ export async function getShapes(args: Args) {
                         />
                     );
                     shapesData.splice(index, 0, preparedData);
+                    break;
+                }
+                case SERIES_TYPE.XRange: {
+                    if (xAxis && xScale && yScale?.length) {
+                        const preparedData = prepareXRangeData({
+                            series: chartSeries as PreparedXRangeSeries[],
+                            xAxis,
+                            xScale,
+                            yAxis,
+                            yScale,
+                        });
+                        shapes[index] = (
+                            <XRangeSeriesShapes
+                                key={SERIES_TYPE.XRange}
+                                dispatcher={dispatcher}
+                                preparedData={preparedData}
+                                seriesOptions={seriesOptions}
+                                clipPathId={clipPathId}
+                            />
+                        );
+                        shapesData.splice(index, 0, ...preparedData);
+                    }
                     break;
                 }
                 default: {

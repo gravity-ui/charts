@@ -31,6 +31,7 @@ export * from './chart/radar';
 export * from './chart/heatmap';
 export * from './chart/funnel';
 export * from './chart/brush';
+export * from './chart/x-range';
 
 export interface ChartData<T = MeaningfulAny> {
     /**

@@ -12,3 +12,4 @@ export * from './scatter';
 export * from './radar';
 export * from './heatmap';
 export * from './funnel';
+export * from './x-range';

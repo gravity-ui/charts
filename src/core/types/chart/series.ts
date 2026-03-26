@@ -17,6 +17,7 @@ import type {SankeySeries, SankeySeriesData} from './sankey';
 import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
+import type {XRangeSeries, XRangeSeriesData} from './x-range';
 
 export type ChartSeries<T = MeaningfulAny> =
     | ScatterSeries<T>
@@ -30,7 +31,8 @@ export type ChartSeries<T = MeaningfulAny> =
     | SankeySeries<T>
     | RadarSeries<T>
     | HeatmapSeries<T>
-    | FunnelSeries<T>;
+    | FunnelSeries<T>
+    | XRangeSeries<T>;
 
 export type ChartSeriesData<T = MeaningfulAny> =
     | ScatterSeriesData<T>
@@ -44,7 +46,8 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | SankeySeriesData<T>
     | RadarSeriesData<T>
     | HeatmapSeriesData<T>
-    | FunnelSeriesData<T>;
+    | FunnelSeriesData<T>
+    | XRangeSeriesData<T>;
 
 export interface DataLabelRendererData<T = MeaningfulAny> {
     data: ChartSeriesData<T>;
@@ -321,6 +324,32 @@ export interface ChartSeriesOptions {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;
+        };
+    };
+    'x-range'?: {
+        /**
+         * The corner radius of the border surrounding each bar.
+         * @default 0
+         */
+        borderRadius?: number;
+        /**
+         * The width of the border surrounding each bar.
+         * @default 0
+         */
+        borderWidth?: number;
+        /**
+         * The color of the border surrounding each bar.
+         */
+        borderColor?: string;
+        /**
+         * The dash style of the border surrounding each bar.
+         * @default 'Solid'
+         */
+        borderDashStyle?: DashStyle;
+        /** Options for the series states that provide additional styling information to the series. */
+        states?: {
+            hover?: BasicHoverState;
+            inactive?: BasicInactiveState;
         };
     };
 }

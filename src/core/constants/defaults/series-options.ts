@@ -15,7 +15,9 @@ type DefaultWaterfallSeriesOptions = Partial<ChartSeriesOptions['waterfall']> & 
 export type SeriesOptionsDefaults = Partial<ChartSeriesOptions> &
     DefaultBarXSeriesOptions &
     DefaultBarYSeriesOptions &
-    DefaultWaterfallSeriesOptions;
+    DefaultWaterfallSeriesOptions & {
+        'x-range': {borderRadius: number};
+    };
 
 export const seriesOptionsDefaults: SeriesOptionsDefaults = {
     'bar-x': {
@@ -149,6 +151,19 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
             hover: {
                 enabled: true,
                 brightness: 0.3,
+            },
+        },
+    },
+    'x-range': {
+        borderRadius: 0,
+        states: {
+            hover: {
+                enabled: true,
+                brightness: 0.3,
+            },
+            inactive: {
+                enabled: false,
+                opacity: 0.5,
             },
         },
     },
