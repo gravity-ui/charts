@@ -249,7 +249,7 @@ export const Legend = (props: Props) => {
                         .append('g')
                         .attr('class', b('item'))
                         .on('click', function (e, d) {
-                            onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
+                            onItemClick({id: d.id, name: d.name, metaKey: e.metaKey || e.ctrlKey});
                             onUpdate?.();
                         });
 
@@ -293,7 +293,11 @@ export const Legend = (props: Props) => {
                                 return '0px';
                             })
                             .on('click', function (e, d) {
-                                onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
+                                onItemClick({
+                                    id: d.id,
+                                    name: d.name,
+                                    metaKey: e.metaKey || e.ctrlKey,
+                                });
                                 onUpdate?.();
                             })
                             .html((d) => d.text);
