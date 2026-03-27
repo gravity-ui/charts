@@ -30,6 +30,8 @@ items:
         href: ./pages/guides/axis-types.md
       - name: Data labels
         href: ./pages/guides/data-labels.md
+      - name: HTML content
+        href: ./pages/guides/html.md
       - name: Legend
         href: ./pages/guides/legend.md
       - name: Theming
