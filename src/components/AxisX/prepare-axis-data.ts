@@ -2,6 +2,7 @@ import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 
 import {
+    calculateCos,
     calculateSin,
     formatAxisTickLabel,
     getBandsPosition,
@@ -110,7 +111,9 @@ async function getSvgAxisLabel({
         x = left + actualTextWidth / 2 - xOffset;
     }
     const yOffset = rotation <= 0 ? textSize.width * calculateSin(a) : 0;
-    const y = top + yOffset + axis.labels.margin + (textSize.hangingOffset ?? 0);
+    const hOffset = textSize.hangingOffset;
+    const y = top + yOffset + axis.labels.margin + hOffset * calculateCos(rotation);
+    x -= hOffset * calculateSin(rotation);
 
     const svgLabel: AxisSvgLabelData = {
         title: content[0]?.text === text ? undefined : text,
@@ -365,16 +368,16 @@ export async function prepareXAxisData({
             const halfBandwidth = (axisScale.bandwidth?.() ?? 0) / 2;
             const startPos = halfBandwidth + Math.min(from, to);
             const endPos = Math.min(Math.abs(to - from), axisWidth - Math.min(from, to));
-
-            const getPlotLabelSize = getTextSizeFn({style: plotBand.label.style});
-            const labelSize = plotBand.label.text
-                ? await getPlotLabelSize(plotBand.label.text)
-                : null;
             const plotBandWidth = Math.min(endPos, axisWidth);
 
             if (plotBandWidth < 0) {
                 continue;
             }
+
+            const getPlotLabelSize = getTextSizeFn({style: plotBand.label.style});
+            const labelSize = plotBand.label.text
+                ? await getPlotLabelSize(plotBand.label.text)
+                : null;
 
             plotBands.push({
                 layerPlacement: plotBand.layerPlacement,
@@ -388,7 +391,7 @@ export async function prepareXAxisData({
                     ? {
                           text: plotBand.label.text,
                           style: plotBand.label.style,
-                          x: plotBand.label.padding,
+                          x: plotBand.label.padding + (labelSize?.hangingOffset ?? 0),
                           y: plotBand.label.padding + (labelSize?.width ?? 0),
                           rotate: -90,
                           qa: plotBand.label.qa,
@@ -419,7 +422,7 @@ export async function prepareXAxisData({
                 label = {
                     text: plotLine.label.text,
                     style: plotLine.label.style,
-                    x: plotLineValue - plotLine.label.padding - size.height,
+                    x: plotLineValue - plotLine.label.padding - size.height + size.hangingOffset,
                     y: plotLine.label.padding + size.width,
                     rotate: -90,
                     qa: plotLine.label.qa,
