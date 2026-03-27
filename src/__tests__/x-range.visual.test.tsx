@@ -2,7 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {xRangeBasicData} from 'src/__stories__/__data__';
+import {xRangeBasicData, xRangeContinuousLegendData} from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -21,5 +21,10 @@ test.describe('X-Range series', () => {
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
+    });
+
+    test('Continuous legend', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={xRangeContinuousLegendData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
