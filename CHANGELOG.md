@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.42.3](https://github.com/gravity-ui/charts/compare/v1.42.2...v1.42.3) (2026-03-27)
+
+
+### Bug Fixes
+
+* render tooltip value via dangerouslySetInnerHTML to support HTML in valueFormat prefix ([#512](https://github.com/gravity-ui/charts/issues/512)) ([f97e2e3](https://github.com/gravity-ui/charts/commit/f97e2e3701d487111a8cf3cebb4bb56e0ab1b8fa))
+* support Ctrl+click for multi-select on Windows ([#513](https://github.com/gravity-ui/charts/issues/513)) ([39ac863](https://github.com/gravity-ui/charts/commit/39ac863154a068bae84bcd10bb035487d3d3f4fb))
+
 ## [1.42.2](https://github.com/gravity-ui/charts/compare/v1.42.1...v1.42.2) (2026-03-24)
 
 
