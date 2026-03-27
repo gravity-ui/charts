@@ -225,7 +225,7 @@ export async function prepareBarYData(args: {
                     map.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
                 }
                 const getTextSize = map.get(dataLabels.style);
-                const {width, height} = await getTextSize(content);
+                const {width, height, hangingOffset} = await getTextSize(content);
                 const x = dataLabels.inside
                     ? prepared.x + prepared.width / 2 - width / 2
                     : prepared.x + prepared.width + dataLabels.padding;
@@ -235,7 +235,8 @@ export async function prepareBarYData(args: {
                     height,
                     width,
                     x,
-                    y: y + height / 2,
+                    y,
+                    hangingOffset,
                 });
 
                 labels.push({

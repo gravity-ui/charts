@@ -78,10 +78,11 @@ export function getSvgLabelConstraintedPosition(args: {
     width: number;
     x: number;
     y: number;
+    hangingOffset: number;
 }) {
-    const {boundsHeight, boundsWidth, height, width, x, y} = args;
+    const {boundsHeight, boundsWidth, height, width, x, y, hangingOffset} = args;
     let resultX = x;
-    let resultY = y;
+    let resultY = y - height / 2 + hangingOffset;
 
     if (x < 0) {
         resultX = 0;
@@ -91,12 +92,12 @@ export function getSvgLabelConstraintedPosition(args: {
         resultX = boundsWidth - width;
     }
 
-    if (y - height < 0) {
+    if (resultY < 0) {
         resultY = 0;
     }
 
-    if (y > boundsHeight) {
-        resultY = boundsHeight;
+    if (resultY + height > boundsHeight) {
+        resultY = boundsHeight - height + hangingOffset;
     }
 
     return {x: resultX, y: resultY};
