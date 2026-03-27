@@ -218,7 +218,7 @@ export const getHorizontalSvgTextHeight = (args: {
     const fontSize = get(style, 'fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE);
 
     if (fontSize) {
-        textSelection.style('font-size', fontSize).style('dominant-baseline', 'text-after-edge');
+        textSelection.style('font-size', fontSize).style('dominant-baseline', 'text-bottom');
     }
 
     const height = textSelection.node()?.getBoundingClientRect().height || 0;

@@ -98,7 +98,7 @@ function appendSvgLabels(args: {
             return 'middle';
         })
         .style('transform', transform)
-        .style('dominant-baseline', 'text-after-edge');
+        .style('dominant-baseline', 'text-bottom');
 
     const labels = ticksSelection.selectAll<SVGTextElement, unknown>('.tick text');
 

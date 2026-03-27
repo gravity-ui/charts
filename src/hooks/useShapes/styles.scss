@@ -4,7 +4,7 @@
 .gcharts-heatmap,
 .gcharts-funnel {
     &__label {
-        dominant-baseline: text-before-edge;
+        dominant-baseline: hanging;
     }
 }
 
@@ -24,7 +24,7 @@
         font-weight: bold;
 
         fill: var(--g-color-text-complementary);
-        dominant-baseline: text-before-edge;
+        dominant-baseline: hanging;
     }
 }
 
@@ -41,7 +41,7 @@
         user-select: none;
 
         fill: var(--g-color-text-complementary);
-        dominant-baseline: text-after-edge;
+        dominant-baseline: text-bottom;
     }
 }
 
@@ -51,7 +51,7 @@
         pointer-events: none;
 
         fill: var(--g-color-text-complementary);
-        dominant-baseline: text-before-edge;
+        dominant-baseline: hanging;
     }
 }
 

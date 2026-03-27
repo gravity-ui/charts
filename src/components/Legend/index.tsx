@@ -476,7 +476,7 @@ export const Legend = (props: Props) => {
                     .attr('font-weight', legend.title.style.fontWeight ?? null)
                     .attr('font-size', legend.title.style.fontSize ?? null)
                     .attr('fill', legend.title.style.fontColor ?? null)
-                    .style('dominant-baseline', 'text-before-edge')
+                    .style('dominant-baseline', 'hanging')
                     .html(legend.title.text);
             } else {
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();

@@ -26,7 +26,7 @@
 
     &__item-text {
         fill: var(--g-color-text-secondary);
-        dominant-baseline: text-before-edge;
+        dominant-baseline: hanging;
 
         &_unselected {
             fill: var(--g-color-text-hint);
