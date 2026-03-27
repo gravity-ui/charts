@@ -6,7 +6,6 @@ import {
     getDefaultDateFormat,
     getDefaultMinYAxisValue,
     getHorizontalHtmlTextHeight,
-    getHorizontalSvgTextHeight,
     getLabelsSize,
     getMinSpaceBetween,
     getTextSizeFn,
@@ -135,7 +134,7 @@ export const getPreparedYAxis = ({
             const labelsHtml = get(axisItem, 'labels.html', false);
             const labelsLineHeight = labelsHtml
                 ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
-                : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
+                : (await getTextSizeFn({style: labelsStyle})('Tmp')).height;
             const titleText = isAxisVisible ? get(axisItem, 'title.text', '') : '';
             const titleStyle = {
                 ...yAxisTitleDefaults.style,

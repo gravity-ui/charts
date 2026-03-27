@@ -26,7 +26,7 @@ const CHART_MARGIN: ChartMargin = {
     bottom: 20,
 };
 
-test.describe.only('Bar-y series', () => {
+test.describe('Bar-y series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barYBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();

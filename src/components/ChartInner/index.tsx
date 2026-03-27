@@ -29,8 +29,6 @@ import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
 import {useDefaultState} from './useDefaultState';
 import {
-    getPreparedChart,
-    getPreparedTitle,
     getPreparedTooltip,
     getResetZoomButtonStyle,
     useAsyncState,
@@ -54,16 +52,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const rangeSliderRef = React.useRef<RangeSliderHandle | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
-    const preparedTitle = React.useMemo(() => {
-        return getPreparedTitle({title: data.title});
-    }, [data.title]);
-    const preparedChart = React.useMemo(() => {
-        return getPreparedChart({
-            chart: data.chart,
-            seriesData: data.series.data,
-            preparedTitle,
-        });
-    }, [data.chart, data.series.data, preparedTitle]);
+
     const preparedTooltip = React.useMemo(() => {
         return getPreparedTooltip({
             tooltip: data.tooltip,
@@ -111,13 +100,14 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         yAxis,
         yScale,
+        preparedTitle,
+        preparedChart,
     } = useChartInnerProps({
         ...props,
         clipPathId,
         dispatcher,
         htmlLayout,
         plotNode: plotRef.current,
-        preparedChart,
         rangeSliderState,
         updateZoomState,
         zoomState,
@@ -375,6 +365,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 <g ref={plotAfterRef} />
             </g>
             {xAxis?.rangeSlider?.enabled &&
+                preparedChart &&
                 preparedLegend &&
                 debouncedAllPreparedSeries &&
                 preparedSeriesOptions && (
@@ -437,7 +428,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {Object.keys(zoomState).length > 0 && preparedChart.zoom && (
+            {Object.keys(zoomState).length > 0 && preparedChart?.zoom && (
                 <Button
                     className={b('reset-zoom-button')}
                     onClick={() => {

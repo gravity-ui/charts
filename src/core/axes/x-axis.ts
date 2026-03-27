@@ -8,7 +8,6 @@ import {
     formatAxisTickLabel,
     getDefaultDateFormat,
     getHorizontalHtmlTextHeight,
-    getHorizontalSvgTextHeight,
     getLabelsSize,
     getMinSpaceBetween,
     getTextSizeFn,
@@ -158,7 +157,7 @@ export const getPreparedXAxis = async ({
     if (isLabelsEnabled) {
         labelsLineHeight = labelsHtml
             ? getHorizontalHtmlTextHeight({text: 'Tmp', style: labelsStyle})
-            : getHorizontalSvgTextHeight({text: 'Tmp', style: labelsStyle});
+            : (await getTextSizeFn({style: labelsStyle})('Tmp')).height;
     }
 
     const shouldHideGrid =
