@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.4](https://github.com/gravity-ui/charts/compare/v1.42.3...v1.42.4) (2026-03-27)
+
+
+### Bug Fixes
+
+* replace deprecated SVG dominant-baseline values for cross-browser compatibility ([#514](https://github.com/gravity-ui/charts/issues/514)) ([ba4946a](https://github.com/gravity-ui/charts/commit/ba4946a9a3682b128c4facdd0f8f9c541bf4f2f2))
+
 ## [1.42.3](https://github.com/gravity-ui/charts/compare/v1.42.2...v1.42.3) (2026-03-27)
 
 
