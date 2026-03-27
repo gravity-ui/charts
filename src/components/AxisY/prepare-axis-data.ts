@@ -39,7 +39,7 @@ async function getSvgAxisLabel({
     labelMaxHeight,
     topOffset,
 }: {
-    getTextSize: (str: string) => Promise<{width: number; height: number}>;
+    getTextSize: (str: string) => Promise<{width: number; height: number; hangingOffset: number}>;
     text: string;
     axis: PreparedAxis;
     top: number;
@@ -117,6 +117,7 @@ async function getSvgAxisLabel({
 
         content.forEach((row) => {
             row.y -= newLabelHeight / 2;
+            row.y += originalTextSize.hangingOffset ?? 0;
         });
 
         size.width = newLabelWidth;
@@ -148,7 +149,9 @@ async function getSvgAxisLabel({
             ? textSize.height / calculateSin(axis.labels.rotation)
             : textSize.height;
         const x = axis.position === 'left' ? -textSize.width : 0;
-        const y = Math.max(-topOffset - top, -actualTextHeight / 2);
+        const y =
+            Math.max(-topOffset - top, -actualTextHeight / 2) +
+            (originalTextSize.hangingOffset ?? 0);
         content.push({
             text: rowText,
             x,

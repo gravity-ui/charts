@@ -278,6 +278,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
         return {
             width: textMetric.width,
             height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
+            hangingOffset: textMetric.fontBoundingBoxAscent - textMetric.hangingBaseline,
         };
     };
 }

@@ -41,7 +41,7 @@ async function getSvgAxisLabel({
     boundsOffsetLeft,
     boundsOffsetRight,
 }: {
-    getTextSize: (str: string) => Promise<{width: number; height: number}>;
+    getTextSize: (str: string) => Promise<{width: number; height: number; hangingOffset: number}>;
     text: string;
     axis: PreparedAxis;
     top: number;
@@ -110,7 +110,7 @@ async function getSvgAxisLabel({
         x = left + actualTextWidth / 2 - xOffset;
     }
     const yOffset = rotation <= 0 ? textSize.width * calculateSin(a) : 0;
-    const y = top + yOffset + axis.labels.margin;
+    const y = top + yOffset + axis.labels.margin + (textSize.hangingOffset ?? 0);
 
     const svgLabel: AxisSvgLabelData = {
         title: content[0]?.text === text ? undefined : text,
