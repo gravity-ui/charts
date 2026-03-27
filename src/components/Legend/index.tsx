@@ -182,16 +182,14 @@ function renderLegendSymbol(args: {
             }
             case 'symbol': {
                 const symbolAreaSize = Math.pow(d.symbol.width, 2);
-                const y = legendLineHeight / 2;
                 const bboxWidth = d.symbol.bboxWidth;
+                const translateX = x + bboxWidth / 2;
+                const translateY = legendLineHeight / 2;
 
                 element
                     .append('svg:path')
                     .attr('d', () => symbol(scatterSymbol, symbolAreaSize)())
-                    .attr('transform', () => {
-                        const translateX = x + bboxWidth / 2;
-                        return 'translate(' + translateX + ',' + y + ')';
-                    })
+                    .attr('transform', 'translate(' + translateX + ',' + translateY + ')')
                     .attr('class', className)
                     .style('fill', color);
 

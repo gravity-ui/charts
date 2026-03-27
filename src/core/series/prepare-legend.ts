@@ -45,7 +45,7 @@ export async function getPreparedLegend(args: {
         ...get(legend, 'title.style'),
     };
     const titleText = isTitleEnabled ? get(legend, 'title.text', '') : '';
-    const titleTextSize = await getTextSizeFn({style: titleStyle})(titleText || 'Tmp');
+    const titleTextSize = await getTextSizeFn({style: titleStyle})(titleText);
     const titleHeight = isTitleEnabled ? titleTextSize.height : 0;
     const titleHangingOffset = titleTextSize.hangingOffset;
     const tickStyle: BaseTextStyle = {
@@ -54,7 +54,7 @@ export async function getPreparedLegend(args: {
 
     const ticks = {
         labelsMargin: 4,
-        labelsLineHeight: (await getLabelsSize({labels: ['Tmp'], style: tickStyle})).maxHeight,
+        labelsLineHeight: (await getTextSizeFn({style: tickStyle})('Tmp')).height,
         style: tickStyle,
     };
 

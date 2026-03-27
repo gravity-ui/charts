@@ -274,11 +274,12 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
         await document.fonts.ready;
         context.font = `${style?.fontWeight ?? defaultFontWeight} ${style?.fontSize ?? defaultFontSize} ${defaultFontFamily}`;
         const textMetric = context.measureText(unescapeHtml(str));
+        const hangingBaseline = textMetric.actualBoundingBoxAscent;
 
         return {
             width: textMetric.width,
             height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
-            hangingOffset: textMetric.fontBoundingBoxAscent - textMetric.hangingBaseline,
+            hangingOffset: textMetric.fontBoundingBoxAscent - hangingBaseline,
         };
     };
 }
