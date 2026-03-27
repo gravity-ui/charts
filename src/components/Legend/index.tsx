@@ -220,6 +220,8 @@ export const Legend = (props: Props) => {
             svgElement.selectAll('*').remove();
             svgElement.style('opacity', 0);
 
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+
             const htmlElement = select(htmlLayout);
             htmlElement.selectAll('[data-legend]').remove();
             const htmlContainer = legend.html
@@ -249,7 +251,11 @@ export const Legend = (props: Props) => {
                         .append('g')
                         .attr('class', b('item'))
                         .on('click', function (e, d) {
-                            onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
+                            onItemClick({
+                                id: d.id,
+                                name: d.name,
+                                metaKey: isMac ? e.metaKey : e.ctrlKey,
+                            });
                             onUpdate?.();
                         });
 
@@ -293,7 +299,11 @@ export const Legend = (props: Props) => {
                                 return '0px';
                             })
                             .on('click', function (e, d) {
-                                onItemClick({id: d.id, name: d.name, metaKey: e.metaKey});
+                                onItemClick({
+                                    id: d.id,
+                                    name: d.name,
+                                    metaKey: isMac ? e.metaKey : e.ctrlKey,
+                                });
                                 onUpdate?.();
                             })
                             .html((d) => d.text);
