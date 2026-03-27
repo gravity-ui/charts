@@ -62,7 +62,7 @@ export const xRangeBasicData: ChartData = {
     yAxis: [
         {
             type: 'category',
-            categories: ['Design', 'Frontend', 'Backend'],
+            categories: ['SpongeBob', 'Patrick', 'Squidward'],
             title: {text: 'Team'},
         },
     ],

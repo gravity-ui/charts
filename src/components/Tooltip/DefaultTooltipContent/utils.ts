@@ -101,7 +101,7 @@ export const getMeasureValue = ({
         return {value};
     }
 
-    if (data.some((item) => item.series.type === 'bar-y')) {
+    if (data.some((item) => ['bar-y', 'x-range'].includes(item.series.type))) {
         const value = getYRowData(data[0]?.data, yAxis);
         const formattedValue = getFormattedValue({
             value: getYRowData(data[0]?.data, yAxis),
@@ -133,6 +133,7 @@ export function getHoveredValues(args: {
             case 'area':
             case 'line':
             case 'bar-x':
+            case 'waterfall':
             case 'scatter': {
                 return getYRowData(data, yAxis);
             }
@@ -151,7 +152,7 @@ export function getHoveredValues(args: {
                 const {target, data: source} = seriesItem as TooltipDataChunkSankey;
                 return source.links.find((d) => d.name === target?.name)?.value;
             }
-            case 'waterfall': {
+            case 'x-range': {
                 return getYRowData(data, yAxis);
             }
             default: {

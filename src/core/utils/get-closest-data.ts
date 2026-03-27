@@ -14,6 +14,7 @@ import type {PreparedRadarData} from '../../hooks/useShapes/radar/types';
 import type {PreparedSankeyData} from '../../hooks/useShapes/sankey/types';
 import type {PreparedTreemapData} from '../../hooks/useShapes/treemap/types';
 import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
+import type {PreparedXRangeData} from '../../hooks/useShapes/x-range/types';
 import type {
     AreaSeries,
     BarXSeries,
@@ -28,6 +29,7 @@ import type {
     TreemapSeries,
     WaterfallSeries,
     WaterfallSeriesData,
+    XRangeSeries,
 } from '../../types';
 
 type GetClosestPointsArgs = {
@@ -407,6 +409,34 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                         closest: true,
                     });
                 }
+
+                break;
+            }
+            case 'x-range': {
+                const data = list as unknown as PreparedXRangeData[];
+                const pointsInXRange = data.filter(
+                    (d) =>
+                        pointerX >= d.x &&
+                        pointerX <= d.x + d.width &&
+                        pointerY >= d.y &&
+                        pointerY <= d.y + d.height,
+                );
+
+                if (pointsInXRange.length === 0) {
+                    break;
+                }
+
+                const closestByX = sort(pointsInXRange, (d) =>
+                    Math.abs(d.x + d.width / 2 - pointerX),
+                )[0];
+
+                result.push(
+                    ...pointsInXRange.map((d) => ({
+                        data: d.data,
+                        series: d.series as unknown as XRangeSeries,
+                        closest: d === closestByX,
+                    })),
+                );
 
                 break;
             }
