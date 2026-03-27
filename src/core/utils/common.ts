@@ -218,25 +218,6 @@ export const getHorizontalHtmlTextHeight = (args: {
     return height;
 };
 
-export const getHorizontalSvgTextHeight = (args: {
-    text: string;
-    style?: Partial<BaseTextStyle>;
-}) => {
-    const {text, style} = args;
-    const container = select(document.body).append('svg');
-    const textSelection = container.append('text').text(text);
-    const fontSize = get(style, 'fontSize', DEFAULT_AXIS_LABEL_FONT_SIZE);
-
-    if (fontSize) {
-        textSelection.style('font-size', fontSize).style('dominant-baseline', 'text-after-edge');
-    }
-
-    const height = textSelection.node()?.getBoundingClientRect().height || 0;
-    container.remove();
-
-    return height;
-};
-
 const extractCategoryValue = (args: {
     axisDirection: AxisDirection;
     categories: string[];

@@ -39,7 +39,7 @@ async function getSvgAxisLabel({
     labelMaxHeight,
     topOffset,
 }: {
-    getTextSize: (str: string) => Promise<{width: number; height: number}>;
+    getTextSize: (str: string) => Promise<{width: number; height: number; hangingOffset: number}>;
     text: string;
     axis: PreparedAxis;
     top: number;
@@ -117,6 +117,7 @@ async function getSvgAxisLabel({
 
         content.forEach((row) => {
             row.y -= newLabelHeight / 2;
+            row.y += originalTextSize.hangingOffset ?? 0;
         });
 
         size.width = newLabelWidth;
@@ -148,7 +149,9 @@ async function getSvgAxisLabel({
             ? textSize.height / calculateSin(axis.labels.rotation)
             : textSize.height;
         const x = axis.position === 'left' ? -textSize.width : 0;
-        const y = Math.max(-topOffset - top, -actualTextHeight / 2);
+        const y =
+            Math.max(-topOffset - top, -actualTextHeight / 2) +
+            (originalTextSize.hangingOffset ?? 0);
         content.push({
             text: rowText,
             x,
@@ -310,7 +313,7 @@ export async function prepareYAxisData({
           });
 
     const plotBands: AxisPlotBandData[] = [];
-    axis.plotBands.forEach((plotBand) => {
+    for (const plotBand of axis.plotBands) {
         const axisScale = scale as AxisScale<AxisDomain>;
         const {from, to} = getBandsPosition({
             band: plotBand,
@@ -324,10 +327,10 @@ export async function prepareYAxisData({
         const plotBandHeight = Math.min(endPos, axisHeight);
 
         if (plotBandHeight < 0) {
-            return;
+            continue;
         }
 
-        plotBands.push({
+        const plotBandItem: AxisPlotBandData = {
             layerPlacement: plotBand.layerPlacement,
             x: 0,
             y: axisPlotTopPosition + top,
@@ -335,17 +338,24 @@ export async function prepareYAxisData({
             height: plotBandHeight,
             color: plotBand.color,
             opacity: plotBand.opacity,
-            label: plotBand.label.text
-                ? {
-                      text: plotBand.label.text,
-                      style: plotBand.label.style,
-                      x: plotBand.label.padding,
-                      y: plotBand.label.padding,
-                      qa: plotBand.label.qa,
-                  }
-                : null,
-        });
-    });
+            label: null,
+        };
+
+        if (plotBand.label.text) {
+            const getPlotLabelSize = getTextSizeFn({style: plotBand.label.style});
+            const labelSize = await getPlotLabelSize(plotBand.label.text);
+
+            plotBandItem.label = {
+                text: plotBand.label.text,
+                style: plotBand.label.style,
+                x: plotBand.label.padding,
+                y: plotBand.label.padding + labelSize.hangingOffset,
+                qa: plotBand.label.qa,
+            };
+        }
+
+        plotBands.push(plotBandItem);
+    }
 
     const plotLines: AxisPlotLineData[] = [];
     for (let i = 0; i < axis.plotLines.length; i++) {
@@ -370,7 +380,10 @@ export async function prepareYAxisData({
                 text: plotLine.label.text,
                 style: plotLine.label.style,
                 x: plotLine.label.padding,
-                y: Math.max(0, plotLineValue - size.height - plotLine.label.padding),
+                y: Math.max(
+                    0,
+                    plotLineValue - size.height - plotLine.label.padding + size.hangingOffset,
+                ),
                 qa: plotLine.label.qa,
             };
         }

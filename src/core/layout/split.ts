@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
-import {calculateNumericProperty, getHorizontalSvgTextHeight} from '~core/utils';
+import {calculateNumericProperty, getTextSizeFn} from '~core/utils';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 
@@ -16,13 +16,13 @@ type UseSplitArgs = {
 const DEFAULT_TITLE_FONT_SIZE = '15px';
 const TITLE_TOP_BOTTOM_PADDING = 8;
 
-function preparePlotTitle(args: {
+async function preparePlotTitle(args: {
     title: SplitPlotOptions['title'];
     plotIndex: number;
     plotHeight: number;
     chartWidth: number;
     gap: number;
-}): PreparedPlotTitle {
+}): Promise<PreparedPlotTitle> {
     const {title, plotIndex, plotHeight, chartWidth, gap} = args;
     const titleText = title?.text || '';
     const titleStyle: BaseTextStyle = {
@@ -30,7 +30,7 @@ function preparePlotTitle(args: {
         fontWeight: get(title, 'style.fontWeight'),
     };
     const titleHeight = titleText
-        ? getHorizontalSvgTextHeight({text: titleText, style: titleStyle}) +
+        ? (await getTextSizeFn({style: titleStyle})(titleText)).height +
           TITLE_TOP_BOTTOM_PADDING * 2
         : 0;
     const top = plotIndex * (plotHeight + gap);
@@ -59,7 +59,7 @@ export function getPlotHeight(args: {
     return boundsHeight;
 }
 
-export function getSplit(args: UseSplitArgs) {
+export async function getSplit(args: UseSplitArgs) {
     const {split, boundsHeight, chartWidth} = args;
     const splitGap = calculateNumericProperty({value: split?.gap, base: boundsHeight}) ?? 0;
     const plotHeight = getPlotHeight({split: split, boundsHeight, gap: splitGap});
@@ -68,23 +68,27 @@ export function getSplit(args: UseSplitArgs) {
         plots.push({});
     }
 
-    return {
-        plots: plots.map<PreparedPlot>((p, index) => {
-            const title = preparePlotTitle({
-                title: p.title,
-                plotIndex: index,
-                gap: splitGap,
-                plotHeight,
-                chartWidth,
-            });
-            const top = index * (plotHeight + splitGap);
+    const items: PreparedPlot[] = [];
+    for (let index = 0; index < plots.length; index++) {
+        const p = plots[index];
+        const title = await preparePlotTitle({
+            title: p.title,
+            plotIndex: index,
+            gap: splitGap,
+            plotHeight,
+            chartWidth,
+        });
+        const top = index * (plotHeight + splitGap);
 
-            return {
-                top: top + title.height,
-                height: plotHeight - title.height,
-                title,
-            };
-        }),
+        items.push({
+            top: top + title.height,
+            height: plotHeight - title.height,
+            title,
+        });
+    }
+
+    return {
+        plots: items,
         gap: splitGap,
     };
 }

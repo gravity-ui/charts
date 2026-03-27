@@ -5,7 +5,7 @@ export interface LabelData {
     x: number;
     y: number;
     style: BaseTextStyle;
-    size: {width: number; height: number};
+    size: {width: number; height: number; hangingOffset?: number};
     textAnchor: 'start' | 'end' | 'middle';
     series: {id: string};
     active?: boolean;

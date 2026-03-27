@@ -2,7 +2,7 @@ import {range} from 'd3-array';
 import {scaleLinear} from 'd3-scale';
 import {curveLinearClosed, line} from 'd3-shape';
 
-import {getLabelsSize} from '~core/utils';
+import {getLabelsSize, getTextSizeFn} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem} from '../../../types';
@@ -146,7 +146,6 @@ export async function prepareRadarData(args: Args): Promise<PreparedRadarData[]>
                             value: category.key,
                             ...dataLabels,
                         });
-                        const labelSize = await getLabelsSize({labels: [text], style});
                         const angle = index * angleStep - Math.PI / 2;
 
                         // Position label slightly outside the point
@@ -154,11 +153,22 @@ export async function prepareRadarData(args: Args): Promise<PreparedRadarData[]>
                         let x = center[0] + Math.cos(angle) * labelRadius;
                         let y = center[1] + Math.sin(angle) * labelRadius;
 
+                        let labelWidth = 0;
+                        let labelHeight = 0;
                         if (shouldUseHtml) {
-                            x = x < center[0] ? x - labelSize.maxWidth : x;
-                            y = y - labelSize.maxHeight;
+                            const labelSize = await getLabelsSize({labels: [text], style});
+                            labelWidth = labelSize.maxWidth;
+                            labelHeight = labelSize.maxHeight;
+                            x = x < center[0] ? x - labelWidth : x;
+                            y = y - labelHeight;
                         } else {
-                            y = y < center[1] ? y - labelSize.maxHeight : y;
+                            const labelSize = await getTextSizeFn({style})(text);
+                            labelWidth = labelSize.width;
+                            labelHeight = labelSize.height;
+                            y =
+                                y < center[1]
+                                    ? y - labelHeight + labelSize.hangingOffset
+                                    : y + labelSize.hangingOffset;
                         }
 
                         x = Math.max(-boundsWidth / 2, x);
@@ -168,8 +178,8 @@ export async function prepareRadarData(args: Args): Promise<PreparedRadarData[]>
                             x,
                             y,
                             style,
-                            size: {width: labelSize.maxWidth, height: labelSize.maxHeight},
-                            maxWidth: labelSize.maxWidth,
+                            size: {width: labelWidth, height: labelHeight},
+                            maxWidth: labelWidth,
                             textAnchor:
                                 angle > Math.PI / 2 && angle < (3 * Math.PI) / 2 ? 'end' : 'start',
                             series: {id: series.id},

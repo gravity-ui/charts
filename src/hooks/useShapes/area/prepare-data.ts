@@ -94,7 +94,10 @@ async function prepareDataLabels({
         } else {
             const labelSize = await getTextSize(text);
             const x = Math.min(xMax - labelSize.width, Math.max(0, point.x - labelSize.width / 2));
-            const y = Math.max(yAxisTop, point.y - series.dataLabels.padding - labelSize.height);
+            const y = Math.max(
+                yAxisTop,
+                point.y - series.dataLabels.padding - labelSize.height + labelSize.hangingOffset,
+            );
             svgLabels.push({
                 text,
                 x,

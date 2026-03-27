@@ -6,7 +6,7 @@ import {select} from 'd3-selection';
 import type {BaseTextStyle, DeepRequired, MeaningfulAny} from '../../../types';
 import {getAxisItems, getXAxisOffset, getXTickPosition} from '../axis/common';
 import {calculateCos, calculateSin} from '../math';
-import {getLabelsSize, setEllipsisForOverflowText} from '../text';
+import {getTextSizeFn, setEllipsisForOverflowText} from '../text';
 
 const AXIS_BOTTOM_HTML_LABELS_DATA_ATTR = 'data-axis-bottom-html-labels';
 
@@ -98,7 +98,7 @@ function appendSvgLabels(args: {
             return 'middle';
         })
         .style('transform', transform)
-        .style('dominant-baseline', 'text-after-edge');
+        .attr('dominant-baseline', 'hanging');
 
     const labels = ticksSelection.selectAll<SVGTextElement, unknown>('.tick text');
 
@@ -268,12 +268,8 @@ export async function axisBottom(args: AxisBottomArgs) {
     const offset = getXAxisOffset();
     const position = getXTickPosition({scale, offset});
     const values = getAxisItems({scale, count: ticksCount, maxCount: maxTickCount});
-    const labelHeight = (
-        await getLabelsSize({
-            labels: values.map(labelFormat),
-            style: labelsStyle,
-        })
-    ).maxHeight;
+    const getTextSize = getTextSizeFn({style: labelsStyle});
+    const labelSize = await getTextSize('Tmp');
 
     return function (selection: Selection<SVGGElement, unknown, null, undefined>) {
         selection.selectAll('.tick, .domain').remove();
@@ -285,16 +281,8 @@ export async function axisBottom(args: AxisBottomArgs) {
         const right = x + domain.size;
         const top = -(tickItems?.[0]?.[0] ?? 0);
 
-        const translateY = labelHeight + labelsMargin - top;
-        let transform = `translate(0, ${translateY}px)`;
-        if (rotation) {
-            const labelsOffsetTop = labelHeight * calculateCos(rotation) + labelsMargin - top;
-            let labelsOffsetLeft = calculateSin(rotation) * labelHeight;
-            if (Math.abs(rotation) % 360 === 90) {
-                labelsOffsetLeft += ((rotation > 0 ? -1 : 1) * labelHeight) / 2;
-            }
-            transform = `translate(${-labelsOffsetLeft}px, ${labelsOffsetTop}px) rotate(${rotation}deg)`;
-        }
+        const translateY = labelsMargin - top + labelSize.hangingOffset;
+        const transform = `translate(0, ${translateY}px)`;
 
         const tickPath = path();
         tickItems?.forEach(([start, end]) => {

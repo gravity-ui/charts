@@ -150,6 +150,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
             let labelWidth = 0;
             let labelHeight = 0;
+            let labelHangingOffset = 0;
             if (dataLabels.html) {
                 const size = await getLabelsSize({
                     labels: [text],
@@ -162,11 +163,12 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 const size = await getTextSize(text);
                 labelWidth = size.width;
                 labelHeight = size.height;
+                labelHangingOffset = size.hangingOffset;
             }
 
             const label: Partial<PieLabelData> = {
                 text,
-                size: {width: labelWidth, height: labelHeight},
+                size: {width: labelWidth, height: labelHeight, hangingOffset: labelHangingOffset},
             };
 
             acc[d.id] = label;
@@ -242,9 +244,11 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
                 if (shouldUseHtml) {
                     x = x < 0 ? x - labelWidth : x;
+                    y = y < 0 ? y - labelHeight : y;
+                } else {
+                    const hangingOffset = labelSize?.hangingOffset ?? 0;
+                    y = y < 0 ? y - labelHeight + hangingOffset : y + hangingOffset;
                 }
-
-                y = y < 0 ? y - labelHeight : y;
 
                 return [x, y];
             };
