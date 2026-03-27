@@ -37,6 +37,7 @@ import {
     scatterTwoYAxisData,
     treemapPlaygroundData,
     waterfallBasicData,
+    xRangeBasicData,
 } from './__data__';
 
 const ShowcaseStory = () => {
@@ -204,6 +205,10 @@ const ShowcaseStory = () => {
                     <Col s={12} m={6} l={6}>
                         <Text variant="subheader-1">Funnel</Text>
                         <ChartStory data={funnelBasicData} style={{margin: 24}} />
+                    </Col>
+                    <Col s={12} m={6} l={6}>
+                        <Text variant="subheader-1">X-Range</Text>
+                        <ChartStory data={xRangeBasicData} />
                     </Col>
                 </Row>
             </Container>
