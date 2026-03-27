@@ -39,6 +39,9 @@ export async function prepareSvgYAxisTitle({
 
     if (axis.title.maxRowCount > 1) {
         const rows = await getMultilineTitleContentRows({axis, titleMaxWidth});
+        rows.forEach((r) => {
+            r.y -= r.size.height;
+        });
         titleContent.push(...rows);
     } else {
         const text = await getTextWithElipsis({
