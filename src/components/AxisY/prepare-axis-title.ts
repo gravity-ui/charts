@@ -38,18 +38,20 @@ export async function prepareSvgYAxisTitle({
     const titleMaxWidth = rotateAngle === 0 ? axis.title.maxWidth : sin * axisHeight;
 
     if (axis.title.maxRowCount > 1) {
-        titleContent.push(...(await getMultilineTitleContentRows({axis, titleMaxWidth})));
+        const rows = await getMultilineTitleContentRows({axis, titleMaxWidth});
+        titleContent.push(...rows);
     } else {
         const text = await getTextWithElipsis({
             text: axis.title.text,
             maxWidth: titleMaxWidth,
             getTextWidth: async (s) => (await getTitleTextSize(s)).width,
         });
+        const titleSize = await getTitleTextSize(text);
         titleContent.push({
             text,
             x: 0,
-            y: 0,
-            size: await getTitleTextSize(text),
+            y: titleSize.hangingOffset - titleSize.height,
+            size: titleSize,
         });
     }
 

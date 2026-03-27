@@ -52,6 +52,7 @@ async function getLabels(args: {
             const label = getFormattedValue({value: text, ...args.options});
             let labelMaxHeight = 0;
             let labelMaxWidth = 0;
+            let hangingOffset = 0;
             if (html) {
                 const size =
                     (await getLabelsSize({
@@ -69,10 +70,11 @@ async function getLabels(args: {
                 const size = await getTextSize(label);
                 labelMaxHeight = size.height;
                 labelMaxWidth = size.width;
+                hangingOffset = size.hangingOffset;
             }
 
             let x = left;
-            const y = prevLabelsHeight + d.y0 + padding;
+            const y = prevLabelsHeight + d.y0 + padding + hangingOffset;
             const labelWidth = Math.min(labelMaxWidth, spaceWidth);
             const labelHeight = Math.min(labelMaxHeight, availableSpaceHeight);
 

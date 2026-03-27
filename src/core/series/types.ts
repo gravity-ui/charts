@@ -64,10 +64,12 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
 };
 
 export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>> & {
+    hangingOffset: number;
     height: number;
     lineHeight: number;
     title: {
         enable: boolean;
+        hangingOffset: number;
         text: string;
         margin: number;
         style: BaseTextStyle;

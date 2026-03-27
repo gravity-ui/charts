@@ -31,10 +31,11 @@ export async function getPreparedLegend(args: {
     const defaultItemStyle = clone(legendDefaults.itemStyle);
     const itemStyle = get(legend, 'itemStyle');
     const computedItemStyle = merge(defaultItemStyle, itemStyle);
-    const {maxHeight: lineHeight, maxWidth: lineWidth} = await getLabelsSize({
-        labels: ['Tmp'],
-        style: computedItemStyle,
-    });
+    const {
+        width: lineWidth,
+        height: lineHeight,
+        hangingOffset: itemHangingOffset,
+    } = await getTextSizeFn({style: computedItemStyle})('Tmp');
     const legendType = get(legend, 'type', 'discrete');
     const isTitleEnabled = Boolean(legend?.title?.text);
     const titleMargin = isTitleEnabled ? get(legend, 'title.margin', 4) : 0;
@@ -44,8 +45,9 @@ export async function getPreparedLegend(args: {
         ...get(legend, 'title.style'),
     };
     const titleText = isTitleEnabled ? get(legend, 'title.text', '') : '';
-    const titleSize = await getLabelsSize({labels: [titleText], style: titleStyle});
-    const titleHeight = isTitleEnabled ? titleSize.maxHeight : 0;
+    const titleTextSize = await getTextSizeFn({style: titleStyle})(titleText || 'Tmp');
+    const titleHeight = isTitleEnabled ? titleTextSize.height : 0;
+    const titleHangingOffset = titleTextSize.hangingOffset;
     const tickStyle: BaseTextStyle = {
         fontSize: '12px',
     };
@@ -86,6 +88,7 @@ export async function getPreparedLegend(args: {
         verticalAlign: get(legend, 'verticalAlign', legendDefaults.verticalAlign),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
+        hangingOffset: itemHangingOffset,
         height,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
         itemStyle: computedItemStyle,
@@ -94,6 +97,7 @@ export async function getPreparedLegend(args: {
         type: legendType,
         title: {
             enable: isTitleEnabled,
+            hangingOffset: titleHangingOffset,
             text: titleText,
             margin: titleMargin,
             style: titleStyle,

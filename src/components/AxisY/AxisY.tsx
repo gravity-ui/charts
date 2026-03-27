@@ -78,7 +78,7 @@ export const AxisY = (props: Props) => {
                 .html((d) => d.text)
                 .attr('x', (d) => d.x)
                 .attr('y', (d) => d.y)
-                .attr('dominant-baseline', 'text-bottom')
+                .attr('dominant-baseline', 'hanging')
                 .attr('text-anchor', 'start');
         }
 

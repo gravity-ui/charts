@@ -45,7 +45,7 @@ export async function getMultilineTitleContentRows({
         titleContent.push({
             text: textRowContent,
             x: 0,
-            y: textRow.y,
+            y: textRow.y + textRowSize.hangingOffset,
             size: textRowSize,
         });
     }

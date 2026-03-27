@@ -90,7 +90,11 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
 
             svgLabels.push({
                 x,
-                y: getSegmentY(index) + itemHeight / 2 - labelSize.height / 2,
+                y:
+                    getSegmentY(index) +
+                    itemHeight / 2 -
+                    labelSize.height / 2 +
+                    labelSize.hangingOffset,
                 text: labelContent,
                 style: s.dataLabels.style,
                 size: labelSize,

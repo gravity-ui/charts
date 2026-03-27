@@ -10,8 +10,8 @@ import {CONTINUOUS_LEGEND_SIZE} from '~core/constants';
 import {
     createGradientRect,
     getContinuesColorFn,
-    getLabelsSize,
     getSymbol,
+    getTextSizeFn,
     getUniqId,
 } from '~core/utils';
 import {axisBottom} from '~core/utils/axis-generators';
@@ -307,6 +307,7 @@ export const Legend = (props: Props) => {
                                     legendItem.symbol.padding
                                 );
                             })
+                            .attr('y', legend.hangingOffset)
                             .attr('height', legend.height)
                             .attr('class', function (d) {
                                 const mods = {selected: d.visible, unselected: !d.visible};
@@ -446,10 +447,9 @@ export const Legend = (props: Props) => {
             const legendTitleClassname = b('title');
 
             if (legend.title.enable) {
-                const {maxWidth: titleWidth} = await getLabelsSize({
-                    labels: [legend.title.text],
-                    style: legend.title.style,
-                });
+                const {width: titleWidth} = await getTextSizeFn({style: legend.title.style})(
+                    legend.title.text,
+                );
                 let dx = 0;
                 switch (legend.title.align) {
                     case 'center': {
@@ -473,6 +473,7 @@ export const Legend = (props: Props) => {
                     .attr('class', legendTitleClassname)
                     .append('text')
                     .attr('dx', dx)
+                    .attr('y', legend.title.hangingOffset)
                     .attr('font-weight', legend.title.style.fontWeight ?? null)
                     .attr('font-size', legend.title.style.fontSize ?? null)
                     .attr('fill', legend.title.style.fontColor ?? null)
