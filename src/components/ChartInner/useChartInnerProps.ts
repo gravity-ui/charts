@@ -39,12 +39,18 @@ import type {
     ShapeData,
     ZoomState,
 } from '../../hooks';
-import type {PreparedChart} from '../../hooks/types';
+import type {PreparedChart, PreparedTitle} from '../../hooks/types';
 import {getActiveLegendItems, getAllLegendItems} from '../../hooks/useSeries/utils';
 import type {ChartData, LegendConfig} from '../../types';
 
 import type {ChartInnerProps} from './types';
-import {getNormalizedXAxis, getNormalizedYAxis, recalculateYAxisLabelsWidth} from './utils';
+import {
+    getNormalizedXAxis,
+    getNormalizedYAxis,
+    getPreparedChart,
+    getPreparedTitle,
+    recalculateYAxisLabelsWidth,
+} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
 
 type Props = ChartInnerProps & {
@@ -52,7 +58,6 @@ type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     plotNode: SVGGElement | null;
-    preparedChart: PreparedChart;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
     rangeSliderState?: RangeSliderState;
@@ -132,6 +137,8 @@ type ChartState = {
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[] | undefined;
     activeLegendItems: string[];
+    preparedChart: PreparedChart | undefined;
+    preparedTitle: PreparedTitle | undefined;
 };
 
 export function useChartInnerProps(props: Props) {
@@ -142,7 +149,6 @@ export function useChartInnerProps(props: Props) {
         height,
         htmlLayout,
         plotNode,
-        preparedChart,
         rangeSliderState,
         width,
         updateZoomState,
@@ -150,7 +156,6 @@ export function useChartInnerProps(props: Props) {
     } = props;
 
     const [selectedLegendItems, setSelectedLegendItems] = React.useState<string[] | null>(null);
-
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
@@ -163,6 +168,13 @@ export function useChartInnerProps(props: Props) {
             const chartDataChanged = !(
                 previousChartData.current && isEqual(previousChartData.current, data)
             );
+
+            const preparedTitle = await getPreparedTitle({title: data.title});
+            const preparedChart = getPreparedChart({
+                chart: data.chart,
+                seriesData: data.series.data,
+                preparedTitle,
+            });
 
             const colors = data.colors ?? DEFAULT_PALETTE;
             const normalizedSeriesData = getSortedSeriesData({
@@ -243,7 +255,7 @@ export function useChartInnerProps(props: Props) {
             let boundsWidth = 0;
             let boundsHeight = 0;
 
-            const calculateAxisBasedProps = () => {
+            const calculateAxisBasedProps = async () => {
                 const chartDimensions = getChartDimensions({
                     height,
                     margin: preparedChart.margin,
@@ -257,7 +269,11 @@ export function useChartInnerProps(props: Props) {
                 boundsHeight = chartDimensions.boundsHeight;
                 boundsWidth = chartDimensions.boundsWidth;
 
-                preparedSplit = getSplit({split: data.split, boundsHeight, chartWidth: width});
+                preparedSplit = await getSplit({
+                    split: data.split,
+                    boundsHeight,
+                    chartWidth: width,
+                });
 
                 if (preparedSeries.some(isAxisRelatedSeries)) {
                     ({xScale, yScale} = createScales({
@@ -274,7 +290,7 @@ export function useChartInnerProps(props: Props) {
                 }
             };
 
-            calculateAxisBasedProps();
+            await calculateAxisBasedProps();
             const newYAxis = await recalculateYAxisLabelsWidth({
                 seriesData: preparedSeries,
                 yAxis,
@@ -282,7 +298,7 @@ export function useChartInnerProps(props: Props) {
             });
             if (!isEqual(yAxis, newYAxis)) {
                 yAxis = newYAxis;
-                calculateAxisBasedProps();
+                await calculateAxisBasedProps();
             }
 
             const {shapes, shapesData} = await getShapes({
@@ -341,6 +357,8 @@ export function useChartInnerProps(props: Props) {
                 yAxis,
                 yScale,
                 activeLegendItems,
+                preparedChart,
+                preparedTitle,
             };
 
             if (currentRunRef.current === currentRun) {
@@ -358,7 +376,6 @@ export function useChartInnerProps(props: Props) {
         selectedLegendItems,
         zoomState,
         rangeSliderState,
-        preparedChart,
         dispatcher,
         htmlLayout,
         clipPathId,
@@ -428,7 +445,7 @@ export function useChartInnerProps(props: Props) {
         plotContainerHeight: boundsHeight,
         plotContainerWidth: boundsWidth,
         preparedSplit: chartState?.preparedSplit,
-        preparedZoom: preparedChart.zoom,
+        preparedZoom: chartState?.preparedChart?.zoom ?? null,
         xAxis,
         xScale: chartState?.xScale,
         yAxis,
@@ -449,5 +466,7 @@ export function useChartInnerProps(props: Props) {
         shapesData: chartState?.shapesData ?? [],
         shapesReady: Boolean(chartState),
         handleLegendItemClick,
+        preparedTitle: chartState?.preparedTitle,
+        preparedChart: chartState?.preparedChart,
     };
 }

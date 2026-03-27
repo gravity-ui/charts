@@ -275,9 +275,13 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
         context.font = `${style?.fontWeight ?? defaultFontWeight} ${style?.fontSize ?? defaultFontSize} ${defaultFontFamily}`;
         const textMetric = context.measureText(unescapeHtml(str));
 
+        // we calculate hanging based on an approximate algorithm from chromium
+        // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=32;drc=7cf6ac3dd6dca800fbc0d28e80a7732d4ea90340?q=member_hanging_&ss=chromium%2Fchromium%2Fsrc
+        // it would be possible to use native, but the browsers are not working in harmony right now
         return {
             width: textMetric.width,
             height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
+            hangingOffset: textMetric.fontBoundingBoxAscent * 0.2,
         };
     };
 }

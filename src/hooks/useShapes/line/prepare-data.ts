@@ -104,7 +104,10 @@ export const prepareLineData = async (args: {
 
                         const y = Math.max(
                             yAxisTop,
-                            point.y - s.dataLabels.padding - labelSize.height,
+                            point.y -
+                                s.dataLabels.padding -
+                                labelSize.height +
+                                labelSize.hangingOffset,
                         );
                         const x = Math.min(
                             xMax - labelSize.width,

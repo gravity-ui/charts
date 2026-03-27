@@ -71,7 +71,7 @@ export const AxisX = (props: Props) => {
                 .html((d) => d.text)
                 .attr('x', (d) => d.x)
                 .attr('y', (d) => d.y)
-                .attr('dominant-baseline', 'text-before-edge')
+                .attr('dominant-baseline', 'hanging')
                 .attr('text-anchor', 'start');
         }
 
@@ -137,7 +137,7 @@ export const AxisX = (props: Props) => {
                     .attr('y', (d) => d.y)
                     .attr('text-anchor', 'start')
                     .attr('class', labelClassName)
-                    .style('dominant-baseline', 'text-before-edge')
+                    .style('dominant-baseline', 'hanging')
                     .style('font-size', label.style.fontSize)
                     .style('fill', label.style.fontColor ?? '');
             }
@@ -180,7 +180,7 @@ export const AxisX = (props: Props) => {
                             .style('fill', label.style.fontColor ?? '')
                             .style('font-size', label.style.fontSize)
                             .style('font-weight', label.style.fontWeight ?? '')
-                            .style('dominant-baseline', 'text-before-edge')
+                            .style('dominant-baseline', 'hanging')
                             .style('text-anchor', 'start')
                             .attr(
                                 'transform',
@@ -239,7 +239,7 @@ export const AxisX = (props: Props) => {
                             .style('fill', label.style.fontColor ?? '')
                             .style('font-size', label.style.fontSize)
                             .style('font-weight', label.style.fontWeight ?? '')
-                            .style('dominant-baseline', 'text-before-edge')
+                            .style('dominant-baseline', 'hanging')
                             .style('text-anchor', 'start')
                             .attr(
                                 'transform',

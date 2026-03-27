@@ -128,7 +128,7 @@ export async function prepareHeatmapData({
                     if (text) {
                         svgDataLabels.push({
                             x: item.x + item.width / 2 - size.width / 2,
-                            y: item.y + item.height / 2 - size.height / 2,
+                            y: item.y + item.height / 2 - size.height / 2 + size.hangingOffset,
                             text,
                             style: series.dataLabels.style,
                         });

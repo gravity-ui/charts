@@ -6,7 +6,7 @@
     &__label {
         fill: var(--g-color-text-secondary);
         stroke: none;
-        dominant-baseline: text-after-edge;
+        dominant-baseline: text-bottom;
     }
 
     &__tick {
