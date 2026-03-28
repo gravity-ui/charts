@@ -243,6 +243,8 @@ export const getPreparedXAxis = async ({
             custom: d.custom,
             label: prepareAxisPlotLabel(d),
         })),
+        // x, y and hitbox are populated later in prepare-axis-data
+        // after pixel coordinates and element dimensions are computed
         plotShapes: get(xAxis, 'plotShapes', []).map((d) => ({
             custom: d.custom,
             hitbox: {x: 0, y: 0, width: 0, height: 0},
