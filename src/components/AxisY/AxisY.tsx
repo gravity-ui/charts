@@ -10,7 +10,13 @@ import {HtmlLayer} from '../../hooks/useShapes/HtmlLayer';
 import type {HtmlItem} from '../../types';
 import {block} from '../../utils';
 
-import type {AxisPlotBandData, AxisPlotLineData, AxisTickData, AxisYData} from './types';
+import type {
+    AxisPlotBandData,
+    AxisPlotLineData,
+    AxisPlotShapeData,
+    AxisTickData,
+    AxisYData,
+} from './types';
 
 import './styles.scss';
 
@@ -50,6 +56,7 @@ export const AxisY = (props: Props) => {
         const plotDataAttr = 'data-plot-y';
         const plotBandDataAttr = `data-plot-y-band-${preparedAxisData.id}`;
         const plotLineDataAttr = `data-plot-y-line-${preparedAxisData.id}`;
+        const plotShapeDataAttr = `data-plot-y-shape-${preparedAxisData.id}`;
 
         if (plotBeforeRef?.current) {
             plotBeforeContainer = select(plotBeforeRef.current);
@@ -261,15 +268,55 @@ export const AxisY = (props: Props) => {
             );
         }
 
+        if (preparedAxisData.plotShapes.length > 0) {
+            const setPlotShapes = (
+                plotContainer: Selection<SVGGElement, unknown, null, undefined> | null,
+                plotShapes: AxisPlotShapeData[],
+            ) => {
+                if (!plotContainer || !plotShapes.length) {
+                    return;
+                }
+
+                plotContainer
+                    .selectAll(`[${plotShapeDataAttr}]`)
+                    .remove()
+                    .data(plotShapes)
+                    .join('g')
+                    .attr(plotDataAttr, 1)
+                    .attr(plotShapeDataAttr, 1)
+                    .attr('transform', (d) => `translate(${d.x}, ${d.y})`)
+                    .attr('opacity', (d) => d.opacity)
+                    .html((d) =>
+                        d.renderer({
+                            x: 0,
+                            y: d.y,
+                            plotHeight: d.plotHeight,
+                            plotWidth: d.plotWidth,
+                        }),
+                    );
+            };
+
+            setPlotShapes(
+                plotBeforeContainer,
+                preparedAxisData.plotShapes.filter((item) => item.layerPlacement === 'before'),
+            );
+            setPlotShapes(
+                plotAfterContainer,
+                preparedAxisData.plotShapes.filter((item) => item.layerPlacement === 'after'),
+            );
+        }
+
         return () => {
             if (plotBeforeContainer) {
                 plotBeforeContainer.selectAll(`[${plotBandDataAttr}]`).remove();
                 plotBeforeContainer.selectAll(`[${plotLineDataAttr}]`).remove();
+                plotBeforeContainer.selectAll(`[${plotShapeDataAttr}]`).remove();
             }
 
             if (plotAfterContainer) {
                 plotAfterContainer.selectAll(`[${plotBandDataAttr}]`).remove();
                 plotAfterContainer.selectAll(`[${plotLineDataAttr}]`).remove();
+                plotAfterContainer.selectAll(`[${plotShapeDataAttr}]`).remove();
             }
         };
     }, [lineGenerator, plotAfterRef, plotBeforeRef, preparedAxisData]);

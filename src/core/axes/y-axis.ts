@@ -270,6 +270,16 @@ export const getPreparedYAxis = ({
                     custom: d.custom,
                     label: prepareAxisPlotLabel(d),
                 })),
+                plotShapes: get(axisItem, 'plotShapes', []).map((d) => ({
+                    custom: d.custom,
+                    hitbox: {x: 0, y: 0, width: 0, height: 0},
+                    layerPlacement: get(d, 'layerPlacement', 'before'),
+                    opacity: get(d, 'opacity', 1),
+                    renderer: d.renderer,
+                    value: d.value,
+                    x: 0,
+                    y: 0,
+                })),
                 crosshair: {
                     enabled: get(axisItem, 'crosshair.enabled', axisCrosshairDefaults.enabled),
                     color: get(axisItem, 'crosshair.color', axisCrosshairDefaults.color),

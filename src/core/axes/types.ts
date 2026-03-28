@@ -1,6 +1,7 @@
 import type {
     AxisCrosshair,
     AxisPlotBand,
+    AxisPlotShape,
     BaseTextStyle,
     ChartAxis,
     ChartAxisLabels,
@@ -51,6 +52,17 @@ export type PreparedAxisPlotLine = {
     };
 };
 
+export type PreparedAxisPlotShape = {
+    custom?: MeaningfulAny;
+    hitbox: {height: number; width: number; x: number; y: number};
+    layerPlacement: PlotLayerPlacement;
+    opacity: number;
+    renderer: AxisPlotShape['renderer'];
+    value: number | string;
+    x: number;
+    y: number;
+};
+
 export type PreparedRangeSlider = DeepRequired<Omit<ChartAxisRangeSlider, 'defaultRange'>> & {
     defaultRange?: ChartAxisRangeSlider['defaultRange'];
 };
@@ -60,7 +72,10 @@ export type PreparedAxisTickMarks = {
     length: number;
 };
 
-type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotBands'> & {
+type PreparedBaseAxis = Omit<
+    ChartAxis,
+    'type' | 'labels' | 'plotLines' | 'plotBands' | 'plotShapes'
+> & {
     type: ChartAxisType;
     labels: PreparedAxisLabels;
     title: {
@@ -87,6 +102,7 @@ type PreparedBaseAxis = Omit<ChartAxis, 'type' | 'labels' | 'plotLines' | 'plotB
     plotIndex: number;
     plotLines: PreparedAxisPlotLine[];
     plotBands: PreparedAxisPlotBand[];
+    plotShapes: PreparedAxisPlotShape[];
     crosshair: PreparedAxisCrosshair;
 };
 

@@ -1,5 +1,6 @@
 import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3-axis';
+import {select} from 'd3-selection';
 
 import {
     calculateCos,
@@ -22,6 +23,7 @@ import type {
     AxisPlotBandData,
     AxisPlotLineData,
     AxisPlotLineLabel,
+    AxisPlotShapeData,
     AxisSvgLabelData,
     AxisTickData,
     AxisTickLine,
@@ -389,6 +391,40 @@ export async function prepareYAxisData({
         });
     }
 
+    const plotShapes: AxisPlotShapeData[] = [];
+    for (let i = 0; i < axis.plotShapes.length; i++) {
+        const plotShape = axis.plotShapes[i];
+        const axisScale = scale as AxisScale<AxisDomain>;
+        const shapeY = Number(axisScale(plotShape.value));
+
+        if (shapeY < 0 || shapeY > axisHeight) {
+            continue;
+        }
+
+        const markup = plotShape.renderer({
+            x: 0,
+            y: shapeY,
+            plotHeight: axisHeight,
+            plotWidth: width,
+        });
+
+        const container = select(document.body).append('svg');
+        const wrapper = container.append('g').html(markup);
+        const bbox = (wrapper.node() as SVGGraphicsElement).getBBox();
+        container.remove();
+
+        plotShapes.push({
+            hitbox: {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height},
+            layerPlacement: plotShape.layerPlacement,
+            opacity: plotShape.opacity,
+            plotHeight: axisHeight,
+            plotWidth: width,
+            renderer: plotShape.renderer,
+            x: 0,
+            y: axisPlotTopPosition + shapeY,
+        });
+    }
+
     return {
         id: getUniqId(),
         gridEnabled: axis.grid.enabled,
@@ -397,5 +433,6 @@ export async function prepareYAxisData({
         domain,
         plotBands,
         plotLines,
+        plotShapes,
     };
 }

@@ -27,12 +27,13 @@ type TooltipProps = {
 
 export const Tooltip = (props: TooltipProps) => {
     const {tooltip, xAxis, yAxis, svgContainer, dispatcher, tooltipPinned, onOutsideClick} = props;
-    const {hovered, hoveredPlotLines, hoveredPlotBands, pointerPosition} = useTooltip({
-        dispatcher,
-        tooltip,
-        xAxis,
-        yAxis,
-    });
+    const {hovered, hoveredPlotBands, hoveredPlotLines, hoveredPlotShapes, pointerPosition} =
+        useTooltip({
+            dispatcher,
+            tooltip,
+            xAxis,
+            yAxis,
+        });
     const containerRect = svgContainer?.getBoundingClientRect() || {left: 0, top: 0};
     const left = (pointerPosition?.[0] || 0) + containerRect.left;
     const top = (pointerPosition?.[1] || 0) + containerRect.top;
@@ -63,8 +64,9 @@ export const Tooltip = (props: TooltipProps) => {
             <div className={b('popup-content')}>
                 <ChartTooltipContent
                     hovered={hovered}
-                    hoveredPlotLines={hoveredPlotLines}
                     hoveredPlotBands={hoveredPlotBands}
+                    hoveredPlotLines={hoveredPlotLines}
+                    hoveredPlotShapes={hoveredPlotShapes}
                     pinned={tooltipPinned}
                     renderer={tooltip.renderer}
                     rowRenderer={tooltip.rowRenderer}

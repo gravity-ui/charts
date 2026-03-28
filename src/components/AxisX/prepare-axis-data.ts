@@ -1,5 +1,6 @@
 import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3-axis';
+import {select} from 'd3-selection';
 
 import {
     calculateSin,
@@ -22,6 +23,7 @@ import type {
     AxisPlotBandData,
     AxisPlotLineData,
     AxisPlotLineLabel,
+    AxisPlotShapeData,
     AxisSvgLabelData,
     AxisTickData,
     AxisTickLine,
@@ -438,6 +440,40 @@ export async function prepareXAxisData({
             });
         }
 
+        const plotShapes: AxisPlotShapeData[] = [];
+        for (let i = 0; i < axis.plotShapes.length; i++) {
+            const plotShape = axis.plotShapes[i];
+            const axisScale = scale as AxisScale<AxisDomain>;
+            const shapeX = Number(axisScale(plotShape.value));
+
+            if (shapeX < 0 || shapeX > boundsWidth) {
+                continue;
+            }
+
+            const markup = plotShape.renderer({
+                x: shapeX,
+                y: 0,
+                plotHeight: axisHeight,
+                plotWidth: axisWidth,
+            });
+
+            const container = select(document.body).append('svg');
+            const wrapper = container.append('g').html(markup);
+            const bbox = (wrapper.node() as SVGGraphicsElement).getBBox();
+            container.remove();
+
+            plotShapes.push({
+                hitbox: {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height},
+                layerPlacement: plotShape.layerPlacement,
+                opacity: plotShape.opacity,
+                plotHeight: axisHeight,
+                plotWidth: axisWidth,
+                renderer: plotShape.renderer,
+                x: shapeX,
+                y: axisTop,
+            });
+        }
+
         xAxisItems.push({
             id: getUniqId(),
             gridEnabled: axis.grid.enabled,
@@ -446,6 +482,7 @@ export async function prepareXAxisData({
             domain,
             plotBands,
             plotLines,
+            plotShapes,
         });
     }
 

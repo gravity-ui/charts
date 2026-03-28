@@ -195,6 +195,8 @@ export interface ChartAxis {
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */
     plotBands?: AxisPlotBand[];
+    /** An array of custom SVG elements placed at specific axis values. */
+    plotShapes?: AxisPlotShape[];
     /**
      * Small perpendicular marks on the axis line at each tick position.
      *
@@ -288,6 +290,41 @@ export interface AxisPlotLine extends AxisPlot {
     width?: number;
     /** Option for line stroke style. */
     dashStyle?: DashStyle;
+}
+
+export interface AxisPlotShape extends AxisPlot {
+    /**
+     * The position of the shape in axis units.
+     *
+     * Can be a number or a string (e.g., a category).
+     * When representing a date, the value **must be a timestamp** (number of milliseconds since Unix epoch).
+     */
+    value: number | string;
+    /**
+     * Custom SVG content renderer.
+     *
+     * Called with the pixel coordinates of the shape and the plot area dimensions.
+     * Must return a string of valid SVG markup that will be inserted inside a `<g>` container
+     * positioned at the shape's axis value.
+     *
+     * @example
+     * ```
+     * renderer: ({plotHeight}) =>
+     *   `<circle cx="0" cy="${plotHeight}" r="4" fill="red"/>
+     *    <line x1="0" y1="0" x2="0" y2="${plotHeight}" stroke="red" stroke-width="1"/>
+     *    <text x="4" y="12" font-size="11" fill="currentColor">Label</text>`
+     * ```
+     */
+    renderer: (args: {
+        /** Pixel X coordinate in the plot area coordinate system */
+        x: number;
+        /** Pixel Y coordinate in the plot area coordinate system */
+        y: number;
+        /** Width of the plot area in pixels */
+        plotWidth: number;
+        /** Height of the plot area in pixels */
+        plotHeight: number;
+    }) => string;
 }
 
 export interface AxisPlotBand extends AxisPlot {

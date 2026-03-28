@@ -77,7 +77,7 @@ export function useDefaultState(props: Props) {
                 boundsWidth,
             });
 
-            const {plotLines, plotBands} = getHoveredPlots({
+            const {plotBands, plotLines, plotShapes} = getHoveredPlots({
                 pointerX: x,
                 pointerY: y,
                 xAxis,
@@ -86,7 +86,7 @@ export function useDefaultState(props: Props) {
                 yScale,
             });
 
-            const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
+            const hoveredPlotsArg = {bands: plotBands, lines: plotLines, shapes: plotShapes};
             const svgPointerX = x + boundsOffsetLeft;
             const svgPointerY = y + boundsOffsetTop;
 
@@ -118,8 +118,9 @@ export function useDefaultState(props: Props) {
                     hovered: closest,
                     xAxis,
                     yAxis: yAxis[0] as ChartYAxis,
-                    hoveredPlotLines: plotLines,
                     hoveredPlotBands: plotBands,
+                    hoveredPlotLines: plotLines,
+                    hoveredPlotShapes: plotShapes,
                 } satisfies ChartTooltipRendererArgs,
                 syntheticEvent,
             );
