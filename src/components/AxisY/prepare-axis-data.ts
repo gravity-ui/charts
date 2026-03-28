@@ -392,7 +392,19 @@ export async function prepareYAxisData({
     }
 
     const plotShapes: AxisPlotShapeData[] = [];
+    const measureContainer = axis.plotShapes.length
+        ? select(document.body)
+              .append('svg')
+              .style('visibility', 'hidden')
+              .style('position', 'absolute')
+              .style('top', '-200vw')
+        : null;
+
     for (let i = 0; i < axis.plotShapes.length; i++) {
+        if (!measureContainer) {
+            break;
+        }
+
         const plotShape = axis.plotShapes[i];
         const axisScale = scale as AxisScale<AxisDomain>;
         const shapeY = Number(axisScale(plotShape.value));
@@ -408,10 +420,9 @@ export async function prepareYAxisData({
             plotWidth: width,
         });
 
-        const container = select(document.body).append('svg');
-        const wrapper = container.append('g').html(markup);
+        const wrapper = measureContainer.append('g').html(markup);
         const bbox = (wrapper.node() as SVGGraphicsElement).getBBox();
-        container.remove();
+        wrapper.remove();
 
         plotShapes.push({
             hitbox: {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height},
@@ -424,6 +435,8 @@ export async function prepareYAxisData({
             y: axisPlotTopPosition + shapeY,
         });
     }
+
+    measureContainer?.remove();
 
     return {
         id: getUniqId(),
