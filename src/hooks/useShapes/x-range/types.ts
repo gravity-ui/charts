@@ -1,4 +1,4 @@
-import type {TooltipDataChunkXRange} from '../../../types';
+import type {HtmlItem, LabelData, TooltipDataChunkXRange} from '../../../types';
 import type {PreparedXRangeSeries} from '../../useSeries/types';
 
 export type PreparedXRangeData = Omit<TooltipDataChunkXRange, 'series'> & {
@@ -8,4 +8,6 @@ export type PreparedXRangeData = Omit<TooltipDataChunkXRange, 'series'> & {
     height: number;
     color: string;
     series: PreparedXRangeSeries;
+    label?: LabelData;
+    htmlElements: HtmlItem[];
 };

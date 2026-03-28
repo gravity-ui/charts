@@ -3,8 +3,10 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
-import {getDataCategoryValue} from '~core/utils';
+import {getDataCategoryValue, getLabelsSize} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
 
+import type {HtmlItem} from '../../../types';
 import {MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {PreparedXRangeSeries} from '../../useSeries/types';
@@ -22,7 +24,9 @@ type PrepareXRangeDataArgs = {
     yScale: (ChartScale | undefined)[];
 };
 
-export function prepareXRangeData(args: PrepareXRangeDataArgs): PreparedXRangeData[] {
+export async function prepareXRangeData(
+    args: PrepareXRangeDataArgs,
+): Promise<PreparedXRangeData[]> {
     const {
         series,
         xAxis,
@@ -121,9 +125,40 @@ export function prepareXRangeData(args: PrepareXRangeDataArgs): PreparedXRangeDa
                 color: d.color || s.color,
                 data: d,
                 series: s,
+                htmlElements: [],
             });
         });
     });
+
+    for (let i = 0; i < result.length; i++) {
+        const item = result[i];
+        const {dataLabels} = item.series;
+
+        if (!dataLabels.enabled || item.data.label === null) {
+            continue;
+        }
+
+        const content = getFormattedValue({value: item.data.label, ...dataLabels});
+        const {maxHeight: height, maxWidth: width} = await getLabelsSize({
+            labels: [content],
+            style: dataLabels.style,
+            html: dataLabels.html,
+        });
+
+        const x = item.x + item.width / 2 - width / 2;
+        const y = item.y + item.height / 2 - height / 2;
+
+        if (dataLabels.html) {
+            const htmlItem: HtmlItem = {
+                content,
+                size: {width, height},
+                style: dataLabels.style,
+                x,
+                y,
+            };
+            item.htmlElements.push(htmlItem);
+        }
+    }
 
     return result;
 }

@@ -10,6 +10,7 @@ import {getFormattedValue} from '~core/utils/format';
 
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
+import {HtmlLayer} from '../HtmlLayer';
 import {getRectPath} from '../utils';
 
 export {prepareXRangeData} from './prepare-data';
@@ -21,13 +22,14 @@ const b = block('x-range');
 
 type Args = {
     clipPathId: string;
+    htmlLayout: HTMLElement | null;
     preparedData: PreparedXRangeData[];
     seriesOptions: PreparedSeriesOptions;
     dispatcher?: Dispatch<object>;
 };
 
 export function XRangeSeriesShapes(args: Args) {
-    const {dispatcher, preparedData, seriesOptions, clipPathId} = args;
+    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
     const hoveredDataRef = React.useRef<PreparedXRangeData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
 
@@ -84,7 +86,14 @@ export function XRangeSeriesShapes(args: Args) {
 
         svgElement
             .selectAll(`text.${b('label')}`)
-            .data(preparedData.filter((d) => d.series.dataLabels.enabled && d.data.label !== null))
+            .data(
+                preparedData.filter(
+                    (d) =>
+                        d.series.dataLabels.enabled &&
+                        !d.series.dataLabels.html &&
+                        d.data.label !== null,
+                ),
+            )
             .join('text')
             .attr('class', b('label'))
             .attr('x', (d) => d.x + d.width / 2)
@@ -139,5 +148,15 @@ export function XRangeSeriesShapes(args: Args) {
         };
     }, [dispatcher, preparedData, seriesOptions]);
 
-    return <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />;
+    const htmlLayerData = React.useMemo(
+        () => ({htmlElements: preparedData.flatMap((d) => d.htmlElements)}),
+        [preparedData],
+    );
+
+    return (
+        <React.Fragment>
+            <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
+            <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
+        </React.Fragment>
+    );
 }

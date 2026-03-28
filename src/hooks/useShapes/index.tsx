@@ -417,7 +417,7 @@ export async function getShapes(args: Args) {
                 }
                 case SERIES_TYPE.XRange: {
                     if (xAxis && xScale && yScale?.length) {
-                        const preparedData = prepareXRangeData({
+                        const preparedData = await prepareXRangeData({
                             series: chartSeries as PreparedXRangeSeries[],
                             xAxis,
                             xScale,
@@ -430,6 +430,7 @@ export async function getShapes(args: Args) {
                                 dispatcher={dispatcher}
                                 preparedData={preparedData}
                                 seriesOptions={seriesOptions}
+                                htmlLayout={htmlLayout}
                                 clipPathId={clipPathId}
                             />
                         );
