@@ -3,7 +3,7 @@ import type {DateTimeLabelFormats} from '../../utils/time';
 import type {MeaningfulAny} from '../misc';
 
 import type {AreaSeries, AreaSeriesData} from './area';
-import type {AxisPlotBand, AxisPlotLine, ChartXAxis, ChartYAxis} from './axis';
+import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {CustomFormat, ValueFormat} from './base';
@@ -122,6 +122,8 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     hoveredPlotLines?: AxisPlotLine[];
     /** Plot bands that contain the current pointer position. */
     hoveredPlotBands?: AxisPlotBand[];
+    /** Plot shapes that contain the current pointer position. */
+    hoveredPlotShapes?: AxisPlotShape[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     /** Formatting settings for tooltip header row (includes computed default). */

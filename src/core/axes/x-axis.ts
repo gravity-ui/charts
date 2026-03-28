@@ -242,6 +242,18 @@ export const getPreparedXAxis = async ({
             custom: d.custom,
             label: prepareAxisPlotLabel(d),
         })),
+        // x, y and hitbox are populated later in prepare-axis-data
+        // after pixel coordinates and element dimensions are computed
+        plotShapes: get(xAxis, 'plotShapes', []).map((d) => ({
+            custom: d.custom,
+            hitbox: {x: 0, y: 0, width: 0, height: 0},
+            layerPlacement: get(d, 'layerPlacement', 'before'),
+            opacity: get(d, 'opacity', 1),
+            renderer: d.renderer,
+            value: d.value,
+            x: 0,
+            y: 0,
+        })),
         crosshair: {
             enabled: get(xAxis, 'crosshair.enabled', axisCrosshairDefaults.enabled),
             color: get(xAxis, 'crosshair.color', axisCrosshairDefaults.color),

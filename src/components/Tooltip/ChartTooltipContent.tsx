@@ -19,8 +19,9 @@ export interface ChartTooltipContentProps {
     rowRenderer?: ChartTooltip['rowRenderer'];
     valueFormat?: ChartTooltip['valueFormat'];
     headerFormat?: ChartTooltip['headerFormat'];
-    hoveredPlotLines?: ChartTooltipRendererArgs['hoveredPlotLines'];
     hoveredPlotBands?: ChartTooltipRendererArgs['hoveredPlotBands'];
+    hoveredPlotLines?: ChartTooltipRendererArgs['hoveredPlotLines'];
+    hoveredPlotShapes?: ChartTooltipRendererArgs['hoveredPlotShapes'];
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
@@ -30,8 +31,9 @@ export interface ChartTooltipContentProps {
 export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) => {
     const {
         hovered,
-        hoveredPlotLines,
         hoveredPlotBands,
+        hoveredPlotLines,
+        hoveredPlotShapes,
         xAxis,
         yAxis,
         renderer,
@@ -50,8 +52,9 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
     const customTooltip = renderer?.({
         headerFormat,
         hovered,
-        hoveredPlotLines,
         hoveredPlotBands,
+        hoveredPlotLines,
+        hoveredPlotShapes,
         xAxis,
         yAxis,
     });

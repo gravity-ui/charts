@@ -216,6 +216,13 @@ export const ChartInner = (props: ChartInnerProps) => {
                     split: preparedSplit,
                     series: preparedSeries.filter((s) => s.visible),
                 });
+                axisData.plotShapes.forEach((shapeData, j) => {
+                    if (axis.plotShapes[j]) {
+                        axis.plotShapes[j].hitbox = shapeData.hitbox;
+                        axis.plotShapes[j].x = shapeData.x;
+                        axis.plotShapes[j].y = shapeData.y;
+                    }
+                });
                 items.push(axisData);
             }
         }
@@ -242,6 +249,15 @@ export const ChartInner = (props: ChartInnerProps) => {
                 series: preparedSeries.filter((s) => s.visible),
                 split: preparedSplit,
                 yAxis,
+            });
+            axisData.forEach((data) => {
+                data.plotShapes.forEach((shapeData, i) => {
+                    if (axis.plotShapes[i]) {
+                        axis.plotShapes[i].hitbox = shapeData.hitbox;
+                        axis.plotShapes[i].x = shapeData.x;
+                        axis.plotShapes[i].y = shapeData.y;
+                    }
+                });
             });
             items.push(...axisData);
         }

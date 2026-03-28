@@ -1,9 +1,10 @@
 import type {AxisDomain, AxisScale} from 'd3-axis';
 
-import type {AxisPlotBand, AxisPlotLine} from '../../types';
+import type {AxisPlotBand, AxisPlotLine, AxisPlotShape} from '../../types';
 import type {
     PreparedAxisPlotBand,
     PreparedAxisPlotLine,
+    PreparedAxisPlotShape,
     PreparedXAxis,
     PreparedYAxis,
 } from '../axes/types';
@@ -59,6 +60,28 @@ function getHoveredAxisPlotLines(args: {
     return result;
 }
 
+function getHoveredAxisPlotShapes(args: {
+    pointerX: number;
+    pointerY: number;
+    plotShapes: PreparedAxisPlotShape[];
+}): AxisPlotShape[] {
+    const {pointerX, pointerY, plotShapes} = args;
+    const result: AxisPlotShape[] = [];
+
+    for (const shape of plotShapes) {
+        const left = shape.x + shape.hitbox.x;
+        const top = shape.y + shape.hitbox.y;
+        const inX = pointerX >= left && pointerX <= left + shape.hitbox.width;
+        const inY = pointerY >= top && pointerY <= top + shape.hitbox.height;
+
+        if (inX && inY) {
+            result.push(shape);
+        }
+    }
+
+    return result;
+}
+
 export function getHoveredPlots(args: {
     pointerX: number;
     pointerY: number;
@@ -66,10 +89,11 @@ export function getHoveredPlots(args: {
     yAxis: PreparedYAxis[];
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
-}): {plotLines: AxisPlotLine[]; plotBands: AxisPlotBand[]} {
+}): {plotBands: AxisPlotBand[]; plotLines: AxisPlotLine[]; plotShapes: AxisPlotShape[]} {
     const {pointerX, pointerY, xAxis, yAxis, xScale, yScale} = args;
-    const plotLines: AxisPlotLine[] = [];
     const plotBands: AxisPlotBand[] = [];
+    const plotLines: AxisPlotLine[] = [];
+    const plotShapes: AxisPlotShape[] = [];
 
     if (xAxis && xScale) {
         plotBands.push(
@@ -85,6 +109,13 @@ export function getHoveredPlots(args: {
                 pointerPx: pointerX,
                 plotLines: xAxis.plotLines,
                 scale: xScale,
+            }),
+        );
+        plotShapes.push(
+            ...getHoveredAxisPlotShapes({
+                pointerX,
+                pointerY,
+                plotShapes: xAxis.plotShapes,
             }),
         );
     }
@@ -110,7 +141,14 @@ export function getHoveredPlots(args: {
                 scale: yScaleItem,
             }),
         );
+        plotShapes.push(
+            ...getHoveredAxisPlotShapes({
+                pointerX,
+                pointerY,
+                plotShapes: yAxisItem.plotShapes,
+            }),
+        );
     }
 
-    return {plotLines, plotBands};
+    return {plotBands, plotLines, plotShapes};
 }
