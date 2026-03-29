@@ -10,7 +10,7 @@ const getMarginTop = (args: {chart: ChartData['chart']; preparedTitle?: Prepared
     let marginTop = get(chart, 'margin.top', 0);
 
     if (preparedTitle?.height) {
-        marginTop += preparedTitle.height;
+        marginTop += preparedTitle.height + preparedTitle.margin;
     }
 
     return marginTop;

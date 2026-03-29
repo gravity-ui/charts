@@ -270,9 +270,21 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     const defaultFontSize = computedStyle.getPropertyValue('font-size');
     const defaultFontWeight = computedStyle.getPropertyValue('font-weight');
 
+    const resolveCSSVar = (value: string) => {
+        const match = value.match(/^var\(\s*(--[\w-]+)/);
+        if (match) {
+            return computedStyle.getPropertyValue(match[1]).trim() || value;
+        }
+        return value;
+    };
+
     return async (str: string) => {
         await document.fonts.ready;
-        context.font = `${style?.fontWeight ?? defaultFontWeight} ${style?.fontSize ?? defaultFontSize} ${defaultFontFamily}`;
+        const fontWeight = style?.fontWeight
+            ? resolveCSSVar(String(style.fontWeight))
+            : defaultFontWeight;
+        const fontSize = style?.fontSize ? resolveCSSVar(style.fontSize) : defaultFontSize;
+        context.font = `${fontWeight} ${fontSize} ${defaultFontFamily}`;
         const textMetric = context.measureText(unescapeHtml(str));
 
         // we calculate hanging based on an approximate algorithm from chromium
