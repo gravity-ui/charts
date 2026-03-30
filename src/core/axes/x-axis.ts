@@ -19,6 +19,7 @@ import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../.
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
+    PLOT_LINE_HOVER_THRESHOLD,
     SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
@@ -228,6 +229,7 @@ export const getPreparedXAxis = async ({
             color: get(d, 'color', 'var(--g-color-base-brand)'),
             width: get(d, 'width', 1),
             dashStyle: get(d, 'dashStyle', DASH_STYLE.Solid),
+            hoverThreshold: get(d, 'hoverThreshold', PLOT_LINE_HOVER_THRESHOLD),
             opacity: get(d, 'opacity', 1),
             layerPlacement: get(d, 'layerPlacement', 'before'),
             custom: d.custom,
