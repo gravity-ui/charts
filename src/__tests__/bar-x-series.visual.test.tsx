@@ -317,7 +317,7 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Stacking positive and negative values', async ({mount}) => {
+    test('Stacking positive and negative values', async ({mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
