@@ -55,7 +55,10 @@ export function isLabelsOverlapping<T extends LabelData | HtmlItem>(
     );
 }
 
-export function filterOverlappingLabels<T extends LabelData | HtmlItem>(labels: T[]) {
+export function filterOverlappingLabels<T extends LabelData | HtmlItem>(
+    labels: T[],
+    renderedSvgLabels?: T[],
+) {
     const result: T[] = [];
     const sorted = sortBy(
         labels,
@@ -63,7 +66,10 @@ export function filterOverlappingLabels<T extends LabelData | HtmlItem>(labels: 
         (d) => ('textAnchor' in d ? getLeftPosition(d) : d.x),
     );
     sorted.forEach((label) => {
-        if (!result.some((l) => isLabelsOverlapping(label, l))) {
+        if (
+            !renderedSvgLabels?.some((l) => isLabelsOverlapping(label, l)) &&
+            !result.some((l) => isLabelsOverlapping(label, l))
+        ) {
             result.push(label);
         }
     });

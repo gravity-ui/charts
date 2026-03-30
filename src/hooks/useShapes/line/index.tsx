@@ -7,7 +7,7 @@ import {select} from 'd3-selection';
 import {line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
-import {filterOverlappingLabels, getLineDashArray} from '~core/utils';
+import {getLineDashArray} from '~core/utils';
 
 import type {LabelData, TooltipDataChunkLine} from '../../../types';
 import {block} from '../../../utils';
@@ -42,10 +42,6 @@ export const LineSeriesShapes = (args: Args) => {
     const markersRef = React.useRef<SVGGElement>(null);
     const hoverMarkersRef = React.useRef<SVGGElement>(null);
 
-    const allowOverlapDataLabels = React.useMemo(() => {
-        return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
-    }, [preparedData]);
-
     React.useEffect(() => {
         if (!plotRef.current || !markersRef.current) {
             return () => {};
@@ -78,13 +74,9 @@ export const LineSeriesShapes = (args: Args) => {
             .attr('opacity', (d) => d.opacity)
             .attr('cursor', (d) => d.series.cursor);
 
-        let dataLabels = preparedData.reduce((acc, d) => {
-            return acc.concat(d.labels);
+        const dataLabels = preparedData.reduce((acc, d) => {
+            return acc.concat(d.svgLabels);
         }, [] as LabelData[]);
-
-        if (!allowOverlapDataLabels) {
-            dataLabels = filterOverlappingLabels(dataLabels);
-        }
 
         const labelsSelection = plotSvgElement
             .selectAll('text')
@@ -249,16 +241,12 @@ export const LineSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on('hover-shape.line', null);
         };
-    }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
+    }, [dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(() => {
-        const items = preparedData.map((d) => d?.htmlElements).flat();
-        if (allowOverlapDataLabels) {
-            return {htmlElements: items};
-        }
-
-        return {htmlElements: filterOverlappingLabels(items)};
-    }, [allowOverlapDataLabels, preparedData]);
+        const items = preparedData.map((d) => d?.htmlLabels).flat();
+        return {htmlElements: items};
+    }, [preparedData]);
 
     return (
         <React.Fragment>

@@ -31,6 +31,6 @@ export type PreparedAreaData = {
     series: PreparedAreaSeries;
     hovered: boolean;
     active: boolean;
-    labels: LabelData[];
-    htmlElements: HtmlItem[];
+    svgLabels: LabelData[];
+    htmlLabels: HtmlItem[];
 };
