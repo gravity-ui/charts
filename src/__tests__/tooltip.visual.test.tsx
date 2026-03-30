@@ -350,7 +350,7 @@ test.describe('Tooltip', () => {
         await expect(tooltip.getByText('threshold-line')).toBeVisible();
     });
 
-    test.only('Y-axis plot line hoverThreshold', async ({page, mount}) => {
+    test('Y-axis plot line hoverThreshold', async ({page, mount}) => {
         const chartData: ChartData = {
             series: {
                 data: [
