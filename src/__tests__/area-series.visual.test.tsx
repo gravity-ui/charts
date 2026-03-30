@@ -530,4 +530,47 @@ test.describe('Area series', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Logarithmic Y-axis', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'order_id',
+                        type: 'area',
+                        data: [
+                            {
+                                y: 2537,
+                                x: 0,
+                            },
+                            {
+                                y: 1491,
+                                x: 1,
+                            },
+                            {
+                                y: 894,
+                                x: 2,
+                            },
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                lineColor: 'var(--g-color-line-generic)',
+                type: 'category',
+                categories: ['Consumer', 'Corporate', 'Home Office'],
+            },
+            yAxis: [
+                {
+                    type: 'logarithmic',
+                    lineColor: 'transparent',
+                    startOnTick: true,
+                    endOnTick: true,
+                    maxPadding: 0,
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
