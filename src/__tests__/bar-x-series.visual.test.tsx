@@ -37,7 +37,7 @@ test.describe('Bar-x series', () => {
             series: {
                 data: [
                     {
-                        name: 'order_id',
+                        name: 'orders',
                         type: 'bar-x',
                         data: [
                             {
