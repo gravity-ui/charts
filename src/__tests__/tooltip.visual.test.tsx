@@ -452,6 +452,36 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
+    test('Mouse hover shows tooltip on touch-enabled desktop @desktop-touch', async ({
+        page,
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 100},
+                            {x: 1, y: 200},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['A', 'B'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-x').first();
+        const position = await getLocatorBoundingBox(bar);
+        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toBeVisible();
+    });
+
     test.describe('rowRenderer', () => {
         const FLEX_SNAPSHOT_NAME = 'Tooltip-row-renderer-flex-layout.png';
         const TABLE_SNAPSHOT_NAME = 'Tooltip-row-renderer-table-layout.png';

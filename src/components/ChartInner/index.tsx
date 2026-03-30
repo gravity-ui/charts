@@ -126,24 +126,28 @@ export const ChartInner = (props: ChartInnerProps) => {
         value: allPreparedSeries,
         delay: DEBOUNCED_VALUE_DELAY,
     });
-    const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
-        useChartInnerHandlers({
-            boundsHeight,
-            boundsOffsetLeft,
-            boundsOffsetTop,
-            boundsWidth,
-            dispatcher,
-            shapesData,
-            svgContainer: svgRef.current,
-            togglePinTooltip,
-            tooltipPinned,
-            unpinTooltip,
-            xAxis,
-            yAxis,
-            xScale,
-            yScale,
-            tooltipThrottle: preparedTooltip.throttle,
-        });
+    const {
+        handleChartClick,
+        handlePointerLeave,
+        throttledHandlePointerMove,
+        throttledHandleTouchMove,
+    } = useChartInnerHandlers({
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        boundsWidth,
+        dispatcher,
+        shapesData,
+        svgContainer: svgRef.current,
+        togglePinTooltip,
+        tooltipPinned,
+        unpinTooltip,
+        xAxis,
+        yAxis,
+        xScale,
+        yScale,
+        tooltipThrottle: preparedTooltip.throttle,
+    });
     useDefaultState({
         boundsHeight,
         boundsOffsetLeft,
@@ -427,8 +431,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                 height={height}
                 // We use onPointerMove here because onMouseMove works incorrectly when the zoom setting is enabled:
                 // when starting to select an area, the tooltip remains in the position where the selection began
-                onPointerMove={throttledHandleMouseMove}
-                onMouseLeave={handleMouseLeave}
+                onPointerMove={throttledHandlePointerMove}
+                onPointerLeave={handlePointerLeave}
                 onTouchStart={throttledHandleTouchMove}
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
