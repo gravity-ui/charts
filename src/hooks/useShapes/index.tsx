@@ -127,13 +127,20 @@ export async function getShapes(args: Args) {
     } = args;
 
     const visibleSeries = getOnlyVisibleSeries(series);
-    const groupedSeries = group(visibleSeries, (item) => item.type);
+    const groupedSeries = group(visibleSeries, (item) => {
+        if (item.type === 'line') {
+            return item.id;
+        }
+
+        return item.type;
+    });
     const shapesData: ShapeData[] = [];
     const shapes: React.ReactElement[] = [];
 
     await Promise.all(
         Array.from(groupedSeries).map(async (item, index) => {
-            const [seriesType, chartSeries] = item;
+            const [groupId, chartSeries] = item;
+            const seriesType = chartSeries[0].type;
             switch (seriesType) {
                 case SERIES_TYPE.BarX: {
                     if (xAxis && xScale && yScale?.length) {
@@ -231,7 +238,7 @@ export async function getShapes(args: Args) {
                         });
                         shapes[index] = (
                             <LineSeriesShapes
-                                key={SERIES_TYPE.Line}
+                                key={groupId}
                                 dispatcher={dispatcher}
                                 seriesOptions={seriesOptions}
                                 preparedData={preparedData}
