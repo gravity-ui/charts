@@ -1,4 +1,4 @@
-import {ascending, descending, max, reverse, sort} from 'd3-array';
+import {ascending, descending, max, min, reverse, sort} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
@@ -231,7 +231,8 @@ export const prepareBarXData = async (args: {
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
                     const y = seriesYScale(yDataValue);
-                    const base = seriesYScale(0);
+                    const yMinValue = min(seriesYScale.domain()) ?? 0;
+                    const base = seriesYScale(yMinValue);
                     const isLastStackItem = yValueIndex === sortedData.length - 1;
                     const height = Math.abs(base - y);
                     let shapeHeight = height - (stackItems.length ? stackGap : 0);

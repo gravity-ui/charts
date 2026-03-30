@@ -5,6 +5,7 @@ import get from 'lodash/get';
 
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
+    getDefaultMinYAxisValue,
     getDomainDataYBySeries,
     shouldSyncAxisWithPrimary,
 } from '~core/utils';
@@ -125,15 +126,23 @@ function getDomainMinAlignedToStartTick(args: {
     let dNewMin = dMin;
 
     if (!isStartOnTick) {
-        let step: number;
-
-        if (typeof tickValues[0]?.value === 'number' && typeof tickValues[1]?.value === 'number') {
-            step = tickValues[1].value - tickValues[0].value;
+        if (axis.type === 'logarithmic') {
+            const [nicedMin, _nicedMax] = scale.copy().nice().domain();
+            dNewMin = nicedMin;
         } else {
-            step = tickStep(dMin, dMax, 1);
-        }
+            let step: number;
 
-        dNewMin = tickValues[0].value - step;
+            if (
+                typeof tickValues[0]?.value === 'number' &&
+                typeof tickValues[1]?.value === 'number'
+            ) {
+                step = tickValues[1].value - tickValues[0].value;
+            } else {
+                step = tickStep(dMin, dMax, 1);
+            }
+
+            dNewMin = tickValues[0].value - step;
+        }
     }
 
     return dNewMin;
@@ -153,18 +162,26 @@ function getDomainMaxAlignedToEndTick(args: {
         labelLineHeight: axis.labels.lineHeight,
         series,
     }) as {y: number; value: number}[];
-    const isEndOnTick = tickValues[tickValues.length - 1].y === range[1];
+
     let dNewMax = dMax;
-
+    const isEndOnTick = tickValues[tickValues.length - 1].y === range[1];
     if (!isEndOnTick) {
-        let step: number;
-        if (typeof tickValues[0]?.value === 'number' && typeof tickValues[1]?.value === 'number') {
-            step = tickValues[1].value - tickValues[0].value;
+        if (axis.type === 'logarithmic') {
+            const [_nicedMin, nicedMax] = scale.copy().nice().domain();
+            dNewMax = nicedMax;
         } else {
-            step = tickStep(dMin, dMax, 1);
-        }
+            let step: number;
+            if (
+                typeof tickValues[0]?.value === 'number' &&
+                typeof tickValues[1]?.value === 'number'
+            ) {
+                step = tickValues[1].value - tickValues[0].value;
+            } else {
+                step = tickStep(dMin, dMax, 1);
+            }
 
-        dNewMax = tickValues[tickValues.length - 1].value + step;
+            dNewMax = tickValues[tickValues.length - 1].value + step;
+        }
     }
 
     return dNewMax;
@@ -213,9 +230,17 @@ export function createYScale(args: {
                     number,
                 ];
 
-                const yMin = typeof yMinPropsOrState === 'number' ? yMinPropsOrState : yMinDomain;
-                let yMax: number;
+                let yMin: number;
+                if (typeof yMinPropsOrState === 'number') {
+                    yMin = yMinPropsOrState;
+                } else if (axis.type === 'logarithmic') {
+                    yMin = yMinDomain;
+                } else {
+                    const yMinDefault = getDefaultMinYAxisValue(series);
+                    yMin = typeof yMinDefault === 'number' ? yMinDefault : yMinDomain;
+                }
 
+                let yMax: number;
                 if (typeof yMaxPropsOrState === 'number') {
                     yMax = yMaxPropsOrState;
                 } else {
