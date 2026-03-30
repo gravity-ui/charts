@@ -7,10 +7,7 @@ type Props = PreparedTitle & {
 };
 
 export const Title = (props: Props) => {
-    const {chartWidth, height, style, qa, contentRows} = props;
-
-    const totalTextHeight = contentRows.reduce((acc, row) => acc + row.size.height, 0);
-    const topOffset = (height - totalTextHeight) / 2;
+    const {chartWidth, style, qa, contentRows} = props;
 
     return (
         <text
@@ -27,7 +24,7 @@ export const Title = (props: Props) => {
                 <tspan
                     key={i}
                     x={chartWidth / 2}
-                    y={topOffset + row.y}
+                    y={row.y}
                     dominantBaseline="hanging"
                     dangerouslySetInnerHTML={{__html: row.text}}
                 />

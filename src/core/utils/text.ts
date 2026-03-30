@@ -271,7 +271,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
     const defaultFontWeight = computedStyle.getPropertyValue('font-weight');
 
     const resolveCSSVar = (value: string) => {
-        const match = value.match(/^var\(\s*(--[\w-]+)/);
+        const match = value.match(/^var\(\s*([\w-]+)/);
         if (match) {
             return computedStyle.getPropertyValue(match[1]).trim() || value;
         }
