@@ -4,7 +4,6 @@ export * from './datetime';
 export * from './defaults';
 export * from './layout-algorithms';
 export * from './line-styles';
-export * from './misc';
 export * from './palette';
 export * from './symbol-types';
 export * from './tooltip';
