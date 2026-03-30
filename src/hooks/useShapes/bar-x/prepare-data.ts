@@ -231,8 +231,16 @@ export const prepareBarXData = async (args: {
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
                     const y = seriesYScale(yDataValue);
-                    const yMinValue = min(seriesYScale.domain()) ?? 0;
-                    const base = seriesYScale(yMinValue);
+
+                    let base = 0;
+                    if (seriesYAxis.type === 'logarithmic') {
+                        const domainData = seriesYScale.domain();
+                        const yMinValue = min(domainData) ?? 0;
+                        base = seriesYScale(yMinValue);
+                    } else {
+                        base = seriesYScale(0);
+                    }
+
                     const isLastStackItem = yValueIndex === sortedData.length - 1;
                     const height = Math.abs(base - y);
                     let shapeHeight = height - (stackItems.length ? stackGap : 0);
