@@ -12,8 +12,6 @@ import type {ChartScale} from '../scales/types';
 
 import {getBandsPosition, isBandScale} from './axis/common';
 
-const PLOT_LINE_HIT_THRESHOLD_PX = 4;
-
 function getHoveredAxisPlotBands(args: {
     pointerPx: number;
     plotBands: PreparedAxisPlotBand[];
@@ -52,7 +50,7 @@ function getHoveredAxisPlotLines(args: {
     for (const line of plotLines) {
         const linePx = Number(scale(line.value));
 
-        if (Math.abs(pointerPx - linePx) <= PLOT_LINE_HIT_THRESHOLD_PX + line.width / 2) {
+        if (Math.abs(pointerPx - linePx) <= line.hoverThreshold + line.width / 2) {
             result.push(line);
         }
     }

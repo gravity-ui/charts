@@ -290,6 +290,12 @@ export interface AxisPlotLine extends AxisPlot {
     width?: number;
     /** Option for line stroke style. */
     dashStyle?: DashStyle;
+    /**
+     * Extra pixels added to each side of the line for hover detection.
+     * The total hoverable area equals `line.width + hoverThreshold * 2`.
+     * @default 4
+     */
+    hoverThreshold?: number;
 }
 
 export interface AxisPlotShape extends AxisPlot {
@@ -348,7 +354,10 @@ export interface AxisPlotBand extends AxisPlot {
     to: number | string | null;
 }
 
-export interface AxisCrosshair extends Omit<AxisPlotLine, 'value' | 'label' | 'custom'> {
+export interface AxisCrosshair extends Pick<
+    AxisPlotLine,
+    'color' | 'dashStyle' | 'opacity' | 'layerPlacement' | 'width'
+> {
     /**
      * Whether the crosshair should snap to the point or follow the pointer independent of points.
      * @default true

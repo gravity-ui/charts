@@ -37,19 +37,20 @@ export type PreparedAxisPlotBand = Required<AxisPlotBand> & {
 type PreparedAxisCrosshair = Required<AxisCrosshair>;
 
 export type PreparedAxisPlotLine = {
-    value: number;
     color: string;
-    width: number;
-    dashStyle: DashStyle;
-    opacity: number;
-    layerPlacement: PlotLayerPlacement;
     custom?: MeaningfulAny;
+    dashStyle: DashStyle;
+    hoverThreshold: number;
     label: {
-        text: string;
-        style: BaseTextStyle;
         padding: number;
         qa?: string;
+        style: BaseTextStyle;
+        text: string;
     };
+    layerPlacement: PlotLayerPlacement;
+    opacity: number;
+    value: number;
+    width: number;
 };
 
 export type PreparedAxisPlotShape = {

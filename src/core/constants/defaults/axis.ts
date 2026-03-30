@@ -50,3 +50,5 @@ export const axisTickMarksDefaults = {
 };
 
 export const DEFAULT_AXIS_TYPE: ChartAxisType = 'linear';
+
+export const PLOT_LINE_HOVER_THRESHOLD = 4;
