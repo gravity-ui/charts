@@ -1,5 +1,6 @@
 import type {DashStyle} from 'src/core/constants';
 
+import type {AxisPlotShape} from '../../core/types/chart/axis';
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';
 import type {TextRowData} from '../types';
 
@@ -71,6 +72,17 @@ export type AxisPlotBandData = {
     label: AxisPlotLineLabel | null;
 };
 
+export type AxisPlotShapeData = {
+    hitbox: {x: number; y: number; width: number; height: number};
+    layerPlacement: PlotLayerPlacement;
+    opacity: number;
+    plotHeight: number;
+    plotWidth: number;
+    renderer: AxisPlotShape['renderer'];
+    x: number;
+    y: number;
+};
+
 export type AxisDomainData = {
     start: [number, number];
     end: [number, number];
@@ -83,6 +95,7 @@ export type AxisXData = {
     title: AxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];
-    plotLines: AxisPlotLineData[];
     plotBands: AxisPlotBandData[];
+    plotLines: AxisPlotLineData[];
+    plotShapes: AxisPlotShapeData[];
 };

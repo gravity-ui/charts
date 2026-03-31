@@ -19,6 +19,7 @@ import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../.
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
+    PLOT_LINE_HOVER_THRESHOLD,
     SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
@@ -228,6 +229,7 @@ export const getPreparedXAxis = async ({
             color: get(d, 'color', 'var(--g-color-base-brand)'),
             width: get(d, 'width', 1),
             dashStyle: get(d, 'dashStyle', DASH_STYLE.Solid),
+            hoverThreshold: get(d, 'hoverThreshold', PLOT_LINE_HOVER_THRESHOLD),
             opacity: get(d, 'opacity', 1),
             layerPlacement: get(d, 'layerPlacement', 'before'),
             custom: d.custom,
@@ -241,6 +243,18 @@ export const getPreparedXAxis = async ({
             layerPlacement: get(d, 'layerPlacement', 'before'),
             custom: d.custom,
             label: prepareAxisPlotLabel(d),
+        })),
+        // x, y and hitbox are populated later in prepare-axis-data
+        // after pixel coordinates and element dimensions are computed
+        plotShapes: get(xAxis, 'plotShapes', []).map((d) => ({
+            custom: d.custom,
+            hitbox: {x: 0, y: 0, width: 0, height: 0},
+            layerPlacement: get(d, 'layerPlacement', 'before'),
+            opacity: get(d, 'opacity', 1),
+            renderer: d.renderer,
+            value: d.value,
+            x: 0,
+            y: 0,
         })),
         crosshair: {
             enabled: get(xAxis, 'crosshair.enabled', axisCrosshairDefaults.enabled),

@@ -73,7 +73,7 @@ const config: PlaywrightTestConfig = {
                     ignoreDefaultArgs: ['--hide-scrollbars'],
                 },
             },
-            grepInvert: /@perf/,
+            grepInvert: /@perf|@desktop-touch/,
         },
         {
             name: 'chromium-perf',
@@ -86,6 +86,19 @@ const config: PlaywrightTestConfig = {
             },
             grep: /@perf/,
             workers: 1,
+        },
+        {
+            name: 'chromium-desktop-touch',
+            use: {
+                ...devices['Desktop Chrome'],
+                deviceScaleFactor: 2,
+                hasTouch: true,
+                isMobile: false,
+                launchOptions: {
+                    ignoreDefaultArgs: ['--hide-scrollbars'],
+                },
+            },
+            grep: /@desktop-touch/,
         },
         {
             name: 'webkit',

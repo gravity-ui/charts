@@ -130,7 +130,7 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
         switch (type) {
             case 'area':
             case 'bar-x': {
-                acc.push(0, ...getDomainDataForStackedSeries(seriesList as StackedSeries[]));
+                acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[]));
 
                 break;
             }

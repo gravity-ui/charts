@@ -1,4 +1,5 @@
-import {group} from 'd3-array';
+import {group, min} from 'd3-array';
+import type {ScaleLogarithmic} from 'd3-scale';
 import isNil from 'lodash/isNil';
 import round from 'lodash/round';
 
@@ -213,9 +214,15 @@ export const prepareAreaData = async (args: {
 
                 const yAxisTop = split.plots[plotIndex]?.top || 0;
 
+                let base = 0;
+                if (seriesYAxis.type === 'logarithmic') {
+                    const domainData = (seriesYScale as ScaleLogarithmic<number, number>).domain();
+                    base = min(domainData) ?? 0;
+                }
+
                 const yMin =
                     getYValue({
-                        point: {y: 0},
+                        point: {y: base},
                         points: s.data,
                         yAxis: seriesYAxis,
                         yScale: seriesYScale,

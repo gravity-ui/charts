@@ -309,6 +309,94 @@ test.describe('Tooltip', () => {
         await expect(tooltip).toHaveScreenshot();
     });
 
+    test('X-axis plot line hoverThreshold', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'S',
+                        data: [
+                            {x: 0, y: 1},
+                            {x: 1, y: 2},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                plotLines: [{value: 0.5, custom: 'threshold-line'}],
+            },
+        };
+        const component = await mount(<HoveredPlotsTestStory data={chartData} />);
+        const line = await getLocator({component, selector: '.gcharts-line'});
+        const lineBox = await getLocatorBoundingBox(line);
+        const tooltip = page.locator('.gcharts-tooltip');
+        // Move cursor far from the plot line — default threshold is too small to reach it
+        await page.mouse.move(lineBox.x + 5, lineBox.y + lineBox.height / 2);
+        await expect(tooltip).not.toBeVisible();
+        // Update data with a large hoverThreshold so the line is detected from the edge
+        await component.update(
+            <HoveredPlotsTestStory
+                data={{
+                    ...chartData,
+                    xAxis: {
+                        plotLines: [{value: 0.5, custom: 'threshold-line', hoverThreshold: 500}],
+                    },
+                }}
+            />,
+        );
+        // Move cursor to the same position again
+        await page.mouse.move(lineBox.x + 5, lineBox.y + lineBox.height / 2);
+        await expect(tooltip.getByText('threshold-line')).toBeVisible();
+    });
+
+    test('Y-axis plot line hoverThreshold', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'S',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 1, y: 2},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    plotLines: [{value: 1, custom: 'y-threshold-line'}],
+                },
+            ],
+        };
+        const component = await mount(<HoveredPlotsTestStory data={chartData} />);
+        const line = await getLocator({component, selector: '.gcharts-line'});
+        const lineBox = await getLocatorBoundingBox(line);
+        const tooltip = page.locator('.gcharts-tooltip');
+        // Move cursor near the top edge — far from the horizontal plot line at center
+        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + 5);
+        await expect(tooltip).not.toBeVisible();
+        // Update data with a large hoverThreshold so the line is detected from the edge
+        await component.update(
+            <HoveredPlotsTestStory
+                data={{
+                    ...chartData,
+                    yAxis: [
+                        {
+                            plotLines: [
+                                {value: 1, custom: 'y-threshold-line', hoverThreshold: 500},
+                            ],
+                        },
+                    ],
+                }}
+            />,
+        );
+        // Move cursor to the same position again
+        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + 5);
+        await expect(tooltip.getByText('y-threshold-line')).toBeVisible();
+    });
+
     test('Grouped bar-x with line series', async ({mount, page}) => {
         const data = cloneDeep(barXGroupedColumnsData);
         data.series.data.push({
@@ -362,6 +450,36 @@ test.describe('Tooltip', () => {
         await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
+    });
+
+    test('Mouse hover shows tooltip on touch-enabled desktop @desktop-touch', async ({
+        page,
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 100},
+                            {x: 1, y: 200},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['A', 'B'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const bar = component.locator('.gcharts-bar-x').first();
+        const position = await getLocatorBoundingBox(bar);
+        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toBeVisible();
     });
 
     test.describe('rowRenderer', () => {

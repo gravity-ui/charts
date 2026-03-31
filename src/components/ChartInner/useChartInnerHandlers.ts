@@ -5,7 +5,6 @@ import {pointer} from 'd3-selection';
 import get from 'lodash/get';
 import throttle from 'lodash/throttle';
 
-import {IS_TOUCH_ENABLED} from '~core/constants';
 import type {ChartScale} from '~core/scales/types';
 import {EventType} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
@@ -88,7 +87,7 @@ export function useChartInnerHandlers(props: Props) {
             boundsHeight,
             boundsWidth,
         });
-        const {plotLines, plotBands} = getHoveredPlots({
+        const {plotBands, plotLines, plotShapes} = getHoveredPlots({
             pointerX: x,
             pointerY: y,
             xAxis,
@@ -96,7 +95,7 @@ export function useChartInnerHandlers(props: Props) {
             xScale,
             yScale,
         });
-        const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
+        const hoveredPlotsArg = {bands: plotBands, lines: plotLines, shapes: plotShapes};
         dispatcher.call(
             EventType.HOVER_SHAPE,
             event.target,
@@ -118,21 +117,23 @@ export function useChartInnerHandlers(props: Props) {
         );
     };
 
-    const handleMouseMove: React.MouseEventHandler<SVGSVGElement> = (event) => {
+    const handlePointerMove: React.PointerEventHandler<SVGSVGElement> = (event) => {
+        if (event.pointerType === 'touch') {
+            return;
+        }
+
         const [pointerX, pointerY] = pointer(event, svgContainer);
         handleMove([pointerX, pointerY], event);
     };
 
-    const throttledHandleMouseMove = IS_TOUCH_ENABLED
-        ? undefined
-        : throttle(handleMouseMove, tooltipThrottle);
+    const throttledHandlePointerMove = throttle(handlePointerMove, tooltipThrottle);
 
-    const handleMouseLeave: React.MouseEventHandler<SVGSVGElement> = (event) => {
+    const handlePointerLeave: React.PointerEventHandler<SVGSVGElement> = (event) => {
         if (tooltipPinned) {
             return;
         }
 
-        throttledHandleMouseMove?.cancel();
+        throttledHandlePointerMove.cancel();
         dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
         dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
     };
@@ -143,9 +144,7 @@ export function useChartInnerHandlers(props: Props) {
         handleMove([pointerX, pointerY], event);
     };
 
-    const throttledHandleTouchMove = IS_TOUCH_ENABLED
-        ? throttle(handleTouchMove, tooltipThrottle)
-        : undefined;
+    const throttledHandleTouchMove = throttle(handleTouchMove, tooltipThrottle);
 
     const handleChartClick = (event: React.MouseEvent<SVGSVGElement>) => {
         const [pointerX, pointerY] = pointer(event, svgContainer);
@@ -181,7 +180,7 @@ export function useChartInnerHandlers(props: Props) {
         const nextTooltipFixed = !tooltipPinned;
 
         if (!nextTooltipFixed) {
-            const {plotLines, plotBands} = getHoveredPlots({
+            const {plotBands, plotLines, plotShapes} = getHoveredPlots({
                 pointerX: x,
                 pointerY: y,
                 xAxis,
@@ -189,7 +188,7 @@ export function useChartInnerHandlers(props: Props) {
                 xScale,
                 yScale,
             });
-            const hoveredPlotsArg = {lines: plotLines, bands: plotBands};
+            const hoveredPlotsArg = {bands: plotBands, lines: plotLines, shapes: plotShapes};
             dispatcher.call(
                 EventType.HOVER_SHAPE,
                 event.target,
@@ -204,8 +203,9 @@ export function useChartInnerHandlers(props: Props) {
                     hovered: items,
                     xAxis,
                     yAxis: yAxis[0] as ChartYAxis,
-                    hoveredPlotLines: plotLines,
                     hoveredPlotBands: plotBands,
+                    hoveredPlotLines: plotLines,
+                    hoveredPlotShapes: plotShapes,
                 } satisfies ChartTooltipRendererArgs,
                 event,
             );
@@ -216,8 +216,8 @@ export function useChartInnerHandlers(props: Props) {
 
     return {
         handleChartClick,
-        handleMouseLeave,
-        throttledHandleMouseMove,
+        handlePointerLeave,
+        throttledHandlePointerMove,
         throttledHandleTouchMove,
     };
 }

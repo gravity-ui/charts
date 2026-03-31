@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.43.0](https://github.com/gravity-ui/charts/compare/v1.42.4...v1.43.0) (2026-03-30)
+
+
+### Features
+
+* add configurable hoverThreshold to AxisPlotLine ([#523](https://github.com/gravity-ui/charts/issues/523)) ([504820f](https://github.com/gravity-ui/charts/commit/504820f71c166bb6a9adcb3ec2816eb6aec99582))
+* add multiline title support with configurable margin ([#520](https://github.com/gravity-ui/charts/issues/520)) ([d16002d](https://github.com/gravity-ui/charts/commit/d16002dfca6bbc5b954b9df37336e689c434abcc))
+* add plotShapes ([#518](https://github.com/gravity-ui/charts/issues/518)) ([d01e506](https://github.com/gravity-ui/charts/commit/d01e5062faadd96cc8cdacfc9f2274937411d6d1))
+
+
+### Bug Fixes
+
+* fix bar-x series with logarithmic y-axis ([#522](https://github.com/gravity-ui/charts/issues/522)) ([8cea048](https://github.com/gravity-ui/charts/commit/8cea0481d2ac4dd3bdfc5a52a288076b9d5622cc))
+
 ## [1.42.4](https://github.com/gravity-ui/charts/compare/v1.42.3...v1.42.4) (2026-03-27)
 
 

@@ -126,24 +126,28 @@ export const ChartInner = (props: ChartInnerProps) => {
         value: allPreparedSeries,
         delay: DEBOUNCED_VALUE_DELAY,
     });
-    const {handleChartClick, handleMouseLeave, throttledHandleMouseMove, throttledHandleTouchMove} =
-        useChartInnerHandlers({
-            boundsHeight,
-            boundsOffsetLeft,
-            boundsOffsetTop,
-            boundsWidth,
-            dispatcher,
-            shapesData,
-            svgContainer: svgRef.current,
-            togglePinTooltip,
-            tooltipPinned,
-            unpinTooltip,
-            xAxis,
-            yAxis,
-            xScale,
-            yScale,
-            tooltipThrottle: preparedTooltip.throttle,
-        });
+    const {
+        handleChartClick,
+        handlePointerLeave,
+        throttledHandlePointerMove,
+        throttledHandleTouchMove,
+    } = useChartInnerHandlers({
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        boundsWidth,
+        dispatcher,
+        shapesData,
+        svgContainer: svgRef.current,
+        togglePinTooltip,
+        tooltipPinned,
+        unpinTooltip,
+        xAxis,
+        yAxis,
+        xScale,
+        yScale,
+        tooltipThrottle: preparedTooltip.throttle,
+    });
     useDefaultState({
         boundsHeight,
         boundsOffsetLeft,
@@ -216,6 +220,13 @@ export const ChartInner = (props: ChartInnerProps) => {
                     split: preparedSplit,
                     series: preparedSeries.filter((s) => s.visible),
                 });
+                axisData.plotShapes.forEach((shapeData, j) => {
+                    if (axis.plotShapes[j]) {
+                        axis.plotShapes[j].hitbox = shapeData.hitbox;
+                        axis.plotShapes[j].x = shapeData.x;
+                        axis.plotShapes[j].y = shapeData.y;
+                    }
+                });
                 items.push(axisData);
             }
         }
@@ -242,6 +253,15 @@ export const ChartInner = (props: ChartInnerProps) => {
                 series: preparedSeries.filter((s) => s.visible),
                 split: preparedSplit,
                 yAxis,
+            });
+            axisData.forEach((data) => {
+                data.plotShapes.forEach((shapeData, i) => {
+                    if (axis.plotShapes[i]) {
+                        axis.plotShapes[i].hitbox = shapeData.hitbox;
+                        axis.plotShapes[i].x = shapeData.x;
+                        axis.plotShapes[i].y = shapeData.y;
+                    }
+                });
             });
             items.push(...axisData);
         }
@@ -411,8 +431,8 @@ export const ChartInner = (props: ChartInnerProps) => {
                 height={height}
                 // We use onPointerMove here because onMouseMove works incorrectly when the zoom setting is enabled:
                 // when starting to select an area, the tooltip remains in the position where the selection began
-                onPointerMove={throttledHandleMouseMove}
-                onMouseLeave={handleMouseLeave}
+                onPointerMove={throttledHandlePointerMove}
+                onPointerLeave={handlePointerLeave}
                 onTouchStart={throttledHandleTouchMove}
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}

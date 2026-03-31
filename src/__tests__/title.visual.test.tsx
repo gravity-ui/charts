@@ -21,4 +21,31 @@ test.describe('Chart title', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
+
+    test('Long title truncated with ellipsis', async ({mount}) => {
+        const chartData: ChartData = {
+            title: {
+                text: 'This is a very long chart title that should be truncated with an ellipsis when it does not fit in a single line',
+            },
+            series: {
+                data: [{type: 'line', name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
+    test('Multiline title (2 rows)', async ({mount}) => {
+        const chartData: ChartData = {
+            title: {
+                text: 'This is a very long chart title that should wrap to a second line when it does not fit in one row',
+                maxRowCount: 2,
+            },
+            series: {
+                data: [{type: 'line', name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
 });
