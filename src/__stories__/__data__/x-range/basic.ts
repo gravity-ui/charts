@@ -1,6 +1,7 @@
 import type {ChartData} from '../../../types';
 
 export const xRangeBasicData: ChartData = {
+    chart: {zoom: {enabled: true}},
     series: {
         data: [
             {

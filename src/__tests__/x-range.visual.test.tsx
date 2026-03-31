@@ -15,6 +15,7 @@ function getRangeSliderData(extraData?: DeepPartial<ChartData>): ChartData {
     const data = cloneDeep(xRangeBasicData);
     const defaults: DeepPartial<ChartData> = {
         xAxis: {rangeSlider: {enabled: true}},
+        chart: {zoom: {enabled: false}},
     };
     merge(data, defaults, extraData);
     return data;
@@ -86,6 +87,28 @@ test.describe('X-Range series', () => {
             });
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+    });
+
+    test('Zoom', async ({mount}) => {
+        const zoomData: ChartData = {
+            chart: {zoom: {enabled: true}},
+            series: {data: xRangeBasicData.series.data},
+            xAxis: xRangeBasicData.xAxis,
+            yAxis: xRangeBasicData.yAxis,
+            tooltip: {enabled: false},
+        };
+        const component = await mount(<ChartTestStory data={zoomData} />);
+
+        const brushAreaLocator = component.locator('.gcharts-brush');
+        const boundingBox = await brushAreaLocator.evaluate((el) => el.getBoundingClientRect());
+        const startX = boundingBox.x + boundingBox.width / 10;
+        const endX = boundingBox.x + (boundingBox.width / 10) * 2;
+        const y = boundingBox.y + boundingBox.height / 2;
+        await component.dragTo(brushAreaLocator, {
+            sourcePosition: {x: startX, y},
+            targetPosition: {x: endX, y},
+        });
+        await expect(component.locator('svg').first()).toHaveScreenshot();
     });
 
     test('Html data labels', async ({mount}) => {
