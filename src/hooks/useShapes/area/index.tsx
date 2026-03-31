@@ -95,7 +95,7 @@ export const AreaSeriesShapes = (args: Args) => {
             .attr('opacity', (d) => d.opacity);
 
         let dataLabels = preparedData.reduce((acc, d) => {
-            return acc.concat(d.labels);
+            return acc.concat(d.svgLabels);
         }, [] as LabelData[]);
 
         if (!allowOverlapDataLabels) {
@@ -267,7 +267,7 @@ export const AreaSeriesShapes = (args: Args) => {
     }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(() => {
-        const items = preparedData.map((d) => d?.htmlElements).flat();
+        const items = preparedData.map((d) => d?.htmlLabels).flat();
         if (allowOverlapDataLabels) {
             return {htmlElements: items};
         }

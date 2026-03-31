@@ -19,6 +19,11 @@ export interface HtmlItem {
     style?: BaseTextStyle & React.CSSProperties;
 }
 
+export interface ShapeDataWithLabels {
+    svgLabels: LabelData[];
+    htmlLabels: HtmlItem[];
+}
+
 export interface ShapeDataWithHtmlItems {
     htmlElements: HtmlItem[];
 }

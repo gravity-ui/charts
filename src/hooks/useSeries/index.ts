@@ -39,7 +39,13 @@ export const getPreparedSeries = async ({
 }) => {
     const seriesNames = getSeriesNames(seriesData);
     const colorScale = scaleOrdinal(seriesNames, colors);
-    const groupedSeries = group(seriesData, (item) => item.type);
+    const groupedSeries = group(seriesData, (item, index) => {
+        if (item.type === 'line') {
+            return `${item.type}_${index}`;
+        }
+
+        return item.type;
+    });
 
     const acc: PreparedSeries[] = [];
 
@@ -49,7 +55,8 @@ export const getPreparedSeries = async ({
 
     const list = Array.from(groupedSeries);
     for (let i = 0; i < list.length; i++) {
-        const [seriesType, seriesList] = list[i];
+        const [_groupId, seriesList] = list[i];
+        const seriesType = seriesList[0].type;
         acc.push(
             ...(await prepareSeries({
                 type: seriesType,

@@ -63,4 +63,47 @@ test.describe('Multiple types of series on same chart', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('The series should be placed in the DOM in the same order as they are in the chart config (line on top of area)', async ({
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: '01. Line',
+                        data: [
+                            {x: 0, y: 5},
+                            {x: 10, y: 5},
+                        ],
+                    },
+                    {
+                        type: 'area',
+                        name: '02. Area',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 10, y: 10},
+                        ],
+                    },
+                    {
+                        type: 'line',
+                        name: '03. Line',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 10, y: 0},
+                        ],
+                        dataLabels: {enabled: true},
+                    },
+                ],
+                options: {
+                    line: {
+                        lineWidth: 2,
+                    },
+                },
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
 });
