@@ -9,6 +9,8 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import type {ChartData, ChartLegend} from '../types';
 
+import {LONG_TEXT} from './constants';
+
 const pieOverflowedLegendItemsData: ChartData = {
     legend: {
         enabled: true,
@@ -223,6 +225,31 @@ test.describe('Legend', () => {
             const component = await mount(
                 <ChartTestStory data={chartData} styles={{width: '270px'}} />,
             );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Legend with long item names', async ({mount}) => {
+            const data: ChartData = {
+                legend: {enabled: true},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            data: [
+                                {
+                                    name: '1: ' + LONG_TEXT,
+                                    value: 5,
+                                },
+                                {
+                                    name: '2: ' + LONG_TEXT,
+                                    value: 5,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} styles={{width: 400}} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
