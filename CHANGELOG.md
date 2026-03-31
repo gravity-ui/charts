@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.43.1](https://github.com/gravity-ui/charts/compare/v1.43.0...v1.43.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* preserve layer order for line series mixed with other series types ([#526](https://github.com/gravity-ui/charts/issues/526)) ([ad87cf5](https://github.com/gravity-ui/charts/commit/ad87cf56499574d746ff84ddacbf7dff4c77778f))
+* respect chart margins in title positioning and wrapping ([#527](https://github.com/gravity-ui/charts/issues/527)) ([29e190b](https://github.com/gravity-ui/charts/commit/29e190b0a5c8324881208cbab952ffa0394723d5))
+* use Pointer Events API to detect input type instead of static touch detection ([#524](https://github.com/gravity-ui/charts/issues/524)) ([121c204](https://github.com/gravity-ui/charts/commit/121c204d2cf7e442a2cb0ff34da40b9b704fed4b))
+
 ## [1.43.0](https://github.com/gravity-ui/charts/compare/v1.42.4...v1.43.0) (2026-03-30)
 
 
