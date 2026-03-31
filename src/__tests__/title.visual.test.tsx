@@ -5,6 +5,8 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
+import {LONG_TEXT} from './constants';
+
 test.describe('Chart title', () => {
     test('Custom color title', async ({mount}) => {
         const chartData: ChartData = {
@@ -55,7 +57,7 @@ test.describe('Chart title', () => {
                 margin: {top: 10, left: 50, right: 30},
             },
             title: {
-                text: 'Chart title',
+                text: LONG_TEXT,
             },
             series: {
                 data: [{type: 'scatter', name: 'Series 1', data: [{x: 1, y: 1}]}],
