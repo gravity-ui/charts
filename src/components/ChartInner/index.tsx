@@ -333,7 +333,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     <rect x={0} y={-boundsHeight} width={boundsWidth} height={boundsHeight * 3} />
                 </clipPath>
             </defs>
-            {preparedTitle && <Title {...preparedTitle} chartWidth={width} />}
+            {preparedTitle && <Title {...preparedTitle} />}
             <g transform={`translate(0, ${boundsOffsetTop})`}>
                 {preparedSplit?.plots.map((plot, index) => {
                     return <PlotTitle key={`plot-${index}`} title={plot.title} />;

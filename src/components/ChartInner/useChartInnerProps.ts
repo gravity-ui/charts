@@ -169,7 +169,11 @@ export function useChartInnerProps(props: Props) {
                 previousChartData.current && isEqual(previousChartData.current, data)
             );
 
-            const preparedTitle = await getPreparedTitle({title: data.title, chartWidth: width});
+            const preparedTitle = await getPreparedTitle({
+                title: data.title,
+                chartWidth: width,
+                chartMargin: data.chart?.margin,
+            });
             const preparedChart = getPreparedChart({
                 chart: data.chart,
                 seriesData: data.series.data,
