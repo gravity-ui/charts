@@ -1,4 +1,4 @@
-import {group, min} from 'd3-array';
+import {group, min, sort} from 'd3-array';
 import type {ScaleLogarithmic} from 'd3-scale';
 import isNil from 'lodash/isNil';
 import round from 'lodash/round';
@@ -43,7 +43,7 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: 
         }, []);
     }
 
-    return Array.from(xValues);
+    return sort(Array.from(xValues), (d) => d[1]);
 }
 
 async function prepareDataLabels({
@@ -240,15 +240,16 @@ export const prepareAreaData = async (args: {
                     return m.set(key, d);
                 }, new Map());
                 const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue], index) => {
+                    const rawData = seriesData.get(x);
                     const d =
-                        seriesData.get(x) ??
+                        rawData ??
                         ({
                             x,
                             y: 0,
                         } as AreaSeriesData);
                     let yDataValue = d.y ?? null;
 
-                    if (s.nullMode === 'connect' && yDataValue === null) {
+                    if (s.nullMode === 'connect' && (yDataValue === null || !rawData)) {
                         return pointsAcc;
                     }
 
@@ -305,12 +306,12 @@ export const prepareAreaData = async (args: {
                                 }
                             }
 
-                            if (prevPoint?.y !== null) {
+                            if (prevPoint?.y !== null || s.nullMode === 'zero') {
                                 prevSectionStackHeight =
                                     prevSectionStackHeight + currentPointStackHeight;
                             }
 
-                            if (nextPoint?.y !== null) {
+                            if (nextPoint?.y !== null || s.nullMode === 'zero') {
                                 nextSectionStackHeight =
                                     nextSectionStackHeight + currentPointStackHeight;
                             }

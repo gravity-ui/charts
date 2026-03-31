@@ -121,6 +121,49 @@ test.describe('Area series', () => {
         });
     });
 
+    test('Stacking nullMode=zero with uneven x distribution', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'area',
+                        stacking: 'normal',
+                        nullMode: 'zero',
+                        data: [
+                            {x: 1, y: 10},
+                            {x: 2, y: 20},
+                            {x: 3, y: 15},
+                            {x: 4, y: 25},
+                        ],
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'area',
+                        stacking: 'normal',
+                        nullMode: 'zero',
+                        data: [
+                            {x: 1, y: 5},
+                            {x: 2, y: 10},
+                        ],
+                    },
+                    {
+                        name: 'Series 3',
+                        type: 'area',
+                        stacking: 'normal',
+                        nullMode: 'zero',
+                        data: [
+                            {x: 1, y: 3},
+                            {x: 3, y: 6},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Basic split', async ({mount}) => {
         const component = await mount(<ChartTestStory data={areaSplitData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
