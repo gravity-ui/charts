@@ -182,8 +182,8 @@ export const prepareBarXData = async (args: {
 
             for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
                 const yValues = stacks[groupItemIndex];
-                let positiveStackHeight = 0;
-                let negativeStackHeight = 0;
+                let positiveStackSum = 0;
+                let negativeStackSum = 0;
                 const stackItems: PreparedBarXData[] = [];
 
                 let sortedData = yValues;
@@ -230,7 +230,6 @@ export const prepareBarXData = async (args: {
                         xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * groupItemIndex;
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
-                    const y = seriesYScale(yDataValue);
 
                     let base = 0;
                     if (seriesYAxis.type === 'logarithmic') {
@@ -242,7 +241,26 @@ export const prepareBarXData = async (args: {
                     }
 
                     const isLastStackItem = yValueIndex === sortedData.length - 1;
-                    const height = Math.abs(base - y);
+
+                    let height: number;
+                    let barPositionY: number;
+
+                    if (yDataValue > 0) {
+                        const newSum = positiveStackSum + yDataValue;
+                        const topPixel = seriesYScale(newSum);
+                        const bottomPixel =
+                            positiveStackSum === 0 ? base : seriesYScale(positiveStackSum);
+                        height = Math.abs(bottomPixel - topPixel);
+                        barPositionY = yAxisTop + topPixel;
+                    } else {
+                        const newSum = negativeStackSum + yDataValue;
+                        const bottomPixel =
+                            negativeStackSum === 0 ? base : seriesYScale(negativeStackSum);
+                        const topPixel = seriesYScale(newSum);
+                        height = Math.abs(bottomPixel - topPixel);
+                        barPositionY = yAxisTop + bottomPixel;
+                    }
+
                     let shapeHeight = height - (stackItems.length ? stackGap : 0);
 
                     if (shapeHeight < 0) {
@@ -255,10 +273,7 @@ export const prepareBarXData = async (args: {
 
                     const barData: PreparedBarXData = {
                         x,
-                        y:
-                            yDataValue > 0
-                                ? yAxisTop + y - positiveStackHeight
-                                : yAxisTop + base + negativeStackHeight,
+                        y: barPositionY,
                         width: rectWidth,
                         height: shapeHeight,
                         _height: height,
@@ -273,14 +288,18 @@ export const prepareBarXData = async (args: {
                     stackItems.push(barData);
 
                     if (yDataValue > 0) {
-                        positiveStackHeight += height;
+                        positiveStackSum += yDataValue;
                     } else {
-                        negativeStackHeight += height;
+                        negativeStackSum += yDataValue;
                     }
                 }
 
                 if (series.some((s) => s.stacking === 'percent')) {
                     let acc = 0;
+                    const positiveStackHeight = stackItems.reduce(
+                        (sum, item) => sum + item._height,
+                        0,
+                    );
                     const ratio = plotHeight / positiveStackHeight;
                     stackItems.forEach((item) => {
                         item.height = item._height * ratio;
