@@ -185,7 +185,7 @@ async function getGroupedLegendItems(args: {
             resultItem.textWidth = textWidth;
         }
 
-        textWidthsInLine.push(textWidth);
+        textWidthsInLine.push(resultItem.textWidth);
         const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
 
         if (!result[lineIndex]) {
@@ -208,7 +208,7 @@ async function getGroupedLegendItems(args: {
         } else if (isCurrentLineOverMaxWidth) {
             result[lineIndex].pop();
             lineIndex += 1;
-            textWidthsInLine = [textWidth];
+            textWidthsInLine = [resultItem.textWidth];
             const nextLineIndex = lineIndex;
             result[nextLineIndex] = [];
             result[nextLineIndex].push(resultItem);
