@@ -21,7 +21,8 @@
     "label_invalid-axis-labels-html-not-supported-axis-type": "It seems you are trying to use \"labels.html\" property for an axis with an unsupported type. This property is supported only for \"category\" axis.",
     "label_duplicate-axis-categories": "It seems you have duplicate value \"{{duplicate}}\" found in {{key}}[{{axisIndex}}].",
     "label_invalid-axis-categories": "It seems you are trying to use inappropriate value for \"categories\", or defined it incorrectly. Categories must be a non-empty array for an axis with \"category\" type.",
-    "label_inconsistent-y-axis-configuration": "It seems you have inconsistent Y-axis configuration. Possible reasons:\n1. Multiple Y axes with the same position and plot index.\n2. At the moment, 'category' axis is not supported in dual Y-axis configurations."
+    "label_inconsistent-y-axis-configuration": "It seems you have inconsistent Y-axis configuration. Possible reasons:\n1. Multiple Y axes with the same position and plot index.\n2. At the moment, 'category' axis is not supported in dual Y-axis configurations.",
+    "label_stacking-area-connect-null-mode": "It seems you are using \"nullMode: 'connect'\" with a stacking area series. The \"connect\" null mode is not supported in stacking mode. Use \"zero\" or \"skip\" instead."
   },
   "tooltip": {
     "label_totals_sum": "Sum",

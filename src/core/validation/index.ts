@@ -323,6 +323,23 @@ function validateStacking({series}: {series: AreaSeries | BarXSeries | BarYSerie
     }
 }
 
+function validateStackingAreaNullMode({series}: {series: ChartSeries[]}) {
+    const availableStackingValues = ['normal', 'percent'];
+    const invalid = series.find(
+        (s): s is AreaSeries =>
+            s.type === 'area' &&
+            availableStackingValues.includes((s as AreaSeries).stacking as string) &&
+            (s as AreaSeries).nullMode === 'connect',
+    );
+
+    if (invalid) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_stacking-area-connect-null-mode'),
+        });
+    }
+}
+
 function validateTreemapSeries({series}: {series: TreemapSeries}) {
     const parentIds: Record<string, boolean> = {};
     series.data.forEach((d) => {
@@ -456,6 +473,7 @@ export function validateData(data?: ChartData) {
 
     validateAxes({xAxis: data.xAxis, yAxis: data.yAxis});
     validateTooltip({tooltip: data.tooltip});
+    validateStackingAreaNullMode({series: data.series.data});
 
     if (data.series.data.some((s) => isEmpty(s.data))) {
         throw new ChartError({

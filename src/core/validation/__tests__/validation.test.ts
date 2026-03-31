@@ -73,6 +73,46 @@ describe('validation/validateData', () => {
     );
 
     test.each([
+        {
+            series: {
+                data: [
+                    {
+                        type: 'area',
+                        stacking: 'normal',
+                        nullMode: 'connect',
+                        data: [{x: 1, y: 1}],
+                    },
+                ],
+            },
+        },
+        {
+            series: {
+                data: [
+                    {
+                        type: 'area',
+                        stacking: 'percent',
+                        nullMode: 'connect',
+                        data: [{x: 1, y: 1}],
+                    },
+                ],
+            },
+        },
+    ])(
+        'validateData should throw an error when stacking area series use nullMode=connect (data: %j)',
+        (data) => {
+            let error: ChartError | null = null;
+
+            try {
+                validateData(data as ChartData);
+            } catch (e) {
+                error = e as ChartError;
+            }
+
+            expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+        },
+    );
+
+    test.each([
         {series: {data: [{type: 'area', stacking: 'notNormal', data: [{x: 1, y: 1}]}]}},
         {series: {data: [{type: 'bar-x', stacking: 'notNormal', data: [{x: 1, y: 1}]}]}},
         {series: {data: [{type: 'bar-y', stacking: 'notNormal', data: [{x: 1, y: 1}]}]}},

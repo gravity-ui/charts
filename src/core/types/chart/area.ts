@@ -81,9 +81,10 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Specifies how null or undefined values should be handled in the series.
      *
-     * - `'connect'`: Connect points across null values (skip nulls in rendering)
+     * - `'connect'`: Connect points across null values (skip nulls in rendering). **Not supported with `stacking`.**
      * - `'zero'`: Treat null values as zero
      * - `'skip'`: Omit the data point (creates gap in area)
+     *
      * @default 'skip'
      */
     nullMode?: 'connect' | 'zero' | 'skip';
