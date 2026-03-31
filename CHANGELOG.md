@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.44.0](https://github.com/gravity-ui/charts/compare/v1.43.1...v1.44.0) (2026-03-31)
+
+
+### Features
+
+* add x-range series ([#510](https://github.com/gravity-ui/charts/issues/510)) ([927b36d](https://github.com/gravity-ui/charts/commit/927b36ddf1185909ee965ddd9547511fa2769f79))
+
+
+### Bug Fixes
+
+* **bar-x:** fix stacking normal with logarithmic Y-axis ([#530](https://github.com/gravity-ui/charts/issues/530)) ([aa45cc8](https://github.com/gravity-ui/charts/commit/aa45cc80aaadd699a15b6f4dfcd9ad3efd118caf))
+* correct stacking area behavior with nullMode and uneven x distribution ([#529](https://github.com/gravity-ui/charts/issues/529)) ([1edf353](https://github.com/gravity-ui/charts/commit/1edf35373b4b844c2abd810a8a8d34470715178c))
+* legend breaks when series names don't fit in available width  ([#531](https://github.com/gravity-ui/charts/issues/531)) ([ca1ffda](https://github.com/gravity-ui/charts/commit/ca1ffda6ab0c806e250ad90edf5c8665622c52d1))
+
 ## [1.43.1](https://github.com/gravity-ui/charts/compare/v1.43.0...v1.43.1) (2026-03-31)
 
 
