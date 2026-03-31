@@ -40,6 +40,59 @@ export const BarXLinear = {
     },
 } satisfies Story;
 
+export const BarXStakingNormalLogAxis = {
+    name: 'Logarithmic Y-axis',
+    args: {
+        data: {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 100},
+                            {x: 2, y: 1000},
+                        ],
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 5},
+                            {x: 1, y: 50},
+                            {x: 2, y: 500},
+                        ],
+                    },
+                    {
+                        name: 'Series 3',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 2},
+                            {x: 1, y: 20},
+                            {x: 2, y: 200},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['A', 'B', 'C'],
+            },
+            yAxis: [
+                {
+                    type: 'logarithmic',
+                    startOnTick: true,
+                    endOnTick: true,
+                },
+            ],
+        },
+    },
+} satisfies Story;
+
 export const BarXDateTime = {
     name: 'Datetime X axis',
     args: {

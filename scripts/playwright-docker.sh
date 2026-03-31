@@ -12,7 +12,8 @@ command_exists() {
 }
 
 run_command() {
-  $CONTAINER_TOOL run --rm --network host -it -w /work \
+  TTY_FLAG=$([ -t 0 ] && echo "-it" || echo "-i")
+  $CONTAINER_TOOL run --rm --network host $TTY_FLAG -w /work \
     --memory=4g --shm-size=1g \
     -v $(pwd):/work \
     -v "$NODE_MODULES_CACHE_DIR:/work/node_modules" \
@@ -41,4 +42,8 @@ if [[ ! -d "$NODE_MODULES_CACHE_DIR" ]]; then
   run_command 'npm ci'
 fi
 
-run_command "$*"
+if [ $# -gt 1 ]; then
+  run_command "$1 -- $(printf '%q ' "${@:2}")"
+else
+  run_command "$1"
+fi

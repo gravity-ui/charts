@@ -208,6 +208,58 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Stacking normal with logarithmic Y-axis', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 100},
+                            {x: 2, y: 1000},
+                        ],
+                    },
+                    {
+                        name: 'Series 2',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 5},
+                            {x: 1, y: 50},
+                            {x: 2, y: 500},
+                        ],
+                    },
+                    {
+                        name: 'Series 3',
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        data: [
+                            {x: 0, y: 2},
+                            {x: 1, y: 20},
+                            {x: 2, y: 200},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['A', 'B', 'C'],
+            },
+            yAxis: [
+                {
+                    type: 'logarithmic',
+                    startOnTick: true,
+                    endOnTick: true,
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Stacking normal with reverse data order', async ({mount}) => {
         const chartData = cloneDeep(barXStakingNormalData);
         set(chartData, 'series.options.bar-x.dataSorting.direction', 'desc');
