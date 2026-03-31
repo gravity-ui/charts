@@ -3,10 +3,10 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
-import {getDataCategoryValue, getLabelsSize} from '~core/utils';
+import {getDataCategoryValue, getLabelsSize, getTextSizeFn, getTextWithElipsis} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
-import type {HtmlItem} from '../../../types';
+import type {HtmlItem, LabelData} from '../../../types';
 import {MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {PreparedXRangeSeries} from '../../useSeries/types';
@@ -125,10 +125,13 @@ export async function prepareXRangeData(
                 color: d.color || s.color,
                 data: d,
                 series: s,
-                htmlElements: [],
+                htmlLabels: [],
+                svgLabels: [],
             });
         });
     });
+
+    const textSizeFnCache = new Map<object, ReturnType<typeof getTextSizeFn>>();
 
     for (let i = 0; i < result.length; i++) {
         const item = result[i];
@@ -139,24 +142,47 @@ export async function prepareXRangeData(
         }
 
         const content = getFormattedValue({value: item.data.label, ...dataLabels});
-        const {maxHeight: height, maxWidth: width} = await getLabelsSize({
-            labels: [content],
-            style: dataLabels.style,
-            html: dataLabels.html,
-        });
-
-        const x = item.x + item.width / 2 - width / 2;
-        const y = item.y + item.height / 2 - height / 2;
 
         if (dataLabels.html) {
+            const {maxHeight: height, maxWidth: width} = await getLabelsSize({
+                labels: [content],
+                style: dataLabels.style,
+                html: true,
+            });
             const htmlItem: HtmlItem = {
                 content,
                 size: {width, height},
                 style: dataLabels.style,
-                x,
-                y,
+                x: item.x + item.width / 2 - width / 2,
+                y: item.y + item.height / 2 - height / 2,
             };
-            item.htmlElements.push(htmlItem);
+            item.htmlLabels.push(htmlItem);
+        } else {
+            if (!textSizeFnCache.has(dataLabels.style)) {
+                textSizeFnCache.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
+            }
+            const getTextSize =
+                textSizeFnCache.get(dataLabels.style) ?? getTextSizeFn({style: dataLabels.style});
+            const availableWidth = Math.max(0, item.width - 2 * dataLabels.padding);
+            const text = await getTextWithElipsis({
+                text: content,
+                getTextWidth: (s) => getTextSize(s).then((r) => r.width),
+                maxWidth: availableWidth,
+            });
+            if (!text) {
+                continue;
+            }
+            const {width, height, hangingOffset} = await getTextSize(text);
+            const svgItem: LabelData = {
+                text,
+                size: {width, height, hangingOffset},
+                style: dataLabels.style,
+                textAnchor: 'middle',
+                x: item.x + item.width / 2,
+                y: item.y + item.height / 2,
+                series: item.series,
+            };
+            item.svgLabels.push(svgItem);
         }
     }
 

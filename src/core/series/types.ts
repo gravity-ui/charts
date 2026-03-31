@@ -421,6 +421,7 @@ export type PreparedXRangeSeries = {
         enabled: boolean;
         style: BaseTextStyle;
         html: boolean;
+        padding: number;
         format?: ValueFormat;
     };
 } & BasePreparedSeries;

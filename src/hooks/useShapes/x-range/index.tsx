@@ -6,7 +6,6 @@ import {select} from 'd3-selection';
 import get from 'lodash/get';
 
 import {getLineDashArray} from '~core/utils';
-import {getFormattedValue} from '~core/utils/format';
 
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
@@ -84,27 +83,21 @@ export function XRangeSeriesShapes(args: Args) {
             .attr('opacity', (d) => d.data.opacity ?? d.series.opacity)
             .attr('pointer-events', 'none');
 
+        const svgLabels = preparedData.flatMap((d) => d.svgLabels);
         svgElement
             .selectAll(`text.${b('label')}`)
-            .data(
-                preparedData.filter(
-                    (d) =>
-                        d.series.dataLabels.enabled &&
-                        !d.series.dataLabels.html &&
-                        d.data.label !== null,
-                ),
-            )
+            .data(svgLabels)
             .join('text')
             .attr('class', b('label'))
-            .attr('x', (d) => d.x + d.width / 2)
-            .attr('y', (d) => d.y + d.height / 2)
-            .attr('text-anchor', 'middle')
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y)
+            .attr('text-anchor', (d) => d.textAnchor)
             .attr('dominant-baseline', 'central')
             .attr('pointer-events', 'none')
-            .style('font-size', (d) => d.series.dataLabels.style.fontSize)
-            .style('font-weight', (d) => d.series.dataLabels.style.fontWeight || null)
-            .style('fill', (d) => d.series.dataLabels.style.fontColor || null)
-            .html((d) => getFormattedValue({value: d.data.label, ...d.series.dataLabels}));
+            .style('font-size', (d) => d.style.fontSize)
+            .style('font-weight', (d) => d.style.fontWeight || null)
+            .style('fill', (d) => d.style.fontColor || null)
+            .html((d) => d.text);
 
         const hoverOptions = get(seriesOptions, 'x-range.states.hover');
         const inactiveOptions = get(seriesOptions, 'x-range.states.inactive');
@@ -149,7 +142,7 @@ export function XRangeSeriesShapes(args: Args) {
     }, [dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(
-        () => ({htmlElements: preparedData.flatMap((d) => d.htmlElements)}),
+        () => ({htmlElements: preparedData.flatMap((d) => d.htmlLabels)}),
         [preparedData],
     );
 

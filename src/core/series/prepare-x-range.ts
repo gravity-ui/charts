@@ -6,6 +6,7 @@ import {getUniqId} from '~core/utils';
 import type {ChartSeriesOptions, XRangeSeries} from '../../types';
 import {DASH_STYLE, DEFAULT_DATALABELS_STYLE} from '../constants';
 
+import {DEFAULT_DATALABELS_PADDING} from './constants';
 import type {PreparedLegend, PreparedXRangeSeries} from './types';
 import {prepareLegendSymbol} from './utils';
 
@@ -53,6 +54,7 @@ export function prepareXRangeSeries(args: PrepareXRangeSeriesArgs): PreparedXRan
                 enabled: get(series, 'dataLabels.enabled', false),
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
                 html: get(series, 'dataLabels.html', false),
+                padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
                 format: series.dataLabels?.format,
             },
         };
