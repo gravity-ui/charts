@@ -5,6 +5,8 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
+import {LONG_TEXT} from './constants';
+
 test.describe('Chart title', () => {
     test('Custom color title', async ({mount}) => {
         const chartData: ChartData = {
@@ -43,6 +45,22 @@ test.describe('Chart title', () => {
             },
             series: {
                 data: [{type: 'line', name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
+    test('Title stays within chart bounds considering top/left/right margins', async ({mount}) => {
+        const chartData: ChartData = {
+            chart: {
+                margin: {top: 10, left: 50, right: 30},
+            },
+            title: {
+                text: LONG_TEXT,
+            },
+            series: {
+                data: [{type: 'scatter', name: 'Series 1', data: [{x: 1, y: 1}]}],
             },
         };
         const component = await mount(<ChartTestStory data={chartData} />);

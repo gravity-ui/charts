@@ -2,12 +2,10 @@ import React from 'react';
 
 import type {PreparedTitle} from '../../hooks';
 
-type Props = PreparedTitle & {
-    chartWidth: number;
-};
+type Props = PreparedTitle;
 
 export const Title = (props: Props) => {
-    const {chartWidth, style, qa, contentRows} = props;
+    const {style, qa, contentRows} = props;
 
     return (
         <text
@@ -23,7 +21,7 @@ export const Title = (props: Props) => {
             {contentRows.map((row, i) => (
                 <tspan
                     key={i}
-                    x={chartWidth / 2}
+                    x={row.x}
                     y={row.y}
                     dominantBaseline="hanging"
                     dangerouslySetInnerHTML={{__html: row.text}}
