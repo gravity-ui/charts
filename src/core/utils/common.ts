@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';
 
-import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
+import type {BaseTextStyle, ChartSeries, ChartSeriesData, XRangeSeries} from '../../types';
 import {DEFAULT_AXIS_LABEL_FONT_SIZE, SERIES_TYPE} from '../constants';
 import type {PreparedWaterfallSeries, StackedSeries} from '../series/types';
 import {getSeriesStackId} from '../series/utils';
@@ -79,6 +79,16 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
         switch (type) {
             case 'bar-y': {
                 acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[], 'y', 'x'));
+                break;
+            }
+            case 'x-range': {
+                (seriesList as unknown as XRangeSeries[]).forEach((s) => {
+                    s.data.forEach((d) => {
+                        if (!isNil(d.x0) && !isNil(d.x1)) {
+                            acc.push(d.x0, d.x1);
+                        }
+                    });
+                });
                 break;
             }
             default: {

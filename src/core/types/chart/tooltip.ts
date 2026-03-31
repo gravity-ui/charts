@@ -16,6 +16,7 @@ import type {SankeySeries, SankeySeriesData} from './sankey';
 import type {ScatterSeries, ScatterSeriesData} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
+import type {XRangeSeries, XRangeSeriesData} from './x-range';
 
 export interface TooltipDataChunkBarX<T = MeaningfulAny> {
     data: BarXSeriesData<T>;
@@ -101,6 +102,11 @@ export interface TooltipDataChunkFunnel<T = MeaningfulAny> {
     };
 }
 
+export interface TooltipDataChunkXRange<T = MeaningfulAny> {
+    data: XRangeSeriesData<T>;
+    series: XRangeSeries<T>;
+}
+
 export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkBarX<T>
     | TooltipDataChunkBarY<T>
@@ -114,6 +120,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkRadar<T>
     | TooltipDataChunkHeatmap<T>
     | TooltipDataChunkFunnel<T>
+    | TooltipDataChunkXRange<T>
 ) & {closest?: boolean};
 
 export interface ChartTooltipRendererArgs<T = MeaningfulAny> {

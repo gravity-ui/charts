@@ -25,7 +25,14 @@ function getTicksCount(args: {
     if (series) {
         const xDataSet = new Set<number | string>();
         series?.forEach((item) => {
-            if (isSeriesWithNumericalXValues(item)) {
+            if (item.type === 'x-range') {
+                item.data.forEach((d) => {
+                    if (d.x0 !== null && d.x1 !== null) {
+                        xDataSet.add(d.x0);
+                        xDataSet.add(d.x1);
+                    }
+                });
+            } else if (isSeriesWithNumericalXValues(item)) {
                 item.data.forEach((data) => {
                     xDataSet.add(data.x);
                 });

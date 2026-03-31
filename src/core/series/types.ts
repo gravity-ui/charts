@@ -35,6 +35,8 @@ import type {
     ValueFormat,
     WaterfallSeries,
     WaterfallSeriesData,
+    XRangeSeries,
+    XRangeSeriesData,
 } from '../../types';
 import type {
     DashStyle,
@@ -407,6 +409,23 @@ export type PreparedFunnelSeries = {
     connectors: Required<FunnelSeries['connectors']>;
 } & BasePreparedSeries;
 
+export type PreparedXRangeSeries = {
+    type: XRangeSeries['type'];
+    data: XRangeSeriesData[];
+    borderRadius: number;
+    borderWidth: number;
+    borderColor: string;
+    borderDashStyle: DashStyle;
+    opacity: number | null;
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        html: boolean;
+        padding: number;
+        format?: ValueFormat;
+    };
+} & BasePreparedSeries;
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
@@ -419,7 +438,8 @@ export type PreparedSeries =
     | PreparedSankeySeries
     | PreparedRadarSeries
     | PreparedHeatmapSeries
-    | PreparedFunnelSeries;
+    | PreparedFunnelSeries
+    | PreparedXRangeSeries;
 
 export type PreparedZoomableSeries = Extract<
     PreparedSeries,

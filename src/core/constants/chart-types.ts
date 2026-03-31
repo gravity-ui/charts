@@ -11,6 +11,7 @@ export const SERIES_TYPE = {
     Radar: 'radar',
     Heatmap: 'heatmap',
     Funnel: 'funnel',
+    XRange: 'x-range',
 } as const;
 
 export type SeriesType = (typeof SERIES_TYPE)[keyof typeof SERIES_TYPE];

@@ -16,6 +16,7 @@ import type {
     ScatterSeries,
     TreemapSeries,
     WaterfallSeries,
+    XRangeSeries,
 } from '../../types';
 
 import {prepareArea} from './prepare-area';
@@ -30,6 +31,7 @@ import {prepareSankeySeries} from './prepare-sankey';
 import {prepareScatterSeries} from './prepare-scatter';
 import {prepareTreemap} from './prepare-treemap';
 import {prepareWaterfallSeries} from './prepare-waterfall';
+import {prepareXRangeSeries} from './prepare-x-range';
 import type {PreparedLegend, PreparedSeries} from './types';
 
 export async function prepareSeries(args: {
@@ -137,6 +139,14 @@ export async function prepareSeries(args: {
                 seriesOptions,
                 legend,
                 colors,
+            });
+        }
+        case 'x-range': {
+            return prepareXRangeSeries({
+                series: series as XRangeSeries[],
+                seriesOptions,
+                legend,
+                colorScale,
             });
         }
         default: {

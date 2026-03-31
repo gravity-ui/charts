@@ -20,6 +20,7 @@ import type {
     TooltipDataChunkWaterfall,
     TreemapSeriesData,
     ValueFormat,
+    XRangeSeriesData,
 } from '../../../types';
 import {block} from '../../../utils';
 
@@ -118,12 +119,15 @@ export const DefaultTooltipContent = ({
         );
     };
 
-    const formattedHeadValue = headerFormat
-        ? getFormattedValue({
-              value: measureValue?.value,
-              format: headerFormat,
-          })
-        : measureValue?.formattedValue;
+    let formattedHeadValue: string | undefined;
+    if (measureValue) {
+        formattedHeadValue = headerFormat
+            ? getFormattedValue({
+                  value: measureValue.value,
+                  format: headerFormat,
+              })
+            : measureValue.formattedValue;
+    }
 
     React.useEffect(() => {
         if (!contentRowsRef.current) {
@@ -286,6 +290,29 @@ export const DefaultTooltipContent = ({
                             name: radarSeries.name || radarSeries.id,
                             value: hoveredValues[i],
                             formattedValue,
+                        });
+                    }
+                    case 'x-range': {
+                        const xRangeData = data as XRangeSeriesData;
+                        const format = rowValueFormat || getDefaultValueFormat({axis: xAxis});
+                        const x0Formatted = getFormattedValue({
+                            value: xRangeData.x0,
+                            format,
+                        });
+                        const x1Formatted = getFormattedValue({
+                            value: xRangeData.x1,
+                            format,
+                        });
+
+                        return renderRow({
+                            id,
+                            active,
+                            color,
+                            name: series.name,
+                            striped,
+                            value: hoveredValues[i],
+                            formattedValue: `${x0Formatted} — ${x1Formatted}`,
+                            series,
                         });
                     }
                     default: {

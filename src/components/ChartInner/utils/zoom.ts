@@ -12,7 +12,8 @@ function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
         case SERIES_TYPE.Area: {
             return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
         }
-        case SERIES_TYPE.BarX: {
+        case SERIES_TYPE.BarX:
+        case SERIES_TYPE.XRange: {
             return [ZOOM_TYPE.X];
         }
         case SERIES_TYPE.BarY: {
@@ -43,6 +44,7 @@ function getDefaultZoomType(seriesType: ChartSeries['type']): ZoomType | undefin
         }
         case SERIES_TYPE.Area:
         case SERIES_TYPE.BarX:
+        case SERIES_TYPE.XRange:
         case SERIES_TYPE.Line:
         case SERIES_TYPE.Waterfall: {
             return ZOOM_TYPE.X;

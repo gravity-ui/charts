@@ -17,6 +17,7 @@
 - `Funnel`
 - `Heatmap`
 - `Radar`
+- `X-Range`
 
 {% cut "Examples from Storybook" %}
 
