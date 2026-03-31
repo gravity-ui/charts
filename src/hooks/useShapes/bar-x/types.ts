@@ -8,8 +8,8 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     height: number;
     opacity: number | null;
     series: PreparedBarXSeries;
-    label?: LabelData;
-    htmlElements: HtmlItem[];
+    svgLabels: LabelData[];
+    htmlLabels: HtmlItem[];
     isLastStackItem: boolean;
     /**
      * the utility field for storing the original height (for recalculations, etc.)

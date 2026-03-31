@@ -265,7 +265,8 @@ export const prepareBarXData = async (args: {
                         opacity: get(yValue.data, 'opacity', null),
                         data: yValue.data,
                         series: yValue.series,
-                        htmlElements: [],
+                        htmlLabels: [],
+                        svgLabels: [],
                         isLastStackItem,
                     };
 
@@ -312,16 +313,18 @@ export const prepareBarXData = async (args: {
             (!isBarOutsideBounds || isZeroValue)
         ) {
             const label = await getLabelData(barData, xMax);
-            if (barData.series.dataLabels.html && label) {
-                barData.htmlElements.push({
-                    x: label.x,
-                    y: label.y,
-                    content: label.text,
-                    size: label.size,
-                    style: label.style,
-                });
-            } else {
-                barData.label = label;
+            if (label) {
+                if (barData.series.dataLabels.html) {
+                    barData.htmlLabels.push({
+                        x: label.x,
+                        y: label.y,
+                        content: label.text,
+                        size: label.size,
+                        style: label.style,
+                    });
+                } else {
+                    barData.svgLabels.push(label);
+                }
             }
         }
     }

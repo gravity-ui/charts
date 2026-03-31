@@ -1,9 +1,9 @@
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
-import {getLabelsSize, getTextSizeFn} from '~core/utils';
+import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
-import type {HtmlItem, LabelData} from '../../../types';
+import type {HtmlItem, LabelData, ShapeDataWithLabels} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {PreparedLineSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
@@ -37,8 +37,19 @@ export const prepareLineData = async (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
+    otherLayers: ShapeDataWithLabels[];
 }): Promise<PreparedLineData[]> => {
-    const {series, xAxis, yAxis, xScale, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const {
+        series,
+        xAxis,
+        yAxis,
+        xScale,
+        yScale,
+        split,
+        isOutsideBounds,
+        isRangeSlider,
+        otherLayers,
+    } = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
 
@@ -69,8 +80,8 @@ export const prepareLineData = async (args: {
             };
         });
 
-        const htmlElements: HtmlItem[] = [];
-        const labels: LabelData[] = [];
+        let htmlElements: HtmlItem[] = [];
+        let svgLabels: LabelData[] = [];
         if (s.dataLabels.enabled && !isRangeSlider) {
             if (s.dataLabels.html) {
                 const list = await Promise.all(
@@ -124,10 +135,21 @@ export const prepareLineData = async (args: {
                             active: true,
                         };
 
-                        labels.push(labelData);
+                        svgLabels.push(labelData);
                     }
                 }
             }
+        }
+
+        if (!s.dataLabels.allowOverlap) {
+            svgLabels = filterOverlappingLabels(
+                svgLabels,
+                otherLayers.map((l) => l.svgLabels).flat(),
+            );
+            htmlElements = filterOverlappingLabels(
+                htmlElements,
+                otherLayers.map((l) => l.htmlLabels).flat(),
+            );
         }
 
         let markers: MarkerData[] = [];
@@ -156,12 +178,12 @@ export const prepareLineData = async (args: {
         const result: PreparedLineData = {
             points,
             markers,
-            labels,
+            svgLabels: svgLabels,
             series: s,
             hovered: false,
             active: true,
             id: s.id,
-            htmlElements,
+            htmlLabels: htmlElements,
             color: s.color,
             lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
             dashStyle: s.dashStyle,

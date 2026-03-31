@@ -25,8 +25,8 @@ export type PreparedLineData = {
     series: PreparedLineSeries;
     hovered: boolean;
     active: boolean;
-    labels: LabelData[];
-    htmlElements: HtmlItem[];
+    svgLabels: LabelData[];
+    htmlLabels: HtmlItem[];
     color: string;
     dashStyle: DashStyle;
     linecap: LineCap;

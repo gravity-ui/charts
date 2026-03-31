@@ -7,7 +7,6 @@ import get from 'lodash/get';
 
 import {filterOverlappingLabels} from '~core/utils';
 
-import type {LabelData} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
@@ -74,7 +73,7 @@ export const BarXSeriesShapes = (args: Args) => {
             .attr('opacity', (d) => d.opacity)
             .attr('cursor', (d) => d.series.cursor);
 
-        let dataLabels = preparedData.map((d) => d.label).filter(Boolean) as LabelData[];
+        let dataLabels = preparedData.map((d) => d.svgLabels).flat();
         if (!allowOverlapDataLabels) {
             dataLabels = filterOverlappingLabels(dataLabels);
         }
@@ -153,7 +152,7 @@ export const BarXSeriesShapes = (args: Args) => {
     }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(() => {
-        const items = preparedData.map((d) => d?.htmlElements).flat();
+        const items = preparedData.map((d) => d?.htmlLabels).flat();
         if (allowOverlapDataLabels) {
             return {htmlElements: items};
         }

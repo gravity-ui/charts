@@ -398,7 +398,7 @@ export const prepareAreaData = async (args: {
                 seriesStackData.push({
                     points,
                     markers,
-                    labels: [],
+                    svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,
                     width: s.lineWidth,
@@ -406,7 +406,7 @@ export const prepareAreaData = async (args: {
                     hovered: false,
                     active: true,
                     id: s.id,
-                    htmlElements: [],
+                    htmlLabels: [],
                 });
             }
 
@@ -423,8 +423,8 @@ export const prepareAreaData = async (args: {
                         yAxisTop: itemYAxisTop,
                         isOutsideBounds,
                     });
-                    item.labels.push(...labelsData.svgLabels);
-                    item.htmlElements.push(...labelsData.htmlLabels);
+                    item.svgLabels.push(...labelsData.svgLabels);
+                    item.htmlLabels.push(...labelsData.htmlLabels);
                 }
             }
 
