@@ -84,7 +84,7 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
             case 'x-range': {
                 (seriesList as unknown as XRangeSeries[]).forEach((s) => {
                     s.data.forEach((d) => {
-                        if (d.x0 !== null && d.x1 !== null) {
+                        if (!isNil(d.x0) && !isNil(d.x1)) {
                             acc.push(d.x0, d.x1);
                         }
                     });

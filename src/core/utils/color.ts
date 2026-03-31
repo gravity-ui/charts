@@ -28,6 +28,8 @@ export function getDomainForContinuousColorScale(args: {
                 break;
             }
             case 'x-range': {
+                // Use bar duration (x1 - x0) as the color domain value so that
+                // longer bars can be visually distinguished by color intensity.
                 acc.push(...s.data.map((d) => Math.abs(Number(d.x1) - Number(d.x0))));
                 break;
             }

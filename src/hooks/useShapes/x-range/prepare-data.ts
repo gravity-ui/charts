@@ -70,7 +70,7 @@ export async function prepareXRangeData(
                 const bandScale = yScale as ScaleBand<string>;
                 const yCategory = getDataCategoryValue({axisDirection: 'y', categories, data: d});
 
-                if (bandScale.domain().indexOf(yCategory) === -1) {
+                if (!bandScale.domain().includes(yCategory)) {
                     return;
                 }
 

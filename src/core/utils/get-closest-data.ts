@@ -426,9 +426,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     break;
                 }
 
-                const closestByX = sort(pointsInXRange, (d) =>
-                    Math.abs(d.x + d.width / 2 - pointerX),
-                )[0];
+                const closestByX =
+                    pointsInXRange.length === 1
+                        ? pointsInXRange[0]
+                        : sort(pointsInXRange, (d) => Math.abs(d.x + d.width / 2 - pointerX))[0];
 
                 result.push(
                     ...pointsInXRange.map((d) => ({

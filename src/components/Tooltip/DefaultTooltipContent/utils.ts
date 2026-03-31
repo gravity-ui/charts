@@ -134,7 +134,8 @@ export function getHoveredValues(args: {
             case 'line':
             case 'bar-x':
             case 'waterfall':
-            case 'scatter': {
+            case 'scatter':
+            case 'x-range': {
                 return getYRowData(data, yAxis);
             }
             case 'bar-y': {
@@ -151,9 +152,6 @@ export function getHoveredValues(args: {
             case 'sankey': {
                 const {target, data: source} = seriesItem as TooltipDataChunkSankey;
                 return source.links.find((d) => d.name === target?.name)?.value;
-            }
-            case 'x-range': {
-                return getYRowData(data, yAxis);
             }
             default: {
                 return undefined;
