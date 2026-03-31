@@ -1,13 +1,24 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import cloneDeep from 'lodash/cloneDeep';
+import merge from 'lodash/merge';
 
 import {xRangeBasicData, xRangeContinuousLegendData} from 'src/__stories__/__data__';
-import type {ChartData, XRangeSeriesData} from 'src/types';
+import type {ChartData, DeepPartial, XRangeSeriesData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
-import {getLocatorBoundingBox} from './utils';
+import {dragElementByCalculatedPosition, getLocatorBoundingBox} from './utils';
+
+function getRangeSliderData(extraData?: DeepPartial<ChartData>): ChartData {
+    const data = cloneDeep(xRangeBasicData);
+    const defaults: DeepPartial<ChartData> = {
+        xAxis: {rangeSlider: {enabled: true}},
+    };
+    merge(data, defaults, extraData);
+    return data;
+}
 
 test.describe('X-Range series', () => {
     test('Basic', async ({mount}) => {
@@ -27,6 +38,54 @@ test.describe('X-Range series', () => {
     test('Continuous legend', async ({mount}) => {
         const component = await mount(<ChartTestStory data={xRangeContinuousLegendData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Range slider', () => {
+        test('Basic', async ({mount}) => {
+            const data = getRangeSliderData();
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Default range size', async ({mount}) => {
+            const data = getRangeSliderData({xAxis: {rangeSlider: {defaultRange: {size: 'P1M'}}}});
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Drag left handle', async ({mount, page}) => {
+            const data = getRangeSliderData();
+            const component = await mount(<ChartTestStory data={data} />);
+            await dragElementByCalculatedPosition({
+                component,
+                page,
+                selector: '.gcharts-brush .handle--w',
+                getDragOptions: ({boundingBox}) => {
+                    const startX = boundingBox.x + boundingBox.width / 2;
+                    const endX = startX + 80;
+                    const y = boundingBox.y + boundingBox.height / 2;
+                    return {from: [startX, y], to: [endX, y]};
+                },
+            });
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Drag right handle', async ({mount, page}) => {
+            const data = getRangeSliderData();
+            const component = await mount(<ChartTestStory data={data} />);
+            await dragElementByCalculatedPosition({
+                component,
+                page,
+                selector: '.gcharts-brush .handle--e',
+                getDragOptions: ({boundingBox}) => {
+                    const startX = boundingBox.x + boundingBox.width / 2;
+                    const endX = startX - 80;
+                    const y = boundingBox.y + boundingBox.height / 2;
+                    return {from: [startX, y], to: [endX, y]};
+                },
+            });
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test('Html data labels', async ({mount}) => {

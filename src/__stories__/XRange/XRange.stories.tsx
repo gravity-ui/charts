@@ -1,4 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react';
+import cloneDeep from 'lodash/cloneDeep';
+import merge from 'lodash/merge';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
@@ -40,5 +42,17 @@ export const XRangeContinuousLegend = {
     name: 'Continuous legend',
     args: {
         data: xRangeContinuousLegendData,
+    },
+} satisfies Story;
+
+const xRangeRangeSliderData = cloneDeep(xRangeBasicData);
+merge(xRangeRangeSliderData, {
+    xAxis: {rangeSlider: {enabled: true, defaultRange: {size: 'P1M'}}},
+});
+
+export const XRangeRangeSlider = {
+    name: 'Range slider',
+    args: {
+        data: xRangeRangeSliderData,
     },
 } satisfies Story;

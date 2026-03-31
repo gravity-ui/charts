@@ -22,6 +22,8 @@ type PrepareXRangeDataArgs = {
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
+    boundsWidth?: number;
+    isRangeSlider?: boolean;
 };
 
 export async function prepareXRangeData(
@@ -33,6 +35,8 @@ export async function prepareXRangeData(
         xScale,
         yAxis,
         yScale: [yScale],
+        boundsWidth,
+        isRangeSlider,
     } = args;
 
     if (!yScale) {
@@ -137,11 +141,19 @@ export async function prepareXRangeData(
         const item = result[i];
         const {dataLabels} = item.series;
 
-        if (!dataLabels.enabled || item.data.label === null) {
+        if (!dataLabels.enabled || item.data.label === null || isRangeSlider) {
             continue;
         }
 
         const content = getFormattedValue({value: item.data.label, ...dataLabels});
+
+        const visibleStart = Math.max(0, item.x);
+        const visibleEnd =
+            boundsWidth === undefined
+                ? item.x + item.width
+                : Math.min(boundsWidth, item.x + item.width);
+        const visibleWidth = visibleEnd - visibleStart;
+        const visibleCenterX = visibleStart + visibleWidth / 2;
 
         if (dataLabels.html) {
             const {maxHeight: height, maxWidth: width} = await getLabelsSize({
@@ -153,7 +165,7 @@ export async function prepareXRangeData(
                 content,
                 size: {width, height},
                 style: dataLabels.style,
-                x: item.x + item.width / 2 - width / 2,
+                x: visibleCenterX - width / 2,
                 y: item.y + item.height / 2 - height / 2,
             };
             item.htmlLabels.push(htmlItem);
@@ -163,7 +175,7 @@ export async function prepareXRangeData(
             }
             const getTextSize =
                 textSizeFnCache.get(dataLabels.style) ?? getTextSizeFn({style: dataLabels.style});
-            const availableWidth = Math.max(0, item.width - 2 * dataLabels.padding);
+            const availableWidth = Math.max(0, visibleWidth - 2 * dataLabels.padding);
             const text = await getTextWithElipsis({
                 text: content,
                 getTextWidth: (s) => getTextSize(s).then((r) => r.width),
@@ -178,7 +190,7 @@ export async function prepareXRangeData(
                 size: {width, height, hangingOffset},
                 style: dataLabels.style,
                 textAnchor: 'middle',
-                x: item.x + item.width / 2,
+                x: visibleCenterX,
                 y: item.y + item.height / 2,
                 series: item.series,
             };

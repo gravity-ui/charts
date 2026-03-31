@@ -113,13 +113,29 @@ export function getZoomedSeriesData(args: {
 
             if (zoomState.x) {
                 const [xMin, xMax] = zoomState.x;
-                const x = 'x' in point ? (point.x ?? undefined) : undefined;
-                inXRange = isValueInRange({
-                    axis: xAxis,
-                    value: x,
-                    min: xMin,
-                    max: xMax,
-                });
+                if ('x0' in point && 'x1' in point) {
+                    const isStartInRange = isValueInRange({
+                        axis: xAxis,
+                        value: point.x0,
+                        min: xMin,
+                        max: xMax,
+                    });
+                    const isEndInRange = isValueInRange({
+                        axis: xAxis,
+                        value: point.x1,
+                        min: xMin,
+                        max: xMax,
+                    });
+                    inXRange = isStartInRange || isEndInRange;
+                } else {
+                    const x = 'x' in point ? (point.x ?? undefined) : undefined;
+                    inXRange = isValueInRange({
+                        axis: xAxis,
+                        value: x,
+                        min: xMin,
+                        max: xMax,
+                    });
+                }
             }
 
             if (zoomState.y) {

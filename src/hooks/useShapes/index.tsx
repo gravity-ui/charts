@@ -438,6 +438,8 @@ export async function getShapes(args: Args) {
                         xScale,
                         yAxis,
                         yScale,
+                        boundsWidth,
+                        isRangeSlider,
                     });
                     shapes[index] = (
                         <XRangeSeriesShapes
