@@ -413,6 +413,44 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Hover marker appears on closest series', async ({mount, page}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Bottom',
+                        data: [
+                            {x: 0, y: 20},
+                            {x: 10, y: 20},
+                        ],
+                    },
+                    {
+                        type: 'line',
+                        name: 'Top',
+                        data: [
+                            {x: 0, y: 80},
+                            {x: 10, y: 80},
+                        ],
+                    },
+                ],
+            },
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+        };
+
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const svg = component.locator('svg').first();
+        const box = await svg.boundingBox();
+
+        if (box) {
+            // Hover at center x, ~70% down — between the two lines but closer to Bottom (y=20)
+            await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.7);
+        }
+
+        await expect(svg).toHaveScreenshot();
+    });
+
     test('Equals values with defined min/max', async ({mount}) => {
         const chartData: ChartData = {
             series: {
