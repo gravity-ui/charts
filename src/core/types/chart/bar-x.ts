@@ -1,6 +1,7 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
+import type {ChartAnnotationLabel, ChartAnnotationPopup} from './annotation';
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {RectLegendSymbolOptions} from './legend';
 import type {ChartSeriesOptions, ChartSeriesRangeSliderOptions} from './series';
@@ -29,6 +30,14 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     label?: string | number;
     /** Individual opacity for the bar-x column. */
     opacity?: number;
+    /**
+     * Annotation displayed near this data point as a bubble with text label.
+     * Useful for highlighting specific values, events, or adding contextual notes.
+     */
+    annotation?: {
+        label: ChartAnnotationLabel;
+        popup?: ChartAnnotationPopup;
+    };
 }
 
 export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {

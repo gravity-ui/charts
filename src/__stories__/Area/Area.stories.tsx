@@ -3,6 +3,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
+    areaAnnotationsData,
     areaBasicData,
     areaHtmlLabelsData,
     areaPlaygroundData,
@@ -55,6 +56,13 @@ export const AreaSplit = {
     args: {
         data: areaSplitData,
         style: {height: 560},
+    },
+} satisfies Story;
+
+export const AreaAnnotations = {
+    name: 'Annotations',
+    args: {
+        data: areaAnnotationsData,
     },
 } satisfies Story;
 

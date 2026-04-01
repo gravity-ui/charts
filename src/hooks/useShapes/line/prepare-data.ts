@@ -1,14 +1,15 @@
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
+import {prepareAnnotation} from '~core/series/prepare-annotation';
 import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData, ShapeDataWithLabels} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {PreparedLineSeries} from '../../useSeries/types';
+import type {PreparedLineSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
-import type {MarkerData, MarkerPointData, PreparedLineData} from './types';
+import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';
 
 async function getHtmlLabel(
     point: MarkerPointData,
@@ -30,6 +31,7 @@ async function getHtmlLabel(
 
 export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
+    seriesOptions?: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -41,6 +43,7 @@ export const prepareLineData = async (args: {
 }): Promise<PreparedLineData[]> => {
     const {
         series,
+        seriesOptions,
         xAxis,
         yAxis,
         xScale,
@@ -64,21 +67,32 @@ export const prepareLineData = async (args: {
         if (!seriesYScale) {
             continue;
         }
-        const points = s.data.map((d) => {
+        const annotationOpts = seriesOptions?.line?.annotation;
+        const points: PointData[] = [];
+        for (let j = 0; j < s.data.length; j++) {
+            const d = s.data[j];
             const yValue = getYValue({
                 point: d,
                 points: s.data,
                 yAxis: seriesYAxis,
                 yScale: seriesYScale,
             });
-            return {
+            points.push({
                 x: getXValue({point: d, points: s.data, xAxis, xScale}),
                 y: yValue === null ? null : yAxisTop + yValue,
-                active: true,
+                color: d.marker?.color ?? d.color,
                 data: d,
                 series: s,
-            };
-        });
+                annotation:
+                    d.annotation && !isRangeSlider
+                        ? await prepareAnnotation({
+                              annotation: d.annotation,
+                              optionsLabel: annotationOpts?.label,
+                              optionsPopup: annotationOpts?.popup,
+                          })
+                        : undefined,
+            });
+        }
 
         let htmlElements: HtmlItem[] = [];
         let svgLabels: LabelData[] = [];

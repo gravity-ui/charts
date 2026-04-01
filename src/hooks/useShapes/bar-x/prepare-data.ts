@@ -5,6 +5,7 @@ import get from 'lodash/get';
 
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
+import {prepareAnnotation} from '~core/series/prepare-annotation';
 import {getDataCategoryValue, getLabelsSize} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
@@ -272,6 +273,14 @@ export const prepareBarXData = async (args: {
                     }
 
                     const barData: PreparedBarXData = {
+                        annotation:
+                            yValue.data.annotation && !isRangeSlider
+                                ? await prepareAnnotation({
+                                      annotation: yValue.data.annotation,
+                                      optionsLabel: seriesOptions['bar-x']?.annotation?.label,
+                                      optionsPopup: seriesOptions['bar-x']?.annotation?.popup,
+                                  })
+                                : undefined,
                         x,
                         y: barPositionY,
                         width: rectWidth,

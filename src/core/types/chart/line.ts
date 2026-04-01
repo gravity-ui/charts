@@ -1,6 +1,7 @@
 import type {DashStyle, LineCap, LineJoin, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
+import type {ChartPointAnnotation} from './annotation';
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
@@ -24,12 +25,19 @@ export interface LineSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** Data label value of the point. If not specified, the y value is used. */
     label?: string | number;
     marker?: {
+        /** Fill color of the marker for this point */
+        color?: string;
         states?: {
             normal?: {
                 enabled: boolean;
             };
         };
     };
+    /**
+     * Annotation displayed near this data point as a bubble with text label and optional marker.
+     * Useful for highlighting specific values, events, or adding contextual notes.
+     */
+    annotation?: ChartPointAnnotation;
 }
 
 export interface LineSeriesLineBaseStyle {

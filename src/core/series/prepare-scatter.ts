@@ -18,7 +18,7 @@ function prepareMarker(
     index: number,
 ) {
     const seriesHoverState = get(seriesOptions, 'scatter.states.hover');
-    const markerNormalState: Required<PointMarkerOptions> = {
+    const markerNormalState: Required<Omit<PointMarkerOptions, 'color'>> = {
         ...DEFAULT_POINT_MARKER_OPTIONS,
         enabled: true,
         symbol: (series as ScatterSeries).symbolType || getSymbolType(index),

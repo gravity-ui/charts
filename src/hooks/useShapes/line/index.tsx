@@ -13,6 +13,8 @@ import type {LabelData, TooltipDataChunkLine} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {renderAnnotations} from '../annotation';
+import type {AnnotationAnchor} from '../annotation';
 import {
     getMarkerHaloVisibility,
     getMarkerVisibility,
@@ -28,6 +30,8 @@ import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './t
 const b = block('line');
 
 type Args = {
+    boundsHeight: number;
+    boundsWidth: number;
     clipPathId: string;
     htmlLayout: HTMLElement | null;
     preparedData: PreparedLineData[];
@@ -36,11 +40,20 @@ type Args = {
 };
 
 export const LineSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
+    const {
+        boundsHeight,
+        boundsWidth,
+        dispatcher,
+        preparedData,
+        seriesOptions,
+        htmlLayout,
+        clipPathId,
+    } = args;
     const hoveredDataRef = React.useRef<TooltipDataChunkLine[] | null | undefined>(null);
     const plotRef = React.useRef<SVGGElement>(null);
     const markersRef = React.useRef<SVGGElement>(null);
     const hoverMarkersRef = React.useRef<SVGGElement>(null);
+    const annotationsRef = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
         if (!plotRef.current || !markersRef.current) {
@@ -97,6 +110,23 @@ export const LineSeriesShapes = (args: Args) => {
             .data(markers)
             .join('g')
             .call(renderMarker);
+
+        if (annotationsRef.current) {
+            const anchors: AnnotationAnchor[] = [];
+            for (const d of preparedData) {
+                for (const p of d.points) {
+                    if (p.annotation && p.x !== null && p.y !== null) {
+                        anchors.push({annotation: p.annotation, x: p.x, y: p.y});
+                    }
+                }
+            }
+            renderAnnotations({
+                anchors,
+                container: select(annotationsRef.current),
+                plotHeight: boundsHeight,
+                plotWidth: boundsWidth,
+            });
+        }
 
         const hoverEnabled = hoverOptions?.enabled;
         const inactiveEnabled = inactiveOptions?.enabled;
@@ -242,7 +272,7 @@ export const LineSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on(eventName, null);
         };
-    }, [dispatcher, preparedData, seriesOptions]);
+    }, [boundsHeight, boundsWidth, dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(() => {
         const items = preparedData.map((d) => d?.htmlLabels).flat();
@@ -254,6 +284,7 @@ export const LineSeriesShapes = (args: Args) => {
             <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
             <g ref={markersRef} />
             <g ref={hoverMarkersRef} />
+            <g ref={annotationsRef} />
             <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

@@ -3,6 +3,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
+    barXAnnotationsData,
     barXBasicData,
     barXContinuousLegendData,
     barXDateTimeData,
@@ -140,6 +141,13 @@ export const BarXSplit = {
     args: {
         data: barXSplitData,
         style: {height: 560},
+    },
+} satisfies Story;
+
+export const BarXAnnotations = {
+    name: 'Annotations',
+    args: {
+        data: barXAnnotationsData,
     },
 } satisfies Story;
 

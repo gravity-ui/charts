@@ -13,9 +13,12 @@ export const DEFAULT_HALO_OPTIONS: Required<Halo> = {
     size: 6,
 };
 
-export const DEFAULT_POINT_MARKER_OPTIONS: Omit<Required<PointMarkerOptions>, 'enabled'> = {
-    radius: 4,
+export const DEFAULT_POINT_MARKER_OPTIONS: Omit<
+    Required<PointMarkerOptions>,
+    'color' | 'enabled'
+> = {
     borderColor: '',
     borderWidth: 0,
+    radius: 4,
     symbol: 'circle',
 };

@@ -32,7 +32,7 @@ type PrepareAreaSeriesArgs = {
 
 function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
     const seriesHoverState = get(seriesOptions, 'area.states.hover');
-    const markerNormalState: Required<PointMarkerOptions> = Object.assign(
+    const markerNormalState: Required<Omit<PointMarkerOptions, 'color'>> = Object.assign(
         {},
         DEFAULT_MARKER,
         seriesOptions?.area?.marker,
