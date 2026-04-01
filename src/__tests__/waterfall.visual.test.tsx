@@ -11,6 +11,8 @@ import {
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData, WaterfallSeriesData} from '../types';
 
+import {getLocatorBoundingBox} from './utils';
+
 test.describe('Waterfall series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={waterfallBasicData} />);
@@ -23,7 +25,11 @@ test.describe('Waterfall series', () => {
 
         const totalColumn = component.locator('.gcharts-waterfall__segment').last();
         await expect(totalColumn).toBeVisible();
-        await totalColumn.hover();
+        const totalColumnBox = await getLocatorBoundingBox(totalColumn);
+        await page.mouse.move(
+            Math.round(totalColumnBox.x + totalColumnBox.width / 2),
+            Math.round(totalColumnBox.y + totalColumnBox.height / 2),
+        );
 
         await expect(component.locator('svg')).toHaveScreenshot();
     });

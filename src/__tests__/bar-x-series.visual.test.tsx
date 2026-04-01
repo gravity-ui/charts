@@ -20,6 +20,7 @@ import {
 import type {BarXSeries, ChartData} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
+import {getLocatorBoundingBox} from './utils';
 
 test.describe('Bar-x series', () => {
     test('Basic', async ({mount}) => {
@@ -615,13 +616,25 @@ test.describe('Bar-x series', () => {
             const bars = component.locator('.gcharts-bar-x__segment');
             const tooltip = page.locator('.gcharts-tooltip');
 
-            await bars.nth(0).hover();
+            const box0 = await getLocatorBoundingBox(bars.nth(0));
+            await page.mouse.move(
+                Math.round(box0.x + box0.width / 2),
+                Math.round(box0.y + box0.height / 2),
+            );
             await expect(tooltip).toHaveScreenshot();
 
-            await bars.nth(1).hover();
+            const box1 = await getLocatorBoundingBox(bars.nth(1));
+            await page.mouse.move(
+                Math.round(box1.x + box1.width / 2),
+                Math.round(box1.y + box1.height / 2),
+            );
             await expect(tooltip).toHaveScreenshot();
 
-            await bars.nth(2).hover();
+            const box2 = await getLocatorBoundingBox(bars.nth(2));
+            await page.mouse.move(
+                Math.round(box2.x + box2.width / 2),
+                Math.round(box2.y + box2.height / 2),
+            );
             await expect(tooltip).toHaveScreenshot();
         });
     });

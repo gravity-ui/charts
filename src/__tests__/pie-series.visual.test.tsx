@@ -18,6 +18,8 @@ import {
 } from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
 
+import {getLocatorBoundingBox} from './utils';
+
 function getModifiedData(data: ChartData, pieSeries: Partial<PieSeries>) {
     const resultData = merge({}, data);
     merge(resultData.series.data[0], pieSeries);
@@ -191,7 +193,7 @@ test.describe('Pie series', () => {
         ] as const;
 
         for (const testCase of testCases) {
-            test(testCase.testName, async ({mount}) => {
+            test(testCase.testName, async ({mount, page}) => {
                 const data: ChartData = {...pieBasicData};
                 data.series.data[0].dataLabels = {enabled: false};
                 data.legend = {enabled: false};
@@ -200,7 +202,12 @@ test.describe('Pie series', () => {
                 const component = await mount(
                     <ChartTestStory data={data} styles={testCase.styles} />,
                 );
-                await component.locator('.gcharts-pie__segment').first().hover();
+                const segment = component.locator('.gcharts-pie__segment').first();
+                const segmentBox = await getLocatorBoundingBox(segment);
+                await page.mouse.move(
+                    Math.round(segmentBox.x + segmentBox.width / 2),
+                    Math.round(segmentBox.y + segmentBox.height / 2),
+                );
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
         }

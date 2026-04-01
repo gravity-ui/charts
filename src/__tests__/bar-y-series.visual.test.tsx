@@ -19,6 +19,8 @@ import {
 } from '../__stories__/__data__';
 import type {BarYSeries, BarYSeriesData, ChartData, ChartMargin} from '../types';
 
+import {getLocatorBoundingBox} from './utils';
+
 const CHART_MARGIN: ChartMargin = {
     top: 20,
     left: 20,
@@ -892,19 +894,27 @@ test.describe('Bar-y series', () => {
     });
 
     test.describe('Tooltip', () => {
-        test('Grouped series tooltip', async ({mount}) => {
+        test('Grouped series tooltip', async ({mount, page}) => {
             const component = await mount(<ChartTestStory data={barYGroupedColumnsData} />);
 
             const bar = component.locator('.gcharts-bar-y__segment').first();
-            await bar.hover();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('Series with continuous legend', async ({mount}) => {
+        test('Series with continuous legend', async ({mount, page}) => {
             const component = await mount(<ChartTestStory data={barYContinuousLegendData} />);
 
             const bar = component.locator('.gcharts-bar-y__segment').first();
-            await bar.hover();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
@@ -912,11 +922,11 @@ test.describe('Bar-y series', () => {
             const component = await mount(<ChartTestStory data={barYBasicData} />);
 
             const bar = component.locator('.gcharts-bar-y__segment').last();
-            const position = await bar.boundingBox();
-            if (position === null) {
-                throw Error('bar position is null');
-            }
-            await page.mouse.move(position.x + 1, position.y + position.height - 1);
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + 1),
+                Math.round(barBox.y + barBox.height - 1),
+            );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });

@@ -31,7 +31,10 @@ test.describe('X-Range series', () => {
         const component = await mount(<ChartTestStory data={xRangeBasicData} />);
         const segment = component.locator('.gcharts-x-range__segment').first();
         const box = await getLocatorBoundingBox(segment);
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.move(
+            Math.round(box.x + box.width / 2),
+            Math.round(box.y + box.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
