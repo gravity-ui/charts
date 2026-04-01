@@ -24,9 +24,16 @@ test.describe('Tooltip', () => {
         await page.setViewportSize({width: 500, height: 280});
         const component = await mount(<ChartTestStory data={tooltipOverflowedRowsData} />);
         const bar = component.locator('.gcharts-bar-y').first();
-        await bar.hover();
+        const barBox = await getLocatorBoundingBox(bar);
+        await page.mouse.move(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
-        await bar.click();
+        await page.mouse.click(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 
@@ -36,9 +43,16 @@ test.describe('Tooltip', () => {
         set(data, 'tooltip.totals.enabled', true);
         const component = await mount(<ChartTestStory data={data} />);
         const bar = component.locator('.gcharts-bar-y').first();
-        await bar.hover();
+        const barBox = await getLocatorBoundingBox(bar);
+        await page.mouse.move(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
-        await bar.click();
+        await page.mouse.click(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 
@@ -46,10 +60,17 @@ test.describe('Tooltip', () => {
         await page.setViewportSize({width: 500, height: 280});
         const component = await mount(<ChartTestStory data={tooltipOverflowedRowsHtmlData} />);
         const bar = component.locator('.gcharts-bar-y').first();
-        await bar.hover();
+        const barBox = await getLocatorBoundingBox(bar);
+        await page.mouse.move(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
-        await bar.click();
+        await page.mouse.click(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         await expect(tooltip).toHaveScreenshot();
     });
 
@@ -72,7 +93,7 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-y').first();
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, 50);
+        await page.mouse.move(Math.round(position.x + position.width / 2), 50);
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 
@@ -105,7 +126,10 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        await page.mouse.move(
+            Math.round(position.x + position.width / 2),
+            Math.round(position.y + position.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip.getByText('2025', {exact: true})).toBeVisible();
     });
@@ -152,7 +176,7 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, 50);
+        await page.mouse.move(Math.round(position.x + position.width / 2), 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
@@ -186,7 +210,7 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, 50);
+        await page.mouse.move(Math.round(position.x + position.width / 2), 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
@@ -215,7 +239,7 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, 50);
+        await page.mouse.move(Math.round(position.x + position.width / 2), 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
@@ -252,7 +276,7 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = await getLocator({component, selector: '.gcharts-bar-x'});
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, 50);
+        await page.mouse.move(Math.round(position.x + position.width / 2), 50);
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
@@ -304,7 +328,10 @@ test.describe('Tooltip', () => {
         const plotLine = component.locator('[data-plot-x] path').first();
         await plotLine.waitFor({state: 'attached'});
         const lineBox = await getLocatorBoundingBox(plotLine);
-        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + lineBox.height / 2);
+        await page.mouse.move(
+            Math.round(lineBox.x + lineBox.width / 2),
+            Math.round(lineBox.y + lineBox.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
@@ -332,7 +359,10 @@ test.describe('Tooltip', () => {
         const lineBox = await getLocatorBoundingBox(line);
         const tooltip = page.locator('.gcharts-tooltip');
         // Move cursor far from the plot line — default threshold is too small to reach it
-        await page.mouse.move(lineBox.x + 5, lineBox.y + lineBox.height / 2);
+        await page.mouse.move(
+            Math.round(lineBox.x + 5),
+            Math.round(lineBox.y + lineBox.height / 2),
+        );
         await expect(tooltip).not.toBeVisible();
         // Update data with a large hoverThreshold so the line is detected from the edge
         await component.update(
@@ -346,7 +376,10 @@ test.describe('Tooltip', () => {
             />,
         );
         // Move cursor to the same position again
-        await page.mouse.move(lineBox.x + 5, lineBox.y + lineBox.height / 2);
+        await page.mouse.move(
+            Math.round(lineBox.x + 5),
+            Math.round(lineBox.y + lineBox.height / 2),
+        );
         await expect(tooltip.getByText('threshold-line')).toBeVisible();
     });
 
@@ -375,7 +408,7 @@ test.describe('Tooltip', () => {
         const lineBox = await getLocatorBoundingBox(line);
         const tooltip = page.locator('.gcharts-tooltip');
         // Move cursor near the top edge — far from the horizontal plot line at center
-        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + 5);
+        await page.mouse.move(Math.round(lineBox.x + lineBox.width / 2), Math.round(lineBox.y + 5));
         await expect(tooltip).not.toBeVisible();
         // Update data with a large hoverThreshold so the line is detected from the edge
         await component.update(
@@ -393,7 +426,7 @@ test.describe('Tooltip', () => {
             />,
         );
         // Move cursor to the same position again
-        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + 5);
+        await page.mouse.move(Math.round(lineBox.x + lineBox.width / 2), Math.round(lineBox.y + 5));
         await expect(tooltip.getByText('y-threshold-line')).toBeVisible();
     });
 
@@ -414,7 +447,11 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={data} />);
         const bars = component.locator('.gcharts-bar-x__segment');
         const tooltip = page.locator('.gcharts-tooltip');
-        await bars.nth(1).hover();
+        const barBox = await getLocatorBoundingBox(bars.nth(1));
+        await page.mouse.move(
+            Math.round(barBox.x + barBox.width / 2),
+            Math.round(barBox.y + barBox.height / 2),
+        );
         await expect(tooltip).toHaveScreenshot();
     });
 
@@ -447,7 +484,10 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const line = component.locator('.gcharts-line');
         const position = await getLocatorBoundingBox(line);
-        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        await page.mouse.move(
+            Math.round(position.x + position.width / 2),
+            Math.round(position.y + position.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
@@ -477,7 +517,10 @@ test.describe('Tooltip', () => {
         const component = await mount(<ChartTestStory data={chartData} />);
         const bar = component.locator('.gcharts-bar-x').first();
         const position = await getLocatorBoundingBox(bar);
-        await page.mouse.move(position.x + position.width / 2, position.y + position.height / 2);
+        await page.mouse.move(
+            Math.round(position.x + position.width / 2),
+            Math.round(position.y + position.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toBeVisible();
     });
@@ -495,7 +538,12 @@ test.describe('Tooltip', () => {
                 />,
             );
             const bar = component.locator('.gcharts-bar-x__segment').last();
-            await bar.hover();
+            await bar.scrollIntoViewIfNeeded();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
             const tooltip = page.locator('.gcharts-tooltip');
             await expect(tooltip).toHaveScreenshot(FLEX_SNAPSHOT_NAME);
         });
@@ -509,7 +557,12 @@ test.describe('Tooltip', () => {
                 />,
             );
             const bar = component.locator('.gcharts-bar-x__segment').last();
-            await bar.hover();
+            await bar.scrollIntoViewIfNeeded();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
             const tooltip = page.locator('.gcharts-tooltip');
             await expect(tooltip).toHaveScreenshot(FLEX_SNAPSHOT_NAME);
         });
@@ -523,8 +576,14 @@ test.describe('Tooltip', () => {
                 />,
             );
             const bar = component.locator('.gcharts-bar-x__segment').last();
-            await bar.hover();
+            await bar.scrollIntoViewIfNeeded();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
             const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
             await expect(tooltip).toHaveScreenshot(TABLE_SNAPSHOT_NAME);
         });
 
@@ -537,7 +596,12 @@ test.describe('Tooltip', () => {
                 />,
             );
             const bar = component.locator('.gcharts-bar-x__segment').last();
-            await bar.hover();
+            await bar.scrollIntoViewIfNeeded();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
             const tooltip = page.locator('.gcharts-tooltip');
             await expect(tooltip).toHaveScreenshot(TABLE_SNAPSHOT_NAME);
         });
