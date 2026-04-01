@@ -53,6 +53,7 @@ export interface TooltipDataChunkLine<T = MeaningfulAny> {
         id: string;
         name: string;
     };
+    closest?: boolean;
 }
 
 export interface TooltipDataChunkArea<T = MeaningfulAny> {

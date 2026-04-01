@@ -104,8 +104,8 @@ export const LineSeriesShapes = (args: Args) => {
         function handleShapeHover(data?: TooltipDataChunkLine[]) {
             hoveredDataRef.current = data;
             const selected = data?.filter((d) => d.series.type === 'line') || [];
-            const selectedDataItems = selected.map((d) => d.data);
             const selectedSeriesIds = selected.map((d) => d.series?.id);
+            const closestChunk = selected.find((d) => d.closest);
 
             lineSelection.datum((d, index, list) => {
                 const elementSelection = select<BaseType, PreparedLineData>(list[index]);
@@ -154,7 +154,7 @@ export const LineSeriesShapes = (args: Args) => {
             markerSelection.datum((d, index, list) => {
                 const elementSelection = select<BaseType, MarkerData>(list[index]);
 
-                const hovered = Boolean(hoverEnabled && selectedDataItems.includes(d.point.data));
+                const hovered = Boolean(hoverEnabled && d.point.data === closestChunk?.data);
                 if (d.hovered !== hovered) {
                     d.hovered = hovered;
                     elementSelection.attr('visibility', getMarkerVisibility(d));
@@ -186,7 +186,7 @@ export const LineSeriesShapes = (args: Args) => {
             if (hoverEnabled && selected.length > 0) {
                 const hoverOnlyMarkers: MarkerData[] = [];
 
-                for (const chunk of selected) {
+                for (const chunk of selected.filter((c) => c.closest)) {
                     const seriesData = preparedData.find((pd) => pd.id === chunk.series.id);
 
                     if (!seriesData) {
@@ -236,10 +236,11 @@ export const LineSeriesShapes = (args: Args) => {
             handleShapeHover(hoveredDataRef.current);
         }
 
-        dispatcher?.on('hover-shape.line', handleShapeHover);
+        const eventName = `hover-shape.line-${preparedData[0]?.id ?? 'unknown'}`;
+        dispatcher?.on(eventName, handleShapeHover);
 
         return () => {
-            dispatcher?.on('hover-shape.line', null);
+            dispatcher?.on(eventName, null);
         };
     }, [dispatcher, preparedData, seriesOptions]);
 
