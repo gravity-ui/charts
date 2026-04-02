@@ -33,6 +33,7 @@ export const HtmlLayer = (props: Props) => {
     return (
         <Portal container={htmlLayout}>
             {items.map((item, index) => {
+                const scope = item.scope ?? 'plot';
                 const style: React.CSSProperties = {
                     ...item.style,
                     color: item.style?.color ?? item.style?.fontColor,
@@ -43,7 +44,7 @@ export const HtmlLayer = (props: Props) => {
 
                 return (
                     <div
-                        className={b('html-layer-item')}
+                        className={b('html-layer-item', {plot: scope === 'plot'})}
                         key={index}
                         dangerouslySetInnerHTML={{__html: item.content}}
                         style={style}

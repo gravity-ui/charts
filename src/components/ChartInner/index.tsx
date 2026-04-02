@@ -333,7 +333,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     <rect x={0} y={-boundsHeight} width={boundsWidth} height={boundsHeight * 3} />
                 </clipPath>
             </defs>
-            {preparedTitle && <Title {...preparedTitle} />}
+            {preparedTitle && <Title {...preparedTitle} htmlLayout={htmlLayout} />}
             <g transform={`translate(0, ${boundsOffsetTop})`}>
                 {preparedSplit?.plots.map((plot, index) => {
                     return <PlotTitle key={`plot-${index}`} title={plot.title} />;
@@ -444,7 +444,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 ref={setHtmlLayout}
                 style={
                     {
-                        '--g-html-layout-transform': `translate(${boundsOffsetLeft}px, ${boundsOffsetTop}px)`,
+                        '--g-html-layout-plot-transform': `translate(${boundsOffsetLeft}px, ${boundsOffsetTop}px)`,
                     } as React.CSSProperties
                 }
             />

@@ -1,11 +1,22 @@
 import React from 'react';
 
 import type {PreparedTitle} from '../../hooks';
+import {HtmlLayer} from '../../hooks/useShapes/HtmlLayer';
 
-type Props = PreparedTitle;
+type Props = PreparedTitle & {
+    htmlLayout?: HTMLElement | null;
+};
 
 export const Title = (props: Props) => {
-    const {style, qa, contentRows} = props;
+    const {style, qa, contentRows, html, htmlElements, htmlLayout} = props;
+
+    if (html) {
+        if (!htmlLayout || !htmlElements) {
+            return null;
+        }
+
+        return <HtmlLayer htmlLayout={htmlLayout} preparedData={{htmlElements}} />;
+    }
 
     return (
         <text
@@ -18,7 +29,7 @@ export const Title = (props: Props) => {
             }}
             data-qa={qa}
         >
-            {contentRows.map((row, i) => (
+            {contentRows?.map((row, i) => (
                 <tspan
                     key={i}
                     x={row.x}

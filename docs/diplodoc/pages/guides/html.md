@@ -185,6 +185,29 @@ series: {
 }
 ```
 
+### Chart title
+
+```javascript
+title: {
+  text: '<a href="https://example.com" style="color: blue;">My chart</a>',
+  html: true,
+}
+```
+
+When `title.html` is set, the title is rendered as an HTML element on top of the SVG instead of an SVG `<text>` node. This allows using any HTML tags — links, styled badges, images — that cannot be embedded in SVG.
+
+Use `maxHeight` to cap the title area. The value can be a number (pixels), a `"px"` string, or a percentage of the full chart height:
+
+```javascript
+title: {
+  text: '<b>My chart</b><br/><span style="font-size:12px">Subtitle line</span>',
+  html: true,
+  maxHeight: '20%', // or 80 / "80px"
+}
+```
+
+Content that exceeds `maxHeight` is clipped.
+
 ### Tooltip
 
 Tooltip rows support HTML in series names out of the box — no `html` flag required. The tooltip renders series names and formatted values via `dangerouslySetInnerHTML`, so HTML in `series.data[].name` or in `valueFormat` prefix/suffix will be interpreted.
@@ -211,5 +234,6 @@ series: {
 | Clipping to plot area                | ✓             | Partial                     |
 | Category axis                        | ✓             | ✓                           |
 | Datetime / numeric axis              | ✓             | —                           |
+| Chart title                          | ✓             | ✓                           |
 
 Use SVG rendering when your labels contain plain values and you need rotation, export, or strict clipping. Use the HTML overlay when you need rich formatting — styled badges, custom colors, icons, or multi-line layouts.

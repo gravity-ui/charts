@@ -51,6 +51,20 @@ test.describe('Chart title', () => {
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 
+    test('HTML title with a link', async ({mount}) => {
+        const chartData: ChartData = {
+            title: {
+                text: '<a href="https://example.com" style="color: var(--g-color-text-info); text-decoration: underline;">Chart with a link</a> <span style="background: var(--g-color-base-info-light); border-radius: 4px; padding: 0 4px;">new</span>',
+                html: true,
+            },
+            series: {
+                data: [{type: 'line', name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
     test('Title stays within chart bounds considering top/left/right margins', async ({mount}) => {
         const chartData: ChartData = {
             chart: {
@@ -58,6 +72,25 @@ test.describe('Chart title', () => {
             },
             title: {
                 text: LONG_TEXT,
+            },
+            series: {
+                data: [{type: 'scatter', name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+    });
+
+    test('Html title stays within chart bounds considering top/left/right margins', async ({
+        mount,
+    }) => {
+        const chartData: ChartData = {
+            chart: {
+                margin: {top: 10, left: 50, right: 30},
+            },
+            title: {
+                text: LONG_TEXT,
+                html: true,
             },
             series: {
                 data: [{type: 'scatter', name: 'Series 1', data: [{x: 1, y: 1}]}],

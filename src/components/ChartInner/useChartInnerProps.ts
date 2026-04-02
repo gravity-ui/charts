@@ -172,6 +172,7 @@ export function useChartInnerProps(props: Props) {
             const preparedTitle = await getPreparedTitle({
                 title: data.title,
                 chartWidth: width,
+                chartHeight: height,
                 chartMargin: data.chart?.margin,
             });
             const preparedChart = getPreparedChart({
@@ -339,8 +340,6 @@ export function useChartInnerProps(props: Props) {
                 getYAxisWidth,
                 legendConfig,
             });
-
-            //end
 
             const newStateValue = {
                 allPreparedSeries,

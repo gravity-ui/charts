@@ -1,5 +1,6 @@
 import type {TextRowData} from '../components/types';
 import type {
+    BaseTextStyle,
     ChartBrush,
     ChartData,
     ChartMargin,
@@ -7,6 +8,7 @@ import type {
     ChartZoom,
     DeepRequired,
 } from '../types';
+import type {HtmlItem} from '../types/chart-ui';
 
 export type PreparedZoom = DeepRequired<Omit<ChartZoom, 'enabled' | 'brush'>> &
     DeepRequired<{brush: ChartBrush}>;
@@ -16,10 +18,12 @@ export type PreparedChart = {
     zoom: PreparedZoom | null;
 };
 
-export type PreparedTitle = Omit<ChartTitle, 'margin'> & {
+export type PreparedTitle = Omit<ChartTitle, 'margin' | 'style'> & {
     height: number;
     margin: number;
-    contentRows: TextRowData[];
+    style: BaseTextStyle;
+    contentRows?: TextRowData[];
+    htmlElements?: HtmlItem[];
 };
 
 export type PreparedTooltip = ChartData['tooltip'] & {
