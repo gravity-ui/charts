@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.45.0](https://github.com/gravity-ui/charts/compare/v1.44.0...v1.45.0) (2026-04-02)
+
+
+### Features
+
+* add point annotations for line, area, and bar-x series ([#536](https://github.com/gravity-ui/charts/issues/536)) ([11306ce](https://github.com/gravity-ui/charts/commit/11306ce2232e5030b48748c5586ec9fdaf8da0ef))
+
+
+### Bug Fixes
+
+* **line:** show hover marker on geometrically closest series ([#534](https://github.com/gravity-ui/charts/issues/534)) ([7b592f0](https://github.com/gravity-ui/charts/commit/7b592f0aa2db579b7474f958151bbd61ab23f004))
+
 ## [1.44.0](https://github.com/gravity-ui/charts/compare/v1.43.1...v1.44.0) (2026-03-31)
 
 
