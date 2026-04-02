@@ -100,6 +100,15 @@ export default [
         },
     },
 
+    // docs/examples — built from root node_modules, all deps live in root package.json
+    // @gravity-ui/charts is the package itself, resolved via vite alias — not in any package.json
+    {
+        files: ['docs/examples/**/*.[jt]s?(x)'],
+        rules: {
+            'import/no-extraneous-dependencies': 'off',
+        },
+    },
+
     // Unit test files
     {
         files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],

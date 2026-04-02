@@ -15,6 +15,8 @@ xAxis: {
 
 A linear axis distributes values evenly across the axis with constant intervals between tick marks. The distance between 0 and 10 is the same as between 90 and 100.
 
+<div data-chart-example="axis-types/linear"></div>
+
 ### Best Use Cases
 
 - General numeric data with uniform distribution
@@ -25,6 +27,8 @@ A linear axis distributes values evenly across the axis with constant intervals 
 ## Logarithmic Axis
 
 A logarithmic axis uses a logarithmic scale where each interval represents a multiplication factor (typically powers of 10). The distance between 1 and 10 equals the distance between 10 and 100.
+
+<div data-chart-example="axis-types/logarithmic"></div>
 
 ### Best Use Cases
 
@@ -41,6 +45,8 @@ A logarithmic axis uses a logarithmic scale where each interval represents a mul
 ## DateTime Axis
 
 A datetime axis is specifically designed for temporal data, handling dates and times with appropriate formatting, intervals, and timezone awareness.
+
+<div data-chart-example="axis-types/datetime"></div>
 
 ### Best Use Cases
 
@@ -60,6 +66,8 @@ A datetime axis is specifically designed for temporal data, handling dates and t
 ## Category Axis
 
 A category axis displays discrete, non-numeric labels. Each category occupies equal space regardless of any inherent ordering or value.
+
+<div data-chart-example="axis-types/category"></div>
 
 ### Best Use Cases
 

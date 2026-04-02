@@ -1,0 +1,73 @@
+name: PR Docs Preview
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      # Generate token early so it is available for both success and failure
+      # comment steps at the end of the job.
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GRAVITY_UI_APP_ID }}
+          private-key: ${{ secrets.GRAVITY_UI_APP_PRIVATE_KEY }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install docs dependencies
+        run: npm run docs:deps
+
+      - name: Build docs
+        run: npm run docs:build
+
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2.22.35
+          arch: amd64
+
+      - name: Upload to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STORYBOOK_S3_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
+          AWS_EC2_METADATA_DISABLED: true
+        run: |
+          aws s3 cp dist-docs s3://playwright-reports/charts/pulls/${{ github.event.pull_request.number }}/docs/ \
+            --endpoint-url=https://storage.yandexcloud.net \
+            --recursive
+        shell: bash
+
+      - name: Comment on PR (success)
+        if: success()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          header: docs-preview
+          message: |
+            📖 [Docs Preview](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ github.event.pull_request.number }}/docs/index.html) is ready.
+
+      - name: Comment on PR (failure)
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          header: docs-preview
+          message: |
+            ❌ Docs preview build failed. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
