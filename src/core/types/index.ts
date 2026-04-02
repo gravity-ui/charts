@@ -8,6 +8,7 @@ import type {ChartTooltip} from './chart/tooltip';
 import type {MeaningfulAny} from './misc';
 
 export * from './misc';
+export * from './chart/annotation';
 export * from './chart/axis';
 export * from './chart/base';
 export * from './chart/chart';

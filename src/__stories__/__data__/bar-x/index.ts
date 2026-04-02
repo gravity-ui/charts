@@ -1,3 +1,4 @@
+export * from './annotations';
 export * from './basic';
 export * from './continuous-legend';
 export * from './data-labels';

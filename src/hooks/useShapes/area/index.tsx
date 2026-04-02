@@ -13,6 +13,7 @@ import type {LabelData, TooltipDataChunkArea} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {renderAnnotations} from '../annotation';
 import {
     getMarkerHaloVisibility,
     getMarkerVisibility,
@@ -28,6 +29,8 @@ import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './t
 const b = block('area');
 
 type Args = {
+    boundsHeight: number;
+    boundsWidth: number;
     clipPathId: string;
     htmlLayout: HTMLElement | null;
     preparedData: PreparedAreaData[];
@@ -36,11 +39,20 @@ type Args = {
 };
 
 export const AreaSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
+    const {
+        boundsHeight,
+        boundsWidth,
+        dispatcher,
+        preparedData,
+        seriesOptions,
+        htmlLayout,
+        clipPathId,
+    } = args;
     const hoveredDataRef = React.useRef<TooltipDataChunkArea[] | null | undefined>(null);
     const plotRef = React.useRef<SVGGElement | null>(null);
     const markersRef = React.useRef<SVGGElement>(null);
     const hoverMarkersRef = React.useRef<SVGGElement>(null);
+    const annotationsRef = React.useRef<SVGGElement>(null);
 
     const allowOverlapDataLabels = React.useMemo(() => {
         return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
@@ -121,6 +133,16 @@ export const AreaSeriesShapes = (args: Args) => {
             .data(markers)
             .join('g')
             .call(renderMarker);
+
+        if (annotationsRef.current) {
+            const anchors = preparedData.flatMap((d) => d.annotations);
+            renderAnnotations({
+                anchors,
+                container: select(annotationsRef.current),
+                plotHeight: boundsHeight,
+                plotWidth: boundsWidth,
+            });
+        }
 
         const hoverEnabled = hoverOptions?.enabled;
         const inactiveEnabled = inactiveOptions?.enabled;
@@ -264,7 +286,14 @@ export const AreaSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on('hover-shape.area', null);
         };
-    }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
+    }, [
+        allowOverlapDataLabels,
+        boundsHeight,
+        boundsWidth,
+        dispatcher,
+        preparedData,
+        seriesOptions,
+    ]);
 
     const htmlLayerData = React.useMemo(() => {
         const items = preparedData.map((d) => d?.htmlLabels).flat();
@@ -280,6 +309,7 @@ export const AreaSeriesShapes = (args: Args) => {
             <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
             <g ref={markersRef} />
             <g ref={hoverMarkersRef} />
+            <g ref={annotationsRef} />
             <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

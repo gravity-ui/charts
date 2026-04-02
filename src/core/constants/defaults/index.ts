@@ -1,3 +1,4 @@
+export * from './annotation';
 export * from './axis';
 export * from './brush';
 export * from './data-labels';

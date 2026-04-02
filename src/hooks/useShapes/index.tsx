@@ -166,6 +166,8 @@ export async function getShapes(args: Args) {
                     shapes[index] = (
                         <BarXSeriesShapes
                             key={SERIES_TYPE.BarX}
+                            boundsHeight={boundsHeight}
+                            boundsWidth={boundsWidth}
                             dispatcher={dispatcher}
                             seriesOptions={seriesOptions}
                             preparedData={preparedData}
@@ -232,6 +234,7 @@ export async function getShapes(args: Args) {
                 if (xAxis && xScale && yScale?.length) {
                     const preparedData = await prepareLineData({
                         series: chartSeries as PreparedLineSeries[],
+                        seriesOptions,
                         xAxis,
                         xScale,
                         yAxis,
@@ -249,6 +252,8 @@ export async function getShapes(args: Args) {
                     shapes[index] = (
                         <LineSeriesShapes
                             key={groupId}
+                            boundsHeight={boundsHeight}
+                            boundsWidth={boundsWidth}
                             dispatcher={dispatcher}
                             seriesOptions={seriesOptions}
                             preparedData={preparedData}
@@ -265,6 +270,7 @@ export async function getShapes(args: Args) {
                 if (xAxis && xScale && yScale?.length) {
                     const preparedData = await prepareAreaData({
                         series: chartSeries as PreparedAreaSeries[],
+                        seriesOptions,
                         xAxis,
                         xScale,
                         yAxis,
@@ -276,6 +282,8 @@ export async function getShapes(args: Args) {
                     shapes[index] = (
                         <AreaSeriesShapes
                             key={SERIES_TYPE.Area}
+                            boundsHeight={boundsHeight}
+                            boundsWidth={boundsWidth}
                             dispatcher={dispatcher}
                             seriesOptions={seriesOptions}
                             preparedData={preparedData}

@@ -5,12 +5,14 @@ import round from 'lodash/round';
 
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
+import {prepareAnnotation} from '~core/series/prepare-annotation';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {PreparedAreaSeries} from '../../useSeries/types';
+import type {PreparedAreaSeries, PreparedSeriesOptions} from '../../useSeries/types';
+import type {AnnotationAnchor} from '../annotation';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
@@ -117,6 +119,7 @@ async function prepareDataLabels({
 
 export const prepareAreaData = async (args: {
     series: PreparedAreaSeries[];
+    seriesOptions?: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -125,7 +128,17 @@ export const prepareAreaData = async (args: {
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
 }): Promise<PreparedAreaData[]> => {
-    const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const {
+        series,
+        seriesOptions,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        split,
+        isOutsideBounds,
+        isRangeSlider,
+    } = args;
     const [_xMin, xRangeMax] = xScale.range();
     const xMax = xRangeMax;
 
@@ -239,7 +252,11 @@ export const prepareAreaData = async (args: {
                     );
                     return m.set(key, d);
                 }, new Map());
-                const points = xValues.reduce<PointData[]>((pointsAcc, [x, xValue], index) => {
+                const annotationOpts = seriesOptions?.area?.annotation;
+                const points: PointData[] = [];
+
+                for (let xIdx = 0; xIdx < xValues.length; xIdx++) {
+                    const [x, xValue] = xValues[xIdx];
                     const rawData = seriesData.get(x);
                     const d =
                         rawData ??
@@ -248,9 +265,17 @@ export const prepareAreaData = async (args: {
                             y: 0,
                         } as AreaSeriesData);
                     let yDataValue = d.y ?? null;
+                    const pointAnnotation =
+                        d.annotation && !isRangeSlider
+                            ? await prepareAnnotation({
+                                  annotation: d.annotation,
+                                  optionsLabel: annotationOpts?.label,
+                                  optionsPopup: annotationOpts?.popup,
+                              })
+                            : undefined;
 
                     if (s.nullMode === 'connect' && (yDataValue === null || !rawData)) {
-                        return pointsAcc;
+                        continue;
                     }
 
                     if (yDataValue && isPercentStacking) {
@@ -267,8 +292,8 @@ export const prepareAreaData = async (args: {
 
                     if (typeof yDataValue === 'number' && yValue !== null) {
                         yValue = round(yValue, 2);
-                        const prevPoint = seriesData.get(xValues[index - 1]?.[0]);
-                        const nextPoint = seriesData.get(xValues[index + 1]?.[0]);
+                        const prevPoint = seriesData.get(xValues[xIdx - 1]?.[0]);
+                        const nextPoint = seriesData.get(xValues[xIdx + 1]?.[0]);
                         const currentPointStackHeight = Math.abs(yMin - yValue);
 
                         if (yDataValue >= 0) {
@@ -280,11 +305,13 @@ export const prepareAreaData = async (args: {
                                 y0: yAxisTop + yMin - prevSectionStackHeight,
                                 x: xValue,
                                 y: yAxisTop + yValue - prevSectionStackHeight,
+                                color: d.marker?.color ?? d.color,
                                 data: d,
                                 series: s,
+                                annotation: pointAnnotation,
                             };
 
-                            pointsAcc.push(point);
+                            points.push(point);
 
                             if (prevSectionStackHeight !== nextSectionStackHeight) {
                                 const point2 = {
@@ -294,7 +321,7 @@ export const prepareAreaData = async (args: {
                                     data: d,
                                     series: s,
                                 };
-                                pointsAcc.push(point2);
+                                points.push(point2);
 
                                 if (isPercentStacking) {
                                     const newYValue =
@@ -325,7 +352,7 @@ export const prepareAreaData = async (args: {
                             let prevSectionStackHeight = negativeStackHeights?.prev ?? 0;
                             let nextSectionStackHeight = negativeStackHeights?.next ?? 0;
 
-                            pointsAcc.push({
+                            points.push({
                                 y0: yAxisTop + yMin + prevSectionStackHeight,
                                 x: xValue,
                                 y: yAxisTop + yValue + prevSectionStackHeight,
@@ -334,7 +361,7 @@ export const prepareAreaData = async (args: {
                             });
 
                             if (prevSectionStackHeight !== nextSectionStackHeight) {
-                                pointsAcc.push({
+                                points.push({
                                     y0: yAxisTop + yMin + nextSectionStackHeight,
                                     x: xValue,
                                     y: yAxisTop + yValue + nextSectionStackHeight,
@@ -359,7 +386,7 @@ export const prepareAreaData = async (args: {
                             });
                         }
                     } else {
-                        pointsAcc.push({
+                        points.push({
                             y0: yAxisTop + yMin,
                             x: xValue,
                             y: null,
@@ -367,9 +394,7 @@ export const prepareAreaData = async (args: {
                             series: s,
                         });
                     }
-
-                    return pointsAcc;
-                }, []);
+                }
 
                 let markers: MarkerData[] = [];
                 const hasPerPointNormalMarkers = s.data.some(
@@ -396,7 +421,15 @@ export const prepareAreaData = async (args: {
                     }, []);
                 }
 
+                const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
+                    if (p.annotation && p.y !== null) {
+                        result.push({annotation: p.annotation, x: p.x, y: p.y});
+                    }
+                    return result;
+                }, []);
+
                 seriesStackData.push({
+                    annotations,
                     points,
                     markers,
                     svgLabels: [],

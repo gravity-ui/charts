@@ -587,4 +587,141 @@ test.describe('Line series', () => {
 
         expect(median(widgetRenderTimes)).toBeLessThan(500);
     });
+
+    test('Colored marker', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series',
+                        type: 'line',
+                        data: [
+                            {x: 0, y: 10},
+                            {
+                                x: 1,
+                                y: 20,
+                                marker: {
+                                    color: '#e74c3c',
+                                    states: {normal: {enabled: true}},
+                                },
+                            },
+                            {x: 2, y: 30},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Annotations', () => {
+        test('Basic placement', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 'Series',
+                            type: 'line',
+                            data: [
+                                {
+                                    x: 0,
+                                    y: 20,
+                                    annotation: {label: {text: 'Right'}},
+                                },
+                                {x: 1, y: 25},
+                                {
+                                    x: 2,
+                                    y: 15,
+                                    annotation: {label: {text: 'Top'}},
+                                },
+                                {x: 3, y: 28},
+                                {
+                                    x: 4,
+                                    y: 38,
+                                    annotation: {label: {text: 'Bottom'}},
+                                },
+                                {x: 5, y: 25},
+                                {
+                                    x: 6,
+                                    y: 20,
+                                    annotation: {label: {text: 'Left'}},
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Custom styles', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 'Series',
+                            type: 'line',
+                            data: [
+                                {x: 0, y: 10},
+                                {
+                                    x: 1,
+                                    y: 25,
+                                    annotation: {
+                                        label: {
+                                            text: 'Styled',
+                                            style: {
+                                                fontSize: '16px',
+                                                fontWeight: 'bold',
+                                                fontColor: '#ffffff',
+                                            },
+                                        },
+                                        popup: {
+                                            backgroundColor: '#e74c3c',
+                                            borderRadius: 12,
+                                            offset: 10,
+                                            padding: [8, 16],
+                                        },
+                                    },
+                                },
+                                {x: 2, y: 15},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Annotation is not duplicated in range slider', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 'Series',
+                            type: 'line',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 1, y: 20},
+                                {
+                                    x: 2,
+                                    y: 30,
+                                    annotation: {label: {text: 'Annotated'}},
+                                },
+                                {x: 3, y: 25},
+                                {x: 4, y: 15},
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {
+                    rangeSlider: {enabled: true, defaultRange: {size: 3}},
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.getByText('Annotated')).toHaveCount(1);
+        });
+    });
 });

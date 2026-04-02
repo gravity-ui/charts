@@ -10,6 +10,8 @@ import {filterOverlappingLabels} from '~core/utils';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
+import {renderAnnotations} from '../annotation';
+import type {AnnotationAnchor} from '../annotation';
 import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
@@ -20,6 +22,8 @@ export * from './types';
 const b = block('bar-x');
 
 type Args = {
+    boundsHeight: number;
+    boundsWidth: number;
     clipPathId: string;
     htmlLayout: HTMLElement | null;
     preparedData: PreparedBarXData[];
@@ -28,9 +32,18 @@ type Args = {
 };
 
 export const BarXSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions, htmlLayout, clipPathId} = args;
+    const {
+        boundsHeight,
+        boundsWidth,
+        dispatcher,
+        preparedData,
+        seriesOptions,
+        htmlLayout,
+        clipPathId,
+    } = args;
     const hoveredDataRef = React.useRef<PreparedBarXData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
+    const annotationsRef = React.useRef<SVGGElement>(null);
 
     const allowOverlapDataLabels = React.useMemo(() => {
         return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
@@ -91,6 +104,25 @@ export const BarXSeriesShapes = (args: Args) => {
             .style('font-weight', (d) => d.style.fontWeight || null)
             .style('fill', (d) => d.style.fontColor || null);
 
+        if (annotationsRef.current) {
+            const anchors: AnnotationAnchor[] = [];
+            for (const d of preparedData) {
+                if (d.annotation) {
+                    anchors.push({
+                        annotation: d.annotation,
+                        x: d.x + d.width / 2,
+                        y: d.y,
+                    });
+                }
+            }
+            renderAnnotations({
+                anchors,
+                container: select(annotationsRef.current),
+                plotHeight: boundsHeight,
+                plotWidth: boundsWidth,
+            });
+        }
+
         function handleShapeHover(data?: PreparedBarXData[]) {
             hoveredDataRef.current = data;
             const hoverEnabled = hoverOptions?.enabled;
@@ -149,7 +181,14 @@ export const BarXSeriesShapes = (args: Args) => {
         return () => {
             dispatcher?.on('hover-shape.bar-x', null);
         };
-    }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
+    }, [
+        allowOverlapDataLabels,
+        boundsHeight,
+        boundsWidth,
+        dispatcher,
+        preparedData,
+        seriesOptions,
+    ]);
 
     const htmlLayerData = React.useMemo(() => {
         const items = preparedData.map((d) => d?.htmlLabels).flat();
@@ -163,6 +202,7 @@ export const BarXSeriesShapes = (args: Args) => {
     return (
         <React.Fragment>
             <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
+            <g ref={annotationsRef} />
             <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

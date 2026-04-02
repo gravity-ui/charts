@@ -3,6 +3,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
 import {
+    lineAnnotationsData,
     lineBasicData,
     lineHtmlLabelsData,
     linePlaygroundData,
@@ -47,6 +48,13 @@ export const LineSplit = {
     args: {
         data: lineSplitData,
         style: {height: 560},
+    },
+} satisfies Story;
+
+export const LineAnnotations = {
+    name: 'Annotations',
+    args: {
+        data: lineAnnotationsData,
     },
 } satisfies Story;
 

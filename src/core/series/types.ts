@@ -47,6 +47,20 @@ import type {
     SymbolType,
 } from '../constants';
 
+export type PreparedAnnotation = {
+    label: {
+        size: {height: number; width: number};
+        style: BaseTextStyle;
+        text: string;
+    };
+    popup: {
+        backgroundColor: string;
+        borderRadius: number;
+        offset: number;
+        padding: [number, number];
+    };
+};
+
 export type RectLegendSymbol = {
     shape: 'rect';
 } & Required<RectLegendSymbolOptions>;

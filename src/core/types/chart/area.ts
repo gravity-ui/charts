@@ -1,6 +1,7 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
+import type {ChartPointAnnotation} from './annotation';
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
@@ -25,6 +26,8 @@ export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     label?: string | number;
     /** Individual marker options for the point. */
     marker?: {
+        /** Fill color of the marker for this point */
+        color?: string;
         /** States for a single point marker. */
         states?: {
             /** The normal state of a single point marker. */
@@ -37,6 +40,11 @@ export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
             };
         };
     };
+    /**
+     * Annotation displayed near this data point as a bubble with text label and optional marker.
+     * Useful for highlighting specific values, events, or adding contextual notes.
+     */
+    annotation?: ChartPointAnnotation;
 }
 
 export type AreaMarkerSymbol = 'circle' | 'square';
