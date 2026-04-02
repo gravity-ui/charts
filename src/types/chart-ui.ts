@@ -17,6 +17,8 @@ export interface HtmlItem {
     content: string;
     size: {width: number; height: number};
     style?: BaseTextStyle & React.CSSProperties;
+    /** Coordinate space for positioning: 'plot' uses the plot area origin, 'chart' uses the full chart origin. Defaults to 'plot'. */
+    scope?: 'plot' | 'chart';
 }
 
 export interface ShapeDataWithLabels {

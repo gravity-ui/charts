@@ -31,6 +31,9 @@ const seriesData: ChartData['series'] = {
     ],
 };
 
+const htmlTitleWithLink =
+    '<a href="https://example.com" target="_blank" style="color: var(--g-color-text-info); text-decoration: underline; font-weight: var(--g-text-subheader-font-weight);">Chart with a link</a> <span style="background: var(--g-color-base-info-light); border-radius: 4px; padding: 0 4px; font-size: 12px;">docs</span>';
+
 const ChartTitleStoryContent = () => {
     return (
         <Container spaceRow={5}>
@@ -64,4 +67,14 @@ const ChartTitleStoryContent = () => {
 export const ChartTitleStory = {
     name: 'Chart title',
     render: ChartTitleStoryContent,
+} satisfies Story;
+
+export const HtmlChartTitleStory = {
+    name: 'Html title',
+    args: {
+        data: {
+            title: {text: htmlTitleWithLink, html: true},
+            series: seriesData,
+        },
+    },
 } satisfies Story;
