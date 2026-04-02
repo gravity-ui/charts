@@ -13,7 +13,7 @@ import type {BaseTextStyle, ChartData, ChartMargin} from '../../../types';
 
 const DEFAULT_TITLE_FONT_SIZE = '15px';
 const DEFAULT_TITLE_MARGIN = 10;
-const DEFAULT_TITLE_MAX_HEIGH = '50%';
+const DEFAULT_TITLE_MAX_HEIGHT = '50%';
 
 export const getPreparedTitle = async ({
     title,
@@ -51,15 +51,17 @@ export const getPreparedTitle = async ({
             html: true,
         });
         const resolvedMaxHeight = calculateNumericProperty({
-            value: title.maxHeight ?? DEFAULT_TITLE_MAX_HEIGH,
+            value: title.maxHeight ?? DEFAULT_TITLE_MAX_HEIGHT,
             base: chartHeight,
         });
-        const titleHeight = resolvedMaxHeight
-            ? Math.min(titleSize.maxHeight, resolvedMaxHeight)
-            : titleSize.maxHeight;
+        const titleHeight =
+            resolvedMaxHeight === undefined
+                ? titleSize.maxHeight
+                : Math.min(titleSize.maxHeight, resolvedMaxHeight);
         const qa = title?.qa;
         const qaAttr = qa ? ` data-qa="${qa}"` : '';
-        const maxHeightStyle = resolvedMaxHeight ? ` max-height: ${resolvedMaxHeight}px;` : '';
+        const maxHeightStyle =
+            resolvedMaxHeight === undefined ? '' : ` max-height: ${resolvedMaxHeight}px;`;
         const htmlContent = `<div${qaAttr} style="max-width: ${usableWidth}px; overflow: hidden;${maxHeightStyle}">${titleText}</div>`;
 
         const titleWidth = Math.min(titleSize.maxWidth, usableWidth);
@@ -73,7 +75,7 @@ export const getPreparedTitle = async ({
             html: true,
             htmlElements: [
                 {
-                    x: (chartWidth - titleWidth) / 2,
+                    x: chartMarginLeft + (usableWidth - titleWidth) / 2,
                     y: chartMarginTop,
                     content: htmlContent,
                     size: {width: titleWidth, height: titleHeight},
