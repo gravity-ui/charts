@@ -2,6 +2,7 @@ import type {PreparedAnnotation} from '~core/series/types';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedAreaSeries} from '../../useSeries/types';
+import type {AnnotationAnchor} from '../annotation';
 
 export type PointData = {
     y0: number;
@@ -25,6 +26,7 @@ export type MarkerData = {
 };
 
 export type PreparedAreaData = {
+    annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
     markers: MarkerData[];

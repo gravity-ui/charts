@@ -3,7 +3,7 @@ import type React from 'react';
 import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {ChartAnnotationLabel, ChartAnnotationPopup} from './annotation';
+import type {ChartAnnotationSeriesOptions} from './annotation';
 import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
@@ -137,10 +137,7 @@ export interface ChartSeriesOptions {
             inactive?: BasicInactiveState;
         };
         /** Default annotation settings for all bar-x data points */
-        annotation?: {
-            label?: Omit<ChartAnnotationLabel, 'text'>;
-            popup?: ChartAnnotationPopup;
-        };
+        annotation?: ChartAnnotationSeriesOptions;
     };
     'bar-y'?: {
         /**
@@ -253,10 +250,7 @@ export interface ChartSeriesOptions {
          */
         linejoin?: `${LineJoin}`;
         /** Default annotation settings for all line data points */
-        annotation?: {
-            label?: Omit<ChartAnnotationLabel, 'text'>;
-            popup?: ChartAnnotationPopup;
-        };
+        annotation?: ChartAnnotationSeriesOptions;
     };
     area?: {
         /**
@@ -277,10 +271,7 @@ export interface ChartSeriesOptions {
         /** Options for the point markers of line series */
         marker?: PointMarkerOptions;
         /** Default annotation settings for all area data points */
-        annotation?: {
-            label?: Omit<ChartAnnotationLabel, 'text'>;
-            popup?: ChartAnnotationPopup;
-        };
+        annotation?: ChartAnnotationSeriesOptions;
     };
     treemap?: {
         /** Options for the series states that provide additional styling information to the series. */

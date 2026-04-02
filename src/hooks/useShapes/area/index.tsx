@@ -14,7 +14,6 @@ import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {renderAnnotations} from '../annotation';
-import type {AnnotationAnchor} from '../annotation';
 import {
     getMarkerHaloVisibility,
     getMarkerVisibility,
@@ -136,14 +135,7 @@ export const AreaSeriesShapes = (args: Args) => {
             .call(renderMarker);
 
         if (annotationsRef.current) {
-            const anchors: AnnotationAnchor[] = [];
-            for (const d of preparedData) {
-                for (const p of d.points) {
-                    if (p.annotation && p.y !== null) {
-                        anchors.push({annotation: p.annotation, x: p.x, y: p.y});
-                    }
-                }
-            }
+            const anchors = preparedData.flatMap((d) => d.annotations);
             renderAnnotations({
                 anchors,
                 container: select(annotationsRef.current),

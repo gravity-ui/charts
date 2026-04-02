@@ -3,6 +3,7 @@ import type {PreparedAnnotation} from '~core/series/types';
 
 import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
 import type {PreparedLineSeries} from '../../useSeries/types';
+import type {AnnotationAnchor} from '../annotation';
 
 export type PointData = {
     x: number | null;
@@ -21,6 +22,7 @@ export type MarkerData = {
 };
 
 export type PreparedLineData = {
+    annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
     markers: MarkerData[];

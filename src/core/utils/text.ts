@@ -6,6 +6,15 @@ import {block} from '../../utils/cn';
 
 const b = block('chart');
 
+/**
+ * Approximate ratio of descenders relative to the full font em height.
+ * Based on the Chromium hanging baseline algorithm where hanging offset ≈ ascent × 0.2.
+ * This means ascent ≈ 80% of em height, descenders ≈ 20%.
+ *
+ * @see https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=32
+ */
+export const DESCENDER_RATIO = 0.2;
+
 export function handleOverflowingText(
     tSpan: SVGTSpanElement | null,
     maxWidth: number,
@@ -293,7 +302,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
         return {
             width: textMetric.width,
             height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
-            hangingOffset: textMetric.fontBoundingBoxAscent * 0.2,
+            hangingOffset: textMetric.fontBoundingBoxAscent * DESCENDER_RATIO,
         };
     };
 }

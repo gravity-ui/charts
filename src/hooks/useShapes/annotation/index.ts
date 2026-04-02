@@ -2,6 +2,7 @@ import type {BaseType, Selection} from 'd3-selection';
 import {select} from 'd3-selection';
 
 import type {PreparedAnnotation} from '~core/series/types';
+import {DESCENDER_RATIO} from '~core/utils/text';
 
 import {block} from '../../../utils';
 
@@ -9,15 +10,6 @@ const b = block('annotation');
 
 const ARROW_WIDTH = 18;
 const ARROW_HEIGHT = 9;
-
-/**
- * Approximate ratio of the ascent (from baseline to top of capital letters)
- * relative to the full font height (ascent + descent).
- * Used to vertically center text within the popup since SVG <text> positions
- * at the baseline by default. The value 0.8 closely matches typical Latin fonts
- * where descenders take ~20% of the total em height.
- */
-const TEXT_BASELINE_RATIO = 0.8;
 
 type AnnotationAnchor = {
     annotation: PreparedAnnotation;
@@ -268,7 +260,7 @@ export function renderAnnotations(args: {
             .attr('class', b('text'))
             .text(label.text)
             .attr('x', layout.popupX + paddingH)
-            .attr('y', layout.popupY + paddingV + label.size.height * TEXT_BASELINE_RATIO)
+            .attr('y', layout.popupY + paddingV + label.size.height * (1 - DESCENDER_RATIO))
             .style('font-size', label.style.fontSize)
             .style('font-weight', label.style.fontWeight || '')
             .style('fill', label.style.fontColor || '');

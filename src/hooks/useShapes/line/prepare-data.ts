@@ -7,6 +7,7 @@ import {getFormattedValue} from '~core/utils/format';
 import type {HtmlItem, LabelData, ShapeDataWithLabels} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {PreparedLineSeries, PreparedSeriesOptions} from '../../useSeries/types';
+import type {AnnotationAnchor} from '../annotation';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';
@@ -189,7 +190,15 @@ export const prepareLineData = async (args: {
                 return result;
             }, []);
         }
+        const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
+            if (p.annotation && p.x !== null && p.y !== null) {
+                result.push({annotation: p.annotation, x: p.x, y: p.y});
+            }
+            return result;
+        }, []);
+
         const result: PreparedLineData = {
+            annotations,
             points,
             markers,
             svgLabels: svgLabels,

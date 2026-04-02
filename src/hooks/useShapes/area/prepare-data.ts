@@ -12,6 +12,7 @@ import {getFormattedValue} from '~core/utils/format';
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import type {PreparedAreaSeries, PreparedSeriesOptions} from '../../useSeries/types';
+import type {AnnotationAnchor} from '../annotation';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
@@ -420,7 +421,15 @@ export const prepareAreaData = async (args: {
                     }, []);
                 }
 
+                const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
+                    if (p.annotation && p.y !== null) {
+                        result.push({annotation: p.annotation, x: p.x, y: p.y});
+                    }
+                    return result;
+                }, []);
+
                 seriesStackData.push({
+                    annotations,
                     points,
                     markers,
                     svgLabels: [],

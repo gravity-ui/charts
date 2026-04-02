@@ -32,8 +32,18 @@ export interface ChartAnnotationPopup {
     padding?: number | [number, number];
 }
 
-/** Annotation for a specific data point (line, area) */
+/** Default annotation settings applied to all data points in a series */
+export interface ChartAnnotationSeriesOptions {
+    /** Default label style for annotations */
+    label?: Omit<ChartAnnotationLabel, 'text'>;
+    /** Default popup settings for annotations */
+    popup?: ChartAnnotationPopup;
+}
+
+/** Annotation for a specific data point. Renders as a popup with text label near the data point. */
 export interface ChartPointAnnotation {
+    /** Text content and style of the annotation */
     label: ChartAnnotationLabel;
+    /** Visual settings for the annotation popup container (background, padding, etc.) */
     popup?: ChartAnnotationPopup;
 }
