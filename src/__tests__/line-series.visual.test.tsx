@@ -14,6 +14,7 @@ import {
 import type {ChartData} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
+import {getLocatorBoundingBox} from './utils';
 
 test.describe('Line series', () => {
     test.beforeEach(async ({page}) => {
@@ -59,7 +60,7 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Vertical line tooltip', async ({mount}) => {
+    test('Vertical line tooltip', async ({mount, page}) => {
         const data: ChartData = {
             series: {
                 data: [
@@ -77,12 +78,12 @@ test.describe('Line series', () => {
 
         const component = await mount(<ChartTestStory data={data} />);
         const line = component.locator('.gcharts-line');
-        await line.hover({force: true, position: {x: 0, y: 0}});
+        const lineBox = await getLocatorBoundingBox(line);
+        await page.mouse.move(Math.round(lineBox.x), Math.round(lineBox.y));
+
         await expect(component.locator('svg')).toHaveScreenshot();
-        const boundingBox = await line.boundingBox();
         // 20 - reserved space for point with marker
-        const y = typeof boundingBox?.height === 'number' ? boundingBox.height - 20 : 0;
-        await line.hover({force: true, position: {x: 0, y}});
+        await page.mouse.move(Math.round(lineBox.x), Math.round(lineBox.y + lineBox.height - 20));
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
