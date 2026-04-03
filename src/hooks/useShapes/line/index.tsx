@@ -126,8 +126,8 @@ export const LineSeriesShapes = (args: Args) => {
         function handleShapeHover(data?: TooltipDataChunkLine[]) {
             hoveredDataRef.current = data;
             const selected = data?.filter((d) => d.series.type === 'line') || [];
+            const selectedDataItems = selected.map((d) => d.data);
             const selectedSeriesIds = selected.map((d) => d.series?.id);
-            const closestChunk = selected.find((d) => d.closest);
 
             lineSelection.datum((d, index, list) => {
                 const elementSelection = select<BaseType, PreparedLineData>(list[index]);
@@ -176,7 +176,7 @@ export const LineSeriesShapes = (args: Args) => {
             markerSelection.datum((d, index, list) => {
                 const elementSelection = select<BaseType, MarkerData>(list[index]);
 
-                const hovered = Boolean(hoverEnabled && d.point.data === closestChunk?.data);
+                const hovered = Boolean(hoverEnabled && selectedDataItems.includes(d.point.data));
                 if (d.hovered !== hovered) {
                     d.hovered = hovered;
                     elementSelection.attr('visibility', getMarkerVisibility(d));
@@ -208,7 +208,7 @@ export const LineSeriesShapes = (args: Args) => {
             if (hoverEnabled && selected.length > 0) {
                 const hoverOnlyMarkers: MarkerData[] = [];
 
-                for (const chunk of selected.filter((c) => c.closest)) {
+                for (const chunk of selected) {
                     const seriesData = preparedData.find((pd) => pd.id === chunk.series.id);
 
                     if (!seriesData) {
