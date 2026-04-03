@@ -11,8 +11,15 @@
     "resolveJsonModule": true,
     "paths": {
       "~playwright/*": ["playwright/*"],
-      "~core/*": ["src/core/*"]
+      "~core/*": ["src/core/*"],
+      "@gravity-ui/charts": ["src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "playwright/*"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "playwright/*",
+    "docs/examples/**/*.ts",
+    "docs/examples/**/*.tsx"
+  ]
 }

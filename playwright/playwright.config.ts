@@ -52,6 +52,7 @@ const config: PlaywrightTestConfig = {
             resolve: {
                 alias: {
                     '~core': pathFromRoot('src/core'),
+                    '@gravity-ui/charts': pathFromRoot('src/index.ts'),
                 },
             },
         },
