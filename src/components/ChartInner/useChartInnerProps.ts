@@ -6,6 +6,7 @@ import isEqual from 'lodash/isEqual';
 import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
 import {getLegendComponents, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
+import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
 import {
     getChartDimensions,
     getEffectiveXRange,
@@ -40,7 +41,6 @@ import type {
     ZoomState,
 } from '../../hooks';
 import type {PreparedChart, PreparedTitle} from '../../hooks/types';
-import {getActiveLegendItems, getAllLegendItems} from '../../hooks/useSeries/utils';
 import type {ChartData, LegendConfig} from '../../types';
 
 import type {ChartInnerProps} from './types';

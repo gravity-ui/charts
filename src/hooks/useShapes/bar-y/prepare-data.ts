@@ -3,6 +3,7 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
+import type {PreparedBarYSeries, PreparedSeriesOptions} from '~core/series/types';
 import {
     filterOverlappingLabels,
     getHtmlLabelConstraintedPosition,
@@ -14,7 +15,6 @@ import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../useSeries/types';
 import {getBarYLayout, groupBarYDataByYValue} from '../../utils';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';

@@ -7,11 +7,11 @@ import {select} from 'd3-selection';
 import {line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {getLineDashArray} from '~core/utils';
 
 import type {LabelData, TooltipDataChunkLine} from '../../../types';
 import {block} from '../../../utils';
-import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {renderAnnotations} from '../annotation';
 import {

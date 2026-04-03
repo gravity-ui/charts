@@ -4,9 +4,10 @@ import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 
+import type {PreparedSeriesOptions} from '~core/series/types';
+
 import type {TooltipDataChunkHeatmap} from '../../../types';
 import {block} from '../../../utils';
-import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 
 import type {PreparedHeatmapData} from './types';

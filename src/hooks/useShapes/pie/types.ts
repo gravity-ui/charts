@@ -1,7 +1,8 @@
 import type {PieArcDatum} from 'd3-shape';
 
+import type {PreparedPieSeries} from '~core/series/types';
+
 import type {ConnectorCurve, HtmlItem, LabelData} from '../../../types';
-import type {PreparedPieSeries} from '../../useSeries/types';
 
 export type SegmentData = {
     value: number;

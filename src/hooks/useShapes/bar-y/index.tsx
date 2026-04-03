@@ -5,9 +5,10 @@ import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
+import type {PreparedSeriesOptions} from '~core/series/types';
+
 import type {LabelData} from '../../../types';
 import {block} from '../../../utils';
-import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';

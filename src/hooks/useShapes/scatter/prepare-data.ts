@@ -1,11 +1,11 @@
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
+import type {PreparedScatterSeries} from '~core/series/types';
 import {getDataCategoryValue} from '~core/utils';
 
 import type {ScatterSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {PreparedScatterSeries} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {PreparedScatterData} from './types';

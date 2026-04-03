@@ -1,10 +1,10 @@
 import type {ChartScale} from '~core/scales/types';
+import type {PreparedLegend} from '~core/series/types';
 import {isBandScale} from '~core/utils';
 
 import type {PreparedChart} from '../types';
 import type {PreparedRangeSlider} from '../useAxis/types';
 import type {BrushSelection} from '../useBrush/types';
-import type {PreparedLegend} from '../useSeries/types';
 
 import type {RangeSliderState} from './types';
 

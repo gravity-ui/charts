@@ -1,5 +1,6 @@
+import type {PreparedSankeySeries} from '~core/series/types';
+
 import type {BaseTextStyle, HtmlItem, SankeySeriesData} from '../../../types';
-import type {PreparedSankeySeries} from '../../useSeries/types';
 
 export type SankeyDataLabel = {
     text: string;

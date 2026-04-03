@@ -3,13 +3,13 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
+import type {PreparedXRangeSeries} from '~core/series/types';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn, getTextWithElipsis} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData} from '../../../types';
 import {MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {PreparedXRangeSeries} from '../../useSeries/types';
 import {getBandSize} from '../../utils/get-band-size';
 
 import type {PreparedXRangeData} from './types';
