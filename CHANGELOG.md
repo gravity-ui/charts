@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.46.0](https://github.com/gravity-ui/charts/compare/v1.45.0...v1.46.0) (2026-04-03)
+
+
+### Features
+
+* **title:** support HTML rendering for chart title ([#537](https://github.com/gravity-ui/charts/issues/537)) ([ffeb28d](https://github.com/gravity-ui/charts/commit/ffeb28dd8614d4ebdd76fe603cc44596f90a71cf))
+
+
+### Bug Fixes
+
+* **line:** revert hover marker to show on all selected series ([#540](https://github.com/gravity-ui/charts/issues/540)) ([4d05e8c](https://github.com/gravity-ui/charts/commit/4d05e8c237318321665ee28cea8cadc9d9a42584))
+
 ## [1.45.0](https://github.com/gravity-ui/charts/compare/v1.44.0...v1.45.0) (2026-04-02)
 
 
