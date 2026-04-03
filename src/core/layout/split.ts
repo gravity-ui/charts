@@ -1,9 +1,8 @@
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 
-import {calculateNumericProperty, getTextSizeFn} from '~core/utils';
-
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
+import {calculateNumericProperty, getTextSizeFn} from '../utils';
 
 import type {PreparedPlot, PreparedPlotTitle} from './split-types';
 

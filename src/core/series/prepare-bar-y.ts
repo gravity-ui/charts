@@ -1,10 +1,9 @@
 import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import {getLabelsSize, getUniqId} from '~core/utils';
-
 import type {BarYSeries, BarYSeriesData, ChartSeriesOptions} from '../../types';
 import {DEFAULT_DATALABELS_STYLE} from '../constants';
+import {getLabelsSize, getUniqId} from '../utils';
 import {getFormattedValue} from '../utils/format';
 
 import type {PreparedBarYSeries, PreparedLegend} from './types';

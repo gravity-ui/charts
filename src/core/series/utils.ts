@@ -1,9 +1,8 @@
 import memoize from 'lodash/memoize';
 
-import {getSymbolBBoxWidth} from '~core/utils';
-
 import type {RectLegendSymbolOptions} from '../../types';
 import {SymbolType} from '../constants';
+import {getSymbolBBoxWidth} from '../utils';
 import {getUniqId} from '../utils/misc';
 
 import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './constants';

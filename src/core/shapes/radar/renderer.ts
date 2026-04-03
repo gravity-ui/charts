@@ -1,0 +1,175 @@
+import {color} from 'd3-color';
+import type {Dispatch} from 'd3-dispatch';
+import {select} from 'd3-selection';
+import type {BaseType} from 'd3-selection';
+import {line} from 'd3-shape';
+import get from 'lodash/get';
+
+import type {TooltipDataChunkRadar} from '../../../types';
+import {block} from '../../../utils';
+import type {PreparedRadarSeries, PreparedSeriesOptions} from '../../series/types';
+import {
+    getMarkerHaloVisibility,
+    getMarkerVisibility,
+    renderMarker,
+    selectMarkerHalo,
+    selectMarkerSymbol,
+    setMarker,
+} from '../../shapes/marker';
+import {setActiveState} from '../../shapes/utils';
+
+import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from './types';
+
+const b = block('radar');
+
+export function renderRadar(
+    elements: {
+        plot: SVGGElement;
+    },
+    preparedData: PreparedRadarData[],
+    seriesOptions: PreparedSeriesOptions,
+    dispatcher?: Dispatch<object>,
+): () => void {
+    const svgElement = select(elements.plot);
+    svgElement.selectAll('*').remove();
+    const areaSelector = `.${b('area')}`;
+
+    const radarSelection = svgElement
+        .selectAll('radar')
+        .data(preparedData)
+        .join('g')
+        .attr('id', (radarData) => radarData.id)
+        .attr('class', b('item'))
+        .attr('cursor', (radarData) => radarData.cursor);
+
+    // render axes
+    radarSelection
+        .selectAll(`.${b('axis')}`)
+        .data((radarData) => radarData.axes)
+        .join('line')
+        .attr('class', b('axis'))
+        .attr('x1', (d) => d.radar.center[0])
+        .attr('y1', (d) => d.radar.center[1])
+        .attr('x2', (d) => d.point[0])
+        .attr('y2', (d) => d.point[1])
+        .attr('stroke', (d) => d.strokeColor)
+        .attr('stroke-width', (d) => d.strokeWidth);
+
+    // render grid lines
+    radarSelection
+        .selectAll(`.${b('grid')}`)
+        .data((radarData) => radarData.grid)
+        .join('path')
+        .attr('class', b('grid'))
+        .attr('d', (d) => `${line()(d.path)} Z`)
+        .attr('fill', 'none')
+        .attr('stroke', (d) => d.strokeColor)
+        .attr('stroke-width', (d) => d.strokeWidth);
+
+    // render radar area
+    const shapesSelection = radarSelection
+        .selectAll(areaSelector)
+        .data((radarData) => radarData.shapes)
+        .join('g')
+        .attr('class', b('area'));
+
+    shapesSelection
+        .append('path')
+        .attr('d', (d) => d.path)
+        .attr('fill', (d) => d.color)
+        .attr('fill-opacity', (d) => d.fillOpacity)
+        .attr('stroke', (d) => d.borderColor)
+        .attr('stroke-width', (d) => d.borderWidth);
+
+    // render markers
+    const markerSelection = shapesSelection
+        .selectAll('marker')
+        .data((radarData) => radarData.points)
+        .join('g')
+        .call(renderMarker);
+
+    // Render labels
+    radarSelection
+        .selectAll('text')
+        .data((radarData) => radarData.labels)
+        .join('text')
+        .html((d) => d.text)
+        .attr('class', b('label'))
+        .attr('x', (d) => d.x)
+        .attr('y', (d) => d.y)
+        .attr('text-anchor', (d) => d.textAnchor)
+        .style('font-size', (d) => d.style.fontSize)
+        .style('font-weight', (d) => d.style.fontWeight || null)
+        .style('fill', (d) => d.style.fontColor || null);
+
+    // Handle hover events
+    const eventName = `hover-shape.radar`;
+    const hoverOptions = get(seriesOptions, 'radar.states.hover');
+    const inactiveOptions = get(seriesOptions, 'radar.states.inactive');
+
+    dispatcher?.on(eventName, (data?: TooltipDataChunkRadar[]) => {
+        const closest = data?.find((d) => d.closest);
+        const selectedSeries = closest?.series as PreparedRadarSeries;
+        const selectedSeriesData = closest?.data;
+        const selectedSeriesId = selectedSeries?.id;
+        const hoverEnabled = hoverOptions?.enabled;
+        const inactiveEnabled = inactiveOptions?.enabled;
+
+        shapesSelection.datum((d, i, elements) => {
+            const hovered = Boolean(hoverEnabled && d.series?.id === selectedSeriesId);
+
+            if (d.hovered !== hovered) {
+                d.hovered = hovered;
+                select(elements[i]).attr('fill', () => {
+                    const initialColor = d.color;
+                    if (d.hovered) {
+                        return (
+                            color(initialColor)?.brighter(hoverOptions?.brightness).toString() ||
+                            initialColor
+                        );
+                    }
+                    return initialColor;
+                });
+
+                if (hovered) {
+                    select(elements[i]).raise();
+                }
+            }
+
+            setActiveState<RadarShapeData>({
+                element: elements[i],
+                state: inactiveOptions,
+                active: Boolean(
+                    !inactiveEnabled || !selectedSeriesId || selectedSeriesId === d.series.id,
+                ),
+                datum: d,
+            });
+
+            markerSelection.datum((markerData, index, markers) => {
+                const hoveredState = Boolean(
+                    hoverEnabled && markerData.data === selectedSeriesData,
+                );
+
+                if (markerData.hovered !== hoveredState) {
+                    markerData.hovered = hoveredState;
+                    const elementSelection = select<BaseType, RadarMarkerData>(markers[index]);
+
+                    elementSelection.attr('visibility', getMarkerVisibility(markerData));
+                    selectMarkerHalo(elementSelection).attr('visibility', getMarkerHaloVisibility);
+                    selectMarkerSymbol(elementSelection).call(
+                        setMarker,
+                        hoveredState ? 'hover' : 'normal',
+                    );
+                }
+
+                return markerData;
+            });
+
+            return d;
+        });
+    });
+
+    return () => {
+        dispatcher?.on(eventName, null);
+    };
+}

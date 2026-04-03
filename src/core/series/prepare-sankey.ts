@@ -1,10 +1,9 @@
 import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import {getUniqId} from '~core/utils';
-
 import type {ChartSeriesOptions, SankeySeries} from '../../types';
 import {DEFAULT_DATALABELS_STYLE} from '../constants';
+import {getUniqId} from '../utils';
 
 import type {PreparedLegend, PreparedSankeySeries} from './types';
 import {prepareLegendSymbol} from './utils';

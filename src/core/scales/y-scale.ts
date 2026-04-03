@@ -3,19 +3,18 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
+import {getTickValues} from '../../components/AxisY/utils';
+import type {ChartSeries} from '../../types';
+import type {PreparedAxis} from '../axes/types';
+import {SERIES_TYPE} from '../constants';
+import type {PreparedSeries} from '../series';
 import {
     CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
     getDefaultMinYAxisValue,
     getDomainDataYBySeries,
     shouldSyncAxisWithPrimary,
-} from '~core/utils';
-
-import {getTickValues} from '../../components/AxisY/utils';
-import {getBandSize} from '../../hooks/utils/get-band-size';
-import type {ChartSeries} from '../../types';
-import type {PreparedAxis} from '../axes/types';
-import {SERIES_TYPE} from '../constants';
-import type {PreparedSeries} from '../series';
+} from '../utils';
+import {getBandSize} from '../utils/band-size';
 
 import type {ChartScaleLinear} from './types';
 import {

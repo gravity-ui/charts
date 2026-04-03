@@ -1,13 +1,12 @@
 import get from 'lodash/get';
 
-import {getDataCategoryValue, isSeriesWithCategoryValues} from '~core/utils';
-import type {AxisDirection} from '~core/utils';
-
 import type {ChartAxis, ChartSeries} from '../../types';
 import type {PreparedAxis, PreparedYAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
 import type {SeriesType} from '../constants';
 import type {PreparedSeries} from '../series';
+import type {AxisDirection} from '../utils';
+import {getDataCategoryValue, isSeriesWithCategoryValues} from '../utils';
 
 const MARKER_SERIES_TYPES: SeriesType[] = [SERIES_TYPE.Area, SERIES_TYPE.Line, SERIES_TYPE.Scatter];
 

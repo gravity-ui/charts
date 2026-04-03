@@ -3,17 +3,16 @@ import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
+import type {PreparedChart} from '../../hooks/types';
+import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
+import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
 import {
     getDefaultColorStops,
     getDomainForContinuousColorScale,
     getLabelsSize,
     getTextSizeFn,
     getTextWithElipsis,
-} from '~core/utils';
-
-import type {PreparedChart} from '../../hooks/types';
-import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
-import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
+} from '../utils';
 
 import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
 

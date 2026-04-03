@@ -1,18 +1,5 @@
 import get from 'lodash/get';
 
-import {
-    calculateNumericProperty,
-    formatAxisTickLabel,
-    getDefaultDateFormat,
-    getHorizontalHtmlTextHeight,
-    getLabelsSize,
-    getMinSpaceBetween,
-    getTextSizeFn,
-    isAxisRelatedSeries,
-    shouldSyncAxisWithPrimary,
-    wrapText,
-} from '~core/utils';
-
 import {getTickValues} from '../../components/AxisY/utils';
 import type {BaseTextStyle, ChartAxisTitleRotation, ChartSeries, ChartYAxis} from '../../types';
 import {
@@ -29,6 +16,18 @@ import {
 import type {ChartScale} from '../scales/types';
 import {createYScale} from '../scales/y-scale';
 import type {PreparedSeries} from '../series/types';
+import {
+    calculateNumericProperty,
+    formatAxisTickLabel,
+    getDefaultDateFormat,
+    getHorizontalHtmlTextHeight,
+    getLabelsSize,
+    getMinSpaceBetween,
+    getTextSizeFn,
+    isAxisRelatedSeries,
+    shouldSyncAxisWithPrimary,
+    wrapText,
+} from '../utils';
 
 import type {PreparedYAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';

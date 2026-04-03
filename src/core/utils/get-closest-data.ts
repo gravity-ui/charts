@@ -3,18 +3,7 @@ import {Delaunay} from 'd3-delaunay';
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {PreparedBarXData, PreparedScatterData, ShapeData} from '../../hooks';
-import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
-import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
-import type {PreparedFunnelData} from '../../hooks/useShapes/funnel/types';
-import type {PreparedHeatmapData} from '../../hooks/useShapes/heatmap';
-import type {PreparedLineData} from '../../hooks/useShapes/line/types';
-import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
-import type {PreparedRadarData} from '../../hooks/useShapes/radar/types';
-import type {PreparedSankeyData} from '../../hooks/useShapes/sankey/types';
-import type {PreparedTreemapData} from '../../hooks/useShapes/treemap/types';
-import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
-import type {PreparedXRangeData} from '../../hooks/useShapes/x-range/types';
+import type {ShapeData} from '../../hooks/useShapes';
 import type {
     AreaSeries,
     BarXSeries,
@@ -31,6 +20,19 @@ import type {
     WaterfallSeriesData,
     XRangeSeries,
 } from '../../types';
+import type {PreparedAreaData} from '../shapes/area/types';
+import type {PreparedBarXData} from '../shapes/bar-x/types';
+import type {PreparedBarYData} from '../shapes/bar-y/types';
+import type {PreparedFunnelData} from '../shapes/funnel/types';
+import type {PreparedHeatmapData} from '../shapes/heatmap/types';
+import type {PreparedLineData} from '../shapes/line/types';
+import type {PreparedPieData} from '../shapes/pie/types';
+import type {PreparedRadarData} from '../shapes/radar/types';
+import type {PreparedSankeyData} from '../shapes/sankey/types';
+import type {PreparedScatterData} from '../shapes/scatter/types';
+import type {PreparedTreemapData} from '../shapes/treemap/types';
+import type {PreparedWaterfallData} from '../shapes/waterfall/types';
+import type {PreparedXRangeData} from '../shapes/x-range/types';
 
 type GetClosestPointsArgs = {
     position: [number, number];

@@ -1,7 +1,6 @@
-import {annotationLabelDefaults, annotationPopupDefaults} from '~core/constants';
-import {getTextSizeFn} from '~core/utils';
-
 import type {ChartAnnotationLabel, ChartAnnotationPopup} from '../../types';
+import {annotationLabelDefaults, annotationPopupDefaults} from '../constants';
+import {getTextSizeFn} from '../utils';
 
 import type {PreparedAnnotation} from './types';
 

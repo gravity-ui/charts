@@ -2,11 +2,10 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {getUniqId} from '~core/utils';
-
 import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../constants';
 import type {PointMarkerOptions} from '../types/chart/marker';
+import {getUniqId} from '../utils';
 
 import {
     DEFAULT_DATALABELS_PADDING,
