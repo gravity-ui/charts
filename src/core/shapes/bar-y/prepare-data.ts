@@ -2,20 +2,19 @@ import {ascending, descending, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
-import type {ChartScale} from '~core/scales/types';
-import type {PreparedBarYSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {HtmlItem, LabelData} from '../../../types';
+import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
+import type {ChartScale} from '../../scales/types';
+import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
 import {
     filterOverlappingLabels,
     getHtmlLabelConstraintedPosition,
     getLabelsSize,
     getSvgLabelConstraintedPosition,
     getTextSizeFn,
-} from '~core/utils';
-import {getBarYLayout, groupBarYDataByYValue} from '~core/utils/bar-y';
-import {getFormattedValue} from '~core/utils/format';
-
-import type {HtmlItem, LabelData} from '../../../types';
+} from '../../utils';
+import {getBarYLayout, groupBarYDataByYValue} from '../../utils/bar-y';
+import {getFormattedValue} from '../../utils/format';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 

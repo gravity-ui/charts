@@ -2,10 +2,9 @@ import type {BaseType, Selection} from 'd3-selection';
 import {symbol} from 'd3-shape';
 import get from 'lodash/get';
 
-import {SymbolType} from '~core/constants';
-import {getSymbol} from '~core/utils';
-
 import {block} from '../../utils';
+import {SymbolType} from '../constants';
+import {getSymbol} from '../utils';
 
 const b = block('marker');
 const haloClassName = b('halo');

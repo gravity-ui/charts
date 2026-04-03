@@ -1,6 +1,6 @@
 import type {AxisDomain, AxisScale} from 'd3-axis';
 
-import {isBandScale} from '~core/utils';
+import {isBandScale} from '../utils';
 
 export function getBandSize({
     domain,

@@ -1,6 +1,5 @@
-import type {AnnotationAnchor, PreparedAnnotation, PreparedAreaSeries} from '~core/series/types';
-
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
+import type {AnnotationAnchor, PreparedAnnotation, PreparedAreaSeries} from '../../series/types';
 
 export type PointData = {
     y0: number;

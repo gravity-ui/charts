@@ -1,6 +1,5 @@
-import type {PreparedScatterSeries} from '~core/series/types';
-
 import type {HtmlItem, ScatterSeriesData} from '../../../types';
+import type {PreparedScatterSeries} from '../../series/types';
 
 type PointData = {
     x: number;

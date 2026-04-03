@@ -2,11 +2,10 @@ import {range} from 'd3-array';
 import {scaleLinear} from 'd3-scale';
 import {curveLinearClosed, line} from 'd3-shape';
 
-import type {PreparedRadarSeries} from '~core/series/types';
-import {getLabelsSize, getTextSizeFn} from '~core/utils';
-import {getFormattedValue} from '~core/utils/format';
-
 import type {HtmlItem} from '../../../types';
+import type {PreparedRadarSeries} from '../../series/types';
+import {getLabelsSize, getTextSizeFn} from '../../utils';
+import {getFormattedValue} from '../../utils/format';
 
 import type {PreparedRadarData, RadarGridData, RadarMarkerData} from './types';
 

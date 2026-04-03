@@ -1,10 +1,9 @@
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 
-import type {PreparedSeriesOptions} from '~core/series/types';
-
 import type {TooltipDataChunkTreemap} from '../../../types';
 import {block} from '../../../utils';
+import type {PreparedSeriesOptions} from '../../series/types';
 
 import type {PreparedSankeyData} from './types';
 

@@ -1,5 +1,17 @@
 import get from 'lodash/get';
 
+import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../../types';
+import {
+    DASH_STYLE,
+    DEFAULT_AXIS_LABEL_FONT_SIZE,
+    PLOT_LINE_HOVER_THRESHOLD,
+    SERIES_TYPE,
+    axisCrosshairDefaults,
+    axisLabelsDefaults,
+    axisTickMarksDefaults,
+    xAxisTitleDefaults,
+} from '../constants';
+import {createXScale} from '../scales/x-scale';
 import {
     TIME_UNITS,
     calculateCos,
@@ -13,20 +25,7 @@ import {
     getTextSizeFn,
     isAxisRelatedSeries,
     wrapText,
-} from '~core/utils';
-
-import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../../types';
-import {
-    DASH_STYLE,
-    DEFAULT_AXIS_LABEL_FONT_SIZE,
-    PLOT_LINE_HOVER_THRESHOLD,
-    SERIES_TYPE,
-    axisCrosshairDefaults,
-    axisLabelsDefaults,
-    axisTickMarksDefaults,
-    xAxisTitleDefaults,
-} from '../constants';
-import {createXScale} from '../scales/x-scale';
+} from '../utils';
 import {getXAxisTickValues} from '../utils/axis/x-axis';
 
 import {getPreparedRangeSlider} from './range-slider';

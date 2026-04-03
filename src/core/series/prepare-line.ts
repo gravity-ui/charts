@@ -2,8 +2,6 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {getUniqId} from '~core/utils';
-
 import type {
     ChartSeriesOptions,
     LineSeries,
@@ -18,6 +16,7 @@ import {
     seriesRangeSliderOptionsDefaults,
 } from '../constants';
 import type {DashStyle} from '../constants';
+import {getUniqId} from '../utils';
 
 import {
     DEFAULT_DATALABELS_PADDING,

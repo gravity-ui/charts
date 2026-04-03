@@ -1,7 +1,6 @@
-import type {DashStyle, LineCap, LineJoin} from '~core/constants';
-import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '~core/series/types';
-
 import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
+import type {DashStyle, LineCap, LineJoin} from '../../constants';
+import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '../../series/types';
 
 export type PointData = {
     x: number | null;

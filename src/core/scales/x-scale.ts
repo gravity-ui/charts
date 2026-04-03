@@ -3,19 +3,18 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
-import {
-    getDefaultMaxXAxisValue,
-    getDefaultMinXAxisValue,
-    getDomainDataXBySeries,
-    getEffectiveXRange,
-} from '~core/utils';
-import {getBandSize} from '~core/utils/band-size';
-
 import type {RangeSliderState} from '../../hooks';
 import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
 import type {PreparedSeries} from '../series';
+import {
+    getDefaultMaxXAxisValue,
+    getDefaultMinXAxisValue,
+    getDomainDataXBySeries,
+    getEffectiveXRange,
+} from '../utils';
+import {getBandSize} from '../utils/band-size';
 
 import {
     checkIsPointDomain,

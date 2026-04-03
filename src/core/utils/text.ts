@@ -10,7 +10,6 @@ const b = block('chart');
  * Approximate ratio of descenders relative to the full font em height.
  * Based on the Chromium hanging baseline algorithm where hanging offset ≈ ascent × 0.2.
  * This means ascent ≈ 80% of em height, descenders ≈ 20%.
- *
  * @see https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=32
  */
 export const DESCENDER_RATIO = 0.2;

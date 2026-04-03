@@ -5,7 +5,9 @@ import type {BaseType} from 'd3-selection';
 import {line} from 'd3-shape';
 import get from 'lodash/get';
 
-import type {PreparedRadarSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {TooltipDataChunkRadar} from '../../../types';
+import {block} from '../../../utils';
+import type {PreparedRadarSeries, PreparedSeriesOptions} from '../../series/types';
 import {
     getMarkerHaloVisibility,
     getMarkerVisibility,
@@ -13,11 +15,8 @@ import {
     selectMarkerHalo,
     selectMarkerSymbol,
     setMarker,
-} from '~core/shapes/marker';
-import {setActiveState} from '~core/shapes/utils';
-
-import type {TooltipDataChunkRadar} from '../../../types';
-import {block} from '../../../utils';
+} from '../../shapes/marker';
+import {setActiveState} from '../../shapes/utils';
 
 import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from './types';
 

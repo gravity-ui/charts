@@ -6,12 +6,11 @@ import type {PieArcDatum} from 'd3-shape';
 import {arc} from 'd3-shape';
 import get from 'lodash/get';
 
-import type {PreparedSeriesOptions} from '~core/series/types';
-import {setActiveState} from '~core/shapes/utils';
-import {setEllipsisForOverflowTexts} from '~core/utils';
-
 import type {TooltipDataChunkPie} from '../../../types';
 import {block} from '../../../utils';
+import type {PreparedSeriesOptions} from '../../series/types';
+import {setActiveState} from '../../shapes/utils';
+import {setEllipsisForOverflowTexts} from '../../utils';
 
 import type {PieLabelData, PreparedPieData, SegmentData} from './types';
 

@@ -21,17 +21,14 @@ export type CustomFormat = {
  * Specifies how a value should be formatted for display.
  *
  * - `{ type: 'number' }` — numeric formatting with optional precision, units, percent display, etc.
- *   See [FormatNumberOptions](https://gravity-ui.github.io/charts/pages/api/Utilities/interfaces/FormatNumberOptions.html) for all available options.
+ * See [FormatNumberOptions](https://gravity-ui.github.io/charts/pages/api/Utilities/interfaces/FormatNumberOptions.html) for all available options.
  * - `{ type: 'date' }` — date/time formatting
- *
  * @example
  * // Two decimal places, shown as percent
  * { type: 'number', precision: 2, format: 'percent' }
- *
  * @example
  * // Compact thousands: 1 500 000 → "1.5M"
  * { type: 'number', unit: 'auto', precision: 1 }
- *
  * @example
  * // Date value (Unix ms) formatted as "17 October 2025"
  * { type: 'date', format: 'DD MMMM YYYY' }

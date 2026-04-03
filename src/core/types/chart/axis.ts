@@ -312,7 +312,6 @@ export interface AxisPlotShape extends AxisPlot {
      * Called with the pixel coordinates of the shape and the plot area dimensions.
      * Must return a string of valid SVG markup that will be inserted inside a `<g>` container
      * positioned at the shape's axis value.
-     *
      * @example
      * ```
      * renderer: ({plotHeight}) =>

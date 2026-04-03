@@ -5,10 +5,9 @@ import {select} from 'd3-selection';
 import type {BaseType} from 'd3-selection';
 import get from 'lodash/get';
 
-import type {PreparedSeriesOptions} from '~core/series/types';
-
 import type {TooltipDataChunkTreemap, TreemapSeriesData} from '../../../types';
 import {block} from '../../../utils';
+import type {PreparedSeriesOptions} from '../../series/types';
 
 import type {PreparedTreemapData, TreemapLabelData} from './types';
 

@@ -1,10 +1,9 @@
 import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import {getUniqId} from '~core/utils';
-
 import type {BarXSeries, BarXSeriesData, ChartSeriesOptions} from '../../types';
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../constants';
+import {getUniqId} from '../utils';
 
 import {DEFAULT_DATALABELS_PADDING} from './constants';
 import type {PreparedBarXSeries, PreparedLegend, PreparedSeries} from './types';

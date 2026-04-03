@@ -3,19 +3,7 @@ import {Delaunay} from 'd3-delaunay';
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {PreparedAreaData} from '~core/shapes/area/types';
-import type {PreparedBarYData} from '~core/shapes/bar-y/types';
-import type {PreparedFunnelData} from '~core/shapes/funnel/types';
-import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
-import type {PreparedLineData} from '~core/shapes/line/types';
-import type {PreparedPieData} from '~core/shapes/pie/types';
-import type {PreparedRadarData} from '~core/shapes/radar/types';
-import type {PreparedSankeyData} from '~core/shapes/sankey/types';
-import type {PreparedTreemapData} from '~core/shapes/treemap/types';
-import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
-import type {PreparedXRangeData} from '~core/shapes/x-range/types';
-
-import type {PreparedBarXData, PreparedScatterData, ShapeData} from '../../hooks';
+import type {ShapeData} from '../../hooks/useShapes';
 import type {
     AreaSeries,
     BarXSeries,
@@ -32,6 +20,19 @@ import type {
     WaterfallSeriesData,
     XRangeSeries,
 } from '../../types';
+import type {PreparedAreaData} from '../shapes/area/types';
+import type {PreparedBarXData} from '../shapes/bar-x/types';
+import type {PreparedBarYData} from '../shapes/bar-y/types';
+import type {PreparedFunnelData} from '../shapes/funnel/types';
+import type {PreparedHeatmapData} from '../shapes/heatmap/types';
+import type {PreparedLineData} from '../shapes/line/types';
+import type {PreparedPieData} from '../shapes/pie/types';
+import type {PreparedRadarData} from '../shapes/radar/types';
+import type {PreparedSankeyData} from '../shapes/sankey/types';
+import type {PreparedScatterData} from '../shapes/scatter/types';
+import type {PreparedTreemapData} from '../shapes/treemap/types';
+import type {PreparedWaterfallData} from '../shapes/waterfall/types';
+import type {PreparedXRangeData} from '../shapes/x-range/types';
 
 type GetClosestPointsArgs = {
     position: [number, number];

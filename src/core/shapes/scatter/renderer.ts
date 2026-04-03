@@ -3,17 +3,16 @@ import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
-import type {PreparedSeriesOptions} from '~core/series/types';
+import type {TooltipDataChunkScatter} from '../../../types';
+import type {PreparedSeriesOptions} from '../../series/types';
 import {
     getMarkerHaloVisibility,
     renderMarker,
     selectMarkerHalo,
     selectMarkerSymbol,
     setMarker,
-} from '~core/shapes/marker';
-import {setActiveState, shapeKey} from '~core/shapes/utils';
-
-import type {TooltipDataChunkScatter} from '../../../types';
+} from '../../shapes/marker';
+import {setActiveState, shapeKey} from '../../shapes/utils';
 
 import type {MarkerData, PreparedScatterData} from './types';
 

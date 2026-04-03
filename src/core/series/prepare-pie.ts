@@ -1,10 +1,9 @@
 import {scaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import {getUniqId} from '~core/utils';
-
 import type {ChartSeriesOptions, PieSeries, PieSeriesData} from '../../types';
 import {DEFAULT_DATALABELS_STYLE} from '../constants';
+import {getUniqId} from '../utils';
 
 import {DEFAULT_DATALABELS_PADDING} from './constants';
 import type {PreparedLegend, PreparedPieSeries, PreparedSeries} from './types';

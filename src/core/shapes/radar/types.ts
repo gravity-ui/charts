@@ -1,6 +1,5 @@
-import type {PreparedRadarSeries} from '~core/series/types';
-
 import type {HtmlItem, LabelData, RadarSeriesData} from '../../../types';
+import type {PreparedRadarSeries} from '../../series/types';
 
 export type RadarLabelData = LabelData & {
     maxWidth: number;

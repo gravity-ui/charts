@@ -2,11 +2,10 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import {getSymbolType, getUniqId} from '~core/utils';
-
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 import {seriesRangeSliderOptionsDefaults} from '../constants';
 import type {PointMarkerOptions} from '../types/chart/marker';
+import {getSymbolType, getUniqId} from '../utils';
 
 import {DEFAULT_HALO_OPTIONS, DEFAULT_POINT_MARKER_OPTIONS} from './constants';
 import type {PreparedLegend, PreparedScatterSeries} from './types';

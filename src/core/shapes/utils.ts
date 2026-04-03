@@ -4,10 +4,10 @@ import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
-import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
-import type {ChartScale} from '~core/scales/types';
-import type {BasicInactiveState} from '~core/types';
-import {getDataCategoryValue} from '~core/utils';
+import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
+import type {ChartScale} from '../scales/types';
+import type {BasicInactiveState} from '../types';
+import {getDataCategoryValue} from '../utils';
 
 const ONE_POINT_DOMAIN_DATA_CAPACITY = 3;
 
