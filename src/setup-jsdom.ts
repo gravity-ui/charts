@@ -11,6 +11,14 @@ if (typeof document !== 'undefined') {
     }
 }
 
+if (typeof ResizeObserver === 'undefined') {
+    global.ResizeObserver = class ResizeObserver {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    };
+}
+
 if (typeof HTMLCanvasElement !== 'undefined') {
     // jsdom does not implement HTMLCanvasElement.prototype.getContext (used for text measurement)
     HTMLCanvasElement.prototype.getContext = (() => ({

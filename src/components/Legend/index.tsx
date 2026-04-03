@@ -70,18 +70,24 @@ const getLegendPosition = (args: {
     return {top: offsetTop, left: offsetLeft + width / 2 - contentWidth / 2};
 };
 
-const appendPaginator = (args: {
+async function appendPaginator(args: {
     container: Selection<SVGGElement, unknown, null, undefined>;
     pageIndex: number;
     legend: PreparedLegend;
     transform: string;
     pages: NonNullable<LegendConfig['pagination']>['pages'];
     onArrowClick: (nextPageIndex: number) => void;
-}) => {
+}) {
     const {container, pageIndex, legend, transform, pages, onArrowClick} = args;
     const paginationLine = container.append('g').attr('class', b('pagination'));
     const maxPage = pages.length;
-    let computedWidth = 0;
+    const paginationCounterText = `${pageIndex + 1}/${maxPage}`;
+
+    const getTextSize = getTextSizeFn({style: legend.itemStyle});
+    const [arrowIcon, counter] = await Promise.all([
+        getTextSize('▲'),
+        getTextSize(paginationCounterText),
+    ]);
 
     paginationLine
         .append('text')
@@ -90,9 +96,6 @@ const appendPaginator = (args: {
             return b('pagination-arrow', {inactive: pageIndex === 0});
         })
         .style('font-size', legend.itemStyle.fontSize)
-        .each(function () {
-            computedWidth += this.getComputedTextLength();
-        })
         .on('click', function () {
             if (pageIndex - 1 >= 0) {
                 onArrowClick(pageIndex - 1);
@@ -100,20 +103,17 @@ const appendPaginator = (args: {
         });
     paginationLine
         .append('text')
-        .text(`${pageIndex + 1}/${maxPage}`)
+        .text(paginationCounterText)
         .attr('class', b('pagination-counter'))
-        .attr('x', computedWidth)
-        .style('font-size', legend.itemStyle.fontSize)
-        .each(function () {
-            computedWidth += this.getComputedTextLength();
-        });
+        .attr('x', arrowIcon.width)
+        .style('font-size', legend.itemStyle.fontSize);
     paginationLine
         .append('text')
         .text('▼')
         .attr('class', function () {
             return b('pagination-arrow', {inactive: pageIndex === maxPage - 1});
         })
-        .attr('x', computedWidth)
+        .attr('x', arrowIcon.width + counter.width)
         .style('font-size', legend.itemStyle.fontSize)
         .on('click', function () {
             if (pageIndex + 1 < maxPage) {
@@ -121,7 +121,7 @@ const appendPaginator = (args: {
             }
         });
     paginationLine.attr('transform', transform);
-};
+}
 
 function renderLegendSymbol(args: {
     selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
@@ -365,7 +365,7 @@ export const Legend = (props: Props) => {
                     const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
                         ',',
                     )})`;
-                    appendPaginator({
+                    await appendPaginator({
                         container: svgElement,
                         pageIndex: pageIndex,
                         legend,
