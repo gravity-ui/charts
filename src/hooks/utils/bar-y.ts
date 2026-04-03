@@ -3,13 +3,13 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
+import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '~core/series/types';
+import {getSeriesStackId} from '~core/series/utils';
 import {getDataCategoryValue} from '~core/utils';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
 import type {PreparedYAxis} from '../useAxis/types';
-import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '../useSeries/types';
-import {getSeriesStackId} from '../useSeries/utils';
 
 import {getBandSize} from './get-band-size';
 

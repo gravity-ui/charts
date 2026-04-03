@@ -51,3 +51,22 @@ export function getSeriesStackId(series: StackedSeries) {
 
     return stackId;
 }
+
+export const getVisibleSeries = ({
+    preparedSeries,
+    activeLegendItems,
+}: {
+    preparedSeries: PreparedSeries[];
+    activeLegendItems: string[];
+}) => {
+    return preparedSeries.map((singleSeries) => {
+        if (singleSeries.legend.enabled) {
+            return {
+                ...singleSeries,
+                visible: activeLegendItems.includes(singleSeries.legend.groupId),
+            };
+        }
+
+        return singleSeries;
+    });
+};

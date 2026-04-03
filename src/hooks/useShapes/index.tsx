@@ -7,11 +7,6 @@ import {SERIES_TYPE} from '~core/constants';
 import type {SeriesType} from '~core/constants';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
-import {getOnlyVisibleSeries} from '~core/utils';
-
-import {ChartError} from '../../libs';
-import type {ShapeDataWithLabels} from '../../types';
-import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
@@ -28,7 +23,12 @@ import type {
     PreparedTreemapSeries,
     PreparedWaterfallSeries,
     PreparedXRangeSeries,
-} from '../useSeries/types';
+} from '~core/series/types';
+import {getOnlyVisibleSeries} from '~core/utils';
+
+import {ChartError} from '../../libs';
+import type {ShapeDataWithLabels} from '../../types';
+import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ZoomState} from '../useZoom/types';
 
 import {AreaSeriesShapes} from './area';

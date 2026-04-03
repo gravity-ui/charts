@@ -1,10 +1,13 @@
+import {group} from 'd3-array';
 import type {ScaleOrdinal} from 'd3-scale';
+import {scaleOrdinal} from 'd3-scale';
 
 import {ChartError} from '../../libs';
 import type {
     AreaSeries,
     BarXSeries,
     BarYSeries,
+    ChartData,
     ChartSeries,
     ChartSeriesOptions,
     FunnelSeries,
@@ -18,6 +21,7 @@ import type {
     WaterfallSeries,
     XRangeSeries,
 } from '../../types';
+import {getSeriesNames} from '../utils';
 
 import {prepareArea} from './prepare-area';
 import {prepareBarXSeries} from './prepare-bar-x';
@@ -33,6 +37,52 @@ import {prepareTreemap} from './prepare-treemap';
 import {prepareWaterfallSeries} from './prepare-waterfall';
 import {prepareXRangeSeries} from './prepare-x-range';
 import type {PreparedLegend, PreparedSeries} from './types';
+
+export const getPreparedSeries = async ({
+    seriesData,
+    seriesOptions,
+    colors,
+    preparedLegend,
+}: {
+    seriesData: ChartData['series']['data'];
+    seriesOptions: ChartData['series']['options'];
+    colors: string[];
+    preparedLegend?: PreparedLegend | null;
+}) => {
+    const seriesNames = getSeriesNames(seriesData);
+    const colorScale = scaleOrdinal(seriesNames, colors);
+    const groupedSeries = group(seriesData, (item, index) => {
+        if (item.type === 'line') {
+            return `${item.type}_${index}`;
+        }
+
+        return item.type;
+    });
+
+    const acc: PreparedSeries[] = [];
+
+    if (!preparedLegend) {
+        return acc;
+    }
+
+    const list = Array.from(groupedSeries);
+    for (let i = 0; i < list.length; i++) {
+        const [_groupId, seriesList] = list[i];
+        const seriesType = seriesList[0].type;
+        acc.push(
+            ...(await prepareSeries({
+                type: seriesType,
+                series: seriesList,
+                seriesOptions,
+                legend: preparedLegend,
+                colorScale,
+                colors,
+            })),
+        );
+    }
+
+    return acc;
+};
 
 export async function prepareSeries(args: {
     type: ChartSeries['type'];

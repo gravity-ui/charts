@@ -3,17 +3,17 @@ import get from 'lodash/get';
 import sortBy from 'lodash/sortBy';
 
 import type {ChartScale} from '~core/scales/types';
+import type {
+    PreparedSeriesOptions,
+    PreparedWaterfallSeries,
+    PreparedWaterfallSeriesData,
+} from '~core/series/types';
 import {getLabelsSize} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {LabelData} from '../../../types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {
-    PreparedSeriesOptions,
-    PreparedWaterfallSeries,
-    PreparedWaterfallSeriesData,
-} from '../../useSeries/types';
 import {getXValue, getYValue} from '../utils';
 
 import type {PreparedWaterfallData} from './types';

@@ -5,9 +5,10 @@ import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
+import type {PreparedSeriesOptions} from '~core/series/types';
+
 import type {TooltipDataChunkScatter} from '../../../types';
 import {block} from '../../../utils';
-import type {PreparedSeriesOptions} from '../../useSeries/types';
 import {HtmlLayer} from '../HtmlLayer';
 import {
     getMarkerHaloVisibility,

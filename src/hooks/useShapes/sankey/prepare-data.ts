@@ -1,7 +1,7 @@
+import type {PreparedSankeySeries} from '~core/series/types';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, SankeySeriesData} from '../../../types';
-import type {PreparedSankeySeries} from '../../useSeries/types';
 
 import {sankey, sankeyLinkHorizontal} from './sankey-layout';
 import type {PreparedSankeyData, SankeyDataLabel} from './types';

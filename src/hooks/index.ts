@@ -8,7 +8,7 @@ export * from './useCrosshair';
 export * from './usePrevious';
 export * from './useRangeSlider';
 export * from './useRangeSlider/types';
-export * from './useSeries';
+export {getPreparedSeries, getVisibleSeries} from '~core/series';
 export * from '~core/series/types';
 export * from './useShapes';
 export * from '~core/layout/split';

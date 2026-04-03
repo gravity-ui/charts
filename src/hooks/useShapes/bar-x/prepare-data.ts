@@ -6,14 +6,14 @@ import get from 'lodash/get';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
+import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '~core/series/types';
+import {getSeriesStackId} from '~core/series/utils';
 import {getDataCategoryValue, getLabelsSize} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {BarXSeriesData, LabelData} from '../../../types';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../constants';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../useSeries/types';
-import {getSeriesStackId} from '../../useSeries/utils';
 import {getBandSize} from '../../utils/get-band-size';
 
 import type {PreparedBarXData} from './types';

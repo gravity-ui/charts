@@ -1,5 +1,6 @@
+import type {PreparedWaterfallSeries} from '~core/series/types';
+
 import type {HtmlItem, LabelData, WaterfallSeriesData} from '../../../types';
-import type {PreparedWaterfallSeries} from '../../useSeries/types';
 
 export type PreparedWaterfallData = {
     x: number;
