@@ -61,6 +61,12 @@ export type PreparedAnnotation = {
     };
 };
 
+export type AnnotationAnchor = {
+    annotation: PreparedAnnotation;
+    x: number;
+    y: number;
+};
+
 export type RectLegendSymbol = {
     shape: 'rect';
 } & Required<RectLegendSymbolOptions>;

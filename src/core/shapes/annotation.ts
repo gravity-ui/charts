@@ -1,21 +1,14 @@
 import type {BaseType, Selection} from 'd3-selection';
 import {select} from 'd3-selection';
 
-import type {PreparedAnnotation} from '~core/series/types';
-import {DESCENDER_RATIO} from '~core/utils/text';
-
-import {block} from '../../../utils';
+import {block} from '../../utils';
+import type {AnnotationAnchor} from '../series/types';
+import {DESCENDER_RATIO} from '../utils/text';
 
 const b = block('annotation');
 
 const ARROW_WIDTH = 18;
 const ARROW_HEIGHT = 9;
-
-type AnnotationAnchor = {
-    annotation: PreparedAnnotation;
-    x: number;
-    y: number;
-};
 
 type Placement = 'top' | 'bottom' | 'right' | 'left';
 
@@ -191,8 +184,6 @@ function getArrowTranslate(layout: PopupLayout, popupWidth: number, popupHeight:
             return `translate(${popupX + popupWidth - overlap}, ${arrowY})`;
     }
 }
-
-export {type AnnotationAnchor};
 
 export function renderAnnotations(args: {
     anchors: AnnotationAnchor[];

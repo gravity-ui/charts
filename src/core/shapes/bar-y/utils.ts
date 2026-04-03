@@ -1,4 +1,4 @@
-import {getRectBorderPath, getRectPath} from '../utils';
+import {getRectBorderPath, getRectPath} from '~core/shapes/utils';
 
 import type {PreparedBarYData} from './types';
 

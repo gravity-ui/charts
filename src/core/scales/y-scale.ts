@@ -9,9 +9,9 @@ import {
     getDomainDataYBySeries,
     shouldSyncAxisWithPrimary,
 } from '~core/utils';
+import {getBandSize} from '~core/utils/band-size';
 
 import {getTickValues} from '../../components/AxisY/utils';
-import {getBandSize} from '../../hooks/utils/get-band-size';
 import type {ChartSeries} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';

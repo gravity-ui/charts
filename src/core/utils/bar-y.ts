@@ -2,16 +2,16 @@ import {max} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
+import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '~core/series/types';
 import {getSeriesStackId} from '~core/series/utils';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '~core/shapes/bar-constants';
 import {getDataCategoryValue} from '~core/utils';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../constants';
-import type {PreparedYAxis} from '../useAxis/types';
 
-import {getBandSize} from './get-band-size';
+import {getBandSize} from './band-size';
 
 /**
  * BarY always filters out data with null or replace null by zero.

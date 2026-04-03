@@ -3,18 +3,19 @@ import {Delaunay} from 'd3-delaunay';
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
+import type {PreparedAreaData} from '~core/shapes/area/types';
+import type {PreparedBarYData} from '~core/shapes/bar-y/types';
+import type {PreparedFunnelData} from '~core/shapes/funnel/types';
+import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
+import type {PreparedLineData} from '~core/shapes/line/types';
+import type {PreparedPieData} from '~core/shapes/pie/types';
+import type {PreparedRadarData} from '~core/shapes/radar/types';
+import type {PreparedSankeyData} from '~core/shapes/sankey/types';
+import type {PreparedTreemapData} from '~core/shapes/treemap/types';
+import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
+import type {PreparedXRangeData} from '~core/shapes/x-range/types';
+
 import type {PreparedBarXData, PreparedScatterData, ShapeData} from '../../hooks';
-import type {PreparedAreaData} from '../../hooks/useShapes/area/types';
-import type {PreparedBarYData} from '../../hooks/useShapes/bar-y/types';
-import type {PreparedFunnelData} from '../../hooks/useShapes/funnel/types';
-import type {PreparedHeatmapData} from '../../hooks/useShapes/heatmap';
-import type {PreparedLineData} from '../../hooks/useShapes/line/types';
-import type {PreparedPieData} from '../../hooks/useShapes/pie/types';
-import type {PreparedRadarData} from '../../hooks/useShapes/radar/types';
-import type {PreparedSankeyData} from '../../hooks/useShapes/sankey/types';
-import type {PreparedTreemapData} from '../../hooks/useShapes/treemap/types';
-import type {PreparedWaterfallData} from '../../hooks/useShapes/waterfall';
-import type {PreparedXRangeData} from '../../hooks/useShapes/x-range/types';
 import type {
     AreaSeries,
     BarXSeries,

@@ -3,17 +3,16 @@ import type {ScaleLogarithmic} from 'd3-scale';
 import isNil from 'lodash/isNil';
 import round from 'lodash/round';
 
+import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedAreaSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '~core/series/types';
+import {getXValue, getYValue} from '~core/shapes/utils';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
-import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {AnnotationAnchor} from '../annotation';
-import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
 

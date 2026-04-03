@@ -1,13 +1,12 @@
+import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedLineSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '~core/series/types';
 import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData, ShapeDataWithLabels} from '../../../types';
-import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import type {AnnotationAnchor} from '../annotation';
 import {getXValue, getYValue} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';

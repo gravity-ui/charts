@@ -24,6 +24,24 @@ import type {
     PreparedWaterfallSeries,
     PreparedXRangeSeries,
 } from '~core/series/types';
+import {prepareAreaData} from '~core/shapes/area/prepare-data';
+import type {PreparedAreaData} from '~core/shapes/area/types';
+import type {PreparedBarXData} from '~core/shapes/bar-x/types';
+import type {PreparedBarYData} from '~core/shapes/bar-y/types';
+import type {PreparedFunnelData} from '~core/shapes/funnel/types';
+import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
+import {prepareLineData} from '~core/shapes/line/prepare-data';
+import type {PreparedLineData} from '~core/shapes/line/types';
+import {preparePieData} from '~core/shapes/pie/prepare-data';
+import type {PreparedPieData} from '~core/shapes/pie/types';
+import {prepareRadarData} from '~core/shapes/radar/prepare-data';
+import type {PreparedRadarData} from '~core/shapes/radar/types';
+import {prepareSankeyData} from '~core/shapes/sankey/prepare-data';
+import type {PreparedSankeyData} from '~core/shapes/sankey/types';
+import type {PreparedScatterData} from '~core/shapes/scatter/types';
+import {prepareTreemapData} from '~core/shapes/treemap/prepare-data';
+import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
+import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getOnlyVisibleSeries} from '~core/utils';
 
 import {ChartError} from '../../libs';
@@ -32,39 +50,19 @@ import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import type {ZoomState} from '../useZoom/types';
 
 import {AreaSeriesShapes} from './area';
-import {prepareAreaData} from './area/prepare-data';
-import type {PreparedAreaData} from './area/types';
 import {BarXSeriesShapes, prepareBarXData} from './bar-x';
-import type {PreparedBarXData} from './bar-x';
 import {BarYSeriesShapes, prepareBarYData} from './bar-y';
-import type {PreparedBarYData} from './bar-y/types';
-import type {PreparedFunnelData} from './funnel';
 import {FunnelSeriesShapes, prepareFunnelData} from './funnel';
-import type {PreparedHeatmapData} from './heatmap';
 import {HeatmapSeriesShapes, prepareHeatmapData} from './heatmap';
 import {LineSeriesShapes} from './line';
-import {prepareLineData} from './line/prepare-data';
-import type {PreparedLineData} from './line/types';
 import {PieSeriesShapes} from './pie';
-import {preparePieData} from './pie/prepare-data';
-import type {PreparedPieData} from './pie/types';
 import {RadarSeriesShapes} from './radar';
-import {prepareRadarData} from './radar/prepare-data';
-import type {PreparedRadarData} from './radar/types';
 import {SankeySeriesShape} from './sankey';
-import {prepareSankeyData} from './sankey/prepare-data';
-import type {PreparedSankeyData} from './sankey/types';
 import {ScatterSeriesShape, prepareScatterData} from './scatter';
-import type {PreparedScatterData} from './scatter/types';
-export type {PreparedBarXData} from './bar-x';
-export type {PreparedScatterData} from './scatter/types';
 import {TreemapSeriesShape} from './treemap';
-import {prepareTreemapData} from './treemap/prepare-data';
 import {getSeriesClipPathId} from './utils';
-import type {PreparedWaterfallData} from './waterfall';
 import {WaterfallSeriesShapes, prepareWaterfallData} from './waterfall';
 import {XRangeSeriesShapes, prepareXRangeData} from './x-range';
-import type {PreparedXRangeData} from './x-range';
 
 import './styles.scss';
 
@@ -420,7 +418,7 @@ export async function getShapes(args: Args) {
                 }
                 break;
             }
-            case 'funnel': {
+            case SERIES_TYPE.Funnel: {
                 const preparedData = await prepareFunnelData({
                     series: chartSeries as PreparedFunnelSeries[],
                     boundsWidth,
@@ -428,7 +426,7 @@ export async function getShapes(args: Args) {
                 });
                 shapes[index] = (
                     <FunnelSeriesShapes
-                        key="funnel"
+                        key={SERIES_TYPE.Funnel}
                         dispatcher={dispatcher}
                         preparedData={preparedData}
                         seriesOptions={seriesOptions}
@@ -494,8 +492,8 @@ export const useShapes = (args: Args) => {
         zoomState,
     } = args;
 
-    const [shapesElemens, setShapesElements] = React.useState<React.ReactElement[]>([]);
-    const [shapesElemensData, setShapesElemensData] = React.useState<ShapeData[]>([]);
+    const [shapesElements, setShapesElements] = React.useState<React.ReactElement[]>([]);
+    const [shapesElementsData, setShapesElementsData] = React.useState<ShapeData[]>([]);
     const shapesReadyRef = React.useRef(false);
 
     const countedRef = React.useRef(0);
@@ -532,7 +530,7 @@ export const useShapes = (args: Args) => {
             if (countedRef.current === currentRun) {
                 shapesReadyRef.current = true;
                 setShapesElements(shapes);
-                setShapesElemensData(shapesData);
+                setShapesElementsData(shapesData);
             }
         })();
     }, [
@@ -555,8 +553,8 @@ export const useShapes = (args: Args) => {
     ]);
 
     return {
-        shapes: shapesElemens,
-        shapesData: shapesElemensData,
+        shapes: shapesElements,
+        shapesData: shapesElementsData,
         shapesReady: shapesReadyRef.current,
     };
 };

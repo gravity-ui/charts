@@ -3,18 +3,18 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
+import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '~core/series/types';
 import {getSeriesStackId} from '~core/series/utils';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '~core/shapes/bar-constants';
 import {getDataCategoryValue, getLabelsSize} from '~core/utils';
+import {getBandSize} from '~core/utils/band-size';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {BarXSeriesData, LabelData} from '../../../types';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../constants';
-import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import {getBandSize} from '../../utils/get-band-size';
 
 import type {PreparedBarXData} from './types';
 

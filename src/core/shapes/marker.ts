@@ -7,18 +7,48 @@ import {getSymbol} from '~core/utils';
 
 import {block} from '../../utils';
 
-import type {MarkerData as AreaMarkerData} from './area/types';
-import type {MarkerData as LineMarkerData} from './line/types';
-import type {RadarMarkerData} from './radar/types';
-import type {MarkerData as ScatterMarkerData} from './scatter/types';
-
 const b = block('marker');
 const haloClassName = b('halo');
 const symbolClassName = b('symbol');
 
-type MarkerData = LineMarkerData | AreaMarkerData | ScatterMarkerData | RadarMarkerData;
+export interface BaseMarkerData {
+    point: {
+        x: number;
+        y: number;
+        color?: string;
+        data: unknown;
+        series: {
+            color: string;
+            marker: {
+                states: {
+                    normal: {
+                        symbol: `${SymbolType}`;
+                        enabled: boolean;
+                        radius: number;
+                        borderWidth: number;
+                        borderColor: string;
+                    };
+                    hover: {
+                        enabled: boolean;
+                        radius: number;
+                        borderWidth: number;
+                        borderColor: string;
+                        halo: {
+                            enabled: boolean;
+                            size: number;
+                            opacity: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    active: boolean;
+    hovered: boolean;
+    clipped?: boolean;
+}
 
-export function renderMarker<T extends MarkerData>(
+export function renderMarker<T extends BaseMarkerData>(
     selection: Selection<BaseType, T, BaseType, unknown>,
 ) {
     const markerSelection = selection
@@ -53,7 +83,7 @@ export function renderMarker<T extends MarkerData>(
     return markerSelection;
 }
 
-export function getMarkerVisibility(d: MarkerData) {
+export function getMarkerVisibility(d: BaseMarkerData) {
     const markerStates = d.point.series.marker.states;
     let enabled: Boolean;
 
@@ -67,13 +97,13 @@ export function getMarkerVisibility(d: MarkerData) {
     return enabled ? '' : 'hidden';
 }
 
-export function getMarkerHaloVisibility(d: MarkerData) {
+export function getMarkerHaloVisibility(d: BaseMarkerData) {
     const markerStates = d.point.series.marker.states;
     const enabled = markerStates.hover.halo.enabled && d.hovered;
     return enabled ? '' : 'hidden';
 }
 
-export function setMarker<T extends BaseType, D extends MarkerData>(
+export function setMarker<T extends BaseType, D extends BaseMarkerData>(
     selection: Selection<T, D, BaseType | null, unknown>,
     state: 'normal' | 'hover',
 ) {

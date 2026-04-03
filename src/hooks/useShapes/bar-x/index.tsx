@@ -1,23 +1,17 @@
 import React from 'react';
 
-import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
-import {select} from 'd3-selection';
-import get from 'lodash/get';
 
 import type {PreparedSeriesOptions} from '~core/series/types';
+import {renderBarX} from '~core/shapes/bar-x/renderer';
+import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {filterOverlappingLabels} from '~core/utils';
 
 import {block} from '../../../utils';
 import {HtmlLayer} from '../HtmlLayer';
-import {renderAnnotations} from '../annotation';
-import type {AnnotationAnchor} from '../annotation';
-import {getRectPath} from '../utils';
 
-import type {PreparedBarXData} from './types';
-
-export {prepareBarXData} from './prepare-data';
-export * from './types';
+export {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
+export * from '~core/shapes/bar-x/types';
 
 const b = block('bar-x');
 
@@ -41,7 +35,6 @@ export const BarXSeriesShapes = (args: Args) => {
         htmlLayout,
         clipPathId,
     } = args;
-    const hoveredDataRef = React.useRef<PreparedBarXData[] | null | undefined>(null);
     const ref = React.useRef<SVGGElement>(null);
     const annotationsRef = React.useRef<SVGGElement>(null);
 
@@ -50,137 +43,22 @@ export const BarXSeriesShapes = (args: Args) => {
     }, [preparedData]);
 
     React.useEffect(() => {
-        if (!ref.current) {
+        if (!ref.current || !annotationsRef.current) {
             return () => {};
         }
 
-        const svgElement = select(ref.current);
-        const hoverOptions = get(seriesOptions, 'bar-x.states.hover');
-        const inactiveOptions = get(seriesOptions, 'bar-x.states.inactive');
-        svgElement.selectAll('*').remove();
-        const rectSelection = svgElement
-            .selectAll('allRects')
-            .data(preparedData)
-            .join('path')
-            .attr('d', (d) => {
-                const borderRadius = d.isLastStackItem
-                    ? Math.min(d.height, d.width / 2, d.series.borderRadius)
-                    : 0;
-
-                const p = getRectPath({
-                    x: d.x,
-                    y: d.y,
-                    width: d.width,
-                    height: d.height,
-                    borderRadius: [borderRadius, borderRadius, 0, 0],
-                });
-
-                return p.toString();
-            })
-            .attr('class', b('segment'))
-            .attr('x', (d) => d.x)
-            .attr('y', (d) => d.y)
-            .attr('height', (d) => d.height)
-            .attr('width', (d) => d.width)
-            .attr('fill', (d) => d.data.color || d.series.color)
-            .attr('opacity', (d) => d.opacity)
-            .attr('cursor', (d) => d.series.cursor);
-
-        let dataLabels = preparedData.map((d) => d.svgLabels).flat();
-        if (!allowOverlapDataLabels) {
-            dataLabels = filterOverlappingLabels(dataLabels);
-        }
-
-        const labelSelection = svgElement
-            .selectAll('text')
-            .data(dataLabels)
-            .join('text')
-            .html((d) => d.text)
-            .attr('class', b('label'))
-            .attr('x', (d) => d.x)
-            .attr('y', (d) => d.y)
-            .attr('text-anchor', (d) => d.textAnchor)
-            .style('font-size', (d) => d.style.fontSize)
-            .style('font-weight', (d) => d.style.fontWeight || null)
-            .style('fill', (d) => d.style.fontColor || null);
-
-        if (annotationsRef.current) {
-            const anchors: AnnotationAnchor[] = [];
-            for (const d of preparedData) {
-                if (d.annotation) {
-                    anchors.push({
-                        annotation: d.annotation,
-                        x: d.x + d.width / 2,
-                        y: d.y,
-                    });
-                }
-            }
-            renderAnnotations({
-                anchors,
-                container: select(annotationsRef.current),
-                plotHeight: boundsHeight,
-                plotWidth: boundsWidth,
-            });
-        }
-
-        function handleShapeHover(data?: PreparedBarXData[]) {
-            hoveredDataRef.current = data;
-            const hoverEnabled = hoverOptions?.enabled;
-            const inactiveEnabled = inactiveOptions?.enabled;
-
-            if (!data) {
-                if (hoverEnabled) {
-                    rectSelection.attr('fill', (d) => d.data.color || d.series.color);
-                }
-
-                if (inactiveEnabled) {
-                    rectSelection.attr('opacity', null);
-                    labelSelection.attr('opacity', null);
-                }
-
-                return;
-            }
-
-            if (hoverEnabled) {
-                const hoveredValues = data.map((d) => d.data.x);
-                rectSelection.attr('fill', (d) => {
-                    const fillColor = d.data.color || d.series.color;
-
-                    if (hoveredValues.includes(d.data.x)) {
-                        return (
-                            color(fillColor)?.brighter(hoverOptions?.brightness).toString() ||
-                            fillColor
-                        );
-                    }
-
-                    return fillColor;
-                });
-            }
-
-            if (inactiveEnabled) {
-                const hoveredSeries = data.map((d) => d.series.id);
-                rectSelection.attr('opacity', (d) => {
-                    return hoveredSeries.includes(d.series.id)
-                        ? null
-                        : inactiveOptions?.opacity || null;
-                });
-                labelSelection.attr('opacity', (d) => {
-                    return hoveredSeries.includes(d.series.id)
-                        ? null
-                        : inactiveOptions?.opacity || null;
-                });
-            }
-        }
-
-        if (hoveredDataRef.current !== null) {
-            handleShapeHover(hoveredDataRef.current);
-        }
-
-        dispatcher?.on('hover-shape.bar-x', handleShapeHover);
-
-        return () => {
-            dispatcher?.on('hover-shape.bar-x', null);
-        };
+        return renderBarX(
+            {
+                plot: ref.current,
+                annotations: annotationsRef.current,
+                boundsWidth,
+                boundsHeight,
+            },
+            preparedData,
+            seriesOptions,
+            allowOverlapDataLabels,
+            dispatcher,
+        );
     }, [
         allowOverlapDataLabels,
         boundsHeight,

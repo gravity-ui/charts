@@ -2,6 +2,7 @@ import {ascending, descending, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
+import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '~core/series/types';
 import {
@@ -11,11 +12,10 @@ import {
     getSvgLabelConstraintedPosition,
     getTextSizeFn,
 } from '~core/utils';
+import {getBarYLayout, groupBarYDataByYValue} from '~core/utils/bar-y';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData} from '../../../types';
-import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
-import {getBarYLayout, groupBarYDataByYValue} from '../../utils';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 

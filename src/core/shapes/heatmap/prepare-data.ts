@@ -1,6 +1,9 @@
+import type React from 'react';
+
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleLinear, ScaleTime} from 'd3-scale';
 
+import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedHeatmapSeries} from '~core/series/types';
 import {
@@ -12,9 +15,8 @@ import {
     getTextWithElipsis,
     isBandScale,
 } from '~core/utils';
+import {getBandSize} from '~core/utils/band-size';
 
-import type {PreparedXAxis, PreparedYAxis} from '../../../hooks/useAxis/types';
-import {getBandSize} from '../../../hooks/utils/get-band-size';
 import type {BaseTextStyle, HtmlItem} from '../../../types';
 
 import type {HeatmapItem, HeatmapLabel, PreparedHeatmapData} from './types';

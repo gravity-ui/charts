@@ -1,6 +1,6 @@
 import type {Path} from 'd3-path';
 
-import type {DashStyle} from 'src/core/constants';
+import type {DashStyle} from '~core/constants';
 import type {PreparedFunnelSeries} from '~core/series/types';
 
 import type {FunnelSeriesData, LabelData} from '../../../types';
