@@ -222,9 +222,10 @@ export function renderLine(
         }
     }
 
-    dispatcher?.on('hover-shape.line', handleShapeHover);
+    const eventName = `hover-shape.line-${preparedData[0]?.id ?? 'unknown'}`;
+    dispatcher?.on(eventName, handleShapeHover);
 
     return () => {
-        dispatcher?.on('hover-shape.line', null);
+        dispatcher?.on(eventName, null);
     };
 }
