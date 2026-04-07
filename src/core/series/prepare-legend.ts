@@ -169,11 +169,11 @@ async function getGroupedLegendItems(args: {
         resultItem.height = textHeight;
 
         if (textWidth > maxTextWidth) {
+            resultItem.overflowed = true;
+
             if (preparedLegend.html) {
-                resultItem.overflowed = true;
                 resultItem.textWidth = maxTextWidth;
             } else {
-                resultItem.overflowed = true;
                 resultItem.text = await getTextWithElipsis({
                     text: resultItem.text,
                     getTextWidth: async (s: string) => (await getLegendItemTextSize(s)).width,
