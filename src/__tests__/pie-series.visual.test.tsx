@@ -220,6 +220,47 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Should not overlap legend items on narrow width with long names', async ({mount}) => {
+        const data: ChartData = {
+            legend: {enabled: true},
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        data: [
+                            {
+                                name: 'eiusmod dolor tempor elit, in amet, sit do adipiscing Lorem ipsum sed consectetur',
+                                value: 77,
+                            },
+                            {
+                                name: 'consectetur adipisci ipsum Lorem amet, dolor sit',
+                                value: 39,
+                            },
+                            {
+                                name: 'ipsum sit do elit, adipiscing amet, te eiusmod consectetur dolor Lorem sed',
+                                value: 32,
+                            },
+                            {
+                                name: 'ipsum amet, adipiscing tempor dolor eiusmod sit inci consectetur Lorem elit, sed do',
+                                value: 22,
+                            },
+                            {
+                                name: 'te eiusmod',
+                                value: 11,
+                            },
+                            {
+                                name: 'do dolor sit consectetur tempor elit, amet, eiusmod ipsum adipiscing incidi sed Lorem',
+                                value: 1,
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} styles={{width: '174px'}} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test.describe('Connectors should not intersect with circle', () => {
         const baseData: ChartData = {
             legend: {
