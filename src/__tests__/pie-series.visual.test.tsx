@@ -220,9 +220,7 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test.only('Should not overlap legend items on narrow width with long names', async ({
-        mount,
-    }) => {
+    test('Should not overlap legend items on narrow width with long names', async ({mount}) => {
         const data: ChartData = {
             legend: {enabled: true},
             series: {
