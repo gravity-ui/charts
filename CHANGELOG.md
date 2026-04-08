@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.46.1](https://github.com/gravity-ui/charts/compare/v1.46.0...v1.46.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* render bar-x and area on logarithmic axis with zero or decade-aligned values ([#545](https://github.com/gravity-ui/charts/issues/545)) ([b520b31](https://github.com/gravity-ui/charts/commit/b520b314a107e09d336449c62528b2c890aeada9))
+
 ## [1.46.0](https://github.com/gravity-ui/charts/compare/v1.45.0...v1.46.0) (2026-04-03)
 
 
