@@ -107,6 +107,44 @@ function getDomainSyncedToPrimaryTicks(args: {
     return [secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]];
 }
 
+function getLogarithmicYMin(args: {
+    axis: PreparedAxis;
+    domain: unknown[];
+    yMinDomain: number;
+    hasSeriesWithVolumeOnYAxis: boolean;
+}): number {
+    const {axis, domain, yMinDomain, hasSeriesWithVolumeOnYAxis} = args;
+
+    // scaleLog cannot represent values <= 0. Pick the smallest positive value
+    // present in the domain, falling back to 1 if there is none.
+    const smallestPositive =
+        yMinDomain > 0
+            ? yMinDomain
+            : (domain.reduce<number | null>((min, v) => {
+                  if (typeof v === 'number' && v > 0) {
+                      return min === null ? v : Math.min(min, v);
+                  }
+                  return min;
+              }, null) ?? 1);
+
+    if (!hasSeriesWithVolumeOnYAxis) {
+        return smallestPositive;
+    }
+
+    // Volume series (bar-x, area, waterfall) draw bars from yMin up to the
+    // value, so a bar whose value equals yMin collapses to zero height. Drop
+    // the baseline one decade below to give it visible space — but only when
+    // the later `nice()` pass (triggered by startOnTick) won't supply that
+    // headroom on its own. nice() rounds down to the previous decade, which
+    // covers any value strictly between two decades; it has nothing to round
+    // when the smallest value already sits on a decade (e.g. 1, 10, 100).
+    const startOnTick = get(axis, 'startOnTick', false);
+    const isOnDecade = Number.isInteger(Math.log10(smallestPositive));
+    const needsHeadroom = !startOnTick || isOnDecade;
+
+    return needsHeadroom ? smallestPositive / 10 : smallestPositive;
+}
+
 function getDomainMinAlignedToStartTick(args: {
     axis: PreparedAxis;
     range: [number, number];
@@ -121,6 +159,11 @@ function getDomainMinAlignedToStartTick(args: {
         labelLineHeight: axis.labels.lineHeight,
         series,
     }) as {y: number; value: number}[];
+
+    if (tickValues.length === 0) {
+        return dMin;
+    }
+
     const isStartOnTick = tickValues[0].y === range[0];
     let dNewMin = dMin;
 
@@ -161,6 +204,10 @@ function getDomainMaxAlignedToEndTick(args: {
         labelLineHeight: axis.labels.lineHeight,
         series,
     }) as {y: number; value: number}[];
+
+    if (tickValues.length === 0) {
+        return dMax;
+    }
 
     let dNewMax = dMax;
     const isEndOnTick = tickValues[tickValues.length - 1].y === range[1];
@@ -229,11 +276,20 @@ export function createYScale(args: {
                     number,
                 ];
 
+                const hasSeriesWithVolumeOnYAxis = series.some((s) =>
+                    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
+                );
+
                 let yMin: number;
                 if (typeof yMinPropsOrState === 'number') {
                     yMin = yMinPropsOrState;
                 } else if (axis.type === 'logarithmic') {
-                    yMin = yMinDomain;
+                    yMin = getLogarithmicYMin({
+                        axis,
+                        domain,
+                        yMinDomain,
+                        hasSeriesWithVolumeOnYAxis,
+                    });
                 } else {
                     const yMinDefault = getDefaultMinYAxisValue(series);
                     yMin = typeof yMinDefault === 'number' ? yMinDefault : yMinDomain;
@@ -242,10 +298,11 @@ export function createYScale(args: {
                 let yMax: number;
                 if (typeof yMaxPropsOrState === 'number') {
                     yMax = yMaxPropsOrState;
+                } else if (axis.type === 'logarithmic') {
+                    // scaleLog cannot represent values <= 0; ensure yMax is strictly
+                    // greater than yMin so the resulting domain stays valid.
+                    yMax = yMaxDomain > yMin ? yMaxDomain : yMin * 10;
                 } else {
-                    const hasSeriesWithVolumeOnYAxis = series.some((s) =>
-                        CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
-                    );
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 

@@ -261,6 +261,35 @@ test.describe('Bar-x series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Logarithmic Y-axis with zero values in data', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 1, y: 0},
+                            {x: 2, y: 1},
+                            {x: 3, y: 0},
+                            {x: 4, y: 24},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    type: 'logarithmic',
+                    startOnTick: true,
+                    endOnTick: true,
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Stacking normal with reverse data order', async ({mount}) => {
         const chartData = cloneDeep(barXStakingNormalData);
         set(chartData, 'series.options.bar-x.dataSorting.direction', 'desc');
