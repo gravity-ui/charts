@@ -20,6 +20,7 @@ import {
 import type {ChartData} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
+import {getAttachedLocator, getLocator, getLocatorBoundingBox} from './utils';
 
 test.describe('Area series', () => {
     test('Basic', async ({mount}) => {
@@ -791,6 +792,167 @@ test.describe('Area series', () => {
             };
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.getByText('Annotated')).toHaveCount(1);
+        });
+    });
+
+    test.describe('Out-of-range points', () => {
+        test('empty line and region when axis.min is above all data', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: -3},
+                                {x: 2, y: -2},
+                                {x: 3, y: -4},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{min: 0}],
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const linePath = await getAttachedLocator({
+                component,
+                selector: '.gcharts-area__line',
+            });
+            const regionPath = await getAttachedLocator({
+                component,
+                selector: '.gcharts-area__region',
+            });
+            const lineD = await linePath.getAttribute('d');
+            const regionD = await regionPath.getAttribute('d');
+            expect(lineD).toBeNull();
+            expect(regionD).toBeNull();
+        });
+
+        test('empty line and region when axis.max is below all data', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: 50},
+                                {x: 2, y: 60},
+                                {x: 3, y: 55},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{max: 0}],
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const linePath = await getAttachedLocator({
+                component,
+                selector: '.gcharts-area__line',
+            });
+            const regionPath = await getAttachedLocator({
+                component,
+                selector: '.gcharts-area__region',
+            });
+            const lineD = await linePath.getAttribute('d');
+            const regionD = await regionPath.getAttribute('d');
+            expect(lineD).toBeNull();
+            expect(regionD).toBeNull();
+        });
+
+        test('no hover marker when all points are out of range', async ({mount, page}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: -3},
+                                {x: 2, y: -2},
+                                {x: 3, y: -4},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{min: 0}],
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const svg = await getLocator({component, selector: 'svg'});
+            const box = await getLocatorBoundingBox(svg);
+            await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+            // Default area series has marker.normal disabled, so any
+            // .gcharts-marker__wrapper in the DOM would be a hover marker.
+            const hoverMarkers = component.locator('.gcharts-marker__wrapper');
+            await expect(hoverMarkers).toHaveCount(0);
+        });
+
+        test('anchor neighbors extend the visible cluster by one point on each side', async ({
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: -10},
+                                {x: 2, y: -5},
+                                {x: 3, y: 5},
+                                {x: 4, y: 8},
+                                {x: 5, y: 4},
+                                {x: 6, y: -5},
+                                {x: 7, y: -10},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{min: 0, max: 10}],
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const linePath = await getLocator({component, selector: '.gcharts-area__line'});
+            const d = (await linePath.getAttribute('d')) ?? '';
+            // 3 in-range + 2 anchor neighbors = 5 points = 1 M + 4 L commands.
+            // Without anchors we'd get only 3 points (1 M + 2 L), so this catches
+            // a regression where anchor logic stops preserving out-of-range
+            // neighbors of visible points.
+            const moveCount = (d.match(/M/g) ?? []).length;
+            const lineCount = (d.match(/L/g) ?? []).length;
+            expect(moveCount).toBe(1);
+            expect(lineCount).toBe(4);
+        });
+
+        test('out-of-range gap between visible clusters splits the path', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: 5},
+                                {x: 2, y: -10},
+                                {x: 3, y: -10},
+                                {x: 4, y: -10},
+                                {x: 5, y: 5},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{min: 0, max: 10}],
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const linePath = await getLocator({component, selector: '.gcharts-area__line'});
+            const d = (await linePath.getAttribute('d')) ?? '';
+            // Defined sequence [def, def, skip, def, def] → two separate subpaths.
+            const moveCount = (d.match(/M/g) ?? []).length;
+            expect(moveCount).toBe(2);
         });
     });
 });

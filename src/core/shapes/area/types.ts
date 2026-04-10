@@ -2,13 +2,14 @@ import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedAreaSeries} from '../../series/types';
 
 export type PointData = {
-    y0: number;
-    x: number;
-    y: number | null;
-    data: AreaSeriesData;
-    series: PreparedAreaSeries;
     annotation?: PreparedAnnotation;
     color?: string;
+    data: AreaSeriesData;
+    hiddenInLine?: boolean;
+    series: PreparedAreaSeries;
+    x: number;
+    y: number | null;
+    y0: number;
 };
 
 export type MarkerPointData = PointData & {

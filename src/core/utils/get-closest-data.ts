@@ -147,7 +147,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 const linePoints = (list as PreparedLineData[]).reduce<ShapePoint[]>((acc, d) => {
                     acc.push(
                         ...d.points.reduce<ShapePoint[]>((accPoints, p) => {
-                            if (p.y !== null && p.x !== null) {
+                            if (p.y !== null && p.x !== null && !p.hiddenInLine) {
                                 accPoints.push({
                                     data: p.data,
                                     series: p.series as LineSeries,
@@ -166,16 +166,18 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             }
             case 'area': {
                 const areaPoints = (list as PreparedAreaData[]).reduce<ShapePoint[]>((acc, d) => {
-                    Array.prototype.push.apply(
-                        acc,
-                        d.points.map((p) => ({
+                    for (const p of d.points) {
+                        if (p.y === null || p.hiddenInLine) {
+                            continue;
+                        }
+                        acc.push({
                             data: p.data,
                             series: p.series as AreaSeries,
                             x: p.x,
                             y0: p.y0,
                             y1: p.y,
-                        })),
-                    );
+                        });
+                    }
                     return acc;
                 }, []);
                 closestPointsByXValue.push(...areaPoints);

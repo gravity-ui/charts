@@ -6,7 +6,7 @@ import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '../../utils';
 import {getFormattedValue} from '../../utils/format';
-import {getXValue, getYValue} from '../utils';
+import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';
 
@@ -194,6 +194,15 @@ export const prepareLineData = async (args: {
             }
             return result;
         }, []);
+
+        markHiddenPointsOutOfYRange({
+            points,
+            yScale: seriesYScale,
+            yAxisTop,
+            axisMin: seriesYAxis.min,
+            axisMax: seriesYAxis.max,
+            getDataY: (p) => p.data.y,
+        });
 
         const result: PreparedLineData = {
             annotations,

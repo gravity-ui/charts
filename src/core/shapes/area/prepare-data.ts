@@ -9,7 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
-import {getXValue, getYValue} from '../../shapes/utils';
+import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
 import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 
@@ -425,6 +425,12 @@ export const prepareAreaData = async (args: {
                     }
                     return result;
                 }, []);
+
+                markHiddenPointsOutOfYRange({
+                    points,
+                    yScale: seriesYScale,
+                    yAxisTop,
+                });
 
                 seriesStackData.push({
                     annotations,

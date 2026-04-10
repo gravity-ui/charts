@@ -306,6 +306,27 @@ export function createYScale(args: {
                     yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
+                // When the user pins only one of min/max on the wrong side of all data,
+                // d3 produces either an inverted scale (yMax<yMin, silently flips the
+                // axis) or a degenerate one (yMax===yMin, maps everything to the range
+                // midpoint); both leave phantom hover targets inside an empty plot.
+                // Expand the auto-computed side so the scale stays sane. Only applies
+                // when the opposite bound is auto-derived — if the user supplied both
+                // bounds, trust the explicit range and let point filtering hide the
+                // rest. Comparison uses the raw data extent because upstream coercions
+                // like volume-series `yMax = Math.max(yMaxDomain, 0)` can make the
+                // post-coerced yMin/yMax lie about where data actually sits.
+                // Logarithmic has its own guard.
+                if (axis.type === 'linear') {
+                    const minIsUserSet = typeof yMinPropsOrState === 'number';
+                    const maxIsUserSet = typeof yMaxPropsOrState === 'number';
+                    if (minIsUserSet && !maxIsUserSet && yMaxDomain < yMin) {
+                        yMax = yMin + Math.max(Math.abs(yMin), 1);
+                    } else if (maxIsUserSet && !minIsUserSet && yMinDomain > yMax) {
+                        yMin = yMax - Math.max(Math.abs(yMax), 1);
+                    }
+                }
+
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 

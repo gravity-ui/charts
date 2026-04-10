@@ -5,10 +5,31 @@ import type {Locator, Page} from '@playwright/test';
 /** Same shape as Playwright `locator.boundingBox()` (not `DOMRect`: no top/left/right/bottom). */
 export type LocatorBoundingBox = {x: number; y: number; width: number; height: number};
 
+/**
+ * Waits for the element to be visible before returning the locator. Use this
+ * when the test needs to interact with a rendered element (read its bounding
+ * box, simulate mouse events on it, parse its attributes) and you want a clear
+ * failure if the chart hasn't painted it yet. For elements that can
+ * legitimately exist without a visible bounding box — an SVG `<path>` with an
+ * empty `d`, for example — use `getAttachedLocator` instead.
+ */
 export async function getLocator(args: {component: MountResult; selector: string}) {
     const {component, selector} = args;
     const locator = component.locator(selector);
     await expect(locator).toBeVisible();
+
+    return locator;
+}
+
+/**
+ * Waits for the element to be attached to the DOM without requiring visibility.
+ * Useful for SVG paths that can legitimately have a zero-size bounding box
+ * (e.g. empty `d` attribute), which Playwright's `toBeVisible()` rejects.
+ */
+export async function getAttachedLocator(args: {component: MountResult; selector: string}) {
+    const {component, selector} = args;
+    const locator = component.locator(selector);
+    await expect(locator).toBeAttached();
 
     return locator;
 }

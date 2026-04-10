@@ -47,7 +47,7 @@ export function renderArea(
 
     const line = lineGenerator<PointData>()
         .x((d) => d.x)
-        .defined((d) => d.y !== null)
+        .defined((d) => d.y !== null && !d.hiddenInLine)
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
@@ -71,7 +71,7 @@ export function renderArea(
         .attr('stroke-linecap', 'round');
 
     const area = areaGenerator<PointData>()
-        .defined((d) => d.y !== null)
+        .defined((d) => d.y !== null && !d.hiddenInLine)
         .x((d) => d.x)
         .y0((d) => d.y0)
         .y1((d) => d.y as number);
