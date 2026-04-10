@@ -5,7 +5,7 @@ import capitalize from 'lodash/capitalize';
 
 import {formatNumber, getDefaultUnit} from '../../libs';
 import type {FormatOptions} from '../../libs/format-number/types';
-import type {CustomFormat, ValueFormat} from '../../types';
+import type {ValueFormat} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_DATE_FORMAT} from '../constants';
 
@@ -37,7 +37,7 @@ function getFormattedDate(args: {value: DateTimeInput; format?: string}) {
 
 export function getFormattedValue(args: {
     value: string | number | undefined | null;
-    format?: ValueFormat | CustomFormat;
+    format?: ValueFormat;
 }) {
     const {value, format} = args;
 
