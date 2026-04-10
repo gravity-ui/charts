@@ -3,12 +3,13 @@ import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '../../series/types';
 
 export type PointData = {
-    x: number | null;
-    y: number | null;
-    data: LineSeriesData;
-    series: PreparedLineSeries;
     annotation?: PreparedAnnotation;
     color?: string;
+    data: LineSeriesData;
+    hiddenInLine?: boolean;
+    series: PreparedLineSeries;
+    x: number | null;
+    y: number | null;
 };
 export type MarkerPointData = PointData & {y: number; x: number};
 export type MarkerData = {

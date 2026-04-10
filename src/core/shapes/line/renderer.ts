@@ -45,7 +45,7 @@ export function renderLine(
     const inactiveOptions = get(seriesOptions, 'line.states.inactive');
 
     const line = lineGenerator<PointData>()
-        .defined((d) => d.y !== null && d.x !== null)
+        .defined((d) => d.y !== null && d.x !== null && !d.hiddenInLine)
         .x((d) => d.x as number)
         .y((d) => d.y as number);
 

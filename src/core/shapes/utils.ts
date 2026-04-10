@@ -89,6 +89,74 @@ export function getYValue(args: {
     return point.y === null ? null : yLinearScale(point.y as number);
 }
 
+// Slack for d3 scale rounding (a `500` edge can come back as `499.9999`).
+// Half a pixel matches the ±0.5 of a 1px centered stroke and far exceeds any
+// plausible float error.
+const Y_RANGE_PIXEL_TOLERANCE = 0.5;
+
+/**
+ * Hides out-of-range points from line/area path generators via `hiddenInLine`.
+ * Neighbors of in-range points are kept as anchors so the path retains its
+ * slope at the plot edges instead of stopping abruptly at the visible point.
+ *
+ * Pixel check alone is not enough: a degenerate/clamped scale domain (see the
+ * y-scale.ts guard) can map out-of-range data into the plot rectangle, leaving
+ * phantom hover targets. Pass `axisMin`/`axisMax` + `getDataY` to also reject
+ * points whose raw value is outside the user's intended range.
+ *
+ * Stacked shapes must NOT pass the data check — `point.data.y` is the unstacked
+ * value and doesn't reflect where the point actually lands on the plot.
+ */
+export function markHiddenPointsOutOfYRange<
+    P extends {y: number | null; hiddenInLine?: boolean},
+>(args: {
+    points: P[];
+    yScale: ChartScale;
+    yAxisTop: number;
+    axisMin?: number;
+    axisMax?: number;
+    getDataY?: (point: P) => unknown;
+}): void {
+    const {points, yScale, yAxisTop, axisMin, axisMax, getDataY} = args;
+    const [yRangeA, yRangeB] = yScale.range() as [number, number];
+    const yMinPx = yAxisTop + Math.min(yRangeA, yRangeB);
+    const yMaxPx = yAxisTop + Math.max(yRangeA, yRangeB);
+    const hasDataBoundsCheck =
+        Boolean(getDataY) && (typeof axisMin === 'number' || typeof axisMax === 'number');
+
+    const isInRange = (point: P): boolean => {
+        if (point.y === null) {
+            return false;
+        }
+
+        if (hasDataBoundsCheck) {
+            const dataY = getDataY?.(point);
+
+            if (typeof dataY === 'number') {
+                if (typeof axisMin === 'number' && dataY < axisMin) {
+                    return false;
+                }
+
+                if (typeof axisMax === 'number' && dataY > axisMax) {
+                    return false;
+                }
+            }
+        }
+
+        return (
+            point.y >= yMinPx - Y_RANGE_PIXEL_TOLERANCE &&
+            point.y <= yMaxPx + Y_RANGE_PIXEL_TOLERANCE
+        );
+    };
+
+    const inRange = points.map(isInRange);
+    for (let idx = 0; idx < points.length; idx++) {
+        if (!inRange[idx] && !inRange[idx - 1] && !inRange[idx + 1]) {
+            points[idx].hiddenInLine = true;
+        }
+    }
+}
+
 export function shapeKey(d: unknown) {
     return (d as {id?: string | number}).id || -1;
 }
