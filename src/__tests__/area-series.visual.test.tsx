@@ -795,7 +795,7 @@ test.describe('Area series', () => {
         });
     });
 
-    test.describe.only('Out-of-range points', () => {
+    test.describe('Out-of-range points', () => {
         test('empty line and region when axis.min is above all data', async ({mount}) => {
             const chartData: ChartData = {
                 series: {
