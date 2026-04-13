@@ -43,7 +43,7 @@ describe('getFormattedValue', () => {
                     format: {
                         type: 'number',
                         precision: 1,
-                        units: {base: 1024, labels: ['B', 'KB', 'MB']},
+                        units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB']}},
                     },
                 }),
             ).toMatch(/^1[.,]5 KB$/);
@@ -55,11 +55,13 @@ describe('getFormattedValue', () => {
                     value: 3600,
                     format: {
                         type: 'number',
-                        units: [
-                            {factor: 1, label: 's'},
-                            {factor: 60, label: 'min'},
-                            {factor: 3600, label: 'h'},
-                        ],
+                        units: {
+                            scale: [
+                                {factor: 1, postfix: 's'},
+                                {factor: 60, postfix: 'min'},
+                                {factor: 3600, postfix: 'h'},
+                            ],
+                        },
                     },
                 }),
             ).toBe('1 h');

@@ -69,7 +69,7 @@ export const tooltipWithUnits: ChartData = {
                     format: {
                         type: 'number',
                         precision: 1,
-                        units: {base: 1024, labels: ['B', 'KB', 'MB', 'GB', 'TB']},
+                        units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']}},
                     },
                 },
             },
@@ -79,7 +79,7 @@ export const tooltipWithUnits: ChartData = {
         valueFormat: {
             type: 'number',
             precision: 1,
-            units: {base: 1024, labels: ['B', 'KB', 'MB', 'GB', 'TB']},
+            units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']}},
         },
     },
     yAxis: [

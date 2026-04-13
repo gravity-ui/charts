@@ -102,9 +102,9 @@ const baseFormatNumber = unitFormatter({
     unitsI18nKeys: BASE_NUMBER_FORMAT_UNIT_KEYS,
 });
 
-const FALLBACK_UNIT_ENTRY: FormatUnitScaleEntry = {factor: 1, label: ''};
+const FALLBACK_UNIT_ENTRY: FormatUnitScaleEntry = {factor: 1, postfix: ''};
 
-const normalizedUnitsCache = new WeakMap<object, FormatUnitScaleEntry[]>();
+const normalizedUnitsCache = new WeakMap<FormatUnitScale, FormatUnitScaleEntry[]>();
 
 const normalizeUnits = (units: FormatUnitScale): FormatUnitScaleEntry[] => {
     const cached = normalizedUnitsCache.get(units);
@@ -113,11 +113,12 @@ const normalizeUnits = (units: FormatUnitScale): FormatUnitScaleEntry[] => {
         return cached;
     }
 
-    const entries = Array.isArray(units)
-        ? units.map((e) => ({factor: e.factor, label: e.label}))
-        : units.labels.map((label, i) => ({factor: Math.pow(units.base, i), label}));
+    const {scale} = units;
+    const rawEntries = Array.isArray(scale)
+        ? scale.map((e) => ({factor: e.factor, postfix: e.postfix}))
+        : scale.postfixes.map((postfix, i) => ({factor: Math.pow(scale.base, i), postfix}));
 
-    const valid = entries.filter((e) => Number.isFinite(e.factor) && e.factor > 0);
+    const valid = rawEntries.filter((e) => Number.isFinite(e.factor) && e.factor > 0);
     valid.sort((a, b) => a.factor - b.factor);
 
     const deduped: FormatUnitScaleEntry[] = [];
@@ -151,10 +152,10 @@ const pickUnitEntry = (value: number, scale: FormatUnitScaleEntry[]): FormatUnit
 
 const customUnitFormatter = (
     value: number,
-    scale: FormatUnitScaleEntry[],
+    units: FormatUnitScale,
     options: FormatNumberOptions,
 ): string => {
-    const {lang, unitDelimiter} = options;
+    const {lang} = options;
 
     const i18nLang = i18nInstance.lang as string;
 
@@ -162,15 +163,16 @@ const customUnitFormatter = (
         i18nInstance.setLang(lang);
     }
 
-    const entry = pickUnitEntry(value, scale);
+    const normalizedScale = normalizeUnits(units);
+    const entry = pickUnitEntry(value, normalizedScale);
     const result = formatScaledNumber(value / entry.factor, options);
     const resolvedDelimiter =
-        typeof unitDelimiter === 'string' ? unitDelimiter : i18n('value_space-delimiter');
-    const delimiter = entry.label ? resolvedDelimiter : '';
+        typeof units.delimiter === 'string' ? units.delimiter : i18n('value_space-delimiter');
+    const delimiter = entry.postfix ? resolvedDelimiter : '';
 
     i18nInstance.setLang(i18nLang);
 
-    return `${result}${delimiter}${entry.label}`;
+    return `${result}${delimiter}${entry.postfix}`;
 };
 
 const NUMBER_UNIT_RATE_BY_UNIT = {
@@ -217,10 +219,9 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
     }
 
     if (units) {
-        const scale = normalizeUnits(units);
         const formattedValue = customUnitFormatter(
             Number(value) * changedMultiplier,
-            scale,
+            units,
             options,
         );
 

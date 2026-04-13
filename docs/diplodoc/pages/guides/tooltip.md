@@ -84,122 +84,11 @@ In this example:
 
 ## Value Formatting
 
-The tooltip displays values from your data series. While these can be of different types (strings, dates, etc.), numeric values are most common. By default, numbers are shown as-is, but you can customize their formatting using the `valueFormat` property, which accepts a [FormatNumberOptions](../api/Utilities/interfaces/FormatNumberOptions.md) object. This is useful for controlling decimal precision, formatting large numbers, percentages, and more.
-
-**Example:** For percentage values, use `type: 'number'` with `format: 'percent'`.The formatter automatically multiplies the value by 100 and adds the % symbol. Use precision to control the number of decimal places.
-
-```javascript
-series: {
-  data: [
-    {
-      type: 'line',
-      data: [{x: 1, y: 0.156}, {x: 2, y: 0.234}, {x: 3, y: 0.389}], // Values as decimal fractions
-      name: 'Conversion Rate',
-    },
-  ],
-},
-tooltip: {
-  valueFormat: {
-    type: 'number',
-    format: 'percent',
-    precision: 1, // Will display: 15.6%, 23.4%, 38.9%
-  },
-}
-```
-
-### Custom unit scales
-
-For scaled values like bytes, SI prefixes, or time units, use the declarative `units` option instead of writing a custom formatter. The scale entry with the largest `factor` such that `|value| / factor >= 1` wins automatically.
-
-Two forms are supported:
-
-- **`{base, labels}`** — geometric progression: `labels[i]` is bound to `factor = base^i`. Great for bytes (base `1024`), SI decimal prefixes (base `1000`), and similar.
-- **`{factor, label}[]`** — arbitrary factors. Required for non-linear scales like seconds/minutes/hours/days.
-
-The `unitDelimiter` option controls the string placed between the value and the label (defaults to a locale-aware space; pass `''` to suppress it).
-
-**Example:** Render raw byte counts as `B / KB / MB / GB / TB`.
-
-```javascript
-tooltip: {
-  valueFormat: {
-    type: 'number',
-    precision: 1,
-    units: {base: 1024, labels: ['B', 'KB', 'MB', 'GB', 'TB']},
-  },
-}
-```
-
-**Example:** Non-linear time scale — `45` → `"45 s"`, `90` → `"1.5 min"`, `3600` → `"1 h"`.
-
-```javascript
-tooltip: {
-  valueFormat: {
-    type: 'number',
-    precision: 1,
-    units: [
-      {factor: 1, label: 's'},
-      {factor: 60, label: 'min'},
-      {factor: 3600, label: 'h'},
-      {factor: 86400, label: 'd'},
-    ],
-    unitDelimiter: '', // renders "1.5min" instead of "1.5 min"
-  },
-}
-```
-
-### Custom formatter
-
-When the built-in `number` and `date` formatters aren't enough — and the `units`
-option above doesn't fit either — use `{ type: 'custom' }` to provide your own
-formatter function. This is the right escape hatch when the output isn't a single
-scaled number: locale-aware currency rendering, pluralization, value + delta
-concatenation, or any other domain-specific shape.
-
-The `formatter` receives `{value}` and must return a string. The same `ValueFormat`
-shape is accepted in `tooltip.valueFormat`, `tooltip.headerFormat`, and `dataLabels.format`.
-
-**Example:** Render a value as locale-aware currency with a signed delta against a
-baseline (e.g. `"$1,234.56 (+2.3%)"` or `"1 234,56 € (−0,8 %)"`). This combines
-`Intl.NumberFormat`'s `style: 'currency'` mode with a comparison that depends on
-external state — neither piece is expressible declaratively.
-
-```javascript
-const BASELINE = 1000;
-
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
-const percent = new Intl.NumberFormat('en-US', {
-  style: 'percent',
-  signDisplay: 'exceptZero',
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
-
-const formatRevenue = ({value}) => {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return String(value);
-  const delta = (amount - BASELINE) / BASELINE;
-  return `${currency.format(amount)} (${percent.format(delta)})`;
-};
-
-{
-  series: {
-    data: [
-      {
-        type: 'line',
-        name: 'Revenue',
-        data: [/* y in USD */],
-      },
-    ],
-  },
-  tooltip: {
-    valueFormat: {type: 'custom', formatter: formatRevenue},
-  },
-}
-```
+Tooltip rows, header, and totals accept a `valueFormat` / `headerFormat` shaped
+as [ValueFormat](../api/Utilities/type-aliases/ValueFormat.md). Formatting works
+the same way as everywhere else in the chart (data labels, axis labels, etc.) —
+see the [Value formatting](./value-formatting.md) guide for the full reference,
+the `units` option, custom formatters, and examples.
 
 ### Per-series override
 
@@ -220,7 +109,7 @@ series-level setting takes precedence over the chart-level one for that series o
           valueFormat: {
             type: 'number',
             precision: 1,
-            units: {base: 1024, labels: ['B', 'KB', 'MB', 'GB', 'TB']},
+            units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']}},
           },
         },
       },

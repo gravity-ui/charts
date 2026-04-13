@@ -38,6 +38,8 @@ items:
         href: ./pages/guides/theming.md
       - name: Tooltip
         href: ./pages/guides/tooltip.md
+      - name: Value formatting
+        href: ./pages/guides/value-formatting.md
   - name: API
     href: ./pages/api
     autodoc: true

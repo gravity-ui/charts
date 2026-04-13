@@ -17,18 +17,30 @@ export interface FormatOptions {
 
 /** Single entry of a custom unit scale. */
 export type FormatUnitScaleEntry = {
-    /** Positive multiplier applied to the value. The label wins when `|value| / factor >= 1`. */
+    /** Positive multiplier applied to the value. The entry wins when `|value| / factor >= 1`. */
     factor: number;
-    /** Suffix rendered after the scaled value (e.g. `'KB'`). Use an empty string to suppress the suffix and the delimiter. */
-    label: string;
+    /** String appended after the scaled value (e.g. `'KB'`). Use an empty string to suppress the suffix and the delimiter. */
+    postfix: string;
 };
 
 /**
  * Custom unit scale for numeric formatting.
- * - `{base, labels}` — geometric progression: `labels[i]` is bound to `factor = base^i` (e.g. `{base: 1024, labels: ['B','KB','MB']}`).
- * - `FormatUnitScaleEntry[]` — arbitrary factors; required for non-linear scales (e.g. `[{factor:1,label:'s'},{factor:60,label:'min'},{factor:3600,label:'h'}]`).
+ *
+ * `scale` describes the unit table in one of two forms:
+ * - `{base, postfixes}` — geometric progression: `postfixes[i]` is bound to `factor = base^i` (e.g. `{base: 1024, postfixes: ['B','KB','MB']}`).
+ * - `FormatUnitScaleEntry[]` — arbitrary factors; required for non-linear scales (e.g. `[{factor:1,postfix:'s'},{factor:60,postfix:'min'},{factor:3600,postfix:'h'}]`).
+ *
+ * `delimiter` is the shared string placed between the scaled value and the
+ * postfix. Defaults to a locale-aware space; pass `''` to suppress it.
+ *
+ * The normalized scale is cached by object identity, so for best performance
+ * reuse the same `units` object across `formatNumber` calls instead of
+ * creating a new inline literal on every render.
  */
-export type FormatUnitScale = {base: number; labels: string[]} | FormatUnitScaleEntry[];
+export type FormatUnitScale = {
+    scale: {base: number; postfixes: string[]} | FormatUnitScaleEntry[];
+    delimiter?: string;
+};
 
 export interface FormatNumberOptions extends FormatOptions {
     /**
@@ -63,9 +75,4 @@ export interface FormatNumberOptions extends FormatOptions {
      * clamped to the smallest entry for very small values.
      */
     units?: FormatUnitScale;
-    /**
-     * String placed between the scaled value and the unit label when `units` is set.
-     * Defaults to a locale-aware space. Use `''` to render without a separator (e.g. `'1.5h'`).
-     */
-    unitDelimiter?: string;
 }

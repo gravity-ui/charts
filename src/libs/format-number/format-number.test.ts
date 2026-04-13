@@ -6,16 +6,17 @@ import {formatNumber} from '.';
 i18nInstance.setLang('en');
 
 const BYTES: FormatNumberOptions['units'] = {
-    base: 1024,
-    labels: ['B', 'KB', 'MB', 'GB', 'TB'],
+    scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']},
 };
 
-const TIME: FormatNumberOptions['units'] = [
-    {factor: 1, label: 's'},
-    {factor: 60, label: 'min'},
-    {factor: 3600, label: 'h'},
-    {factor: 86400, label: 'd'},
-];
+const TIME: FormatNumberOptions['units'] = {
+    scale: [
+        {factor: 1, postfix: 's'},
+        {factor: 60, postfix: 'min'},
+        {factor: 3600, postfix: 'h'},
+        {factor: 86400, postfix: 'd'},
+    ],
+};
 
 describe('plugins/shared', () => {
     test.each<[unknown, FormatNumberOptions | undefined, string]>([
@@ -28,7 +29,7 @@ describe('plugins/shared', () => {
         expect(result).toEqual(expected);
     });
 
-    describe('formatNumber units (object form)', () => {
+    describe('formatNumber units (geometric scale)', () => {
         test.each<[number, FormatNumberOptions, string]>([
             [0, {units: BYTES}, '0 B'],
             [512, {units: BYTES}, '512 B'],
@@ -43,7 +44,7 @@ describe('plugins/shared', () => {
         });
     });
 
-    describe('formatNumber units (array form, non-linear)', () => {
+    describe('formatNumber units (entries scale, non-linear)', () => {
         test.each<[number, FormatNumberOptions, string]>([
             [45, {units: TIME}, '45 s'],
             [90, {units: TIME, precision: 1}, '1.5 min'],
@@ -55,39 +56,45 @@ describe('plugins/shared', () => {
         });
     });
 
-    test('non-ascending array input is sorted', () => {
-        const reversed: FormatNumberOptions['units'] = [
-            {factor: 3600, label: 'h'},
-            {factor: 60, label: 'min'},
-            {factor: 1, label: 's'},
-        ];
+    test('non-ascending entries are sorted', () => {
+        const reversed: FormatNumberOptions['units'] = {
+            scale: [
+                {factor: 3600, postfix: 'h'},
+                {factor: 60, postfix: 'min'},
+                {factor: 1, postfix: 's'},
+            ],
+        };
         expect(formatNumber(120, {units: reversed})).toEqual('2 min');
     });
 
     test('duplicate factors are deduped (first wins after sort)', () => {
-        const dup: FormatNumberOptions['units'] = [
-            {factor: 1, label: 's'},
-            {factor: 60, label: 'min-a'},
-            {factor: 60, label: 'min-b'},
-        ];
+        const dup: FormatNumberOptions['units'] = {
+            scale: [
+                {factor: 1, postfix: 's'},
+                {factor: 60, postfix: 'min-a'},
+                {factor: 60, postfix: 'min-b'},
+            ],
+        };
         expect(formatNumber(60, {units: dup})).toEqual('1 min-a');
     });
 
-    test('single-entry array always picks that entry', () => {
-        const single: FormatNumberOptions['units'] = [{factor: 10, label: 'X'}];
+    test('single-entry scale always picks that entry', () => {
+        const single: FormatNumberOptions['units'] = {scale: [{factor: 10, postfix: 'X'}]};
         expect(formatNumber(5, {units: single})).toEqual('0.5 X');
         expect(formatNumber(250, {units: single})).toEqual('25 X');
     });
 
-    test('empty array falls back to bare number', () => {
-        expect(formatNumber(1234, {units: []})).toEqual('1,234');
+    test('empty entries scale falls back to bare number', () => {
+        expect(formatNumber(1234, {units: {scale: []}})).toEqual('1,234');
     });
 
-    test('label="" suppresses trailing delimiter', () => {
-        const mixed: FormatNumberOptions['units'] = [
-            {factor: 1, label: ''},
-            {factor: 1000, label: 'k'},
-        ];
+    test('postfix="" suppresses trailing delimiter', () => {
+        const mixed: FormatNumberOptions['units'] = {
+            scale: [
+                {factor: 1, postfix: ''},
+                {factor: 1000, postfix: 'k'},
+            ],
+        };
         expect(formatNumber(500, {units: mixed})).toEqual('500');
         expect(formatNumber(2000, {units: mixed})).toEqual('2 k');
     });
@@ -103,7 +110,10 @@ describe('plugins/shared', () => {
 
     test('showRankDelimiter=false disables grouping', () => {
         expect(
-            formatNumber(1536000, {units: [{factor: 1, label: 'B'}], showRankDelimiter: false}),
+            formatNumber(1536000, {
+                units: {scale: [{factor: 1, postfix: 'B'}]},
+                showRankDelimiter: false,
+            }),
         ).toEqual('1536000 B');
     });
 
@@ -119,24 +129,32 @@ describe('plugins/shared', () => {
         expect(formatNumber(2048, {units: BYTES, unit: 'k'})).toEqual('2 KB');
     });
 
-    describe('unitDelimiter', () => {
+    describe('delimiter', () => {
         test('empty string removes the space', () => {
-            expect(formatNumber(3600, {units: TIME, unitDelimiter: ''})).toEqual('1h');
+            const time: FormatNumberOptions['units'] = {...TIME, delimiter: ''};
+            expect(formatNumber(3600, {units: time})).toEqual('1h');
         });
 
         test('custom string is used verbatim', () => {
-            expect(formatNumber(2048, {units: BYTES, unitDelimiter: '\u00a0'})).toEqual(
-                '2\u00a0KB',
-            );
+            const bytes: FormatNumberOptions['units'] = {...BYTES, delimiter: '\u00a0'};
+            expect(formatNumber(2048, {units: bytes})).toEqual('2\u00a0KB');
         });
 
-        test('unitDelimiter still suppressed when label is empty', () => {
-            const mixed: FormatNumberOptions['units'] = [
-                {factor: 1, label: ''},
-                {factor: 1000, label: 'k'},
-            ];
-            expect(formatNumber(500, {units: mixed, unitDelimiter: ' · '})).toEqual('500');
-            expect(formatNumber(2000, {units: mixed, unitDelimiter: ' · '})).toEqual('2 · k');
+        test('multi-char delimiter on geometric scale', () => {
+            const bytes: FormatNumberOptions['units'] = {...BYTES, delimiter: ' — '};
+            expect(formatNumber(1048576, {units: bytes, precision: 1})).toEqual('1.0 — MB');
+        });
+
+        test('still suppressed when postfix is empty', () => {
+            const mixed: FormatNumberOptions['units'] = {
+                scale: [
+                    {factor: 1, postfix: ''},
+                    {factor: 1000, postfix: 'k'},
+                ],
+                delimiter: ' · ',
+            };
+            expect(formatNumber(500, {units: mixed})).toEqual('500');
+            expect(formatNumber(2000, {units: mixed})).toEqual('2 · k');
         });
     });
 });
