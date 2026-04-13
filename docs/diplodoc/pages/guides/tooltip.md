@@ -107,27 +107,82 @@ tooltip: {
 }
 ```
 
+### Custom unit scales
+
+For scaled values like bytes, SI prefixes, or time units, use the declarative `units` option instead of writing a custom formatter. The scale entry with the largest `factor` such that `|value| / factor >= 1` wins automatically.
+
+Two forms are supported:
+
+- **`{base, labels}`** — geometric progression: `labels[i]` is bound to `factor = base^i`. Great for bytes (base `1024`), SI decimal prefixes (base `1000`), and similar.
+- **`{factor, label}[]`** — arbitrary factors. Required for non-linear scales like seconds/minutes/hours/days.
+
+The `unitDelimiter` option controls the string placed between the value and the label (defaults to a locale-aware space; pass `''` to suppress it).
+
+**Example:** Render raw byte counts as `B / KB / MB / GB / TB`.
+
+```javascript
+tooltip: {
+  valueFormat: {
+    type: 'number',
+    precision: 1,
+    units: {base: 1024, labels: ['B', 'KB', 'MB', 'GB', 'TB']},
+  },
+}
+```
+
+**Example:** Non-linear time scale — `45` → `"45 s"`, `90` → `"1.5 min"`, `3600` → `"1 h"`.
+
+```javascript
+tooltip: {
+  valueFormat: {
+    type: 'number',
+    precision: 1,
+    units: [
+      {factor: 1, label: 's'},
+      {factor: 60, label: 'min'},
+      {factor: 3600, label: 'h'},
+      {factor: 86400, label: 'd'},
+    ],
+    unitDelimiter: '', // renders "1.5min" instead of "1.5 min"
+  },
+}
+```
+
 ### Custom formatter
 
-When the built-in `number` and `date` formatters aren't enough, use `{ type: 'custom' }`
-to provide your own formatter function. This is useful for things like byte sizes,
-currency with locale-aware rules, compound units, or any domain-specific formatting.
+When the built-in `number` and `date` formatters aren't enough — and the `units`
+option above doesn't fit either — use `{ type: 'custom' }` to provide your own
+formatter function. This is the right escape hatch when the output isn't a single
+scaled number: locale-aware currency rendering, pluralization, value + delta
+concatenation, or any other domain-specific shape.
 
 The `formatter` receives `{value}` and must return a string. The same `ValueFormat`
 shape is accepted in `tooltip.valueFormat`, `tooltip.headerFormat`, and `dataLabels.format`.
 
-**Example:** Display raw bytes as a human-readable size (KB, MB, GB, ...).
+**Example:** Render a value as locale-aware currency with a signed delta against a
+baseline (e.g. `"$1,234.56 (+2.3%)"` or `"1 234,56 € (−0,8 %)"`). This combines
+`Intl.NumberFormat`'s `style: 'currency'` mode with a comparison that depends on
+external state — neither piece is expressible declaratively.
 
 ```javascript
-const formatBytes = ({value}) => {
-  const bytes = Number(value);
-  if (!Number.isFinite(bytes)) return String(value);
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(
-    units.length - 1,
-    Math.floor(Math.log(Math.abs(bytes) || 1) / Math.log(1024)),
-  );
-  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+const BASELINE = 1000;
+
+const currency = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+const percent = new Intl.NumberFormat('en-US', {
+  style: 'percent',
+  signDisplay: 'exceptZero',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const formatRevenue = ({value}) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return String(value);
+  const delta = (amount - BASELINE) / BASELINE;
+  return `${currency.format(amount)} (${percent.format(delta)})`;
 };
 
 {
@@ -135,13 +190,13 @@ const formatBytes = ({value}) => {
     data: [
       {
         type: 'line',
-        name: 'Downloaded',
-        data: [/* y in bytes */],
+        name: 'Revenue',
+        data: [/* y in USD */],
       },
     ],
   },
   tooltip: {
-    valueFormat: {type: 'custom', formatter: formatBytes},
+    valueFormat: {type: 'custom', formatter: formatRevenue},
   },
 }
 ```
@@ -160,9 +215,13 @@ series-level setting takes precedence over the chart-level one for that series o
       {
         type: 'line',
         name: 'Bandwidth',
-        data: [/* ... */],
+        data: [/* y in bytes */],
         tooltip: {
-          valueFormat: {type: 'custom', formatter: formatBytes},
+          valueFormat: {
+            type: 'number',
+            precision: 1,
+            units: {base: 1024, labels: ['B', 'KB', 'MB', 'GB', 'TB']},
+          },
         },
       },
       {

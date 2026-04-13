@@ -36,6 +36,35 @@ describe('getFormattedValue', () => {
             ).toMatch(/^15[.,]6%$/);
         });
 
+        test('applies custom units scale (object form)', () => {
+            expect(
+                getFormattedValue({
+                    value: 1536,
+                    format: {
+                        type: 'number',
+                        precision: 1,
+                        units: {base: 1024, labels: ['B', 'KB', 'MB']},
+                    },
+                }),
+            ).toMatch(/^1[.,]5 KB$/);
+        });
+
+        test('applies custom units scale (array form, non-linear)', () => {
+            expect(
+                getFormattedValue({
+                    value: 3600,
+                    format: {
+                        type: 'number',
+                        units: [
+                            {factor: 1, label: 's'},
+                            {factor: 60, label: 'min'},
+                            {factor: 3600, label: 'h'},
+                        ],
+                    },
+                }),
+            ).toBe('1 h');
+        });
+
         test('falls back to String(value) when value is not a number', () => {
             expect(getFormattedValue({value: 'abc', format: {type: 'number', precision: 2}})).toBe(
                 'abc',

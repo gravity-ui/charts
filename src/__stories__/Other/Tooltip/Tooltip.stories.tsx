@@ -13,6 +13,7 @@ import {
     tooltipWithCustomFormatter,
     tooltipWithDateFormat,
     tooltipWithNumberFormat,
+    tooltipWithUnits,
 } from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
@@ -44,7 +45,10 @@ const TooltipFormattedValues = () => {
                 </Col>
             </Row>
             <Row space={2}>
-                <Col s={12}>
+                <Col s={6}>
+                    <ChartStory data={tooltipWithUnits} />
+                </Col>
+                <Col s={6}>
                     <ChartStory data={tooltipWithCustomFormatter} />
                 </Col>
             </Row>
