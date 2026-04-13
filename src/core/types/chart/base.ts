@@ -14,7 +14,7 @@ type DateFormat = {
 
 export type CustomFormat = {
     type: 'custom';
-    formatter: (args: {value: unknown; formattedValue?: string}) => string;
+    formatter: (args: {value: unknown}) => string;
 };
 
 /**
@@ -22,7 +22,10 @@ export type CustomFormat = {
  *
  * - `{ type: 'number' }` — numeric formatting with optional precision, units, percent display, etc.
  * See [FormatNumberOptions](https://gravity-ui.github.io/charts/pages/api/Utilities/interfaces/FormatNumberOptions.html) for all available options.
- * - `{ type: 'date' }` — date/time formatting
+ * - `{ type: 'date' }` — date/time formatting.
+ * - `{ type: 'custom' }` — user-defined formatter function. Receives the raw `value`
+ *   and returns the display string. Use it when the built-in number/date formatters
+ *   are not enough (e.g. bytes → KB/MB/GB, currency with locale, etc.).
  * @example
  * // Two decimal places, shown as percent
  * { type: 'number', precision: 2, format: 'percent' }
@@ -32,8 +35,20 @@ export type CustomFormat = {
  * @example
  * // Date value (Unix ms) formatted as "17 October 2025"
  * { type: 'date', format: 'DD MMMM YYYY' }
+ * @example
+ * // Bytes → human-readable size
+ * {
+ *   type: 'custom',
+ *   formatter: ({value}) => {
+ *     const bytes = Number(value);
+ *     if (!Number.isFinite(bytes)) return String(value);
+ *     const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+ *     const i = Math.min(units.length - 1, Math.floor(Math.log(Math.abs(bytes) || 1) / Math.log(1024)));
+ *     return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+ *   },
+ * }
  */
-export type ValueFormat = NumberFormat | DateFormat;
+export type ValueFormat = NumberFormat | DateFormat | CustomFormat;
 
 export interface BaseDataLabels {
     /**

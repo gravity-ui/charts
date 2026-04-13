@@ -50,6 +50,53 @@ export const tooltipWithNumberFormat: ChartData = {
     },
 };
 
+const formatBytes = ({value}: {value: unknown}) => {
+    const bytes = Number(value);
+    if (!Number.isFinite(bytes)) {
+        return String(value);
+    }
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.min(
+        units.length - 1,
+        Math.floor(Math.log(Math.abs(bytes) || 1) / Math.log(1024)),
+    );
+    return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+};
+
+export const tooltipWithCustomFormatter: ChartData = {
+    series: {
+        data: [
+            {
+                name: 'Downloaded',
+                type: 'line',
+                data: [
+                    {x: 1, y: 512},
+                    {x: 2, y: 2 * 1024},
+                    {x: 3, y: 512 * 1024},
+                    {x: 4, y: 5 * 1024 * 1024},
+                    {x: 5, y: 120 * 1024 * 1024},
+                    {x: 6, y: 1.2 * 1024 * 1024 * 1024},
+                ],
+                dataLabels: {
+                    enabled: true,
+                    format: {type: 'custom', formatter: formatBytes},
+                },
+            },
+        ],
+    },
+    tooltip: {
+        valueFormat: {type: 'custom', formatter: formatBytes},
+    },
+    yAxis: [
+        {
+            type: 'logarithmic',
+        },
+    ],
+    title: {
+        text: 'Bytes (custom formatter)',
+    },
+};
+
 export const tooltipWithDateFormat: ChartData = (() => {
     const date = new Date('2025-10-17T13:51:01').getTime();
 

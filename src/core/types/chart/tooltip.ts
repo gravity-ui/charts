@@ -6,7 +6,7 @@ import type {AreaSeries, AreaSeriesData} from './area';
 import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
-import type {CustomFormat, ValueFormat} from './base';
+import type {ValueFormat} from './base';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
@@ -135,7 +135,7 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
     /** Formatting settings for tooltip header row (includes computed default). */
-    headerFormat?: ValueFormat | CustomFormat;
+    headerFormat?: ValueFormat;
 }
 
 export interface ChartTooltipTotalsAggregationArgs<
@@ -206,7 +206,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
     /** Formatting settings for tooltip value. */
     valueFormat?: ValueFormat;
     /** Formatting settings for tooltip header row. */
-    headerFormat?: ValueFormat | CustomFormat;
+    headerFormat?: ValueFormat;
     /** Settings for totals block in tooltip */
     totals?: {
         /**

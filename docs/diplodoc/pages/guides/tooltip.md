@@ -106,3 +106,75 @@ tooltip: {
   },
 }
 ```
+
+### Custom formatter
+
+When the built-in `number` and `date` formatters aren't enough, use `{ type: 'custom' }`
+to provide your own formatter function. This is useful for things like byte sizes,
+currency with locale-aware rules, compound units, or any domain-specific formatting.
+
+The `formatter` receives `{value}` and must return a string. The same `ValueFormat`
+shape is accepted in `tooltip.valueFormat`, `tooltip.headerFormat`, and `dataLabels.format`.
+
+**Example:** Display raw bytes as a human-readable size (KB, MB, GB, ...).
+
+```javascript
+const formatBytes = ({value}) => {
+  const bytes = Number(value);
+  if (!Number.isFinite(bytes)) return String(value);
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(
+    units.length - 1,
+    Math.floor(Math.log(Math.abs(bytes) || 1) / Math.log(1024)),
+  );
+  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+};
+
+{
+  series: {
+    data: [
+      {
+        type: 'line',
+        name: 'Downloaded',
+        data: [/* y in bytes */],
+      },
+    ],
+  },
+  tooltip: {
+    valueFormat: {type: 'custom', formatter: formatBytes},
+  },
+}
+```
+
+### Per-series override
+
+The value format set on `tooltip.valueFormat` applies to every series in the chart.
+If a specific series needs a different format — for example, when the chart mixes
+bytes, durations, and counts — override it via `series.tooltip.valueFormat`. The
+series-level setting takes precedence over the chart-level one for that series only.
+
+```javascript
+{
+  series: {
+    data: [
+      {
+        type: 'line',
+        name: 'Bandwidth',
+        data: [/* ... */],
+        tooltip: {
+          valueFormat: {type: 'custom', formatter: formatBytes},
+        },
+      },
+      {
+        type: 'line',
+        name: 'Requests',
+        data: [/* ... */],
+        // falls back to tooltip.valueFormat below
+      },
+    ],
+  },
+  tooltip: {
+    valueFormat: {type: 'number', precision: 0},
+  },
+}
+```

@@ -10,6 +10,7 @@ import {
     tooltipOverflowedRowsHtmlData,
     tooltipRowRendererHtmlData,
     tooltipTotalsSumData,
+    tooltipWithCustomFormatter,
     tooltipWithDateFormat,
     tooltipWithNumberFormat,
 } from '../../__data__';
@@ -40,6 +41,11 @@ const TooltipFormattedValues = () => {
                 </Col>
                 <Col s={6}>
                     <ChartStory data={tooltipWithDateFormat} />
+                </Col>
+            </Row>
+            <Row space={2}>
+                <Col s={12}>
+                    <ChartStory data={tooltipWithCustomFormatter} />
                 </Col>
             </Row>
         </Container>
