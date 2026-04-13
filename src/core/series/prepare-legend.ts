@@ -3,8 +3,8 @@ import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {PreparedChart} from '../../hooks/types';
 import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
+import type {PreparedChart} from '../chart/types';
 import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
 import {
     getDefaultColorStops,

@@ -8,3 +8,6 @@ export * from './scales';
 export * from './axes';
 export * from './layout';
 export * from './zoom';
+export * from './brush';
+export * from './range-slider';
+export * from './chart';

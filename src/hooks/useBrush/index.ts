@@ -5,15 +5,15 @@ import type {BrushBehavior} from 'd3-brush';
 import {pointer, select} from 'd3-selection';
 import type {Selection} from 'd3-selection';
 
-import {block} from '../../utils';
-
-import type {UseBrushProps} from './types';
+import type {UseBrushProps} from '~core/brush/types';
 import {
     getDefaultSelection,
     getNormalizedSelection,
     setBrushBorder,
     setBrushHandles,
-} from './utils';
+} from '~core/brush/utils';
+
+import {block} from '../../utils';
 
 import './styles.scss';
 

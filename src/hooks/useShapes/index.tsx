@@ -43,11 +43,11 @@ import {prepareTreemapData} from '~core/shapes/treemap/prepare-data';
 import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getOnlyVisibleSeries} from '~core/utils';
+import type {ZoomState} from '~core/zoom/types';
 
 import {ChartError} from '../../libs';
 import type {ShapeDataWithLabels} from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
-import type {ZoomState} from '../useZoom/types';
 
 import {AreaSeriesShapes} from './area';
 import {BarXSeriesShapes, prepareBarXData} from './bar-x';
