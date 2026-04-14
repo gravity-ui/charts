@@ -1,15 +1,10 @@
-import type {RangeSliderState} from '../../hooks';
-import type {ZoomState} from '../../hooks/useZoom/types';
-import type {
-    ChartAxisType,
-    ChartSeries,
-    ChartSeriesData,
-    ChartXAxis,
-    ChartYAxis,
-} from '../../types';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
+import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries, PreparedZoomableSeries} from '../series';
+import type {ChartAxisType, ChartSeries, ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
+
+import type {ZoomState} from './types';
 
 const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SERIES_TYPE.Area, SERIES_TYPE.Line];
 

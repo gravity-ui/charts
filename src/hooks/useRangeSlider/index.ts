@@ -3,20 +3,20 @@ import React from 'react';
 import {pointer} from 'd3-selection';
 import {isEqual} from 'lodash';
 
+import type {UseBrushProps} from '~core/brush/types';
+import {getNormalizedSelection, isOneDimensionalSelection} from '~core/brush/utils';
 import {SERIES_TYPE} from '~core/constants';
 import type {PreparedSplit} from '~core/layout/split-types';
+import {getRangeSliderOffsetTop, getRangeSliderSelection} from '~core/range-slider/utils';
 import {isBandScale} from '~core/utils';
+import {selectionToZoomBounds} from '~core/zoom/utils';
 
 import {useAxis} from '../useAxis';
 import {useAxisScales} from '../useAxisScales';
-import type {UseBrushProps} from '../useBrush/types';
-import {getNormalizedSelection, isOneDimensionalSelection} from '../useBrush/utils';
 import {useShapes} from '../useShapes';
 import type {ClipPathBySeriesType} from '../useShapes';
-import {selectionToZoomBounds} from '../useZoom/utils';
 
 import type {PreparedRangeSliderProps, UseRangeSliderProps} from './types';
-import {getRangeSliderOffsetTop, getRangeSliderSelection} from './utils';
 
 export const EMPTY_PREPARED_SPLIT: PreparedSplit = {
     plots: [],

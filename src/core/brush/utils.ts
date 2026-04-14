@@ -3,7 +3,7 @@ import {path} from 'd3-path';
 import {select} from 'd3-selection';
 import round from 'lodash/round';
 
-import type {ChartBrush, DeepRequired} from '../../types';
+import type {ChartBrush, DeepRequired} from '../types';
 
 import type {BrushSelection} from './types';
 

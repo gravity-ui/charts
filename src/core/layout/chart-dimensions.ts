@@ -1,6 +1,6 @@
-import type {PreparedChart} from '../../hooks/types';
 import type {ChartMargin, LegendConfig} from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
+import type {PreparedChart} from '../chart/types';
 import type {PreparedLegend, PreparedSeries} from '../series';
 import {isAxisRelatedSeries} from '../utils/series-type-guards';
 

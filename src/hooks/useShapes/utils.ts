@@ -1,5 +1,6 @@
+import type {ZoomState} from '~core/zoom/types';
+
 import type {PreparedYAxis} from '../useAxis/types';
-import type {ZoomState} from '../useZoom/types';
 
 export * from '~core/shapes/utils';
 

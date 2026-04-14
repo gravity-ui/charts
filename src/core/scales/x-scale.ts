@@ -3,11 +3,11 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {RangeSliderState} from '../../hooks';
-import type {ChartAxis, ChartAxisType, ChartSeries} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
+import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
+import type {ChartAxis, ChartAxisType, ChartSeries} from '../types';
 import {
     getDefaultMaxXAxisValue,
     getDefaultMinXAxisValue,

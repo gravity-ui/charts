@@ -2,16 +2,15 @@ import React from 'react';
 
 import {select} from 'd3-selection';
 
+import type {BrushArea, UseBrushProps} from '~core/brush/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
+import type {ZoomState} from '~core/zoom/types';
+import {selectionToZoomBounds} from '~core/zoom/utils';
 
 import type {PreparedZoom} from '../types';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import {useBrush} from '../useBrush';
-import type {BrushArea, UseBrushProps} from '../useBrush/types';
-
-import type {ZoomState} from './types';
-import {selectionToZoomBounds} from './utils';
 
 interface UseZoomProps {
     node: SVGGElement | null;

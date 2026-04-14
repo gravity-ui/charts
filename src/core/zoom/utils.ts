@@ -1,11 +1,10 @@
 import type {BrushSelection} from 'd3-brush';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 
-import {ZOOM_TYPE} from '~core/constants';
-import type {ZoomType} from '~core/constants';
-import type {ChartScale} from '~core/scales/types';
-
-import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
+import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
+import {ZOOM_TYPE} from '../constants';
+import type {ZoomType} from '../constants';
+import type {ChartScale} from '../scales/types';
 
 import type {ZoomState} from './types';
 
