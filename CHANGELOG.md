@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.47.0](https://github.com/gravity-ui/charts/compare/v1.46.1...v1.47.0) (2026-04-14)
+
+
+### Features
+
+* **format-number:** add declarative `units` option for custom unit scales ([#550](https://github.com/gravity-ui/charts/issues/550)) ([b6a7888](https://github.com/gravity-ui/charts/commit/b6a788835fc3a2c01fd32e45e00e46a9f0179c2f))
+* **tooltip:** support custom formatter function in valueFormat ([#549](https://github.com/gravity-ui/charts/issues/549)) ([a4e61d1](https://github.com/gravity-ui/charts/commit/a4e61d1bbc9b5a54d1724187f8cd43387a7e1ddf))
+
+
+### Bug Fixes
+
+* axis type change should reset range slider state ([#551](https://github.com/gravity-ui/charts/issues/551)) ([42222a4](https://github.com/gravity-ui/charts/commit/42222a4abb3c96a52fd60f1202cb25a39639887e))
+* **line,area:** hide points outside user-defined y-axis range ([#547](https://github.com/gravity-ui/charts/issues/547)) ([5ec39bc](https://github.com/gravity-ui/charts/commit/5ec39bc18a778cf689fd6648f02782667119de4f))
+
 ## [1.46.1](https://github.com/gravity-ui/charts/compare/v1.46.0...v1.46.1) (2026-04-08)
 
 
