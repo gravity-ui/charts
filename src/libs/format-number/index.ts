@@ -1,5 +1,11 @@
 import {i18nInstance, makeInstance} from './i18n/i18n';
-import type {FormatNumberOptions, FormatOptions} from './types';
+import type {
+    FormatI18nString,
+    FormatNumberOptions,
+    FormatOptions,
+    FormatUnitScale,
+    FormatUnitScaleEntry,
+} from './types';
 
 import en from './i18n/en.json';
 import ru from './i18n/ru.json';
@@ -19,6 +25,27 @@ function getUnitRate(value: number, exponent: number, unitsI18nKeys: string[]) {
     return resultUnitRate - 1;
 }
 
+const formatScaledNumber = (
+    value: number,
+    options: Pick<FormatOptions, 'precision' | 'showRankDelimiter' | 'lang'>,
+): string => {
+    const {precision, showRankDelimiter = true, lang} = options;
+
+    let result: number = value;
+
+    if (typeof precision === 'number') {
+        result = Number(result.toFixed(precision));
+    } else if (precision === 'auto' && result % 1 !== 0) {
+        result = Number(result.toFixed(Math.abs(result) > 1 ? 2 : 4));
+    }
+
+    return new Intl.NumberFormat(lang ?? (i18nInstance.lang as string), {
+        minimumFractionDigits: typeof precision === 'number' ? precision : 0,
+        maximumFractionDigits: 20,
+        useGrouping: showRankDelimiter,
+    }).format(result);
+};
+
 const unitFormatter = ({
     exponent,
     unitsI18nKeys,
@@ -29,7 +56,7 @@ const unitFormatter = ({
     unitDelimiterI18nKey: string;
 }) => {
     return function formatUnit(value: number, options: FormatOptions & {unitRate?: number} = {}) {
-        const {precision, unitRate, showRankDelimiter = true, lang} = options;
+        const {unitRate, lang} = options;
 
         const i18nLang = i18nInstance.lang as string;
         if (lang) {
@@ -39,18 +66,7 @@ const unitFormatter = ({
         const resultUnitRate =
             typeof unitRate === 'number' ? unitRate : getUnitRate(value, exponent, unitsI18nKeys);
 
-        let result: number | string = value / Math.pow(exponent, resultUnitRate);
-        if (typeof precision === 'number') {
-            result = Number(result.toFixed(precision));
-        } else if (precision === 'auto' && result % 1 !== 0) {
-            result = Number(result.toFixed(Math.abs(result) > 1 ? 2 : 4));
-        }
-
-        result = new Intl.NumberFormat(lang ?? i18nLang, {
-            minimumFractionDigits: typeof precision === 'number' ? precision : 0,
-            maximumFractionDigits: 20,
-            useGrouping: showRankDelimiter,
-        }).format(result);
+        const result = formatScaledNumber(value / Math.pow(exponent, resultUnitRate), options);
 
         const unit = i18n(unitsI18nKeys[resultUnitRate]);
         const delimiter = i18n(unitDelimiterI18nKey);
@@ -87,6 +103,88 @@ const baseFormatNumber = unitFormatter({
     unitsI18nKeys: BASE_NUMBER_FORMAT_UNIT_KEYS,
 });
 
+const resolvePostfix = (postfix: FormatI18nString, lang: string): string => {
+    if (typeof postfix === 'string') {
+        return postfix;
+    }
+
+    return postfix[lang] ?? postfix.en ?? '';
+};
+
+const FALLBACK_UNIT_ENTRY: FormatUnitScaleEntry = {factor: 1, postfix: ''};
+
+const normalizedUnitsCache = new WeakMap<FormatUnitScale, FormatUnitScaleEntry[]>();
+
+const normalizeUnits = (units: FormatUnitScale): FormatUnitScaleEntry[] => {
+    const cached = normalizedUnitsCache.get(units);
+
+    if (cached) {
+        return cached;
+    }
+
+    const {scale} = units;
+    const rawEntries = Array.isArray(scale)
+        ? scale.map((e) => ({factor: e.factor, postfix: e.postfix}))
+        : scale.postfixes.map((postfix, i) => ({factor: Math.pow(scale.base, i), postfix}));
+
+    const valid = rawEntries.filter((e) => Number.isFinite(e.factor) && e.factor > 0);
+    valid.sort((a, b) => a.factor - b.factor);
+
+    const deduped: FormatUnitScaleEntry[] = [];
+
+    for (const e of valid) {
+        if (deduped.length === 0 || deduped[deduped.length - 1].factor !== e.factor) {
+            deduped.push(e);
+        }
+    }
+
+    const result = deduped.length > 0 ? deduped : [FALLBACK_UNIT_ENTRY];
+    normalizedUnitsCache.set(units, result);
+
+    return result;
+};
+
+const pickUnitEntry = (value: number, scale: FormatUnitScaleEntry[]): FormatUnitScaleEntry => {
+    const av = Math.abs(value);
+    let chosen = scale[0];
+
+    for (const e of scale) {
+        if (av / e.factor >= 1) {
+            chosen = e;
+        } else {
+            break;
+        }
+    }
+
+    return chosen;
+};
+
+const customUnitFormatter = (
+    value: number,
+    units: FormatUnitScale,
+    options: FormatNumberOptions,
+): string => {
+    const {lang} = options;
+
+    const i18nLang = i18nInstance.lang as string;
+
+    if (lang) {
+        i18nInstance.setLang(lang);
+    }
+
+    const normalizedScale = normalizeUnits(units);
+    const entry = pickUnitEntry(value, normalizedScale);
+    const result = formatScaledNumber(value / entry.factor, options);
+    const effectiveLang = lang ?? i18nLang;
+    const resolvedPostfix = resolvePostfix(entry.postfix, effectiveLang);
+    const resolvedDelimiter = typeof units.delimiter === 'string' ? units.delimiter : ' ';
+    const delimiter = resolvedPostfix ? resolvedDelimiter : '';
+
+    i18nInstance.setLang(i18nLang);
+
+    return `${result}${delimiter}${resolvedPostfix}`;
+};
+
 const NUMBER_UNIT_RATE_BY_UNIT = {
     default: 0,
     auto: undefined,
@@ -108,7 +206,15 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
         return new Intl.NumberFormat('en').format(Number(value));
     }
 
-    const {format = 'number', multiplier = 1, prefix = '', postfix = '', unit, labelMode} = options;
+    const {
+        format = 'number',
+        multiplier = 1,
+        prefix = '',
+        postfix = '',
+        unit,
+        units,
+        labelMode,
+    } = options;
 
     let changedMultiplier = multiplier;
     let prePostfix = '';
@@ -120,6 +226,17 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
 
     if (labelMode === 'percent') {
         prePostfix = '%';
+    }
+
+    if (units) {
+        const unitScale: FormatUnitScale = 'scale' in units ? units : {scale: [units]};
+        const formattedValue = customUnitFormatter(
+            Number(value) * changedMultiplier,
+            unitScale,
+            options,
+        );
+
+        return `${prefix}${formattedValue}${prePostfix}${postfix}`;
     }
 
     const formattedValue = baseFormatNumber(Number(value) * changedMultiplier, {

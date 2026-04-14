@@ -84,67 +84,11 @@ In this example:
 
 ## Value Formatting
 
-The tooltip displays values from your data series. While these can be of different types (strings, dates, etc.), numeric values are most common. By default, numbers are shown as-is, but you can customize their formatting using the `valueFormat` property, which accepts a [FormatNumberOptions](../api/Utilities/interfaces/FormatNumberOptions.md) object. This is useful for controlling decimal precision, formatting large numbers, percentages, and more.
-
-**Example:** For percentage values, use `type: 'number'` with `format: 'percent'`.The formatter automatically multiplies the value by 100 and adds the % symbol. Use precision to control the number of decimal places.
-
-```javascript
-series: {
-  data: [
-    {
-      type: 'line',
-      data: [{x: 1, y: 0.156}, {x: 2, y: 0.234}, {x: 3, y: 0.389}], // Values as decimal fractions
-      name: 'Conversion Rate',
-    },
-  ],
-},
-tooltip: {
-  valueFormat: {
-    type: 'number',
-    format: 'percent',
-    precision: 1, // Will display: 15.6%, 23.4%, 38.9%
-  },
-}
-```
-
-### Custom formatter
-
-When the built-in `number` and `date` formatters aren't enough, use `{ type: 'custom' }`
-to provide your own formatter function. This is useful for things like byte sizes,
-currency with locale-aware rules, compound units, or any domain-specific formatting.
-
-The `formatter` receives `{value}` and must return a string. The same `ValueFormat`
-shape is accepted in `tooltip.valueFormat`, `tooltip.headerFormat`, and `dataLabels.format`.
-
-**Example:** Display raw bytes as a human-readable size (KB, MB, GB, ...).
-
-```javascript
-const formatBytes = ({value}) => {
-  const bytes = Number(value);
-  if (!Number.isFinite(bytes)) return String(value);
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(
-    units.length - 1,
-    Math.floor(Math.log(Math.abs(bytes) || 1) / Math.log(1024)),
-  );
-  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
-};
-
-{
-  series: {
-    data: [
-      {
-        type: 'line',
-        name: 'Downloaded',
-        data: [/* y in bytes */],
-      },
-    ],
-  },
-  tooltip: {
-    valueFormat: {type: 'custom', formatter: formatBytes},
-  },
-}
-```
+Tooltip rows, header, and totals accept a `valueFormat` / `headerFormat` shaped
+as [ValueFormat](../api/Utilities/type-aliases/ValueFormat.md). Formatting works
+the same way as everywhere else in the chart (data labels, axis labels, etc.) —
+see the [Value formatting](./value-formatting.md) guide for the full reference,
+the `units` option, custom formatters, and examples.
 
 ### Per-series override
 
@@ -160,9 +104,13 @@ series-level setting takes precedence over the chart-level one for that series o
       {
         type: 'line',
         name: 'Bandwidth',
-        data: [/* ... */],
+        data: [/* y in bytes */],
         tooltip: {
-          valueFormat: {type: 'custom', formatter: formatBytes},
+          valueFormat: {
+            type: 'number',
+            precision: 1,
+            units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']}},
+          },
         },
       },
       {

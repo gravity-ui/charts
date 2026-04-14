@@ -1,5 +1,6 @@
 import {getFormattedValue} from '~core/utils';
 
+import {FORMAT_UNITS_BYTES} from '../../../../libs/format-number/presets';
 import type {ChartData} from '../../../../types';
 
 export const tooltipWithNumberFormat: ChartData = {
@@ -50,20 +51,7 @@ export const tooltipWithNumberFormat: ChartData = {
     },
 };
 
-const formatBytes = ({value}: {value: unknown}) => {
-    const bytes = Number(value);
-    if (!Number.isFinite(bytes)) {
-        return String(value);
-    }
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.min(
-        units.length - 1,
-        Math.floor(Math.log(Math.abs(bytes) || 1) / Math.log(1024)),
-    );
-    return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
-};
-
-export const tooltipWithCustomFormatter: ChartData = {
+export const tooltipWithUnits: ChartData = {
     series: {
         data: [
             {
@@ -79,13 +67,21 @@ export const tooltipWithCustomFormatter: ChartData = {
                 ],
                 dataLabels: {
                     enabled: true,
-                    format: {type: 'custom', formatter: formatBytes},
+                    format: {
+                        type: 'number',
+                        precision: 1,
+                        units: FORMAT_UNITS_BYTES,
+                    },
                 },
             },
         ],
     },
     tooltip: {
-        valueFormat: {type: 'custom', formatter: formatBytes},
+        valueFormat: {
+            type: 'number',
+            precision: 1,
+            units: FORMAT_UNITS_BYTES,
+        },
     },
     yAxis: [
         {
@@ -93,7 +89,58 @@ export const tooltipWithCustomFormatter: ChartData = {
         },
     ],
     title: {
-        text: 'Bytes (custom formatter)',
+        text: 'Bytes (declarative units scale)',
+    },
+};
+
+const REVENUE_BASELINE = 1000;
+
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+});
+const deltaFormatter = new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    signDisplay: 'exceptZero',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+});
+
+const formatRevenue = ({value}: {value: unknown}) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) {
+        return String(value);
+    }
+    const delta = (amount - REVENUE_BASELINE) / REVENUE_BASELINE;
+    return `${currencyFormatter.format(amount)} (${deltaFormatter.format(delta)})`;
+};
+
+export const tooltipWithCustomFormatter: ChartData = {
+    series: {
+        data: [
+            {
+                name: 'Revenue',
+                type: 'line',
+                data: [
+                    {x: 1, y: 820},
+                    {x: 2, y: 975},
+                    {x: 3, y: 1000},
+                    {x: 4, y: 1180},
+                    {x: 5, y: 1342.5},
+                    {x: 6, y: 1605.75},
+                ],
+                dataLabels: {
+                    enabled: true,
+                    format: {type: 'custom', formatter: formatRevenue},
+                },
+            },
+        ],
+    },
+    tooltip: {
+        valueFormat: {type: 'custom', formatter: formatRevenue},
+    },
+    title: {
+        text: 'Revenue vs baseline (custom formatter)',
     },
 };
 
