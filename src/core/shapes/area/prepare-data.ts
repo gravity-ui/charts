@@ -3,15 +3,14 @@ import type {ScaleLogarithmic} from 'd3-scale';
 import isNil from 'lodash/isNil';
 import round from 'lodash/round';
 
-import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
+import type {AreaSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
-import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../utils';
-import {getFormattedValue} from '../../utils/format';
+import {getDataCategoryValue, preparePointDataLabels} from '../../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
 
@@ -44,75 +43,6 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: 
     }
 
     return sort(Array.from(xValues), (d) => d[1]);
-}
-
-async function prepareDataLabels({
-    series,
-    points,
-    xMax,
-    yAxisTop,
-    isOutsideBounds,
-}: {
-    series: PreparedAreaSeries;
-    points: PointData[];
-    xMax: number;
-    yAxisTop: number;
-    isOutsideBounds: (x: number, y: number) => boolean;
-}) {
-    const svgLabels: LabelData[] = [];
-    const htmlLabels: HtmlItem[] = [];
-
-    const getTextSize = getTextSizeFn({style: series.dataLabels.style});
-    for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
-        const point = points[pointsIndex];
-
-        if (point.y === null || isOutsideBounds(point.x, point.y)) {
-            continue;
-        }
-
-        const text = getFormattedValue({
-            value: point.data.label ?? point.data.y,
-            ...series.dataLabels,
-        });
-
-        if (series.dataLabels.html) {
-            const size = await getLabelsSize({
-                labels: [text],
-                style: series.dataLabels.style,
-                html: series.dataLabels.html,
-            });
-            const labelSize = {width: size.maxWidth, height: size.maxHeight};
-            const x = Math.min(xMax - labelSize.width, Math.max(0, point.x - labelSize.width / 2));
-            const y = Math.max(yAxisTop, point.y - series.dataLabels.padding - labelSize.height);
-
-            htmlLabels.push({
-                x,
-                y,
-                content: text,
-                size: labelSize,
-                style: series.dataLabels.style,
-            });
-        } else {
-            const labelSize = await getTextSize(text);
-            const x = Math.min(xMax - labelSize.width, Math.max(0, point.x - labelSize.width / 2));
-            const y = Math.max(
-                yAxisTop,
-                point.y - series.dataLabels.padding - labelSize.height + labelSize.hangingOffset,
-            );
-            svgLabels.push({
-                text,
-                x,
-                y,
-                style: series.dataLabels.style,
-                size: labelSize,
-                textAnchor: 'start',
-                series,
-                active: true,
-            });
-        }
-    }
-
-    return {svgLabels, htmlLabels};
 }
 
 export const prepareAreaData = async (args: {
@@ -454,7 +384,7 @@ export const prepareAreaData = async (args: {
                 const itemYAxisTop = split.plots[currentYAxis.plotIndex]?.top || 0;
 
                 if (item.series.dataLabels.enabled && !isRangeSlider) {
-                    const labelsData = await prepareDataLabels({
+                    const labelsData = await preparePointDataLabels({
                         series: item.series,
                         points: item.points,
                         xMax,

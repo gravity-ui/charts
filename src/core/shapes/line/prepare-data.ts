@@ -4,29 +4,10 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '../../series/types';
-import {filterOverlappingLabels, getLabelsSize, getTextSizeFn} from '../../utils';
-import {getFormattedValue} from '../../utils/format';
+import {filterOverlappingLabels, preparePointDataLabels} from '../../utils';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';
-
-async function getHtmlLabel(
-    point: MarkerPointData,
-    series: PreparedLineSeries,
-    xMax: number,
-): Promise<HtmlItem> {
-    const content = String(point.data.label ?? point.data.y);
-    const size = await getLabelsSize({labels: [content], html: true});
-    const width = size.maxWidth;
-
-    return {
-        x: Math.min(xMax - size.maxWidth, Math.max(0, point.x - width / 2)),
-        y: Math.max(0, point.y - series.dataLabels.padding - size.maxHeight),
-        content,
-        size: {width, height: size.maxHeight},
-        style: series.dataLabels.style,
-    };
-}
 
 export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
@@ -96,62 +77,15 @@ export const prepareLineData = async (args: {
         let htmlElements: HtmlItem[] = [];
         let svgLabels: LabelData[] = [];
         if (s.dataLabels.enabled && !isRangeSlider) {
-            if (s.dataLabels.html) {
-                const list = await Promise.all(
-                    points.reduce<Promise<HtmlItem>[]>((result, p) => {
-                        if (p.y === null || p.x === null || isOutsideBounds(p.x, p.y)) {
-                            return result;
-                        }
-                        result.push(getHtmlLabel(p as MarkerPointData, s, xMax));
-                        return result;
-                    }, []),
-                );
-                htmlElements.push(...list);
-            } else {
-                const getTextSize = getTextSizeFn({style: s.dataLabels.style});
-                for (let index = 0; index < points.length; index++) {
-                    const point = points[index];
-
-                    if (
-                        point.y !== null &&
-                        point.x !== null &&
-                        !isOutsideBounds(point.x, point.y)
-                    ) {
-                        const labelValue = point.data.label ?? point.data.y;
-                        const text = getFormattedValue({
-                            value: labelValue,
-                            ...s.dataLabels,
-                        });
-                        const labelSize = await getTextSize(text);
-
-                        const style = s.dataLabels.style;
-
-                        const y = Math.max(
-                            yAxisTop,
-                            point.y -
-                                s.dataLabels.padding -
-                                labelSize.height +
-                                labelSize.hangingOffset,
-                        );
-                        const x = Math.min(
-                            xMax - labelSize.width,
-                            Math.max(0, point.x - labelSize.width / 2),
-                        );
-                        const labelData: LabelData = {
-                            text,
-                            x,
-                            y,
-                            style,
-                            size: labelSize,
-                            textAnchor: 'start',
-                            series: s,
-                            active: true,
-                        };
-
-                        svgLabels.push(labelData);
-                    }
-                }
-            }
+            const labelsData = await preparePointDataLabels({
+                series: s,
+                points,
+                xMax,
+                yAxisTop,
+                isOutsideBounds,
+            });
+            svgLabels = labelsData.svgLabels;
+            htmlElements = labelsData.htmlLabels;
         }
 
         if (!s.dataLabels.allowOverlap) {

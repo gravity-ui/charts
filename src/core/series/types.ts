@@ -153,6 +153,14 @@ type BasePreparedAxisRelatedSeries = {
 export type PreparedScatterSeries = {
     type: ScatterSeries['type'];
     data: ScatterSeriesData[];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        padding: number;
+        allowOverlap: boolean;
+        html: boolean;
+        format?: ValueFormat;
+    };
     marker: {
         states: {
             normal: {

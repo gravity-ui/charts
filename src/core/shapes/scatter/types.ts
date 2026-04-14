@@ -1,4 +1,4 @@
-import type {HtmlItem, ScatterSeriesData} from '../../../types';
+import type {HtmlItem, LabelData, ScatterSeriesData} from '../../../types';
 import type {PreparedScatterSeries} from '../../series/types';
 
 type PointData = {
@@ -19,3 +19,9 @@ export type MarkerData = {
 };
 
 export type PreparedScatterData = MarkerData;
+
+export type PreparedScatterShapeData = {
+    markers: PreparedScatterData[];
+    svgLabels: LabelData[];
+    htmlLabels: HtmlItem[];
+};

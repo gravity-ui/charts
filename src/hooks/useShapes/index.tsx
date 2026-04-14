@@ -296,13 +296,15 @@ export async function getShapes(args: Args) {
             }
             case SERIES_TYPE.Scatter: {
                 if (xAxis && xScale && yScale?.length) {
-                    const preparedData = prepareScatterData({
+                    const scatterShapeData = await prepareScatterData({
                         series: chartSeries as PreparedScatterSeries[],
                         xAxis,
                         xScale,
                         yAxis,
                         yScale,
+                        split,
                         isOutsideBounds,
+                        isRangeSlider,
                     });
                     shapes[index] = (
                         <ScatterSeriesShape
@@ -313,12 +315,12 @@ export async function getShapes(args: Args) {
                                     : undefined
                             }
                             dispatcher={dispatcher}
-                            preparedData={preparedData}
+                            preparedData={scatterShapeData}
                             seriesOptions={seriesOptions}
                             htmlLayout={htmlLayout}
                         />
                     );
-                    shapesData.splice(index, 0, ...preparedData);
+                    shapesData.splice(index, 0, ...scatterShapeData.markers);
                 }
                 break;
             }

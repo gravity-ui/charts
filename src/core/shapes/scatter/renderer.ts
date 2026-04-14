@@ -4,6 +4,7 @@ import {select} from 'd3-selection';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkScatter} from '../../../types';
+import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {
     getMarkerHaloVisibility,
@@ -13,14 +14,17 @@ import {
     setMarker,
 } from '../../shapes/marker';
 import {setActiveState, shapeKey} from '../../shapes/utils';
+import {renderDataLabels} from '../data-labels';
 
-import type {MarkerData, PreparedScatterData} from './types';
+import type {MarkerData, PreparedScatterShapeData} from './types';
+
+const b = block('scatter');
 
 export function renderScatter(
     elements: {
         plot: SVGGElement;
     },
-    preparedData: PreparedScatterData[],
+    preparedData: PreparedScatterShapeData,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -32,11 +36,17 @@ export function renderScatter(
 
     const selection = svgElement
         .selectAll('path')
-        .data(preparedData, shapeKey)
+        .data(preparedData.markers, shapeKey)
         .join('g')
         .call(renderMarker)
         .attr('opacity', (d) => d.point.opacity)
         .attr('cursor', (d) => d.point.series.cursor);
+
+    renderDataLabels({
+        container: svgElement,
+        data: preparedData.svgLabels,
+        className: b('label'),
+    });
 
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;

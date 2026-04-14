@@ -15,3 +15,4 @@ export * from '../layout/chart-dimensions';
 export * from './common';
 export * from './misc';
 export * from './dispatcher';
+export * from './data-labels';

@@ -2,7 +2,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {scatterBasicData, scatterPlaygroundData} from '../__data__';
+import {scatterBasicData, scatterDataLabelsData, scatterPlaygroundData} from '../__data__';
 import {scatterContinuousLegendData} from '../__data__/scatter/continuous-legend';
 
 const meta: Meta<typeof Chart> = {
@@ -27,6 +27,13 @@ export const ScatterContinuousLegend = {
     name: 'Continuous legend',
     args: {
         data: scatterContinuousLegendData,
+    },
+} satisfies Story;
+
+export const ScatterDataLabels = {
+    name: 'Data labels',
+    args: {
+        data: scatterDataLabelsData,
     },
 } satisfies Story;
 

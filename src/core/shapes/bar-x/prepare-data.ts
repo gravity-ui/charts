@@ -3,7 +3,7 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {BarXSeriesData, LabelData} from '../../../types';
+import type {BarXSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
@@ -11,7 +11,7 @@ import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../series/types';
 import {getSeriesStackId} from '../../series/utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
-import {getDataCategoryValue, getLabelsSize} from '../../utils';
+import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 
@@ -26,9 +26,12 @@ const isSeriesDataValid = (
     d: BarXSeriesData | PreparedBarXSeriesData,
 ): d is PreparedBarXSeriesData => d.y !== null;
 
-async function getLabelData(d: PreparedBarXData, xMax: number): Promise<LabelData | undefined> {
+async function getLabelData(
+    d: PreparedBarXData,
+    xMax: number,
+): Promise<{svgLabel?: LabelData; htmlLabel?: HtmlItem}> {
     if (!d.series.dataLabels.enabled) {
-        return undefined;
+        return {};
     }
 
     const text = getFormattedValue({
@@ -36,28 +39,47 @@ async function getLabelData(d: PreparedBarXData, xMax: number): Promise<LabelDat
         ...d.series.dataLabels,
     });
     const style = d.series.dataLabels.style;
-    const html = d.series.dataLabels.html;
-    const {maxHeight: height, maxWidth: width} = await getLabelsSize({
-        labels: [text],
-        style,
-        html,
-    });
 
-    let y = Math.max(height, d.y - d.series.dataLabels.padding);
-    if (d.series.dataLabels.inside) {
-        y = d.y + d.height / 2;
+    if (d.series.dataLabels.html) {
+        const {maxHeight: height, maxWidth: width} = await getLabelsSize({
+            labels: [text],
+            style,
+            html: true,
+        });
+        let y = Math.max(height, d.y - d.series.dataLabels.padding);
+        if (d.series.dataLabels.inside) {
+            y = d.y + d.height / 2;
+        }
+        const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
+        return {
+            htmlLabel: {
+                content: text,
+                x: centerX - width / 2,
+                y: y - height,
+                size: {width, height},
+                style,
+            },
+        };
+    } else {
+        const getTextSize = getTextSizeFn({style});
+        const {width, height, hangingOffset} = await getTextSize(text);
+        let y = Math.max(height, d.y - d.series.dataLabels.padding);
+        if (d.series.dataLabels.inside) {
+            y = d.y + d.height / 2;
+        }
+        const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
+        return {
+            svgLabel: {
+                text,
+                x: centerX,
+                y: y - height / 2 + hangingOffset,
+                style,
+                size: {width, height, hangingOffset},
+                textAnchor: 'middle',
+                series: d.series,
+            },
+        };
     }
-
-    const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
-    return {
-        text,
-        x: html ? centerX - width / 2 : centerX,
-        y: html ? y - height : y,
-        style,
-        size: {width, height},
-        textAnchor: 'middle',
-        series: d.series,
-    };
 }
 
 type PlotIndex = number;
@@ -339,19 +361,12 @@ export const prepareBarXData = async (args: {
             !isRangeSlider &&
             (!isBarOutsideBounds || isZeroValue)
         ) {
-            const label = await getLabelData(barData, xMax);
-            if (label) {
-                if (barData.series.dataLabels.html) {
-                    barData.htmlLabels.push({
-                        x: label.x,
-                        y: label.y,
-                        content: label.text,
-                        size: label.size,
-                        style: label.style,
-                    });
-                } else {
-                    barData.svgLabels.push(label);
-                }
+            const {svgLabel, htmlLabel} = await getLabelData(barData, xMax);
+            if (svgLabel) {
+                barData.svgLabels.push(svgLabel);
+            }
+            if (htmlLabel) {
+                barData.htmlLabels.push(htmlLabel);
             }
         }
     }
