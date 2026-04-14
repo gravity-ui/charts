@@ -4,6 +4,7 @@ import {select} from 'd3-selection';
 import type {TooltipDataChunkTreemap} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
+import {renderDataLabels} from '../data-labels';
 
 import type {PreparedSankeyData} from './types';
 
@@ -46,18 +47,11 @@ export function renderSankey(
         .attr('stroke-width', (d) => d.strokeWidth);
 
     // dataLabels
-    svgElement
-        .append('g')
-        .selectAll()
-        .data(preparedData.labels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('dy', '0.35em')
-        .attr('text-anchor', (d) => d.textAnchor)
-        .attr('fill', (d) => d.style.fontColor ?? null);
+    renderDataLabels({
+        container: svgElement.append('g'),
+        data: preparedData.labels,
+        className: b('label'),
+    }).attr('dy', '0.35em');
 
     const eventName = `hover-shape.sankey`;
 

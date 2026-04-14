@@ -9,6 +9,7 @@ import {block} from '../../../utils';
 import {DASH_STYLE} from '../../constants';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels, getLineDashArray, getWaterfallPointColor} from '../../utils';
+import {renderDataLabels} from '../data-labels';
 
 import type {PreparedWaterfallData} from './types';
 
@@ -46,18 +47,11 @@ export function renderWaterfall(
         dataLabels = filterOverlappingLabels(dataLabels);
     }
 
-    const labelSelection = svgElement
-        .selectAll('text')
-        .data(dataLabels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    const labelSelection = renderDataLabels({
+        container: svgElement,
+        data: dataLabels,
+        className: b('label'),
+    });
 
     // Add the connector line between bars
     svgElement

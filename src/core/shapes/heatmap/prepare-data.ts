@@ -131,6 +131,7 @@ export async function prepareHeatmapData({
                             x: item.x + item.width / 2 - size.width / 2,
                             y: item.y + item.height / 2 - size.height / 2 + size.hangingOffset,
                             text,
+                            textAnchor: 'start',
                             style: series.dataLabels.style,
                         });
                     }

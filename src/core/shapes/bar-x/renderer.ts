@@ -7,6 +7,7 @@ import {block} from '../../../utils';
 import type {AnnotationAnchor, PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels} from '../../utils';
 import {renderAnnotations} from '../annotation';
+import {renderDataLabels} from '../data-labels';
 import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
@@ -59,18 +60,11 @@ export function renderBarX(
         dataLabels = filterOverlappingLabels(dataLabels);
     }
 
-    const labelSelection = svgElement
-        .selectAll('text')
-        .data(dataLabels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    const labelSelection = renderDataLabels({
+        container: svgElement,
+        data: dataLabels,
+        className: b('label'),
+    });
 
     const annotationAnchors: AnnotationAnchor[] = [];
     for (const d of preparedData) {

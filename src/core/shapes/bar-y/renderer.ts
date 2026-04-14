@@ -6,6 +6,7 @@ import get from 'lodash/get';
 import type {LabelData} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
+import {renderDataLabels} from '../data-labels';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 import {getAdjustedRectBorderPath, getAdjustedRectPath} from './utils';
@@ -48,18 +49,11 @@ export function renderBarY(
         .attr('opacity', (d) => d.data.opacity || null)
         .attr('pointer-events', 'none');
 
-    const labelSelection = svgElement
-        .selectAll('text')
-        .data(dataLabels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    const labelSelection = renderDataLabels({
+        container: svgElement,
+        data: dataLabels,
+        className: b('label'),
+    });
 
     const hoverOptions = get(seriesOptions, 'bar-y.states.hover');
     const inactiveOptions = get(seriesOptions, 'bar-y.states.inactive');

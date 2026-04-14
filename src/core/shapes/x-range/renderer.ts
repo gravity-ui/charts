@@ -7,6 +7,7 @@ import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {getRectPath} from '../../shapes/utils';
 import {getLineDashArray} from '../../utils';
+import {renderDataLabels} from '../data-labels';
 
 import type {PreparedXRangeData} from './types';
 
@@ -67,20 +68,13 @@ export function renderXRange(
         .attr('pointer-events', 'none');
 
     const svgLabels = preparedData.flatMap((d) => d.svgLabels);
-    svgElement
-        .selectAll(`text.${b('label')}`)
-        .data(svgLabels)
-        .join('text')
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
+    renderDataLabels({
+        container: svgElement,
+        data: svgLabels,
+        className: b('label'),
+    })
         .attr('dominant-baseline', 'central')
-        .attr('pointer-events', 'none')
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null)
-        .html((d) => d.text);
+        .attr('pointer-events', 'none');
 
     const hoverOptions = get(seriesOptions, 'x-range.states.hover');
     const inactiveOptions = get(seriesOptions, 'x-range.states.inactive');
