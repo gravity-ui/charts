@@ -6,6 +6,7 @@ import type {TooltipDataChunkFunnel} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {getLineDashArray} from '../../utils';
+import {renderDataLabels} from '../data-labels';
 
 import type {PreparedFunnelData} from './types';
 
@@ -62,17 +63,11 @@ export function renderFunnel(
     connectorLines.append('path').attr('d', (d) => d.linePath[1].toString());
 
     // dataLabels
-    svgElement
-        .selectAll('text')
-        .data(preparedData.svgLabels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    renderDataLabels({
+        container: svgElement,
+        data: preparedData.svgLabels,
+        className: b('label'),
+    });
 
     function handleShapeHover(data?: TooltipDataChunkFunnel[]) {
         const hoverEnabled = hoverOptions?.enabled;

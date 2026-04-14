@@ -10,6 +10,7 @@ import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {getLineDashArray} from '../../utils';
 import {renderAnnotations} from '../annotation';
+import {renderDataLabels} from '../data-labels';
 import {
     getMarkerHaloVisibility,
     getMarkerVisibility,
@@ -69,18 +70,11 @@ export function renderLine(
         return acc.concat(d.svgLabels);
     }, [] as LabelData[]);
 
-    const labelsSelection = plotSvgElement
-        .selectAll('text')
-        .data(dataLabels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    const labelsSelection = renderDataLabels({
+        container: plotSvgElement,
+        data: dataLabels,
+        className: b('label'),
+    });
 
     const markers = preparedData.reduce<MarkerData[]>((acc, d) => acc.concat(d.markers), []);
     const markerSelection = markersSvgElement

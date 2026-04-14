@@ -1,13 +1,14 @@
 import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
-import type {BaseType} from 'd3-selection';
+import type {BaseType, Selection} from 'd3-selection';
 import {line} from 'd3-shape';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkRadar} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedRadarSeries, PreparedSeriesOptions} from '../../series/types';
+import {renderDataLabels} from '../../shapes/data-labels';
 import {
     getMarkerHaloVisibility,
     getMarkerVisibility,
@@ -89,18 +90,13 @@ export function renderRadar(
         .call(renderMarker);
 
     // Render labels
-    radarSelection
-        .selectAll('text')
-        .data((radarData) => radarData.labels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    radarSelection.each(function (radarData) {
+        renderDataLabels({
+            container: select(this) as Selection<SVGGElement, unknown, null, undefined>,
+            data: radarData.labels,
+            className: b('label'),
+        });
+    });
 
     // Handle hover events
     const eventName = `hover-shape.radar`;

@@ -16,6 +16,7 @@ export type HeatmapLabel = {
     x: number;
     y: number;
     text: string;
+    textAnchor: 'start' | 'end' | 'middle';
     style: BaseTextStyle;
 };
 

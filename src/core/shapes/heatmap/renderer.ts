@@ -5,6 +5,7 @@ import {select} from 'd3-selection';
 import type {TooltipDataChunkHeatmap} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
+import {renderDataLabels} from '../data-labels';
 
 import type {PreparedHeatmapData} from './types';
 
@@ -36,17 +37,11 @@ export function renderHeatmap(
         .attr('stroke-width', (d) => d.borderWidth);
 
     // dataLabels
-    svgElement
-        .selectAll('text')
-        .data(preparedData.labels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null);
+    renderDataLabels({
+        container: svgElement,
+        data: preparedData.labels,
+        className: b('label'),
+    });
 
     function handleShapeHover(data?: TooltipDataChunkHeatmap[]) {
         const hoverEnabled = hoverOptions?.enabled;
