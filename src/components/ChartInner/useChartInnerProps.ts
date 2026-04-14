@@ -58,6 +58,7 @@ type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     plotNode: SVGGElement | null;
+    updateRangeSliderState: (nextState?: RangeSliderState) => void;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
     rangeSliderState?: RangeSliderState;
@@ -151,6 +152,7 @@ export function useChartInnerProps(props: Props) {
         plotNode,
         rangeSliderState,
         width,
+        updateRangeSliderState,
         updateZoomState,
         zoomState,
     } = props;
@@ -168,6 +170,14 @@ export function useChartInnerProps(props: Props) {
             const chartDataChanged = !(
                 previousChartData.current && isEqual(previousChartData.current, data)
             );
+            const axisTypeChanged =
+                previousChartData.current?.xAxis?.type !== undefined &&
+                previousChartData.current.xAxis.type !== data.xAxis?.type;
+
+            if (axisTypeChanged && rangeSliderState !== undefined) {
+                updateRangeSliderState(undefined);
+                return;
+            }
 
             const preparedTitle = await getPreparedTitle({
                 title: data.title,
@@ -381,6 +391,7 @@ export function useChartInnerProps(props: Props) {
         rangeSliderState,
         dispatcher,
         htmlLayout,
+        updateRangeSliderState,
         clipPathId,
     ]);
 

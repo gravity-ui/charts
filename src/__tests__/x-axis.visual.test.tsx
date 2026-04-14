@@ -5,6 +5,8 @@ import {median} from 'd3-array';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
+import {DAY} from '~core/constants';
+
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barYBasicData} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
@@ -552,6 +554,63 @@ test.describe('X-axis', () => {
 
         test('category axis with numeric index in data', async ({mount}) => {
             const component = await mount(<ChartTestStory data={baseData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
+    test.describe('Axis type change', () => {
+        // When the range slider initialises with a defaultRange, switching to a category axis must
+        // not use those stale timestamps to filter the new categorical series.
+        test('datetime → category: series render correctly after range slider default range was set', async ({
+            mount,
+        }) => {
+            const startDate = new Date('2024-01-01T00:00:00Z').getTime();
+            const datetimeData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series 1',
+                            data: Array.from({length: 10}, (_, i) => ({
+                                x: startDate + i * DAY,
+                                y: i + 1,
+                            })),
+                        },
+                    ],
+                },
+                xAxis: {
+                    type: 'datetime',
+                    rangeSlider: {enabled: true, defaultRange: {size: 'P3D'}},
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={datetimeData} />);
+            await expect(component.locator('.gcharts-bar-x__segment').first()).toBeVisible();
+
+            await component.update(
+                <ChartTestStory
+                    data={{
+                        series: {
+                            data: [
+                                {
+                                    type: 'bar-x',
+                                    name: 'Series 1',
+                                    data: [
+                                        {x: 0, y: 10},
+                                        {x: 1, y: 20},
+                                        {x: 2, y: 30},
+                                    ],
+                                },
+                            ],
+                        },
+                        xAxis: {
+                            type: 'category',
+                            categories: ['Alpha', 'Beta', 'Gamma'],
+                        },
+                    }}
+                />,
+            );
+
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });

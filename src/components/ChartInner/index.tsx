@@ -109,6 +109,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         htmlLayout,
         plotNode: plotRef.current,
         rangeSliderState,
+        updateRangeSliderState,
         updateZoomState,
         zoomState,
     });
