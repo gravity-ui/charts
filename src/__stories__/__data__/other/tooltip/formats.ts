@@ -1,5 +1,6 @@
 import {getFormattedValue} from '~core/utils';
 
+import {FORMAT_UNITS_BYTES} from '../../../../libs/format-number/presets';
 import type {ChartData} from '../../../../types';
 
 export const tooltipWithNumberFormat: ChartData = {
@@ -69,7 +70,7 @@ export const tooltipWithUnits: ChartData = {
                     format: {
                         type: 'number',
                         precision: 1,
-                        units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']}},
+                        units: FORMAT_UNITS_BYTES,
                     },
                 },
             },
@@ -79,7 +80,7 @@ export const tooltipWithUnits: ChartData = {
         valueFormat: {
             type: 'number',
             precision: 1,
-            units: {scale: {base: 1024, postfixes: ['B', 'KB', 'MB', 'GB', 'TB']}},
+            units: FORMAT_UNITS_BYTES,
         },
     },
     yAxis: [
