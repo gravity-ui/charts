@@ -1,4 +1,5 @@
 import {i18nInstance} from './i18n/i18n';
+import {FORMAT_UNITS_BITS, FORMAT_UNITS_BYTES} from './presets';
 import type {FormatNumberOptions} from './types';
 
 import {formatNumber} from '.';
@@ -127,6 +128,96 @@ describe('plugins/shared', () => {
 
     test('units overrides deprecated unit option', () => {
         expect(formatNumber(2048, {units: BYTES, unit: 'k'})).toEqual('2 KB');
+    });
+
+    describe('single-entry sugar (lock to one unit)', () => {
+        test('lock to K — small value scales into K', () => {
+            expect(formatNumber(300, {units: {factor: 1000, postfix: 'K'}, precision: 1})).toEqual(
+                '0.3 K',
+            );
+        });
+
+        test('lock to K — large value stays in K', () => {
+            expect(
+                formatNumber(1_500_000, {units: {factor: 1000, postfix: 'K'}, precision: 0}),
+            ).toEqual('1,500 K');
+        });
+
+        test('lock to K — negative value', () => {
+            expect(
+                formatNumber(-2500, {units: {factor: 1000, postfix: 'K'}, precision: 1}),
+            ).toEqual('-2.5 K');
+        });
+
+        test('lock with empty postfix suppresses delimiter', () => {
+            expect(formatNumber(300, {units: {factor: 1000, postfix: ''}, precision: 1})).toEqual(
+                '0.3',
+            );
+        });
+
+        test('lock respects i18n postfix', () => {
+            const entry = {factor: 1000, postfix: {en: 'K', ru: 'К'}};
+            expect(formatNumber(1500, {units: entry, precision: 1, lang: 'en'})).toEqual('1.5 K');
+            expect(formatNumber(1500, {units: entry, precision: 1, lang: 'ru'})).toEqual('1,5 К');
+        });
+    });
+
+    describe('i18n postfix resolution', () => {
+        const SCALE: FormatNumberOptions['units'] = {
+            scale: [
+                {factor: 1, postfix: {en: 's', ru: 'с'}},
+                {factor: 60, postfix: {en: 'min', ru: 'мин'}},
+                {factor: 3600, postfix: {en: 'h', ru: 'ч'}},
+            ],
+        };
+
+        test('uses explicit lang option', () => {
+            expect(formatNumber(3600, {units: SCALE, lang: 'en'})).toEqual('1 h');
+            expect(formatNumber(3600, {units: SCALE, lang: 'ru'})).toEqual('1 ч');
+        });
+
+        test('falls back to en when lang missing in dictionary', () => {
+            expect(formatNumber(3600, {units: SCALE, lang: 'de'})).toEqual('1 h');
+        });
+
+        test('falls back to empty string when neither lang nor en present', () => {
+            const partial: FormatNumberOptions['units'] = {
+                scale: [{factor: 1, postfix: {de: 'sek'}}],
+            };
+            expect(formatNumber(1, {units: partial, lang: 'en'})).toEqual('1');
+        });
+    });
+
+    describe('built-in presets', () => {
+        test('FORMAT_UNITS_BYTES en', () => {
+            expect(
+                formatNumber(1024, {units: FORMAT_UNITS_BYTES, precision: 0, lang: 'en'}),
+            ).toEqual('1 KB');
+            expect(
+                formatNumber(1_572_864, {units: FORMAT_UNITS_BYTES, precision: 1, lang: 'en'}),
+            ).toEqual('1.5 MB');
+        });
+
+        test('FORMAT_UNITS_BYTES ru', () => {
+            expect(
+                formatNumber(1024, {units: FORMAT_UNITS_BYTES, precision: 0, lang: 'ru'}),
+            ).toEqual('1 КБ');
+        });
+
+        test('FORMAT_UNITS_BITS en', () => {
+            expect(
+                formatNumber(1000, {units: FORMAT_UNITS_BITS, precision: 0, lang: 'en'}),
+            ).toEqual('1 Kbit');
+            expect(
+                formatNumber(1_500_000, {units: FORMAT_UNITS_BITS, precision: 1, lang: 'en'}),
+            ).toEqual('1.5 Mbit');
+        });
+
+        test('FORMAT_UNITS_BITS ru', () => {
+            expect(
+                formatNumber(1_000_000, {units: FORMAT_UNITS_BITS, precision: 0, lang: 'ru'}),
+            ).toEqual('1 Мбит');
+        });
     });
 
     describe('delimiter', () => {

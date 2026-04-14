@@ -105,6 +105,100 @@ tooltip: {
 }
 ```
 
+#### Locking to a single unit
+
+Pass a single `{factor, postfix}` entry directly as `units` to force every
+value into that unit, regardless of its magnitude. This replaces the legacy
+`unit: 'k' | 'm' | ...` behavior.
+
+```javascript
+// Plain sugar — lock to thousands with an English postfix.
+tooltip: {
+  valueFormat: {
+    type: 'number',
+    precision: 1,
+    units: {factor: 1000, postfix: 'K'},
+  },
+}
+// 300     → "0.3 K"
+// 1500    → "1.5 K"
+// 1500000 → "1,500 K"
+```
+
+The sugar form accepts a dictionary `postfix` too — locking and localization
+work together without extra wrapping.
+
+```javascript
+// Sugar + localized postfix. Same scale, different language.
+tooltip: {
+  valueFormat: {
+    type: 'number',
+    precision: 1,
+    units: {factor: 1000, postfix: {en: 'K', ru: 'К'}},
+    lang: 'ru',
+  },
+}
+// 1500 → "1,5 К"
+```
+
+Need a custom delimiter on top of locking? Use the full wrapper form:
+
+```javascript
+units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''}
+// 1500 → "1.5K"
+```
+
+#### Localized postfixes
+
+Any `postfix` can be either a plain string or a `{lang: string}` dictionary.
+The lookup falls back to `en`, then to an empty string if neither is present.
+Resolution uses the `lang` option on `FormatNumberOptions` (defaulting to the
+current i18n instance language).
+
+```javascript
+tooltip: {
+  valueFormat: {
+    type: 'number',
+    precision: 1,
+    units: {
+      scale: {
+        base: 1024,
+        postfixes: [
+          {en: 'B', ru: 'Б'},
+          {en: 'KB', ru: 'КБ'},
+          {en: 'MB', ru: 'МБ'},
+        ],
+      },
+    },
+    lang: 'ru',
+  },
+}
+// 1024 → "1 КБ"
+```
+
+#### Built-in presets
+
+Two ready-made scales are exported from the package root for the most common
+cases. Both use localized postfixes with `en` and `ru` out of the box.
+
+```javascript
+import {FORMAT_UNITS_BYTES, FORMAT_UNITS_BITS} from '@gravity-ui/charts';
+
+// Bytes: B/KB/MB/GB/TB (base 1024); ru: Б/КБ/МБ/ГБ/ТБ
+tooltip: {
+  valueFormat: {type: 'number', units: FORMAT_UNITS_BYTES, precision: 1},
+}
+
+// Bits: bit/Kbit/Mbit/Gbit/Tbit (base 1000); ru: бит/Кбит/Мбит/Гбит/Тбит
+// Typical for network throughput values.
+tooltip: {
+  valueFormat: {type: 'number', units: FORMAT_UNITS_BITS, precision: 1},
+}
+```
+
+Reuse the same preset object across calls — `formatNumber` memoizes the
+normalized scale by object identity.
+
 ## Dates
 
 Use `type: 'date'` with a Day.js format string to render timestamps.

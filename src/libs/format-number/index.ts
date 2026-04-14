@@ -1,5 +1,6 @@
 import {i18nInstance, makeInstance} from './i18n/i18n';
 import type {
+    FormatI18nString,
     FormatNumberOptions,
     FormatOptions,
     FormatUnitScale,
@@ -102,6 +103,14 @@ const baseFormatNumber = unitFormatter({
     unitsI18nKeys: BASE_NUMBER_FORMAT_UNIT_KEYS,
 });
 
+const resolvePostfix = (postfix: FormatI18nString, lang: string): string => {
+    if (typeof postfix === 'string') {
+        return postfix;
+    }
+
+    return postfix[lang] ?? postfix.en ?? '';
+};
+
 const FALLBACK_UNIT_ENTRY: FormatUnitScaleEntry = {factor: 1, postfix: ''};
 
 const normalizedUnitsCache = new WeakMap<FormatUnitScale, FormatUnitScaleEntry[]>();
@@ -166,13 +175,14 @@ const customUnitFormatter = (
     const normalizedScale = normalizeUnits(units);
     const entry = pickUnitEntry(value, normalizedScale);
     const result = formatScaledNumber(value / entry.factor, options);
-    const resolvedDelimiter =
-        typeof units.delimiter === 'string' ? units.delimiter : i18n('value_space-delimiter');
-    const delimiter = entry.postfix ? resolvedDelimiter : '';
+    const effectiveLang = lang ?? i18nLang;
+    const resolvedPostfix = resolvePostfix(entry.postfix, effectiveLang);
+    const resolvedDelimiter = typeof units.delimiter === 'string' ? units.delimiter : ' ';
+    const delimiter = resolvedPostfix ? resolvedDelimiter : '';
 
     i18nInstance.setLang(i18nLang);
 
-    return `${result}${delimiter}${entry.postfix}`;
+    return `${result}${delimiter}${resolvedPostfix}`;
 };
 
 const NUMBER_UNIT_RATE_BY_UNIT = {
@@ -219,9 +229,10 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
     }
 
     if (units) {
+        const unitScale: FormatUnitScale = 'scale' in units ? units : {scale: [units]};
         const formattedValue = customUnitFormatter(
             Number(value) * changedMultiplier,
-            units,
+            unitScale,
             options,
         );
 

@@ -15,12 +15,23 @@ export interface FormatOptions {
     labelMode?: string;
 }
 
+/**
+ * Plain string or a per-language dictionary of strings.
+ * When a dictionary is used, the lookup chain is:
+ * current `lang` → `en` → empty string.
+ */
+export type FormatI18nString = string | Partial<Record<string, string>>;
+
 /** Single entry of a custom unit scale. */
 export type FormatUnitScaleEntry = {
     /** Positive multiplier applied to the value. The entry wins when `|value| / factor >= 1`. */
     factor: number;
-    /** String appended after the scaled value (e.g. `'KB'`). Use an empty string to suppress the suffix and the delimiter. */
-    postfix: string;
+    /**
+     * String appended after the scaled value (e.g. `'KB'`).
+     * Use an empty string to suppress the suffix and the delimiter.
+     * Pass a `{lang: string}` dictionary to localize the postfix — resolution falls back to `en`, then to empty.
+     */
+    postfix: FormatI18nString;
 };
 
 /**
@@ -38,7 +49,7 @@ export type FormatUnitScaleEntry = {
  * creating a new inline literal on every render.
  */
 export type FormatUnitScale = {
-    scale: {base: number; postfixes: string[]} | FormatUnitScaleEntry[];
+    scale: {base: number; postfixes: FormatI18nString[]} | FormatUnitScaleEntry[];
     delimiter?: string;
 };
 
@@ -70,9 +81,13 @@ export interface FormatNumberOptions extends FormatOptions {
      */
     unit?: 'auto' | 'k' | 'm' | 'b' | 't' | null;
     /**
-     * Custom unit scale. When set, fully overrides `unit`.
-     * Unit selection is always automatic: the entry with the largest `factor` such that `|value| / factor >= 1`,
-     * clamped to the smallest entry for very small values.
+     * Custom unit scale, or a single `FormatUnitScaleEntry` as sugar for
+     * locking every value to one unit (equivalent to the legacy `unit: 'k'`).
+     * When set, fully overrides `unit`.
+     *
+     * Unit selection is always automatic: the entry with the largest `factor`
+     * such that `|value| / factor >= 1`, clamped to the smallest entry for
+     * very small values.
      */
-    units?: FormatUnitScale;
+    units?: FormatUnitScale | FormatUnitScaleEntry;
 }
