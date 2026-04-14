@@ -1,18 +1,12 @@
 # Value Formatting
 
-Chart values can appear in several places: tooltip rows, data labels rendered on
-the shapes themselves, axis tick labels, and totals. All of these accept the
-same [ValueFormat](../api/Utilities/type-aliases/ValueFormat.md) shape, so you
-configure formatting once and apply it consistently across the chart.
+Chart values can appear in several places: tooltip rows, data labels rendered on the shapes themselves, axis tick labels, and totals. All of these accept the same [ValueFormat](../api/Utilities/type-aliases/ValueFormat.md) shape, so you configure formatting once and apply it consistently across the chart.
 
 `ValueFormat` is a tagged union with three variants:
 
-- `{ type: 'number', ... }` — numeric formatting driven by
-  [FormatNumberOptions](../api/Utilities/interfaces/FormatNumberOptions.md).
-- `{ type: 'date', format }` — date/time formatting via a
-  [Day.js format string](https://day.js.org/docs/en/display/format).
-- `{ type: 'custom', formatter }` — an escape hatch that lets you return any
-  string from a user-supplied function.
+- `{ type: 'number', ... }` — numeric formatting driven by [FormatNumberOptions](../api/Utilities/interfaces/FormatNumberOptions.md).
+- `{ type: 'date', format }` — date/time formatting via a [Day.js format string](https://day.js.org/docs/en/display/format).
+- `{ type: 'custom', formatter }` — an escape hatch that lets you return any string from a user-supplied function.
 
 Where to set it:
 
@@ -26,12 +20,9 @@ Where to set it:
 
 ## Numbers
 
-Use `type: 'number'` for numeric values. The most common options are `precision`
-(fixed decimal places or `'auto'`), `showRankDelimiter` (thousands separator),
-`prefix`/`postfix`, and `multiplier`.
+Use `type: 'number'` for numeric values. The most common options are `precision` (fixed decimal places or `'auto'`), `showRankDelimiter` (thousands separator), `prefix`/`postfix`, and `multiplier`.
 
-**Example:** Percentage values. Pass `format: 'percent'` and store your data as
-decimal fractions — the formatter multiplies by 100 and appends `%`.
+**Example:** Percentage values. Pass `format: 'percent'` and store your data as decimal fractions — the formatter multiplies by 100 and appends `%`.
 
 ```javascript
 series: {
@@ -54,21 +45,14 @@ tooltip: {
 
 ### Custom unit scales
 
-For scaled values like bytes, SI prefixes, or time units, use the declarative
-`units` option instead of writing a custom formatter. The scale entry with the
-largest `factor` such that `|value| / factor >= 1` wins automatically.
+For scaled values like bytes, SI prefixes, or time units, use the declarative `units` option instead of writing a custom formatter. The scale entry with the largest `factor` such that `|value| / factor >= 1` wins automatically.
 
-`units` is an object with two fields: `scale` (the unit table) and an
-optional shared `delimiter`. The `scale` itself accepts two forms:
+`units` is an object with two fields: `scale` (the unit table) and an optional shared `delimiter`. The `scale` itself accepts two forms:
 
-- **`{base, postfixes}`** — geometric progression: `postfixes[i]` is bound to
-  `factor = base^i`. Great for bytes (base `1024`), SI decimal prefixes
-  (base `1000`), and similar.
-- **`{factor, postfix}[]`** — arbitrary factors. Required for non-linear scales
-  like seconds/minutes/hours/days.
+- **`{base, postfixes}`** — geometric progression: `postfixes[i]` is bound to `factor = base^i`. Great for bytes (base `1024`), SI decimal prefixes (base `1000`), and similar.
+- **`{factor, postfix}[]`** — arbitrary factors. Required for non-linear scales like seconds/minutes/hours/days.
 
-`delimiter` is placed between the scaled value and the postfix (defaults to
-a locale-aware space; pass `''` to suppress it).
+`delimiter` is placed between the scaled value and the postfix (defaults to a locale-aware space; pass `''` to suppress it).
 
 **Example:** Render raw byte counts as `B / KB / MB / GB / TB`.
 
@@ -84,8 +68,7 @@ tooltip: {
 }
 ```
 
-**Example:** Non-linear time scale — `45` → `"45s"`, `90` → `"1.5min"`,
-`3600` → `"1h"`. Here `delimiter: ''` glues the number and the postfix.
+**Example:** Non-linear time scale — `45` → `"45s"`, `90` → `"1.5min"`, `3600` → `"1h"`. Here `delimiter: ''` glues the number and the postfix.
 
 ```javascript
 tooltip: {
@@ -107,9 +90,7 @@ tooltip: {
 
 #### Locking to a single unit
 
-Pass a single `{factor, postfix}` entry directly as `units` to force every
-value into that unit, regardless of its magnitude. This replaces the legacy
-`unit: 'k' | 'm' | ...` behavior.
+Pass a single `{factor, postfix}` entry directly as `units` to force every value into that unit, regardless of its magnitude. This replaces the legacy `unit: 'k' | 'm' | ...` behavior.
 
 ```javascript
 // Plain sugar — lock to thousands with an English postfix.
@@ -125,8 +106,7 @@ tooltip: {
 // 1500000 → "1,500 K"
 ```
 
-The sugar form accepts a dictionary `postfix` too — locking and localization
-work together without extra wrapping.
+The sugar form accepts a dictionary `postfix` too — locking and localization work together without extra wrapping.
 
 ```javascript
 // Sugar + localized postfix. Same scale, different language.
@@ -150,10 +130,7 @@ units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''}
 
 #### Localized postfixes
 
-Any `postfix` can be either a plain string or a `{lang: string}` dictionary.
-The lookup falls back to `en`, then to an empty string if neither is present.
-Resolution uses the `lang` option on `FormatNumberOptions` (defaulting to the
-current i18n instance language).
+Any `postfix` can be either a plain string or a `{lang: string}` dictionary. The lookup falls back to `en`, then to an empty string if neither is present. Resolution uses the `lang` option on `FormatNumberOptions` (defaulting to the current i18n instance language).
 
 ```javascript
 tooltip: {
@@ -178,8 +155,7 @@ tooltip: {
 
 #### Built-in presets
 
-Two ready-made scales are exported from the package root for the most common
-cases. Both use localized postfixes with `en` and `ru` out of the box.
+Three ready-made scales are exported from the package root for the most common cases. `FORMAT_UNITS_BYTES` and `FORMAT_UNITS_BITS` ship with `en` and `ru` translations out of the box; `FORMAT_UNITS_NUMBERS` uses plain Latin letters that stay the same regardless of language.
 
 ```javascript
 import {
@@ -206,8 +182,7 @@ tooltip: {
 }
 ```
 
-Reuse the same preset object across calls — `formatNumber` memoizes the
-normalized scale by object identity.
+Reuse the same preset object across calls — `formatNumber` memoizes the normalized scale by object identity.
 
 ## Dates
 
@@ -221,20 +196,11 @@ tooltip: {
 
 ## Custom formatter
 
-When the built-in `number` and `date` formatters aren't enough — and the
-`units` option above doesn't fit either — use `{ type: 'custom' }` to provide
-your own formatter function. This is the right escape hatch when the output
-isn't a single scaled number: locale-aware currency rendering, pluralization,
-value + delta concatenation, or any other domain-specific shape.
+When the built-in `number` and `date` formatters aren't enough — and the `units` option above doesn't fit either — use `{ type: 'custom' }` to provide your own formatter function. This is the right escape hatch when the output isn't a single scaled number: locale-aware currency rendering, pluralization, value + delta concatenation, or any other domain-specific shape.
 
-The `formatter` receives `{value}` and must return a string. The same
-`ValueFormat` shape is accepted everywhere values are formatted — tooltip
-rows, tooltip headers, data labels, totals.
+The `formatter` receives `{value}` and must return a string. The same `ValueFormat` shape is accepted everywhere values are formatted — tooltip rows, tooltip headers, data labels, totals.
 
-**Example:** Render a value as locale-aware currency with a signed delta
-against a baseline (e.g. `"$1,234.56 (+2.3%)"` or `"1 234,56 € (−0,8 %)"`).
-This combines `Intl.NumberFormat`'s `style: 'currency'` mode with a comparison
-that depends on external state — neither piece is expressible declaratively.
+**Example:** Render a value as locale-aware currency with a signed delta against a baseline (e.g. `"$1,234.56 (+2.3%)"` or `"1 234,56 € (−0,8 %)"`). This combines `Intl.NumberFormat`'s `style: 'currency'` mode with a comparison that depends on external state — neither piece is expressible declaratively.
 
 ```javascript
 const BASELINE = 1000;
