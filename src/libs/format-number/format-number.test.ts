@@ -1,5 +1,5 @@
 import {i18nInstance} from './i18n/i18n';
-import {FORMAT_UNITS_BITS, FORMAT_UNITS_BYTES} from './presets';
+import {FORMAT_UNITS_BITS, FORMAT_UNITS_BYTES, FORMAT_UNITS_NUMBERS} from './presets';
 import type {FormatNumberOptions} from './types';
 
 import {formatNumber} from '.';
@@ -217,6 +217,30 @@ describe('plugins/shared', () => {
             expect(
                 formatNumber(1_000_000, {units: FORMAT_UNITS_BITS, precision: 0, lang: 'ru'}),
             ).toEqual('1 Мбит');
+        });
+
+        test('FORMAT_UNITS_NUMBERS — small value renders bare', () => {
+            expect(formatNumber(300, {units: FORMAT_UNITS_NUMBERS, precision: 0})).toEqual('300');
+        });
+
+        test('FORMAT_UNITS_NUMBERS — K/M/B scale', () => {
+            expect(formatNumber(1500, {units: FORMAT_UNITS_NUMBERS, precision: 1})).toEqual(
+                '1.5 K',
+            );
+            expect(formatNumber(1_500_000, {units: FORMAT_UNITS_NUMBERS, precision: 1})).toEqual(
+                '1.5 M',
+            );
+            expect(
+                formatNumber(2_500_000_000, {units: FORMAT_UNITS_NUMBERS, precision: 2}),
+            ).toEqual('2.50 B');
+        });
+
+        test('FORMAT_UNITS_NUMBERS postfixes are language-agnostic', () => {
+            // Postfix stays Latin "K" for any language; only the decimal
+            // separator follows Intl rules.
+            expect(formatNumber(1500, {units: FORMAT_UNITS_NUMBERS, lang: 'en'})).toEqual('1.5 K');
+            expect(formatNumber(1500, {units: FORMAT_UNITS_NUMBERS, lang: 'ru'})).toEqual('1,5 K');
+            expect(formatNumber(1500, {units: FORMAT_UNITS_NUMBERS, lang: 'de'})).toEqual('1,5 K');
         });
     });
 

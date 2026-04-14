@@ -182,7 +182,11 @@ Two ready-made scales are exported from the package root for the most common
 cases. Both use localized postfixes with `en` and `ru` out of the box.
 
 ```javascript
-import {FORMAT_UNITS_BYTES, FORMAT_UNITS_BITS} from '@gravity-ui/charts';
+import {
+  FORMAT_UNITS_BITS,
+  FORMAT_UNITS_BYTES,
+  FORMAT_UNITS_NUMBERS,
+} from '@gravity-ui/charts';
 
 // Bytes: B/KB/MB/GB/TB (base 1024); ru: Б/КБ/МБ/ГБ/ТБ
 tooltip: {
@@ -193,6 +197,12 @@ tooltip: {
 // Typical for network throughput values.
 tooltip: {
   valueFormat: {type: 'number', units: FORMAT_UNITS_BITS, precision: 1},
+}
+
+// Short numbers: K/M/B/T (base 1000), language-agnostic Latin postfixes.
+// 300 → "300", 1500 → "1.5 K", 1_500_000 → "1.5 M"
+tooltip: {
+  valueFormat: {type: 'number', units: FORMAT_UNITS_NUMBERS, precision: 1},
 }
 ```
 

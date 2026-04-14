@@ -24,6 +24,29 @@ export const FORMAT_UNITS_BYTES: FormatUnitScale = {
 };
 
 /**
+ * Short number scale with decimal base (`1000`). Renders large numbers
+ * compactly as `K/M/B/T`. Postfixes are plain Latin letters and stay the
+ * same regardless of language. The first entry has an empty postfix, so
+ * values below `1000` render as plain numbers without a delimiter.
+ *
+ * @example
+ * ```ts
+ * tooltip: {
+ *   valueFormat: {type: 'number', units: FORMAT_UNITS_NUMBERS, precision: 1},
+ * }
+ * // 300       → "300"
+ * // 1_500     → "1.5 K"
+ * // 1_500_000 → "1.5 M"
+ * ```
+ */
+export const FORMAT_UNITS_NUMBERS: FormatUnitScale = {
+    scale: {
+        base: 1000,
+        postfixes: ['', 'K', 'M', 'B', 'T'],
+    },
+};
+
+/**
  * Bit scale with decimal base (`1000`) and localized postfixes.
  *
  * @example
