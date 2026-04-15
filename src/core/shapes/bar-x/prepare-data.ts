@@ -63,16 +63,20 @@ async function getLabelData(
     } else {
         const getTextSize = getTextSizeFn({style});
         const {width, height, hangingOffset} = await getTextSize(text);
-        let y = Math.max(height, d.y - d.series.dataLabels.padding);
+        let y = Math.max(height, d.y - height + hangingOffset - d.series.dataLabels.padding);
         if (d.series.dataLabels.inside) {
-            y = d.y + d.height / 2;
+            const centerY = d.y + d.height / 2;
+            y = Math.min(
+                d.y + d.height - height + hangingOffset,
+                centerY - height / 2 + hangingOffset,
+            );
         }
         const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
         return {
             svgLabel: {
                 text,
                 x: centerX,
-                y: y - height / 2 + hangingOffset,
+                y,
                 style,
                 size: {width, height, hangingOffset},
                 textAnchor: 'middle',
