@@ -17,7 +17,7 @@ const sizedBandsBaseData: ChartData = {
     },
 };
 
-test.describe.only('Plot bands', () => {
+test.describe('Plot bands', () => {
     test('X-axis plot bands with split', async ({mount}) => {
         const chartData: ChartData = {
             series: {
