@@ -4,6 +4,7 @@ import {select} from 'd3-selection';
 
 import {
     calculateCos,
+    calculateNumericProperty,
     calculateSin,
     formatAxisTickLabel,
     getBandsPosition,
@@ -332,11 +333,19 @@ export async function prepareYAxisData({
             continue;
         }
 
+        const perpExtent = calculateNumericProperty({value: plotBand.size, base: width}) ?? width;
+        // 'start' = at the main Y axis line. For a left axis that's x=0;
+        // for a right axis that's x = width - perpExtent. 'end' is mirrored.
+        const isLeftAxis = axis.position === 'left';
+        const atMainAxis = isLeftAxis ? 0 : width - perpExtent;
+        const atOpposite = isLeftAxis ? width - perpExtent : 0;
+        const bandX = plotBand.align === 'end' ? atOpposite : atMainAxis;
+
         const plotBandItem: AxisPlotBandData = {
             layerPlacement: plotBand.layerPlacement,
-            x: 0,
+            x: bandX,
             y: axisPlotTopPosition + top,
-            width,
+            width: perpExtent,
             height: plotBandHeight,
             color: plotBand.color,
             opacity: plotBand.opacity,

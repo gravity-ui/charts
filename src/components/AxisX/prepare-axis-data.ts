@@ -4,6 +4,7 @@ import {select} from 'd3-selection';
 
 import {
     calculateCos,
+    calculateNumericProperty,
     calculateSin,
     formatAxisTickLabel,
     getBandsPosition,
@@ -376,6 +377,11 @@ export async function prepareXAxisData({
                 continue;
             }
 
+            const perpExtent =
+                calculateNumericProperty({value: plotBand.size, base: axisHeight}) ?? axisHeight;
+            // X axis is positioned at the bottom of the plot area, so 'start' = bottom edge.
+            const bandY = plotBand.align === 'end' ? axisTop : axisTop + axisHeight - perpExtent;
+
             const getPlotLabelSize = getTextSizeFn({style: plotBand.label.style});
             const labelSize = plotBand.label.text
                 ? await getPlotLabelSize(plotBand.label.text)
@@ -384,9 +390,9 @@ export async function prepareXAxisData({
             plotBands.push({
                 layerPlacement: plotBand.layerPlacement,
                 x: Math.max(0, startPos),
-                y: axisTop,
+                y: bandY,
                 width: plotBandWidth,
-                height: axisHeight,
+                height: perpExtent,
                 color: plotBand.color,
                 opacity: plotBand.opacity,
                 label: plotBand.label.text

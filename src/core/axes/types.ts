@@ -11,6 +11,7 @@ import type {
     ChartAxisType,
     DeepRequired,
     MeaningfulAny,
+    PlotBandAlign,
     PlotLayerPlacement,
 } from '../../types';
 import type {DashStyle} from '../constants';
@@ -25,7 +26,8 @@ type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' 
         maxWidth: number;
     };
 
-export type PreparedAxisPlotBand = Required<AxisPlotBand> & {
+export type PreparedAxisPlotBand = Required<Omit<AxisPlotBand, 'size' | 'align'>> & {
+    align: PlotBandAlign;
     custom?: MeaningfulAny;
     label: {
         text: string;
@@ -33,6 +35,7 @@ export type PreparedAxisPlotBand = Required<AxisPlotBand> & {
         padding: number;
         qa?: string;
     };
+    size?: number | string;
 };
 type PreparedAxisCrosshair = Required<AxisCrosshair>;
 

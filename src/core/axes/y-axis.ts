@@ -265,6 +265,8 @@ export const getPreparedYAxis = ({
                     opacity: get(d, 'opacity', 1),
                     from: get(d, 'from', 0),
                     to: get(d, 'to', 0),
+                    align: get(d, 'align', 'start'),
+                    size: d.size,
                     layerPlacement: get(d, 'layerPlacement', 'before'),
                     custom: d.custom,
                     label: prepareAxisPlotLabel(d),

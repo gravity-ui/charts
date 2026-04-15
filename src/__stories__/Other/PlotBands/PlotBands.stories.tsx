@@ -13,6 +13,8 @@ import {
     barYWithXLinearAxisPlotBandsInfinityData,
     barYWithYAxisPlotBandsInfinityData,
     lineDatetimePlotBandData,
+    xAxisSizedPlotBandsData,
+    yAxisSizedPlotBandsData,
 } from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
@@ -93,5 +95,19 @@ export const BarYWithXLinearAxisPlotBandsInfinityData = {
     name: 'Linear X Plot Bands Infinity',
     args: {
         data: barYWithXLinearAxisPlotBandsInfinityData,
+    },
+} satisfies Story;
+
+export const XAxisSizedPlotBands = {
+    name: 'Sized X Plot Bands (size + align)',
+    args: {
+        data: xAxisSizedPlotBandsData,
+    },
+} satisfies Story;
+
+export const YAxisSizedPlotBands = {
+    name: 'Sized Y Plot Bands (size + align)',
+    args: {
+        data: yAxisSizedPlotBandsData,
     },
 } satisfies Story;
