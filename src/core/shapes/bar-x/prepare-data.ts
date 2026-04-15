@@ -63,7 +63,7 @@ async function getLabelData(
     } else {
         const getTextSize = getTextSizeFn({style});
         const {width, height, hangingOffset} = await getTextSize(text);
-        let y = Math.max(height, d.y - height + hangingOffset - d.series.dataLabels.padding);
+        let y = Math.max(hangingOffset, d.y - height + hangingOffset - d.series.dataLabels.padding);
         if (d.series.dataLabels.inside) {
             const centerY = d.y + d.height / 2;
             y = Math.min(
