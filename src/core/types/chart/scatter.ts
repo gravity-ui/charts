@@ -25,6 +25,8 @@ export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
      * @deprecated use `x` or `y` instead
      */
     category?: string;
+    /** Data label value of the point. If not specified, the y value is used. */
+    label?: string | number;
     /** Individual radius for the point. */
     radius?: number;
     /** Individual opacity for the point. */

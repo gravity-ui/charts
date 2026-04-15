@@ -1,9 +1,16 @@
 .gcharts-line,
 .gcharts-area,
 .gcharts-radar,
+.gcharts-bar-x,
+.gcharts-bar-y,
 .gcharts-heatmap,
-.gcharts-funnel {
+.gcharts-funnel,
+.gcharts-treemap,
+.gcharts-pie,
+.gcharts-scatter {
     &__label {
+        user-select: none;
+        pointer-events: none;
         dominant-baseline: hanging;
     }
 }
@@ -17,41 +24,6 @@
 .gcharts-pie {
     &__segment {
         stroke: var(--g-color-base-background);
-    }
-
-    &__label {
-        font-size: 11px;
-        font-weight: bold;
-
-        fill: var(--g-color-text-complementary);
-        dominant-baseline: hanging;
-    }
-}
-
-.gcharts-bar-x {
-    &__label {
-        user-select: none;
-
-        fill: var(--g-color-text-complementary);
-    }
-}
-
-.gcharts-bar-y {
-    &__label {
-        user-select: none;
-
-        fill: var(--g-color-text-complementary);
-        dominant-baseline: hanging;
-    }
-}
-
-.gcharts-treemap {
-    &__label {
-        user-select: none;
-        pointer-events: none;
-
-        fill: var(--g-color-text-complementary);
-        dominant-baseline: hanging;
     }
 }
 

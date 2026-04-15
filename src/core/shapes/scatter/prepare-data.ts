@@ -1,13 +1,14 @@
 import get from 'lodash/get';
 
-import type {ScatterSeriesData} from '../../../types';
+import type {HtmlItem, LabelData, ScatterSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
+import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedScatterSeries} from '../../series/types';
 import {getXValue, getYValue} from '../../shapes/utils';
-import {getDataCategoryValue} from '../../utils';
+import {filterOverlappingLabels, getDataCategoryValue, preparePointDataLabels} from '../../utils';
 
-import type {PreparedScatterData} from './types';
+import type {PreparedScatterData, PreparedScatterShapeData} from './types';
 
 function getFilteredLinearScatterData(data: ScatterSeriesData[]) {
     return data.filter((d) => typeof d.x === 'number' && typeof d.y === 'number');
@@ -52,17 +53,22 @@ function getFilteredCategoryScatterData(args: {
     });
 }
 
-export function prepareScatterData(args: {
+export async function prepareScatterData(args: {
     series: PreparedScatterSeries[];
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
+    split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
-}): PreparedScatterData[] {
-    const {series, xAxis, xScale, yAxis, yScale, isOutsideBounds} = args;
+    isRangeSlider?: boolean;
+}): Promise<PreparedScatterShapeData> {
+    const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
 
-    return series.reduce<PreparedScatterData[]>((acc, s) => {
+    const [_xMin, xRangeMax] = xScale.range();
+    const xMax = xRangeMax;
+
+    const markers: PreparedScatterData[] = series.reduce<PreparedScatterData[]>((acc, s) => {
         const yAxisIndex = get(s, 'yAxis', 0);
         const seriesYAxis = yAxis[yAxisIndex];
         const seriesYScale = yScale[yAxisIndex];
@@ -108,4 +114,48 @@ export function prepareScatterData(args: {
 
         return acc;
     }, []);
+
+    const allSvgLabels: LabelData[] = [];
+    const allHtmlLabels: HtmlItem[] = [];
+
+    if (!isRangeSlider) {
+        for (const s of series) {
+            if (!s.dataLabels.enabled) {
+                continue;
+            }
+
+            const yAxisIndex = get(s, 'yAxis', 0);
+            const seriesYAxis = yAxis[yAxisIndex];
+            const seriesYScale = yScale[yAxisIndex];
+
+            if (!seriesYScale) {
+                continue;
+            }
+
+            const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+
+            const seriesPoints = markers
+                .filter((m) => m.point.series.id === s.id && !m.clipped)
+                .map((m) => m.point);
+
+            const {svgLabels, htmlLabels} = await preparePointDataLabels({
+                series: s,
+                points: seriesPoints,
+                xMax,
+                yAxisTop,
+                isOutsideBounds,
+                anchorYOffset: s.marker.states.normal.radius,
+            });
+
+            if (s.dataLabels.allowOverlap) {
+                allSvgLabels.push(...svgLabels);
+                allHtmlLabels.push(...htmlLabels);
+            } else {
+                allSvgLabels.push(...filterOverlappingLabels(svgLabels, allSvgLabels));
+                allHtmlLabels.push(...filterOverlappingLabels(htmlLabels, allHtmlLabels));
+            }
+        }
+    }
+
+    return {markers, svgLabels: allSvgLabels, htmlLabels: allHtmlLabels};
 }

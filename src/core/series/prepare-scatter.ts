@@ -3,11 +3,15 @@ import get from 'lodash/get';
 import merge from 'lodash/merge';
 
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
-import {seriesRangeSliderOptionsDefaults} from '../constants';
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../constants';
 import type {PointMarkerOptions} from '../types/chart/marker';
 import {getSymbolType, getUniqId} from '../utils';
 
-import {DEFAULT_HALO_OPTIONS, DEFAULT_POINT_MARKER_OPTIONS} from './constants';
+import {
+    DEFAULT_DATALABELS_PADDING,
+    DEFAULT_HALO_OPTIONS,
+    DEFAULT_POINT_MARKER_OPTIONS,
+} from './constants';
 import type {PreparedLegend, PreparedScatterSeries} from './types';
 import {prepareLegendSymbol} from './utils';
 
@@ -84,6 +88,14 @@ export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedSc
                 itemText: s.legend?.itemText ?? name,
             },
             data: prepareSeriesData(s),
+            dataLabels: {
+                enabled: s.dataLabels?.enabled || false,
+                style: Object.assign({}, DEFAULT_DATALABELS_STYLE, s.dataLabels?.style),
+                padding: get(s, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
+                allowOverlap: get(s, 'dataLabels.allowOverlap', false),
+                html: get(s, 'dataLabels.html', false),
+                format: s.dataLabels?.format,
+            },
             marker: prepareMarker(s, seriesOptions, index),
             cursor: get(s, 'cursor', null),
             yAxis: get(s, 'yAxis', 0),

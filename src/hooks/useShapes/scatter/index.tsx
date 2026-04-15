@@ -4,7 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {renderScatter} from '~core/shapes/scatter/renderer';
-import type {PreparedScatterData} from '~core/shapes/scatter/types';
+import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
 
 import {block} from '../../../utils';
 import {HtmlLayer} from '../HtmlLayer';
@@ -15,7 +15,7 @@ const b = block('scatter');
 
 type ScatterSeriesShapeProps = {
     htmlLayout: HTMLElement | null;
-    preparedData: PreparedScatterData[];
+    preparedData: PreparedScatterShapeData;
     seriesOptions: PreparedSeriesOptions;
     clipPathId?: string;
     dispatcher?: Dispatch<object>;
@@ -33,6 +33,10 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
         return renderScatter({plot: ref.current}, preparedData, seriesOptions, dispatcher);
     }, [dispatcher, preparedData, seriesOptions]);
 
+    const htmlLayerData = React.useMemo(() => {
+        return {htmlElements: preparedData.htmlLabels};
+    }, [preparedData]);
+
     return (
         <React.Fragment>
             <g
@@ -40,7 +44,7 @@ export function ScatterSeriesShape(props: ScatterSeriesShapeProps) {
                 className={b()}
                 clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
             />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
+            <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 }

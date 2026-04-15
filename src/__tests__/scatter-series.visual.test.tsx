@@ -8,6 +8,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     scatterBasicData,
     scatterContinuousLegendData,
+    scatterDataLabelsData,
     scatterNullModeSkipLinearXData,
     scatterNullModeZeroLinearXData,
 } from '../__stories__/__data__';
@@ -174,5 +175,120 @@ test.describe('Scatter series', () => {
     test('x null values, nullMode=zero', async ({mount}) => {
         const component = await mount(<ChartTestStory data={scatterNullModeZeroLinearXData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Data labels', () => {
+        test('Basic (two series)', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={scatterDataLabelsData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Positioning of extreme point dataLabels', async ({mount}) => {
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: '',
+                            data: [
+                                {x: 0, y: 0, label: 'left-bottom'},
+                                {x: 0, y: 10, label: 'left-top'},
+                                {x: 10, y: 10, label: 'right-top'},
+                                {x: 10, y: 0, label: 'right-bottom'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                yAxis: [{maxPadding: 0}],
+                xAxis: {maxPadding: 0},
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Custom label value via label field', async ({mount}) => {
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: 10, label: 'alpha'},
+                                {x: 2, y: 20, label: 'beta'},
+                                {x: 3, y: 15, label: 'gamma'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Html labels', async ({mount}) => {
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: 10, label: '<b>A</b>'},
+                                {x: 2, y: 20, label: '<b>B</b>'},
+                                {x: 3, y: 15, label: '<b>C</b>'},
+                            ],
+                            dataLabels: {enabled: true, html: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Overlapping labels hidden by default', async ({mount}) => {
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: 10, label: 'close-1'},
+                                {x: 1.05, y: 10.5, label: 'close-2'},
+                                {x: 5, y: 50, label: 'far'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('allowOverlap shows all labels', async ({mount}) => {
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'Series',
+                            data: [
+                                {x: 1, y: 10, label: 'close-1'},
+                                {x: 1.05, y: 10.5, label: 'close-2'},
+                                {x: 5, y: 50, label: 'far'},
+                            ],
+                            dataLabels: {enabled: true, allowOverlap: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 });
