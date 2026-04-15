@@ -8,3 +8,5 @@ export * from './plot-bands-infinity-linear-y';
 export * from './plot-bands-infinity-category-x';
 export * from './plot-bands-infinity-category-y';
 export * from './plot-bands-infinity-linear-x';
+export * from './plot-bands-x-sized';
+export * from './plot-bands-y-sized';

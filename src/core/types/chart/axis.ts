@@ -332,6 +332,8 @@ export interface AxisPlotShape extends AxisPlot {
     }) => string;
 }
 
+export type PlotBandAlign = 'start' | 'end';
+
 export interface AxisPlotBand extends AxisPlot {
     /**
      * The start position of the plot band in axis units.
@@ -351,6 +353,25 @@ export interface AxisPlotBand extends AxisPlot {
      * If the value is `Infinity` or `null`, it will be treated as the end of the axis.
      */
     to: number | string | null;
+    /**
+     * Anchor side on the perpendicular axis when `size` is set.
+     *
+     * - `'start'` — the band sticks to the main axis line (bottom for an X axis,
+     *   left for a left Y axis, right for a right Y axis).
+     * - `'end'` — the band sticks to the opposite side of the plot area.
+     *
+     * Has no effect without `size`.
+     * @default 'start'
+     */
+    align?: PlotBandAlign;
+    /**
+     * Perpendicular extent of the band.
+     *
+     * Accepts a pixel number (`40`), a pixel string (`"40px"`), or a percentage of
+     * the perpendicular plot extent (`"25%"`). When omitted, the band spans the
+     * full perpendicular extent of the plot area (default behavior).
+     */
+    size?: number | string;
 }
 
 export interface AxisCrosshair extends Pick<
