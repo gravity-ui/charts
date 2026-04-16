@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.48.0](https://github.com/gravity-ui/charts/compare/v1.47.0...v1.48.0) (2026-04-15)
+
+
+### Features
+
+* **plot-bands:** add `size` and `align` for constrained-extent bands ([#557](https://github.com/gravity-ui/charts/issues/557)) ([a2d274c](https://github.com/gravity-ui/charts/commit/a2d274ccd21a9a0f1c095817eeaa2c340d5ce887))
+* **scatter:** add dataLabels to scatter series ([#554](https://github.com/gravity-ui/charts/issues/554)) ([ac96229](https://github.com/gravity-ui/charts/commit/ac96229ad75d27d8a1eecaabca51874133684de8))
+
 ## [1.47.0](https://github.com/gravity-ui/charts/compare/v1.46.1...v1.47.0) (2026-04-14)
 
 
