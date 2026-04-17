@@ -31,6 +31,7 @@ const tickIntervals: [CountableTimeInterval, number, number][] = [
     [utcWeek, 1, WEEK],
     [utcMonth, 1, MONTH],
     [utcMonth, 3, 3 * MONTH],
+    [utcMonth, 6, 6 * MONTH],
     [utcYear, 1, YEAR],
 ];
 

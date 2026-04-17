@@ -56,7 +56,7 @@ async function setLabelSettings({
     const tickValues = getXAxisTickValues({axis, scale, labelLineHeight, series: seriesData});
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
     if (axis.type === 'datetime' && !axisLabels?.dateFormat && tickStep >= TIME_UNITS.day) {
-        axis.labels.dateFormat = getDefaultDateFormat(tickStep);
+        axis.labels.dateFormat = getDefaultDateFormat(tickStep, axisLabels?.dateTimeLabelFormats);
     }
     const labels = tickValues.map((tick) =>
         formatAxisTickLabel({
@@ -174,6 +174,7 @@ export const getPreparedXAxis = async ({
             margin: isLabelsEnabled ? get(xAxis, 'labels.margin', axisLabelsDefaults.margin) : 0,
             padding: get(xAxis, 'labels.padding', axisLabelsDefaults.padding),
             dateFormat: get(xAxis, 'labels.dateFormat'),
+            dateTimeLabelFormats: get(xAxis, 'labels.dateTimeLabelFormats'),
             numberFormat: get(xAxis, 'labels.numberFormat'),
             rotation: get(xAxis, 'labels.rotation', 0),
             style: labelsStyle,
