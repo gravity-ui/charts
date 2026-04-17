@@ -12,8 +12,14 @@ import {
 import type {CountableTimeInterval} from 'd3-time';
 
 import {DAY, HOUR, MINUTE, MONTH, SECOND, WEEK, YEAR} from '../../constants';
+import type {DateTimeLabelFormats} from '../time';
 
-const tickIntervals: [CountableTimeInterval, number, number][] = [
+type TickInterval = [CountableTimeInterval, number, number];
+
+// Base tick intervals matching the original D3 utcTicks algorithm
+// (with Monday-start weeks). Extra granularities live in optionalTickIntervals
+// and are injected only when the matching dateTimeLabelFormats key is provided.
+const baseTickIntervals: TickInterval[] = [
     [utcSecond, 1, SECOND],
     [utcSecond, 5, 5 * SECOND],
     [utcSecond, 15, 15 * SECOND],
@@ -31,15 +37,41 @@ const tickIntervals: [CountableTimeInterval, number, number][] = [
     [utcWeek, 1, WEEK],
     [utcMonth, 1, MONTH],
     [utcMonth, 3, 3 * MONTH],
-    [utcMonth, 6, 6 * MONTH],
     [utcYear, 1, YEAR],
 ];
 
-function getDateTimeTickInterval(start: number, stop: number, count: number) {
-    const target = Math.abs(stop - start) / count;
-    const i = bisector(([, , step]) => step).right(tickIntervals, target);
+const optionalTickIntervals: Partial<Record<keyof DateTimeLabelFormats, TickInterval>> = {
+    halfYear: [utcMonth, 6, 6 * MONTH],
+};
 
-    if (i === tickIntervals.length) {
+function buildTickIntervals(formats?: DateTimeLabelFormats): TickInterval[] {
+    if (!formats) {
+        return baseTickIntervals;
+    }
+
+    const extras = Object.keys(formats).flatMap((key) => {
+        const entry = optionalTickIntervals[key as keyof DateTimeLabelFormats];
+        return entry ? [entry] : [];
+    });
+
+    if (extras.length === 0) {
+        return baseTickIntervals;
+    }
+
+    return [...baseTickIntervals, ...extras].sort((a, b) => a[2] - b[2]);
+}
+
+function getDateTimeTickInterval(
+    start: number,
+    stop: number,
+    count: number,
+    formats?: DateTimeLabelFormats,
+) {
+    const intervals = buildTickIntervals(formats);
+    const target = Math.abs(stop - start) / count;
+    const i = bisector(([, , step]) => step).right(intervals, target);
+
+    if (i === intervals.length) {
         return utcYear.every(tickStep(start / YEAR, stop / YEAR, count));
     }
 
@@ -47,19 +79,8 @@ function getDateTimeTickInterval(start: number, stop: number, count: number) {
         return utcMillisecond.every(Math.max(tickStep(start, stop, count), 1));
     }
 
-    const idx = target / tickIntervals[i - 1][2] < tickIntervals[i][2] / target ? i - 1 : i;
-    const [t, step] = tickIntervals[idx];
-    if (t === utcMonth && step === 6 && idx + 1 < tickIntervals.length) {
-        const interval = t.every(step);
-        const startDate = new Date(start);
-        const stopDate = new Date(stop + 1);
-        if ((interval?.range(startDate, stopDate).length ?? 0) > count) {
-            const [tNext, stepNext] = tickIntervals[idx + 1];
-            return tNext.every(stepNext);
-        }
-        return interval;
-    }
-
+    const [t, step] =
+        intervals[target / intervals[i - 1][2] < intervals[i][2] / target ? i - 1 : i];
     return t.every(step);
 }
 
@@ -70,13 +91,18 @@ function getDateTimeTickInterval(start: number, stop: number, count: number) {
  * weeks are considered to start on Monday (ISO 8601 standard)
  * instead of Sunday (d3 default).
  */
-export function getDateTimeTicks(start: Date, stop: Date, count = 10) {
+export function getDateTimeTicks(
+    start: Date,
+    stop: Date,
+    count = 10,
+    formats?: DateTimeLabelFormats,
+) {
     const reverse = stop < start;
     if (reverse) {
         [start, stop] = [stop, start];
     }
 
-    const interval = getDateTimeTickInterval(start.getTime(), stop.getTime(), count);
+    const interval = getDateTimeTickInterval(start.getTime(), stop.getTime(), count, formats);
     const ticks = interval ? interval.range(start, new Date(Number(stop) + 1)) : [];
     return reverse ? ticks.reverse() : ticks;
 }

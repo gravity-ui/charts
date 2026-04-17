@@ -7,9 +7,11 @@ import {getDateTimeTicks} from './datetime';
 export function getScaleTicks({
     scale,
     ticksCount,
+    dateTimeLabelFormats,
 }: {
     scale: ChartScale | AxisScale<AxisDomain>;
     ticksCount?: number;
+    dateTimeLabelFormats?: Parameters<typeof getDateTimeTicks>[3];
 }): string[] | number[] | Date[] {
     const scaleDomain = scale.domain();
 
@@ -23,6 +25,7 @@ export function getScaleTicks({
                 scaleDomain[0] as Date,
                 scaleDomain[scaleDomain.length - 1] as Date,
                 ticksCount,
+                dateTimeLabelFormats,
             );
         }
         case 'string': {
