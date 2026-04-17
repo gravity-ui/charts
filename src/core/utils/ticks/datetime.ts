@@ -47,20 +47,19 @@ function getDateTimeTickInterval(start: number, stop: number, count: number) {
         return utcMillisecond.every(Math.max(tickStep(start, stop, count), 1));
     }
 
-    let idx = target / tickIntervals[i - 1][2] < tickIntervals[i][2] / target ? i - 1 : i;
-    const startDate = new Date(start);
-    const stopDate = new Date(stop + 1);
-
-    while (idx < tickIntervals.length - 1) {
-        const [t, step] = tickIntervals[idx];
+    const idx = target / tickIntervals[i - 1][2] < tickIntervals[i][2] / target ? i - 1 : i;
+    const [t, step] = tickIntervals[idx];
+    if (t === utcMonth && step === 6 && idx + 1 < tickIntervals.length) {
         const interval = t.every(step);
-        if ((interval?.range(startDate, stopDate).length ?? 0) <= count) {
-            return interval;
+        const startDate = new Date(start);
+        const stopDate = new Date(stop + 1);
+        if ((interval?.range(startDate, stopDate).length ?? 0) > count) {
+            const [tNext, stepNext] = tickIntervals[idx + 1];
+            return tNext.every(stepNext);
         }
-        idx++;
+        return interval;
     }
 
-    const [t, step] = tickIntervals[idx];
     return t.every(step);
 }
 
