@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.48.2](https://github.com/gravity-ui/charts/compare/v1.48.1...v1.48.2) (2026-04-20)
+
+
+### Bug Fixes
+
+* prevent X-axis edge tick labels from overflowing into chart margins ([#565](https://github.com/gravity-ui/charts/issues/565)) ([788b1ab](https://github.com/gravity-ui/charts/commit/788b1abce849a5beb2f636839c4d95fac0862cbe))
+* update tooltip position on CSS transition/animation end ([#567](https://github.com/gravity-ui/charts/issues/567)) ([6711716](https://github.com/gravity-ui/charts/commit/67117162e7dd479e9544c1071b7a7054313b0cc7))
+
 ## [1.48.1](https://github.com/gravity-ui/charts/compare/v1.48.0...v1.48.1) (2026-04-20)
 
 
