@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.48.1](https://github.com/gravity-ui/charts/compare/v1.48.0...v1.48.1) (2026-04-20)
+
+
+### Bug Fixes
+
+* fix uneven grid step across month boundary ([#563](https://github.com/gravity-ui/charts/issues/563)) ([01e8ab6](https://github.com/gravity-ui/charts/commit/01e8ab6c7e86dda39fa07b0e32b3980e6c5d4cb8))
+
 ## [1.48.0](https://github.com/gravity-ui/charts/compare/v1.47.0...v1.48.0) (2026-04-15)
 
 
