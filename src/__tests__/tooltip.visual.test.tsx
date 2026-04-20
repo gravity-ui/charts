@@ -15,6 +15,7 @@ import type {ChartData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
+import {DrawerChartTestStory} from './components/DrawerChartTestStory';
 import {HoveredPlotsTestStory} from './components/HoveredPlotsTestStory';
 import {StackingPercentRowRendererTestStory} from './components/StackingPercentRowRendererTestStory';
 import {getLocator, getLocatorBoundingBox} from './utils';
@@ -605,5 +606,44 @@ test.describe('Tooltip', () => {
             const tooltip = page.locator('.gcharts-tooltip');
             await expect(tooltip).toHaveScreenshot(TABLE_SNAPSHOT_NAME);
         });
+    });
+
+    // TODO: rewrite the test after updating @gravity-ui/uikit (to the version with a drawer)
+    test('Tooltip is visible and correctly positioned when chart is inside an animated panel', async ({
+        mount,
+        page,
+    }) => {
+        await page.setViewportSize({width: 1280, height: 800});
+
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 20},
+                            {x: 2, y: 15},
+                        ],
+                    },
+                ],
+            },
+        };
+
+        await mount(<DrawerChartTestStory data={chartData} />);
+
+        await page.getByRole('button', {name: 'Open drawer'}).click();
+        // wait for drawer to open
+        await page.waitForTimeout(500);
+
+        const bar = page.locator('.gcharts-bar-x__segment').first();
+        await expect(bar).toBeVisible();
+        const barBbox = await getLocatorBoundingBox(bar);
+        await page.mouse.move(Math.round(barBbox.x + barBbox.width / 2), Math.round(barBbox.y + 1));
+
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toBeVisible();
+        await expect(page.locator('svg')).toHaveScreenshot();
     });
 });
