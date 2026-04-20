@@ -40,10 +40,9 @@ export const Tooltip = (props: TooltipProps) => {
         if (!svgContainer) return undefined;
 
         const updateRect = (e?: Event) => {
-            // Skip synthetic events (e.g. the CustomEvent('scroll') dispatched by the
-            // sibling useEffect below to reposition the Popup). Only native browser
-            // scroll events have isTrusted === true, so those still update the rect.
-            if (e && !e.isTrusted) return;
+            // Skip the synthetic CustomEvent('scroll') dispatched below to reposition the Popup.
+            // All other events — including transitionend and animationend — should update the rect.
+            if (e instanceof CustomEvent) return;
             containerRectRef.current = svgContainer.getBoundingClientRect();
         };
 
@@ -53,10 +52,14 @@ export const Tooltip = (props: TooltipProps) => {
         resizeObserver.observe(svgContainer);
 
         window.addEventListener('scroll', updateRect, {passive: true, capture: true});
+        window.addEventListener('transitionend', updateRect, {capture: true});
+        window.addEventListener('animationend', updateRect, {capture: true});
 
         return () => {
             resizeObserver.disconnect();
             window.removeEventListener('scroll', updateRect, {capture: true});
+            window.removeEventListener('transitionend', updateRect, {capture: true});
+            window.removeEventListener('animationend', updateRect, {capture: true});
         };
     }, [svgContainer]);
 
