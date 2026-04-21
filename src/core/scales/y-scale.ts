@@ -226,7 +226,7 @@ function getDomainMaxAlignedToEndTick(args: {
                 step = tickStep(dMin, dMax, 1);
             }
 
-            dNewMax = tickValues[tickValues.length - 1].value + step;
+            dNewMax = Math.floor(dMax / step + 1) * step;
         }
     }
 
