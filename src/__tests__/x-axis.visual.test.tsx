@@ -558,6 +558,41 @@ test.describe('X-axis', () => {
         });
     });
 
+    test.describe('Edge tick labels with chart margin', () => {
+        const baseDate = new Date('2024-01-01T00:00:00Z').getTime();
+        const edgeTickData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: Array.from({length: 6}, (_, i) => ({
+                            x: baseDate + i * 30 * 24 * 60 * 60 * 1000,
+                            y: 10 + i * 5,
+                        })),
+                    },
+                ],
+            },
+            xAxis: {type: 'datetime'},
+            yAxis: [{visible: false}],
+            chart: {margin: {top: 20, bottom: 20, left: 60, right: 60}},
+        };
+
+        test('horizontal labels do not overflow into left/right margins', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={edgeTickData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('rotated labels (-45 deg) do not overflow into left margin', async ({mount}) => {
+            const data: ChartData = {
+                ...edgeTickData,
+                xAxis: {type: 'datetime', labels: {rotation: -45}},
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
     test.describe('Axis type change', () => {
         // When the range slider initialises with a defaultRange, switching to a category axis must
         // not use those stale timestamps to filter the new categorical series.

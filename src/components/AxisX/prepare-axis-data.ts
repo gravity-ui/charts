@@ -44,6 +44,8 @@ async function getSvgAxisLabel({
     axisWidth,
     boundsOffsetLeft,
     boundsOffsetRight,
+    chartMarginLeft,
+    chartMarginRight,
 }: {
     getTextSize: (str: string) => Promise<{width: number; height: number; hangingOffset: number}>;
     text: string;
@@ -54,6 +56,8 @@ async function getSvgAxisLabel({
     axisWidth: number;
     boundsOffsetLeft: number;
     boundsOffsetRight: number;
+    chartMarginLeft: number;
+    chartMarginRight: number;
 }) {
     const rotation = axis.labels.rotation;
     const content: AxisSvgLabelData['content'] = [];
@@ -66,8 +70,10 @@ async function getSvgAxisLabel({
     if (a === 0) {
         textMaxWidth = Math.min(
             labelMaxWidth,
-            // rightmost label
-            labelMaxWidth / 2 + axisWidth + boundsOffsetRight - left,
+            // rightmost label: may extend into the right Y-axis area but not into the right margin
+            labelMaxWidth / 2 + axisWidth + (boundsOffsetRight - chartMarginRight) - left,
+            // leftmost label: when clamped at the margin boundary, don't bleed into next-tick territory
+            left + (boundsOffsetLeft - chartMarginLeft) + labelMaxWidth / 2,
         );
     } else if (rotation > 0) {
         textMaxWidth = Math.min(
@@ -78,8 +84,8 @@ async function getSvgAxisLabel({
     } else {
         textMaxWidth = Math.min(
             axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
-            // leftmostLabel
-            (boundsOffsetLeft + left) / calculateSin(a),
+            // leftmost label: may extend into the left Y-axis area but not into the left margin
+            (boundsOffsetLeft - chartMarginLeft + left) / calculateSin(a),
         );
     }
 
@@ -123,7 +129,7 @@ async function getSvgAxisLabel({
         content,
         style: axis.labels.style,
         size: textSize,
-        x: Math.max(-boundsOffsetLeft, x),
+        x: Math.max(-(boundsOffsetLeft - chartMarginLeft), x),
         y,
         angle: rotation,
     };
@@ -136,6 +142,8 @@ export async function prepareXAxisData({
     boundsOffsetLeft,
     boundsOffsetRight,
     boundsWidth,
+    chartMarginLeft,
+    chartMarginRight,
     height,
     scale,
     series,
@@ -146,6 +154,8 @@ export async function prepareXAxisData({
     boundsOffsetLeft: number;
     boundsOffsetRight: number;
     boundsWidth: number;
+    chartMarginLeft: number;
+    chartMarginRight: number;
     height: number;
     scale: ChartScale;
     series: PreparedSeries[];
@@ -261,6 +271,8 @@ export async function prepareXAxisData({
                         axisWidth,
                         boundsOffsetLeft,
                         boundsOffsetRight,
+                        chartMarginLeft,
+                        chartMarginRight,
                     });
                 }
             }

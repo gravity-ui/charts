@@ -44,6 +44,11 @@ const optionalTickIntervals: Partial<Record<keyof DateTimeLabelFormats, TickInte
     halfYear: [utcMonth, 6, 6 * MONTH],
 };
 
+// utcDay.every(2) resets its day counter at the start of each month (field = getUTCDate() - 1),
+// so in a 31-day month the last tick lands on day 31 and the next tick is day 1 of the following
+// month — only 1 day apart. Filtering by absolute Unix day number avoids the monthly reset.
+const utcEvery2Days = utcDay.filter((d) => Math.floor(d.getTime() / DAY) % 2 === 0);
+
 function buildTickIntervals(formats?: DateTimeLabelFormats): TickInterval[] {
     if (!formats) {
         return baseTickIntervals;
@@ -81,6 +86,11 @@ function getDateTimeTickInterval(
 
     const [t, step] =
         intervals[target / intervals[i - 1][2] < intervals[i][2] / target ? i - 1 : i];
+
+    if (t === utcDay && step === 2) {
+        return utcEvery2Days;
+    }
+
     return t.every(step);
 }
 

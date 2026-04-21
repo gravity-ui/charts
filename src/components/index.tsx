@@ -87,11 +87,17 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         const eventName = `resize.${getUniqId()}`;
         selection.on(eventName, debuncedHandleResize);
 
+        window.addEventListener('transitionend', handleResize, {capture: true});
+        window.addEventListener('animationend', handleResize, {capture: true});
+
         return () => {
             // https://d3js.org/d3-selection/events#selection_on
             selection.on(eventName, null);
+
+            window.removeEventListener('transitionend', handleResize, {capture: true});
+            window.removeEventListener('animationend', handleResize, {capture: true});
         };
-    }, [debuncedHandleResize]);
+    }, [debuncedHandleResize, handleResize]);
 
     React.useEffect(() => {
         if (typeof onResize === 'function') {
@@ -114,10 +120,10 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
                 position: 'relative',
             }}
         >
-            {dimensions?.height && dimensions?.width && (
+            {Boolean(dimensions?.height && dimensions?.width) && (
                 <ChartInner
-                    height={dimensions?.height}
-                    width={dimensions?.width}
+                    height={dimensions?.height ?? 0}
+                    width={dimensions?.width ?? 0}
                     data={data}
                     onReady={onReady}
                 />
