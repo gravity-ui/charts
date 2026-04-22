@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.48.3](https://github.com/gravity-ui/charts/compare/v1.48.2...v1.48.3) (2026-04-22)
+
+
+### Bug Fixes
+
+* correct axis maximum calculation when endOnTick is enabled ([#568](https://github.com/gravity-ui/charts/issues/568)) ([87e29a7](https://github.com/gravity-ui/charts/commit/87e29a702dc61d6236125a2a36c1b504b30cfb8e))
+
 ## [1.48.2](https://github.com/gravity-ui/charts/compare/v1.48.1...v1.48.2) (2026-04-20)
 
 
