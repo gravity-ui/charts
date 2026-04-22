@@ -172,15 +172,15 @@ export async function prepareXAxisData({
         const isBottomPlot = plotIndex === splitPlots.length - 1;
 
         const plotYAxes = yAxis.filter((a) => a.plotIndex === plotIndex);
-        const yDomainLeftPosition = plotYAxes.find((a) => a.position === 'left')?.visible
-            ? 0
-            : null;
-        const yDomainRightPosition = plotYAxes.find((a) => a.position === 'right')?.visible
-            ? axisWidth
-            : null;
+        const leftYAxis = plotYAxes.find((a) => a.position === 'left');
+        const yDomainLeftPosition =
+            leftYAxis?.visible && leftYAxis?.lineVisible !== false ? 0 : null;
+        const rightYAxis = plotYAxes.find((a) => a.position === 'right');
+        const yDomainRightPosition =
+            rightYAxis?.visible && rightYAxis?.lineVisible !== false ? axisWidth : null;
 
         let domain: AxisDomainData | null = null;
-        if (isBottomPlot && axis.visible) {
+        if (isBottomPlot && axis.visible && axis.lineVisible !== false) {
             domain = {
                 start: [0, axisTop + axisHeight],
                 end: [axisWidth, axisTop + axisHeight],

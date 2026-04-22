@@ -207,6 +207,7 @@ export const getPreparedYAxis = ({
                     html: labelsHtml,
                 },
                 lineColor: get(axisItem, 'lineColor'),
+                lineVisible: get(axisItem, 'lineVisible', true),
                 categories: axisItem.categories,
                 timestamps: get(axisItem, 'timestamps'),
                 title: {

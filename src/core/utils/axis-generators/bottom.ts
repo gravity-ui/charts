@@ -14,6 +14,7 @@ interface AxisBottomArgs {
     domain: {
         size: number;
         color?: string;
+        visible?: boolean;
     };
     htmlLayout: HTMLElement;
     scale: AxisScale<AxisDomain>;
@@ -316,14 +317,16 @@ export async function axisBottom(args: AxisBottomArgs) {
             .attr('d', tickPath.toString())
             .attr('stroke', tickColor ?? 'currentColor');
 
-        // Remove tick that has the same x coordinate like domain
-        selection
-            .selectAll('.tick')
-            .filter((d) => {
-                return position(d as AxisDomain) === 0;
-            })
-            .select('path')
-            .remove();
+        // Remove tick that has the same x coordinate like domain (only when domain line is visible)
+        if (domain.visible !== false) {
+            selection
+                .selectAll('.tick')
+                .filter((d) => {
+                    return position(d as AxisDomain) === 0;
+                })
+                .select('path')
+                .remove();
+        }
 
         if (labelsHtml) {
             appendHtmlLabels({
@@ -359,7 +362,9 @@ export async function axisBottom(args: AxisBottomArgs) {
             });
         }
 
-        const {size: domainSize, color: domainColor} = domain;
-        selection.call(addDomain, {size: domainSize, color: domainColor});
+        const {size: domainSize, color: domainColor, visible: domainVisible} = domain;
+        if (domainVisible !== false) {
+            selection.call(addDomain, {size: domainSize, color: domainColor});
+        }
     };
 }
