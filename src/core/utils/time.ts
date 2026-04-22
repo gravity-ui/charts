@@ -6,6 +6,8 @@ export const TIME_UNITS = {
     day: 24 * 3600000,
     week: 7 * 24 * 3600000,
     month: 28 * 24 * 3600000,
+    quarter: 62 * 24 * 3600000,
+    halfYear: 160 * 24 * 3600000,
     year: 364 * 24 * 3600000,
 } as const;
 
@@ -19,6 +21,8 @@ export const DATETIME_LABEL_FORMATS: Record<TimeUnit, string> = {
     day: 'DD.MM.YY',
     week: 'DD.MM.YY',
     month: "MMM 'YY",
+    quarter: "MMM 'YY",
+    halfYear: "MMM 'YY",
     year: 'YYYY',
 };
 

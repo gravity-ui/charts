@@ -8,6 +8,8 @@ import {LinearAxisExample} from './axis-types/linear';
 import linearRaw from './axis-types/linear.tsx?raw';
 import {LogarithmicAxisExample} from './axis-types/logarithmic';
 import logarithmicRaw from './axis-types/logarithmic.tsx?raw';
+import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
+import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
 
 // Strip "import React from 'react';" — not needed in display code (JSX transform handles it)
 function extractDisplayCode(raw: string): string {
@@ -29,5 +31,9 @@ export const registry: Record<string, ExampleModule> = {
     'axis-types/category': {
         code: extractDisplayCode(categoryRaw),
         Component: CategoryAxisExample,
+    },
+    'value-formatting/quarterly-x-axis': {
+        code: extractDisplayCode(quarterlyXAxisRaw),
+        Component: QuarterlyXAxisExample,
     },
 };

@@ -194,6 +194,26 @@ tooltip: {
 }
 ```
 
+### Datetime format tokens
+
+One custom token extends the standard Day.js vocabulary for all date format strings in the chart — axis tick labels, tooltip headers, and `type: 'date'` value formats:
+
+- `B` — half-year digit (1 or 2). Example: `[H]B YYYY` → `H1 2024`.
+
+The standard Day.js `Q` token (quarter digit, 1–4) is also supported. Wrap a literal prefix in `[…]` to escape it: `[Q]Q YYYY` → `Q1 2024`.
+
+On a `datetime` x-axis the tick labels are formatted automatically based on the visible time range — seconds get `HH:mm:ss`, days get `DD.MM.YY`, months get `MMM 'YY`, and so on. Use `xAxis.labels.dateTimeLabelFormats` to override any of those defaults. The same format strings apply to tooltip dates via `tooltip.headerFormat: {type: 'date', format: '...'}` and other `type: 'date'` values.
+
+The option accepts a partial map of time-unit keys to Day.js format strings. Only the keys you provide are overridden; everything else keeps the built-in default.
+
+Available keys: `millisecond`, `second`, `minute`, `hour`, `day`, `week`, `month`, `quarter`, `halfYear`, `year`.
+
+The `halfYear` granularity (6-month ticks) is **opt-in**: it only activates when you supply a `halfYear` format override. Without it the tick selection skips from quarterly to yearly.
+
+**Example:** Quarterly x-axis labels and tooltip header both showing `Q1 2022`, `Q2 2022`, …
+
+<div data-chart-example="value-formatting/quarterly-x-axis"></div>
+
 ## Custom formatter
 
 When the built-in `number` and `date` formatters aren't enough — and the `units` option above doesn't fit either — use `{ type: 'custom' }` to provide your own formatter function. This is the right escape hatch when the output isn't a single scaled number: locale-aware currency rendering, pluralization, value + delta concatenation, or any other domain-specific shape.

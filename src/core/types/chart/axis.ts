@@ -1,6 +1,7 @@
 import type {DurationInput} from '@gravity-ui/date-utils';
 
 import type {AXIS_TYPE, DashStyle} from '../../constants';
+import type {DateTimeLabelFormats} from '../../utils/time';
 import type {FormatNumberOptions} from '../formatter';
 import type {MeaningfulAny} from '../misc';
 
@@ -25,6 +26,38 @@ export interface ChartAxisLabels {
      */
     padding?: number;
     dateFormat?: string;
+    /**
+     * Per-granularity display formats for the x-axis datetime labels.
+     * Ignored when `dateFormat` is set.
+     *
+     * Each value is a format string in the same form as the `format` argument to
+     * [`DateTime#format`](https://gravity-ui.github.io/date-utils/pages/api/DateTime/overview.html) in `@gravity-ui/date-utils`
+     * (see the **`FormatInput`** type there): Day.js–style tokens, e.g. `YYYY`, `MM`, `DD`, `HH`, `mm`, `ss`, `SSS`, `MMM`.
+     *
+     * Additional custom token: `B` expands to the half-year digit (`1` or `2`) — `B` stands for *bi*-annual since `H` and `h` are reserved by Day.js for clock hours.
+     * Use Day.js escape syntax for the label prefix, e.g. `'YYYY [H]B'` → `"2024 H1"`.
+     * Mirrors the quarter pattern: `'YYYY [Q]Q'` → `"2024 Q2"`.
+     *
+     * Partial objects are merged with the built-in `DATETIME_LABEL_FORMATS`; omitted keys keep defaults.
+     * @example ISO-like date and time
+     * ```ts
+     * dateTimeLabelFormats: { day: 'YYYY-MM-DD', hour: 'YYYY-MM-DD HH:mm', minute: 'YYYY-MM-DD HH:mm' }
+     * ```
+     * @example US-style calendar date
+     * ```ts
+     * dateTimeLabelFormats: { day: 'MM/DD/YYYY', week: 'MM/DD/YYYY' }
+     * ```
+     * @example Quarter and half-year labels
+     * ```ts
+     * dateTimeLabelFormats: { quarter: 'YYYY [Q]Q', halfYear: 'YYYY [H]B' }
+     * ```
+     * @example Coarse ranges: short month and full year
+     * ```ts
+     * dateTimeLabelFormats: { month: 'YYYY-MM', year: 'YYYY' }
+     * ```
+     * @see https://gravity-ui.github.io/date-utils/pages/api/DateTime/overview.html
+     */
+    dateTimeLabelFormats?: DateTimeLabelFormats;
     numberFormat?: FormatNumberOptions;
     style?: Partial<BaseTextStyle>;
     /**

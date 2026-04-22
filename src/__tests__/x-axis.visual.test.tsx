@@ -649,4 +649,116 @@ test.describe('X-axis', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
+
+    test.describe('Datetime dateTimeLabelFormats', () => {
+        const QUARTERLY_TIMESTAMPS = [
+            new Date('2024-01-01T00:00:00.000Z').getTime(),
+            new Date('2024-04-01T00:00:00.000Z').getTime(),
+            new Date('2024-07-01T00:00:00.000Z').getTime(),
+            new Date('2024-10-01T00:00:00.000Z').getTime(),
+            new Date('2025-01-01T00:00:00.000Z').getTime(),
+        ];
+
+        const YEARLY_TIMESTAMPS = [
+            new Date('2010-01-01T00:00:00.000Z').getTime(),
+            new Date('2011-01-01T00:00:00.000Z').getTime(),
+            new Date('2012-01-01T00:00:00.000Z').getTime(),
+            new Date('2013-01-01T00:00:00.000Z').getTime(),
+            new Date('2014-01-01T00:00:00.000Z').getTime(),
+            new Date('2015-01-01T00:00:00.000Z').getTime(),
+            new Date('2016-01-01T00:00:00.000Z').getTime(),
+        ];
+
+        const HALF_YEAR_TIMESTAMPS = [
+            new Date('2022-01-01T00:00:00.000Z').getTime(),
+            new Date('2022-07-01T00:00:00.000Z').getTime(),
+            new Date('2023-01-01T00:00:00.000Z').getTime(),
+            new Date('2023-07-01T00:00:00.000Z').getTime(),
+            new Date('2024-01-01T00:00:00.000Z').getTime(),
+        ];
+
+        const makeLineSeries = (timestamps: number[]) => ({
+            type: 'line' as const,
+            name: 'Series 1',
+            data: timestamps.map((x, i) => ({x, y: i + 1})),
+        });
+
+        test('quarterly data — default format unchanged', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {data: [makeLineSeries(QUARTERLY_TIMESTAMPS)]},
+                xAxis: {type: 'datetime'},
+                chart: {margin: CHART_MARGIN},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('quarterly data with Q token format', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {data: [makeLineSeries(QUARTERLY_TIMESTAMPS)]},
+                xAxis: {
+                    type: 'datetime',
+                    labels: {dateTimeLabelFormats: {quarter: 'YYYY [Q]Q'}},
+                },
+                chart: {margin: CHART_MARGIN},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('half-yearly data with H token format', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {data: [makeLineSeries(HALF_YEAR_TIMESTAMPS)]},
+                xAxis: {
+                    type: 'datetime',
+                    labels: {dateTimeLabelFormats: {halfYear: 'YYYY [H]B'}},
+                },
+                chart: {margin: CHART_MARGIN},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('yearly data — default format shows year only', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {data: [makeLineSeries(YEARLY_TIMESTAMPS)]},
+                xAxis: {type: 'datetime'},
+                chart: {margin: CHART_MARGIN},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('yearly data with custom year format', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {data: [makeLineSeries(YEARLY_TIMESTAMPS)]},
+                xAxis: {
+                    type: 'datetime',
+                    labels: {dateTimeLabelFormats: {year: "'YY"}},
+                },
+                chart: {margin: CHART_MARGIN},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('custom month format overrides default', async ({mount}) => {
+            const monthlyTimestamps = [
+                new Date('2024-01-01T00:00:00.000Z').getTime(),
+                new Date('2024-02-01T00:00:00.000Z').getTime(),
+                new Date('2024-03-01T00:00:00.000Z').getTime(),
+                new Date('2024-04-01T00:00:00.000Z').getTime(),
+            ];
+            const chartData: ChartData = {
+                series: {data: [makeLineSeries(monthlyTimestamps)]},
+                xAxis: {
+                    type: 'datetime',
+                    labels: {dateTimeLabelFormats: {month: 'MM.YYYY'}},
+                },
+                chart: {margin: CHART_MARGIN},
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
 });
