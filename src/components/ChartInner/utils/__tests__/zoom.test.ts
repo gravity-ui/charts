@@ -82,6 +82,7 @@ describe('zoom/getZoomType', () => {
     test.each([
         {seriesData: [AREA_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [LINE_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
+        {seriesData: [BAR_X_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [BAR_X_SERIES], zoomType: ZOOM_TYPE.Y, expected: ZOOM_TYPE.X},
         {seriesData: [BAR_Y_SERIES], zoomType: ZOOM_TYPE.X, expected: ZOOM_TYPE.Y},
         {seriesData: [PIE_SERIES], zoomType: ZOOM_TYPE.X, expected: undefined},
@@ -107,6 +108,7 @@ describe('zoom/getZoomType', () => {
 
     test.each([
         {seriesData: [AREA_SERIES, BAR_X_SERIES], zoomType: ZOOM_TYPE.X, expected: ZOOM_TYPE.X},
+        {seriesData: [AREA_SERIES, BAR_X_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [AREA_SERIES, BAR_X_SERIES], zoomType: ZOOM_TYPE.Y, expected: ZOOM_TYPE.X},
         {
             seriesData: [AREA_SERIES, BAR_Y_SERIES, SCATTER_SERIES],
