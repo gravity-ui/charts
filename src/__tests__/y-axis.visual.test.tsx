@@ -626,6 +626,27 @@ test.describe('Y-axis', () => {
                 const component = await mount(<ChartTestStory data={data} />);
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
+
+            test('endOnTick with small chart height', async ({mount}) => {
+                const data: ChartData = {
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Series 1',
+                                data: [
+                                    {x: 1, y: 17},
+                                    {x: 2, y: 111},
+                                    {x: 3, y: 10},
+                                ],
+                            },
+                        ],
+                    },
+                    yAxis: [{startOnTick: true, endOnTick: true}],
+                };
+                const component = await mount(<ChartTestStory data={data} styles={{height: 40}} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
         });
 
         test.describe('datetime', () => {
