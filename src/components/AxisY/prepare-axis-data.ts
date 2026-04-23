@@ -200,7 +200,7 @@ export async function prepareYAxisData({
 
     const domainX = axis.position === 'left' ? 0 : width;
     let domain: AxisDomainData | null = null;
-    if (axis.visible) {
+    if (axis.visible && axis.lineVisible !== false) {
         domain = {
             start: [domainX, axisPlotTopPosition],
             end: [domainX, axisPlotTopPosition + axisHeight],

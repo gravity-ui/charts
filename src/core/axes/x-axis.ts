@@ -187,6 +187,7 @@ export const getPreparedXAxis = async ({
             html: labelsHtml,
         },
         lineColor: get(xAxis, 'lineColor'),
+        lineVisible: get(xAxis, 'lineVisible', true),
         categories: xAxis?.categories,
         timestamps: get(xAxis, 'timestamps'),
         title: {

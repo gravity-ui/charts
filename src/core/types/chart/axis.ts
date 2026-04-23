@@ -166,6 +166,11 @@ export interface ChartAxis {
     labels?: ChartAxisLabels;
     /** The color of the line marking the axis itself. */
     lineColor?: string;
+    /**
+     * Whether to display the line marking the axis itself.
+     * @default true
+     */
+    lineVisible?: boolean;
     title?: ChartAxisTitle;
     /**
      * The minimum value of the axis. If undefined the min value is automatically calculated.
