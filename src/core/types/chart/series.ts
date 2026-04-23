@@ -99,7 +99,7 @@ export interface ChartSeriesOptions {
          */
         barMaxWidth?: number;
         /**
-         * Padding between each column or bar, in x axis units.
+         * Padding between each bar as a fraction of the space allocated per bar.
          * @default 0.1
          */
         barPadding?: number;
@@ -147,7 +147,7 @@ export interface ChartSeriesOptions {
          */
         barMaxWidth?: number;
         /**
-         * Padding between each column or bar, in x axis units.
+         * Padding between each bar as a fraction of the space allocated per bar.
          * @default 0.1
          */
         barPadding?: number;
@@ -288,7 +288,7 @@ export interface ChartSeriesOptions {
          */
         barMaxWidth?: number;
         /**
-         * Padding between each column or bar, in x axis units.
+         * Padding between each bar as a fraction of the space allocated per bar.
          * @default 0.1
          */
         barPadding?: number;
