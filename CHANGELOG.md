@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.49.0](https://github.com/gravity-ui/charts/compare/v1.48.3...v1.49.0) (2026-04-23)
+
+
+### Features
+
+* **axis:** add lineVisible option and fix tick removal when domain line is hidden ([#572](https://github.com/gravity-ui/charts/issues/572)) ([f478f99](https://github.com/gravity-ui/charts/commit/f478f999ef478833d9b1eb829b9a7d7c886cb78d))
+* **bar:** calculate barPadding as a fraction of per-bar slot width ([#573](https://github.com/gravity-ui/charts/issues/573)) ([54aa500](https://github.com/gravity-ui/charts/commit/54aa500e1946be59a5a6e36dc605ee09251ffaa5))
+* **x-axis:** support dateTimeLabelFormats for datetime labels ([#560](https://github.com/gravity-ui/charts/issues/560)) ([9d57b7e](https://github.com/gravity-ui/charts/commit/9d57b7e8971c442411a5ba84e58b4db8f067dac1))
+* **zoom:** add xy zoom support for bar-x series ([#571](https://github.com/gravity-ui/charts/issues/571)) ([2dc347d](https://github.com/gravity-ui/charts/commit/2dc347de6bf788d16af97cc61800200e406c6c6d))
+
 ## [1.48.3](https://github.com/gravity-ui/charts/compare/v1.48.2...v1.48.3) (2026-04-22)
 
 
