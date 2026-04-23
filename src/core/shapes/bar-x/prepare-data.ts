@@ -190,11 +190,9 @@ export const prepareBarXData = async (args: {
     });
     const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
     const groupSize = bandSize - groupGap;
-    const rectGap = Math.max(bandSize * barPadding, MIN_BAR_GAP);
-    const rectWidth = Math.max(
-        MIN_BAR_WIDTH,
-        Math.min(groupSize / maxGroupSize - rectGap, barMaxWidth),
-    );
+    const barSlotSize = groupSize / maxGroupSize;
+    const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
+    const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - rectGap, barMaxWidth));
 
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {

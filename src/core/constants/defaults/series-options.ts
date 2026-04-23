@@ -22,8 +22,8 @@ export type SeriesOptionsDefaults = Partial<ChartSeriesOptions> &
 export const seriesOptionsDefaults: SeriesOptionsDefaults = {
     'bar-x': {
         barMaxWidth: 50,
-        barPadding: 0.1,
-        groupPadding: 0.2,
+        barPadding: 0.2,
+        groupPadding: 0.1,
         stackGap: 1,
         states: {
             hover: {
@@ -38,8 +38,8 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
     },
     'bar-y': {
         barMaxWidth: 50,
-        barPadding: 0.1,
-        groupPadding: 0.2,
+        barPadding: 0.2,
+        groupPadding: 0.1,
         stackGap: 1,
         states: {
             hover: {
@@ -126,7 +126,7 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
     },
     waterfall: {
         barMaxWidth: 50,
-        barPadding: 0.1,
+        barPadding: 0.2,
         states: {
             hover: {
                 enabled: true,
