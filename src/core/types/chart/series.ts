@@ -73,7 +73,7 @@ export interface BasicHoverState {
 export interface BasicInactiveState {
     /**
      * Enable separate styles for the inactive series.
-     * @default true
+     * @default false for most series types; true for radar
      */
     enabled?: boolean;
     /**
@@ -241,12 +241,12 @@ export interface ChartSeriesOptions {
         dashStyle?: DashStyle;
         /**
          * Options for line cap style
-         * @default 'round' when dashStyle is not 'solid', 'none' when dashStyle is not 'solid'
+         * @default 'round' when dashStyle is 'Solid', 'none' when dashStyle is not 'Solid'
          */
         linecap?: `${LineCap}`;
         /**
          * Defines the shape to be used at the corners of the line
-         * @default 'round' when dashStyle is not 'solid', 'unset' when dashStyle is not 'solid'
+         * @default 'round' when dashStyle is 'Solid', 'unset' when dashStyle is not 'Solid'
          */
         linejoin?: `${LineJoin}`;
         /** Default annotation settings for all line data points */
