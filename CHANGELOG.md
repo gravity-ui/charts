@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.49.1](https://github.com/gravity-ui/charts/compare/v1.49.0...v1.49.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* **axis:** prevent left-boundary clamp from shifting rotated x-axis labels unevenly ([#575](https://github.com/gravity-ui/charts/issues/575)) ([7e4b695](https://github.com/gravity-ui/charts/commit/7e4b695c8c3be9795e5e27312f40bb2ba5a8e00e))
+
 ## [1.49.0](https://github.com/gravity-ui/charts/compare/v1.48.3...v1.49.0) (2026-04-23)
 
 
