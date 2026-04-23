@@ -39,8 +39,6 @@ jobs:
         run: npm run docs:build
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: Write CNAME
-        run: echo 'gravity-ui.com' > ./dist-docs/CNAME
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
