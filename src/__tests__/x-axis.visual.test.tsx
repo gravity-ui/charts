@@ -198,6 +198,49 @@ test.describe('X-axis', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Dense categorical labels with long second category (-45 deg): even spacing, no left shift', async ({
+            mount,
+        }) => {
+            const categories = [
+                'Ox',
+                "Humuhumunukunukuapua'a",
+                'Dog',
+                'Fox',
+                'Elephant',
+                'Bear',
+                'Wolf',
+                'Lion',
+                'Tiger',
+                'Snake',
+                'Hawk',
+                'Deer',
+                'Moose',
+                'Rabbit',
+            ];
+            const data: ChartData = {
+                yAxis: [{visible: false}],
+                xAxis: {
+                    type: 'category',
+                    categories,
+                    labels: {
+                        rotation: -45,
+                        padding: 0,
+                    },
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series 1',
+                            data: categories.map((_, i) => ({x: i, y: (i + 1) * 10})),
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
     });
 
     test.describe('Axis title', () => {

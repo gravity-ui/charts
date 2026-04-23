@@ -85,7 +85,8 @@ async function getSvgAxisLabel({
         textMaxWidth = Math.min(
             axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
             // leftmost label: may extend into the left Y-axis area but not into the left margin
-            (boundsOffsetLeft - chartMarginLeft + left) / calculateSin(a),
+            // subtract textSize.height / 2 to account for the height component in the x calculation
+            (boundsOffsetLeft - chartMarginLeft + left) / calculateSin(a) - textSize.height / 2,
         );
     }
 
