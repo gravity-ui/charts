@@ -100,12 +100,12 @@ export interface ChartSeriesOptions {
         barMaxWidth?: number;
         /**
          * Padding between each bar as a fraction of the space allocated per bar.
-         * @default 0.1
+         * @default 0.2
          */
         barPadding?: number;
         /**
          * Padding between each value groups, in x axis units
-         * @default 0.2
+         * @default 0.1
          */
         groupPadding?: number;
         /**
@@ -148,12 +148,12 @@ export interface ChartSeriesOptions {
         barMaxWidth?: number;
         /**
          * Padding between each bar as a fraction of the space allocated per bar.
-         * @default 0.1
+         * @default 0.2
          */
         barPadding?: number;
         /**
          * Padding between each value groups, in x axis units
-         * @default 0.2
+         * @default 0.1
          */
         groupPadding?: number;
         /**
@@ -289,7 +289,7 @@ export interface ChartSeriesOptions {
         barMaxWidth?: number;
         /**
          * Padding between each bar as a fraction of the space allocated per bar.
-         * @default 0.1
+         * @default 0.2
          */
         barPadding?: number;
         /** Options for the series states that provide additional styling information to the series. */
