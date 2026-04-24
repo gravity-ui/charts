@@ -24,6 +24,7 @@ import type {PreparedAreaData} from '../shapes/area/types';
 import type {PreparedBarXData} from '../shapes/bar-x/types';
 import type {PreparedBarYData} from '../shapes/bar-y/types';
 import type {PreparedFunnelData} from '../shapes/funnel/types';
+import type {PreparedGaugeData} from '../shapes/gauge/types';
 import type {PreparedHeatmapData} from '../shapes/heatmap/types';
 import type {PreparedLineData} from '../shapes/line/types';
 import type {PreparedPieData} from '../shapes/pie/types';
@@ -300,6 +301,52 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                     });
                 }
 
+                break;
+            }
+            case 'gauge': {
+                const gaugeList = list as unknown as PreparedGaugeData[];
+                for (const item of gaugeList) {
+                    const dx = pointerX - item.cx;
+                    const dy = pointerY - item.cy;
+                    const polarRadius = Math.sqrt(dx * dx + dy * dy);
+
+                    // Small extra margin to catch the marker overhang
+                    if (polarRadius < item.innerRadius || polarRadius > item.outerRadius + 8) {
+                        continue;
+                    }
+
+                    // 0° = 12-o'clock, clockwise positive — matches pointOnArc convention
+                    const angleDeg = Math.atan2(dx, -dy) * (180 / Math.PI);
+                    if (angleDeg < item.startAngleDeg || angleDeg > item.endAngleDeg) {
+                        continue;
+                    }
+
+                    const zone = item.thresholdArcs.find(
+                        (z) => angleDeg >= z.startDeg && angleDeg <= z.endDeg,
+                    );
+
+                    result.push({
+                        series: {
+                            type: 'gauge' as const,
+                            id: item.series.id,
+                            name: item.series.name,
+                            color: item.series.color,
+                        },
+                        data: {
+                            value: item.series.value,
+                            unit: item.series.unit,
+                            zoneColor: zone?.color ?? item.series.color,
+                            zoneLabel: zone?.label,
+                            zoneMin: zone?.zoneMin,
+                            zoneMax: zone?.zoneMax,
+                            distanceToTarget:
+                                item.series.target !== undefined
+                                    ? item.series.target - item.series.value
+                                    : undefined,
+                        },
+                        closest: true,
+                    } as TooltipDataChunk);
+                }
                 break;
             }
             case 'treemap': {

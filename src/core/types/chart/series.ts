@@ -8,6 +8,7 @@ import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
+import type {GaugeSeries} from './gauge';
 import type {Halo} from './halo';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
@@ -22,6 +23,7 @@ import type {XRangeSeries, XRangeSeriesData} from './x-range';
 
 export type ChartSeries<T = MeaningfulAny> =
     | ScatterSeries<T>
+    | GaugeSeries<T>
     | PieSeries<T>
     | BarXSeries<T>
     | BarYSeries<T>

@@ -46,6 +46,7 @@ import type {
     SeriesOptionsDefaults,
     SymbolType,
 } from '../constants';
+import type {PreparedGaugeSeries} from '../shapes/gauge/types';
 
 export type PreparedAnnotation = {
     label: {
@@ -454,10 +455,13 @@ export type PreparedXRangeSeries = {
     };
 } & BasePreparedSeries;
 
+export type {PreparedGaugeSeries};
+
 export type PreparedSeries =
     | PreparedScatterSeries
     | PreparedBarXSeries
     | PreparedBarYSeries
+    | PreparedGaugeSeries
     | PreparedPieSeries
     | PreparedLineSeries
     | PreparedAreaSeries

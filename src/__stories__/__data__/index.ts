@@ -1,6 +1,7 @@
 export * from './area';
 export * from './bar-x';
 export * from './bar-y';
+export * from './gauge';
 export * from './other';
 export * from './line';
 export * from './pie';

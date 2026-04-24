@@ -2,6 +2,7 @@ export const SERIES_TYPE = {
     Area: 'area',
     BarX: 'bar-x',
     BarY: 'bar-y',
+    Gauge: 'gauge',
     Line: 'line',
     Pie: 'pie',
     Scatter: 'scatter',

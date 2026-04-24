@@ -5,7 +5,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 
 import {xRangeBasicData, xRangeContinuousLegendData} from 'src/__stories__/__data__';
-import type {ChartData, DeepPartial, XRangeSeriesData} from 'src/types';
+import type {ChartData, DeepPartial, XRangeSeries, XRangeSeriesData} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -119,9 +119,9 @@ test.describe('X-Range series', () => {
             ...xRangeBasicData,
             series: {
                 data: xRangeBasicData.series.data.map((s) => ({
-                    ...s,
+                    ...(s as XRangeSeries),
                     dataLabels: {enabled: true, html: true},
-                    data: s.data.map((d) => ({
+                    data: (s as XRangeSeries).data.map((d) => ({
                         ...d,
                         label: `<pre>${String((d as XRangeSeriesData).label)}</pre>`,
                     })),

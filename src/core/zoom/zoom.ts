@@ -66,7 +66,7 @@ function isValueInRange(args: {
 }
 
 function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoomableSeries {
-    return Array.isArray(series.data);
+    return 'data' in series && Array.isArray((series as {data?: unknown}).data);
 }
 
 export function getZoomedSeriesData(args: {

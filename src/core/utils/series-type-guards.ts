@@ -1,8 +1,15 @@
 import type {ChartSeries} from '../../types';
 
-const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar', 'funnel'];
+const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = [
+    'gauge',
+    'pie',
+    'treemap',
+    'sankey',
+    'radar',
+    'funnel',
+];
 
-export type UnknownSeries = {type: ChartSeries['type']; data: unknown};
+export type UnknownSeries = {type: ChartSeries['type']; data?: unknown};
 
 /**
  * Checks whether the series should be drawn with axes.

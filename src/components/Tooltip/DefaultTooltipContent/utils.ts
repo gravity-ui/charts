@@ -88,7 +88,7 @@ export const getMeasureValue = ({
 }) => {
     if (
         data.every((item) =>
-            ['pie', 'treemap', 'waterfall', 'sankey', 'heatmap', 'funnel'].includes(
+            ['gauge', 'pie', 'treemap', 'waterfall', 'sankey', 'heatmap', 'funnel'].includes(
                 item.series.type,
             ),
         )
@@ -140,6 +140,9 @@ export function getHoveredValues(args: {
             }
             case 'bar-y': {
                 return getXRowData(data, xAxis);
+            }
+            case 'gauge': {
+                return (data as {value: number}).value;
             }
             case 'pie':
             case 'radar':
