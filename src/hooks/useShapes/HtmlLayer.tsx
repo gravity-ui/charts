@@ -34,13 +34,13 @@ export const HtmlLayer = (props: Props) => {
         <Portal container={htmlLayout}>
             {items.map((item, index) => {
                 const scope = item.scope ?? 'plot';
-                const style: React.CSSProperties = {
+                const style = {
                     ...item.style,
                     color: item.style?.color ?? item.style?.fontColor,
                     position: 'absolute',
                     left: item.x,
                     top: item.y,
-                };
+                } as React.CSSProperties;
 
                 return (
                     <div

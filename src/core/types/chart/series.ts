@@ -1,7 +1,6 @@
-import type React from 'react';
-
 import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {MeaningfulAny} from '../misc';
+import type {SVGTextAttributes} from '../renderer';
 
 import type {ChartAnnotationSeriesOptions} from './annotation';
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -89,7 +88,7 @@ export interface ChartSeriesOptions {
         /** Enable or disable the data labels */
         enabled?: boolean;
         /** Callback function to render the data label */
-        renderer?: (args: DataLabelRendererData) => React.SVGTextElementAttributes<SVGTextElement>;
+        renderer?: (args: DataLabelRendererData) => SVGTextAttributes;
     };
     'bar-x'?: {
         /**

@@ -57,7 +57,7 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         hoveredPlotShapes,
         xAxis,
         yAxis,
-    });
+    }) as React.ReactElement | null | undefined;
 
     return isNil(customTooltip) ? (
         <DefaultTooltipContent

@@ -8,6 +8,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {ChartScale} from '../scales/types';
 import type {BasicInactiveState} from '../types';
 import {getDataCategoryValue} from '../utils';
+import type {ZoomState} from '../zoom/types';
 
 const ONE_POINT_DOMAIN_DATA_CAPACITY = 3;
 
@@ -317,4 +318,22 @@ export function getClipPathIdByBounds(args: {clipPathId: string; bounds?: 'horiz
     const {bounds, clipPathId} = args;
 
     return bounds ? `${clipPathId}-${bounds}` : clipPathId;
+}
+
+export function getSeriesClipPathId(args: {
+    clipPathId: string;
+    yAxis: PreparedYAxis[];
+    zoomState?: Partial<ZoomState>;
+}) {
+    const {clipPathId, yAxis, zoomState} = args;
+    const hasMinOrMax = yAxis.some(
+        (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
+    );
+    const hasZoom = zoomState && Object.keys(zoomState).length > 0;
+
+    if (!hasZoom && !hasMinOrMax) {
+        return `${clipPathId}-horizontal`;
+    }
+
+    return clipPathId;
 }
