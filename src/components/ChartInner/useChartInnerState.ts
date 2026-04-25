@@ -5,7 +5,7 @@ import isEqual from 'lodash/isEqual';
 
 import {EventType, isMacintosh} from '~core/utils';
 
-import type {PreparedRangeSlider, PreparedTooltip, RangeSliderState, ZoomState} from '../../hooks';
+import type {PreparedRangeSlider, PreparedTooltip, ZoomState} from '../../hooks';
 
 type Props = {
     dispatcher: Dispatch<object>;
@@ -17,7 +17,6 @@ export function useChartInnerState(props: Props) {
     const {dispatcher, preparedRangeSlider, tooltip} = props;
     const [tooltipPinned, setTooltipPinned] = React.useState(false);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
-    const [rangeSliderState, setRangeSliderState] = React.useState<RangeSliderState | undefined>();
     const [initialized, setInitialized] = React.useState(!preparedRangeSlider.enabled);
     const tooltipEnabled = tooltip?.enabled;
     const tooltipPinEnabled = tooltip?.pin?.enabled;
@@ -53,48 +52,18 @@ export function useChartInnerState(props: Props) {
         (nextZoomState: Partial<ZoomState>) => {
             if (!isEqual(zoomState, nextZoomState)) {
                 setZoomState(nextZoomState);
-
-                // One-way sync: zoom → range slider. On full reset clear the slider state;
-                // on x-zoom change sync slider to the zoomed x range.
-                if (Object.keys(nextZoomState).length === 0) {
-                    setRangeSliderState(undefined);
-                } else if (nextZoomState.x !== undefined) {
-                    setRangeSliderState({min: nextZoomState.x[0], max: nextZoomState.x[1]});
-                }
-
                 dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
             }
         },
         [dispatcher, zoomState],
     );
 
-    const updateRangeSliderState = React.useCallback(
-        (nextRangeSliderState?: RangeSliderState) => {
-            if (!isEqual(rangeSliderState, nextRangeSliderState)) {
-                setRangeSliderState(
-                    nextRangeSliderState
-                        ? {
-                              max: nextRangeSliderState.max,
-                              min: nextRangeSliderState.min,
-                          }
-                        : undefined,
-                );
-                // Moving the slider clears zoom so the slider is always the sole source of truth.
-                // Zoom stays active only until the user explicitly touches the slider.
-                setZoomState({});
-            }
-        },
-        [rangeSliderState],
-    );
-
     return {
         initialized,
-        rangeSliderState,
         setInitialized,
         tooltipPinned,
         togglePinTooltip: tooltipEnabled && tooltipPinEnabled ? togglePinTooltip : undefined,
         unpinTooltip: tooltipEnabled && tooltipPinEnabled ? unpinTooltip : undefined,
-        updateRangeSliderState,
         updateZoomState,
         zoomState,
     };

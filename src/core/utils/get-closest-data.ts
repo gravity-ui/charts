@@ -147,7 +147,15 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 const linePoints = (list as PreparedLineData[]).reduce<ShapePoint[]>((acc, d) => {
                     acc.push(
                         ...d.points.reduce<ShapePoint[]>((accPoints, p) => {
-                            if (p.y !== null && p.x !== null && !p.hiddenInLine) {
+                            if (
+                                p.y !== null &&
+                                p.x !== null &&
+                                !p.hiddenInLine &&
+                                p.x >= 0 &&
+                                p.x <= boundsWidth &&
+                                p.y >= 0 &&
+                                p.y <= boundsHeight
+                            ) {
                                 accPoints.push({
                                     data: p.data,
                                     series: p.series as LineSeries,
@@ -167,7 +175,14 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             case 'area': {
                 const areaPoints = (list as PreparedAreaData[]).reduce<ShapePoint[]>((acc, d) => {
                     for (const p of d.points) {
-                        if (p.y === null || p.hiddenInLine) {
+                        if (
+                            p.y === null ||
+                            p.hiddenInLine ||
+                            p.x < 0 ||
+                            p.x > boundsWidth ||
+                            p.y < 0 ||
+                            p.y > boundsHeight
+                        ) {
                             continue;
                         }
                         acc.push({
@@ -184,7 +199,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 break;
             }
             case 'bar-x': {
-                const barXList = list as PreparedBarXData[];
+                const barXList = (list as PreparedBarXData[]).filter((d) => {
+                    const cx = d.x + d.width / 2;
+                    return cx >= 0 && cx <= boundsWidth;
+                });
                 const barXGroups = groupBy(barXList, (d) => String(d.data.x));
                 const barXPoints: ShapePoint[] = [];
                 Object.values(barXGroups).forEach((group) => {
@@ -205,14 +223,19 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 break;
             }
             case 'waterfall': {
-                const points = (list as PreparedWaterfallData[]).map<ShapePoint>((d) => ({
-                    data: d.data as WaterfallSeriesData,
-                    series: d.series as WaterfallSeries,
-                    x: d.x + d.width / 2,
-                    y0: d.y,
-                    y1: d.y + d.height,
-                    subTotal: d.subTotal,
-                }));
+                const points = (list as PreparedWaterfallData[])
+                    .filter((d) => {
+                        const cx = d.x + d.width / 2;
+                        return cx >= 0 && cx <= boundsWidth;
+                    })
+                    .map<ShapePoint>((d) => ({
+                        data: d.data as WaterfallSeriesData,
+                        series: d.series as WaterfallSeries,
+                        x: d.x + d.width / 2,
+                        y0: d.y,
+                        y1: d.y + d.height,
+                        subTotal: d.subTotal,
+                    }));
                 result.push(
                     ...(getClosestPointsByXValue(pointerX, pointerY, points) as TooltipDataChunk[]),
                 );
@@ -220,7 +243,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 break;
             }
             case 'bar-y': {
-                const points = list as PreparedBarYData[];
+                const points = (list as PreparedBarYData[]).filter((d) => {
+                    const cy = d.y + d.height / 2;
+                    return cy >= 0 && cy <= boundsHeight;
+                });
                 const sorted = sort(points, (p) => p.y);
                 const closestYIndex = bisector<PreparedBarYData, number>(
                     (p) => p.y + p.height / 2,
@@ -260,7 +286,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
                 break;
             }
             case 'scatter': {
-                const points = list as PreparedScatterData[];
+                const points = (list as PreparedScatterData[]).filter((p) => !p.clipped);
+                if (points.length === 0) {
+                    break;
+                }
                 const delaunayX = Delaunay.from(
                     points,
                     (d) => d.point.x,

@@ -2,11 +2,13 @@ import React from 'react';
 
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
+import isEqual from 'lodash/isEqual';
 
 import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {EventType, getDispatcher, isBandScale} from '~core/utils';
 
 import {useCrosshair, usePrevious} from '../../hooks';
+import type {RangeSliderState, ZoomState} from '../../hooks';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
 import {block} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
@@ -18,7 +20,6 @@ import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
 import {PlotTitle} from '../PlotTitle';
 import {RangeSlider} from '../RangeSlider';
-import type {RangeSliderHandle} from '../RangeSlider';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
 import {getInitialRangeSliderState} from '../utils';
@@ -49,7 +50,6 @@ export const ChartInner = (props: ChartInnerProps) => {
     const plotRef = React.useRef<SVGGElement | null>(null);
     const plotBeforeRef = React.useRef<SVGGElement | null>(null);
     const plotAfterRef = React.useRef<SVGGElement | null>(null);
-    const rangeSliderRef = React.useRef<RangeSliderHandle | null>(null);
     const dispatcher = React.useMemo(() => getDispatcher(), []);
     const clipPathId = useUniqId();
 
@@ -70,8 +70,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         tooltipPinned,
         togglePinTooltip,
         unpinTooltip,
-        rangeSliderState,
-        updateRangeSliderState,
         updateZoomState,
         zoomState,
     } = useChartInnerState({
@@ -79,6 +77,16 @@ export const ChartInner = (props: ChartInnerProps) => {
         preparedRangeSlider,
         tooltip: preparedTooltip,
     });
+    // Snapshot of zoomState that the chart returns to on reset. Captures the slider's
+    // initial range (when defaultRange is set) so reset doesn't drop us to {} and
+    // wipe the user's intended starting view.
+    const initialZoomRef = React.useRef<Partial<ZoomState>>({});
+    const handleRangeSliderUpdate = React.useCallback(
+        (state?: RangeSliderState) => {
+            updateZoomState(state ? {x: [state.min, state.max]} : {});
+        },
+        [updateZoomState],
+    );
     const {
         activeLegendItems,
         allPreparedSeries,
@@ -108,8 +116,6 @@ export const ChartInner = (props: ChartInnerProps) => {
         dispatcher,
         htmlLayout,
         plotNode: plotRef.current,
-        rangeSliderState,
-        updateRangeSliderState,
         updateZoomState,
         zoomState,
     });
@@ -290,26 +296,32 @@ export const ChartInner = (props: ChartInnerProps) => {
                 return;
             }
 
-            const defaultRange = preparedRangeSlider.defaultRange;
             const initialRangeSliderState = getInitialRangeSliderState({
-                defaultRange,
+                defaultRange: preparedRangeSlider.defaultRange,
                 xScale,
             });
+            const initialZoom: Partial<ZoomState> = {
+                x: [initialRangeSliderState.min, initialRangeSliderState.max],
+            };
 
-            updateRangeSliderState(initialRangeSliderState);
+            initialZoomRef.current = initialZoom;
+            updateZoomState(initialZoom);
             setInitialized(true);
         } else if (preparedRangeSlider.defaultRange !== prevRangeSliderDefaultRange && xScale) {
             if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
                 return;
             }
 
-            const defaultRange = preparedRangeSlider.defaultRange;
             const initialRangeSliderState = getInitialRangeSliderState({
-                defaultRange,
+                defaultRange: preparedRangeSlider.defaultRange,
                 xScale,
             });
+            const initialZoom: Partial<ZoomState> = {
+                x: [initialRangeSliderState.min, initialRangeSliderState.max],
+            };
 
-            updateRangeSliderState(initialRangeSliderState);
+            initialZoomRef.current = initialZoom;
+            updateZoomState(initialZoom);
         }
     }, [
         initialized,
@@ -317,7 +329,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         preparedRangeSlider.enabled,
         prevRangeSliderDefaultRange,
         setInitialized,
-        updateRangeSliderState,
+        updateZoomState,
         xScale,
     ]);
 
@@ -399,14 +411,13 @@ export const ChartInner = (props: ChartInnerProps) => {
                         boundsWidth={debouncedBoundsWidth}
                         height={height}
                         htmlLayout={htmlLayout}
-                        onUpdate={updateRangeSliderState}
+                        onUpdate={handleRangeSliderUpdate}
                         preparedChart={preparedChart}
                         preparedLegend={preparedLegend}
                         preparedSeries={debouncedAllPreparedSeries}
                         preparedSeriesOptions={preparedSeriesOptions}
                         preparedRangeSlider={xAxis.rangeSlider}
-                        rangeSliderState={rangeSliderState}
-                        ref={rangeSliderRef}
+                        range={zoomState.x}
                         width={width}
                         xAxis={data.xAxis}
                         yAxis={data.yAxis}
@@ -452,12 +463,11 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {Object.keys(zoomState).length > 0 && preparedChart?.zoom && (
+            {!isEqual(zoomState, initialZoomRef.current) && preparedChart?.zoom && (
                 <Button
                     className={b('reset-zoom-button')}
                     onClick={() => {
-                        updateZoomState({});
-                        rangeSliderRef.current?.resetState();
+                        updateZoomState(initialZoomRef.current);
                     }}
                     ref={resetZoomButtonRef}
                     style={getResetZoomButtonStyle({

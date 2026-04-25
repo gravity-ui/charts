@@ -2,90 +2,75 @@ import intersection from 'lodash/intersection';
 import merge from 'lodash/merge';
 
 import {SERIES_TYPE, ZOOM_TYPE, brushDefaults} from '~core/constants';
-import type {ZoomType} from '~core/constants';
+import type {SeriesType, ZoomType} from '~core/constants';
 
 import type {PreparedZoom} from '../../../hooks/types';
 import type {ChartBrush, ChartSeries, ChartZoom} from '../../../types';
 
-function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
-    switch (seriesType) {
-        case SERIES_TYPE.Area: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.BarX: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY];
-        }
-        case SERIES_TYPE.XRange: {
-            return [ZOOM_TYPE.X];
-        }
-        case SERIES_TYPE.BarY: {
-            return [ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.Line: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.Scatter: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.Waterfall: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        default: {
-            return [];
-        }
-    }
-}
+type SeriesZoomSupport = {
+    types: ZoomType[];
+    default: ZoomType;
+};
 
-function getDefaultZoomType(seriesType: ChartSeries['type']): ZoomType | undefined {
-    switch (seriesType) {
-        case SERIES_TYPE.BarY: {
-            return ZOOM_TYPE.Y;
-        }
-        case SERIES_TYPE.Scatter: {
-            return ZOOM_TYPE.XY;
-        }
-        case SERIES_TYPE.Area:
-        case SERIES_TYPE.BarX:
-        case SERIES_TYPE.XRange:
-        case SERIES_TYPE.Line:
-        case SERIES_TYPE.Waterfall: {
-            return ZOOM_TYPE.X;
-        }
-        default: {
-            return undefined;
-        }
-    }
-}
+const SERIES_ZOOM_SUPPORT: Partial<Record<SeriesType, SeriesZoomSupport>> = {
+    [SERIES_TYPE.Area]: {
+        types: [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y],
+        default: ZOOM_TYPE.X,
+    },
+    [SERIES_TYPE.BarX]: {
+        types: [ZOOM_TYPE.X, ZOOM_TYPE.XY],
+        default: ZOOM_TYPE.X,
+    },
+    [SERIES_TYPE.BarY]: {
+        types: [ZOOM_TYPE.Y],
+        default: ZOOM_TYPE.Y,
+    },
+    [SERIES_TYPE.Line]: {
+        types: [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y],
+        default: ZOOM_TYPE.X,
+    },
+    [SERIES_TYPE.Scatter]: {
+        types: [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y],
+        default: ZOOM_TYPE.XY,
+    },
+    [SERIES_TYPE.Waterfall]: {
+        types: [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y],
+        default: ZOOM_TYPE.X,
+    },
+    [SERIES_TYPE.XRange]: {
+        types: [ZOOM_TYPE.X],
+        default: ZOOM_TYPE.X,
+    },
+};
 
 export function getZoomType(args: {
     seriesData: ChartSeries[];
     zoomType?: ZoomType;
 }): ZoomType | undefined {
     const {seriesData, zoomType} = args;
-    const possibleZoomTypes: ZoomType[][] = seriesData.map((s) => {
-        return mapSeriesTypeToZoomType(s.type);
-    });
-    const availableZoomTypes = intersection(...possibleZoomTypes) as ZoomType[];
 
-    if (zoomType && availableZoomTypes.includes(zoomType)) {
+    if (seriesData.length === 0) {
+        return undefined;
+    }
+
+    const perSeries = seriesData.map((s) => SERIES_ZOOM_SUPPORT[s.type]);
+
+    if (perSeries.some((s) => !s)) {
+        return undefined;
+    }
+
+    const supportedTypes = intersection(
+        ...perSeries.map((s) => (s as SeriesZoomSupport).types),
+    ) as ZoomType[];
+
+    if (zoomType && supportedTypes.includes(zoomType)) {
         return zoomType;
     }
 
-    const possibleDefaultZoomTypes: ZoomType[] = seriesData
-        .map((s) => {
-            return getDefaultZoomType(s.type);
-        })
-        .filter(Boolean) as ZoomType[];
-    const availableDefaultZoomTypes = intersection(
-        possibleDefaultZoomTypes,
-        ...possibleZoomTypes,
-    ) as ZoomType[];
+    const defaults = perSeries.map((s) => (s as SeriesZoomSupport).default);
+    const compatibleDefault = intersection(defaults, supportedTypes) as ZoomType[];
 
-    if (availableDefaultZoomTypes.length) {
-        return availableDefaultZoomTypes[0];
-    }
-
-    return undefined;
+    return compatibleDefault[0];
 }
 
 export function getPreparedZoom(args: {

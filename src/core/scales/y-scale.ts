@@ -396,11 +396,20 @@ export function createYScale(args: {
         }
         case 'category': {
             if (yCategories) {
-                const filteredCategories = filterCategoriesByVisibleSeries({
+                let filteredCategories = filterCategoriesByVisibleSeries({
                     axisDirection: 'y',
                     categories: yCategories,
                     series: series,
                 });
+
+                if (zoomStateY) {
+                    const [a, b] = zoomStateY;
+                    const minIdx = Math.max(0, Math.min(a, b));
+                    const maxIdx = Math.min(yCategories.length - 1, Math.max(a, b));
+                    const inZoom = new Set(yCategories.slice(minIdx, maxIdx + 1));
+                    filteredCategories = filteredCategories.filter((c) => inZoom.has(c));
+                }
+
                 return scaleBand().domain(filteredCategories).range(range);
             }
 

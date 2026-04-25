@@ -92,19 +92,21 @@ function selectionXToZoomBounds(args: {
             const categories = xAxis.categories || [];
             const currentDomain = bandScale.domain();
             const step = bandScale.step();
-            let startIndex = Math.floor(x0 / step);
-            let endIndex = Math.floor(x1 / step);
-            const startCategory = currentDomain[startIndex];
-            const endCategory = currentDomain[endIndex];
-            startIndex = categories.indexOf(startCategory);
-            endIndex = categories.indexOf(endCategory);
+            const rawStart = Math.floor(x0 / step);
+            const rawEnd = Math.floor(x1 / step);
+            const lastIdx = currentDomain.length - 1;
 
-            if (!categories[startIndex]) {
-                startIndex = 0;
+            if (lastIdx < 0 || rawStart > lastIdx || rawEnd < 0) {
+                return [-1, -1];
             }
 
-            if (!categories[endIndex]) {
-                endIndex = categories.length - 1;
+            const clampedStart = Math.max(0, Math.min(lastIdx, rawStart));
+            const clampedEnd = Math.max(0, Math.min(lastIdx, rawEnd));
+            const startIndex = categories.indexOf(currentDomain[clampedStart]);
+            const endIndex = categories.indexOf(currentDomain[clampedEnd]);
+
+            if (startIndex === -1 || endIndex === -1) {
+                return [-1, -1];
             }
 
             return [startIndex, endIndex];
@@ -165,22 +167,21 @@ function selectionYToZoomBounds(args: {
             const categories = yAxis.categories || [];
             const currentDomain = bandScale.domain();
             const step = bandScale.step();
-            let startIndex = Math.max(0, currentDomain.length - 1 - Math.floor(y0 / step));
-            let endIndex = Math.min(
-                currentDomain.length - 1,
-                currentDomain.length - 1 - Math.floor(y1 / step),
-            );
-            const startCategory = currentDomain[startIndex];
-            const endCategory = currentDomain[endIndex];
-            startIndex = categories.indexOf(startCategory);
-            endIndex = categories.indexOf(endCategory);
+            const lastIdx = currentDomain.length - 1;
+            const rawStart = lastIdx - Math.floor(y0 / step);
+            const rawEnd = lastIdx - Math.floor(y1 / step);
 
-            if (!categories[startIndex]) {
-                startIndex = 0;
+            if (lastIdx < 0 || rawEnd < 0 || rawStart > lastIdx) {
+                return [-1, -1];
             }
 
-            if (!categories[endIndex]) {
-                endIndex = categories.length - 1;
+            const clampedStart = Math.max(0, Math.min(lastIdx, rawStart));
+            const clampedEnd = Math.max(0, Math.min(lastIdx, rawEnd));
+            const startIndex = categories.indexOf(currentDomain[clampedStart]);
+            const endIndex = categories.indexOf(currentDomain[clampedEnd]);
+
+            if (startIndex === -1 || endIndex === -1) {
+                return [-1, -1];
             }
 
             return [startIndex, endIndex];

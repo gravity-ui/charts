@@ -5,15 +5,9 @@ import get from 'lodash/get';
 
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
-import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
 import type {ChartAxis, ChartAxisType, ChartSeries} from '../types';
-import {
-    getDefaultMaxXAxisValue,
-    getDefaultMinXAxisValue,
-    getDomainDataXBySeries,
-    getEffectiveXRange,
-} from '../utils';
+import {getDefaultMaxXAxisValue, getDefaultMinXAxisValue, getDomainDataXBySeries} from '../utils';
 import {getBandSize} from '../utils/band-size';
 
 import {
@@ -66,19 +60,14 @@ export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
-    rangeSliderState?: RangeSliderState;
     zoomStateX?: [number, number];
 }) {
-    const {axis, boundsWidth, series, rangeSliderState, zoomStateX} = args;
-
-    const effectiveX = getEffectiveXRange(zoomStateX, rangeSliderState);
-    const effectiveXMin = effectiveX?.[0];
-    const effectiveXMax = effectiveX?.[1];
+    const {axis, boundsWidth, series, zoomStateX} = args;
 
     const [xMinPropsOrState, xMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
-        maxValues: [effectiveXMax],
-        minValues: [effectiveXMin],
+        maxValues: [zoomStateX?.[1]],
+        minValues: [zoomStateX?.[0]],
     });
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const hasZoomX = Boolean(zoomStateX);
@@ -197,11 +186,20 @@ export function createXScale(args: {
         }
         case 'category': {
             if (xCategories) {
-                const filteredCategories = filterCategoriesByVisibleSeries({
+                let filteredCategories = filterCategoriesByVisibleSeries({
                     axisDirection: 'x',
                     categories: xCategories,
                     series: series,
                 });
+
+                if (zoomStateX) {
+                    const [a, b] = zoomStateX;
+                    const minIdx = Math.max(0, Math.min(a, b));
+                    const maxIdx = Math.min(xCategories.length - 1, Math.max(a, b));
+                    const inZoom = new Set(xCategories.slice(minIdx, maxIdx + 1));
+                    filteredCategories = filteredCategories.filter((c) => inZoom.has(c));
+                }
+
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 
                 if (xScale.step() / 2 < xAxisMaxPadding) {

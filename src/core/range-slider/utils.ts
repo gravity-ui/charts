@@ -5,8 +5,6 @@ import type {ChartScale} from '../scales/types';
 import type {PreparedLegend} from '../series/types';
 import {isBandScale} from '../utils';
 
-import type {RangeSliderState} from './types';
-
 export function getRangeSliderOffsetTop(args: {
     height: number;
     preparedChart: PreparedChart;
@@ -27,14 +25,14 @@ export function getRangeSliderOffsetTop(args: {
 }
 
 export function getRangeSliderSelection(args: {
-    rangeSliderState?: RangeSliderState;
+    range?: [number, number];
     xScale?: ChartScale;
 }): BrushSelection | undefined {
-    const {rangeSliderState, xScale} = args;
+    const {range, xScale} = args;
 
-    if (!rangeSliderState || !xScale || isBandScale(xScale)) {
+    if (!range || !xScale || isBandScale(xScale)) {
         return undefined;
     }
 
-    return [xScale(rangeSliderState.min), xScale(rangeSliderState.max)];
+    return [xScale(range[0]), xScale(range[1])];
 }

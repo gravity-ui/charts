@@ -23,7 +23,7 @@ export interface RangeSliderProps {
     preparedSeries: PreparedSeries[];
     preparedSeriesOptions: PreparedSeriesOptions;
     width: number;
-    rangeSliderState?: RangeSliderState;
+    range?: [number, number];
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
 }

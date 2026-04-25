@@ -1,12 +1,8 @@
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
-import {SERIES_TYPE} from '../constants';
-import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries, PreparedZoomableSeries} from '../series';
-import type {ChartAxisType, ChartSeries, ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
+import type {ChartAxisType, ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
 
 import type {ZoomState} from './types';
-
-const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SERIES_TYPE.Area, SERIES_TYPE.Line];
 
 function isValueInRange(args: {
     axis?: ChartXAxis | ChartYAxis | PreparedAxis | null;
@@ -78,33 +74,21 @@ export function getZoomedSeriesData(args: {
     const {seriesData, xAxis, yAxis, zoomState} = args;
 
     if (Object.keys(zoomState).length <= 0) {
-        return {preparedSeries: seriesData, preparedShapesSeries: seriesData};
+        return {preparedSeries: seriesData};
     }
 
     const zoomedSeriesData: PreparedSeries[] = [];
-    const zoomedShapesSeriesData: PreparedSeries[] = [];
 
     seriesData.forEach((seriesItem) => {
-        let prevPointInRange = false;
-        let currentPointInRange = false;
-
-        const filteredData: ChartSeriesData[] = [];
-        const filteredShapesData: ChartSeriesData[] | undefined =
-            SERIES_TYPE_WITH_HIDDEN_POINTS.includes(seriesItem.type) && xAxis?.type !== 'category'
-                ? []
-                : undefined;
-
         if (!isPreparedZoomableSeries(seriesItem)) {
             return;
         }
 
-        seriesItem.data.forEach((point, i) => {
-            const prevPoint = seriesItem.data[i - 1];
-            const isFirstPoint = i === 0;
+        const filteredData: ChartSeriesData[] = [];
+
+        seriesItem.data.forEach((point) => {
             let inXRange = true;
             let inYRange = true;
-
-            prevPointInRange = currentPointInRange;
 
             if (zoomState.x) {
                 const [xMin, xMax] = zoomState.x;
@@ -154,23 +138,8 @@ export function getZoomedSeriesData(args: {
                 }
             }
 
-            currentPointInRange = inXRange && inYRange;
-
-            if (currentPointInRange) {
+            if (inXRange && inYRange) {
                 filteredData.push(point);
-            }
-
-            if (filteredShapesData) {
-                if (prevPointInRange && !currentPointInRange) {
-                    filteredShapesData.push(point);
-                } else if (!isFirstPoint && !prevPointInRange && currentPointInRange) {
-                    filteredShapesData.push(prevPoint, point);
-                } else if (
-                    (isFirstPoint || (!isFirstPoint && prevPointInRange)) &&
-                    currentPointInRange
-                ) {
-                    filteredShapesData.push(point);
-                }
             }
         });
 
@@ -178,29 +147,7 @@ export function getZoomedSeriesData(args: {
             ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredData,
         } as PreparedSeries);
-        zoomedShapesSeriesData.push({
-            ...(seriesItem as Omit<PreparedSeries, 'data'>),
-            data: filteredShapesData || filteredData,
-        } as PreparedSeries);
     });
 
-    return {
-        preparedSeries: zoomedSeriesData,
-        preparedShapesSeries: zoomedShapesSeriesData,
-    };
-}
-
-export function getEffectiveXRange(
-    zoomStateX: [number, number] | undefined,
-    rangeSliderState: RangeSliderState | undefined,
-): [number, number] | undefined {
-    if (zoomStateX && rangeSliderState) {
-        return [
-            Math.max(zoomStateX[0], rangeSliderState.min),
-            Math.min(zoomStateX[1], rangeSliderState.max),
-        ];
-    }
-    return (
-        zoomStateX ?? (rangeSliderState ? [rangeSliderState.min, rangeSliderState.max] : undefined)
-    );
+    return {preparedSeries: zoomedSeriesData};
 }

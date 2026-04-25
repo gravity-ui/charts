@@ -14,7 +14,6 @@ import type {
     PreparedSeries,
     PreparedSplit,
     PreparedYAxis,
-    RangeSliderState,
     ZoomState,
 } from '../../hooks';
 
@@ -29,7 +28,6 @@ type Args = {
     yAxis: PreparedYAxis[];
     split: PreparedSplit;
     isRangeSlider?: boolean;
-    rangeSliderState?: RangeSliderState;
     zoomState?: Partial<ZoomState>;
 };
 
@@ -39,17 +37,7 @@ type ReturnValue = {
 };
 
 export const createScales = (args: Args) => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        isRangeSlider,
-        rangeSliderState,
-        series,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
+    const {boundsWidth, boundsHeight, isRangeSlider, series, split, xAxis, yAxis, zoomState} = args;
     // For range slider: always use all series regardless of visibility so the slider domain
     // stays stable when the user hides/shows series via the legend.
     let visibleSeries = isRangeSlider ? series : getOnlyVisibleSeries(series);
@@ -121,7 +109,6 @@ export const createScales = (args: Args) => {
             ? createXScale({
                   axis: xAxis,
                   boundsWidth,
-                  rangeSliderState,
                   series: visibleSeries,
                   zoomStateX: zoomState?.x,
               })
@@ -134,17 +121,7 @@ export const createScales = (args: Args) => {
  * Uses to create scales for axis related series
  */
 export const useAxisScales = (args: Args): ReturnValue => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        isRangeSlider,
-        rangeSliderState,
-        series,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
+    const {boundsWidth, boundsHeight, isRangeSlider, series, split, xAxis, yAxis, zoomState} = args;
     return React.useMemo(() => {
         let xScale: ChartScale | undefined;
         let yScale: (ChartScale | undefined)[] | undefined;
@@ -155,7 +132,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
                 boundsWidth,
                 boundsHeight,
                 isRangeSlider,
-                rangeSliderState,
                 series,
                 split,
                 xAxis,
@@ -165,15 +141,5 @@ export const useAxisScales = (args: Args): ReturnValue => {
         }
 
         return {xScale, yScale};
-    }, [
-        boundsWidth,
-        boundsHeight,
-        isRangeSlider,
-        rangeSliderState,
-        series,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    ]);
+    }, [boundsWidth, boundsHeight, isRangeSlider, series, split, xAxis, yAxis, zoomState]);
 };

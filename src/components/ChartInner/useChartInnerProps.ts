@@ -9,7 +9,6 @@ import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
 import {
     getChartDimensions,
-    getEffectiveXRange,
     getSortedSeriesData,
     getYAxisWidth,
     getZoomedSeriesData,
@@ -36,7 +35,6 @@ import type {
     PreparedSplit,
     PreparedXAxis,
     PreparedYAxis,
-    RangeSliderState,
     ShapeData,
     ZoomState,
 } from '../../hooks';
@@ -58,10 +56,8 @@ type Props = ChartInnerProps & {
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     plotNode: SVGGElement | null;
-    updateRangeSliderState: (nextState?: RangeSliderState) => void;
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
-    rangeSliderState?: RangeSliderState;
 };
 
 const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
@@ -150,9 +146,7 @@ export function useChartInnerProps(props: Props) {
         height,
         htmlLayout,
         plotNode,
-        rangeSliderState,
         width,
-        updateRangeSliderState,
         updateZoomState,
         zoomState,
     } = props;
@@ -174,8 +168,8 @@ export function useChartInnerProps(props: Props) {
                 previousChartData.current?.xAxis?.type !== undefined &&
                 previousChartData.current.xAxis.type !== data.xAxis?.type;
 
-            if (axisTypeChanged && rangeSliderState !== undefined) {
-                updateRangeSliderState(undefined);
+            if (axisTypeChanged && Object.keys(zoomState).length > 0) {
+                updateZoomState({});
                 return;
             }
 
@@ -224,23 +218,7 @@ export function useChartInnerProps(props: Props) {
                 activeLegendItems,
             });
 
-            const effectiveZoomState: Partial<ZoomState> = {};
-            const effectiveX = getEffectiveXRange(zoomState.x, rangeSliderState);
-
-            if (effectiveX !== undefined) {
-                effectiveZoomState.x = effectiveX;
-            }
-
-            if (zoomState.y !== undefined) {
-                effectiveZoomState.y = zoomState.y;
-            }
-
-            const {preparedSeries, preparedShapesSeries} = getZoomedSeriesData({
-                seriesData: visiblePreparedSeries,
-                xAxis: normalizedXAxis,
-                yAxis: normalizedYAxis,
-                zoomState: effectiveZoomState,
-            });
+            const preparedSeries = visiblePreparedSeries;
 
             const {legendConfig, legendItems} = await getLegendComponents({
                 chartWidth: width,
@@ -295,7 +273,6 @@ export function useChartInnerProps(props: Props) {
                         boundsWidth,
                         boundsHeight,
                         isRangeSlider: false,
-                        rangeSliderState,
                         series: preparedSeries,
                         split: preparedSplit,
                         xAxis,
@@ -321,7 +298,7 @@ export function useChartInnerProps(props: Props) {
                 boundsHeight,
                 clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
                 dispatcher,
-                series: preparedShapesSeries,
+                series: preparedSeries,
                 seriesOptions: preparedSeriesOptions,
                 xAxis,
                 xScale,
@@ -333,7 +310,7 @@ export function useChartInnerProps(props: Props) {
                 isOutsideBounds: (x: number, y: number) => {
                     return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
                 },
-                zoomState: effectiveZoomState,
+                zoomState,
             });
 
             const boundsOffsetTop = getBoundsOffsetTop({
@@ -388,10 +365,9 @@ export function useChartInnerProps(props: Props) {
         data,
         selectedLegendItems,
         zoomState,
-        rangeSliderState,
         dispatcher,
         htmlLayout,
-        updateRangeSliderState,
+        updateZoomState,
         clipPathId,
     ]);
 

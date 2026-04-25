@@ -42,7 +42,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         preparedSeries,
         preparedSeriesOptions,
         preparedRangeSlider,
-        rangeSliderState,
+        range,
         width,
         xAxis,
         yAxis,
@@ -97,12 +97,12 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         yScale,
     });
     const selection = React.useMemo(() => {
-        if (rangeSliderState) {
-            return getRangeSliderSelection({rangeSliderState, xScale: xScale});
+        if (range) {
+            return getRangeSliderSelection({range, xScale});
         }
 
         return undefined;
-    }, [rangeSliderState, xScale]);
+    }, [range, xScale]);
     const offsetTop = getRangeSliderOffsetTop({
         height,
         preparedChart,
