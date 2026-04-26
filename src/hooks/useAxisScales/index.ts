@@ -7,6 +7,7 @@ import {clusterYAxes} from '~core/scales/utils';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
 import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
+import {getZoomedSeriesData} from '~core/zoom/zoom';
 
 import {getTickValues} from '../../components/AxisY/utils';
 import type {
@@ -44,12 +45,24 @@ export const createScales = (args: Args) => {
     // Reassign to all series in case of all series unselected,
     // otherwise we will get an empty space without grid
     visibleSeries = visibleSeries.length === 0 ? series : visibleSeries;
+    // Restrict the series used for Y scale calculation to points within the current X viewport
+    // so the Y axis auto-fits the visible X range (e.g. when the rangeSlider shifts to a
+    // region where data sits to one side). The X scale is unaffected — it uses zoomState.x
+    // as its domain directly. User-set axis.min/axis.max on Y still wins via getMinMaxPropsOrState.
+    const ySeriesSource =
+        zoomState?.x && xAxis
+            ? getZoomedSeriesData({
+                  seriesData: series,
+                  xAxis,
+                  zoomState: {x: zoomState.x},
+              }).preparedSeries
+            : series;
     const axisHeight = getAxisHeight({boundsHeight, split});
     let index = 0;
     const yScale = clusterYAxes(yAxis).reduce(
         (acc, cluster) => {
             const [primaryAxis, secondaryAxis] = cluster;
-            const primaryAxisSeries = series.filter((s) => {
+            const primaryAxisSeries = ySeriesSource.filter((s) => {
                 const seriesAxisIndex = get(s, 'yAxis', 0);
                 return seriesAxisIndex === index;
             });
@@ -78,7 +91,7 @@ export const createScales = (args: Args) => {
                 }).length;
             }
 
-            const secondAxisSeries = series.filter((s) => {
+            const secondAxisSeries = ySeriesSource.filter((s) => {
                 const seriesAxisIndex = get(s, 'yAxis', 0);
                 return seriesAxisIndex === index;
             });
