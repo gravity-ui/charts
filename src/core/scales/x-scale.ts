@@ -71,13 +71,16 @@ export function createXScale(args: {
     });
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const hasZoomX = Boolean(zoomStateX);
+    // When rangeSlider is enabled, its selection arrives as zoomStateX but should not trigger
+    // the zoom range padding — the slider already shows context, so the chart fills the bounds.
+    const isRangeSliderEnabled = Boolean(get(axis, 'rangeSlider.enabled'));
     const xCategories = get(axis, 'categories');
     const maxPadding = get(axis, 'maxPadding', 0);
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
         boundsWidth,
-        hasZoomX,
+        hasZoomX: hasZoomX && !isRangeSliderEnabled,
     });
 
     switch (axis.order) {
