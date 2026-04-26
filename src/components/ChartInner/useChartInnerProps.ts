@@ -287,6 +287,7 @@ export function useChartInnerProps(props: Props) {
                 seriesData: preparedSeries,
                 yAxis,
                 yScale,
+                hasXZoom: Boolean(zoomState?.x),
             });
             if (!isEqual(yAxis, newYAxis)) {
                 yAxis = newYAxis;

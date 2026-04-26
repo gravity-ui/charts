@@ -10,8 +10,11 @@ export async function recalculateYAxisLabelsWidth(props: {
     seriesData: PreparedSeries[];
     yAxis: PreparedYAxis[];
     yScale?: (ChartScale | undefined)[];
+    // When the X axis is zoomed, the Y scale is rebuilt from X-filtered data, so its
+    // ticks may differ from the ones measured at prepare time — re-check label widths.
+    hasXZoom?: boolean;
 }) {
-    const {seriesData, yAxis, yScale} = props;
+    const {seriesData, yAxis, yScale, hasXZoom} = props;
     const axisIndexesToRecalculateMap: Map<number, number> = new Map();
 
     for (let i = 0; i < yAxis.length; i++) {
@@ -22,7 +25,7 @@ export async function recalculateYAxisLabelsWidth(props: {
             continue;
         }
 
-        if (axis.startOnTick || axis.endOnTick) {
+        if (axis.startOnTick || axis.endOnTick || hasXZoom) {
             const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === i && s.visible);
 
             if (axisSeriesData.length === 0) {
