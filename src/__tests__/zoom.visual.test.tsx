@@ -259,7 +259,7 @@ test.describe('Zoom', () => {
         });
     });
 
-    test.describe.only('Reset button', () => {
+    test.describe('Reset button', () => {
         const cases: {
             align: ResetButtonAlign;
             relativeTo: ResetButtonRelativeTo;
