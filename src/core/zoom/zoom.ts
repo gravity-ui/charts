@@ -98,6 +98,19 @@ export function getZoomedSeriesData(args: {
             return;
         }
 
+        // For stacked series the chart-space position of each point is the
+        // cumulative stack sum, not its individual value. Filtering by the
+        // raw point value would drop segments that still need to participate
+        // in the stack, so skip the value-axis filter and let the axis range
+        // / clip handle visibility:
+        //   - bar-x, area  → value axis is Y, skip Y filter
+        //   - bar-y        → value axis is X, skip X filter
+        const isStacked = 'stacking' in seriesItem && Boolean(seriesItem.stacking);
+        const skipYFilter =
+            isStacked &&
+            (seriesItem.type === SERIES_TYPE.BarX || seriesItem.type === SERIES_TYPE.Area);
+        const skipXFilter = isStacked && seriesItem.type === SERIES_TYPE.BarY;
+
         seriesItem.data.forEach((point, i) => {
             const prevPoint = seriesItem.data[i - 1];
             const isFirstPoint = i === 0;
@@ -106,7 +119,7 @@ export function getZoomedSeriesData(args: {
 
             prevPointInRange = currentPointInRange;
 
-            if (zoomState.x) {
+            if (zoomState.x && !skipXFilter) {
                 const [xMin, xMax] = zoomState.x;
                 if ('x0' in point && 'x1' in point) {
                     const isStartInRange = isValueInRange({
@@ -133,7 +146,7 @@ export function getZoomedSeriesData(args: {
                 }
             }
 
-            if (zoomState.y) {
+            if (zoomState.y && !skipYFilter) {
                 const yAxisIndex =
                     'yAxis' in seriesItem && typeof seriesItem.yAxis === 'number'
                         ? seriesItem.yAxis

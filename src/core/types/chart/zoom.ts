@@ -21,8 +21,8 @@ export interface ChartZoom {
      * Supported zoom types by series type:
      * - `Area`, `Line`, `Scatter`: `x`, `y`, `xy`
      * - `BarX`: `x`, `xy`
+     * - `BarY`: `y`, `xy`
      * - `XRange`: `x`
-     * - `BarY`: `y`
      *
      * Default zoom type by series type:
      * - `BarY`: `y`
