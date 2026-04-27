@@ -81,6 +81,7 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                 data: prepareSeriesData(series),
                 stacking: series.stacking,
                 stackId: getSeriesStackId(series),
+                valueAxis: 'x',
                 dataLabels: await prepareDataLabels(series),
                 cursor: get(series, 'cursor', null),
                 borderRadius: series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,

@@ -137,10 +137,6 @@ export async function prepareBarYData(args: {
                 const borderWidth = barSize > s.borderWidth * 2 ? s.borderWidth : 0;
                 const isFirstInStack = xValueIndex === 0;
                 const isLastStackItem = xValueIndex === sortedData.length - 1;
-                // Whether the bar extends toward higher pixel coords from base.
-                // Depends on both data sign and axis order (e.g. reverse). Doing
-                // the comparison in pixel space keeps it correct under zoom too,
-                // where range[0] is no longer 0 due to zoom padding.
                 const extendsRight = xLinearScale(xValue) > baseValue;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
