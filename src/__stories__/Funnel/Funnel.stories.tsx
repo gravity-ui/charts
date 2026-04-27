@@ -2,7 +2,12 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {funnelBasicData, funnelContinuousLegendData, funnelHtmlLabelsData} from '../__data__';
+import {
+    funnelBasicData,
+    funnelContinuousLegendData,
+    funnelHtmlLabelsData,
+    funnelTrapezoidData,
+} from '../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Funnel',
@@ -40,5 +45,12 @@ export const FunnelWithHtmlLabels = {
     name: 'HTML labels',
     args: {
         data: funnelHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const FunnelTrapezoid = {
+    name: 'Trapezoid',
+    args: {
+        data: funnelTrapezoidData,
     },
 } satisfies Story;

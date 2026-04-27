@@ -26,13 +26,10 @@ export function renderFunnel(
 
     // funnel levels
     const cellsSelection = svgElement
-        .selectAll('rect')
+        .selectAll<SVGPolygonElement, (typeof preparedData.items)[number]>('polygon')
         .data(preparedData.items)
-        .join('rect')
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('height', (d) => d.height)
-        .attr('width', (d) => d.width)
+        .join('polygon')
+        .attr('points', (d) => d.points.map((p) => p.join(',')).join(' '))
         .attr('fill', (d) => d.color)
         .attr('stroke', (d) => d.borderColor)
         .attr('stroke-width', (d) => d.borderWidth);

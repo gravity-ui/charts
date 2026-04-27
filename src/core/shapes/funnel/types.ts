@@ -9,6 +9,7 @@ export type FunnelItemData = {
     y: number;
     width: number;
     height: number;
+    points: [number, number][];
     color: string;
     series: PreparedFunnelSeries;
     data: FunnelSeriesData;
