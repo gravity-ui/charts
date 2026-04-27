@@ -24,6 +24,23 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
     name?: string;
     /** The color of the funnel series. */
     color?: string;
+    /**
+     * The visual shape of funnel segments.
+     *
+     * - `'rectangle'` (**recommended**): each segment is an independent rectangle whose
+     *   width is directly proportional to its value. The human eye reads width as a linear
+     *   scale, making comparisons between segments accurate and effortless.
+     *
+     * - `'trapezoid'`: adjacent segments are drawn as connected trapezoids, giving the chart
+     *   a classic "funnel" silhouette. However, this shape distorts perception: the slanted
+     *   sides cause viewers to judge area (which grows as the square of width) rather than
+     *   width alone, exaggerating differences between large and small values. Use only for
+     *   decorative purposes or when visual familiarity with the funnel metaphor is more
+     *   important than analytical precision.
+     *
+     * @default 'rectangle'
+     */
+    shape?: 'rectangle' | 'trapezoid';
     /** Lines or areas connecting the funnel segments. */
     connectors?: {
         enabled?: boolean;

@@ -430,6 +430,7 @@ export type PreparedRadarSeries = {
 export type PreparedFunnelSeries = {
     type: FunnelSeries['type'];
     data: FunnelSeriesData;
+    shape: Required<FunnelSeries>['shape'];
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;

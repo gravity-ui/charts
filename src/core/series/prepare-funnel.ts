@@ -20,13 +20,16 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
     const dataNames = series.data.map((d) => d.name);
     const colorScale = scaleOrdinal(dataNames, colors);
 
-    const isConnectorsEnabled = series.connectors?.enabled ?? true;
+    const shape = series.shape ?? 'rectangle';
+    const isTrapezoid = shape === 'trapezoid';
+    const isConnectorsEnabled = series.connectors?.enabled ?? !isTrapezoid;
 
     const preparedSeries: PreparedSeries[] = series.data.map<PreparedFunnelSeries>((dataItem) => {
         const id = getUniqId();
         const color = dataItem.color || colorScale(dataItem.name);
         const result: PreparedFunnelSeries = {
             type: 'funnel',
+            shape,
             data: dataItem,
             dataLabels: {
                 enabled: get(series, 'dataLabels.enabled', true),

@@ -129,15 +129,32 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
     }
 
     const segmentMaxWidth = boundsWidth - segmentLeftOffset - segmentRightOffset;
+    const isTrapezoid = series[0]?.shape === 'trapezoid';
+
+    const getItemWidth = (index: number) => (segmentMaxWidth * series[index].data.value) / maxValue;
+
     for (let index = 0; index < series.length; index++) {
         const s = series[index];
         const d = s.data;
-        const itemWidth = (segmentMaxWidth * d.value) / maxValue;
+        const itemWidth = getItemWidth(index);
+        const centerX = segmentLeftOffset + segmentMaxWidth / 2;
+        const segmentY = getSegmentY(index);
+
+        const isLastSegment = index === series.length - 1;
+        const bottomWidth = isTrapezoid && !isLastSegment ? getItemWidth(index + 1) : itemWidth;
+        const points: [number, number][] = [
+            [centerX - itemWidth / 2, segmentY],
+            [centerX + itemWidth / 2, segmentY],
+            [centerX + bottomWidth / 2, segmentY + itemHeight],
+            [centerX - bottomWidth / 2, segmentY + itemHeight],
+        ];
+
         const funnelSegment = {
-            x: segmentLeftOffset + segmentMaxWidth / 2 - itemWidth / 2,
-            y: getSegmentY(index),
+            x: centerX - itemWidth / 2,
+            y: segmentY,
             width: itemWidth,
             height: itemHeight,
+            points,
             color: s.color,
             series: s,
             data: d,
