@@ -24,7 +24,11 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
     const axisCategories = getAxisCategories(axis) ?? [];
     const order = Object.fromEntries(axisCategories.map((value, index) => [value, index]));
 
-    const newSeriesData = series.data.reduce<ChartSeriesData[]>((acc, d) => {
+    const seriesWithData = series as T & {data: ChartSeriesData[]};
+    if (!Array.isArray(seriesWithData.data)) {
+        return series;
+    }
+    const newSeriesData = seriesWithData.data.reduce<ChartSeriesData[]>((acc, d) => {
         const value = get(d, key);
         let newData: ChartSeriesData | undefined;
 
@@ -51,7 +55,7 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
     return {
         ...series,
         data: newSeriesData,
-    };
+    } as T;
 }
 
 export function getSortedSeriesData({

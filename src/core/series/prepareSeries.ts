@@ -11,6 +11,7 @@ import type {
     ChartSeries,
     ChartSeriesOptions,
     FunnelSeries,
+    GaugeSeries,
     HeatmapSeries,
     LineSeries,
     PieSeries,
@@ -27,6 +28,7 @@ import {prepareArea} from './prepare-area';
 import {prepareBarXSeries} from './prepare-bar-x';
 import {prepareBarYSeries} from './prepare-bar-y';
 import {prepareFunnelSeries} from './prepare-funnel';
+import {prepareGaugeSeries} from './prepare-gauge';
 import {prepareHeatmapSeries} from './prepare-heatmap';
 import {prepareLineSeries} from './prepare-line';
 import {preparePieSeries} from './prepare-pie';
@@ -95,6 +97,18 @@ export async function prepareSeries(args: {
     const {type, series, seriesOptions, legend, colors, colorScale} = args;
 
     switch (type) {
+        case 'gauge': {
+            return series.reduce<PreparedSeries[]>((acc, singleSeries) => {
+                acc.push(
+                    ...prepareGaugeSeries({
+                        series: singleSeries as GaugeSeries,
+                        legend,
+                        colorScale,
+                    }),
+                );
+                return acc;
+            }, []);
+        }
         case 'pie': {
             return series.reduce<PreparedSeries[]>((acc, singleSeries) => {
                 acc.push(

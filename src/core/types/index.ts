@@ -12,6 +12,7 @@ export * from './chart/annotation';
 export * from './chart/axis';
 export * from './chart/base';
 export * from './chart/chart';
+export * from './chart/gauge';
 export * from './chart/legend';
 export * from './chart/pie';
 export * from './chart/scatter';

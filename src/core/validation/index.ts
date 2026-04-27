@@ -463,7 +463,9 @@ export function validateData(data?: ChartData) {
         isEmpty(data) ||
         isEmpty(data.series) ||
         isEmpty(data.series.data) ||
-        data.series.data.every((s) => isEmpty(s.data))
+        data.series.data.every((s) =>
+            s.type === 'gauge' ? false : isEmpty((s as {data?: unknown}).data),
+        )
     ) {
         throw new ChartError({
             code: CHART_ERROR_CODE.NO_DATA,
@@ -475,7 +477,7 @@ export function validateData(data?: ChartData) {
     validateTooltip({tooltip: data.tooltip});
     validateStackingAreaNullMode({series: data.series.data});
 
-    if (data.series.data.some((s) => isEmpty(s.data))) {
+    if (data.series.data.some((s) => s.type !== 'gauge' && isEmpty((s as {data?: unknown}).data))) {
         throw new ChartError({
             code: CHART_ERROR_CODE.INVALID_DATA,
             message: 'You should specify data for all series',

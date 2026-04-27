@@ -33,7 +33,11 @@ export function hasAtLeastOneSeriesDataPerPlot(
         const plotIndex = yAxis?.plotIndex ?? 0;
 
         if (!hasDataMap.get(plotIndex)) {
-            if (Array.isArray(seriesDataChunk.data) && seriesDataChunk.data.length > 0) {
+            if (
+                'data' in seriesDataChunk &&
+                Array.isArray(seriesDataChunk.data) &&
+                seriesDataChunk.data.length > 0
+            ) {
                 hasDataMap.set(plotIndex, true);
             }
         }

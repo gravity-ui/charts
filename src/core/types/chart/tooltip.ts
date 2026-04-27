@@ -9,6 +9,7 @@ import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {ValueFormat} from './base';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
+import type {GaugeSeries} from './gauge';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
@@ -27,6 +28,24 @@ export interface TooltipDataChunkBarX<T = MeaningfulAny> {
 export interface TooltipDataChunkBarY<T = MeaningfulAny> {
     data: BarYSeriesData<T>;
     series: BarYSeries<T>;
+}
+
+export interface TooltipDataChunkGauge {
+    data: {
+        value: number;
+        unit?: string;
+        zoneColor?: string;
+        zoneLabel?: string;
+        zoneMin?: number;
+        zoneMax?: number;
+        distanceToTarget?: number;
+    };
+    series: {
+        type: GaugeSeries['type'];
+        id: string;
+        name: string;
+        color: string;
+    };
 }
 
 export interface TooltipDataChunkPie<T = MeaningfulAny> {
@@ -112,6 +131,7 @@ export interface TooltipDataChunkXRange<T = MeaningfulAny> {
 export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkBarX<T>
     | TooltipDataChunkBarY<T>
+    | TooltipDataChunkGauge
     | TooltipDataChunkPie<T>
     | TooltipDataChunkScatter<T>
     | TooltipDataChunkLine<T>

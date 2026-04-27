@@ -16,6 +16,7 @@ import type {
     ChartXAxis,
     ChartYAxis,
     TooltipDataChunk,
+    TooltipDataChunkGauge,
     TooltipDataChunkSankey,
     TooltipDataChunkWaterfall,
     TreemapSeriesData,
@@ -314,6 +315,53 @@ export const DefaultTooltipContent = ({
                             formattedValue: `${x0Formatted} — ${x1Formatted}`,
                             series,
                         });
+                    }
+                    case 'gauge': {
+                        const gaugeData = (seriesItem as TooltipDataChunkGauge).data;
+                        const zoneColor = gaugeData.zoneColor ?? get(series, 'color');
+                        const valueWithUnit = gaugeData.unit
+                            ? `${gaugeData.value} ${gaugeData.unit}`
+                            : String(gaugeData.value);
+                        // Empty spacer keeps the color column consistent across all gauge rows
+                        const emptyColorCell = (
+                            <span style={{display: 'inline-block', width: 8, height: 8}} />
+                        );
+
+                        return (
+                            <React.Fragment key={id}>
+                                {renderRow({
+                                    id,
+                                    color: zoneColor,
+                                    name: series.name,
+                                    value: gaugeData.value,
+                                    formattedValue: valueWithUnit,
+                                    series,
+                                })}
+                                {gaugeData.zoneLabel && (
+                                    <Row
+                                        colorSymbol={emptyColorCell}
+                                        label={gaugeData.zoneLabel}
+                                        value={
+                                            gaugeData.zoneMin !== undefined &&
+                                            gaugeData.zoneMax !== undefined
+                                                ? `${gaugeData.zoneMin} – ${gaugeData.zoneMax}`
+                                                : undefined
+                                        }
+                                    />
+                                )}
+                                {gaugeData.distanceToTarget !== undefined && (
+                                    <Row
+                                        colorSymbol={emptyColorCell}
+                                        label="vs target"
+                                        value={
+                                            gaugeData.distanceToTarget > 0
+                                                ? `+${gaugeData.distanceToTarget}`
+                                                : String(gaugeData.distanceToTarget)
+                                        }
+                                    />
+                                )}
+                            </React.Fragment>
+                        );
                     }
                     default: {
                         return null;

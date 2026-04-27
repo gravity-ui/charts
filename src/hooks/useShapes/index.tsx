@@ -12,6 +12,7 @@ import type {
     PreparedBarXSeries,
     PreparedBarYSeries,
     PreparedFunnelSeries,
+    PreparedGaugeSeries,
     PreparedHeatmapSeries,
     PreparedLineSeries,
     PreparedPieSeries,
@@ -29,6 +30,8 @@ import type {PreparedAreaData} from '~core/shapes/area/types';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import type {PreparedBarYData} from '~core/shapes/bar-y/types';
 import type {PreparedFunnelData} from '~core/shapes/funnel/types';
+import {prepareGaugeData} from '~core/shapes/gauge/prepare-data';
+import type {PreparedGaugeData} from '~core/shapes/gauge/types';
 import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
 import {prepareLineData} from '~core/shapes/line/prepare-data';
 import type {PreparedLineData} from '~core/shapes/line/types';
@@ -53,6 +56,7 @@ import {AreaSeriesShapes} from './area';
 import {BarXSeriesShapes, prepareBarXData} from './bar-x';
 import {BarYSeriesShapes, prepareBarYData} from './bar-y';
 import {FunnelSeriesShapes, prepareFunnelData} from './funnel';
+import {GaugeSeriesShapes} from './gauge';
 import {HeatmapSeriesShapes, prepareHeatmapData} from './heatmap';
 import {LineSeriesShapes} from './line';
 import {PieSeriesShapes} from './pie';
@@ -69,6 +73,7 @@ import './styles.scss';
 export type ShapeData =
     | PreparedBarXData
     | PreparedBarYData
+    | PreparedGaugeData
     | PreparedScatterData
     | PreparedLineData
     | PreparedPieData
@@ -322,6 +327,22 @@ export async function getShapes(args: Args) {
                     );
                     shapesData.splice(index, 0, ...scatterShapeData.markers);
                 }
+                break;
+            }
+            case SERIES_TYPE.Gauge: {
+                const preparedData = prepareGaugeData({
+                    series: chartSeries as PreparedGaugeSeries[],
+                    boundsWidth,
+                    boundsHeight,
+                });
+                shapes[index] = (
+                    <GaugeSeriesShapes
+                        key={SERIES_TYPE.Gauge}
+                        dispatcher={dispatcher}
+                        preparedData={preparedData}
+                    />
+                );
+                shapesData.splice(index, 0, ...preparedData);
                 break;
             }
             case SERIES_TYPE.Pie: {
