@@ -93,6 +93,7 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
             data: prepareSeriesData(series),
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
+            valueAxis: 'y',
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),

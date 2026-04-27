@@ -1,8 +1,17 @@
+import React from 'react';
+
 import type {Meta, StoryObj} from '@storybook/react';
+import cloneDeep from 'lodash/cloneDeep';
+import merge from 'lodash/merge';
 
 import {Chart} from '../../../components';
 import {ChartStory} from '../../ChartStory';
-import {barYStakingNormalData, lineTwoYAxisData, scatterBasicData} from '../../__data__';
+import {
+    barXStakingNormalData,
+    barYStakingNormalData,
+    lineTwoYAxisData,
+    scatterBasicData,
+} from '../../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Other/Zoom',
@@ -42,17 +51,32 @@ export const ZoomY = {
     },
 } satisfies Story;
 
+const scatterXY = merge(cloneDeep(scatterBasicData), {
+    chart: {zoom: {enabled: true, type: 'xy'}},
+    title: {text: 'Scatter'},
+});
+const barXStackedXY = merge(cloneDeep(barXStakingNormalData), {
+    chart: {zoom: {enabled: true, type: 'xy'}},
+    title: {text: 'Bar-x stacked'},
+});
+const barYStackedXY = merge(cloneDeep(barYStakingNormalData), {
+    chart: {zoom: {enabled: true, type: 'xy'}},
+    title: {text: 'Bar-y stacked'},
+});
+
 export const ZoomXY = {
     name: 'Type XY',
-    args: {
-        data: {
-            ...scatterBasicData,
-            chart: {
-                zoom: {
-                    enabled: true,
-                    type: 'xy',
-                },
-            },
-        },
-    },
+    render: () => (
+        <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+            <div style={{height: 300}}>
+                <Chart data={scatterXY} />
+            </div>
+            <div style={{height: 300}}>
+                <Chart data={barXStackedXY} />
+            </div>
+            <div style={{height: 300}}>
+                <Chart data={barYStackedXY} />
+            </div>
+        </div>
+    ),
 } satisfies Story;

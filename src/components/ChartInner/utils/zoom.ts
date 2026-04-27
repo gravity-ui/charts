@@ -19,7 +19,7 @@ function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
             return [ZOOM_TYPE.X];
         }
         case SERIES_TYPE.BarY: {
-            return [ZOOM_TYPE.Y];
+            return [ZOOM_TYPE.Y, ZOOM_TYPE.XY];
         }
         case SERIES_TYPE.Line: {
             return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];

@@ -42,7 +42,6 @@ export async function prepareBarYData(args: {
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
-    const [baseRangeValue] = xLinearScale.range();
 
     if (!yLinearScale) {
         return {
@@ -138,19 +137,22 @@ export async function prepareBarYData(args: {
                 const borderWidth = barSize > s.borderWidth * 2 ? s.borderWidth : 0;
                 const isFirstInStack = xValueIndex === 0;
                 const isLastStackItem = xValueIndex === sortedData.length - 1;
+                const extendsRight = xLinearScale(xValue) > baseValue;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
-                let itemX = xValue > baseRangeValue ? positiveStack : negativeStack - width;
+                let itemX = extendsRight ? positiveStack : negativeStack - width;
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
-                if (isFirstInStack && xValue > 0) {
-                    // Positive bar: border extends left, so shift position left by halfBorder
-                    // to keep the visual left edge at the zero line
+                if (isFirstInStack && extendsRight) {
+                    // Bar extends right from base, border extends outward to the
+                    // left → shift left by halfBorder to keep the visual left
+                    // edge at the zero line.
                     itemX -= halfBorder;
-                } else if (isFirstInStack && xValue < 0) {
-                    // Negative bar: border extends right, so shift position right by halfBorder
-                    // to keep the visual right edge at the zero line
+                } else if (isFirstInStack && !extendsRight && xValue !== 0) {
+                    // Bar extends left from base, border extends outward to the
+                    // right → shift right by halfBorder to keep the visual
+                    // right edge at the zero line.
                     itemX += halfBorder;
                 }
 
@@ -170,7 +172,7 @@ export async function prepareBarYData(args: {
 
                 stackItems.push(item);
 
-                if (xValue > baseRangeValue) {
+                if (extendsRight) {
                     positiveStack += width;
                 } else {
                     negativeStack -= width;

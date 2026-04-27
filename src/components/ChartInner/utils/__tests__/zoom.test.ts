@@ -85,6 +85,7 @@ describe('zoom/getZoomType', () => {
         {seriesData: [BAR_X_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [BAR_X_SERIES], zoomType: ZOOM_TYPE.Y, expected: ZOOM_TYPE.X},
         {seriesData: [BAR_Y_SERIES], zoomType: ZOOM_TYPE.X, expected: ZOOM_TYPE.Y},
+        {seriesData: [BAR_Y_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [PIE_SERIES], zoomType: ZOOM_TYPE.X, expected: undefined},
         {seriesData: [RADAR_SERIES], zoomType: ZOOM_TYPE.X, expected: undefined},
         {seriesData: [SANKEY_SERIES], zoomType: ZOOM_TYPE.X, expected: undefined},
