@@ -7,6 +7,7 @@ import {renderFunnel} from '~core/shapes/funnel/renderer';
 import type {PreparedFunnelData} from '~core/shapes/funnel/types';
 
 import {block} from '../../../utils';
+import {HtmlLayer} from '../HtmlLayer';
 
 export {prepareFunnelData} from '~core/shapes/funnel/prepare-data';
 export * from '~core/shapes/funnel/types';
@@ -21,7 +22,7 @@ type Args = {
 };
 
 export const FunnelSeriesShapes = (args: Args) => {
-    const {dispatcher, preparedData, seriesOptions} = args;
+    const {dispatcher, htmlLayout, preparedData, seriesOptions} = args;
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -32,9 +33,15 @@ export const FunnelSeriesShapes = (args: Args) => {
         return renderFunnel({plot: ref.current}, preparedData, seriesOptions, dispatcher);
     }, [dispatcher, preparedData, seriesOptions]);
 
+    const htmlLayerData = React.useMemo(
+        () => ({htmlElements: preparedData.htmlLabels}),
+        [preparedData.htmlLabels],
+    );
+
     return (
         <React.Fragment>
             <g ref={ref} className={b()} />
+            <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );
 };

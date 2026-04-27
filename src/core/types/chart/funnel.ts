@@ -42,7 +42,7 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
         /** Opacity for the connector area. */
         areaOpacity?: number;
     };
-    dataLabels?: Omit<BaseDataLabels, 'html' | 'allowOverlap'> & {
+    dataLabels?: Omit<BaseDataLabels, 'allowOverlap'> & {
         /** Horizontal alignment of the data labels. */
         align?: 'left' | 'center' | 'right';
     };

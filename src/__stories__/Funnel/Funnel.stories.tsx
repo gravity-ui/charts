@@ -2,7 +2,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {funnelBasicData, funnelContinuousLegendData} from '../__data__';
+import {funnelBasicData, funnelContinuousLegendData, funnelHtmlLabelsData} from '../__data__';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Funnel',
@@ -33,5 +33,12 @@ export const FunnelWithContinuousLegend = {
     name: 'Continuous legend',
     args: {
         data: funnelContinuousLegendData,
+    },
+} satisfies Story;
+
+export const FunnelWithHtmlLabels = {
+    name: 'HTML labels',
+    args: {
+        data: funnelHtmlLabelsData,
     },
 } satisfies Story;
