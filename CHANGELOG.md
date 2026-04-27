@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.50.0](https://github.com/gravity-ui/charts/compare/v1.49.1...v1.50.0) (2026-04-27)
+
+
+### Features
+
+* **funnel:** support html data labels ([#583](https://github.com/gravity-ui/charts/issues/583)) ([c6b0fac](https://github.com/gravity-ui/charts/commit/c6b0faccdc8c041493d11897dc76c1b310ae8590))
+
+
+### Bug Fixes
+
+* **zoom:** correct stacked bar-x/bar-y/area rendering under xy zoom ([#582](https://github.com/gravity-ui/charts/issues/582)) ([7efde1b](https://github.com/gravity-ui/charts/commit/7efde1b7279caa2e6342a34f2d09afbb6386eaab))
+
 ## [1.49.1](https://github.com/gravity-ui/charts/compare/v1.49.0...v1.49.1) (2026-04-23)
 
 
