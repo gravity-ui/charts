@@ -71,6 +71,7 @@
     "@gravity-ui/date-utils": "^2.5.4",
     "@gravity-ui/i18n": "^1.6.0",
     "@gravity-ui/icons": "^2.15.0",
+    "csstype": "^3.2.3",
     "d3-array": "^3.2.4",
     "d3-axis": "^3.0.0",
     "d3-brush": "^3.0.0",

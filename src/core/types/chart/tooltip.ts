@@ -1,6 +1,7 @@
 import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
 import type {DateTimeLabelFormats} from '../../utils/time';
 import type {MeaningfulAny} from '../misc';
+import type {RendererElement} from '../renderer';
 
 import type {AreaSeries, AreaSeriesData} from './area';
 import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
@@ -171,7 +172,7 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
-    renderer?: (args: ChartTooltipRendererArgs<T>) => React.ReactElement | null;
+    renderer?: (args: ChartTooltipRendererArgs<T>) => RendererElement | null;
     /**
      * Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
      * It is useful in cases where you need to display additional information, but keep the general format of the tooltip.
@@ -196,7 +197,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
      *   `<tr class="${className}"><td>${name}</td><td>${value}</td></tr>`
      * ```
      */
-    rowRenderer?: ((args: ChartTooltipRowRendererArgs) => React.ReactElement | string) | null;
+    rowRenderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
     pin?: {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';

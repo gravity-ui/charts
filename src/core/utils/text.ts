@@ -3,6 +3,7 @@ import {select} from 'd3-selection';
 
 import type {BaseTextStyle, MeaningfulAny} from '../../types';
 import {block} from '../../utils/cn';
+import type {CSSProperties} from '../types/css';
 
 const b = block('chart');
 
@@ -135,7 +136,7 @@ export async function getLabelsSize({
     html,
 }: {
     labels: string[];
-    style?: BaseTextStyle & React.CSSProperties;
+    style?: BaseTextStyle & CSSProperties;
     rotation?: number;
     html?: boolean;
 }) {

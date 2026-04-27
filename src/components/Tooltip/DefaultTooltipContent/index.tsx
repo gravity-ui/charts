@@ -97,7 +97,7 @@ export const DefaultTooltipContent = ({
                 return <React.Fragment key={id}>{parse(result)}</React.Fragment>;
             }
 
-            return result;
+            return result as React.ReactElement | null;
         }
 
         const colorSymbol = getTooltipRowColorSymbol({series, color});

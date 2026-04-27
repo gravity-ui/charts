@@ -1,4 +1,5 @@
 import type {BaseTextStyle} from '~core/types/chart/base';
+import type {CSSProperties} from '~core/types/css';
 
 export interface LabelData {
     text: string;
@@ -16,7 +17,7 @@ export interface HtmlItem {
     y: number;
     content: string;
     size: {width: number; height: number};
-    style?: BaseTextStyle & React.CSSProperties;
+    style?: BaseTextStyle & CSSProperties;
     /** Coordinate space for positioning: 'plot' uses the plot area origin, 'chart' uses the full chart origin. Defaults to 'plot'. */
     scope?: 'plot' | 'chart';
 }

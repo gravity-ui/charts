@@ -1,6 +1,7 @@
 import type {DashStyle} from 'src/core/constants';
 
 import type {AxisPlotShape} from '../../core/types/chart/axis';
+import type {CSSProperties} from '../../core/types/css';
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';
 import type {TextRowData} from '../types';
 
@@ -43,7 +44,7 @@ export type SvgAxisTitleData = {
 export type HtmlAxisTitleData = {
     html: true;
     content: string;
-    style: BaseTextStyle & React.CSSProperties;
+    style: BaseTextStyle & CSSProperties;
     size: {width: number; height: number};
     x: number;
     y: number;

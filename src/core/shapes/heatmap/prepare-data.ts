@@ -1,5 +1,3 @@
-import type React from 'react';
-
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleLinear, ScaleTime} from 'd3-scale';
 
@@ -7,6 +5,7 @@ import type {BaseTextStyle, HtmlItem} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedHeatmapSeries} from '../../series/types';
+import type {CSSProperties} from '../../types/css';
 import {
     getDomainDataXBySeries,
     getDomainDataYBySeries,
@@ -89,7 +88,7 @@ export async function prepareHeatmapData({
                     item.data.label ??
                     getFormattedValue({value: item.data.value, format: series.dataLabels.format});
                 if (labelContent) {
-                    const dataLabelsStyle: BaseTextStyle & React.CSSProperties = {
+                    const dataLabelsStyle: BaseTextStyle & CSSProperties = {
                         ...series.dataLabels.style,
                         maxWidth: `${item.width}px`,
                         maxHeight: `${item.height}px`,
