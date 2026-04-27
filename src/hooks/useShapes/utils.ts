@@ -1,1 +1,1 @@
-export * from '~core/shapes/utils';
+export * from '~core/plugins/series/shared/utils';

@@ -2,7 +2,7 @@ import {scaleOrdinal} from 'd3-scale';
 
 import type {LineSeries} from '../../../types';
 import {DEFAULT_PALETTE} from '../../constants';
-import {DEFAULT_MARKER, prepareLineSeries} from '../prepare-line';
+import {DEFAULT_MARKER, prepareLineSeries} from '../../plugins/series/line/prepare-series';
 import type {PreparedLegend} from '../types';
 
 // TODO: fix tests
