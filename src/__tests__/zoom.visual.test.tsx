@@ -7,7 +7,7 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barYDatetimeYData, lineTwoYAxisData, scatterBasicData} from '../__stories__/__data__';
-import type {ChartData} from '../types';
+import type {ChartData, ChartZoom} from '../types';
 
 type BoundingBox = NonNullable<
     Awaited<ReturnType<ReturnType<MountResult['locator']>['boundingBox']>>
@@ -16,6 +16,10 @@ type BoundingBox = NonNullable<
 type ZoomOptions = NonNullable<Parameters<MountResult['dragTo']>[1]>;
 
 type GetZoomOptions = (boundingBox: BoundingBox) => ZoomOptions;
+
+type ResetButtonConfig = NonNullable<ChartZoom['resetButton']>;
+type ResetButtonAlign = NonNullable<ResetButtonConfig['align']>;
+type ResetButtonRelativeTo = NonNullable<ResetButtonConfig['relativeTo']>;
 
 const getZoomXOptions: GetZoomOptions = (boundingBox) => {
     const startX = boundingBox.x + boundingBox.width / 10;
@@ -42,26 +46,7 @@ const getZoomXYOptions: GetZoomOptions = (boundingBox) => {
     return {sourcePosition: {x: startX, y: startY}, targetPosition: {x: endX, y: endY}};
 };
 
-async function testZoom(args: {
-    component: MountResult;
-    getZoomOptions: GetZoomOptions;
-    shouldScreenshotInitialState?: boolean;
-    useComponentAsScreenshotLocator?: boolean;
-}) {
-    const {
-        component,
-        getZoomOptions,
-        shouldScreenshotInitialState = true,
-        useComponentAsScreenshotLocator = false,
-    } = args;
-    const screenShotLocator = useComponentAsScreenshotLocator
-        ? component
-        : component.locator('.gcharts-chart');
-
-    if (shouldScreenshotInitialState) {
-        await expect(screenShotLocator).toHaveScreenshot();
-    }
-
+async function triggerZoom(component: MountResult, getZoomOptions: GetZoomOptions) {
     const brushAreaLocator = component.locator('.gcharts-brush');
     await expect(brushAreaLocator).toBeVisible();
     const boundingBox = await brushAreaLocator.evaluate((el) => el.getBoundingClientRect());
@@ -71,8 +56,84 @@ async function testZoom(args: {
     }
 
     await component.dragTo(brushAreaLocator, getZoomOptions(boundingBox));
+}
+
+async function testZoom(args: {component: MountResult; getZoomOptions: GetZoomOptions}) {
+    const {component, getZoomOptions} = args;
+    const screenShotLocator = component.locator('.gcharts-chart');
 
     await expect(screenShotLocator).toHaveScreenshot();
+
+    await triggerZoom(component, getZoomOptions);
+
+    await expect(screenShotLocator).toHaveScreenshot();
+}
+
+async function assertResetButtonPosition(args: {
+    component: MountResult;
+    align: ResetButtonAlign;
+    relativeTo: ResetButtonRelativeTo;
+    offset?: {x: number; y: number};
+}) {
+    const {component, align, relativeTo, offset = {x: 0, y: 0}} = args;
+
+    await triggerZoom(component, getZoomXOptions);
+
+    const buttonLocator = component.locator('.gcharts-chart__reset-zoom-button');
+    await expect(buttonLocator).toBeVisible();
+
+    const layout = await component.evaluate((root: HTMLElement) => {
+        const chartEl = root.querySelector('.gcharts-chart');
+        const brushEl = root.querySelector('.gcharts-brush');
+        const buttonEl = root.querySelector('.gcharts-chart__reset-zoom-button');
+        const titleEl = root.querySelector('.gcharts-chart > svg > text');
+
+        if (!chartEl || !brushEl || !buttonEl) {
+            throw new Error('Required chart elements not found');
+        }
+
+        const toBox = (rect: DOMRect) => ({
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+        });
+
+        return {
+            chart: toBox(chartEl.getBoundingClientRect()),
+            plot: toBox(brushEl.getBoundingClientRect()),
+            button: toBox(buttonEl.getBoundingClientRect()),
+            titleHeight: titleEl ? titleEl.getBoundingClientRect().height : 0,
+        };
+    });
+
+    const {chart, plot, button, titleHeight} = layout;
+
+    let leftInChart: number;
+    let topInChart: number;
+
+    if (relativeTo === 'chart-box') {
+        leftInChart = align.endsWith('left') ? 0 : chart.width - button.width;
+        topInChart = align.startsWith('top') ? 0 : chart.height - button.height;
+    } else {
+        const boundsOffsetLeft = plot.x - chart.x;
+        const boundsOffsetTop = plot.y - chart.y;
+        const boundsWidth = plot.width;
+        const boundsHeight = plot.height;
+
+        leftInChart = align.endsWith('left')
+            ? boundsOffsetLeft
+            : boundsOffsetLeft + boundsWidth - button.width;
+        topInChart = align.startsWith('top')
+            ? boundsOffsetTop
+            : boundsHeight - button.height + titleHeight;
+    }
+
+    const expectedX = chart.x + leftInChart + offset.x;
+    const expectedY = chart.y + topInChart + offset.y;
+
+    expect(button.x).toBeCloseTo(expectedX, 0);
+    expect(button.y).toBeCloseTo(expectedY, 0);
 }
 
 test.describe('Zoom', () => {
@@ -199,380 +260,45 @@ test.describe('Zoom', () => {
     });
 
     test.describe('Reset button', () => {
-        test('align=bottom-left, relativeTo=chart-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'bottom-left', relativeTo: 'chart-box'},
+        const cases: {
+            align: ResetButtonAlign;
+            relativeTo: ResetButtonRelativeTo;
+            offset?: {x: number; y: number};
+        }[] = [
+            {align: 'bottom-left', relativeTo: 'chart-box'},
+            {align: 'bottom-left', relativeTo: 'chart-box', offset: {x: 10, y: -10}},
+            {align: 'bottom-right', relativeTo: 'chart-box'},
+            {align: 'bottom-right', relativeTo: 'chart-box', offset: {x: -10, y: -10}},
+            {align: 'top-left', relativeTo: 'chart-box'},
+            {align: 'top-left', relativeTo: 'chart-box', offset: {x: 10, y: 10}},
+            {align: 'top-right', relativeTo: 'chart-box'},
+            {align: 'top-right', relativeTo: 'chart-box', offset: {x: -10, y: 10}},
+            {align: 'bottom-left', relativeTo: 'plot-box'},
+            {align: 'bottom-left', relativeTo: 'plot-box', offset: {x: 10, y: -10}},
+            {align: 'bottom-right', relativeTo: 'plot-box'},
+            {align: 'bottom-right', relativeTo: 'plot-box', offset: {x: -10, y: -10}},
+            {align: 'top-left', relativeTo: 'plot-box'},
+            {align: 'top-left', relativeTo: 'plot-box', offset: {x: 10, y: 10}},
+            {align: 'top-right', relativeTo: 'plot-box'},
+            {align: 'top-right', relativeTo: 'plot-box', offset: {x: -10, y: 10}},
+        ];
+
+        for (const {align, relativeTo, offset} of cases) {
+            const title = `align=${align}, relativeTo=${relativeTo}${offset ? ', offset' : ''}`;
+
+            test(title, async ({mount}) => {
+                const data = cloneDeep(lineTwoYAxisData);
+                set(data, 'chart.zoom', {
+                    enabled: true,
+                    type: 'x',
+                    resetButton: offset ? {align, relativeTo, offset} : {align, relativeTo},
+                });
+                set(data, 'tooltip.enabled', false);
+
+                const component = await mount(<ChartTestStory data={data} />);
+
+                await assertResetButtonPosition({component, align, relativeTo, offset});
             });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=bottom-left, relativeTo=chart-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'bottom-left',
-                    offset: {x: 10, y: -10},
-                    relativeTo: 'chart-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=bottom-right, relativeTo=chart-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'bottom-right', relativeTo: 'chart-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=bottom-right, relativeTo=chart-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'bottom-right',
-                    offset: {x: -10, y: -10},
-                    relativeTo: 'chart-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=top-left, relativeTo=chart-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'top-left', relativeTo: 'chart-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=top-left, relativeTo=chart-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'top-left',
-                    offset: {x: 10, y: 10},
-                    relativeTo: 'chart-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=top-right, relativeTo=chart-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'top-right', relativeTo: 'chart-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=top-right, relativeTo=chart-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'top-right',
-                    offset: {x: -10, y: 10},
-                    relativeTo: 'chart-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(
-                <ChartTestStory
-                    chartStyles={{border: '1px solid black'}}
-                    data={data}
-                    styles={{padding: 20}}
-                />,
-            );
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-                useComponentAsScreenshotLocator: true,
-            });
-        });
-
-        test('align=bottom-left, relativeTo=plot-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'bottom-left', relativeTo: 'plot-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=bottom-left, relativeTo=plot-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'bottom-left',
-                    offset: {x: 10, y: -10},
-                    relativeTo: 'plot-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=bottom-right, relativeTo=plot-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'bottom-right', relativeTo: 'plot-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=bottom-right, relativeTo=plot-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'bottom-right',
-                    offset: {x: -10, y: -10},
-                    relativeTo: 'plot-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=top-left, relativeTo=plot-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'top-left', relativeTo: 'plot-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=top-left, relativeTo=plot-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'top-left',
-                    offset: {x: 10, y: 10},
-                    relativeTo: 'plot-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=top-right, relativeTo=plot-box', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {align: 'top-right', relativeTo: 'plot-box'},
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
-
-        test('align=top-right, relativeTo=plot-box, offset', async ({mount}) => {
-            const data = cloneDeep(lineTwoYAxisData);
-            set(data, 'chart.zoom', {
-                enabled: true,
-                type: 'x',
-                resetButton: {
-                    align: 'top-right',
-                    offset: {x: -10, y: 10},
-                    relativeTo: 'plot-box',
-                },
-            });
-            set(data, 'tooltip.enabled', false);
-
-            const component = await mount(<ChartTestStory data={data} />);
-
-            await testZoom({
-                component,
-                getZoomOptions: getZoomXOptions,
-                shouldScreenshotInitialState: false,
-            });
-        });
+        }
     });
 });
