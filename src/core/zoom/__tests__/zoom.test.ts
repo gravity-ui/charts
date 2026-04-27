@@ -3,19 +3,34 @@ import type {ChartXAxis, ChartYAxis} from '../../types';
 import {getZoomedSeriesData} from '../zoom';
 
 // Minimal series factories. Real `PreparedSeries` carries many extra fields,
-// but `getZoomedSeriesData` only inspects `type`, `data`, `stacking`, `yAxis`,
-// so casting these stubs to `any` is safe for the test.
+// but `getZoomedSeriesData` only inspects `type`, `data`, `stacking`,
+// `valueAxis`, `yAxis`, so casting these stubs to `any` is safe for the test.
 
 function barX(opts: {data: {x: string | number; y: number}[]; stacking?: 'normal' | 'percent'}) {
-    return {type: 'bar-x', data: opts.data, ...(opts.stacking ? {stacking: opts.stacking} : {})};
+    return {
+        type: 'bar-x',
+        data: opts.data,
+        valueAxis: 'y',
+        ...(opts.stacking ? {stacking: opts.stacking} : {}),
+    };
 }
 
 function barY(opts: {data: {x: number; y: string | number}[]; stacking?: 'normal' | 'percent'}) {
-    return {type: 'bar-y', data: opts.data, ...(opts.stacking ? {stacking: opts.stacking} : {})};
+    return {
+        type: 'bar-y',
+        data: opts.data,
+        valueAxis: 'x',
+        ...(opts.stacking ? {stacking: opts.stacking} : {}),
+    };
 }
 
 function area(opts: {data: {x: number; y: number}[]; stacking?: 'normal' | 'percent'}) {
-    return {type: 'area', data: opts.data, ...(opts.stacking ? {stacking: opts.stacking} : {})};
+    return {
+        type: 'area',
+        data: opts.data,
+        valueAxis: 'y',
+        ...(opts.stacking ? {stacking: opts.stacking} : {}),
+    };
 }
 
 function categoryXAxis(categories: string[]): ChartXAxis {
