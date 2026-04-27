@@ -1,7 +1,12 @@
 import {path} from 'd3-path';
 
 import type {PreparedFunnelSeries} from '../../series/types';
-import {calculateNumericProperty, getFormattedValue, getTextSizeFn} from '../../utils';
+import {
+    calculateNumericProperty,
+    getFormattedValue,
+    getLabelsSize,
+    getTextSizeFn,
+} from '../../utils';
 
 import type {PreparedFunnelData} from './types';
 
@@ -42,6 +47,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
 
     const items: PreparedFunnelData['items'] = [];
     const svgLabels: PreparedFunnelData['svgLabels'] = [];
+    const htmlLabels: PreparedFunnelData['htmlLabels'] = [];
     const connectors: PreparedFunnelData['connectors'] = [];
 
     const maxValue = Math.max(...series.map((s) => s.data.value));
@@ -67,39 +73,58 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
             const d = s.data;
             const labelContent =
                 d.label ?? getFormattedValue({value: d.value, format: s.dataLabels.format});
-            const labelSize = await getTextSize(labelContent);
+
+            const {width, height, hangingOffset} = s.dataLabels.html
+                ? await getLabelsSize({
+                      labels: [labelContent],
+                      style: s.dataLabels.style,
+                      html: true,
+                  }).then((size) => ({
+                      width: size.maxWidth,
+                      height: size.maxHeight,
+                      hangingOffset: 0,
+                  }))
+                : await getTextSize(labelContent);
 
             let x;
             switch (s.dataLabels.align) {
                 case 'left': {
                     x = 0;
-                    segmentLeftOffset = Math.max(segmentLeftOffset, labelSize.width);
+                    segmentLeftOffset = Math.max(segmentLeftOffset, width);
                     break;
                 }
                 case 'right': {
-                    x = boundsWidth - labelSize.width;
-                    segmentRightOffset = Math.max(segmentRightOffset, labelSize.width);
+                    x = boundsWidth - width;
+                    segmentRightOffset = Math.max(segmentRightOffset, width);
                     break;
                 }
                 case 'center': {
-                    x = boundsWidth / 2 - labelSize.width / 2;
+                    x = boundsWidth / 2 - width / 2;
                     break;
                 }
             }
 
-            svgLabels.push({
-                x,
-                y:
-                    getSegmentY(index) +
-                    itemHeight / 2 -
-                    labelSize.height / 2 +
-                    labelSize.hangingOffset,
-                text: labelContent,
-                style: s.dataLabels.style,
-                size: labelSize,
-                textAnchor: 'start',
-                series: s,
-            });
+            const y = getSegmentY(index) + itemHeight / 2 - height / 2 + hangingOffset;
+
+            if (s.dataLabels.html) {
+                htmlLabels.push({
+                    x,
+                    y,
+                    content: labelContent,
+                    size: {width, height},
+                    style: s.dataLabels.style,
+                });
+            } else {
+                svgLabels.push({
+                    x,
+                    y,
+                    text: labelContent,
+                    style: s.dataLabels.style,
+                    size: {width, height, hangingOffset},
+                    textAnchor: 'start',
+                    series: s,
+                });
+            }
         }
     }
 
@@ -148,6 +173,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         type: 'funnel',
         items,
         svgLabels,
+        htmlLabels,
         connectors,
     };
 
