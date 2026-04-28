@@ -4,10 +4,14 @@ import get from 'lodash/get';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
 import type {PreparedYAxis} from '../axes/types';
+import {
+    MIN_BAR_GAP,
+    MIN_BAR_GROUP_GAP,
+    MIN_BAR_WIDTH,
+} from '../plugins/series/shared/bar-constants';
 import type {ChartScale} from '../scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '../series/types';
 import {getSeriesStackId} from '../series/utils';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../shapes/bar-constants';
 import {getDataCategoryValue} from '../utils';
 
 import {getBandSize} from './band-size';

@@ -21,7 +21,8 @@
   },
   "sideEffects": [
     "*.css",
-    "*.scss"
+    "*.scss",
+    "**/plugins/index.*"
   ],
   "files": [
     "dist",
