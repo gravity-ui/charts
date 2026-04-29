@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.51.0](https://github.com/gravity-ui/charts/compare/v1.50.0...v1.51.0) (2026-04-29)
+
+
+### Features
+
+* **funnel:** add trapezoid segment shape ([#585](https://github.com/gravity-ui/charts/issues/585)) ([b88bb77](https://github.com/gravity-ui/charts/commit/b88bb776c464dbcca9d62122ab38b0a12b1dd97f))
+
+
+### Bug Fixes
+
+* **line:** render single point when startOnTick/endOnTick is enabled ([#589](https://github.com/gravity-ui/charts/issues/589)) ([8038039](https://github.com/gravity-ui/charts/commit/80380396ce0d03d0cf5081ad54e177c0d8a433af))
+
 ## [1.50.0](https://github.com/gravity-ui/charts/compare/v1.49.1...v1.50.0) (2026-04-27)
 
 
