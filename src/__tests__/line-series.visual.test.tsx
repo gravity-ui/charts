@@ -120,6 +120,23 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Single point with startOnTick/endOnTick', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series 1',
+                        type: 'line',
+                        data: [{y: 10, x: 10, marker: {states: {normal: {enabled: true}}}}],
+                    },
+                ],
+            },
+            yAxis: [{endOnTick: true, startOnTick: true}],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test.describe('Data labels', () => {
         test('Positioning of extreme point dataLabels', async ({mount}) => {
             const chartData: ChartData = {

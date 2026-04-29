@@ -183,6 +183,10 @@ function getDomainMinAlignedToStartTick(args: {
                 step = tickStep(dMin, dMax, 1);
             }
 
+            if (step === 0) {
+                return dMin;
+            }
+
             dNewMin = tickValues[0].value - step;
         }
     }
@@ -224,6 +228,10 @@ function getDomainMaxAlignedToEndTick(args: {
                 step = tickValues[1].value - tickValues[0].value;
             } else {
                 step = tickStep(dMin, dMax, 1);
+            }
+
+            if (step === 0) {
+                return dMax;
             }
 
             dNewMax = Math.floor(dMax / step + 1) * step;
