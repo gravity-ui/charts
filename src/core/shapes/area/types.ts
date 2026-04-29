@@ -1,5 +1,6 @@
-import type {AreaSeriesData, HtmlItem, LabelData} from '../../../types';
+import type {AreaSeriesData, LabelData} from '../../../types';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedAreaSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type PointData = {
     annotation?: PreparedAnnotation;
@@ -35,5 +36,4 @@ export type PreparedAreaData = {
     hovered: boolean;
     active: boolean;
     svgLabels: LabelData[];
-    htmlLabels: HtmlItem[];
-};
+} & SeriesShapeData;

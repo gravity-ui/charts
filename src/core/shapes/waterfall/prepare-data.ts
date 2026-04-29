@@ -196,7 +196,7 @@ export const prepareWaterfallData = async (args: {
             data: item.data,
             series: item.series,
             subTotal: totalValue,
-            htmlElements: [],
+            htmlLabels: [],
         };
 
         preparedData.label = await getLabelData(preparedData, plotHeight);

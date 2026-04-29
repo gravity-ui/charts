@@ -1,7 +1,8 @@
 import type {PieArcDatum} from 'd3-shape';
 
-import type {ConnectorCurve, HtmlItem, LabelData} from '../../../types';
+import type {ConnectorCurve, LabelData} from '../../../types';
 import type {PreparedPieSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type SegmentData = {
     value: number;
@@ -42,5 +43,4 @@ export type PreparedPieData = {
         opacity: number;
         size: number;
     };
-    htmlLabels: HtmlItem[];
-};
+} & SeriesShapeData;

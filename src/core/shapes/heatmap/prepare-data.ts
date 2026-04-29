@@ -141,7 +141,7 @@ export async function prepareHeatmapData({
 
     const preparedData: PreparedHeatmapData = {
         series: series,
-        htmlElements: htmlDataLabels,
+        htmlLabels: htmlDataLabels,
         items: heatmapItems,
         labels: svgDataLabels,
     };

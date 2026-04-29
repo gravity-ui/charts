@@ -1,5 +1,6 @@
-import type {BaseTextStyle, HeatmapSeriesData, HtmlItem} from '../../../types';
+import type {BaseTextStyle, HeatmapSeriesData} from '../../../types';
 import type {PreparedHeatmapSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type HeatmapItem = {
     x: number;
@@ -23,6 +24,5 @@ export type HeatmapLabel = {
 export type PreparedHeatmapData = {
     series: PreparedHeatmapSeries;
     items: HeatmapItem[];
-    htmlElements: HtmlItem[];
     labels: HeatmapLabel[];
-};
+} & SeriesShapeData;

@@ -205,7 +205,7 @@ export async function prepareTreemapData(args: {
     })(hierarchy);
     const leaves = root.leaves();
     let labelData: TreemapLabelData[] = [];
-    const htmlElements: HtmlItem[] = [];
+    const htmlLabels: HtmlItem[] = [];
 
     if (series.dataLabels?.enabled) {
         const {html, style: dataLabelsStyle} = series.dataLabels;
@@ -224,11 +224,11 @@ export async function prepareTreemapData(args: {
                         ...l,
                     }) as HtmlItem,
             );
-            htmlElements.push(...htmlItems);
+            htmlLabels.push(...htmlItems);
         } else {
             labelData = labels as TreemapLabelData[];
         }
     }
 
-    return {labelData, leaves, series, htmlElements};
+    return {labelData, leaves, series, htmlLabels};
 }

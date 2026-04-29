@@ -1,5 +1,6 @@
-import type {HtmlItem, LabelData, WaterfallSeriesData} from '../../../types';
+import type {LabelData, WaterfallSeriesData} from '../../../types';
 import type {PreparedWaterfallSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type PreparedWaterfallData = {
     x: number;
@@ -11,5 +12,4 @@ export type PreparedWaterfallData = {
     data: WaterfallSeriesData;
     label?: LabelData;
     subTotal: number;
-    htmlElements: HtmlItem[];
-};
+} & SeriesShapeData;
