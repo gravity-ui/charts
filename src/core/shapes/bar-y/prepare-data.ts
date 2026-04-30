@@ -47,7 +47,7 @@ export async function prepareBarYData(args: {
         return {
             shapes: [],
             labels: [],
-            htmlElements: [],
+            htmlLabels: [],
         };
     }
 
@@ -184,7 +184,7 @@ export async function prepareBarYData(args: {
     });
 
     let labels: LabelData[] = [];
-    let htmlElements: HtmlItem[] = [];
+    let htmlLabels: HtmlItem[] = [];
 
     const map = new Map();
     for (let i = 0; i < result.length; i++) {
@@ -214,7 +214,7 @@ export async function prepareBarYData(args: {
                     y: y - height / 2,
                 });
 
-                htmlElements.push({
+                htmlLabels.push({
                     content,
                     size: {width, height},
                     style: dataLabels.style,
@@ -257,13 +257,13 @@ export async function prepareBarYData(args: {
 
     if (labels.length && !allowOverlap) {
         labels = filterOverlappingLabels(labels);
-    } else if (htmlElements.length && !allowOverlap) {
-        htmlElements = filterOverlappingLabels(htmlElements);
+    } else if (htmlLabels.length && !allowOverlap) {
+        htmlLabels = filterOverlappingLabels(htmlLabels);
     }
 
     return {
         shapes: result,
         labels,
-        htmlElements,
+        htmlLabels,
     };
 }

@@ -24,7 +24,7 @@ type Args = {
 export function BarYSeriesShapes(args: Args) {
     const {
         dispatcher,
-        preparedData: {htmlElements},
+        preparedData: {htmlLabels: htmlElements},
         seriesOptions,
         htmlLayout,
         clipPathId,

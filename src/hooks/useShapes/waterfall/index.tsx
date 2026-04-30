@@ -46,7 +46,7 @@ export const WaterfallSeriesShapes = (args: Args) => {
     }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(() => {
-        const items = preparedData.map((d) => d?.htmlElements).flat();
+        const items = preparedData.map((d) => d?.htmlLabels).flat();
         if (allowOverlapDataLabels) {
             return {htmlElements: items};
         }

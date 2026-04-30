@@ -1,5 +1,6 @@
-import type {BaseTextStyle, HtmlItem, SankeySeriesData} from '../../../types';
+import type {BaseTextStyle, SankeySeriesData} from '../../../types';
 import type {PreparedSankeySeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type SankeyDataLabel = {
     text: string;
@@ -30,8 +31,7 @@ export type SankeyLink = {
 
 export type PreparedSankeyData = {
     series: PreparedSankeySeries;
-    htmlElements: HtmlItem[];
     nodes: SankeyNode[];
     links: SankeyLink[];
     labels: SankeyDataLabel[];
-};
+} & SeriesShapeData;

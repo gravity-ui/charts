@@ -1,5 +1,6 @@
-import type {HtmlItem, LabelData, TooltipDataChunkBarX} from '../../../types';
+import type {LabelData, TooltipDataChunkBarX} from '../../../types';
 import type {PreparedAnnotation, PreparedBarXSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     annotation?: PreparedAnnotation;
@@ -10,11 +11,10 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     opacity: number | null;
     series: PreparedBarXSeries;
     svgLabels: LabelData[];
-    htmlLabels: HtmlItem[];
     isLastStackItem: boolean;
     /**
      * the utility field for storing the original height (for recalculations, etc.)
      * should not be used for displaying
      */
     _height: number;
-};
+} & SeriesShapeData;

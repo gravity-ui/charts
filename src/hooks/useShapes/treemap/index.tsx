@@ -33,7 +33,10 @@ export const TreemapSeriesShape = (props: ShapeProps) => {
     return (
         <React.Fragment>
             <g ref={ref} className={b()} />
-            <HtmlLayer preparedData={preparedData} htmlLayout={htmlLayout} />
+            <HtmlLayer
+                preparedData={{htmlElements: preparedData.htmlLabels}}
+                htmlLayout={htmlLayout}
+            />
         </React.Fragment>
     );
 };

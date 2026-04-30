@@ -1,5 +1,6 @@
-import type {HtmlItem, LabelData, RadarSeriesData} from '../../../types';
+import type {LabelData, RadarSeriesData} from '../../../types';
 import type {PreparedRadarSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type RadarLabelData = LabelData & {
     maxWidth: number;
@@ -61,6 +62,5 @@ export type PreparedRadarData = {
     grid: RadarGridData[];
     center: [number, number];
     radius: number;
-    htmlLabels: HtmlItem[];
     cursor: string | null;
-};
+} & SeriesShapeData;

@@ -1,7 +1,8 @@
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
-import type {HtmlItem, TreemapSeriesData} from '../../../types';
+import type {TreemapSeriesData} from '../../../types';
 import type {PreparedTreemapSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type TreemapLabelData = {
     text: string;
@@ -14,5 +15,4 @@ export type PreparedTreemapData = {
     labelData: TreemapLabelData[];
     leaves: HierarchyRectangularNode<TreemapSeriesData<any>>[];
     series: PreparedTreemapSeries;
-    htmlElements: HtmlItem[];
-};
+} & SeriesShapeData;

@@ -1,6 +1,7 @@
-import type {HtmlItem, LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
+import type {LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
 import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type PointData = {
     annotation?: PreparedAnnotation;
@@ -28,9 +29,9 @@ export type PreparedLineData = {
     hovered: boolean;
     active: boolean;
     svgLabels: LabelData[];
-    htmlLabels: HtmlItem[];
     color: string;
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
-} & Required<LineSeriesLineBaseStyle>;
+} & Required<LineSeriesLineBaseStyle> &
+    SeriesShapeData;

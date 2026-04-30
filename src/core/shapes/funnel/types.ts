@@ -1,8 +1,9 @@
 import type {Path} from 'd3-path';
 
-import type {FunnelSeriesData, HtmlItem, LabelData} from '../../../types';
+import type {FunnelSeriesData, LabelData} from '../../../types';
 import type {DashStyle} from '../../constants';
 import type {PreparedFunnelSeries} from '../../series/types';
+import type {SeriesShapeData} from '../types';
 
 export type FunnelItemData = {
     x: number;
@@ -34,5 +35,4 @@ export type PreparedFunnelData = {
     items: FunnelItemData[];
     connectors: FunnelConnectorData[];
     svgLabels: LabelData[];
-    htmlLabels: HtmlItem[];
-};
+} & SeriesShapeData;

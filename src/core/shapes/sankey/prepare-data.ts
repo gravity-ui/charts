@@ -17,7 +17,7 @@ export function prepareSankeyData(args: {
     height: number;
 }): PreparedSankeyData {
     const {series, width, height} = args;
-    const htmlElements: HtmlItem[] = [];
+    const htmlLabels: HtmlItem[] = [];
 
     const sankeyGenerator = sankey<SankeySeriesData, SankeyItemLink>()
         .nodeId((d) => d.name)
@@ -89,5 +89,5 @@ export function prepareSankeyData(args: {
         dataLabels.push(...labels);
     }
 
-    return {series, nodes: sankeyNodes, links: sankeyLinks, htmlElements, labels: dataLabels};
+    return {series, nodes: sankeyNodes, links: sankeyLinks, htmlLabels, labels: dataLabels};
 }
