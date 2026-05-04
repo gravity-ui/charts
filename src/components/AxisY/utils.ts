@@ -60,8 +60,12 @@ export function getTickValues({
         let availableSpaceForLabel =
             getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
         let ticksCount = result.length - 1;
+        let lastMultiTickResult = result;
+        const triedCounts = new Set<number>();
         while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
             ticksCount = ticksCount ? ticksCount - 1 : result.length - 1;
+            if (triedCounts.has(ticksCount)) break;
+            triedCounts.add(ticksCount);
             const newScaleTicks = scale.ticks(ticksCount);
             result = newScaleTicks.map((t) => ({
                 y: scale(t),
@@ -70,17 +74,25 @@ export function getTickValues({
 
             availableSpaceForLabel =
                 getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
+
+            if (result.length > 1) {
+                lastMultiTickResult = result;
+            }
         }
 
         // when this is not possible (for example, such values cannot be selected for the logarithmic axis with a small range)
-        // just thin out the originally proposed result
-        if (!result.length) {
-            result = originalTickValues;
+        // just thin out the last result that had multiple ticks
+        // For log scales, 1 tick is also a failure: d3 only places ticks at powers of the base,
+        // so a sub-decade range legitimately yields 1 tick despite having room for more.
+        // For linear scales, 1 tick is a valid result meaning the chart is simply too small.
+        const isLogScale = axis.type === 'logarithmic';
+        if ((isLogScale ? result.length <= 1 : !result.length) && lastMultiTickResult.length > 1) {
+            result = lastMultiTickResult;
             availableSpaceForLabel =
                 getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;
             let delta = 2;
             while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
-                result = thinOut(result, delta);
+                result = thinOut(lastMultiTickResult, delta);
                 if (result.length > 1) {
                     delta += 1;
                     availableSpaceForLabel =

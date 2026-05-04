@@ -759,6 +759,43 @@ test.describe('Y-axis', () => {
         });
     });
 
+    test.describe('Logarithmic axis', () => {
+        // Data range [300, 4000] spans ~1.1 decades — less than 2.
+        // For such sub-decade ranges d3's scaleLog.ticks(count) has a cliff:
+        // count=3 → [316, 1000, 3162], count=2 → [1000].
+        // At small chart heights the while-loop in getTickValues used to
+        // exit with a single [1000] tick instead of falling back to thinOut.
+        const subDecadeData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 300},
+                            {x: 2, y: 1000},
+                            {x: 3, y: 4000},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [{type: 'logarithmic'}],
+            chart: {margin: CHART_MARGIN},
+        };
+
+        test('sub-decade range at default height', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={subDecadeData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('sub-decade range at small height', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory data={subDecadeData} styles={{height: 120}} />,
+            );
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+    });
+
     test('Should not use vertical clip path', async ({mount}) => {
         const data: ChartData = {
             series: {
