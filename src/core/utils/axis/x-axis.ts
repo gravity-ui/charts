@@ -86,8 +86,12 @@ export function getXAxisTickValues({
         let availableSpaceForLabel =
             getMinSpaceBetween(result, (d) => d.x) - axis.labels.padding * 2;
         let ticksCount = result.length - 1;
+        let lastMultiTickResult = result;
+        const triedCounts = new Set<number>();
         while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
             ticksCount = ticksCount ? ticksCount - 1 : result.length - 1;
+            if (triedCounts.has(ticksCount)) break;
+            triedCounts.add(ticksCount);
             const newScaleTicks = getScaleTicks({scale, ticksCount, dateTimeLabelFormats});
             result = newScaleTicks.map((t) => ({
                 x: scale(t as number | Date),
@@ -96,17 +100,21 @@ export function getXAxisTickValues({
 
             availableSpaceForLabel =
                 getMinSpaceBetween(result, (d) => d.x) - axis.labels.padding * 2;
+
+            if (result.length > 1) {
+                lastMultiTickResult = result;
+            }
         }
 
         // when this is not possible (for example, such values cannot be selected for the logarithmic axis with a small range)
-        // just thin out the originally proposed result
-        if (!result.length) {
-            result = originalTickValues;
+        // just thin out the last result that had multiple ticks
+        if (result.length <= 1 && lastMultiTickResult.length > 1) {
+            result = lastMultiTickResult;
             availableSpaceForLabel =
                 getMinSpaceBetween(result, (d) => d.x) - axis.labels.padding * 2;
             let delta = 2;
             while (availableSpaceForLabel < labelLineHeight && result.length > 1) {
-                result = thinOut(result, delta);
+                result = thinOut(lastMultiTickResult, delta);
                 if (result.length > 1) {
                     delta += 1;
                     availableSpaceForLabel =
