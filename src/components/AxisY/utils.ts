@@ -82,7 +82,11 @@ export function getTickValues({
 
         // when this is not possible (for example, such values cannot be selected for the logarithmic axis with a small range)
         // just thin out the last result that had multiple ticks
-        if (result.length <= 1 && lastMultiTickResult.length > 1) {
+        // For log scales, 1 tick is also a failure: d3 only places ticks at powers of the base,
+        // so a sub-decade range legitimately yields 1 tick despite having room for more.
+        // For linear scales, 1 tick is a valid result meaning the chart is simply too small.
+        const isLogScale = axis.type === 'logarithmic';
+        if ((isLogScale ? result.length <= 1 : !result.length) && lastMultiTickResult.length > 1) {
             result = lastMultiTickResult;
             availableSpaceForLabel =
                 getMinSpaceBetween(result, (d) => d.y) - axis.labels.padding * 2;

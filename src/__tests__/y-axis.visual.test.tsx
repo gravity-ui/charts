@@ -789,9 +789,6 @@ test.describe('Y-axis', () => {
         });
 
         test('sub-decade range at small height', async ({mount}) => {
-            // At small heights the tick spacing for [316, 1000, 3162] falls below
-            // labelLineHeight, the loop continues and scale.ticks(2) collapses to
-            // [1000]. The fix must show at least 2 ticks via thinOut.
             const component = await mount(
                 <ChartTestStory data={subDecadeData} styles={{height: 120}} />,
             );
