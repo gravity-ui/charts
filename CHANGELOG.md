@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.1](https://github.com/gravity-ui/charts/compare/v1.51.0...v1.51.1) (2026-05-04)
+
+
+### Bug Fixes
+
+* **axis:** prevent logarithmic axis from collapsing to single tick on sub-decade ranges ([#591](https://github.com/gravity-ui/charts/issues/591)) ([b002aec](https://github.com/gravity-ui/charts/commit/b002aec849d448fd15159592f947fc263a2c05e7))
+
 ## [1.51.0](https://github.com/gravity-ui/charts/compare/v1.50.0...v1.51.0) (2026-04-29)
 
 
