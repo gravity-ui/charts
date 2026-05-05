@@ -167,11 +167,13 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         const prevSeries = series[index - 1];
         const prevItem = items[index - 1];
         if (prevSeries && prevItem && prevSeries.connectors?.enabled) {
+            // Use the actual bottom corners of the previous segment (points[3]/[2]) so that
+            // trapezoid segments (whose bottom edge differs from the top edge) are handled correctly.
             const connectorPoints: [number, number][] = [
-                [prevItem.x, prevItem.y + prevItem.height],
-                [prevItem.x + prevItem.width, prevItem.y + prevItem.height],
-                [funnelSegment.x + funnelSegment.width, funnelSegment.y],
-                [funnelSegment.x, funnelSegment.y],
+                prevItem.points[3],
+                prevItem.points[2],
+                funnelSegment.points[1],
+                funnelSegment.points[0],
             ];
             connectors.push({
                 linePath: getLineConnectorPaths({points: connectorPoints}),

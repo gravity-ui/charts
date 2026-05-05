@@ -7,6 +7,7 @@ import {
     funnelContinuousLegendData,
     funnelHtmlLabelsData,
     funnelTrapezoidData,
+    funnelTrapezoidWithConnectorsData,
 } from 'src/__stories__/__data__';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -29,6 +30,11 @@ test.describe('Funnel series', () => {
 
     test('Trapezoid', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelTrapezoidData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Trapezoid with connectors', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={funnelTrapezoidWithConnectorsData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 });
