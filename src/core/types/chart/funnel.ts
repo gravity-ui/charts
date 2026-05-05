@@ -37,18 +37,23 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
      *   width alone, exaggerating differences between large and small values. Use only for
      *   decorative purposes or when visual familiarity with the funnel metaphor is more
      *   important than analytical precision.
-     *
      * @default 'rectangle'
      */
     shape?: 'rectangle' | 'trapezoid';
     /** Lines or areas connecting the funnel segments. */
     connectors?: {
         enabled?: boolean;
-        /** The height of the connector area relative to the funnel segment. */
+        /**
+         * The height of the connector area between funnel segments.
+         * Accepts a pixel number, a pixel string (e.g. `'10px'`), or a percentage string
+         * (e.g. `'25%'`) relative to the segment band height.
+         *
+         * Defaults to `0` for `'trapezoid'` and `'25%'` for `'rectangle'`.
+         */
         height?: string | number;
         /** Option for line stroke style */
         lineDashStyle?: DashStyle;
-        /** Opacity for the connector line. */
+        /** Opacity for the connector line. Defaults to `0` for `'trapezoid'`, `1` for `'rectangle'`. */
         lineOpacity?: number;
         /** Connector line color. */
         lineColor?: string;
@@ -56,7 +61,7 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
         lineWidth?: number;
         /** Connector area color. */
         areaColor?: string;
-        /** Opacity for the connector area. */
+        /** Opacity for the connector area fill. Defaults to `0` for `'trapezoid'`, `0.25` for `'rectangle'`. */
         areaOpacity?: number;
     };
     dataLabels?: Omit<BaseDataLabels, 'allowOverlap'> & {

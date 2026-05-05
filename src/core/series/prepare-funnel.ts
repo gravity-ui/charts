@@ -22,7 +22,11 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
 
     const shape = series.shape ?? 'rectangle';
     const isTrapezoid = shape === 'trapezoid';
-    const isConnectorsEnabled = series.connectors?.enabled ?? !isTrapezoid;
+    const userSpecifiedHeight = series.connectors?.height !== undefined;
+    // For trapezoid: enable connectors only when the user has explicitly set a height or enabled them.
+    // For rectangle: enable by default.
+    const isConnectorsEnabled =
+        series.connectors?.enabled ?? (isTrapezoid ? userSpecifiedHeight : true);
 
     const preparedSeries: PreparedSeries[] = series.data.map<PreparedFunnelSeries>((dataItem) => {
         const id = getUniqId();
@@ -54,12 +58,14 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
             tooltip: series.tooltip,
             connectors: {
                 enabled: isConnectorsEnabled,
-                height: isConnectorsEnabled ? (series.connectors?.height ?? '25%') : 0,
+                height: isConnectorsEnabled
+                    ? (series.connectors?.height ?? (isTrapezoid ? 0 : '25%'))
+                    : 0,
                 lineDashStyle: series.connectors?.lineDashStyle ?? 'Dash',
-                lineOpacity: series.connectors?.lineOpacity ?? 1,
+                lineOpacity: series.connectors?.lineOpacity ?? (isTrapezoid ? 0 : 1),
                 lineColor: series.connectors?.lineColor ?? 'var(--g-color-line-generic-active)',
                 areaColor: series.connectors?.areaColor ?? color,
-                areaOpacity: series.connectors?.areaOpacity ?? 0.25,
+                areaOpacity: series.connectors?.areaOpacity ?? (isTrapezoid ? 0 : 0.25),
                 lineWidth: series.connectors?.lineWidth ?? 1,
             },
         };
