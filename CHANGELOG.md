@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.51.2](https://github.com/gravity-ui/charts/compare/v1.51.1...v1.51.2) (2026-05-06)
+
+
+### Bug Fixes
+
+* **funnel:** correct trapezoid connector behaviour and geometry ([#593](https://github.com/gravity-ui/charts/issues/593)) ([2b1359c](https://github.com/gravity-ui/charts/commit/2b1359cafe05c10a4216d1989f6d3d00c2fdfe6a))
+* use ResizeObserver instead of window.resize for chart dimensions ([#596](https://github.com/gravity-ui/charts/issues/596)) ([6bf2c81](https://github.com/gravity-ui/charts/commit/6bf2c81d29f98ea852003d504d836ceb9e2a6c83))
+
 ## [1.51.1](https://github.com/gravity-ui/charts/compare/v1.51.0...v1.51.1) (2026-05-04)
 
 
