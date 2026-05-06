@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.3](https://github.com/gravity-ui/charts/compare/v1.51.2...v1.51.3) (2026-05-06)
+
+
+### Bug Fixes
+
+* introduce plugin registry for series preparation ([#597](https://github.com/gravity-ui/charts/issues/597)) ([ff8c603](https://github.com/gravity-ui/charts/commit/ff8c603d97d35210b2e58d183016946e1b012b6b))
+
 ## [1.51.2](https://github.com/gravity-ui/charts/compare/v1.51.1...v1.51.2) (2026-05-06)
 
 
