@@ -16,9 +16,8 @@ export const HoverMarkerLayer = ({hoverMarkers, dispatcher, namespace}: Props) =
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
-        if (ref.current) {
-            return renderHoverMarkers(select(ref.current), hoverMarkers, dispatcher, namespace);
-        }
+        if (!ref.current) return () => {};
+        return renderHoverMarkers(select(ref.current), hoverMarkers, dispatcher, namespace);
     }, [hoverMarkers, dispatcher, namespace]);
 
     return <g ref={ref} />;
