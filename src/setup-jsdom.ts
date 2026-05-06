@@ -14,10 +14,42 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof ResizeObserver === 'undefined') {
+    const resizeObserverCallbacks = new Map<Element, Set<ResizeObserverCallback>>();
+
     global.ResizeObserver = class ResizeObserver {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
+        private callback: ResizeObserverCallback;
+
+        constructor(callback: ResizeObserverCallback) {
+            this.callback = callback;
+        }
+
+        observe(target: Element) {
+            if (!resizeObserverCallbacks.has(target)) {
+                resizeObserverCallbacks.set(target, new Set());
+            }
+            resizeObserverCallbacks.get(target)!.add(this.callback);
+        }
+
+        unobserve(target: Element) {
+            resizeObserverCallbacks.get(target)?.delete(this.callback);
+        }
+
+        disconnect() {
+            resizeObserverCallbacks.forEach((callbacks) => {
+                callbacks.delete(this.callback);
+            });
+        }
+    };
+
+    /**
+     * Test helper: simulate a ResizeObserver notification for the given element.
+     */
+    (global as any).__triggerResizeObserver = (target: Element) => {
+        const callbacks = resizeObserverCallbacks.get(target);
+        if (callbacks) {
+            const entry = [{target, contentRect: target.getBoundingClientRect()}] as any;
+            callbacks.forEach((cb) => cb(entry, {} as any));
+        }
     };
 }
 
