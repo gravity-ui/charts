@@ -26,6 +26,8 @@ const data: ChartData = {
     },
 };
 
+declare const __triggerResizeObserver: (target: Element) => void;
+
 describe('Chart/reflow', () => {
     afterEach(() => {
         document.body.innerHTML = '';
@@ -98,5 +100,58 @@ describe('Chart/reflow', () => {
             ref.current?.reflow({immediate: true});
         });
         expect(onResize).toHaveBeenCalledTimes(1);
+    });
+
+    test('container resize (without window.resize) triggers onResize via ResizeObserver', async () => {
+        jest.useFakeTimers();
+        const onResize = jest.fn();
+
+        const {container} = renderChart(<Chart data={data} onResize={onResize} />);
+
+        await act(async () => {
+            jest.runAllTimers();
+        });
+        onResize.mockClear();
+
+        // simulate container width change (e.g. drawer drag)
+        Object.defineProperty(container, 'clientWidth', {value: 600, configurable: true});
+
+        act(() => {
+            __triggerResizeObserver(container);
+        });
+
+        // not called yet — within debounce window
+        expect(onResize).not.toHaveBeenCalled();
+
+        await act(async () => {
+            jest.advanceTimersByTime(200);
+        });
+
+        expect(onResize).toHaveBeenCalledTimes(1);
+        expect(onResize).toHaveBeenCalledWith({
+            dimensions: {width: 600, height: 400},
+        });
+    });
+
+    test('ResizeObserver does not trigger onResize when dimensions stay the same', async () => {
+        jest.useFakeTimers();
+        const onResize = jest.fn();
+
+        const {container} = renderChart(<Chart data={data} onResize={onResize} />);
+
+        await act(async () => {
+            jest.runAllTimers();
+        });
+        onResize.mockClear();
+
+        act(() => {
+            __triggerResizeObserver(container);
+        });
+
+        await act(async () => {
+            jest.advanceTimersByTime(200);
+        });
+
+        expect(onResize).not.toHaveBeenCalled();
     });
 });

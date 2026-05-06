@@ -1,11 +1,9 @@
 import React from 'react';
 
-import {select} from 'd3-selection';
 import type {DebouncedFunc} from 'lodash';
 import debounce from 'lodash/debounce';
 
 import {i18nFactory} from '~core/i18n';
-import {getUniqId} from '~core/utils';
 import {validateData} from '~core/validation';
 
 import type {ChartData} from '../types';
@@ -27,6 +25,10 @@ export interface ChartDimentions {
     width: number;
 }
 
+interface HandleResizeOptions {
+    force?: boolean;
+}
+
 export type ChartOnResize = (args: {dimensions?: ChartDimentions}) => void;
 
 export interface ChartProps {
@@ -40,7 +42,9 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     const {data, lang, onResize, onReady} = props;
     const validatedData = React.useRef<ChartData>();
     const ref = React.useRef<HTMLDivElement>(null);
-    const debounced = React.useRef<DebouncedFunc<() => void> | undefined>();
+    const debounced = React.useRef<
+        DebouncedFunc<(options?: HandleResizeOptions) => void> | undefined
+    >();
     const [dimensions, setDimensions] = React.useState<ChartDimentions>();
 
     if (validatedData.current !== data) {
@@ -48,11 +52,26 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         validatedData.current = data;
     }
 
-    const handleResize = React.useCallback(() => {
+    const handleResize = React.useCallback((options?: HandleResizeOptions) => {
         const parentElement = ref.current?.parentElement;
 
         if (parentElement) {
-            setDimensions({width: parentElement.clientWidth, height: parentElement.clientHeight});
+            const nextDimensions = {
+                width: parentElement.clientWidth,
+                height: parentElement.clientHeight,
+            };
+
+            setDimensions((currentDimensions) => {
+                if (
+                    !options?.force &&
+                    currentDimensions?.width === nextDimensions.width &&
+                    currentDimensions.height === nextDimensions.height
+                ) {
+                    return currentDimensions;
+                }
+
+                return nextDimensions;
+            });
         }
     }, []);
 
@@ -67,9 +86,9 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         () => ({
             reflow(options?: ChartReflowOptions) {
                 if (options?.immediate) {
-                    handleResize();
+                    handleResize({force: true});
                 } else {
-                    debuncedHandleResize();
+                    debuncedHandleResize({force: true});
                 }
             },
         }),
@@ -82,22 +101,20 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     }, [handleResize]);
 
     React.useEffect(() => {
-        const selection = select(window);
-        // https://github.com/d3/d3-selection/blob/main/README.md#handling-events
-        const eventName = `resize.${getUniqId()}`;
-        selection.on(eventName, debuncedHandleResize);
+        const parentElement = ref.current?.parentElement;
 
-        window.addEventListener('transitionend', handleResize, {capture: true});
-        window.addEventListener('animationend', handleResize, {capture: true});
+        if (!parentElement) {
+            return undefined;
+        }
+
+        const observer = new ResizeObserver(() => debuncedHandleResize());
+        observer.observe(parentElement);
 
         return () => {
-            // https://d3js.org/d3-selection/events#selection_on
-            selection.on(eventName, null);
-
-            window.removeEventListener('transitionend', handleResize, {capture: true});
-            window.removeEventListener('animationend', handleResize, {capture: true});
+            observer.disconnect();
+            debuncedHandleResize.cancel();
         };
-    }, [debuncedHandleResize, handleResize]);
+    }, [debuncedHandleResize]);
 
     React.useEffect(() => {
         if (typeof onResize === 'function') {
