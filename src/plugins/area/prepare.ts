@@ -2,18 +2,18 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
-import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../constants';
-import type {PointMarkerOptions} from '../types/chart/marker';
-import {getUniqId} from '../utils';
-
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {
     DEFAULT_DATALABELS_PADDING,
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
-} from './constants';
-import type {PreparedAreaSeries, PreparedLegend} from './types';
-import {getSeriesStackId, prepareLegendSymbol} from './utils';
+} from '~core/series/constants';
+import type {PreparedAreaSeries, PreparedLegend} from '~core/series/types';
+import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import type {PointMarkerOptions} from '~core/types/chart/marker';
+import {getUniqId} from '~core/utils';
+
+import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 
 export const DEFAULT_LINE_WIDTH = 1;
 

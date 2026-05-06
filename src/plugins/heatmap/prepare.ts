@@ -1,41 +1,39 @@
 import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {BarXSeries, BarXSeriesData, ChartSeriesOptions} from '../../types';
-import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../constants';
-import {getUniqId} from '../utils';
+import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
+import type {PreparedHeatmapSeries, PreparedLegend, PreparedSeries} from '~core/series/types';
+import {prepareLegendSymbol} from '~core/series/utils';
+import {getUniqId} from '~core/utils';
 
-import {DEFAULT_DATALABELS_PADDING} from './constants';
-import type {PreparedBarXSeries, PreparedLegend, PreparedSeries} from './types';
-import {getSeriesStackId, prepareLegendSymbol} from './utils';
+import type {ChartSeriesOptions, HeatmapSeries, HeatmapSeriesData} from '../../types';
 
-type PrepareBarXSeriesArgs = {
+type PrepareHeatmapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
-    series: BarXSeries[];
+    series: HeatmapSeries[];
     legend: PreparedLegend;
     seriesOptions?: ChartSeriesOptions;
 };
 
-function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
+function prepareSeriesData(series: HeatmapSeries): HeatmapSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, y: p.y ?? 0}));
+            return data.map((p) => ({...p, value: p.value ?? 0}));
         case 'skip':
         default:
             return data;
     }
 }
 
-export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[] {
+export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
 
-    return seriesList.map<PreparedBarXSeries>((series) => {
+    return seriesList.map<PreparedHeatmapSeries>((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
-        const dataLabelsInside =
-            series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
 
         return {
             type: series.type,
@@ -50,23 +48,21 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
                 itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),
-            stacking: series.stacking,
-            stackId: getSeriesStackId(series),
-            valueAxis: 'y',
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
-                inside: dataLabelsInside,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
-                allowOverlap: series.dataLabels?.allowOverlap || false,
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
-                html: get(series, 'dataLabels.html', false),
+                html: series.dataLabels?.html ?? false,
                 format: series.dataLabels?.format,
             },
             cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
-            borderRadius: get(series, 'borderRadius', get(seriesOptions, 'bar-x.borderRadius', 0)),
             tooltip: series.tooltip,
-            rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
+            borderColor:
+                series.borderColor ??
+                seriesOptions?.heatmap?.borderColor ??
+                'var(--gcharts-shape-border-color)',
+            borderWidth: series.borderWidth ?? seriesOptions?.heatmap?.borderWidth ?? 0,
         };
     }, []);
 }

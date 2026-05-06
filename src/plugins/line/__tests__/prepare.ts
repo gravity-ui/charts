@@ -1,9 +1,10 @@
 import {scaleOrdinal} from 'd3-scale';
 
+import {DEFAULT_PALETTE} from '~core/constants';
+import type {PreparedLegend} from '~core/series/types';
+
 import type {LineSeries} from '../../../types';
-import {DEFAULT_PALETTE} from '../../constants';
-import {DEFAULT_MARKER, prepareLineSeries} from '../prepare-line';
-import type {PreparedLegend} from '../types';
+import {DEFAULT_MARKER, prepareLineSeries} from '../prepare';
 
 // TODO: fix tests
 describe('prepareLineSeries', () => {

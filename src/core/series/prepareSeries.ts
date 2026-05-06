@@ -1,41 +1,11 @@
 import {group} from 'd3-array';
-import type {ScaleOrdinal} from 'd3-scale';
 import {scaleOrdinal} from 'd3-scale';
 
-import {ChartError} from '../../libs';
-import type {
-    AreaSeries,
-    BarXSeries,
-    BarYSeries,
-    ChartData,
-    ChartSeries,
-    ChartSeriesOptions,
-    FunnelSeries,
-    HeatmapSeries,
-    LineSeries,
-    PieSeries,
-    RadarSeries,
-    SankeySeries,
-    ScatterSeries,
-    TreemapSeries,
-    WaterfallSeries,
-    XRangeSeries,
-} from '../../types';
+import type {ChartData} from '../../types';
 import {getSeriesNames} from '../utils';
 
-import {prepareArea} from './prepare-area';
-import {prepareBarXSeries} from './prepare-bar-x';
-import {prepareBarYSeries} from './prepare-bar-y';
-import {prepareFunnelSeries} from './prepare-funnel';
-import {prepareHeatmapSeries} from './prepare-heatmap';
-import {prepareLineSeries} from './prepare-line';
-import {preparePieSeries} from './prepare-pie';
-import {prepareRadarSeries} from './prepare-radar';
-import {prepareSankeySeries} from './prepare-sankey';
-import {prepareScatterSeries} from './prepare-scatter';
-import {prepareTreemap} from './prepare-treemap';
-import {prepareWaterfallSeries} from './prepare-waterfall';
-import {prepareXRangeSeries} from './prepare-x-range';
+import type {PrepareSeriesArgs} from './plugin';
+import {getSeriesPlugin} from './seriesRegistry';
 import type {PreparedLegend, PreparedSeries} from './types';
 
 export const getPreparedSeries = async ({
@@ -68,10 +38,8 @@ export const getPreparedSeries = async ({
     const list = Array.from(groupedSeries);
     for (let i = 0; i < list.length; i++) {
         const [_groupId, seriesList] = list[i];
-        const seriesType = seriesList[0].type;
         acc.push(
             ...(await prepareSeries({
-                type: seriesType,
                 series: seriesList,
                 seriesOptions,
                 legend: preparedLegend,
@@ -84,125 +52,7 @@ export const getPreparedSeries = async ({
     return acc;
 };
 
-export async function prepareSeries(args: {
-    type: ChartSeries['type'];
-    series: ChartSeries[];
-    seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
-    colors: string[];
-    colorScale: ScaleOrdinal<string, string>;
-}): Promise<PreparedSeries[]> {
-    const {type, series, seriesOptions, legend, colors, colorScale} = args;
-
-    switch (type) {
-        case 'pie': {
-            return series.reduce<PreparedSeries[]>((acc, singleSeries) => {
-                acc.push(
-                    ...preparePieSeries({
-                        series: singleSeries as PieSeries,
-                        seriesOptions,
-                        legend,
-                        colors,
-                    }),
-                );
-                return acc;
-            }, []);
-        }
-        case 'bar-x': {
-            return prepareBarXSeries({
-                series: series as BarXSeries[],
-                legend,
-                colorScale,
-                seriesOptions,
-            });
-        }
-        case 'bar-y': {
-            return await prepareBarYSeries({
-                series: series as BarYSeries[],
-                legend,
-                colorScale,
-                seriesOptions,
-            });
-        }
-        case 'scatter': {
-            return prepareScatterSeries({series: series as ScatterSeries[], legend, colorScale});
-        }
-        case 'line': {
-            return prepareLineSeries({
-                series: series as LineSeries[],
-                seriesOptions,
-                legend,
-                colorScale,
-            });
-        }
-        case 'area': {
-            return prepareArea({
-                series: series as AreaSeries[],
-                seriesOptions,
-                legend,
-                colorScale,
-            });
-        }
-        case 'treemap': {
-            return prepareTreemap({
-                series: series as TreemapSeries[],
-                seriesOptions,
-                legend,
-                colorScale,
-            });
-        }
-        case 'waterfall': {
-            return prepareWaterfallSeries({
-                series: series as WaterfallSeries[],
-                legend,
-                colorScale,
-                colors,
-            });
-        }
-        case 'sankey': {
-            return prepareSankeySeries({
-                series: series as SankeySeries[],
-                seriesOptions,
-                colorScale,
-                legend,
-            });
-        }
-        case 'radar': {
-            return prepareRadarSeries({
-                series: series as RadarSeries[],
-                seriesOptions,
-                legend,
-                colors,
-            });
-        }
-        case 'heatmap': {
-            return await prepareHeatmapSeries({
-                series: series as HeatmapSeries[],
-                legend,
-                colorScale,
-                seriesOptions,
-            });
-        }
-        case 'funnel': {
-            return prepareFunnelSeries({
-                series: series[0] as FunnelSeries,
-                seriesOptions,
-                legend,
-                colors,
-            });
-        }
-        case 'x-range': {
-            return prepareXRangeSeries({
-                series: series as XRangeSeries[],
-                seriesOptions,
-                legend,
-                colorScale,
-            });
-        }
-        default: {
-            throw new ChartError({
-                message: `Series type "${type}" does not support data preparation for series that do not support the presence of axes`,
-            });
-        }
-    }
+export async function prepareSeries(args: PrepareSeriesArgs): Promise<PreparedSeries[]> {
+    const plugin = getSeriesPlugin(args.series[0].type);
+    return plugin.prepareSeries(args);
 }

@@ -1,13 +1,13 @@
 import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
-import {DEFAULT_DATALABELS_STYLE} from '../constants';
-import {getUniqId} from '../utils';
+import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
+import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from '~core/series/types';
+import {prepareLegendSymbol} from '~core/series/utils';
+import {getUniqId} from '~core/utils';
 
-import {DEFAULT_DATALABELS_PADDING} from './constants';
-import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from './types';
-import {prepareLegendSymbol} from './utils';
+import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
 
 type PrepareWaterfallSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;

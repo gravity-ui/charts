@@ -1,13 +1,13 @@
 import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {BarYSeries, BarYSeriesData, ChartSeriesOptions} from '../../types';
-import {DEFAULT_DATALABELS_STYLE} from '../constants';
-import {getLabelsSize, getUniqId} from '../utils';
-import {getFormattedValue} from '../utils/format';
+import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import type {PreparedBarYSeries, PreparedLegend} from '~core/series/types';
+import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import {getLabelsSize, getUniqId} from '~core/utils';
+import {getFormattedValue} from '~core/utils/format';
 
-import type {PreparedBarYSeries, PreparedLegend} from './types';
-import {getSeriesStackId, prepareLegendSymbol} from './utils';
+import type {BarYSeries, BarYSeriesData, ChartSeriesOptions} from '../../types';
 
 type PrepareBarYSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
