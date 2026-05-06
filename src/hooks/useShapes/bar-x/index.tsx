@@ -8,6 +8,7 @@ import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {filterOverlappingLabels} from '~core/utils';
 
 import {block} from '../../../utils';
+import {AnnotationLayer} from '../AnnotationLayer';
 import {HtmlLayer} from '../HtmlLayer';
 
 export {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
@@ -36,21 +37,19 @@ export const BarXSeriesShapes = (args: Args) => {
         clipPathId,
     } = args;
     const ref = React.useRef<SVGGElement>(null);
-    const annotationsRef = React.useRef<SVGGElement>(null);
 
     const allowOverlapDataLabels = React.useMemo(() => {
         return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
     }, [preparedData]);
 
     React.useEffect(() => {
-        if (!ref.current || !annotationsRef.current) {
+        if (!ref.current) {
             return () => {};
         }
 
         return renderBarX(
             {
                 plot: ref.current,
-                annotations: annotationsRef.current,
                 boundsWidth,
                 boundsHeight,
             },
@@ -77,10 +76,19 @@ export const BarXSeriesShapes = (args: Args) => {
         return {htmlElements: filterOverlappingLabels(items)};
     }, [allowOverlapDataLabels, preparedData]);
 
+    const allAnnotations = React.useMemo(
+        () => preparedData.flatMap((d) => d.annotations),
+        [preparedData],
+    );
+
     return (
         <React.Fragment>
             <g ref={ref} className={b()} clipPath={`url(#${clipPathId})`} />
-            <g ref={annotationsRef} />
+            <AnnotationLayer
+                annotations={allAnnotations}
+                boundsWidth={boundsWidth}
+                boundsHeight={boundsHeight}
+            />
             <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

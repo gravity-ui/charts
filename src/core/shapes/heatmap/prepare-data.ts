@@ -144,6 +144,9 @@ export async function prepareHeatmapData({
         htmlLabels: htmlDataLabels,
         items: heatmapItems,
         labels: svgDataLabels,
+        markers: [],
+        hoverMarkers: [],
+        annotations: [],
     };
 
     return preparedData;

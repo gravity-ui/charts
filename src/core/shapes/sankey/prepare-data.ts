@@ -89,5 +89,14 @@ export function prepareSankeyData(args: {
         dataLabels.push(...labels);
     }
 
-    return {series, nodes: sankeyNodes, links: sankeyLinks, htmlLabels, labels: dataLabels};
+    return {
+        series,
+        nodes: sankeyNodes,
+        links: sankeyLinks,
+        htmlLabels,
+        labels: dataLabels,
+        markers: [],
+        hoverMarkers: [],
+        annotations: [],
+    };
 }

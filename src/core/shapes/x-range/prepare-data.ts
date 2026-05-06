@@ -130,6 +130,9 @@ export async function prepareXRangeData(
                 series: s,
                 htmlLabels: [],
                 svgLabels: [],
+                markers: [],
+                hoverMarkers: [],
+                annotations: [],
             });
         });
     });

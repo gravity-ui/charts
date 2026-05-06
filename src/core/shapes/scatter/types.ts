@@ -22,6 +22,6 @@ export type MarkerData = {
 export type PreparedScatterData = MarkerData;
 
 export type PreparedScatterShapeData = {
-    markers: PreparedScatterData[];
+    scatterData: PreparedScatterData[];
     svgLabels: LabelData[];
 } & SeriesShapeData;

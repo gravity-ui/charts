@@ -1,9 +1,10 @@
 import type {LabelData, TooltipDataChunkBarX} from '../../../types';
-import type {PreparedAnnotation, PreparedBarXSeries} from '../../series/types';
+import type {AnnotationAnchor, PreparedAnnotation, PreparedBarXSeries} from '../../series/types';
 import type {SeriesShapeData} from '../types';
 
 export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     annotation?: PreparedAnnotation;
+    annotations: AnnotationAnchor[];
     x: number;
     y: number;
     width: number;

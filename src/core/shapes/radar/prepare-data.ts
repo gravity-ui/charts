@@ -42,6 +42,9 @@ export async function prepareRadarData(args: Args): Promise<PreparedRadarData[]>
         htmlLabels: [],
         grid: [],
         cursor: preparedSeries[0].cursor,
+        markers: [],
+        hoverMarkers: [],
+        annotations: [],
     };
 
     const categories = preparedSeries[0].categories;

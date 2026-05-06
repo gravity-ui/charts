@@ -320,7 +320,7 @@ export async function getShapes(args: Args) {
                             htmlLayout={htmlLayout}
                         />
                     );
-                    shapesData.splice(index, 0, ...scatterShapeData.markers);
+                    shapesData.splice(index, 0, ...scatterShapeData.scatterData);
                 }
                 break;
             }

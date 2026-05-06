@@ -8,7 +8,10 @@ import type {PreparedAreaData} from '~core/shapes/area/types';
 import {filterOverlappingLabels} from '~core/utils';
 
 import {block} from '../../../utils';
+import {AnnotationLayer} from '../AnnotationLayer';
+import {HoverMarkerLayer} from '../HoverMarkerLayer';
 import {HtmlLayer} from '../HtmlLayer';
+import {MarkerLayer} from '../MarkerLayer';
 
 const b = block('area');
 
@@ -33,46 +36,24 @@ export const AreaSeriesShapes = (args: Args) => {
         clipPathId,
     } = args;
     const plotRef = React.useRef<SVGGElement | null>(null);
-    const markersRef = React.useRef<SVGGElement>(null);
-    const hoverMarkersRef = React.useRef<SVGGElement>(null);
-    const annotationsRef = React.useRef<SVGGElement>(null);
 
     const allowOverlapDataLabels = React.useMemo(() => {
         return preparedData.some((d) => d?.series.dataLabels.allowOverlap);
     }, [preparedData]);
 
     React.useEffect(() => {
-        if (
-            !plotRef.current ||
-            !markersRef.current ||
-            !hoverMarkersRef.current ||
-            !annotationsRef.current
-        ) {
+        if (!plotRef.current) {
             return () => {};
         }
 
         return renderArea(
-            {
-                plot: plotRef.current,
-                markers: markersRef.current,
-                hoverMarkers: hoverMarkersRef.current,
-                annotations: annotationsRef.current,
-                boundsWidth,
-                boundsHeight,
-            },
+            {plot: plotRef.current},
             preparedData,
             seriesOptions,
             allowOverlapDataLabels,
             dispatcher,
         );
-    }, [
-        allowOverlapDataLabels,
-        boundsHeight,
-        boundsWidth,
-        dispatcher,
-        preparedData,
-        seriesOptions,
-    ]);
+    }, [allowOverlapDataLabels, dispatcher, preparedData, seriesOptions]);
 
     const htmlLayerData = React.useMemo(() => {
         const items = preparedData.map((d) => d?.htmlLabels).flat();
@@ -83,12 +64,32 @@ export const AreaSeriesShapes = (args: Args) => {
         return {htmlElements: filterOverlappingLabels(items)};
     }, [allowOverlapDataLabels, preparedData]);
 
+    const allMarkers = React.useMemo(() => preparedData.flatMap((d) => d.markers), [preparedData]);
+    const allHoverMarkers = React.useMemo(
+        () => preparedData.flatMap((d) => d.hoverMarkers),
+        [preparedData],
+    );
+    const allAnnotations = React.useMemo(
+        () => preparedData.flatMap((d) => d.annotations),
+        [preparedData],
+    );
+
+    const areaId = preparedData[0]?.id ?? 'unknown';
+
     return (
         <React.Fragment>
             <g ref={plotRef} className={b()} clipPath={`url(#${clipPathId})`} />
-            <g ref={markersRef} />
-            <g ref={hoverMarkersRef} />
-            <g ref={annotationsRef} />
+            <MarkerLayer markers={allMarkers} />
+            <HoverMarkerLayer
+                hoverMarkers={allHoverMarkers}
+                dispatcher={dispatcher}
+                namespace={`hover-markers-area-${areaId}`}
+            />
+            <AnnotationLayer
+                annotations={allAnnotations}
+                boundsWidth={boundsWidth}
+                boundsHeight={boundsHeight}
+            />
             <HtmlLayer preparedData={htmlLayerData} htmlLayout={htmlLayout} />
         </React.Fragment>
     );

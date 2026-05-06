@@ -197,6 +197,9 @@ export const prepareWaterfallData = async (args: {
             series: item.series,
             subTotal: totalValue,
             htmlLabels: [],
+            markers: [],
+            hoverMarkers: [],
+            annotations: [],
         };
 
         preparedData.label = await getLabelData(preparedData, plotHeight);

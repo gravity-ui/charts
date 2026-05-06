@@ -9,6 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
+import type {MarkerItem} from '../../shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
 import {getDataCategoryValue, preparePointDataLabels} from '../../utils';
 
@@ -324,13 +325,13 @@ export const prepareAreaData = async (args: {
                     }
                 }
 
-                let markers: MarkerData[] = [];
+                let markerData: MarkerData[] = [];
                 const hasPerPointNormalMarkers = s.data.some(
                     (d) => d.marker?.states?.normal?.enabled,
                 );
 
                 if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
-                    markers = points.reduce<MarkerData[]>((markersAcc, p) => {
+                    markerData = points.reduce<MarkerData[]>((markersAcc, p) => {
                         if (p.y === null) {
                             return markersAcc;
                         }
@@ -349,6 +350,45 @@ export const prepareAreaData = async (args: {
                     }, []);
                 }
 
+                const normalState = s.marker.states.normal;
+                const hoverState = s.marker.states.hover;
+
+                const markers: MarkerItem[] = markerData.map((m) => ({
+                    cx: m.point.x,
+                    cy: m.point.y,
+                    radius: normalState.radius,
+                    symbolType: normalState.symbol,
+                    fill: m.point.color ?? s.color,
+                    stroke: normalState.borderColor,
+                    strokeWidth: normalState.borderWidth,
+                    opacity: 1,
+                    active: m.active,
+                    clipped: m.clipped,
+                    series: {id: s.id},
+                    data: m.point.data,
+                }));
+
+                const hoverMarkers: MarkerItem[] = [];
+                if (!normalState.enabled && hoverState.enabled) {
+                    for (const p of points) {
+                        if (p.y === null) continue;
+                        hoverMarkers.push({
+                            cx: p.x,
+                            cy: p.y,
+                            radius: hoverState.radius,
+                            symbolType: normalState.symbol,
+                            fill: p.color ?? s.color,
+                            stroke: hoverState.borderColor,
+                            strokeWidth: hoverState.borderWidth,
+                            opacity: 1,
+                            active: true,
+                            clipped: false,
+                            series: {id: s.id},
+                            data: p.data,
+                        });
+                    }
+                }
+
                 const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
                     if (p.annotation && p.y !== null) {
                         result.push({annotation: p.annotation, x: p.x, y: p.y});
@@ -365,7 +405,9 @@ export const prepareAreaData = async (args: {
                 seriesStackData.push({
                     annotations,
                     points,
+                    markerData,
                     markers,
+                    hoverMarkers,
                     svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,

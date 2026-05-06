@@ -36,7 +36,7 @@ export function renderScatter(
 
     const selection = svgElement
         .selectAll('path')
-        .data(preparedData.markers, shapeKey)
+        .data(preparedData.scatterData, shapeKey)
         .join('g')
         .call(renderMarker)
         .attr('opacity', (d) => d.point.opacity)
@@ -44,7 +44,7 @@ export function renderScatter(
 
     renderDataLabels({
         container: svgElement,
-        data: preparedData.svgLabels,
+        data: preparedData.svgLabels ?? [],
         className: b('label'),
     });
 

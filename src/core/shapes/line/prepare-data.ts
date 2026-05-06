@@ -5,6 +5,7 @@ import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels, preparePointDataLabels} from '../../utils';
+import type {MarkerItem} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';
@@ -99,11 +100,11 @@ export const prepareLineData = async (args: {
             );
         }
 
-        let markers: MarkerData[] = [];
+        let markerData: MarkerData[] = [];
         const hasPerPointNormalMarkers = s.data.some((d) => d.marker?.states?.normal?.enabled);
 
         if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
-            markers = points.reduce<MarkerData[]>((result, p) => {
+            markerData = points.reduce<MarkerData[]>((result, p) => {
                 if (p.y === null || p.x === null) {
                     return result;
                 }
@@ -122,6 +123,46 @@ export const prepareLineData = async (args: {
                 return result;
             }, []);
         }
+
+        const normalState = s.marker.states.normal;
+        const hoverState = s.marker.states.hover;
+
+        const markers: MarkerItem[] = markerData.map((m) => ({
+            cx: m.point.x,
+            cy: m.point.y,
+            radius: normalState.radius,
+            symbolType: normalState.symbol,
+            fill: m.point.color ?? s.color,
+            stroke: normalState.borderColor,
+            strokeWidth: normalState.borderWidth,
+            opacity: 1,
+            active: m.active,
+            clipped: m.clipped,
+            series: {id: s.id},
+            data: m.point.data,
+        }));
+
+        const hoverMarkers: MarkerItem[] = [];
+        if (!normalState.enabled && hoverState.enabled) {
+            for (const p of points) {
+                if (p.y === null || p.x === null) continue;
+                hoverMarkers.push({
+                    cx: p.x,
+                    cy: p.y,
+                    radius: hoverState.radius,
+                    symbolType: normalState.symbol,
+                    fill: p.color ?? s.color,
+                    stroke: hoverState.borderColor,
+                    strokeWidth: hoverState.borderWidth,
+                    opacity: 1,
+                    active: true,
+                    clipped: false,
+                    series: {id: s.id},
+                    data: p.data,
+                });
+            }
+        }
+
         const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
             if (p.annotation && p.x !== null && p.y !== null) {
                 result.push({annotation: p.annotation, x: p.x, y: p.y});
@@ -141,7 +182,9 @@ export const prepareLineData = async (args: {
         const result: PreparedLineData = {
             annotations,
             points,
+            markerData,
             markers,
+            hoverMarkers,
             svgLabels: svgLabels,
             series: s,
             hovered: false,

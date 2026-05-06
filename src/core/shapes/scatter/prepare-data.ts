@@ -157,5 +157,12 @@ export async function prepareScatterData(args: {
         }
     }
 
-    return {markers, svgLabels: allSvgLabels, htmlLabels: allHtmlLabels};
+    return {
+        scatterData: markers,
+        svgLabels: allSvgLabels,
+        htmlLabels: allHtmlLabels,
+        markers: [],
+        hoverMarkers: [],
+        annotations: [],
+    };
 }

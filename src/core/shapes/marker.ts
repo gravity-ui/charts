@@ -1,3 +1,4 @@
+import type {Dispatch} from 'd3-dispatch';
 import type {BaseType, Selection} from 'd3-selection';
 import {symbol} from 'd3-shape';
 import get from 'lodash/get';
@@ -5,6 +6,8 @@ import get from 'lodash/get';
 import {block} from '../../utils';
 import {SymbolType} from '../constants';
 import {getSymbol} from '../utils';
+
+import type {MarkerItem} from './types';
 
 const b = block('marker');
 const haloClassName = b('halo');
@@ -134,4 +137,66 @@ export function selectMarkerHalo<T>(parentSelection: Selection<BaseType, T, null
 
 export function selectMarkerSymbol<T>(parentSelection: Selection<BaseType, T, null, undefined>) {
     return parentSelection.select(`.${symbolClassName}`);
+}
+
+export function renderMarkers(
+    container: Selection<SVGGElement, unknown, null, undefined>,
+    markers: MarkerItem[],
+): void {
+    container.selectAll('*').remove();
+
+    const selection = container
+        .selectAll<SVGGElement, MarkerItem>('g')
+        .data(markers)
+        .join('g')
+        .attr('class', b('wrapper'))
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
+
+    selection
+        .append('path')
+        .attr('class', b('symbol'))
+        .attr('d', (d) =>
+            d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth),
+        )
+        .attr('fill', (d) => d.fill)
+        .attr('stroke', (d) => d.stroke)
+        .attr('stroke-width', (d) => d.strokeWidth);
+}
+
+export function renderHoverMarkers(
+    container: Selection<SVGGElement, unknown, null, undefined>,
+    hoverMarkers: MarkerItem[],
+    dispatcher: Dispatch<object> | undefined,
+    namespace: string,
+): () => void {
+    container.selectAll('*').remove();
+
+    const selection = container
+        .selectAll<SVGGElement, MarkerItem>('g')
+        .data(hoverMarkers)
+        .join('g')
+        .attr('class', b('wrapper'))
+        .attr('visibility', 'hidden')
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
+
+    selection
+        .append('path')
+        .attr('class', b('symbol'))
+        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth))
+        .attr('fill', (d) => d.fill)
+        .attr('stroke', (d) => d.stroke)
+        .attr('stroke-width', (d) => d.strokeWidth);
+
+    if (!dispatcher) return () => {};
+
+    function handleHover(data?: {data: unknown}[]) {
+        const hoveredDataSet = new Set(data?.map((d) => d.data) ?? []);
+        selection.attr('visibility', (d) => (hoveredDataSet.has(d.data) ? '' : 'hidden'));
+    }
+
+    dispatcher.on(`hover-shape.${namespace}`, handleHover);
+
+    return () => {
+        dispatcher.on(`hover-shape.${namespace}`, null);
+    };
 }
