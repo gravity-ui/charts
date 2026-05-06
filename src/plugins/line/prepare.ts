@@ -2,29 +2,29 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {
-    ChartSeriesOptions,
-    LineSeries,
-    LineSeriesData,
-    RectLegendSymbolOptions,
-} from '../../types';
 import {
     DASH_STYLE,
     DEFAULT_DATALABELS_STYLE,
     LineCap,
     LineJoin,
     seriesRangeSliderOptionsDefaults,
-} from '../constants';
-import type {DashStyle} from '../constants';
-import {getUniqId} from '../utils';
-
+} from '~core/constants';
+import type {DashStyle} from '~core/constants';
 import {
     DEFAULT_DATALABELS_PADDING,
     DEFAULT_HALO_OPTIONS,
     DEFAULT_LEGEND_SYMBOL_PADDING,
     DEFAULT_POINT_MARKER_OPTIONS,
-} from './constants';
-import type {PreparedLegend, PreparedLegendSymbol, PreparedLineSeries} from './types';
+} from '~core/series/constants';
+import type {PreparedLegend, PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
+import {getUniqId} from '~core/utils';
+
+import type {
+    ChartSeriesOptions,
+    LineSeries,
+    LineSeriesData,
+    RectLegendSymbolOptions,
+} from '../../types';
 
 export const DEFAULT_LEGEND_SYMBOL_SIZE = 16;
 export const DEFAULT_LINE_WIDTH = 1;

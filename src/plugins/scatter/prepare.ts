@@ -2,18 +2,18 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
-import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '../constants';
-import type {PointMarkerOptions} from '../types/chart/marker';
-import {getSymbolType, getUniqId} from '../utils';
-
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {
     DEFAULT_DATALABELS_PADDING,
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
-} from './constants';
-import type {PreparedLegend, PreparedScatterSeries} from './types';
-import {prepareLegendSymbol} from './utils';
+} from '~core/series/constants';
+import type {PreparedLegend, PreparedScatterSeries} from '~core/series/types';
+import {prepareLegendSymbol} from '~core/series/utils';
+import type {PointMarkerOptions} from '~core/types/chart/marker';
+import {getSymbolType, getUniqId} from '~core/utils';
+
+import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 
 function prepareMarker(
     series: ScatterSeries,

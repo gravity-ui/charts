@@ -1,3 +1,5 @@
+import './plugins';
+
 // Global mocks for jsdom environment.
 // Guarded by typeof checks so this file is safe to run in the `node` environment too.
 

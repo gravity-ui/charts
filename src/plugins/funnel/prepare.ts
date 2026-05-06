@@ -1,22 +1,23 @@
 import {scaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {ChartSeriesOptions, FunnelSeries} from '../../types';
-import {DEFAULT_DATALABELS_STYLE} from '../constants';
-import {getUniqId} from '../utils';
+import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import type {PreparedFunnelSeries, PreparedLegend, PreparedSeries} from '~core/series/types';
+import {prepareLegendSymbol} from '~core/series/utils';
+import {getUniqId} from '~core/utils';
 
-import type {PreparedFunnelSeries, PreparedLegend, PreparedSeries} from './types';
-import {prepareLegendSymbol} from './utils';
+import type {ChartSeriesOptions, FunnelSeries} from '../../types';
 
 type PrepareFunnelSeriesArgs = {
-    series: FunnelSeries;
+    series: FunnelSeries[];
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
     colors: string[];
 };
 
 export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
-    const {series, legend, colors} = args;
+    const {series: seriesList, legend, colors} = args;
+    const series = seriesList[0];
     const dataNames = series.data.map((d) => d.name);
     const colorScale = scaleOrdinal(dataNames, colors);
 
