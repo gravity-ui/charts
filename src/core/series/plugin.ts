@@ -4,13 +4,13 @@ import type {ChartSeries, ChartSeriesOptions} from '../../types';
 
 import type {PreparedLegend, PreparedSeries} from './types';
 
-export type PrepareSeriesArgs = {
+export interface PrepareSeriesArgs {
     series: ChartSeries[];
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
     colorScale: ScaleOrdinal<string, string>;
     colors: string[];
-};
+}
 
 export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     type: T['type'];
