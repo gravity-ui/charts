@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.8](https://github.com/gravity-ui/charts/compare/v1.51.7...v1.51.8) (2026-05-07)
+
+
+### Bug Fixes
+
+* move plugin registration from entry point to Chart component ([#607](https://github.com/gravity-ui/charts/issues/607)) ([098aa0e](https://github.com/gravity-ui/charts/commit/098aa0ee39270f6069b6b85c8a74782320df331b))
+
 ## [1.51.7](https://github.com/gravity-ui/charts/compare/v1.51.6...v1.51.7) (2026-05-07)
 
 
