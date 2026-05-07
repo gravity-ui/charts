@@ -325,6 +325,12 @@ export const prepareAreaData = async (args: {
                     }
                 }
 
+                markHiddenPointsOutOfYRange({
+                    points,
+                    yScale: seriesYScale,
+                    yAxisTop,
+                });
+
                 let markerData: MarkerData[] = [];
                 const hasPerPointNormalMarkers = s.data.some(
                     (d) => d.marker?.states?.normal?.enabled,
@@ -332,7 +338,7 @@ export const prepareAreaData = async (args: {
 
                 if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
                     markerData = points.reduce<MarkerData[]>((markersAcc, p) => {
-                        if (p.y === null) {
+                        if (p.y === null || p.hiddenInLine) {
                             return markersAcc;
                         }
                         const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
@@ -371,7 +377,7 @@ export const prepareAreaData = async (args: {
                 const hoverMarkers: MarkerItem[] = [];
                 if (!normalState.enabled && hoverState.enabled) {
                     for (const p of points) {
-                        if (p.y === null) continue;
+                        if (p.y === null || p.hiddenInLine) continue;
                         hoverMarkers.push({
                             cx: p.x,
                             cy: p.y,
@@ -395,12 +401,6 @@ export const prepareAreaData = async (args: {
                     }
                     return result;
                 }, []);
-
-                markHiddenPointsOutOfYRange({
-                    points,
-                    yScale: seriesYScale,
-                    yAxisTop,
-                });
 
                 seriesStackData.push({
                     annotations,

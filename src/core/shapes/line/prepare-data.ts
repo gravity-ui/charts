@@ -100,12 +100,21 @@ export const prepareLineData = async (args: {
             );
         }
 
+        markHiddenPointsOutOfYRange({
+            points,
+            yScale: seriesYScale,
+            yAxisTop,
+            axisMin: seriesYAxis.min,
+            axisMax: seriesYAxis.max,
+            getDataY: (p) => p.data.y,
+        });
+
         let markerData: MarkerData[] = [];
         const hasPerPointNormalMarkers = s.data.some((d) => d.marker?.states?.normal?.enabled);
 
         if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
             markerData = points.reduce<MarkerData[]>((result, p) => {
-                if (p.y === null || p.x === null) {
+                if (p.y === null || p.x === null || p.hiddenInLine) {
                     return result;
                 }
 
@@ -145,7 +154,7 @@ export const prepareLineData = async (args: {
         const hoverMarkers: MarkerItem[] = [];
         if (!normalState.enabled && hoverState.enabled) {
             for (const p of points) {
-                if (p.y === null || p.x === null) continue;
+                if (p.y === null || p.x === null || p.hiddenInLine) continue;
                 hoverMarkers.push({
                     cx: p.x,
                     cy: p.y,
@@ -169,15 +178,6 @@ export const prepareLineData = async (args: {
             }
             return result;
         }, []);
-
-        markHiddenPointsOutOfYRange({
-            points,
-            yScale: seriesYScale,
-            yAxisTop,
-            axisMin: seriesYAxis.min,
-            axisMax: seriesYAxis.max,
-            getDataY: (p) => p.data.y,
-        });
 
         const result: PreparedLineData = {
             annotations,
