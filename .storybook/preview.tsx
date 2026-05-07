@@ -5,8 +5,6 @@ import {Controls, Description, Primary, Subtitle, Title} from '@storybook/addon-
 import type {Preview} from '@storybook/react-vite';
 import {MINIMAL_VIEWPORTS} from 'storybook/viewport';
 
-import '../src/plugins';
-
 import {WithContext} from './decorators/withContext';
 import {WithLang} from './decorators/withLang';
 

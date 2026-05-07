@@ -6,6 +6,7 @@ import debounce from 'lodash/debounce';
 import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';
 
+import '../plugins';
 import type {ChartData} from '../types';
 
 import {ChartInner} from './ChartInner';
