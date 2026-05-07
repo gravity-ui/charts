@@ -22,8 +22,7 @@
   "sideEffects": [
     "*.css",
     "*.scss",
-    "**/plugins/index.*",
-    "./dist/*/index.js"
+    "**/plugins/index.*"
   ],
   "files": [
     "dist",
