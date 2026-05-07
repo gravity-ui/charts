@@ -33,6 +33,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const treemapPlugin: SeriesPlugin<TreemapSeries> = {
     type: 'treemap',
+    useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,

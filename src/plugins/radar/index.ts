@@ -33,6 +33,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const radarPlugin: SeriesPlugin<RadarSeries> = {
     type: 'radar',
+    useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     prepareShapeData,

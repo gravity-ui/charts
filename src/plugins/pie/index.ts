@@ -33,6 +33,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const piePlugin: SeriesPlugin<PieSeries> = {
     type: 'pie',
+    useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
     prepareShapeData,

@@ -5,6 +5,7 @@ import type {Dispatch} from 'd3-dispatch';
 
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
+import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
@@ -46,19 +47,19 @@ function IS_OUTSIDE_BOUNDS() {
 }
 
 function resolveClipPathId(args: {
-    seriesType: string;
+    plugin: SeriesPlugin;
     clipPathId: string;
     clipPathBySeriesType?: ClipPathBySeriesType;
     yAxis: PreparedYAxis[];
     zoomState?: Partial<ZoomState>;
 }) {
-    const {seriesType, clipPathId, clipPathBySeriesType, yAxis, zoomState} = args;
+    const {plugin, clipPathId, clipPathBySeriesType, yAxis, zoomState} = args;
 
-    if (seriesType === 'line') {
+    if (plugin.type === 'line') {
         return getSeriesClipPathId({clipPathId, yAxis, zoomState});
     }
 
-    const useClip = clipPathBySeriesType?.[seriesType] ?? true;
+    const useClip = clipPathBySeriesType?.[plugin.type] ?? plugin.useClipPath ?? true;
     return useClip ? clipPathId : undefined;
 }
 
@@ -120,7 +121,7 @@ export async function getShapes(args: Args) {
         }
 
         const resolvedClipPathId = resolveClipPathId({
-            seriesType,
+            plugin,
             clipPathId,
             clipPathBySeriesType,
             yAxis,

@@ -33,6 +33,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const funnelPlugin: SeriesPlugin<FunnelSeries> = {
     type: 'funnel',
+    useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareFunnelSeries({series: series as FunnelSeries[], seriesOptions, legend, colors}),
     prepareShapeData,

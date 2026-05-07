@@ -54,6 +54,7 @@ export interface RenderShapesArgs {
 
 export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     type: T['type'];
+    useClipPath?: boolean;
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
     prepareShapeData(
         args: PrepareShapeDataArgs,

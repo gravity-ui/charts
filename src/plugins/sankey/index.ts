@@ -33,6 +33,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
     type: 'sankey',
+    useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareSankeySeries({series: series as SankeySeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,
