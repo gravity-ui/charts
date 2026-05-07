@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.7](https://github.com/gravity-ui/charts/compare/v1.51.6...v1.51.7) (2026-05-07)
+
+
+### Bug Fixes
+
+* add entry points to sideEffects to prevent tree-shaking of plugin registration ([#605](https://github.com/gravity-ui/charts/issues/605)) ([53d0fee](https://github.com/gravity-ui/charts/commit/53d0fee1389ffafeb09364c7e9c4e102c53dd5c2))
+
 ## [1.51.6](https://github.com/gravity-ui/charts/compare/v1.51.5...v1.51.6) (2026-05-07)
 
 
