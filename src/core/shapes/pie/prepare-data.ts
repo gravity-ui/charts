@@ -93,7 +93,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 size: series.states.hover.halo.size,
             },
             markers: [],
-            hoverMarkers: [],
+            getHoverMarkers: () => [],
             annotations: [],
         };
 

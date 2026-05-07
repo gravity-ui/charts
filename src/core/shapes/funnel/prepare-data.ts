@@ -195,7 +195,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         htmlLabels,
         connectors,
         markers: [],
-        hoverMarkers: [],
+        getHoverMarkers: () => [],
         annotations: [],
     };
 

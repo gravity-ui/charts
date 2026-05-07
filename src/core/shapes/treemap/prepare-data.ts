@@ -230,5 +230,13 @@ export async function prepareTreemapData(args: {
         }
     }
 
-    return {labelData, leaves, series, htmlLabels, markers: [], hoverMarkers: [], annotations: []};
+    return {
+        labelData,
+        leaves,
+        series,
+        htmlLabels,
+        markers: [],
+        getHoverMarkers: () => [],
+        annotations: [],
+    };
 }

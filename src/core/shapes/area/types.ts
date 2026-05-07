@@ -30,7 +30,6 @@ export type PreparedAreaData = {
     points: PointData[];
     markerData: MarkerData[];
     markers: MarkerItem[];
-    hoverMarkers: MarkerItem[];
     color: string;
     opacity: number;
     width: number;

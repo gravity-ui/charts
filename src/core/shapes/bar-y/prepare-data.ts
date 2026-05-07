@@ -49,7 +49,7 @@ export async function prepareBarYData(args: {
             labels: [],
             htmlLabels: [],
             markers: [],
-            hoverMarkers: [],
+            getHoverMarkers: () => [],
             annotations: [],
         };
     }
@@ -269,7 +269,7 @@ export async function prepareBarYData(args: {
         labels,
         htmlLabels,
         markers: [],
-        hoverMarkers: [],
+        getHoverMarkers: () => [],
         annotations: [],
     };
 }

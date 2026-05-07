@@ -54,10 +54,6 @@ export const SeriesShapes = ({
     }, [boundsHeight, boundsWidth, dispatcher, plugin, preparedData, seriesOptions]);
 
     const markers = React.useMemo(() => preparedData.flatMap((d) => d.markers), [preparedData]);
-    const hoverMarkers = React.useMemo(
-        () => preparedData.flatMap((d) => d.hoverMarkers),
-        [preparedData],
-    );
     const annotations = React.useMemo(
         () => preparedData.flatMap((d) => d.annotations),
         [preparedData],
@@ -76,7 +72,7 @@ export const SeriesShapes = ({
             />
             <MarkerLayer markers={markers} />
             <HoverMarkerLayer
-                hoverMarkers={hoverMarkers}
+                preparedData={preparedData}
                 dispatcher={dispatcher}
                 namespace={namespace}
             />

@@ -317,7 +317,7 @@ export const prepareBarXData = async (args: {
                         svgLabels: [],
                         isLastStackItem,
                         markers: [],
-                        hoverMarkers: [],
+                        getHoverMarkers: () => [],
                     };
 
                     stackItems.push(barData);

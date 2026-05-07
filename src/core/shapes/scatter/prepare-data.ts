@@ -162,7 +162,7 @@ export async function prepareScatterData(args: {
         svgLabels: allSvgLabels,
         htmlLabels: allHtmlLabels,
         markers: [],
-        hoverMarkers: [],
+        getHoverMarkers: () => [],
         annotations: [],
     };
 }

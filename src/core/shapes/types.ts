@@ -20,6 +20,6 @@ export interface MarkerItem {
 export interface SeriesShapeData {
     htmlLabels: HtmlItem[];
     markers: MarkerItem[];
-    hoverMarkers: MarkerItem[];
     annotations: AnnotationAnchor[];
+    getHoverMarkers(hoveredData: unknown[]): MarkerItem[];
 }

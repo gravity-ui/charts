@@ -43,7 +43,7 @@ export async function prepareRadarData(args: Args): Promise<PreparedRadarData[]>
         grid: [],
         cursor: preparedSeries[0].cursor,
         markers: [],
-        hoverMarkers: [],
+        getHoverMarkers: () => [],
         annotations: [],
     };
 

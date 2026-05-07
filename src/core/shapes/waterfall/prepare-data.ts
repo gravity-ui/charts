@@ -198,7 +198,7 @@ export const prepareWaterfallData = async (args: {
             subTotal: totalValue,
             htmlLabels: [],
             markers: [],
-            hoverMarkers: [],
+            getHoverMarkers: () => [],
             annotations: [],
         };
 

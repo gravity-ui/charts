@@ -26,7 +26,6 @@ export type PreparedLineData = {
     points: PointData[];
     markerData: MarkerData[];
     markers: MarkerItem[];
-    hoverMarkers: MarkerItem[];
     series: PreparedLineSeries;
     hovered: boolean;
     active: boolean;
