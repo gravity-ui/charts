@@ -6,6 +6,8 @@ import type {SeriesPlugin} from '~core/series/plugin';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
+import {block} from '../../utils';
+
 import {AnnotationLayer} from './AnnotationLayer';
 import {HoverMarkerLayer} from './HoverMarkerLayer';
 import {HtmlLayer} from './HtmlLayer';
@@ -34,6 +36,7 @@ export const SeriesShapes = ({
     preparedData,
     seriesOptions,
 }: Props) => {
+    const b = block(plugin.type);
     const ref = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -66,7 +69,11 @@ export const SeriesShapes = ({
 
     return (
         <React.Fragment>
-            <g ref={ref} clipPath={clipPathId ? `url(#${clipPathId})` : undefined} />
+            <g
+                ref={ref}
+                className={b()}
+                clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
+            />
             <MarkerLayer markers={markers} />
             <HoverMarkerLayer
                 hoverMarkers={hoverMarkers}
