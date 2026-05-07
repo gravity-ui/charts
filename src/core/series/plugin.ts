@@ -53,12 +53,21 @@ export interface RenderShapesArgs {
 }
 
 export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
+    /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
+    /**
+     * Whether the shape `<g>` element should be clipped to the chart bounds.
+     * Defaults to `true`. Set to `false` for series that render outside the plot area (e.g. pie, radar, treemap).
+     */
     useClipPath?: boolean;
+    /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
+    /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
     ): PrepareShapeDataResult | Promise<PrepareShapeDataResult>;
+    /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
+    /** Returns tooltip data for a given pointer position and prepared series. */
     getTooltipData: GetTooltipDataFn;
 }
