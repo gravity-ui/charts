@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.51.6](https://github.com/gravity-ui/charts/compare/v1.51.5...v1.51.6) (2026-05-07)
+
+
+### Bug Fixes
+
+* fix storybook ([#603](https://github.com/gravity-ui/charts/issues/603)) ([1107337](https://github.com/gravity-ui/charts/commit/110733773f316cd70fea674506ca08f0cd977c61))
+
+## [1.51.5](https://github.com/gravity-ui/charts/compare/v1.51.4...v1.51.5) (2026-05-07)
+
+
+### Bug Fixes
+
+* bump version ([bb658a9](https://github.com/gravity-ui/charts/commit/bb658a98afa98e52e0933a4bc7b31ec656d93fa2))
+
 ## [1.51.4](https://github.com/gravity-ui/charts/compare/v1.51.3...v1.51.4) (2026-05-06)
 
 
