@@ -7,6 +7,7 @@ import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
 import {getLegendComponents, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
+import type {TooltipItemData} from '~core/shapes/types';
 import {
     getChartDimensions,
     getEffectiveXRange,
@@ -37,7 +38,6 @@ import type {
     PreparedXAxis,
     PreparedYAxis,
     RangeSliderState,
-    ShapeData,
     ZoomState,
 } from '../../hooks';
 import type {PreparedChart, PreparedTitle} from '../../hooks/types';
@@ -132,7 +132,7 @@ type ChartState = {
     preparedSeriesOptions: PreparedSeriesOptions;
     preparedSplit: PreparedSplit;
     shapes: React.ReactElement[];
-    shapesData: ShapeData[];
+    shapesData: TooltipItemData[];
     xAxis: PreparedXAxis | null;
     xScale: ChartScale | undefined;
     yAxis: PreparedYAxis[];

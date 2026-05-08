@@ -1,21 +1,21 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {ShapeData} from '../../hooks/useShapes';
 import type {TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
+import type {TooltipItemData} from '../shapes/types';
 
 import {getClosestPointsByXValue} from './tooltip-helpers';
 import type {ShapePoint} from './tooltip-helpers';
 
 type GetClosestPointsArgs = {
     position: [number, number];
-    shapesData: ShapeData[];
+    shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
 };
 
-function getSeriesType(shapeData: ShapeData) {
+function getSeriesType(shapeData: TooltipItemData) {
     return (
         get(shapeData, 'series.type') ||
         get(shapeData, 'point.series.type') ||

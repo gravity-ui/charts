@@ -8,7 +8,7 @@ import type {ChartScale} from '~core/scales/types';
 import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {TooltipItemData} from '~core/shapes/types';
 import {getSeriesClipPathId} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
 import type {ZoomState} from '~core/zoom/types';
@@ -20,7 +20,7 @@ import {SeriesShapes} from './SeriesShapes';
 
 import './styles.scss';
 
-export type {SeriesShapeData as ShapeData};
+export type {TooltipItemData};
 export type ClipPathBySeriesType = Partial<Record<string, boolean>>;
 
 type Args = {
@@ -91,7 +91,7 @@ export async function getShapes(args: Args) {
         return item.type;
     });
 
-    const shapesData: SeriesShapeData[] = [];
+    const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
     const layers: ShapeDataWithLabels[] = [];
 
@@ -170,7 +170,7 @@ export const useShapes = (args: Args) => {
     } = args;
 
     const [shapesElements, setShapesElements] = React.useState<React.ReactElement[]>([]);
-    const [shapesElementsData, setShapesElementsData] = React.useState<SeriesShapeData[]>([]);
+    const [shapesElementsData, setShapesElementsData] = React.useState<TooltipItemData[]>([]);
     const shapesReadyRef = React.useRef(false);
 
     const countedRef = React.useRef(0);

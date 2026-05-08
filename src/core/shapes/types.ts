@@ -23,3 +23,9 @@ export interface SeriesShapeData {
     annotations: AnnotationAnchor[];
     getHoverMarkers(hoveredData: unknown[]): MarkerItem[];
 }
+
+export interface TooltipItemData {
+    type?: string;
+    series?: {type?: string; tooltip?: {enabled?: boolean}};
+    point?: {series?: {type?: string}};
+}

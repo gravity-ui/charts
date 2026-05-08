@@ -1,16 +1,11 @@
 import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
-import type {
-    ChartSeries,
-    ChartSeriesOptions,
-    MeaningfulAny,
-    ShapeDataWithLabels,
-} from '../../types';
+import type {ChartSeries, ChartSeriesOptions, ShapeDataWithLabels} from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
-import type {SeriesShapeData} from '../shapes/types';
+import type {SeriesShapeData, TooltipItemData} from '../shapes/types';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from './types';
@@ -40,7 +35,7 @@ export interface PrepareShapeDataArgs {
 
 export interface PrepareShapeDataResult {
     renderData: SeriesShapeData[];
-    tooltipItems: MeaningfulAny[];
+    tooltipItems: TooltipItemData[];
 }
 
 export interface RenderShapesArgs {

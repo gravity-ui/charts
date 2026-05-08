@@ -4,12 +4,13 @@ import type {Dispatch} from 'd3-dispatch';
 import get from 'lodash/get';
 
 import type {ChartScale} from '~core/scales/types';
+import type {TooltipItemData} from '~core/shapes/types';
 import {EventType} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 import {calculateNumericProperty} from '~core/utils/math';
 
-import type {PreparedXAxis, PreparedYAxis, ShapeData} from '../../hooks';
+import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartTooltipRendererArgs, ChartYAxis} from '../../types';
 
 type Props = {
@@ -19,7 +20,7 @@ type Props = {
     boundsWidth: number;
     defaultState?: {hoveredPosition?: {x: number | string; y: number | string}};
     dispatcher: Dispatch<object>;
-    shapesData: ShapeData[];
+    shapesData: TooltipItemData[];
     shapesReady: boolean;
     svgRef: React.RefObject<SVGSVGElement | null>;
     xAxis: PreparedXAxis | null;
