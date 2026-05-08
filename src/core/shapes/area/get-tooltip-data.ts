@@ -12,7 +12,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
 
     const xLookupPoints = data.reduce<ShapePoint[]>((acc, d) => {
         for (const p of d.points) {
-            if (p.y === null || p.hiddenInLine) {
+            if (p.y === null || p.hiddenInLine || p.excluded) {
                 continue;
             }
             acc.push({

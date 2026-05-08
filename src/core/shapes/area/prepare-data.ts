@@ -208,6 +208,12 @@ export const prepareAreaData = async (args: {
                         continue;
                     }
 
+                    const isExcluded = yDataValue === null;
+
+                    if (isExcluded && s.nullMode === 'zero') {
+                        yDataValue = 0;
+                    }
+
                     if (yDataValue && isPercentStacking) {
                         yDataValue = Number(yDataValue) * ratio[x];
                     }
@@ -239,6 +245,7 @@ export const prepareAreaData = async (args: {
                                 data: d,
                                 series: s,
                                 annotation: pointAnnotation,
+                                excluded: isExcluded,
                             };
 
                             points.push(point);
@@ -250,6 +257,7 @@ export const prepareAreaData = async (args: {
                                     y: yAxisTop + yValue - nextSectionStackHeight,
                                     data: d,
                                     series: s,
+                                    excluded: isExcluded,
                                 };
                                 points.push(point2);
 
@@ -288,6 +296,7 @@ export const prepareAreaData = async (args: {
                                 y: yAxisTop + yValue + prevSectionStackHeight,
                                 data: d,
                                 series: s,
+                                excluded: isExcluded,
                             });
 
                             if (prevSectionStackHeight !== nextSectionStackHeight) {
@@ -297,6 +306,7 @@ export const prepareAreaData = async (args: {
                                     y: yAxisTop + yValue + nextSectionStackHeight,
                                     data: d,
                                     series: s,
+                                    excluded: isExcluded,
                                 });
                             }
 
@@ -322,6 +332,7 @@ export const prepareAreaData = async (args: {
                             y: null,
                             data: d,
                             series: s,
+                            excluded: isExcluded,
                         });
                     }
                 }
@@ -340,7 +351,7 @@ export const prepareAreaData = async (args: {
                 const markers =
                     s.marker.states.normal.enabled || hasPerPointNormalMarkers
                         ? points.reduce<MarkerItem[]>((acc, p) => {
-                              if (p.y === null || p.hiddenInLine) {
+                              if (p.y === null || p.hiddenInLine || p.excluded) {
                                   return acc;
                               }
                               const pointNormalEnabled =
@@ -376,7 +387,10 @@ export const prepareAreaData = async (args: {
                     annotations,
                     points,
                     markers,
-                    getHoverMarkers: buildHoverMarkerGetter(points, s),
+                    getHoverMarkers: buildHoverMarkerGetter(
+                        points.filter((p) => !p.excluded),
+                        s,
+                    ),
                     svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,
@@ -397,7 +411,7 @@ export const prepareAreaData = async (args: {
                 if (item.series.dataLabels.enabled && !isRangeSlider) {
                     const labelsData = await preparePointDataLabels({
                         series: item.series,
-                        points: item.points,
+                        points: item.points.filter((p) => !p.excluded),
                         xMax,
                         yAxisTop: itemYAxisTop,
                         isOutsideBounds,
