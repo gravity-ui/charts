@@ -9,30 +9,16 @@ import type {LabelData, TooltipDataChunkArea} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels} from '../../utils';
-import {renderAnnotations} from '../annotation';
 import {renderDataLabels} from '../data-labels';
-import {
-    getMarkerHaloVisibility,
-    getMarkerVisibility,
-    renderMarker,
-    selectMarkerHalo,
-    selectMarkerSymbol,
-    setMarker,
-} from '../marker';
 import {setActiveState} from '../utils';
 
-import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
+import type {PointData, PreparedAreaData} from './types';
 
 const b = block('area');
 
 export function renderArea(
     elements: {
         plot: SVGGElement;
-        markers: SVGGElement;
-        hoverMarkers: SVGGElement;
-        annotations: SVGGElement;
-        boundsWidth: number;
-        boundsHeight: number;
     },
     preparedData: PreparedAreaData[],
     seriesOptions: PreparedSeriesOptions,
@@ -40,9 +26,6 @@ export function renderArea(
     dispatcher?: Dispatch<object>,
 ): () => void {
     const plotSvgElement = select(elements.plot);
-    const markersSvgElement = select(elements.markers);
-    const hoverMarkersSvgElement = select(elements.hoverMarkers);
-    const annotationsSvgElement = select(elements.annotations);
     const hoverOptions = get(seriesOptions, 'area.states.hover');
     const inactiveOptions = get(seriesOptions, 'area.states.inactive');
 
@@ -52,7 +35,6 @@ export function renderArea(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
-    markersSvgElement.selectAll('*').remove();
 
     const shapeSelection = plotSvgElement
         .selectAll('shape')
@@ -97,26 +79,11 @@ export function renderArea(
         className: b('label'),
     });
 
-    const markers = preparedData.reduce<MarkerData[]>((acc, d) => acc.concat(d.markers), []);
-    const markerSelection = markersSvgElement
-        .selectAll('marker')
-        .data(markers)
-        .join('g')
-        .call(renderMarker);
-
-    renderAnnotations({
-        anchors: preparedData.flatMap((d) => d.annotations),
-        container: annotationsSvgElement,
-        plotHeight: elements.boundsHeight,
-        plotWidth: elements.boundsWidth,
-    });
-
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;
 
     function handleShapeHover(data?: TooltipDataChunkArea[]) {
         const selected = data?.filter((d) => d.series.type === 'area') || [];
-        const selectedDataItems = selected.map((d) => d.data);
         const selectedSeriesIds = selected.map((d) => d.series?.id);
 
         shapeSelection.datum((d, index, list) => {
@@ -161,80 +128,6 @@ export function renderArea(
                 datum: d,
             });
         });
-
-        markerSelection.datum((d, index, list) => {
-            const elementSelection = select<BaseType, MarkerData>(list[index]);
-
-            const hovered = Boolean(hoverEnabled && selectedDataItems.includes(d.point.data));
-            if (d.hovered !== hovered) {
-                d.hovered = hovered;
-                elementSelection.attr('visibility', getMarkerVisibility(d));
-                selectMarkerHalo(elementSelection).attr('visibility', getMarkerHaloVisibility);
-                selectMarkerSymbol(elementSelection).call(setMarker, hovered ? 'hover' : 'normal');
-            }
-
-            if (d.point.series.marker.states.normal.enabled) {
-                const isActive = Boolean(
-                    !inactiveEnabled ||
-                    !selectedSeriesIds.length ||
-                    selectedSeriesIds.includes(d.point.series.id),
-                );
-                setActiveState<MarkerData>({
-                    element: list[index],
-                    state: inactiveOptions,
-                    active: isActive,
-                    datum: d,
-                });
-            }
-            return d;
-        });
-
-        hoverMarkersSvgElement.selectAll('*').remove();
-
-        if (hoverEnabled && selected.length > 0) {
-            const hoverOnlyMarkers: MarkerData[] = [];
-
-            for (const chunk of selected) {
-                const seriesData = preparedData.find((pd) => pd.id === chunk.series.id);
-
-                if (!seriesData) {
-                    continue;
-                }
-
-                const {series} = seriesData;
-
-                if (series.marker.states.normal.enabled || !series.marker.states.hover.enabled) {
-                    continue;
-                }
-
-                const point = seriesData.points.find((p) => p.data === chunk.data);
-
-                if (!point || point.y === null) {
-                    continue;
-                }
-
-                hoverOnlyMarkers.push({
-                    point: point as MarkerPointData,
-                    active: true,
-                    hovered: true,
-                    clipped: false,
-                });
-            }
-
-            if (hoverOnlyMarkers.length > 0) {
-                hoverMarkersSvgElement
-                    .selectAll('g')
-                    .data(hoverOnlyMarkers)
-                    .join('g')
-                    .call(renderMarker)
-                    .each((_d, i, nodes) => {
-                        selectMarkerSymbol(select<BaseType, MarkerData>(nodes[i])).call(
-                            setMarker,
-                            'hover',
-                        );
-                    });
-            }
-        }
     }
 
     dispatcher?.on('hover-shape.area', handleShapeHover);

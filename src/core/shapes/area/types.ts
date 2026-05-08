@@ -1,6 +1,6 @@
 import type {AreaSeriesData, LabelData} from '../../../types';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedAreaSeries} from '../../series/types';
-import type {SeriesShapeData} from '../types';
+import type {MarkerItem, SeriesShapeData} from '../types';
 
 export type PointData = {
     annotation?: PreparedAnnotation;
@@ -17,18 +17,11 @@ export type MarkerPointData = PointData & {
     y: number;
 };
 
-export type MarkerData = {
-    point: MarkerPointData;
-    active: boolean;
-    hovered: boolean;
-    clipped: boolean;
-};
-
 export type PreparedAreaData = {
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
-    markers: MarkerData[];
+    markers: MarkerItem[];
     color: string;
     opacity: number;
     width: number;

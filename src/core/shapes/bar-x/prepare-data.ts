@@ -304,6 +304,7 @@ export const prepareBarXData = async (args: {
                                       optionsPopup: seriesOptions['bar-x']?.annotation?.popup,
                                   })
                                 : undefined,
+                        annotations: [],
                         x,
                         y: barPositionY,
                         width: rectWidth,
@@ -315,6 +316,8 @@ export const prepareBarXData = async (args: {
                         htmlLabels: [],
                         svgLabels: [],
                         isLastStackItem,
+                        markers: [],
+                        getHoverMarkers: () => [],
                     };
 
                     stackItems.push(barData);
@@ -343,6 +346,18 @@ export const prepareBarXData = async (args: {
 
                 result.push(...stackItems);
             }
+        }
+    }
+
+    for (const barData of result) {
+        if (barData.annotation) {
+            barData.annotations = [
+                {
+                    annotation: barData.annotation,
+                    x: barData.x + barData.width / 2,
+                    y: barData.y,
+                },
+            ];
         }
     }
 

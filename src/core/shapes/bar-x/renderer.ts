@@ -4,9 +4,8 @@ import {select} from 'd3-selection';
 import get from 'lodash/get';
 
 import {block} from '../../../utils';
-import type {AnnotationAnchor, PreparedSeriesOptions} from '../../series/types';
+import type {PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels} from '../../utils';
-import {renderAnnotations} from '../annotation';
 import {renderDataLabels} from '../data-labels';
 import {getRectPath} from '../utils';
 
@@ -17,7 +16,6 @@ const b = block('bar-x');
 export function renderBarX(
     elements: {
         plot: SVGGElement;
-        annotations: SVGGElement;
         boundsWidth: number;
         boundsHeight: number;
     },
@@ -27,7 +25,6 @@ export function renderBarX(
     dispatcher?: Dispatch<object>,
 ): () => void {
     const svgElement = select(elements.plot);
-    const annotationsSvgElement = select(elements.annotations);
     const hoverOptions = get(seriesOptions, 'bar-x.states.hover');
     const inactiveOptions = get(seriesOptions, 'bar-x.states.inactive');
     svgElement.selectAll('*').remove();
@@ -64,23 +61,6 @@ export function renderBarX(
         container: svgElement,
         data: dataLabels,
         className: b('label'),
-    });
-
-    const annotationAnchors: AnnotationAnchor[] = [];
-    for (const d of preparedData) {
-        if (d.annotation) {
-            annotationAnchors.push({
-                annotation: d.annotation,
-                x: d.x + d.width / 2,
-                y: d.y,
-            });
-        }
-    }
-    renderAnnotations({
-        anchors: annotationAnchors,
-        container: annotationsSvgElement,
-        plotHeight: elements.boundsHeight,
-        plotWidth: elements.boundsWidth,
     });
 
     function handleShapeHover(data?: PreparedBarXData[]) {

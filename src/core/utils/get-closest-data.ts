@@ -1,49 +1,21 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {ShapeData} from '../../hooks/useShapes';
 import type {TooltipDataChunk} from '../../types';
-import {getTooltipData as areaGetTooltipData} from '../shapes/area/get-tooltip-data';
-import {getTooltipData as barXGetTooltipData} from '../shapes/bar-x/get-tooltip-data';
-import {getTooltipData as barYGetTooltipData} from '../shapes/bar-y/get-tooltip-data';
-import {getTooltipData as funnelGetTooltipData} from '../shapes/funnel/get-tooltip-data';
-import {getTooltipData as heatmapGetTooltipData} from '../shapes/heatmap/get-tooltip-data';
-import {getTooltipData as lineGetTooltipData} from '../shapes/line/get-tooltip-data';
-import {getTooltipData as pieGetTooltipData} from '../shapes/pie/get-tooltip-data';
-import {getTooltipData as radarGetTooltipData} from '../shapes/radar/get-tooltip-data';
-import {getTooltipData as sankeyGetTooltipData} from '../shapes/sankey/get-tooltip-data';
-import {getTooltipData as scatterGetTooltipData} from '../shapes/scatter/get-tooltip-data';
-import {getTooltipData as treemapGetTooltipData} from '../shapes/treemap/get-tooltip-data';
-import {getTooltipData as waterfallGetTooltipData} from '../shapes/waterfall/get-tooltip-data';
-import {getTooltipData as xRangeGetTooltipData} from '../shapes/x-range/get-tooltip-data';
+import {getSeriesPlugin} from '../series/seriesRegistry';
+import type {TooltipItemData} from '../shapes/types';
 
 import {getClosestPointsByXValue} from './tooltip-helpers';
-import type {GetTooltipDataFn, ShapePoint} from './tooltip-helpers';
+import type {ShapePoint} from './tooltip-helpers';
 
 type GetClosestPointsArgs = {
     position: [number, number];
-    shapesData: ShapeData[];
+    shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
 };
 
-const tooltipFnByType: Record<string, GetTooltipDataFn> = {
-    line: lineGetTooltipData,
-    area: areaGetTooltipData,
-    'bar-x': barXGetTooltipData,
-    'bar-y': barYGetTooltipData,
-    waterfall: waterfallGetTooltipData,
-    scatter: scatterGetTooltipData,
-    pie: pieGetTooltipData,
-    treemap: treemapGetTooltipData,
-    heatmap: heatmapGetTooltipData,
-    sankey: sankeyGetTooltipData,
-    radar: radarGetTooltipData,
-    funnel: funnelGetTooltipData,
-    'x-range': xRangeGetTooltipData,
-};
-
-function getSeriesType(shapeData: ShapeData) {
+function getSeriesType(shapeData: TooltipItemData) {
     return (
         get(shapeData, 'series.type') ||
         get(shapeData, 'point.series.type') ||
@@ -62,12 +34,14 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const groups = groupBy(shapesData, getSeriesType);
 
     for (const [seriesType, list] of Object.entries(groups)) {
-        const fn = tooltipFnByType[seriesType];
-        if (!fn) {
+        let plugin;
+        try {
+            plugin = getSeriesPlugin(seriesType);
+        } catch {
             continue;
         }
 
-        const {chunks, xLookupPoints: seriesXLookupPoints} = fn({
+        const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.getTooltipData({
             data: list,
             position,
             boundsWidth,

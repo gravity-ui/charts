@@ -6,6 +6,8 @@ import {block} from '../../utils';
 import {SymbolType} from '../constants';
 import {getSymbol} from '../utils';
 
+import type {MarkerItem} from './types';
+
 const b = block('marker');
 const haloClassName = b('halo');
 const symbolClassName = b('symbol');
@@ -134,4 +136,108 @@ export function selectMarkerHalo<T>(parentSelection: Selection<BaseType, T, null
 
 export function selectMarkerSymbol<T>(parentSelection: Selection<BaseType, T, null, undefined>) {
     return parentSelection.select(`.${symbolClassName}`);
+}
+
+export function renderMarkers(
+    container: Selection<SVGGElement, unknown, null, undefined>,
+    markers: MarkerItem[],
+): void {
+    container.selectAll('*').remove();
+
+    const selection = container
+        .selectAll<SVGGElement, MarkerItem>('g')
+        .data(markers)
+        .join('g')
+        .attr('class', b('wrapper'))
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
+
+    selection
+        .append('path')
+        .attr('class', b('symbol'))
+        .attr('d', (d) =>
+            d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth),
+        )
+        .attr('fill', (d) => d.fill)
+        .attr('stroke', (d) => d.stroke)
+        .attr('stroke-width', (d) => d.strokeWidth);
+}
+
+export function renderHoverMarkers(
+    container: Selection<SVGGElement, unknown, null, undefined>,
+    hoverMarkers: MarkerItem[],
+): void {
+    container.selectAll('*').remove();
+
+    if (hoverMarkers.length === 0) return;
+
+    container
+        .selectAll<SVGGElement, MarkerItem>('g')
+        .data(hoverMarkers)
+        .join('g')
+        .attr('class', b('wrapper'))
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`)
+        .append('path')
+        .attr('class', b('symbol'))
+        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth))
+        .attr('fill', (d) => d.fill)
+        .attr('stroke', (d) => d.stroke)
+        .attr('stroke-width', (d) => d.strokeWidth);
+}
+
+interface HoverMarkerPoint {
+    data: unknown;
+    x: number | null;
+    y: number | null;
+    hiddenInLine?: boolean;
+    color?: string;
+}
+
+interface HoverMarkerSeries {
+    id: string;
+    color: string;
+    marker: {
+        states: {
+            normal: {enabled: boolean; symbol: `${SymbolType}`};
+            hover: {enabled: boolean; radius: number; borderColor: string; borderWidth: number};
+        };
+    };
+}
+
+export function buildHoverMarkerGetter(
+    points: HoverMarkerPoint[],
+    series: HoverMarkerSeries,
+): (hoveredData: unknown[]) => MarkerItem[] {
+    const {normal: normalState, hover: hoverState} = series.marker.states;
+
+    if (normalState.enabled || !hoverState.enabled) return () => [];
+
+    const pointByData = new Map<unknown, HoverMarkerPoint>();
+    for (const p of points) {
+        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
+            pointByData.set(p.data, p);
+        }
+    }
+
+    return (hoveredData: unknown[]) => {
+        const items: MarkerItem[] = [];
+        for (const rawData of hoveredData) {
+            const point = pointByData.get(rawData);
+            if (!point || point.x === null || point.y === null) continue;
+            items.push({
+                cx: point.x,
+                cy: point.y,
+                radius: hoverState.radius,
+                symbolType: normalState.symbol,
+                fill: point.color ?? series.color,
+                stroke: hoverState.borderColor,
+                strokeWidth: hoverState.borderWidth,
+                opacity: 1,
+                active: true,
+                clipped: false,
+                series: {id: series.id},
+                data: rawData,
+            });
+        }
+        return items;
+    };
 }

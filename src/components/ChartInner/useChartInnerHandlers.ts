@@ -6,11 +6,12 @@ import get from 'lodash/get';
 import throttle from 'lodash/throttle';
 
 import type {ChartScale} from '~core/scales/types';
+import type {TooltipItemData} from '~core/shapes/types';
 import {EventType} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 
-import type {PreparedXAxis, PreparedYAxis, ShapeData} from '../../hooks';
+import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
 
 import type {useChartInnerState} from './useChartInnerState';
@@ -23,7 +24,7 @@ type Props = {
     boundsOffsetTop: number;
     boundsWidth: number;
     dispatcher: Dispatch<object>;
-    shapesData: ShapeData[];
+    shapesData: TooltipItemData[];
     svgContainer: SVGSVGElement | null;
     togglePinTooltip: ChartInnerState['togglePinTooltip'];
     tooltipPinned: boolean;

@@ -92,6 +92,9 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 opacity: series.states.hover.halo.opacity,
                 size: series.states.hover.halo.size,
             },
+            markers: [],
+            getHoverMarkers: () => [],
+            annotations: [],
         };
 
         const labelMaxHeight = max(Object.values(labels).map((l) => l.size?.height ?? 0)) ?? 0;

@@ -48,6 +48,9 @@ export async function prepareBarYData(args: {
             shapes: [],
             labels: [],
             htmlLabels: [],
+            markers: [],
+            getHoverMarkers: () => [],
+            annotations: [],
         };
     }
 
@@ -265,5 +268,8 @@ export async function prepareBarYData(args: {
         shapes: result,
         labels,
         htmlLabels,
+        markers: [],
+        getHoverMarkers: () => [],
+        annotations: [],
     };
 }

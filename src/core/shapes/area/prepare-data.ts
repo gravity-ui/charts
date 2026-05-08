@@ -9,10 +9,12 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
+import {buildHoverMarkerGetter} from '../../shapes/marker';
+import type {MarkerItem} from '../../shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
 import {getDataCategoryValue, preparePointDataLabels} from '../../utils';
 
-import type {MarkerData, MarkerPointData, PointData, PreparedAreaData} from './types';
+import type {PointData, PreparedAreaData} from './types';
 
 function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: ChartScale) {
     const categories = xAxis.categories || [];
@@ -324,30 +326,44 @@ export const prepareAreaData = async (args: {
                     }
                 }
 
-                let markers: MarkerData[] = [];
+                markHiddenPointsOutOfYRange({
+                    points,
+                    yScale: seriesYScale,
+                    yAxisTop,
+                });
+
+                const normalState = s.marker.states.normal;
                 const hasPerPointNormalMarkers = s.data.some(
                     (d) => d.marker?.states?.normal?.enabled,
                 );
 
-                if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
-                    markers = points.reduce<MarkerData[]>((markersAcc, p) => {
-                        if (p.y === null) {
-                            return markersAcc;
-                        }
-                        const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
-
-                        if (s.marker.states.normal.enabled || pointNormalEnabled) {
-                            markersAcc.push({
-                                point: p as MarkerPointData,
-                                active: true,
-                                hovered: false,
-                                clipped: isOutsideBounds(p.x, p.y),
-                            });
-                        }
-
-                        return markersAcc;
-                    }, []);
-                }
+                const markers =
+                    s.marker.states.normal.enabled || hasPerPointNormalMarkers
+                        ? points.reduce<MarkerItem[]>((acc, p) => {
+                              if (p.y === null || p.hiddenInLine) {
+                                  return acc;
+                              }
+                              const pointNormalEnabled =
+                                  p.data.marker?.states?.normal?.enabled ?? false;
+                              if (s.marker.states.normal.enabled || pointNormalEnabled) {
+                                  acc.push({
+                                      cx: p.x,
+                                      cy: p.y,
+                                      radius: normalState.radius,
+                                      symbolType: normalState.symbol,
+                                      fill: p.color ?? s.color,
+                                      stroke: normalState.borderColor,
+                                      strokeWidth: normalState.borderWidth,
+                                      opacity: 1,
+                                      active: true,
+                                      clipped: isOutsideBounds(p.x, p.y),
+                                      series: {id: s.id},
+                                      data: p.data,
+                                  });
+                              }
+                              return acc;
+                          }, [])
+                        : [];
 
                 const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
                     if (p.annotation && p.y !== null) {
@@ -356,16 +372,11 @@ export const prepareAreaData = async (args: {
                     return result;
                 }, []);
 
-                markHiddenPointsOutOfYRange({
-                    points,
-                    yScale: seriesYScale,
-                    yAxisTop,
-                });
-
                 seriesStackData.push({
                     annotations,
                     points,
                     markers,
+                    getHoverMarkers: buildHoverMarkerGetter(points, s),
                     svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,

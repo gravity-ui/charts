@@ -1,7 +1,7 @@
 import type {LabelData, LineSeriesData, LineSeriesLineBaseStyle} from '../../../types';
 import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '../../series/types';
-import type {SeriesShapeData} from '../types';
+import type {MarkerItem, SeriesShapeData} from '../types';
 
 export type PointData = {
     annotation?: PreparedAnnotation;
@@ -13,18 +13,12 @@ export type PointData = {
     y: number | null;
 };
 export type MarkerPointData = PointData & {y: number; x: number};
-export type MarkerData = {
-    point: MarkerPointData;
-    active: boolean;
-    hovered: boolean;
-    clipped: boolean;
-};
 
 export type PreparedLineData = {
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
-    markers: MarkerData[];
+    markers: MarkerItem[];
     series: PreparedLineSeries;
     hovered: boolean;
     active: boolean;
