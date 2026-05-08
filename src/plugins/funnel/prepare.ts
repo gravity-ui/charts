@@ -2,6 +2,7 @@ import {scaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PreparedFunnelSeries, PreparedLegend, PreparedSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
@@ -42,6 +43,9 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                 html: get(series, 'dataLabels.html', false),
                 format: series.dataLabels?.format,
                 align: series.dataLabels?.align ?? 'center',
+                inside: series.dataLabels?.inside ?? false,
+                reserveSpace: series.dataLabels?.reserveSpace ?? true,
+                padding: series.dataLabels?.padding ?? DEFAULT_DATALABELS_PADDING,
             },
             visible: true,
             name: dataItem.name,
