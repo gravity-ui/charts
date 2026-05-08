@@ -103,8 +103,15 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
 
         const {inside, align, padding} = s.dataLabels;
         if (!inside) {
-            if (align === 'left') rawLeftOffset = Math.max(rawLeftOffset, width + padding);
-            else if (align === 'right') rawRightOffset = Math.max(rawRightOffset, width + padding);
+            // Minimum offset so this label stays within the plot boundary.
+            // Accounts for the fact that narrower segments are already indented from the edge.
+            const ratio = s.data.value / maxValue;
+            const minOffset = (2 * (width + padding) - boundsWidth * (1 - ratio)) / (1 + ratio);
+            if (align === 'left') {
+                rawLeftOffset = Math.max(rawLeftOffset, minOffset);
+            } else if (align === 'right') {
+                rawRightOffset = Math.max(rawRightOffset, minOffset);
+            }
         }
     }
 
