@@ -170,8 +170,8 @@ export const prepareAreaData = async (args: {
                         yAxis: seriesYAxis,
                         yScale: seriesYScale,
                     }) ?? 0;
-                const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
-                    const key = String(
+                const dataKey = (d: AreaSeriesData) =>
+                    String(
                         xAxis.type === 'category'
                             ? getDataCategoryValue({
                                   axisDirection: 'x',
@@ -180,8 +180,14 @@ export const prepareAreaData = async (args: {
                               })
                             : d.x,
                     );
-                    return m.set(key, d);
-                }, new Map());
+                const seriesData = s.data.reduce<Map<string, AreaSeriesData>>(
+                    (m, d) => m.set(dataKey(d), d),
+                    new Map(),
+                );
+                const originalData = s.originalData.reduce<Map<string, AreaSeriesData>>(
+                    (m, d) => m.set(dataKey(d), d),
+                    new Map(),
+                );
                 const annotationOpts = seriesOptions?.area?.annotation;
                 const points: PointData[] = [];
 
@@ -208,11 +214,8 @@ export const prepareAreaData = async (args: {
                         continue;
                     }
 
-                    const isExcluded = yDataValue === null;
-
-                    if (isExcluded && s.nullMode === 'zero') {
-                        yDataValue = 0;
-                    }
+                    const isExcluded =
+                        s.nullMode === 'zero' && (originalData.get(x)?.y ?? null) === null;
 
                     if (yDataValue && isPercentStacking) {
                         yDataValue = Number(yDataValue) * ratio[x];

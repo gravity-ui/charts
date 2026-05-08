@@ -324,6 +324,14 @@ export type PreparedLineSeries = {
 export type PreparedAreaSeries = {
     type: AreaSeries['type'];
     data: AreaSeriesData[];
+    /**
+     * Original input `series.data` before `prepareSeriesData` substitutions
+     * (e.g. `nullMode: 'zero'` rewrites `null` to `0`). Shape preparation reads
+     * this to detect points whose source y was null so it can mark them
+     * `excluded` from interactive UI while keeping the substituted point in
+     * the rendered shape.
+     */
+    originalData: AreaSeriesData[];
     stacking: AreaSeries['stacking'];
     stackId: string;
     valueAxis: 'y';

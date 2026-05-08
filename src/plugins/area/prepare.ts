@@ -13,7 +13,7 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getUniqId} from '~core/utils';
 
-import type {AreaSeries, ChartSeriesOptions} from '../../types';
+import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 
 export const DEFAULT_LINE_WIDTH = 1;
 
@@ -53,6 +53,19 @@ function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
     };
 }
 
+function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
+    const nullMode = series.nullMode ?? 'skip';
+    const data = series.data;
+    switch (nullMode) {
+        case 'zero':
+            return data.map((p) => ({...p, y: p.y ?? 0}));
+        case 'connect':
+        case 'skip':
+        default:
+            return data;
+    }
+}
+
 export function prepareArea(args: PrepareAreaSeriesArgs) {
     const {colorScale, series: seriesList, seriesOptions, legend} = args;
     const defaultAreaWidth = get(seriesOptions, 'area.lineWidth', DEFAULT_LINE_WIDTH);
@@ -77,7 +90,8 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
                 groupId: series.legend?.groupId ?? getUniqId(),
                 itemText: series.legend?.itemText ?? name,
             },
-            data: series.data,
+            data: prepareSeriesData(series),
+            originalData: series.data,
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
             valueAxis: 'y',
