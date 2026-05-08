@@ -17,18 +17,10 @@ export type MarkerPointData = PointData & {
     y: number;
 };
 
-export type MarkerData = {
-    point: MarkerPointData;
-    active: boolean;
-    hovered: boolean;
-    clipped: boolean;
-};
-
 export type PreparedAreaData = {
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
-    markerData: MarkerData[];
     markers: MarkerItem[];
     color: string;
     opacity: number;

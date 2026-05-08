@@ -6,9 +6,10 @@ import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels, preparePointDataLabels} from '../../utils';
 import {buildHoverMarkerGetter} from '../marker';
+import type {MarkerItem} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
-import type {MarkerData, MarkerPointData, PointData, PreparedLineData} from './types';
+import type {PointData, PreparedLineData} from './types';
 
 export const prepareLineData = async (args: {
     series: PreparedLineSeries[];
@@ -109,46 +110,35 @@ export const prepareLineData = async (args: {
             getDataY: (p) => p.data.y,
         });
 
-        let markerData: MarkerData[] = [];
+        const normalState = s.marker.states.normal;
         const hasPerPointNormalMarkers = s.data.some((d) => d.marker?.states?.normal?.enabled);
 
-        if (s.marker.states.normal.enabled || hasPerPointNormalMarkers) {
-            markerData = points.reduce<MarkerData[]>((result, p) => {
-                if (p.y === null || p.x === null || p.hiddenInLine) {
-                    return result;
-                }
-
-                const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
-
-                if (s.marker.states.normal.enabled || pointNormalEnabled) {
-                    result.push({
-                        point: p as MarkerPointData,
-                        active: true,
-                        hovered: false,
-                        clipped: isOutsideBounds(p.x, p.y),
-                    });
-                }
-
-                return result;
-            }, []);
-        }
-
-        const normalState = s.marker.states.normal;
-
-        const markers = markerData.map((m) => ({
-            cx: m.point.x,
-            cy: m.point.y,
-            radius: normalState.radius,
-            symbolType: normalState.symbol,
-            fill: m.point.color ?? s.color,
-            stroke: normalState.borderColor,
-            strokeWidth: normalState.borderWidth,
-            opacity: 1,
-            active: m.active,
-            clipped: m.clipped,
-            series: {id: s.id},
-            data: m.point.data,
-        }));
+        const markers =
+            s.marker.states.normal.enabled || hasPerPointNormalMarkers
+                ? points.reduce<MarkerItem[]>((result, p) => {
+                      if (p.y === null || p.x === null || p.hiddenInLine) {
+                          return result;
+                      }
+                      const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
+                      if (s.marker.states.normal.enabled || pointNormalEnabled) {
+                          result.push({
+                              cx: p.x,
+                              cy: p.y,
+                              radius: normalState.radius,
+                              symbolType: normalState.symbol,
+                              fill: p.color ?? s.color,
+                              stroke: normalState.borderColor,
+                              strokeWidth: normalState.borderWidth,
+                              opacity: 1,
+                              active: true,
+                              clipped: isOutsideBounds(p.x, p.y),
+                              series: {id: s.id},
+                              data: p.data,
+                          });
+                      }
+                      return result;
+                  }, [])
+                : [];
 
         const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
             if (p.annotation && p.x !== null && p.y !== null) {
@@ -160,7 +150,6 @@ export const prepareLineData = async (args: {
         const result: PreparedLineData = {
             annotations,
             points,
-            markerData,
             markers,
             getHoverMarkers: buildHoverMarkerGetter(points, s),
             svgLabels: svgLabels,

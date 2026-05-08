@@ -13,18 +13,11 @@ export type PointData = {
     y: number | null;
 };
 export type MarkerPointData = PointData & {y: number; x: number};
-export type MarkerData = {
-    point: MarkerPointData;
-    active: boolean;
-    hovered: boolean;
-    clipped: boolean;
-};
 
 export type PreparedLineData = {
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
-    markerData: MarkerData[];
     markers: MarkerItem[];
     series: PreparedLineSeries;
     hovered: boolean;
