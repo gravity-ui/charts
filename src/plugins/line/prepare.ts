@@ -145,6 +145,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
                 itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),
+            originalData: series.data,
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
@@ -159,6 +160,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             linejoin: prepareLinejoin(dashStyle, series, seriesOptions),
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
+            nullMode: series.nullMode,
             yAxis: get(series, 'yAxis', 0),
             tooltip: series.tooltip,
             rangeSlider: {

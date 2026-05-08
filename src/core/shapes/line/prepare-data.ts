@@ -59,11 +59,13 @@ export const prepareLineData = async (args: {
                 yAxis: seriesYAxis,
                 yScale: seriesYScale,
             });
+            const excluded = s.nullMode === 'zero' && s.originalData[j]?.y === null;
             points.push({
                 x: getXValue({point: d, points: s.data, xAxis, xScale}),
                 y: yValue === null ? null : yAxisTop + yValue,
                 color: d.marker?.color ?? d.color,
                 data: d,
+                excluded,
                 series: s,
                 annotation:
                     d.annotation && !isRangeSlider
@@ -81,7 +83,7 @@ export const prepareLineData = async (args: {
         if (s.dataLabels.enabled && !isRangeSlider) {
             const labelsData = await preparePointDataLabels({
                 series: s,
-                points,
+                points: points.filter((p) => !p.excluded),
                 xMax,
                 yAxisTop,
                 isOutsideBounds,
@@ -116,7 +118,7 @@ export const prepareLineData = async (args: {
         const markers =
             s.marker.states.normal.enabled || hasPerPointNormalMarkers
                 ? points.reduce<MarkerItem[]>((result, p) => {
-                      if (p.y === null || p.x === null || p.hiddenInLine) {
+                      if (p.y === null || p.x === null || p.hiddenInLine || p.excluded) {
                           return result;
                       }
                       const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
@@ -151,7 +153,10 @@ export const prepareLineData = async (args: {
             annotations,
             points,
             markers,
-            getHoverMarkers: buildHoverMarkerGetter(points, s),
+            getHoverMarkers: buildHoverMarkerGetter(
+                points.filter((p) => !p.excluded),
+                s,
+            ),
             svgLabels: svgLabels,
             series: s,
             hovered: false,

@@ -305,7 +305,18 @@ export type PreparedLineSeries = {
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
+    nullMode: LineSeries['nullMode'];
     opacity: number | null;
+    /**
+     * Original input `series.data` before `prepareSeriesData` substitutions
+     * (e.g. `nullMode: 'zero'` rewrites `null` to `0`). Shape preparation reads
+     * this to detect points whose source y was null so it can mark them
+     * `excluded` from interactive UI while keeping the substituted point in
+     * the rendered shape. Index aligns with `data` for `'zero'` and `'skip'`
+     * modes; `'connect'` filters `data`, but excluded check requires
+     * `nullMode === 'zero'` so the misalignment is harmless.
+     */
+    originalData: LineSeriesData[];
     yAxis: number;
 } & BasePreparedSeries &
     BasePreparedAxisRelatedSeries;

@@ -12,7 +12,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedLineData>): GetT
 
     const xLookupPoints = data.reduce<ShapePoint[]>((acc, d) => {
         for (const p of d.points) {
-            if (p.y !== null && p.x !== null && !p.hiddenInLine) {
+            if (p.y !== null && p.x !== null && !p.hiddenInLine && !p.excluded) {
                 acc.push({
                     data: p.data,
                     series: p.series as LineSeries,

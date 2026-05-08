@@ -102,6 +102,54 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('null point is absent from tooltip in nullMode=zero', async ({mount, page}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Series A',
+                        type: 'line',
+                        nullMode: 'zero',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 15},
+                            {x: 2, y: null},
+                            {x: 3, y: 25},
+                            {x: 4, y: 30},
+                        ],
+                    },
+                    {
+                        name: 'Series B',
+                        type: 'line',
+                        nullMode: 'zero',
+                        data: [
+                            {x: 0, y: 5},
+                            {x: 1, y: 8},
+                            {x: 2, y: 12},
+                            {x: 3, y: 7},
+                            {x: 4, y: 10},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {type: 'category', categories: ['A', 'B', 'C', 'D', 'E']},
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        const categoryC = component.locator('.gcharts-x-axis').getByText('C', {exact: true});
+        const tickBox = await getLocatorBoundingBox(categoryC);
+        const svg = await getLocator({component, selector: 'svg'});
+        const svgBox = await getLocatorBoundingBox(svg);
+        await page.mouse.move(
+            Math.round(tickBox.x + tickBox.width / 2),
+            Math.round(svgBox.y + svgBox.height / 2),
+        );
+
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toBeVisible();
+        await expect(tooltip.getByText('Series B')).toBeVisible();
+        await expect(tooltip.getByText('Series A')).toHaveCount(0);
+    });
+
     test('Single point (with marker enabled)', async ({mount}) => {
         const chartData: ChartData = {
             series: {
