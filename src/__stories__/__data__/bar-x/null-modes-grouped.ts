@@ -16,65 +16,7 @@ const seriesB: BarXSeriesData[] = [
     {x: 4, y: 10},
 ];
 
-const seriesAWithNullLinear: BarXSeriesData[] = [
-    {x: 10, y: 10},
-    {x: 15, y: 15},
-    {x: 20, y: null},
-    {x: 25, y: 25},
-    {x: 30, y: 30},
-];
-
-const seriesBLinear: BarXSeriesData[] = [
-    {x: 10, y: 5},
-    {x: 15, y: 8},
-    {x: 20, y: 12},
-    {x: 25, y: 7},
-    {x: 30, y: 10},
-];
-
 const categories = ['A', 'B', 'C', 'D', 'E'];
-
-export const barXNullModeSkipGroupedLinearXData: ChartData = {
-    series: {
-        data: [
-            {
-                type: 'bar-x',
-                name: 'Series A (null at x=20)',
-                data: seriesAWithNullLinear,
-                nullMode: 'skip',
-                dataLabels: {enabled: true, inside: true},
-            },
-            {
-                type: 'bar-x',
-                name: 'Series B',
-                data: seriesBLinear,
-                nullMode: 'skip',
-                dataLabels: {enabled: true, inside: true},
-            },
-        ],
-    },
-};
-
-export const barXNullModeZeroGroupedLinearXData: ChartData = {
-    series: {
-        data: [
-            {
-                type: 'bar-x',
-                name: 'Series A (null at x=20)',
-                data: seriesAWithNullLinear,
-                nullMode: 'zero',
-                dataLabels: {enabled: true, inside: true},
-            },
-            {
-                type: 'bar-x',
-                name: 'Series B',
-                data: seriesBLinear,
-                nullMode: 'zero',
-                dataLabels: {enabled: true, inside: true},
-            },
-        ],
-    },
-};
 
 export const barXNullModeSkipGroupedData: ChartData = {
     series: {
