@@ -137,6 +137,21 @@ export const prepareBarXData = async (args: {
     const domain = new Set<string | number>();
     let maxGroupSize = 1;
 
+    // Mark data points whose source y was null and were rewritten to 0 by
+    // `nullMode: 'zero'`. The bar still occupies its slot, but tooltip rows
+    // and data labels must skip it.
+    const excludedData = new Set<BarXSeriesData>();
+    series.forEach((s) => {
+        if (s.nullMode !== 'zero') {
+            return;
+        }
+        s.data.forEach((d, i) => {
+            if (s.originalData[i]?.y === null) {
+                excludedData.add(d);
+            }
+        });
+    });
+
     // series grouped by plotIndex > xValue > data[];
     const dataByPlots: GroupedSeries = new Map();
     series.forEach((s) => {
@@ -305,6 +320,7 @@ export const prepareBarXData = async (args: {
                                   })
                                 : undefined,
                         annotations: [],
+                        excluded: excludedData.has(yValue.data),
                         x,
                         y: barPositionY,
                         width: rectWidth,
@@ -376,6 +392,7 @@ export const prepareBarXData = async (args: {
         if (
             barData.series.dataLabels.enabled &&
             !isRangeSlider &&
+            !barData.excluded &&
             (!isBarOutsideBounds || isZeroValue)
         ) {
             const {svgLabel, htmlLabel} = await getLabelData(barData, xMax);

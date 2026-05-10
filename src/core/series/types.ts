@@ -199,6 +199,15 @@ export type PreparedBarXSeries = {
         format?: ValueFormat;
     };
     borderRadius: number;
+    nullMode: BarXSeries['nullMode'];
+    /**
+     * Original input `series.data` before `prepareSeriesData` substitutions
+     * (e.g. `nullMode: 'zero'` rewrites `null` to `0`). Shape preparation reads
+     * this to detect points whose source y was null so it can mark the
+     * resulting bar `excluded` from interactive UI while keeping the
+     * substituted value in the y-axis domain.
+     */
+    originalData: BarXSeriesData[];
     yAxis: number;
 } & BasePreparedSeries &
     BasePreparedAxisRelatedSeries;

@@ -5,6 +5,12 @@ import type {SeriesShapeData} from '../types';
 export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     annotation?: PreparedAnnotation;
     annotations: AnnotationAnchor[];
+    /**
+     * Source y was null but `nullMode: 'zero'` substituted it with 0. The bar
+     * is kept (zero-height) so the y-axis domain and stack/group baselines
+     * stay consistent; the data label and tooltip row must skip it.
+     */
+    excluded?: boolean;
     x: number;
     y: number;
     width: number;

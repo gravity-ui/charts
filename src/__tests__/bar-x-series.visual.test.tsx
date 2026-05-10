@@ -12,6 +12,7 @@ import {
     barXNullModeSkipCategoryXData,
     barXNullModeSkipLinearXData,
     barXNullModeZeroCategoryXData,
+    barXNullModeZeroGroupedData,
     barXNullModeZeroLinearXData,
     barXSplitData,
     barXStakingNormalData,
@@ -20,7 +21,7 @@ import {
 import type {BarXSeries, ChartData} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
-import {getLocatorBoundingBox} from './utils';
+import {getLocator, getLocatorBoundingBox} from './utils';
 
 test.describe('Bar-x series', () => {
     test('Basic', async ({mount}) => {
@@ -543,6 +544,24 @@ test.describe('Bar-x series', () => {
                 );
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
+        });
+
+        test('null point is absent from tooltip in nullMode=zero', async ({mount, page}) => {
+            const component = await mount(<ChartTestStory data={barXNullModeZeroGroupedData} />);
+            const svg = await getLocator({component, selector: 'svg'});
+            const svgBox = await getLocatorBoundingBox(svg);
+            const categoryC = component.locator('.gcharts-x-axis').getByText('C', {exact: true});
+            await expect(categoryC).toBeVisible();
+            const tickBox = await getLocatorBoundingBox(categoryC);
+            await page.mouse.move(
+                Math.round(tickBox.x + tickBox.width / 2),
+                Math.round(svgBox.y + svgBox.height / 2),
+            );
+
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip.getByText('Series B')).toBeVisible();
+            await expect(tooltip.getByText('Series A')).toHaveCount(0);
         });
     });
 

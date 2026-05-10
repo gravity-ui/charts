@@ -18,6 +18,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
     for (const group of Object.values(barXGroups)) {
         const groupCenterX = group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
         for (const d of group) {
+            if (d.excluded) {
+                continue;
+            }
             xLookupPoints.push({
                 data: d.data,
                 series: d.series as BarXSeries,

@@ -50,6 +50,8 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
                 itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),
+            originalData: series.data,
+            nullMode: series.nullMode,
             stacking: series.stacking,
             stackId: getSeriesStackId(series),
             valueAxis: 'y',
