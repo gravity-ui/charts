@@ -79,6 +79,8 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                     itemText: series.legend?.itemText ?? name,
                 },
                 data: prepareSeriesData(series),
+                originalData: series.data,
+                nullMode: series.nullMode,
                 stacking: series.stacking,
                 stackId: getSeriesStackId(series),
                 valueAxis: 'x',

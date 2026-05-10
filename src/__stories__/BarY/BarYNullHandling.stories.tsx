@@ -8,38 +8,38 @@ import set from 'lodash/set';
 import {ChartStory} from '../ChartStory';
 import {
     barYNullModeSkipCategoryYData,
-    barYNullModeSkipLinearXData,
+    barYNullModeSkipGroupedData,
     barYNullModeZeroCategoryYData,
-    barYNullModeZeroLinearXData,
+    barYNullModeZeroGroupedData,
 } from '../__data__';
 
 const BarYNullHandlingComparison = () => {
-    const skipData = cloneDeep(barYNullModeSkipLinearXData);
-    set(skipData, 'title', {text: 'nullMode: "skip" (default) - Linear X-axis'});
-    const zeroData = cloneDeep(barYNullModeZeroLinearXData);
-    set(zeroData, 'title', {text: 'nullMode: "zero" - Linear X-axis'});
+    const skipSingle = cloneDeep(barYNullModeSkipCategoryYData);
+    set(skipSingle, 'title', {text: 'nullMode: "skip" — single series'});
+    const zeroSingle = cloneDeep(barYNullModeZeroCategoryYData);
+    set(zeroSingle, 'title', {text: 'nullMode: "zero" — single series'});
 
-    const skipDataCategory = cloneDeep(barYNullModeSkipCategoryYData);
-    set(skipDataCategory, 'title', {text: 'nullMode: "skip" (default) - Category Y-axis'});
-    const zeroDataCategory = cloneDeep(barYNullModeZeroCategoryYData);
-    set(zeroDataCategory, 'title', {text: 'nullMode: "zero" - Category Y-axis'});
+    const skipGrouped = cloneDeep(barYNullModeSkipGroupedData);
+    set(skipGrouped, 'title', {text: 'nullMode: "skip" — grouped multi-series'});
+    const zeroGrouped = cloneDeep(barYNullModeZeroGroupedData);
+    set(zeroGrouped, 'title', {text: 'nullMode: "zero" — grouped multi-series'});
 
     return (
         <Container spaceRow={5}>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={skipData} />
+                    <ChartStory data={skipSingle} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={zeroData} />
+                    <ChartStory data={zeroSingle} />
                 </Col>
             </Row>
             <Row space={3}>
                 <Col s={12} m={6}>
-                    <ChartStory data={skipDataCategory} />
+                    <ChartStory data={skipGrouped} />
                 </Col>
                 <Col s={12} m={6}>
-                    <ChartStory data={zeroDataCategory} />
+                    <ChartStory data={zeroGrouped} />
                 </Col>
             </Row>
         </Container>

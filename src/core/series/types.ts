@@ -232,6 +232,15 @@ export type PreparedBarYSeries = {
     borderRadius: number;
     borderWidth: number;
     borderColor: string;
+    nullMode: BarYSeries['nullMode'];
+    /**
+     * Original input `series.data` before `prepareSeriesData` substitutions
+     * (e.g. `nullMode: 'zero'` rewrites `null` to `0`). Shape preparation reads
+     * this to detect points whose source x was null so it can mark the
+     * resulting bar `excluded` from interactive UI while keeping the
+     * substituted value in the x-axis (value-axis) domain.
+     */
+    originalData: BarYSeriesData[];
 } & BasePreparedSeries;
 
 export type PreparedHeatmapSeries = {

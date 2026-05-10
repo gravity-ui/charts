@@ -13,13 +13,14 @@ import {
     barYNullModeSkipCategoryYData,
     barYNullModeSkipLinearXData,
     barYNullModeZeroCategoryYData,
+    barYNullModeZeroGroupedData,
     barYNullModeZeroLinearXData,
     barYPlotLinesData,
     barYStakingNormalData,
 } from '../__stories__/__data__';
 import type {BarYSeries, BarYSeriesData, ChartData, ChartMargin} from '../types';
 
-import {getLocatorBoundingBox} from './utils';
+import {getLocator, getLocatorBoundingBox} from './utils';
 
 const CHART_MARGIN: ChartMargin = {
     top: 20,
@@ -960,6 +961,24 @@ test.describe('Bar-y series', () => {
                 );
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
+        });
+
+        test('null point is absent from tooltip in nullMode=zero', async ({mount, page}) => {
+            const component = await mount(<ChartTestStory data={barYNullModeZeroGroupedData} />);
+            const svg = await getLocator({component, selector: 'svg'});
+            const svgBox = await getLocatorBoundingBox(svg);
+            const categoryC = component.locator('.gcharts-y-axis').getByText('C', {exact: true});
+            await expect(categoryC).toBeVisible();
+            const tickBox = await getLocatorBoundingBox(categoryC);
+            await page.mouse.move(
+                Math.round(svgBox.x + svgBox.width / 2),
+                Math.round(tickBox.y + tickBox.height / 2),
+            );
+
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip.getByText('Series B')).toBeVisible();
+            await expect(tooltip.getByText('Series A')).toHaveCount(0);
         });
     });
 

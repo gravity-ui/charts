@@ -2,7 +2,7 @@ import {ascending, descending, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {HtmlItem, LabelData} from '../../../types';
+import type {BarYSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
@@ -69,6 +69,21 @@ export async function prepareBarYData(args: {
             }
         }
     })();
+
+    // Mark data points whose source x was null and were rewritten to 0 by
+    // `nullMode: 'zero'`. The bar still occupies its slot, but tooltip rows
+    // and data labels must skip it.
+    const excludedData = new Set<BarYSeriesData>();
+    series.forEach((s) => {
+        if (s.nullMode !== 'zero') {
+            return;
+        }
+        s.data.forEach((d, i) => {
+            if (s.originalData[i]?.x === null) {
+                excludedData.add(d);
+            }
+        });
+    });
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
     const {bandSize, barGap, barSize} = getBarYLayout({
@@ -167,6 +182,7 @@ export async function prepareBarYData(args: {
                     color: data.color || s.color,
                     borderColor: s.borderColor,
                     borderWidth,
+                    excluded: excludedData.has(data),
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
@@ -194,7 +210,7 @@ export async function prepareBarYData(args: {
         const prepared = result[i];
 
         const dataLabels = prepared.series.dataLabels;
-        if (dataLabels.enabled) {
+        if (dataLabels.enabled && !prepared.excluded) {
             const data = prepared.data;
             const content = getFormattedValue({value: data.label ?? data.x, ...dataLabels});
 

@@ -9,7 +9,8 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     const {data, position} = args;
     const [pointerX, pointerY] = position;
 
-    const sorted = sort(data, (p) => p.y);
+    const visible = data.filter((p) => !p.excluded);
+    const sorted = sort(visible, (p) => p.y);
     const closestYIndex = bisector<PreparedBarYData, number>((p) => p.y + p.height / 2).center(
         sorted,
         pointerY,
@@ -21,7 +22,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
         return {chunks: []};
     }
 
-    const selectedPoints = data.filter((p) => p.data.y === closestYPoint.data.y);
+    const selectedPoints = visible.filter((p) => p.data.y === closestYPoint.data.y);
 
     const closestPoints = sort(
         selectedPoints.filter((p) => p.y === closestYPoint.y),
