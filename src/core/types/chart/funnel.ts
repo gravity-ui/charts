@@ -65,8 +65,32 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
         areaOpacity?: number;
     };
     dataLabels?: Omit<BaseDataLabels, 'allowOverlap'> & {
-        /** Horizontal alignment of the data labels. */
+        /**
+         * Horizontal alignment of the data labels.
+         * @default 'center'
+         */
         align?: 'left' | 'center' | 'right';
+        /**
+         * Whether to align the data label inside or outside the shape.
+         * @default false
+         */
+        inside?: boolean;
+        /**
+         * Whether to shrink the funnel shapes to reserve space for outside labels.
+         * When true, the plot area is inset on the labelled side so labels do not overlap segments.
+         * When false, no space is reserved and labels are clamped to the plot area boundary if they overflow.
+         * Only relevant when `inside` is false.
+         * @default true
+         */
+        reserveSpace?: boolean;
+        /**
+         * The reference area for label alignment. Only relevant when `inside` is false.
+         *
+         * - `'shape'` - aligns relative to the data shape (e.g., funnel section).
+         * - `'plot'` - aligns relative to the chart plot area boundaries.
+         * @default 'plot'
+         */
+        anchor?: 'plot' | 'shape';
     };
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: ChartLegendItem & {

@@ -16,6 +16,14 @@ type Args = {
     boundsHeight: number;
 };
 
+type LabelInfo = {
+    text: string;
+    width: number;
+    height: number;
+    hangingOffset: number;
+    series: PreparedFunnelSeries;
+};
+
 function getLineConnectorPaths(args: {points: [number, number][]}) {
     const {points} = args;
 
@@ -60,84 +68,70 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
     const itemHeight = (boundsHeight - connectorHeight * (series.length - 1)) / series.length;
     const getTextSize = getTextSizeFn({style: series[0].dataLabels.style});
 
-    const getSegmentY = (index: number) => {
-        return index * (itemHeight + connectorHeight);
-    };
+    const getSegmentY = (index: number) => index * (itemHeight + connectorHeight);
 
-    let segmentLeftOffset = 0;
-    let segmentRightOffset = 0;
+    // measure labels and accumulate max outside-label widths per side.
+    let rawLeftOffset = 0;
+    let rawRightOffset = 0;
+    const labelInfos: (LabelInfo | null)[] = [];
+
     for (let index = 0; index < series.length; index++) {
         const s = series[index];
 
-        if (s.dataLabels.enabled) {
-            const d = s.data;
-            const labelContent =
-                d.label ?? getFormattedValue({value: d.value, format: s.dataLabels.format});
+        if (!s.dataLabels.enabled) {
+            labelInfos.push(null);
+            continue;
+        }
 
-            const {width, height, hangingOffset} = s.dataLabels.html
-                ? await getLabelsSize({
-                      labels: [labelContent],
-                      style: s.dataLabels.style,
-                      html: true,
-                  }).then((size) => ({
-                      width: size.maxWidth,
-                      height: size.maxHeight,
-                      hangingOffset: 0,
-                  }))
-                : await getTextSize(labelContent);
+        const d = s.data;
+        const labelContent =
+            d.label ?? getFormattedValue({value: d.value, format: s.dataLabels.format});
 
-            let x;
-            switch (s.dataLabels.align) {
-                case 'left': {
-                    x = 0;
-                    segmentLeftOffset = Math.max(segmentLeftOffset, width);
-                    break;
-                }
-                case 'right': {
-                    x = boundsWidth - width;
-                    segmentRightOffset = Math.max(segmentRightOffset, width);
-                    break;
-                }
-                case 'center': {
-                    x = boundsWidth / 2 - width / 2;
-                    break;
-                }
-            }
+        const {width, height, hangingOffset} = s.dataLabels.html
+            ? await getLabelsSize({
+                  labels: [labelContent],
+                  style: s.dataLabels.style,
+                  html: true,
+              }).then((size) => ({
+                  width: size.maxWidth,
+                  height: size.maxHeight,
+                  hangingOffset: 0,
+              }))
+            : await getTextSize(labelContent);
 
-            const y = getSegmentY(index) + itemHeight / 2 - height / 2 + hangingOffset;
+        labelInfos.push({text: labelContent, width, height, hangingOffset, series: s});
 
-            if (s.dataLabels.html) {
-                htmlLabels.push({
-                    x,
-                    y,
-                    content: labelContent,
-                    size: {width, height},
-                    style: s.dataLabels.style,
-                });
-            } else {
-                svgLabels.push({
-                    x,
-                    y,
-                    text: labelContent,
-                    style: s.dataLabels.style,
-                    size: {width, height, hangingOffset},
-                    textAnchor: 'start',
-                    series: s,
-                });
+        const {inside, align, padding} = s.dataLabels;
+        if (!inside) {
+            // Minimum offset so this label stays within the plot boundary.
+            // Accounts for the fact that narrower segments are already indented from the edge.
+            const ratio = s.data.value / maxValue;
+            const minOffset = (2 * (width + padding) - boundsWidth * (1 - ratio)) / (1 + ratio);
+            if (align === 'left') {
+                rawLeftOffset = Math.max(rawLeftOffset, minOffset);
+            } else if (align === 'right') {
+                rawRightOffset = Math.max(rawRightOffset, minOffset);
             }
         }
     }
 
+    // reserveSpace=true → inset only the labelled side so labels don't overlap segments.
+    // reserveSpace=false → no inset; labels overlap segments.
+    const {reserveSpace} = series[0].dataLabels;
+    const segmentLeftOffset = reserveSpace ? rawLeftOffset : 0;
+    const segmentRightOffset = reserveSpace ? rawRightOffset : 0;
+
+    // compute shapes and label positions in a single pass.
+    // centerX is constant across all segments — hoist it out of the loop.
     const segmentMaxWidth = boundsWidth - segmentLeftOffset - segmentRightOffset;
-    const isTrapezoid = series[0]?.shape === 'trapezoid';
+    const isTrapezoid = series[0].shape === 'trapezoid';
+    const centerX = segmentLeftOffset + segmentMaxWidth / 2;
 
     const getItemWidth = (index: number) => (segmentMaxWidth * series[index].data.value) / maxValue;
 
     for (let index = 0; index < series.length; index++) {
         const s = series[index];
-        const d = s.data;
         const itemWidth = getItemWidth(index);
-        const centerX = segmentLeftOffset + segmentMaxWidth / 2;
         const segmentY = getSegmentY(index);
 
         const isLastSegment = index === series.length - 1;
@@ -149,7 +143,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
             [centerX - bottomWidth / 2, segmentY + itemHeight],
         ];
 
-        const funnelSegment = {
+        const item = {
             x: centerX - itemWidth / 2,
             y: segmentY,
             width: itemWidth,
@@ -157,12 +151,12 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
             points,
             color: s.color,
             series: s,
-            data: d,
+            data: s.data,
             borderColor: '',
             borderWidth: 0,
             cursor: s.cursor,
         };
-        items.push(funnelSegment);
+        items.push(item);
 
         const prevSeries = series[index - 1];
         const prevItem = items[index - 1];
@@ -172,8 +166,8 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
             const connectorPoints: [number, number][] = [
                 prevItem.points[3],
                 prevItem.points[2],
-                funnelSegment.points[1],
-                funnelSegment.points[0],
+                item.points[1],
+                item.points[0],
             ];
             connectors.push({
                 linePath: getLineConnectorPaths({points: connectorPoints}),
@@ -186,9 +180,76 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
                 dashStyle: prevSeries.connectors.lineDashStyle,
             });
         }
+
+        const info = labelInfos[index];
+        if (!info) continue;
+
+        const {text, width, height, hangingOffset} = info;
+        const {anchor, inside, padding} = s.dataLabels;
+        const y = segmentY + itemHeight / 2 - height / 2 + hangingOffset;
+
+        let x: number;
+        if (inside) {
+            switch (s.dataLabels.align) {
+                case 'left':
+                    x = item.x + padding;
+                    break;
+                case 'right':
+                    x = item.x + item.width - width - padding;
+                    break;
+                default:
+                    x = item.x + item.width / 2 - width / 2;
+                    break;
+            }
+        } else {
+            switch (s.dataLabels.align) {
+                case 'left': {
+                    const edge = 0;
+                    if (anchor === 'plot') {
+                        x = edge;
+                    } else {
+                        x = Math.max(edge, item.x - width - padding);
+                    }
+
+                    break;
+                }
+                case 'right': {
+                    const edge = boundsWidth - width;
+                    if (anchor === 'plot') {
+                        x = edge;
+                    } else {
+                        x = Math.min(edge, item.x + item.width + padding);
+                    }
+                    break;
+                }
+                default:
+                    x = boundsWidth / 2 - width / 2;
+                    break;
+            }
+        }
+
+        if (s.dataLabels.html) {
+            htmlLabels.push({
+                x,
+                y,
+                content: text,
+                size: {width, height},
+                style: s.dataLabels.style,
+            });
+        } else {
+            svgLabels.push({
+                x,
+                y,
+                text,
+                style: s.dataLabels.style,
+                size: {width, height, hangingOffset},
+                textAnchor: 'start',
+                series: s,
+            });
+        }
     }
 
-    const data: PreparedFunnelData = {
+    return {
         type: 'funnel',
         items,
         svgLabels,
@@ -198,6 +259,4 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         getHoverMarkers: () => [],
         annotations: [],
     };
-
-    return data;
 }
