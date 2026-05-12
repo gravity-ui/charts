@@ -185,7 +185,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         if (!info) continue;
 
         const {text, width, height, hangingOffset} = info;
-        const {inside, padding} = s.dataLabels;
+        const {anchor, inside, padding} = s.dataLabels;
         const y = segmentY + itemHeight / 2 - height / 2 + hangingOffset;
 
         let x: number;
@@ -202,18 +202,26 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
                     break;
             }
         } else {
-            // Outside label snaps to the segment edge.
-            // Clamp to bounds when space is not reserved.
-            const clamp = !reserveSpace;
             switch (s.dataLabels.align) {
-                case 'left':
-                    x = clamp ? Math.max(0, item.x - width - padding) : item.x - width - padding;
+                case 'left': {
+                    const edge = 0;
+                    if (anchor === 'plot') {
+                        x = edge;
+                    } else {
+                        x = Math.max(edge, item.x - width - padding);
+                    }
+
                     break;
-                case 'right':
-                    x = clamp
-                        ? Math.min(boundsWidth - width, item.x + item.width + padding)
-                        : item.x + item.width + padding;
+                }
+                case 'right': {
+                    const edge = boundsWidth - width;
+                    if (anchor === 'plot') {
+                        x = edge;
+                    } else {
+                        x = Math.max(edge, item.x + item.width + padding);
+                    }
                     break;
+                }
                 default:
                     x = boundsWidth / 2 - width / 2;
                     break;

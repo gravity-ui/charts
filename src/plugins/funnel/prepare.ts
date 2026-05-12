@@ -44,6 +44,7 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                 format: series.dataLabels?.format,
                 align: series.dataLabels?.align ?? 'center',
                 inside: series.dataLabels?.inside ?? false,
+                anchor: series.dataLabels?.anchor ?? 'plot',
                 reserveSpace: series.dataLabels?.reserveSpace ?? true,
                 padding: series.dataLabels?.padding ?? DEFAULT_DATALABELS_PADDING,
             },

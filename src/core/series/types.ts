@@ -440,6 +440,7 @@ export type PreparedFunnelSeries = {
         inside: boolean;
         reserveSpace: boolean;
         padding: number;
+        anchor: Required<Required<FunnelSeries>['dataLabels']>['anchor'];
     };
     connectors: Required<FunnelSeries['connectors']>;
 } & BasePreparedSeries;
