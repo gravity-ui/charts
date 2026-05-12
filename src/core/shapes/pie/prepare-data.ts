@@ -69,12 +69,12 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         stackId,
         items,
         labels,
-        labelsActive,
+        hasDataLabels,
     }: {
         stackId: string;
         items: PreparedPieSeries[];
         labels: Record<string, Partial<PieLabelData>>;
-        labelsActive: boolean;
+        hasDataLabels: boolean;
     }) => {
         const series = items[0];
         const {center, borderWidth, borderColor, borderRadius, dataLabels} = series;
@@ -109,7 +109,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
             let maxSegmentRadius = maxRadius;
 
-            if (labelsActive) {
+            if (hasDataLabels) {
                 maxSegmentRadius -=
                     dataLabels.distance + dataLabels.connectorPadding + labelMaxHeight;
             }
@@ -139,14 +139,14 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
     const getLabels = async ({
         series,
-        labelsActive,
+        hasDataLabels,
     }: {
         series: PreparedPieSeries[];
-        labelsActive: boolean;
+        hasDataLabels: boolean;
     }) => {
         const {dataLabels} = series[0];
 
-        if (!labelsActive) {
+        if (!hasDataLabels) {
             return {};
         }
 
@@ -197,14 +197,14 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         data: PreparedPieData;
         series: PreparedPieSeries[];
         labels: Record<string, Partial<PieLabelData>>;
-        labelsActive: boolean;
+        hasDataLabels: boolean;
         allowOverlow?: boolean;
     }) => {
         const {
             data,
             series,
             labels: labelsData,
-            labelsActive,
+            hasDataLabels,
             allowOverlow = true,
         } = prepareLabelsArgs;
         const {dataLabels} = series[0];
@@ -213,7 +213,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         const htmlLabels: HtmlItem[] = [];
         const connectors: PieConnectorData[] = [];
 
-        if (!labelsActive) {
+        if (!hasDataLabels) {
             return {labels, htmlLabels, connectors};
         }
 
@@ -427,17 +427,17 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
     return Promise.all(
         Array.from(groupedPieSeries).map(async ([stackId, items]) => {
-            const labelsActive = shouldPrepareSeriesDataLabels({
+            const hasDataLabels = shouldPrepareSeriesDataLabels({
                 dataLabels: items[0].dataLabels,
                 data: items.map((it) => it.data),
             });
-            const seriesLabels = await getLabels({series: items, labelsActive});
-            const data = prepareItem({stackId, items, labels: seriesLabels, labelsActive});
+            const seriesLabels = await getLabels({series: items, hasDataLabels});
+            const data = prepareItem({stackId, items, labels: seriesLabels, hasDataLabels});
             const preparedLabels = prepareLabels({
                 data,
                 labels: seriesLabels,
                 series: items,
-                labelsActive,
+                hasDataLabels,
             });
 
             let maxLeftRightFreeSpace = Infinity;
@@ -537,7 +537,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 data,
                 series: items,
                 labels: seriesLabels,
-                labelsActive,
+                hasDataLabels,
                 allowOverlow: false,
             });
 
