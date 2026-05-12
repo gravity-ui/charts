@@ -35,10 +35,6 @@ async function getLabelData(
     d: PreparedBarXData,
     xMax: number,
 ): Promise<{svgLabel?: LabelData; htmlLabel?: HtmlItem}> {
-    if (!isPointDataLabelEnabled({data: d.data, series: d.series})) {
-        return {};
-    }
-
     const text = getFormattedValue({
         value: d.data.label ?? d.data.y,
         ...d.series.dataLabels,
