@@ -437,6 +437,10 @@ export type PreparedFunnelSeries = {
         html: boolean;
         format?: ValueFormat;
         align: Required<Required<FunnelSeries>['dataLabels']>['align'];
+        inside: boolean;
+        reserveSpace: boolean;
+        padding: number;
+        anchor: Required<Required<FunnelSeries>['dataLabels']>['anchor'];
     };
     connectors: Required<FunnelSeries['connectors']>;
 } & BasePreparedSeries;

@@ -15,12 +15,12 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 test.describe('Funnel series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelBasicData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+        await expect(component).toHaveScreenshot();
     });
 
     test('With continuous legend', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelContinuousLegendData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+        await expect(component).toHaveScreenshot();
     });
 
     test('With HTML labels', async ({mount}) => {
@@ -30,11 +30,183 @@ test.describe('Funnel series', () => {
 
     test('Trapezoid', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelTrapezoidData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+        await expect(component).toHaveScreenshot();
     });
 
     test('Trapezoid with connectors', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelTrapezoidWithConnectorsData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+        await expect(component).toHaveScreenshot();
+    });
+
+    test.describe('DataLabels', () => {
+        const seriesData = [
+            {value: 100, name: 'Visit'},
+            {value: 87, name: 'Sign-up'},
+            {value: 63, name: 'Selection'},
+            {value: 27, name: 'Purchase'},
+            {value: 12, name: 'Review'},
+        ];
+
+        function makeData(dataLabels: object) {
+            return {
+                series: {
+                    data: [
+                        {
+                            type: 'funnel' as const,
+                            name: 'Series 1',
+                            data: seriesData,
+                            dataLabels,
+                        },
+                    ],
+                },
+                legend: {enabled: false},
+            };
+        }
+
+        test.describe('SVG labels', () => {
+            test('align: center, inside: true', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({align: 'center', inside: true})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: left, inside: true', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({align: 'left', inside: true})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: right, inside: true', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({align: 'right', inside: true})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: left, inside: false', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({align: 'left', inside: false})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: right, inside: false', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({align: 'right', inside: false})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test.describe('reserveSpace: false', () => {
+                test('align: left', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory data={makeData({align: 'left', reserveSpace: false})} />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+
+                test('align: right', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory data={makeData({align: 'right', reserveSpace: false})} />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+            });
+
+            test.describe('anchor: shape', () => {
+                test('align: left', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory data={makeData({align: 'left', anchor: 'shape'})} />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+
+                test('align: right', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory data={makeData({align: 'right', anchor: 'shape'})} />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+            });
+        });
+
+        test.describe('HTML labels', () => {
+            test('align: center, inside: true', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({html: true, align: 'center', inside: true})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: left, inside: true', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({html: true, align: 'left', inside: true})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: right, inside: true', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({html: true, align: 'right', inside: true})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: left, inside: false', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({html: true, align: 'left', inside: false})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test('align: right, inside: false', async ({mount}) => {
+                const component = await mount(
+                    <ChartTestStory data={makeData({html: true, align: 'right', inside: false})} />,
+                );
+                await expect(component).toHaveScreenshot();
+            });
+
+            test.describe('reserveSpace: false', () => {
+                test('align: left', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory
+                            data={makeData({html: true, align: 'left', reserveSpace: false})}
+                        />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+
+                test('align: right', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory
+                            data={makeData({html: true, align: 'right', reserveSpace: false})}
+                        />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+            });
+
+            test.describe('anchor: shape', () => {
+                test('align: left', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory
+                            data={makeData({html: true, align: 'left', anchor: 'shape'})}
+                        />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+
+                test('align: right', async ({mount}) => {
+                    const component = await mount(
+                        <ChartTestStory
+                            data={makeData({html: true, align: 'right', anchor: 'shape'})}
+                        />,
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+            });
+        });
     });
 });
