@@ -955,4 +955,70 @@ test.describe('Area series', () => {
             expect(moveCount).toBe(2);
         });
     });
+
+    test.describe('Per-point tooltip.enabled', () => {
+        test('hidden point in one series leaves only the other in the tooltip', async ({
+            page,
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: 7},
+                                {x: 2, y: 30, tooltip: {enabled: false}},
+                            ],
+                        },
+                        {
+                            type: 'area',
+                            name: 'Series 2',
+                            data: [
+                                {x: 1, y: 5},
+                                {x: 2, y: 20},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const area = component.locator('.gcharts-area__series').first();
+            const areaBox = await getLocatorBoundingBox(area);
+            await page.mouse.move(
+                Math.round(areaBox.x + areaBox.width),
+                Math.round(areaBox.y + areaBox.height / 2),
+            );
+            const rows = page.locator('.gcharts-tooltip__content-row');
+            await expect(rows).toHaveCount(1);
+            await expect(rows.first()).toContainText('Series 2');
+        });
+    });
+
+    test.describe('Per-point dataLabels.enabled', () => {
+        test('hidden point in one series omits only that label', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series 1',
+                            data: [
+                                {x: 1, y: 7},
+                                {x: 2, y: 30, dataLabels: {enabled: false}},
+                                {x: 3, y: 12},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const labels = component.locator('.gcharts-area__label');
+            await expect(labels).toHaveCount(2);
+            const texts = await labels.allTextContents();
+            expect(texts.slice().sort()).toEqual(['12', '7']);
+        });
+    });
 });

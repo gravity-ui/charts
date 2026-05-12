@@ -23,3 +23,45 @@ series: {
   }]
 }
 ```
+
+## Per-point override
+
+In addition to the series-level setting, you can control the label visibility for a specific point by setting `dataLabels.enabled` on the data point. The point-level value takes precedence over the series-level one: `false` hides the label even when the series has labels enabled, and `true` shows the label for that single point even when the series has labels disabled.
+
+**Example:** show data labels for the whole series except for one specific bar.
+
+```javascript
+series: {
+  data: [
+    {
+      type: 'bar-x',
+      dataLabels: {enabled: true},
+      data: [
+        {x: 0, y: 120},
+        // This bar's label is hidden
+        {x: 1, y: 90, dataLabels: {enabled: false}},
+        {x: 2, y: 150},
+      ],
+    },
+  ];
+}
+```
+
+**Example:** keep labels off for the series and opt only specific points in.
+
+```javascript
+series: {
+  data: [
+    {
+      type: 'bar-x',
+      // No `dataLabels` at series level
+      data: [
+        {x: 0, y: 120},
+        // Only this bar gets a label
+        {x: 1, y: 90, dataLabels: {enabled: true}},
+        {x: 2, y: 150},
+      ],
+    },
+  ];
+}
+```

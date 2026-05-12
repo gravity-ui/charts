@@ -82,6 +82,27 @@ In this example:
 - Hovering over a column will display a tooltip with only the "Monthly Sales" data for that month.
 - Hovering directly over the "Yearly Average" line will not trigger a tooltip.
 
+## Hiding individual points from the tooltip
+
+For more granular control, you can hide a specific point — instead of a whole series — by setting `tooltip.enabled` on the data point itself. The point-level setting takes precedence over the series-level one: `false` hides the point even when the series is shown, and `true` shows the point even when the series is hidden from the tooltip.
+
+```javascript
+series: {
+  data: [
+    {
+      name: 'Monthly Sales',
+      type: 'bar-x',
+      data: [
+        {x: 0, y: 120},
+        // This bar is excluded from the tooltip
+        {x: 1, y: 90, tooltip: {enabled: false}},
+        {x: 2, y: 150},
+      ],
+    },
+  ];
+}
+```
+
 ## Value Formatting
 
 Tooltip rows, header, and totals accept a `valueFormat` / `headerFormat` shaped

@@ -99,14 +99,34 @@ export interface BaseSeries {
 }
 
 export interface BaseSeriesData<T = MeaningfulAny> {
+    /** Individual color for the data chunk (point in scatter, segment in pie, bar etc) */
+    color?: string;
     /**
      * A reserved subspace to store options and values for customized functionality
      *
      * Here you can add additional data for your own event callbacks and formatter callbacks
      */
     custom?: T;
-    /** Individual color for the data chunk (point in scatter, segment in pie, bar etc) */
-    color?: string;
+    /** Per-point overrides for the series data label. */
+    dataLabels?: {
+        /**
+         * Per-point override of `series.dataLabels.enabled`. The point-level value takes precedence:
+         * `true` shows the label even when series-level labels are disabled,
+         * `false` hides the label even when series-level labels are enabled.
+         * @default series.dataLabels.enabled
+         */
+        enabled?: boolean;
+    };
+    /** Per-point overrides for the tooltip behavior. */
+    tooltip?: {
+        /**
+         * Per-point override of `series.tooltip.enabled`. The point-level value takes precedence:
+         * `true` shows the point in the tooltip even when the series is hidden from the tooltip,
+         * `false` hides the point even when the series is shown.
+         * @default series.tooltip.enabled
+         */
+        enabled?: boolean;
+    };
 }
 
 export interface BaseSeriesLegend extends ChartLegendItem {

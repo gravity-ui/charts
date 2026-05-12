@@ -101,6 +101,21 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
     }));
 }
 
+/**
+ * Resolves the effective tooltip visibility for a point: point-level setting wins
+ * over series-level. Both default to `true` when unset.
+ */
+export function isPointTooltipEnabled(args: {
+    data?: {tooltip?: {enabled?: boolean}} | null;
+    series?: {tooltip?: {enabled?: boolean}} | null;
+}): boolean {
+    const pointEnabled = args.data?.tooltip?.enabled;
+    if (pointEnabled !== undefined) {
+        return pointEnabled;
+    }
+    return args.series?.tooltip?.enabled ?? true;
+}
+
 export function isInsidePath(args: {
     path: string;
     point: [number, number];

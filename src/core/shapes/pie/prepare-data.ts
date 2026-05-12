@@ -12,6 +12,8 @@ import {
     getLeftPosition,
     getTextSizeFn,
     isLabelsOverlapping,
+    isPointDataLabelEnabled,
+    shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 
@@ -67,10 +69,12 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         stackId,
         items,
         labels,
+        hasDataLabels,
     }: {
         stackId: string;
         items: PreparedPieSeries[];
         labels: Record<string, Partial<PieLabelData>>;
+        hasDataLabels: boolean;
     }) => {
         const series = items[0];
         const {center, borderWidth, borderColor, borderRadius, dataLabels} = series;
@@ -105,7 +109,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
             let maxSegmentRadius = maxRadius;
 
-            if (dataLabels.enabled) {
+            if (hasDataLabels) {
                 maxSegmentRadius -=
                     dataLabels.distance + dataLabels.connectorPadding + labelMaxHeight;
             }
@@ -133,10 +137,16 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         return data;
     };
 
-    const getLabels = async ({series}: {series: PreparedPieSeries[]}) => {
+    const getLabels = async ({
+        series,
+        hasDataLabels,
+    }: {
+        series: PreparedPieSeries[];
+        hasDataLabels: boolean;
+    }) => {
         const {dataLabels} = series[0];
 
-        if (!dataLabels.enabled) {
+        if (!hasDataLabels) {
             return {};
         }
 
@@ -144,6 +154,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         const acc: Record<string, Partial<PieLabelData>> = {};
         for (let i = 0; i < series.length; i++) {
             const d = series[i];
+
+            if (!isPointDataLabelEnabled({data: d.data, series: d})) {
+                continue;
+            }
 
             const text = getFormattedValue({
                 value: d.data.label ?? d.data.value,
@@ -183,16 +197,23 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         data: PreparedPieData;
         series: PreparedPieSeries[];
         labels: Record<string, Partial<PieLabelData>>;
+        hasDataLabels: boolean;
         allowOverlow?: boolean;
     }) => {
-        const {data, series, labels: labelsData, allowOverlow = true} = prepareLabelsArgs;
+        const {
+            data,
+            series,
+            labels: labelsData,
+            hasDataLabels,
+            allowOverlow = true,
+        } = prepareLabelsArgs;
         const {dataLabels} = series[0];
 
         const labels: PieLabelData[] = [];
         const htmlLabels: HtmlItem[] = [];
         const connectors: PieConnectorData[] = [];
 
-        if (!dataLabels.enabled) {
+        if (!hasDataLabels) {
             return {labels, htmlLabels, connectors};
         }
 
@@ -219,6 +240,9 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
         let shouldStopLabelPlacement = false;
         series.forEach((d, index) => {
+            if (!isPointDataLabelEnabled({data: d.data, series: d})) {
+                return;
+            }
             const prevLabel = labels[labels.length - 1];
             const {text = '', size: labelSize} = labelsData[d.id];
             const labelWidth = labelSize?.width ?? 0;
@@ -403,12 +427,17 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
     return Promise.all(
         Array.from(groupedPieSeries).map(async ([stackId, items]) => {
-            const seriesLabels = await getLabels({series: items});
-            const data = prepareItem({stackId, items, labels: seriesLabels});
+            const hasDataLabels = shouldPrepareSeriesDataLabels({
+                dataLabels: items[0].dataLabels,
+                data: items.map((it) => it.data),
+            });
+            const seriesLabels = await getLabels({series: items, hasDataLabels});
+            const data = prepareItem({stackId, items, labels: seriesLabels, hasDataLabels});
             const preparedLabels = prepareLabels({
                 data,
                 labels: seriesLabels,
                 series: items,
+                hasDataLabels,
             });
 
             let maxLeftRightFreeSpace = Infinity;
@@ -508,6 +537,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 data,
                 series: items,
                 labels: seriesLabels,
+                hasDataLabels,
                 allowOverlow: false,
             });
 

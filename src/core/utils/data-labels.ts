@@ -11,13 +11,44 @@ type PointLabelSeries = {
         html: boolean;
         padding: number;
         format?: ValueFormat;
+        enabled?: boolean;
     };
 };
+
+/**
+ * Resolves the effective dataLabels visibility for a point: point-level setting wins
+ * over series-level. Both default to `true` when unset.
+ */
+export function isPointDataLabelEnabled(args: {
+    data?: {dataLabels?: {enabled?: boolean}} | null;
+    series?: {dataLabels?: {enabled?: boolean}} | null;
+}): boolean {
+    const pointEnabled = args.data?.dataLabels?.enabled;
+    if (pointEnabled !== undefined) {
+        return pointEnabled;
+    }
+    return args.series?.dataLabels?.enabled ?? true;
+}
+
+/**
+ * Returns `true` if the series should run its dataLabels prep pipeline:
+ * either series-level is enabled, or at least one point opts in via override.
+ */
+export function shouldPrepareSeriesDataLabels(series: {
+    dataLabels?: {enabled?: boolean};
+    data?: ReadonlyArray<{dataLabels?: {enabled?: boolean}}>;
+}): boolean {
+    if (series.dataLabels?.enabled) {
+        return true;
+    }
+    return Boolean(series.data?.some((d) => d.dataLabels?.enabled === true));
+}
 
 type LabelPoint = {
     x: number | null;
     y: number | null;
     data: {
+        dataLabels?: {enabled?: boolean};
         label?: string | number | null;
         y?: string | number | null;
     };
@@ -62,6 +93,10 @@ export async function preparePointDataLabels<S extends PointLabelSeries, P exten
         const point = points[i];
 
         if (point.y === null || point.x === null || isOutsideBounds(point.x, point.y)) {
+            continue;
+        }
+
+        if (!isPointDataLabelEnabled({data: point.data, series})) {
             continue;
         }
 

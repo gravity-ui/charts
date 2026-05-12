@@ -12,7 +12,11 @@ import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '
 import {buildHoverMarkerGetter} from '../../shapes/marker';
 import type {MarkerItem} from '../../shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
-import {getDataCategoryValue, preparePointDataLabels} from '../../utils';
+import {
+    getDataCategoryValue,
+    preparePointDataLabels,
+    shouldPrepareSeriesDataLabels,
+} from '../../utils';
 
 import type {PointData, PreparedAreaData} from './types';
 
@@ -394,7 +398,7 @@ export const prepareAreaData = async (args: {
                 const currentYAxis = yAxis[item.series.yAxis];
                 const itemYAxisTop = split.plots[currentYAxis.plotIndex]?.top || 0;
 
-                if (item.series.dataLabels.enabled && !isRangeSlider) {
+                if (!isRangeSlider && shouldPrepareSeriesDataLabels(item.series)) {
                     const labelsData = await preparePointDataLabels({
                         series: item.series,
                         points: item.points,

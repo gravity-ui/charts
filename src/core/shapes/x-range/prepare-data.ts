@@ -7,7 +7,13 @@ import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedXRangeSeries} from '../../series/types';
 import {MIN_BAR_WIDTH} from '../../shapes/bar-constants';
-import {getDataCategoryValue, getLabelsSize, getTextSizeFn, getTextWithElipsis} from '../../utils';
+import {
+    getDataCategoryValue,
+    getLabelsSize,
+    getTextSizeFn,
+    getTextWithElipsis,
+    isPointDataLabelEnabled,
+} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 
@@ -143,7 +149,11 @@ export async function prepareXRangeData(
         const item = result[i];
         const {dataLabels} = item.series;
 
-        if (!dataLabels.enabled || item.data.label === null || isRangeSlider) {
+        if (
+            isRangeSlider ||
+            item.data.label === null ||
+            !isPointDataLabelEnabled({data: item.data, series: item.series})
+        ) {
             continue;
         }
 
