@@ -218,7 +218,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
                     if (anchor === 'plot') {
                         x = edge;
                     } else {
-                        x = Math.max(edge, item.x + item.width + padding);
+                        x = Math.min(edge, item.x + item.width + padding);
                     }
                     break;
                 }
