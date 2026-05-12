@@ -12,6 +12,7 @@ import {
     getLabelsSize,
     getSvgLabelConstraintedPosition,
     getTextSizeFn,
+    isPointDataLabelEnabled,
 } from '../../utils';
 import {getBarYLayout, groupBarYDataByYValue} from '../../utils/bar-y';
 import {getFormattedValue} from '../../utils/format';
@@ -194,7 +195,7 @@ export async function prepareBarYData(args: {
         const prepared = result[i];
 
         const dataLabels = prepared.series.dataLabels;
-        if (dataLabels.enabled) {
+        if (isPointDataLabelEnabled({data: prepared.data, series: prepared.series})) {
             const data = prepared.data;
             const content = getFormattedValue({value: data.label ?? data.x, ...dataLabels});
 

@@ -1,6 +1,7 @@
 import {bisector, sort} from 'd3-array';
 
 import type {TooltipDataChunk} from '../../../types';
+import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
 import type {PreparedBarYData} from './types';
@@ -9,7 +10,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     const {data, position} = args;
     const [pointerX, pointerY] = position;
 
-    const sorted = sort(data, (p) => p.y);
+    const visibleData = data.filter((p) => isPointTooltipEnabled({data: p.data, series: p.series}));
+
+    const sorted = sort(visibleData, (p) => p.y);
     const closestYIndex = bisector<PreparedBarYData, number>((p) => p.y + p.height / 2).center(
         sorted,
         pointerY,
@@ -21,7 +24,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
         return {chunks: []};
     }
 
-    const selectedPoints = data.filter((p) => p.data.y === closestYPoint.data.y);
+    const selectedPoints = visibleData.filter((p) => p.data.y === closestYPoint.data.y);
 
     const closestPoints = sort(
         selectedPoints.filter((p) => p.y === closestYPoint.y),

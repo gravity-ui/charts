@@ -14,6 +14,8 @@ import {
     getTextSizeFn,
     getTextWithElipsis,
     isBandScale,
+    isPointDataLabelEnabled,
+    shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 
@@ -80,10 +82,13 @@ export async function prepareHeatmapData({
 
     const svgDataLabels: HeatmapLabel[] = [];
     const htmlDataLabels: HtmlItem[] = [];
-    if (series.dataLabels.enabled) {
+    if (shouldPrepareSeriesDataLabels(series)) {
         if (series.dataLabels.html) {
             for (let i = 0; i < heatmapItems.length; i++) {
                 const item = heatmapItems[i];
+                if (!isPointDataLabelEnabled({data: item.data, series})) {
+                    continue;
+                }
                 const labelContent =
                     item.data.label ??
                     getFormattedValue({value: item.data.value, format: series.dataLabels.format});
@@ -114,6 +119,9 @@ export async function prepareHeatmapData({
             const getTextSize = getTextSizeFn({style: series.dataLabels.style});
             for (let i = 0; i < heatmapItems.length; i++) {
                 const item = heatmapItems[i];
+                if (!isPointDataLabelEnabled({data: item.data, series})) {
+                    continue;
+                }
                 const labelContent =
                     item.data.label ??
                     getFormattedValue({value: item.data.value, format: series.dataLabels.format});

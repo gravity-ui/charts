@@ -11,7 +11,12 @@ import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../series/types';
 import {getSeriesStackId} from '../../series/utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
-import {getDataCategoryValue, getLabelsSize, getTextSizeFn} from '../../utils';
+import {
+    getDataCategoryValue,
+    getLabelsSize,
+    getTextSizeFn,
+    isPointDataLabelEnabled,
+} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 
@@ -30,7 +35,7 @@ async function getLabelData(
     d: PreparedBarXData,
     xMax: number,
 ): Promise<{svgLabel?: LabelData; htmlLabel?: HtmlItem}> {
-    if (!d.series.dataLabels.enabled) {
+    if (!isPointDataLabelEnabled({data: d.data, series: d.series})) {
         return {};
     }
 
@@ -374,9 +379,9 @@ export const prepareBarXData = async (args: {
             barData.y >= plotHeight;
         const isZeroValue = (barData.data.y ?? 0) === 0;
         if (
-            barData.series.dataLabels.enabled &&
             !isRangeSlider &&
-            (!isBarOutsideBounds || isZeroValue)
+            (!isBarOutsideBounds || isZeroValue) &&
+            isPointDataLabelEnabled({data: barData.data, series: barData.series})
         ) {
             const {svgLabel, htmlLabel} = await getLabelData(barData, xMax);
             if (svgLabel) {

@@ -7,7 +7,7 @@ import type {AreaSeries, AreaSeriesData} from './area';
 import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
-import type {ValueFormat} from './base';
+import type {BaseSeries, ValueFormat} from './base';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
 import type {LineSeries, LineSeriesData} from './line';
@@ -35,6 +35,7 @@ export interface TooltipDataChunkPie<T = MeaningfulAny> {
         type: PieSeries['type'];
         id: string;
         name: string;
+        tooltip?: BaseSeries['tooltip'];
     };
 }
 
@@ -44,6 +45,7 @@ export interface TooltipDataChunkScatter<T = MeaningfulAny> {
         type: ScatterSeries['type'];
         id: string;
         name: string;
+        tooltip?: BaseSeries['tooltip'];
     };
 }
 
@@ -53,6 +55,7 @@ export interface TooltipDataChunkLine<T = MeaningfulAny> {
         type: LineSeries['type'];
         id: string;
         name: string;
+        tooltip?: BaseSeries['tooltip'];
     };
     closest?: boolean;
 }
@@ -63,6 +66,7 @@ export interface TooltipDataChunkArea<T = MeaningfulAny> {
         type: AreaSeries['type'];
         id: string;
         name: string;
+        tooltip?: BaseSeries['tooltip'];
     };
 }
 
@@ -101,6 +105,7 @@ export interface TooltipDataChunkFunnel<T = MeaningfulAny> {
         type: FunnelSeries['type'];
         id: string;
         name: string;
+        tooltip?: BaseSeries['tooltip'];
     };
 }
 

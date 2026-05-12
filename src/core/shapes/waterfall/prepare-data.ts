@@ -12,7 +12,7 @@ import type {
 } from '../../series/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
 import {getXValue, getYValue} from '../../shapes/utils';
-import {getLabelsSize} from '../../utils';
+import {getLabelsSize, isPointDataLabelEnabled} from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 
 import type {PreparedWaterfallData} from './types';
@@ -21,7 +21,7 @@ async function getLabelData(
     d: PreparedWaterfallData,
     plotHeight: number,
 ): Promise<LabelData | undefined> {
-    if (!d.series.dataLabels.enabled) {
+    if (!isPointDataLabelEnabled({data: d.data, series: d.series})) {
         return undefined;
     }
 

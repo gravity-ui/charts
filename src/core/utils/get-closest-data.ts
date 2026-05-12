@@ -5,7 +5,7 @@ import type {TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
-import {getClosestPointsByXValue} from './tooltip-helpers';
+import {getClosestPointsByXValue, isPointTooltipEnabled} from './tooltip-helpers';
 import type {ShapePoint} from './tooltip-helpers';
 
 type GetClosestPointsArgs = {
@@ -48,9 +48,13 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             boundsHeight,
         });
 
-        result.push(...chunks);
+        result.push(...chunks.filter((c) => isPointTooltipEnabled(c)));
         if (seriesXLookupPoints) {
-            xLookupPoints.push(...seriesXLookupPoints);
+            for (const p of seriesXLookupPoints) {
+                if (isPointTooltipEnabled(p)) {
+                    xLookupPoints.push(p);
+                }
+            }
         }
     }
 

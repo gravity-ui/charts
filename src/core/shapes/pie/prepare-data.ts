@@ -12,6 +12,8 @@ import {
     getLeftPosition,
     getTextSizeFn,
     isLabelsOverlapping,
+    isPointDataLabelEnabled,
+    shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 
@@ -98,6 +100,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         };
 
         const labelMaxHeight = max(Object.values(labels).map((l) => l.size?.height ?? 0)) ?? 0;
+        const labelsActive = shouldPrepareSeriesDataLabels({
+            dataLabels,
+            data: items.map((it) => it.data),
+        });
         const segments = items.reduce<SegmentData[]>((acc, item) => {
             if (item.value === null) {
                 return acc;
@@ -105,7 +111,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
             let maxSegmentRadius = maxRadius;
 
-            if (dataLabels.enabled) {
+            if (labelsActive) {
                 maxSegmentRadius -=
                     dataLabels.distance + dataLabels.connectorPadding + labelMaxHeight;
             }
@@ -136,7 +142,12 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
     const getLabels = async ({series}: {series: PreparedPieSeries[]}) => {
         const {dataLabels} = series[0];
 
-        if (!dataLabels.enabled) {
+        if (
+            !shouldPrepareSeriesDataLabels({
+                dataLabels,
+                data: series.map((d) => d.data),
+            })
+        ) {
             return {};
         }
 
@@ -144,6 +155,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         const acc: Record<string, Partial<PieLabelData>> = {};
         for (let i = 0; i < series.length; i++) {
             const d = series[i];
+
+            if (!isPointDataLabelEnabled({data: d.data, series: d})) {
+                continue;
+            }
 
             const text = getFormattedValue({
                 value: d.data.label ?? d.data.value,
@@ -192,7 +207,12 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         const htmlLabels: HtmlItem[] = [];
         const connectors: PieConnectorData[] = [];
 
-        if (!dataLabels.enabled) {
+        if (
+            !shouldPrepareSeriesDataLabels({
+                dataLabels,
+                data: series.map((d) => d.data),
+            })
+        ) {
             return {labels, htmlLabels, connectors};
         }
 
@@ -219,6 +239,9 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
         let shouldStopLabelPlacement = false;
         series.forEach((d, index) => {
+            if (!isPointDataLabelEnabled({data: d.data, series: d})) {
+                return;
+            }
             const prevLabel = labels[labels.length - 1];
             const {text = '', size: labelSize} = labelsData[d.id];
             const labelWidth = labelSize?.width ?? 0;

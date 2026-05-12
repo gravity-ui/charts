@@ -1101,6 +1101,47 @@ test.describe('Bar-y series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.describe('Per-point tooltip.enabled', () => {
+        test('hidden point in one series leaves only the other in the tooltip', async ({
+            page,
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [
+                                {x: 7, y: 1},
+                                {x: 30, y: 2, tooltip: {enabled: false}},
+                            ],
+                        },
+                        {
+                            type: 'bar-y',
+                            name: 'Series 2',
+                            data: [
+                                {x: 5, y: 1},
+                                {x: 20, y: 2},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const bars = component.locator('.gcharts-bar-y__segment');
+            const targetBar = bars.last();
+            const position = await getLocatorBoundingBox(targetBar);
+            await page.mouse.move(
+                Math.round(position.x + position.width / 2),
+                Math.round(position.y + position.height / 2),
+            );
+            const rows = page.locator('.gcharts-tooltip__content-row');
+            await expect(rows).toHaveCount(1);
+            await expect(rows.first()).toContainText('Series 2');
+        });
+    });
+
     test('Empty string category value should be displayed', async ({mount}) => {
         const chartData: ChartData = {
             series: {
@@ -1125,5 +1166,31 @@ test.describe('Bar-y series', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test.describe('Per-point dataLabels.enabled', () => {
+        test('hidden point in one series omits only that label', async ({mount}) => {
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [
+                                {x: 7, y: 1},
+                                {x: 30, y: 2, dataLabels: {enabled: false}},
+                                {x: 12, y: 3},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const labels = component.locator('.gcharts-bar-y__label');
+            await expect(labels).toHaveCount(2);
+            const texts = await labels.allTextContents();
+            expect(texts.slice().sort()).toEqual(['12', '7']);
+        });
     });
 });

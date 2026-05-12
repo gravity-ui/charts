@@ -6,6 +6,7 @@ import {
     getFormattedValue,
     getLabelsSize,
     getTextSizeFn,
+    isPointDataLabelEnabled,
 } from '../../utils';
 
 import type {PreparedFunnelData} from './types';
@@ -69,7 +70,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
     for (let index = 0; index < series.length; index++) {
         const s = series[index];
 
-        if (s.dataLabels.enabled) {
+        if (isPointDataLabelEnabled({data: s.data, series: s})) {
             const d = s.data;
             const labelContent =
                 d.label ?? getFormattedValue({value: d.value, format: s.dataLabels.format});
