@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.52.0](https://github.com/gravity-ui/charts/compare/v1.51.8...v1.52.0) (2026-05-12)
+
+
+### Features
+
+* **funnel:** add label positioning controls — inside, reserveSpace ([#609](https://github.com/gravity-ui/charts/issues/609)) ([c954305](https://github.com/gravity-ui/charts/commit/c954305c575108a72061d1540634b97db78dc5f7))
+* per-point tooltip and dataLabels overrides ([#612](https://github.com/gravity-ui/charts/issues/612)) ([b892ece](https://github.com/gravity-ui/charts/commit/b892ece6a46ff682251aeb00080973a0cade564e))
+
 ## [1.51.8](https://github.com/gravity-ui/charts/compare/v1.51.7...v1.51.8) (2026-05-07)
 
 
