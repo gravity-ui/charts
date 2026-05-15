@@ -5,7 +5,6 @@
 
 ### Bug Fixes
 
-* **area:** hide synthetic stack points from tooltip and data labels ([f8c15aa](https://github.com/gravity-ui/charts/commit/f8c15aa6147f1513e1ab65dfc3098a5219fcb449))
 * **area:** hide synthetic stack points from tooltip and data labels ([#614](https://github.com/gravity-ui/charts/issues/614)) ([deabc36](https://github.com/gravity-ui/charts/commit/deabc36bb5f37af396572e072198c2c4b2eef319))
 
 ## [1.52.0](https://github.com/gravity-ui/charts/compare/v1.51.8...v1.52.0) (2026-05-12)
