@@ -1,4 +1,3 @@
-import {create} from 'd3-selection';
 import get from 'lodash/get';
 
 import {i18n} from '~core/i18n';
@@ -19,7 +18,6 @@ import type {
     TooltipDataChunkSankey,
     TreemapSeriesData,
 } from '../../../types';
-import {appendLinePathElement} from '../../utils';
 
 export type HoveredValue = string | number | null | undefined;
 
@@ -240,33 +238,4 @@ export function getSortedHovered(args: {
             return hovered;
         }
     }
-}
-
-export function getTooltipRowColorSymbol({
-    series,
-    color,
-    height = 8,
-    width = 16,
-}: {
-    color?: string;
-    series?: TooltipDataChunk['series'];
-    height?: number;
-    width?: number;
-}) {
-    if (series?.type === 'line') {
-        const colorSymbol = create('svg').attr('height', height).attr('width', width);
-        const g = colorSymbol.append('g');
-        appendLinePathElement({
-            svgRootElement: g.node(),
-            height,
-            width,
-            color,
-            dashStyle: get(series, 'dashStyle'),
-            lineWidth: get(series, 'lineWidth'),
-        });
-
-        return colorSymbol.node();
-    }
-
-    return null;
 }

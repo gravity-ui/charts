@@ -1,8 +1,9 @@
 import {create} from 'd3-selection';
 
+import type {DashStyle} from '../constants';
 import {getRectPath} from '../shapes/utils';
 import type {ChartTooltip, ChartXAxis, ChartYAxis, ValueFormat} from '../types';
-import {getDefaultDateFormat} from '../utils';
+import {createLineSymbol, getDefaultDateFormat} from '../utils';
 
 export function getDefaultValueFormat({
     axis,
@@ -51,4 +52,27 @@ export function getTooltipColorSymbol(color: string) {
         .attr('fill', color);
 
     return colorSymbol.node()?.outerHTML ?? '';
+}
+
+export function getTooltipLineSymbol({
+    color,
+    dashStyle,
+    lineWidth = 1,
+}: {
+    color: string;
+    dashStyle?: DashStyle;
+    lineWidth?: number;
+}) {
+    const width = 16;
+    const height = 8;
+    const svg = create('svg').attr('height', height).attr('width', width);
+    createLineSymbol({
+        container: svg.append('g').node(),
+        width,
+        height,
+        color,
+        dashStyle,
+        lineWidth,
+    });
+    return svg.node()?.outerHTML ?? '';
 }

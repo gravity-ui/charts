@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
 import {prepareLineData} from '~core/shapes/line/prepare-data';
 import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipLineSymbol} from '~core/tooltip/utils';
 
 import type {LineSeries} from '../../types';
 
@@ -65,12 +65,13 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
                 items: [
                     {
                         id: 'color',
-                        source: 'color',
-                        format: {
-                            type: 'custom',
-                            formatter: ({value}) => {
-                                return value ? getTooltipColorSymbol(String(value)) : '';
-                            },
+                        source: ({item}) => {
+                            const s = item.series as PreparedLineSeries;
+                            return getTooltipLineSymbol({
+                                color: s.color,
+                                dashStyle: s.dashStyle,
+                                lineWidth: s.lineWidth,
+                            });
                         },
                     },
                     {id: 'name', source: 'name', align: 'start'},

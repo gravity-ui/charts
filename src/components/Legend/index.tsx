@@ -9,6 +9,7 @@ import {symbol} from 'd3-shape';
 import {CONTINUOUS_LEGEND_SIZE} from '~core/constants';
 import {
     createGradientRect,
+    createLineSymbol,
     getContinuesColorFn,
     getSymbol,
     getTextSizeFn,
@@ -26,7 +27,6 @@ import type {
 import {formatNumber} from '../../libs';
 import type {LegendConfig} from '../../types';
 import {block} from '../../utils';
-import {appendLinePathElement} from '../utils';
 
 import './styles.scss';
 
@@ -153,8 +153,8 @@ function renderLegendSymbol(args: {
 
         switch (d.symbol.shape) {
             case 'path': {
-                appendLinePathElement({
-                    svgRootElement: element.node(),
+                createLineSymbol({
+                    container: element.node(),
                     x,
                     height: legendLineHeight,
                     width: d.symbol.bboxWidth,
