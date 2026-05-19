@@ -67,6 +67,7 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
                             const {data} = item as TooltipDataChunkXRange;
                             return `${data.x0} — ${data.x1}`;
                         },
+                        align: 'end',
                     },
                 ],
             },

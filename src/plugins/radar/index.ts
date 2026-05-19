@@ -55,7 +55,7 @@ export const radarPlugin: SeriesPlugin<RadarSeries> = {
                         },
                     },
                     {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.value'},
+                    {id: 'value', source: 'data.value', align: 'end'},
                 ],
             },
         },

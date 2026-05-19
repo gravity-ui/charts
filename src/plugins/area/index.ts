@@ -84,7 +84,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
                         },
                     },
                     {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.y'},
+                    {id: 'value', source: 'data.y', align: 'end'},
                 ],
             },
         },

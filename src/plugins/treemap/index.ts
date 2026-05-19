@@ -55,7 +55,7 @@ export const treemapPlugin: SeriesPlugin<TreemapSeries> = {
                         },
                     },
                     {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.value'},
+                    {id: 'value', source: 'data.value', align: 'end'},
                 ],
             },
         },

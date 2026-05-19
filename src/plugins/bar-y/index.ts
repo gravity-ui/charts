@@ -61,7 +61,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries> = {
                         },
                     },
                     {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.x'},
+                    {id: 'value', source: 'data.x', align: 'end'},
                 ],
             },
         },

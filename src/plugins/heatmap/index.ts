@@ -64,7 +64,7 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries> = {
                         },
                     },
                     {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.value'},
+                    {id: 'value', source: 'data.value', align: 'end'},
                 ],
             },
         },

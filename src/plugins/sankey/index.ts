@@ -68,6 +68,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
                             const {target, data: source} = item as TooltipDataChunkSankey;
                             return source.links.find((d) => d.name === target?.name)?.value;
                         },
+                        align: 'end',
                     },
                 ],
             },
