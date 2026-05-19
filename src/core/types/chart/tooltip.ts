@@ -176,7 +176,6 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
 
 type TooltipRowCellItemSourceFn<T = MeaningfulAny> = (args: {item: TooltipDataChunk<T>}) => unknown;
 
-// TODO: при регистрации плагина нужно добавить валидацию - что в ячейках тултипа определены значения для id = color | name | value - могут быть null или пустые строки, если нельзя задать что-то адекватное
 export interface TooltipRowCellItem {
     /** cell name - used in tooltip rowRenderer(if defined) to transfer colors/names, etc. */
     id: string;
