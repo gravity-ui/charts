@@ -10,6 +10,7 @@ import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
 import {renderXRange} from '~core/shapes/x-range/renderer';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getFormattedValue} from '~core/utils/format';
 
 import type {TooltipDataChunkXRange, XRangeSeries} from '../../types';
 
@@ -41,8 +42,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     type: 'x-range',
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareXRangeSeries({series: series as XRangeSeries[], seriesOptions, legend, colorScale}),
+    prepareSeries: prepareXRangeSeries,
     prepareShapeData,
     renderShapes,
     tooltip: {
@@ -64,9 +64,14 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
                     {
                         id: 'value',
                         source: ({item}) => {
-                            const {data} = item as TooltipDataChunkXRange;
-                            return `${data.x0} — ${data.x1}`;
+                            const {data, series} = item as TooltipDataChunkXRange;
+                            const format = (series as unknown as PreparedXRangeSeries).tooltip
+                                ?.valueFormat;
+                            const x0 = getFormattedValue({value: data.x0, format}) ?? data.x0;
+                            const x1 = getFormattedValue({value: data.x1, format}) ?? data.x1;
+                            return `${x0} — ${x1}`;
                         },
+                        format: {type: 'custom', formatter: ({value}) => String(value ?? '')},
                         align: 'end',
                     },
                 ],

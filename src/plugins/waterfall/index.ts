@@ -11,7 +11,7 @@ import {renderWaterfall} from '~core/shapes/waterfall/renderer';
 import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import {filterOverlappingLabels} from '~core/utils';
 
-import type {WaterfallSeries} from '../../types';
+import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
 
 import {prepareWaterfallSeries} from './prepare-waterfall-series';
 
@@ -63,8 +63,22 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         row: {
             cells: {
                 items: [
-                    {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.y', align: 'end'},
+                    {
+                        id: 'name',
+                        source: ({item}) => {
+                            const {data, series} = item as TooltipDataChunkWaterfall;
+                            return data.total ? 'Total' : series.name;
+                        },
+                        align: 'start',
+                    },
+                    {
+                        id: 'value',
+                        source: ({item}) => {
+                            const chunk = item as TooltipDataChunkWaterfall;
+                            return chunk.data.total ? chunk.subTotal : chunk.data.y;
+                        },
+                        align: 'end',
+                    },
                 ],
             },
         },
