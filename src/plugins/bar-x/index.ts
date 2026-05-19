@@ -9,11 +9,12 @@ import {getTooltipData} from '~core/shapes/bar-x/get-tooltip-data';
 import {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
 import {renderBarX} from '~core/shapes/bar-x/renderer';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterOverlappingLabels} from '~core/utils';
 
 import type {BarXSeries} from '../../types';
 
-import {prepareBarXSeries} from './prepare';
+import {prepareBarXSeries} from './prepare-bar-x-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -81,9 +82,28 @@ function renderShapes({
 
 export const barXPlugin: SeriesPlugin<BarXSeries> = {
     type: 'bar-x',
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareBarXSeries({series: series as BarXSeries[], seriesOptions, legend, colorScale}),
+    prepareSeries: prepareBarXSeries,
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => {
+                                return value ? getTooltipColorSymbol(String(value)) : '';
+                            },
+                        },
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.y'},
+                ],
+            },
+        },
+    },
 };

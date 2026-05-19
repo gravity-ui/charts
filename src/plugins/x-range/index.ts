@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/x-range/get-tooltip-data';
 import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
 import {renderXRange} from '~core/shapes/x-range/renderer';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
-import type {XRangeSeries} from '../../types';
+import type {TooltipDataChunkXRange, XRangeSeries} from '../../types';
 
-import {prepareXRangeSeries} from './prepare';
+import {prepareXRangeSeries} from './prepare-x-range-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale, boundsWidth, isRangeSlider} = args;
@@ -44,5 +45,31 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
         prepareXRangeSeries({series: series as XRangeSeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => {
+                                return value ? getTooltipColorSymbol(String(value)) : '';
+                            },
+                        },
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {
+                        id: 'value',
+                        source: ({item}) => {
+                            const {data} = item as TooltipDataChunkXRange;
+                            return `${data.x0} — ${data.x1}`;
+                        },
+                    },
+                ],
+            },
+        },
+    },
 };

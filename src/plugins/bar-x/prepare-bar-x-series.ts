@@ -1,20 +1,14 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedBarXSeries, PreparedLegend, PreparedSeries} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
-import type {BarXSeries, BarXSeriesData, ChartSeriesOptions} from '../../types';
-
-type PrepareBarXSeriesArgs = {
-    colorScale: ScaleOrdinal<string, string>;
-    series: BarXSeries[];
-    legend: PreparedLegend;
-    seriesOptions?: ChartSeriesOptions;
-};
+import type {BarXSeries, BarXSeriesData} from '../../types';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -28,14 +22,15 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     }
 }
 
-export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[] {
-    const {colorScale, series: seriesList, seriesOptions, legend} = args;
+export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedSeries[] {
+    const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
     return seriesList.map<PreparedBarXSeries>((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
         const dataLabelsInside =
             series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
+        const yAxisIndex = get(series, 'yAxis', 0);
 
         return {
             type: series.type,
@@ -63,9 +58,14 @@ export function prepareBarXSeries(args: PrepareBarXSeriesArgs): PreparedSeries[]
                 format: series.dataLabels?.format,
             },
             cursor: get(series, 'cursor', null),
-            yAxis: get(series, 'yAxis', 0),
+            yAxis: yAxisIndex,
             borderRadius: get(series, 'borderRadius', get(seriesOptions, 'bar-x.borderRadius', 0)),
-            tooltip: series.tooltip,
+            tooltip: {
+                ...series.tooltip,
+                valueFormat:
+                    series.tooltip?.valueFormat ??
+                    getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
+            },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
         };
     }, []);

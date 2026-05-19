@@ -1,4 +1,3 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
@@ -8,8 +7,10 @@ import {
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
-import type {PreparedLegend, PreparedScatterSeries} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedScatterSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getSymbolType, getUniqId} from '~core/utils';
 
@@ -60,20 +61,16 @@ function prepareSeriesData(series: ScatterSeries): ScatterSeriesData[] {
     }
 }
 
-interface PrepareScatterSeriesArgs {
-    colorScale: ScaleOrdinal<string, string>;
-    series: ScatterSeries[];
-    legend: PreparedLegend;
-    seriesOptions?: ChartSeriesOptions;
-}
-
-export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedScatterSeries[] {
-    const {colorScale, series, seriesOptions, legend} = args;
+export function prepareScatterSeries(
+    args: PrepareSeriesArgs<ScatterSeries>,
+): PreparedScatterSeries[] {
+    const {colorScale, series, seriesOptions, legend, yAxis} = args;
 
     return series.map<PreparedScatterSeries>((s, index) => {
         const id = getUniqId();
         const name = 'name' in s && s.name ? s.name : '';
         const symbolType = (s as ScatterSeries).symbolType || getSymbolType(index);
+        const yAxisIndex = get(s, 'yAxis', 0);
 
         const prepared: PreparedScatterSeries = {
             id,
@@ -98,8 +95,12 @@ export function prepareScatterSeries(args: PrepareScatterSeriesArgs): PreparedSc
             },
             marker: prepareMarker(s, seriesOptions, index),
             cursor: get(s, 'cursor', null),
-            yAxis: get(s, 'yAxis', 0),
-            tooltip: s.tooltip,
+            yAxis: yAxisIndex,
+            tooltip: {
+                ...s.tooltip,
+                valueFormat:
+                    s.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
+            },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, s.rangeSlider),
         };
 

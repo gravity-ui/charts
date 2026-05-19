@@ -4,6 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
+import {getPreparedSeries} from '~core/series';
 import {getLegendComponents, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
@@ -17,15 +18,7 @@ import {
     isAxisRelatedSeries,
 } from '~core/utils';
 
-import {
-    createScales,
-    getAxes,
-    getPreparedSeries,
-    getShapes,
-    getSplit,
-    getVisibleSeries,
-    useZoom,
-} from '../../hooks';
+import {createScales, getAxes, getShapes, getSplit, getVisibleSeries, useZoom} from '../../hooks';
 import type {
     ChartScale,
     ClipPathBySeriesType,
@@ -212,6 +205,8 @@ export function useChartInnerProps(props: Props) {
                     seriesOptions: data.series.options,
                     preparedLegend,
                     colors,
+                    xAxis: normalizedXAxis,
+                    yAxis: normalizedYAxis,
                 });
             } else {
                 allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];

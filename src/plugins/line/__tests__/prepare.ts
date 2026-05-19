@@ -4,7 +4,7 @@ import {DEFAULT_PALETTE} from '~core/constants';
 import type {PreparedLegend} from '~core/series/types';
 
 import type {LineSeries} from '../../../types';
-import {DEFAULT_MARKER, prepareLineSeries} from '../prepare';
+import {DEFAULT_MARKER, prepareLineSeries} from '../prepare-line-series';
 
 // TODO: fix tests
 describe('prepareLineSeries', () => {
@@ -12,6 +12,7 @@ describe('prepareLineSeries', () => {
         const commonArgs = {
             colorScale: scaleOrdinal([] as string[], DEFAULT_PALETTE),
             legend: {} as PreparedLegend,
+            colors: [] as string[],
         };
 
         it('If the marker parameters are not specified, the default values should be applied', () => {

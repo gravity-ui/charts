@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/sankey/get-tooltip-data';
 import {prepareSankeyData} from '~core/shapes/sankey/prepare-data';
 import {renderSankey} from '~core/shapes/sankey/renderer';
 import type {PreparedSankeyData} from '~core/shapes/sankey/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
-import type {SankeySeries} from '../../types';
+import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
-import {prepareSankeySeries} from './prepare';
+import {prepareSankeySeries} from './prepare-sankey-series';
 
 function prepareShapeData({
     series,
@@ -38,5 +39,38 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
         prepareSankeySeries({series: series as SankeySeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => {
+                                return value ? getTooltipColorSymbol(String(value)) : '';
+                            },
+                        },
+                    },
+                    {
+                        id: 'name',
+                        source: ({item}) => {
+                            const {target, data: source} = item as TooltipDataChunkSankey;
+                            return `${source.name} → ${target?.name}`;
+                        },
+                        align: 'start',
+                    },
+                    {
+                        id: 'value',
+                        source: ({item}) => {
+                            const {target, data: source} = item as TooltipDataChunkSankey;
+                            return source.links.find((d) => d.name === target?.name)?.value;
+                        },
+                    },
+                ],
+            },
+        },
+    },
 };

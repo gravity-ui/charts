@@ -41,7 +41,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             continue;
         }
 
-        const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.getTooltipData({
+        const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
             data: list,
             position,
             boundsWidth,

@@ -4,43 +4,37 @@ import {block} from '../../../utils';
 
 const b = block('tooltip');
 
+type TooltipRowCellView = {
+    formattedValue: string;
+    align?: string;
+};
+
 export function Row(props: {
-    label: React.ReactNode;
     active?: boolean;
     className?: string;
-    color?: string;
-    colorSymbol?: React.ReactNode;
     striped?: boolean;
     style?: React.CSSProperties;
-    value?: React.ReactNode;
+    cells: (TooltipRowCellView | null)[];
 }) {
-    const {label, value, active, color, colorSymbol, className, striped, style} = props;
-
-    const colorItem = React.useMemo(() => {
-        if (colorSymbol) {
-            return colorSymbol;
-        }
-
-        if (color) {
-            return <div className={b('content-row-color')} style={{backgroundColor: color}} />;
-        }
-
-        return null;
-    }, [color, colorSymbol]);
+    const {active, className, striped, style, cells} = props;
 
     return (
         <tr className={b('content-row', {active, striped}, className)} style={style}>
-            {colorItem && <td className={b('content-row-color-cell')}>{colorItem}</td>}
-            <td className={b('content-row-label-cell')}>{label}</td>
-            {value && (
-                <td className={b('content-row-value-cell')}>
-                    {typeof value === 'string' ? (
-                        <span dangerouslySetInnerHTML={{__html: value}} />
-                    ) : (
-                        value
-                    )}
-                </td>
-            )}
+            {cells.map((cell, cellIndex) => {
+                if (cell === null) {
+                    return null;
+                }
+
+                const cellStyle = {
+                    ...(cell.align ? {textAlign: cell.align} : {}),
+                } as React.CSSProperties;
+
+                return (
+                    <td key={cellIndex} className={b('content-row-cell')} style={cellStyle}>
+                        <span dangerouslySetInnerHTML={{__html: cell.formattedValue}} />
+                    </td>
+                );
+            })}
         </tr>
     );
 }

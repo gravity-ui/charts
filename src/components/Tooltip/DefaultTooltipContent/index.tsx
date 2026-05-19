@@ -6,40 +6,30 @@ import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 
 import {i18n} from '~core/i18n';
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import {getFormattedValue} from '~core/utils/format';
 
 import {usePrevious} from '../../../hooks';
-import type {PreparedFunnelSeries, PreparedPieSeries, PreparedRadarSeries} from '../../../hooks';
 import type {
     ChartTooltip,
-    ChartTooltipRowRendererArgs,
     ChartXAxis,
     ChartYAxis,
     TooltipDataChunk,
-    TooltipDataChunkSankey,
-    TooltipDataChunkWaterfall,
-    TreemapSeriesData,
+    TooltipRowCellItem,
     ValueFormat,
-    XRangeSeriesData,
 } from '../../../types';
 import {block} from '../../../utils';
 
 import {Row} from './Row';
 import {RowWithAggregation} from './RowWithAggregation';
-import {
-    getDefaultValueFormat,
-    getHoveredValues,
-    getMeasureValue,
-    getPreparedAggregation,
-    getTooltipRowColorSymbol,
-    getXRowData,
-} from './utils';
+import {getHoveredValues, getMeasureValue, getPreparedAggregation} from './utils';
 
 const b = block('tooltip');
 
 type Props = {
     hovered: TooltipDataChunk[];
     pinned?: boolean;
+    row?: ChartTooltip['row'];
     rowRenderer?: ChartTooltip['rowRenderer'];
     totals?: ChartTooltip['totals'];
     valueFormat?: ValueFormat;
@@ -52,6 +42,7 @@ type Props = {
 export const DefaultTooltipContent = ({
     hovered,
     pinned,
+    row,
     rowRenderer,
     totals,
     valueFormat,
@@ -70,52 +61,25 @@ export const DefaultTooltipContent = ({
     const visibleHovered = pinned || !visibleRows ? hovered : hovered.slice(0, visibleRows);
     const restHoveredValues = pinned || !visibleRows ? [] : hoveredValues.slice(visibleRows);
 
-    const renderRow = ({
-        id,
-        name,
-        color,
-        active,
-        striped,
-        value,
-        formattedValue,
-        series,
-    }: ChartTooltipRowRendererArgs & {series?: TooltipDataChunk['series']}) => {
-        if (typeof rowRenderer === 'function') {
-            const result = rowRenderer({
-                id,
-                name,
-                color,
-                value,
-                formattedValue,
-                striped,
-                active,
-                className: b('content-row', {active, striped}),
-                hovered,
-            });
-
-            if (typeof result === 'string') {
-                return <React.Fragment key={id}>{parse(result)}</React.Fragment>;
-            }
-
-            return result as React.ReactElement | null;
+    const getTooltipRowCellValue = ({
+        cell,
+        tooltipDataChunk,
+    }: {
+        cell: TooltipRowCellItem | undefined;
+        tooltipDataChunk: TooltipDataChunk;
+    }) => {
+        if (!cell || !tooltipDataChunk) {
+            return null;
         }
 
-        const colorSymbol = getTooltipRowColorSymbol({series, color});
+        if (typeof cell.source === 'function') {
+            return cell.source({item: tooltipDataChunk});
+        }
 
         return (
-            <Row
-                key={id}
-                active={active}
-                color={color}
-                colorSymbol={
-                    colorSymbol ? (
-                        <div dangerouslySetInnerHTML={{__html: colorSymbol.outerHTML}} />
-                    ) : undefined
-                }
-                label={<span dangerouslySetInnerHTML={{__html: name}} />}
-                striped={striped}
-                value={formattedValue}
-            />
+            get(tooltipDataChunk, cell.source) ??
+            get(tooltipDataChunk, 'data.' + cell.source) ??
+            get(tooltipDataChunk, 'series.' + cell.source)
         );
     };
 
@@ -173,152 +137,59 @@ export const DefaultTooltipContent = ({
                 const striped = (i + 1) % 2 === 0;
                 const rowValueFormat = get(series, 'tooltip.valueFormat', valueFormat);
 
-                switch (series.type) {
-                    case 'scatter':
-                    case 'line':
-                    case 'area':
-                    case 'bar-x': {
-                        const format = rowValueFormat || getDefaultValueFormat({axis: yAxis});
-                        const formattedValue = getFormattedValue({
-                            value: hoveredValues[i],
-                            format,
-                        });
+                const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
+                const pluginCells = plugin ? plugin.tooltip.row.cells.items : [];
+                const rowCells: ReadonlyArray<TooltipRowCellItem> =
+                    row?.cells?.items ?? pluginCells;
 
-                        return renderRow({
-                            id,
-                            active,
-                            color,
-                            name: series.name,
-                            striped,
-                            value: hoveredValues[i],
-                            formattedValue,
-                            series,
-                        });
-                    }
-                    case 'waterfall': {
-                        const isTotal = get(data, 'total', false);
-                        const subTotalValue =
-                            (seriesItem as TooltipDataChunkWaterfall).subTotal ?? 0;
-                        const format = rowValueFormat || getDefaultValueFormat({axis: yAxis});
-                        const subTotal = getFormattedValue({
-                            value: subTotalValue,
-                            format,
-                        });
-                        const formattedValue = getFormattedValue({
-                            value: hoveredValues[i],
-                            format,
-                        });
+                const activeRowRenderer = row?.renderer ?? rowRenderer;
+                if (typeof activeRowRenderer === 'function') {
+                    const value = getTooltipRowCellValue({
+                        cell: rowCells.find((c) => c.id === 'value'),
+                        tooltipDataChunk: seriesItem,
+                    });
+                    const result = activeRowRenderer({
+                        id,
+                        name: getTooltipRowCellValue({
+                            cell: rowCells.find((c) => c.id === 'name'),
+                            tooltipDataChunk: seriesItem,
+                        }),
+                        color,
+                        value,
+                        formattedValue: getFormattedValue({
+                            value,
+                            format: rowValueFormat,
+                        }),
+                        striped,
+                        active,
+                        className: b('content-row', {active, striped}),
+                        hovered,
+                    });
 
-                        return (
-                            <React.Fragment key={id}>
-                                {!isTotal && (
-                                    <React.Fragment>
-                                        <div className={b('series-name')}>
-                                            {getXRowData(data, xAxis)}
-                                        </div>
-                                        <Row label={series.name} value={formattedValue} />
-                                    </React.Fragment>
-                                )}
-                                <Row label={isTotal ? 'Total' : 'Subtotal'} value={subTotal} />
-                            </React.Fragment>
-                        );
+                    if (typeof result === 'string') {
+                        return <React.Fragment key={id}>{parse(result)}</React.Fragment>;
                     }
-                    case 'bar-y': {
-                        const format = rowValueFormat || getDefaultValueFormat({axis: xAxis});
-                        const formattedValue = getFormattedValue({
-                            value: hoveredValues[i],
-                            format,
-                        });
 
-                        return renderRow({
-                            id,
-                            active,
-                            color,
-                            name: series.name,
-                            striped,
-                            value: hoveredValues[i],
-                            formattedValue,
-                        });
-                    }
-                    case 'pie':
-                    case 'heatmap':
-                    case 'treemap':
-                    case 'funnel': {
-                        const seriesData = data as
-                            | PreparedPieSeries
-                            | TreemapSeriesData
-                            | PreparedFunnelSeries;
-                        const formattedValue = getFormattedValue({
-                            value: hoveredValues[i],
-                            format: rowValueFormat || {type: 'number'},
-                        });
+                    return result as React.ReactElement | null;
+                }
 
-                        return renderRow({
-                            id,
-                            color,
-                            name: [seriesData.name || seriesData.id].flat().join('\n'),
-                            value: hoveredValues[i],
-                            formattedValue,
-                        });
-                    }
-                    case 'sankey': {
-                        const {target, data: source} = seriesItem as TooltipDataChunkSankey;
-                        const formattedValue = getFormattedValue({
-                            value: hoveredValues[i],
-                            format: rowValueFormat || {type: 'number'},
-                        });
-
-                        return renderRow({
-                            id,
-                            color,
-                            name: `${source.name} → ${target?.name}`,
-                            value: hoveredValues[i],
-                            formattedValue,
-                        });
-                    }
-                    case 'radar': {
-                        const radarSeries = series as PreparedRadarSeries;
-                        const formattedValue = getFormattedValue({
-                            value: hoveredValues[i],
-                            format: rowValueFormat || {type: 'number'},
-                        });
-
-                        return renderRow({
-                            id,
-                            color,
-                            active,
-                            name: radarSeries.name || radarSeries.id,
-                            value: hoveredValues[i],
-                            formattedValue,
-                        });
-                    }
-                    case 'x-range': {
-                        const xRangeData = data as XRangeSeriesData;
-                        const format = rowValueFormat || getDefaultValueFormat({axis: xAxis});
-                        const x0Formatted = getFormattedValue({
-                            value: xRangeData.x0,
-                            format,
-                        });
-                        const x1Formatted = getFormattedValue({
-                            value: xRangeData.x1,
-                            format,
-                        });
-
-                        return renderRow({
-                            id,
-                            active,
-                            color,
-                            name: series.name,
-                            striped,
-                            value: hoveredValues[i],
-                            formattedValue: `${x0Formatted} — ${x1Formatted}`,
-                            series,
-                        });
-                    }
-                    default: {
+                const rowCellViewItems = rowCells.map((cell) => {
+                    const cellValue = getTooltipRowCellValue({
+                        cell,
+                        tooltipDataChunk: seriesItem,
+                    });
+                    if (cellValue === undefined) {
                         return null;
                     }
-                }
+
+                    const cellFormattedValue = getFormattedValue({
+                        value: cellValue,
+                        format: cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
+                    });
+                    return {formattedValue: cellFormattedValue, align: cell.align};
+                });
+
+                return <Row key={id} active={active} striped={striped} cells={rowCellViewItems} />;
             })}
         </React.Fragment>
     );

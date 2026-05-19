@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/bar-y/get-tooltip-data';
 import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import type {BarYSeries} from '../../types';
 
-import {prepareBarYSeries} from './prepare';
+import {prepareBarYSeries} from './prepare-bar-y-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale, boundsHeight, boundsWidth} = args;
@@ -41,9 +42,28 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const barYPlugin: SeriesPlugin<BarYSeries> = {
     type: 'bar-y',
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareBarYSeries({series: series as BarYSeries[], seriesOptions, legend, colorScale}),
+    prepareSeries: prepareBarYSeries,
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => {
+                                return value ? getTooltipColorSymbol(String(value)) : '';
+                            },
+                        },
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.x'},
+                ],
+            },
+        },
+    },
 };

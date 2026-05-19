@@ -1,20 +1,14 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
-import type {PreparedBarYSeries, PreparedLegend} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedBarYSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
-import type {BarYSeries, BarYSeriesData, ChartSeriesOptions} from '../../types';
-
-type PrepareBarYSeriesArgs = {
-    colorScale: ScaleOrdinal<string, string>;
-    series: BarYSeries[];
-    legend: PreparedLegend;
-    seriesOptions?: ChartSeriesOptions;
-};
+import type {BarYSeries, BarYSeriesData} from '../../types';
 
 const DEFAULT_LABEL_PADDING = 7;
 
@@ -58,8 +52,8 @@ async function prepareDataLabels(series: BarYSeries) {
     };
 }
 
-export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
-    const {colorScale, series: seriesList, seriesOptions, legend} = args;
+export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
+    const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;
 
     return Promise.all(
         seriesList.map<Promise<PreparedBarYSeries>>(async (series) => {
@@ -90,7 +84,12 @@ export function prepareBarYSeries(args: PrepareBarYSeriesArgs) {
                     series.borderColor ??
                     seriesOptions?.['bar-y']?.borderColor ??
                     'var(--gcharts-shape-border-color)',
-                tooltip: series.tooltip,
+                tooltip: {
+                    ...series.tooltip,
+                    valueFormat:
+                        series.tooltip?.valueFormat ??
+                        getDefaultValueFormat({axis: xAxis ?? undefined}),
+                },
             };
         }),
     );

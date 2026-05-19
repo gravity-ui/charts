@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/pie/get-tooltip-data';
 import {preparePieData} from '~core/shapes/pie/prepare-data';
 import {renderPie} from '~core/shapes/pie/renderer';
 import type {PreparedPieData} from '~core/shapes/pie/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import type {PieSeries} from '../../types';
 
-import {preparePieSeries} from './prepare';
+import {preparePieSeries} from './prepare-pie-series';
 
 async function prepareShapeData({
     series,
@@ -38,5 +39,25 @@ export const piePlugin: SeriesPlugin<PieSeries> = {
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => {
+                                return value ? getTooltipColorSymbol(String(value)) : '';
+                            },
+                        },
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.value'},
+                ],
+            },
+        },
+    },
 };

@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/treemap/get-tooltip-data';
 import {prepareTreemapData} from '~core/shapes/treemap/prepare-data';
 import {renderTreemap} from '~core/shapes/treemap/renderer';
 import type {PreparedTreemapData} from '~core/shapes/treemap/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import type {TreemapSeries} from '../../types';
 
-import {prepareTreemap} from './prepare';
+import {prepareTreemap} from './prepare-treemap-series';
 
 async function prepareShapeData({
     series,
@@ -38,5 +39,25 @@ export const treemapPlugin: SeriesPlugin<TreemapSeries> = {
         prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => {
+                                return value ? getTooltipColorSymbol(String(value)) : '';
+                            },
+                        },
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.value'},
+                ],
+            },
+        },
+    },
 };

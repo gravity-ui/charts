@@ -16,6 +16,7 @@ export interface ChartTooltipContentProps {
     hovered?: TooltipDataChunk[];
     pinned?: boolean;
     renderer?: ChartTooltip['renderer'];
+    row?: ChartTooltip['row'];
     rowRenderer?: ChartTooltip['rowRenderer'];
     valueFormat?: ChartTooltip['valueFormat'];
     headerFormat?: ChartTooltip['headerFormat'];
@@ -37,6 +38,7 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         xAxis,
         yAxis,
         renderer,
+        row,
         rowRenderer,
         valueFormat,
         headerFormat,
@@ -63,6 +65,7 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         <DefaultTooltipContent
             hovered={hovered}
             pinned={pinned}
+            row={row}
             rowRenderer={rowRenderer}
             totals={totals}
             valueFormat={valueFormat}

@@ -174,6 +174,48 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
     b: TooltipDataChunk<T>,
 ) => number;
 
+type TooltipRowCellItemSourceFn<T = MeaningfulAny> = (args: {item: TooltipDataChunk<T>}) => unknown;
+
+// TODO: при регистрации плагина нужно добавить валидацию - что в ячейках тултипа определены значения для id = color | name | value - могут быть null или пустые строки, если нельзя задать что-то адекватное
+export interface TooltipRowCellItem {
+    /** cell name - used in tooltip rowRenderer(if defined) to transfer colors/names, etc. */
+    id: string;
+    /**
+     * What to render in the cell:
+     * - Data field: `'data.fieldName'` — lodash `get(chunk.data, 'fieldName')`.
+     * - Series field: `'series.fieldName'` — lodash `get(chunk.series, 'fieldName')`.
+     */
+    source: string | TooltipRowCellItemSourceFn;
+    /** Optional value format applied when the source resolves to a raw value. Ignored for `'color'`. */
+    format?: ValueFormat;
+    align?: 'start' | 'center' | 'end';
+}
+
+export interface ChartTooltipRowCells {
+    items?: TooltipRowCellItem[];
+}
+
+export interface ChartTooltipRow {
+    /**
+     * Custom renderer for a single tooltip row.
+     *
+     * Takes precedence over the deprecated top-level `rowRenderer`.
+     * If provided, `cells` is ignored for that row.
+     *
+     * The returned React element must be a `<tr>`. Apply the `className` arg to get
+     * the correct active/striped styles.
+     * If a string is returned, it is parsed as HTML and must be a `<tr>…</tr>` element.
+     */
+    renderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
+    /**
+     * Declarative cell configuration for each default tooltip row.
+     * Ignored when `renderer` is set.
+     *
+     * - `items` — replaces the built-in cells entirely when provided.
+     */
+    cells?: ChartTooltipRowCells;
+}
+
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
@@ -201,8 +243,17 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * rowRenderer: ({name, value, className}) =>
      *   `<tr class="${className}"><td>${name}</td><td>${value}</td></tr>`
      * ```
+     * @deprecated Use `row.renderer` instead.
      */
     rowRenderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
+    /**
+     * Row-level configuration. Groups the custom row renderer and declarative cell overrides
+     * under a single key.
+     *
+     * `row.renderer` takes precedence over the deprecated top-level `rowRenderer`.
+     * `row.cells` is ignored when a renderer is active.
+     */
+    row?: ChartTooltipRow;
     pin?: {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';

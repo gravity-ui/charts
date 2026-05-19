@@ -2,7 +2,7 @@ import {create} from 'd3-selection';
 import get from 'lodash/get';
 
 import {i18n} from '~core/i18n';
-import {getDataCategoryValue, getDefaultDateFormat} from '~core/utils';
+import {getDataCategoryValue} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {PreparedPieSeries} from '../../../hooks';
@@ -18,7 +18,6 @@ import type {
     TooltipDataChunkRadar,
     TooltipDataChunkSankey,
     TreemapSeriesData,
-    ValueFormat,
 } from '../../../types';
 import {appendLinePathElement} from '../../utils';
 
@@ -46,33 +45,6 @@ export function getXRowData(data: ChartSeriesData, xAxis?: ChartXAxis | null) {
 
 function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
     return getRowData('y', data, yAxis);
-}
-
-export function getDefaultValueFormat({
-    axis,
-    closestPointsRange,
-    dateTimeLabelFormats,
-}: {
-    axis?: ChartXAxis | ChartYAxis | null;
-    closestPointsRange?: number;
-    dateTimeLabelFormats?: ChartTooltip['dateTimeLabelFormats'];
-}): ValueFormat | undefined {
-    switch (axis?.type) {
-        case 'linear':
-        case 'logarithmic': {
-            return {
-                type: 'number',
-            };
-        }
-        case 'datetime': {
-            return {
-                type: 'date',
-                format: getDefaultDateFormat(closestPointsRange, dateTimeLabelFormats),
-            };
-        }
-        default:
-            return undefined;
-    }
 }
 
 export const getMeasureValue = ({

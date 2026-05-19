@@ -98,6 +98,7 @@ export const Tooltip = (props: TooltipProps) => {
                     hoveredPlotShapes={hoveredPlotShapes}
                     pinned={tooltipPinned}
                     renderer={tooltip.renderer}
+                    row={tooltip.row}
                     rowRenderer={tooltip.rowRenderer}
                     totals={tooltip.totals}
                     valueFormat={tooltip.valueFormat}

@@ -13,7 +13,7 @@ import {filterOverlappingLabels} from '~core/utils';
 
 import type {WaterfallSeries} from '../../types';
 
-import {prepareWaterfallSeries} from './prepare';
+import {prepareWaterfallSeries} from './prepare-waterfall-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
@@ -55,9 +55,18 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
-    prepareSeries: ({series, legend, colorScale, colors}) =>
-        prepareWaterfallSeries({series: series as WaterfallSeries[], legend, colorScale, colors}),
+    prepareSeries: prepareWaterfallSeries,
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        row: {
+            cells: {
+                items: [
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.y'},
+                ],
+            },
+        },
+    },
 };

@@ -1,20 +1,14 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedSeries, PreparedWaterfallSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
 import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
-
-type PrepareWaterfallSeriesArgs = {
-    colorScale: ScaleOrdinal<string, string>;
-    series: WaterfallSeries[];
-    legend: PreparedLegend;
-    colors: string[];
-};
 
 function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -32,8 +26,8 @@ function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
     }
 }
 
-export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): PreparedSeries[] {
-    const {colorScale, series: seriesList, legend, colors} = args;
+export function prepareWaterfallSeries(args: PrepareSeriesArgs<WaterfallSeries>): PreparedSeries[] {
+    const {colorScale, series: seriesList, legend, colors, yAxis} = args;
     const [, negativeColor, positiveColor] = colors;
     const series = seriesList[0];
 
@@ -59,7 +53,10 @@ export function prepareWaterfallSeries(args: PrepareWaterfallSeriesArgs): Prepar
         },
         cursor: get(series, 'cursor', null),
         data: [],
-        tooltip: series.tooltip,
+        tooltip: {
+            ...series.tooltip,
+            valueFormat: series.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[0]}),
+        },
     };
 
     const positiveName = series.legend?.itemText?.positive ?? `${series.name} ↑`;
