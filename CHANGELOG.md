@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.53.0](https://github.com/gravity-ui/charts/compare/v1.52.1...v1.53.0) (2026-05-25)
+
+
+### Features
+
+* add tooltip z index prop ([#616](https://github.com/gravity-ui/charts/issues/616)) ([30af1b8](https://github.com/gravity-ui/charts/commit/30af1b80c4004e541d9022157a1a674bd6987d0b))
+
 ## [1.52.1](https://github.com/gravity-ui/charts/compare/v1.52.0...v1.52.1) (2026-05-15)
 
 
