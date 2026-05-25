@@ -291,4 +291,6 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * @see https://gravity-ui.github.io/date-utils/pages/api/DateTime/overview.html
      */
     dateTimeLabelFormats?: DateTimeLabelFormats;
+    /** CSS property `z-index` for the tooltip popup */
+    zIndex?: number;
 }
