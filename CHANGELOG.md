@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.53.1](https://github.com/gravity-ui/charts/compare/v1.53.0...v1.53.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* **tooltip:** hide tooltip on axis config update instead of crashing ([#618](https://github.com/gravity-ui/charts/issues/618)) ([761bfd1](https://github.com/gravity-ui/charts/commit/761bfd16093c3d25f9d2410f61abf5766c7a5d15))
+
 ## [1.53.0](https://github.com/gravity-ui/charts/compare/v1.52.1...v1.53.0) (2026-05-25)
 
 
