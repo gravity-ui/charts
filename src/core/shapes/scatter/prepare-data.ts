@@ -65,8 +65,7 @@ export async function prepareScatterData(args: {
 }): Promise<PreparedScatterShapeData> {
     const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
 
-    const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax;
+    const xMax = Math.max(...xScale.range());
 
     const markers: PreparedScatterData[] = series.reduce<PreparedScatterData[]>((acc, s) => {
         const yAxisIndex = get(s, 'yAxis', 0);
