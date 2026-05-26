@@ -268,6 +268,39 @@ test.describe('Line series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
+        test('DataLabels visible with reversed datetime xAxis', async ({mount}) => {
+            const DAY = 24 * 60 * 60 * 1000;
+            const startMs = Date.UTC(2024, 0, 1);
+            const chartData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            name: 'Series',
+                            type: 'line',
+                            data: [
+                                {x: startMs, y: 10, label: 'A'},
+                                {x: startMs + DAY, y: 20, label: 'B'},
+                                {x: startMs + 2 * DAY, y: 15, label: 'C'},
+                            ],
+                            dataLabels: {enabled: true},
+                        },
+                    ],
+                },
+                xAxis: {type: 'datetime', order: 'reverse'},
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+
+            const labels = component.locator('.gcharts-line__label');
+            await expect(labels).toHaveCount(3);
+
+            const count = await labels.count();
+            for (let i = 0; i < count; i++) {
+                const x = Number(await labels.nth(i).getAttribute('x'));
+                expect(x).toBeGreaterThanOrEqual(0);
+            }
+        });
+
         test('Overlapping html labels should not be displayed (by default)', async ({mount}) => {
             const longLabel = 'On seashore far a green oak towers ...';
             const chartData: ChartData = {

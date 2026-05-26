@@ -80,8 +80,7 @@ export const prepareAreaData = async (args: {
         isOutsideBounds,
         isRangeSlider,
     } = args;
-    const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax;
+    const xMax = Math.max(...xScale.range());
 
     const result: PreparedAreaData[] = [];
     const dataByPlots = Array.from(
