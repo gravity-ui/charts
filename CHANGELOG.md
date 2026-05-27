@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.53.2](https://github.com/gravity-ui/charts/compare/v1.53.1...v1.53.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* fix labels hidden when xAxis order is reversed ([#620](https://github.com/gravity-ui/charts/issues/620)) ([499c064](https://github.com/gravity-ui/charts/commit/499c064d96431a86210626f8dd4a8cbb09128951))
+
 ## [1.53.1](https://github.com/gravity-ui/charts/compare/v1.53.0...v1.53.1) (2026-05-25)
 
 
