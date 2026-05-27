@@ -186,7 +186,11 @@ export const DefaultTooltipContent = ({
                         value: cellValue,
                         format: cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
                     });
-                    return {formattedValue: cellFormattedValue, align: cell.align};
+                    return {
+                        formattedValue: cellFormattedValue,
+                        align: cell.align,
+                        width: cell.width,
+                    };
                 });
 
                 return <Row key={id} active={active} striped={striped} cells={rowCellViewItems} />;

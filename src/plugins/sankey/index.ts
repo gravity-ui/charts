@@ -53,6 +53,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
                                 return value ? getTooltipColorSymbol(String(value)) : '';
                             },
                         },
+                        width: '16px',
                     },
                     {
                         id: 'name',

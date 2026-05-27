@@ -73,6 +73,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
                                 lineWidth: s.lineWidth,
                             });
                         },
+                        width: '16px',
                     },
                     {id: 'name', source: 'name', align: 'start'},
                     {id: 'value', source: 'data.y', align: 'end'},

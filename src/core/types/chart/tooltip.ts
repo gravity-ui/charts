@@ -188,6 +188,8 @@ export interface TooltipRowCellItem {
     /** Optional value format applied when the source resolves to a raw value. Ignored for `'color'`. */
     format?: ValueFormat;
     align?: 'start' | 'center' | 'end';
+    /** Optional fixed width for the cell (e.g. `'16px'`). */
+    width?: string;
 }
 
 export interface ChartTooltipRowCells {

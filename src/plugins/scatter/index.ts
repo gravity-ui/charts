@@ -64,6 +64,7 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
                                 return value ? getTooltipColorSymbol(String(value)) : '';
                             },
                         },
+                        width: '16px',
                     },
                     {id: 'name', source: 'name', align: 'start'},
                     {id: 'value', source: 'data.y', align: 'end'},

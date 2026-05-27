@@ -59,6 +59,7 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
                                 return value ? getTooltipColorSymbol(String(value)) : '';
                             },
                         },
+                        width: '16px',
                     },
                     {id: 'name', source: 'name', align: 'start'},
                     {

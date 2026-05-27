@@ -7,6 +7,7 @@ const b = block('tooltip');
 type TooltipRowCellView = {
     formattedValue: string;
     align?: string;
+    width?: string;
 };
 
 export function Row(props: {
@@ -27,6 +28,7 @@ export function Row(props: {
 
                 const cellStyle = {
                     ...(cell.align ? {textAlign: cell.align} : {}),
+                    ...(cell.width ? {width: cell.width} : {}),
                 } as React.CSSProperties;
 
                 return (
