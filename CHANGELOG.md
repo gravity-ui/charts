@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.53.2](https://github.com/gravity-ui/charts/compare/v1.53.1...v1.53.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* fix labels hidden when xAxis order is reversed ([#620](https://github.com/gravity-ui/charts/issues/620)) ([499c064](https://github.com/gravity-ui/charts/commit/499c064d96431a86210626f8dd4a8cbb09128951))
+
+## [1.53.1](https://github.com/gravity-ui/charts/compare/v1.53.0...v1.53.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* **tooltip:** hide tooltip on axis config update instead of crashing ([#618](https://github.com/gravity-ui/charts/issues/618)) ([761bfd1](https://github.com/gravity-ui/charts/commit/761bfd16093c3d25f9d2410f61abf5766c7a5d15))
+
+## [1.53.0](https://github.com/gravity-ui/charts/compare/v1.52.1...v1.53.0) (2026-05-25)
+
+
+### Features
+
+* add tooltip z index prop ([#616](https://github.com/gravity-ui/charts/issues/616)) ([30af1b8](https://github.com/gravity-ui/charts/commit/30af1b80c4004e541d9022157a1a674bd6987d0b))
+
+## [1.52.1](https://github.com/gravity-ui/charts/compare/v1.52.0...v1.52.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* **area:** hide synthetic stack points from tooltip and data labels ([#614](https://github.com/gravity-ui/charts/issues/614)) ([deabc36](https://github.com/gravity-ui/charts/commit/deabc36bb5f37af396572e072198c2c4b2eef319))
+
 ## [1.52.0](https://github.com/gravity-ui/charts/compare/v1.51.8...v1.52.0) (2026-05-12)
 
 

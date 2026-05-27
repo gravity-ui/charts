@@ -8,6 +8,7 @@ import {
     areaHtmlLabelsData,
     areaPlaygroundData,
     areaSplitData,
+    areaStakingHeterogeneousData,
     areaStakingNormalData,
     areaStakingPercentData,
 } from '../__data__';
@@ -41,6 +42,13 @@ export const AreaStakingPercent = {
     name: 'Staking percent',
     args: {
         data: areaStakingPercentData,
+    },
+} satisfies Story;
+
+export const AreaStakingHeterogeneous = {
+    name: 'Staking heterogeneous data',
+    args: {
+        data: areaStakingHeterogeneousData,
     },
 } satisfies Story;
 

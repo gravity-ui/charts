@@ -83,6 +83,7 @@ export const Tooltip = (props: TooltipProps) => {
         <Popup
             anchorElement={anchor}
             className={b({pinned: tooltipPinned})}
+            zIndex={tooltip.zIndex}
             disableTransition={true}
             floatingStyles={tooltipPinned ? undefined : {pointerEvents: 'none'}}
             offset={{mainAxis: 20}}

@@ -37,6 +37,21 @@ export const useTooltip = ({dispatcher, tooltip, xAxis, yAxis}: Args) => {
     ] = React.useState<TooltipState>({});
     const prevHovered = React.useRef(hovered);
 
+    // Track the axes that were in effect when hovered was last set.
+    // If axes change (e.g. categories shrink), stale numeric indices in hovered
+    // would cause an out-of-bounds lookup crash during render. Resetting here,
+    // synchronously during render, prevents children from ever seeing the stale combo.
+    const prevXAxisRef = React.useRef(xAxis);
+    const prevYAxisRef = React.useRef(yAxis);
+    if (prevXAxisRef.current !== xAxis || prevYAxisRef.current !== yAxis) {
+        prevXAxisRef.current = xAxis;
+        prevYAxisRef.current = yAxis;
+        if (hovered?.length) {
+            setTooltipState({});
+            prevHovered.current = undefined;
+        }
+    }
+
     React.useEffect(() => {
         if (tooltip?.enabled) {
             dispatcher.on(

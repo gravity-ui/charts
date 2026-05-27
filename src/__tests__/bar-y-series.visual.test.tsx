@@ -929,6 +929,56 @@ test.describe('Bar-y series', () => {
             );
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('No error when config update shrinks categories while cursor is over a bar', async ({
+            mount,
+            page,
+        }) => {
+            const initialData: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type: 'bar-y',
+                            name: 'Series 1',
+                            data: [
+                                {y: 0, x: 10},
+                                {y: 1, x: 20},
+                                {y: 2, x: 30},
+                            ],
+                        },
+                    ],
+                },
+                yAxis: [{type: 'category', categories: ['a', 'b', 'c']}],
+            };
+
+            const errors: string[] = [];
+            page.on('pageerror', (err) => errors.push(err.message));
+
+            const component = await mount(<ChartTestStory data={initialData} />);
+
+            const bar = component.locator('.gcharts-bar-y__segment').last();
+            const barBox = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                Math.round(barBox.x + barBox.width / 2),
+                Math.round(barBox.y + barBox.height / 2),
+            );
+
+            // Shrink categories so that the hovered point's index (2) is out of bounds
+            await component.update(
+                <ChartTestStory
+                    data={{
+                        ...initialData,
+                        yAxis: [{type: 'category', categories: ['x']}],
+                    }}
+                />,
+            );
+
+            // Wait for the async axis recomputation to settle and trigger a re-render
+            // of the tooltip with the new (shorter) categories array.
+            // The bug causes "non-existing category value" to be thrown at that point.
+            await expect(component.locator('svg')).toBeVisible();
+            expect(errors.filter((e) => e.includes('non-existing category'))).toHaveLength(0);
+        });
     });
 
     test.describe('Null modes', () => {

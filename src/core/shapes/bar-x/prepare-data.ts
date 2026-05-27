@@ -362,8 +362,7 @@ export const prepareBarXData = async (args: {
         }
     }
 
-    const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax;
+    const xMax = Math.max(...xScale.range());
 
     for (let i = 0; i < result.length; i++) {
         const barData = result[i];

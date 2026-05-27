@@ -35,8 +35,7 @@ export const prepareLineData = async (args: {
         isRangeSlider,
         otherLayers,
     } = args;
-    const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax;
+    const xMax = Math.max(...xScale.range());
 
     const acc: PreparedLineData[] = [];
     for (let i = 0; i < series.length; i++) {

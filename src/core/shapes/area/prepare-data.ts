@@ -20,6 +20,13 @@ import {
 
 import type {PointData, PreparedAreaData} from './types';
 
+const SYNTHETIC_POINT: AreaSeriesData = {
+    x: 0,
+    y: 0,
+    tooltip: {enabled: false},
+    dataLabels: {enabled: false},
+};
+
 function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: ChartScale) {
     const categories = xAxis.categories || [];
     const xValues = series.reduce<Map<string, number>>((acc, s) => {
@@ -73,8 +80,7 @@ export const prepareAreaData = async (args: {
         isOutsideBounds,
         isRangeSlider,
     } = args;
-    const [_xMin, xRangeMax] = xScale.range();
-    const xMax = xRangeMax;
+    const xMax = Math.max(...xScale.range());
 
     const result: PreparedAreaData[] = [];
     const dataByPlots = Array.from(
@@ -192,12 +198,7 @@ export const prepareAreaData = async (args: {
                 for (let xIdx = 0; xIdx < xValues.length; xIdx++) {
                     const [x, xValue] = xValues[xIdx];
                     const rawData = seriesData.get(x);
-                    const d =
-                        rawData ??
-                        ({
-                            x,
-                            y: 0,
-                        } as AreaSeriesData);
+                    const d = rawData ?? SYNTHETIC_POINT;
                     let yDataValue = d.y ?? null;
                     const pointAnnotation =
                         d.annotation && !isRangeSlider
