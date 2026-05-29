@@ -331,15 +331,19 @@ export const prepareBarXData = async (args: {
                 }
 
                 if (series.some((s) => s.stacking === 'percent')) {
+                    const currentPlot = split.plots[plotIndexes[plotDataIndex]];
+                    const currentPlotHeight = currentPlot?.height ?? plotHeight;
+                    const currentPlotTop = currentPlot?.top ?? 0;
+
                     let acc = 0;
                     const positiveStackHeight = stackItems.reduce(
                         (sum, item) => sum + item._height,
                         0,
                     );
-                    const ratio = plotHeight / positiveStackHeight;
+                    const ratio = currentPlotHeight / positiveStackHeight;
                     stackItems.forEach((item) => {
                         item.height = item._height * ratio;
-                        item.y = plotHeight - item.height - acc;
+                        item.y = currentPlotTop + currentPlotHeight - item.height - acc;
 
                         acc += item.height + 1;
                     });

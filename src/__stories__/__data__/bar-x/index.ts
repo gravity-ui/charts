@@ -9,5 +9,6 @@ export * from './null-modes';
 export * from './playground';
 export * from './staking-normal';
 export * from './staking-percent';
+export * from './staking-percent-split';
 export * from './two-y-axis';
 export * from './split';
