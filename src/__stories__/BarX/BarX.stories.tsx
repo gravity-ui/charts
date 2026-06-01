@@ -11,6 +11,7 @@ import {
     barXHtmlLabelsData,
     barXLinearData,
     barXPlaygroundData,
+    barXStackingPercentSplitData,
     barXStakingNormalData,
     barXStakingPercentData,
 } from '../__data__';
@@ -140,6 +141,14 @@ export const BarXSplit = {
     name: 'Split',
     args: {
         data: barXSplitData,
+        style: {height: 560},
+    },
+} satisfies Story;
+
+export const BarXStackingPercentSplit = {
+    name: 'Staking percent split',
+    args: {
+        data: barXStackingPercentSplitData,
         style: {height: 560},
     },
 } satisfies Story;

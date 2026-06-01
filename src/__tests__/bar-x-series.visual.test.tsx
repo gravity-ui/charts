@@ -14,6 +14,7 @@ import {
     barXNullModeZeroCategoryXData,
     barXNullModeZeroLinearXData,
     barXSplitData,
+    barXStackingPercentSplitData,
     barXStakingNormalData,
     barXWithYAxisPlotLinesData,
 } from '../__stories__/__data__';
@@ -548,6 +549,11 @@ test.describe('Bar-x series', () => {
 
     test('Basic split', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXSplitData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Stacking percent split', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={barXStackingPercentSplitData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
