@@ -41,9 +41,10 @@ export const piePlugin: SeriesPlugin<PieSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: [
+            {
+                id: 'default',
+                cells: [
                     {
                         id: 'color',
                         source: 'color',
@@ -59,6 +60,6 @@ export const piePlugin: SeriesPlugin<PieSeries> = {
                     {id: 'value', source: 'data.value', align: 'end'},
                 ],
             },
-        },
+        ],
     },
 };

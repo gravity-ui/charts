@@ -47,9 +47,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: [
+            {
+                id: 'default',
+                cells: [
                     {
                         id: 'color',
                         source: 'color',
@@ -65,6 +66,6 @@ export const barYPlugin: SeriesPlugin<BarYSeries> = {
                     {id: 'value', source: 'data.x', align: 'end'},
                 ],
             },
-        },
+        ],
     },
 };

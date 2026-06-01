@@ -60,9 +60,10 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: [
+            {
+                id: 'default',
+                cells: [
                     {
                         id: 'color',
                         source: ({item}) => {
@@ -79,6 +80,6 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
                     {id: 'value', source: 'data.y', align: 'end'},
                 ],
             },
-        },
+        ],
     },
 };

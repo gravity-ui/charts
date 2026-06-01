@@ -128,72 +128,87 @@ export const DefaultTooltipContent = ({
 
     const rowsContent = (
         <React.Fragment>
-            {visibleHovered.map((seriesItem, i) => {
+            {visibleHovered.flatMap((seriesItem, chunkIndex) => {
                 const {data, series, closest} = seriesItem;
-                const id = `${get(series, 'id')}_${i}`;
+                const seriesId = get(series, 'id');
                 const color = get(data, 'color') || get(series, 'color');
                 // TODO: improve active item display https://github.com/gravity-ui/charts/issues/208
                 const active = closest && hovered.length > 1;
-                const striped = (i + 1) % 2 === 0;
+                // All rows from the same chunk share the same stripe state for visual grouping.
+                const striped = (chunkIndex + 1) % 2 === 0;
                 const rowValueFormat = get(series, 'tooltip.valueFormat', valueFormat);
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
-                const pluginCells = plugin ? plugin.tooltip.row.cells.items : [];
-                const rowCells: ReadonlyArray<TooltipRowCellItem> =
-                    row?.cells?.items ?? pluginCells;
-
-                const activeRowRenderer = row?.renderer ?? rowRenderer;
-                if (typeof activeRowRenderer === 'function') {
-                    const value = getTooltipRowCellValue({
-                        cell: rowCells.find((c) => c.id === 'value'),
-                        tooltipDataChunk: seriesItem,
-                    });
-                    const result = activeRowRenderer({
-                        id,
-                        name: getTooltipRowCellValue({
-                            cell: rowCells.find((c) => c.id === 'name'),
-                            tooltipDataChunk: seriesItem,
-                        }),
-                        color,
-                        value,
-                        formattedValue: getFormattedValue({
-                            value,
-                            format: rowValueFormat,
-                        }),
-                        striped,
-                        active,
-                        className: b('content-row', {active, striped}),
-                        hovered,
-                    });
-
-                    if (typeof result === 'string') {
-                        return <React.Fragment key={id}>{parse(result)}</React.Fragment>;
-                    }
-
-                    return result as React.ReactElement | null;
+                let pluginRows = plugin?.tooltip.rows ?? [];
+                if (typeof pluginRows === 'function') {
+                    pluginRows = pluginRows(seriesItem);
                 }
 
-                const rowCellViewItems = rowCells.map((cell) => {
-                    const cellValue = getTooltipRowCellValue({
-                        cell,
-                        tooltipDataChunk: seriesItem,
-                    });
-                    if (cellValue === undefined) {
-                        return null;
+                return pluginRows.map((rowDef, rowIndex) => {
+                    const isPrimary = rowIndex === 0;
+                    const rowCells: ReadonlyArray<TooltipRowCellItem> = isPrimary
+                        ? (row?.cells?.items ?? rowDef.cells)
+                        : rowDef.cells;
+                    const key = `${seriesId}_${chunkIndex}_${rowDef.id}`;
+
+                    const activeRowRenderer = isPrimary
+                        ? (row?.renderer ?? rowRenderer)
+                        : undefined;
+                    if (typeof activeRowRenderer === 'function') {
+                        const value = getTooltipRowCellValue({
+                            cell: rowCells.find((c) => c.id === 'value'),
+                            tooltipDataChunk: seriesItem,
+                        });
+                        const result = activeRowRenderer({
+                            id: key,
+                            name: getTooltipRowCellValue({
+                                cell: rowCells.find((c) => c.id === 'name'),
+                                tooltipDataChunk: seriesItem,
+                            }),
+                            color,
+                            value,
+                            formattedValue: getFormattedValue({
+                                value,
+                                format: rowValueFormat,
+                            }),
+                            striped,
+                            active,
+                            className: b('content-row', {active, striped}),
+                            hovered,
+                        });
+
+                        if (typeof result === 'string') {
+                            return <React.Fragment key={key}>{parse(result)}</React.Fragment>;
+                        }
+
+                        return result as React.ReactElement | null;
                     }
 
-                    const cellFormattedValue = getFormattedValue({
-                        value: cellValue,
-                        format: cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
-                    });
-                    return {
-                        formattedValue: cellFormattedValue,
-                        align: cell.align,
-                        width: cell.width,
-                    };
-                });
+                    const rowCellViewItems = rowCells.map((cell) => {
+                        const cellValue = getTooltipRowCellValue({
+                            cell,
+                            tooltipDataChunk: seriesItem,
+                        });
+                        if (cellValue === undefined) {
+                            return null;
+                        }
 
-                return <Row key={id} active={active} striped={striped} cells={rowCellViewItems} />;
+                        const cellFormattedValue = getFormattedValue({
+                            value: cellValue,
+                            format:
+                                cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
+                        });
+                        return {
+                            formattedValue: cellFormattedValue,
+                            align: cell.align,
+                            width: cell.width,
+                        };
+                    });
+
+                    return (
+                        <Row key={key} active={active} striped={striped} cells={rowCellViewItems} />
+                    );
+                });
             })}
         </React.Fragment>
     );

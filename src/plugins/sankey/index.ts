@@ -41,9 +41,10 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: [
+            {
+                id: 'default',
+                cells: [
                     {
                         id: 'color',
                         source: 'color',
@@ -73,6 +74,6 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
                     },
                 ],
             },
-        },
+        ],
     },
 };

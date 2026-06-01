@@ -47,9 +47,10 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: [
+            {
+                id: 'default',
+                cells: [
                     {
                         id: 'color',
                         source: 'color',
@@ -77,6 +78,6 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
                     },
                 ],
             },
-        },
+        ],
     },
 };

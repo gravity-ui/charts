@@ -32,18 +32,21 @@ export function getDefaultValueFormat({
     }
 }
 
+const TOOLTIP_COLOR_SYMBOL_WIDTH = 16;
+const TOOLTIP_COLOR_SYMBOL_HEIGHT = 8;
+
 export function getTooltipColorSymbol(color: string) {
-    const width = 16;
-    const height = 8;
-    const colorSymbol = create('svg').attr('height', height).attr('width', width);
+    const colorSymbol = create('svg')
+        .attr('height', TOOLTIP_COLOR_SYMBOL_HEIGHT)
+        .attr('width', TOOLTIP_COLOR_SYMBOL_WIDTH);
     const g = colorSymbol.append('g');
     g.append('path')
         .attr('d', () => {
             const p = getRectPath({
                 x: 0,
                 y: 0,
-                width,
-                height,
+                width: TOOLTIP_COLOR_SYMBOL_WIDTH,
+                height: TOOLTIP_COLOR_SYMBOL_HEIGHT,
                 borderRadius: 2,
             });
 
@@ -63,13 +66,13 @@ export function getTooltipLineSymbol({
     dashStyle?: DashStyle;
     lineWidth?: number;
 }) {
-    const width = 16;
-    const height = 8;
-    const svg = create('svg').attr('height', height).attr('width', width);
+    const svg = create('svg')
+        .attr('height', TOOLTIP_COLOR_SYMBOL_HEIGHT)
+        .attr('width', TOOLTIP_COLOR_SYMBOL_WIDTH);
     createLineSymbol({
         container: svg.append('g').node(),
-        width,
-        height,
+        width: TOOLTIP_COLOR_SYMBOL_WIDTH,
+        height: TOOLTIP_COLOR_SYMBOL_HEIGHT,
         color,
         dashStyle,
         lineWidth,

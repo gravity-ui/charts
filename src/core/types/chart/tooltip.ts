@@ -185,7 +185,12 @@ export interface TooltipRowCellItem {
      * - Series field: `'series.fieldName'` — lodash `get(chunk.series, 'fieldName')`.
      */
     source: string | TooltipRowCellItemSourceFn;
-    /** Optional value format applied when the source resolves to a raw value. Ignored for `'color'`. */
+    /**
+     * Optional value format applied when the source resolves to a raw value. Ignored for `'color'`.
+     *
+     * For the built-in `'value'` cell, format priority (highest to lowest):
+     * `cell.format` → `series.tooltip.valueFormat` → `tooltip.valueFormat`.
+     */
     format?: ValueFormat;
     align?: 'start' | 'center' | 'end';
     /** Optional fixed width for the cell (e.g. `'16px'`). */
@@ -261,7 +266,12 @@ export interface ChartTooltip<T = MeaningfulAny> {
     };
     /** Show tooltip at most once per every ```throttle``` milliseconds */
     throttle?: number;
-    /** Formatting settings for tooltip value. */
+    /**
+     * Formatting settings for tooltip value.
+     *
+     * Lowest-priority fallback for value cells: overridden by `series.tooltip.valueFormat`,
+     * and then by `row.cells.items[].format`.
+     */
     valueFormat?: ValueFormat;
     /** Formatting settings for tooltip header row. */
     headerFormat?: ValueFormat;

@@ -50,9 +50,10 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: [
+            {
+                id: 'default',
+                cells: [
                     {
                         id: 'color',
                         source: 'color',
@@ -68,6 +69,6 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries> = {
                     {id: 'value', source: 'data.value', align: 'end'},
                 ],
             },
-        },
+        ],
     },
 };

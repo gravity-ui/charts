@@ -19,6 +19,22 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Tooltip for the income column', async ({page, mount}) => {
+        page.setViewportSize({width: 450, height: 280});
+        const component = await mount(<ChartTestStory data={waterfallBasicData} />);
+
+        const incomeColumn = component.locator('.gcharts-waterfall__segment').nth(2);
+        await expect(incomeColumn).toBeVisible();
+        const totalColumnBox = await getLocatorBoundingBox(incomeColumn);
+        await page.mouse.move(
+            Math.round(totalColumnBox.x + totalColumnBox.width / 2),
+            Math.round(totalColumnBox.y + totalColumnBox.height / 2),
+        );
+
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
+
     test('Tooltip for the totals column', async ({page, mount}) => {
         page.setViewportSize({width: 450, height: 280});
         const component = await mount(<ChartTestStory data={waterfallBasicData} />);

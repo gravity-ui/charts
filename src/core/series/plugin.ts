@@ -7,6 +7,7 @@ import type {
     ChartXAxis,
     ChartYAxis,
     ShapeDataWithLabels,
+    TooltipDataChunk,
     TooltipRowCellItem,
 } from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
@@ -75,12 +76,25 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
-        /** Tooltip row cell rendering. */
-        row: {
-            cells: {
-                /** Default cell list used when the user has not set `row.cells.items`. */
-                items: ReadonlyArray<TooltipRowCellItem>;
-            };
-        };
+        /**
+         * Default tooltip row definitions for each data chunk.
+         *
+         * - Static array: every chunk renders the same set of rows.
+         * - Function: called per chunk, allowing conditional extra rows
+         *   (e.g. waterfall adds a "Total" row for subtotal bars).
+         *
+         * Each entry maps to one rendered `<tr>`. The first entry is the *primary* row
+         * and is the only one that respects user overrides (`row.cells.items` /
+         * `row.renderer`). Extra entries are always rendered with the plugin's cells.
+         */
+        rows:
+            | ReadonlyArray<TooltipRowDef>
+            | ((chunk: TooltipDataChunk) => ReadonlyArray<TooltipRowDef>);
     };
+}
+
+export interface TooltipRowDef {
+    /** Unique identifier within one chunk's row list. Used as part of the React key. */
+    id: string;
+    cells: ReadonlyArray<TooltipRowCellItem>;
 }

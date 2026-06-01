@@ -47,40 +47,71 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: data, tooltipItems: data};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    const data = preparedData as PreparedWaterfallData[];
-    const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-    return renderWaterfall({plot}, data, seriesOptions, allowOverlap, dispatcher);
-}
-
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
     prepareSeries: prepareWaterfallSeries,
     prepareShapeData,
-    renderShapes,
+    renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+        const data = preparedData as PreparedWaterfallData[];
+        const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
+        return renderWaterfall({plot}, data, seriesOptions, allowOverlap, dispatcher);
+    },
     tooltip: {
         prepareData: getTooltipData,
-        row: {
-            cells: {
-                items: [
+        rows: (chunk) => {
+            const c = chunk as TooltipDataChunkWaterfall;
+            if (c.data.total) {
+                return [
                     {
-                        id: 'name',
-                        source: ({item}) => {
-                            const {data, series} = item as TooltipDataChunkWaterfall;
-                            return data.total ? 'Total' : series.name;
-                        },
-                        align: 'start',
+                        id: 'totals',
+                        cells: [
+                            {
+                                id: 'name',
+                                source: () => 'Total',
+                                align: 'start',
+                            },
+                            {
+                                id: 'value',
+                                source: ({item}) => (item as TooltipDataChunkWaterfall).data.y,
+                                align: 'end',
+                            },
+                        ],
                     },
-                    {
-                        id: 'value',
-                        source: ({item}) => {
-                            const chunk = item as TooltipDataChunkWaterfall;
-                            return chunk.data.total ? chunk.subTotal : chunk.data.y;
+                ];
+            }
+
+            return [
+                {
+                    id: 'default',
+                    cells: [
+                        {
+                            id: 'name',
+                            source: ({item}) => (item as TooltipDataChunkWaterfall).series.name,
+                            align: 'start',
                         },
-                        align: 'end',
-                    },
-                ],
-            },
+                        {
+                            id: 'value',
+                            source: ({item}) => (item as TooltipDataChunkWaterfall).data.y,
+                            align: 'end',
+                        },
+                    ],
+                },
+                {
+                    id: 'subtotal',
+                    cells: [
+                        {
+                            id: 'name',
+                            source: () => 'Subtotal',
+                            align: 'start',
+                        },
+                        {
+                            id: 'value',
+                            source: ({item}) => (item as TooltipDataChunkWaterfall).subTotal,
+                            align: 'end',
+                        },
+                    ],
+                },
+            ];
         },
     },
 };
