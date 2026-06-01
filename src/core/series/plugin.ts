@@ -81,7 +81,7 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
          *
          * - Static array: every chunk renders the same set of rows.
          * - Function: called per chunk, allowing conditional extra rows
-         *   (e.g. waterfall adds a "Total" row for subtotal bars).
+         *   (e.g. waterfall adds a "Subtotal" row for non-total bars).
          *
          * Each entry maps to one rendered `<tr>`. The first entry is the *primary* row
          * and is the only one that respects user overrides (`row.cells.items` /
