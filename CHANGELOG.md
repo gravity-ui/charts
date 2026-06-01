@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.53.3](https://github.com/gravity-ui/charts/compare/v1.53.2...v1.53.3) (2026-06-01)
+
+
+### Bug Fixes
+
+* **bar-x:** percent stacking in split mode ([#622](https://github.com/gravity-ui/charts/issues/622)) ([4c7996a](https://github.com/gravity-ui/charts/commit/4c7996a31d733c5e554b995aefd5a218d5859954))
+
 ## [1.53.2](https://github.com/gravity-ui/charts/compare/v1.53.1...v1.53.2) (2026-05-26)
 
 
