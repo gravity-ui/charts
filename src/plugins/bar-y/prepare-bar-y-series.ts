@@ -90,6 +90,7 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                         series.tooltip?.valueFormat ??
                         getDefaultValueFormat({axis: xAxis ?? undefined}),
                 },
+                custom: series.custom,
             };
         }),
     );

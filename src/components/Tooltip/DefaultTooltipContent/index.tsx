@@ -29,7 +29,7 @@ const b = block('tooltip');
 type Props = {
     hovered: TooltipDataChunk[];
     pinned?: boolean;
-    row?: ChartTooltip['row'];
+    rows?: ChartTooltip['rows'];
     rowRenderer?: ChartTooltip['rowRenderer'];
     totals?: ChartTooltip['totals'];
     valueFormat?: ValueFormat;
@@ -42,8 +42,8 @@ type Props = {
 export const DefaultTooltipContent = ({
     hovered,
     pinned,
-    row,
-    rowRenderer,
+    rows,
+    rowRenderer: tooltipRowRenderer,
     totals,
     valueFormat,
     headerFormat,
@@ -129,9 +129,8 @@ export const DefaultTooltipContent = ({
     const rowsContent = (
         <React.Fragment>
             {visibleHovered.flatMap((seriesItem, chunkIndex) => {
-                const {data, series, closest} = seriesItem;
+                const {series, closest} = seriesItem;
                 const seriesId = get(series, 'id');
-                const color = get(data, 'color') || get(series, 'color');
                 // TODO: improve active item display https://github.com/gravity-ui/charts/issues/208
                 const active = closest && hovered.length > 1;
                 // All rows from the same chunk share the same stripe state for visual grouping.
@@ -139,32 +138,36 @@ export const DefaultTooltipContent = ({
                 const rowValueFormat = get(series, 'tooltip.valueFormat', valueFormat);
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
-                let pluginRows = plugin?.tooltip.rows ?? [];
-                if (typeof pluginRows === 'function') {
-                    pluginRows = pluginRows(seriesItem);
+
+                let tooltipRows = rows ?? plugin?.tooltip.rows ?? [];
+                if (typeof tooltipRows === 'function') {
+                    tooltipRows = tooltipRows(seriesItem);
                 }
 
-                return pluginRows.map((rowDef, rowIndex) => {
-                    const isPrimary = rowIndex === 0;
-                    const rowCells: ReadonlyArray<TooltipRowCellItem> = isPrimary
-                        ? (row?.cells?.items ?? rowDef.cells)
-                        : rowDef.cells;
-                    const key = `${seriesId}_${chunkIndex}_${rowDef.id}`;
+                return tooltipRows.map((row, rowIndex) => {
+                    const rowCells: ReadonlyArray<TooltipRowCellItem> = row.cells ?? [];
+                    const rowId = 'id' in row ? row.id : String(rowIndex);
+                    const key = `${seriesId}_${chunkIndex}_${rowId}`;
 
-                    const activeRowRenderer = isPrimary
-                        ? (row?.renderer ?? rowRenderer)
-                        : undefined;
-                    if (typeof activeRowRenderer === 'function') {
+                    const rowRenderer =
+                        (rows ? rows[rowIndex]?.renderer : undefined) ?? tooltipRowRenderer;
+
+                    if (typeof rowRenderer === 'function') {
+                        const name = getTooltipRowCellValue({
+                            cell: rowCells.find((c) => c.id === 'name'),
+                            tooltipDataChunk: seriesItem,
+                        });
                         const value = getTooltipRowCellValue({
                             cell: rowCells.find((c) => c.id === 'value'),
                             tooltipDataChunk: seriesItem,
                         });
-                        const result = activeRowRenderer({
+                        const color = getTooltipRowCellValue({
+                            cell: rowCells.find((c) => c.id === 'color'),
+                            tooltipDataChunk: seriesItem,
+                        });
+                        const result = rowRenderer({
                             id: key,
-                            name: getTooltipRowCellValue({
-                                cell: rowCells.find((c) => c.id === 'name'),
-                                tooltipDataChunk: seriesItem,
-                            }),
+                            name,
                             color,
                             value,
                             formattedValue: getFormattedValue({

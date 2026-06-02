@@ -63,6 +63,7 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedSe
                 seriesOptions?.heatmap?.borderColor ??
                 'var(--gcharts-shape-border-color)',
             borderWidth: series.borderWidth ?? seriesOptions?.heatmap?.borderWidth ?? 0,
+            custom: series.custom,
         };
     }, []);
 }

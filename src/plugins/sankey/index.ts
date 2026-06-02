@@ -51,7 +51,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
                         format: {
                             type: 'custom',
                             formatter: ({value}) => {
-                                return value ? getTooltipColorSymbol(String(value)) : '';
+                                return value ? getTooltipColorSymbol({color: String(value)}) : '';
                             },
                         },
                         width: '16px',

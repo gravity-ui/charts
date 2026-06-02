@@ -80,7 +80,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
                         format: {
                             type: 'custom',
                             formatter: ({value}) => {
-                                return value ? getTooltipColorSymbol(String(value)) : '';
+                                return value ? getTooltipColorSymbol({color: String(value)}) : '';
                             },
                         },
                         width: '16px',

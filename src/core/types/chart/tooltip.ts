@@ -214,12 +214,10 @@ export interface ChartTooltipRow {
      */
     renderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
     /**
-     * Declarative cell configuration for each default tooltip row.
+     * Declarative cell configuration for each default tooltip row. Replaces the built-in cells entirely when provided.
      * Ignored when `renderer` is set.
-     *
-     * - `items` — replaces the built-in cells entirely when provided.
      */
-    cells?: ChartTooltipRowCells;
+    cells?: TooltipRowCellItem[];
 }
 
 export interface ChartTooltip<T = MeaningfulAny> {
@@ -249,7 +247,6 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * rowRenderer: ({name, value, className}) =>
      *   `<tr class="${className}"><td>${name}</td><td>${value}</td></tr>`
      * ```
-     * @deprecated Use `row.renderer` instead.
      */
     rowRenderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
     /**
@@ -258,8 +255,9 @@ export interface ChartTooltip<T = MeaningfulAny> {
      *
      * `row.renderer` takes precedence over the deprecated top-level `rowRenderer`.
      * `row.cells` is ignored when a renderer is active.
+     * @experimental This API is unstable and may change without notice.
      */
-    row?: ChartTooltipRow;
+    rows?: ChartTooltipRow[];
     pin?: {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';

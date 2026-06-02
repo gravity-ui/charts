@@ -102,6 +102,7 @@ export function prepareScatterSeries(
                     s.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, s.rangeSlider),
+            custom: s.custom,
         };
 
         return prepared;

@@ -75,7 +75,7 @@ export interface BaseDataLabels {
     format?: ValueFormat;
 }
 
-export interface BaseSeries {
+export interface BaseSeries<T = MeaningfulAny> {
     /** Initial visibility of the series */
     visible?: boolean;
     /**
@@ -96,6 +96,12 @@ export interface BaseSeries {
          */
         enabled?: boolean;
     };
+    /**
+     * A reserved subspace to store options and values for customized functionality
+     *
+     * Here you can add additional data for your own event callbacks and formatter callbacks
+     */
+    custom?: T;
 }
 
 export interface BaseSeriesData<T = MeaningfulAny> {

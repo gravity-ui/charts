@@ -53,6 +53,7 @@ export function prepareXRangeSeries(args: PrepareSeriesArgs<XRangeSeries>): Prep
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
                 format: series.dataLabels?.format,
             },
+            custom: series.custom,
         };
     });
 }

@@ -67,6 +67,7 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
                     getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
+            custom: series.custom,
         };
     }, []);
 }

@@ -57,6 +57,7 @@ export function prepareWaterfallSeries(args: PrepareSeriesArgs<WaterfallSeries>)
             ...series.tooltip,
             valueFormat: series.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[0]}),
         },
+        custom: series.custom,
     };
 
     const positiveName = series.legend?.itemText?.positive ?? `${series.name} ↑`;

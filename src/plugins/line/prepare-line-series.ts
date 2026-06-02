@@ -165,6 +165,7 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
                 ...seriesRangeSliderOptionsDefaults,
                 ...series.rangeSlider,
             },
+            custom: series.custom,
         };
 
         return prepared;

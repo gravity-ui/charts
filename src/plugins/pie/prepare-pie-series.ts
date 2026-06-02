@@ -90,6 +90,7 @@ export function preparePieSeries(args: PreparePieSeriesArgs): PreparedSeries[] {
                 opacity: get(dataItem, 'opacity', null),
                 cursor: get(series, 'cursor', null),
                 tooltip: series.tooltip,
+                custom: series.custom,
             };
 
             return result;

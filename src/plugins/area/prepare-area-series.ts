@@ -108,6 +108,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
             nullMode: series.nullMode,
+            custom: series.custom,
         };
 
         return prepared;
