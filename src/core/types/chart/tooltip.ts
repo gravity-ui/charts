@@ -186,7 +186,7 @@ export interface TooltipRowCellItem {
      */
     source: string | TooltipRowCellItemSourceFn;
     /**
-     * Optional value format applied when the source resolves to a raw value. Ignored for `'color'`.
+     * Optional value format applied when the source resolves to a raw value.
      *
      * For the built-in `'value'` cell, format priority (highest to lowest):
      * `cell.format` → `series.tooltip.valueFormat` → `tooltip.valueFormat`.

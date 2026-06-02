@@ -56,9 +56,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries> = {
                         source: 'color',
                         format: {
                             type: 'custom',
-                            formatter: ({value}) => {
-                                return value ? getTooltipColorSymbol({color: String(value)}) : '';
-                            },
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
                         },
                         width: '16px',
                     },

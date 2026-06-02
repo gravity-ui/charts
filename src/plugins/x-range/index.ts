@@ -56,9 +56,7 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
                         source: 'color',
                         format: {
                             type: 'custom',
-                            formatter: ({value}) => {
-                                return value ? getTooltipColorSymbol({color: String(value)}) : '';
-                            },
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
                         },
                         width: '16px',
                     },
@@ -73,7 +71,6 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
                             const x1 = getFormattedValue({value: data.x1, format}) ?? data.x1;
                             return `${x0} — ${x1}`;
                         },
-                        format: {type: 'custom', formatter: ({value}) => String(value ?? '')},
                         align: 'end',
                     },
                 ],

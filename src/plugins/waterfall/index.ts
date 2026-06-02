@@ -72,7 +72,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
                             },
                             {
                                 id: 'value',
-                                source: ({item}) => (item as TooltipDataChunkWaterfall).data.y,
+                                source: 'data.y',
                                 align: 'end',
                             },
                         ],
@@ -86,12 +86,12 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
                     cells: [
                         {
                             id: 'name',
-                            source: ({item}) => (item as TooltipDataChunkWaterfall).series.name,
+                            source: 'series.name',
                             align: 'start',
                         },
                         {
                             id: 'value',
-                            source: ({item}) => (item as TooltipDataChunkWaterfall).data.y,
+                            source: 'data.y',
                             align: 'end',
                         },
                     ],
@@ -106,7 +106,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
                         },
                         {
                             id: 'value',
-                            source: ({item}) => (item as TooltipDataChunkWaterfall).subTotal,
+                            source: 'subTotal',
                             align: 'end',
                         },
                     ],
