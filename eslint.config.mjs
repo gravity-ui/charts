@@ -141,13 +141,4 @@ export default [
             'storybook/no-renderer-packages': 'off',
         },
     },
-    {
-        files: ['**/*.ts'],
-        rules: {},
-        settings: {
-            jsdoc: {
-                definedTags: ['experimental'],
-            },
-        },
-    },
 ];
