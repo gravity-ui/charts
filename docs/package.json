@@ -32,10 +32,12 @@
     "brace-expansion": "^2.0.3",
     "diff": "^5.2.2",
     "dompurify": "^3.3.4",
-    "fast-xml-parser": "^4.5.5",
+    "fast-xml-parser": "^5.7.2",
     "flatted": "^3.4.2",
     "follow-redirects": "^1.15.12",
     "immutable": "^3.8.3",
+    "js-yaml": "^4.2.0",
+    "lodash": "^4.18.0",
     "lodash-es": "^4.18.0",
     "typedoc": {
       "markdown-it": "^14.1.1"
