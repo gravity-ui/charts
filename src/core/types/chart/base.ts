@@ -31,7 +31,7 @@ export type CustomFormat = {
  * { type: 'number', precision: 2, format: 'percent' }
  * @example
  * // Compact thousands: 1 500 000 → "1.5M"
- * { type: 'number', unit: 'auto', precision: 1 }
+ * { type: 'number', units: { scale: { base: 1000, postfixes: ['', 'K', 'M', 'B', 'T'] }, delimiter: '' }, precision: 1 }
  * @example
  * // Date value (Unix ms) formatted as "17 October 2025"
  * { type: 'date', format: 'DD MMMM YYYY' }

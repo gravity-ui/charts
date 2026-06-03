@@ -437,7 +437,7 @@ export interface ChartYAxisTitle extends ChartAxisTitle {
      */
     rotation?: ChartAxisTitleRotation;
     /**
-     * Interval of the tick marks(absolute or relative to the chart area).
+     * Maximum width of the title (absolute or relative to the chart area).
      *
      * For a title with rotation = 0, the relative value is calculated based on the chart width, otherwise on the chart height.
      * The default value for the title with rotation: 0 is 20%, for the rest - not defined.
