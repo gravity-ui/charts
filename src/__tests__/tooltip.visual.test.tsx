@@ -644,6 +644,6 @@ test.describe('Tooltip', () => {
 
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toBeVisible();
-        await expect(page.locator('svg')).toHaveScreenshot();
+        await expect(page.locator('.gcharts-chart > svg')).toHaveScreenshot();
     });
 });

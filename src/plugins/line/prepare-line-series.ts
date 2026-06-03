@@ -1,4 +1,3 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
@@ -16,7 +15,9 @@ import {
     DEFAULT_LEGEND_SYMBOL_PADDING,
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
-import type {PreparedLegend, PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
 import type {
@@ -33,13 +34,6 @@ export const DEFAULT_DASH_STYLE = DASH_STYLE.Solid;
 export const DEFAULT_MARKER = {
     ...DEFAULT_POINT_MARKER_OPTIONS,
     enabled: false,
-};
-
-type PrepareLineSeriesArgs = {
-    colorScale: ScaleOrdinal<string, string>;
-    series: LineSeries[];
-    seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
 };
 
 function prepareLinecap(
@@ -119,8 +113,8 @@ function prepareSeriesData(series: LineSeries): LineSeriesData[] {
     }
 }
 
-export function prepareLineSeries(args: PrepareLineSeriesArgs) {
-    const {colorScale, series: seriesList, seriesOptions, legend} = args;
+export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
+    const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
     const defaultLineWidth = get(seriesOptions, 'line.lineWidth', DEFAULT_LINE_WIDTH);
     const defaultDashStyle = get(seriesOptions, 'line.dashStyle', DEFAULT_DASH_STYLE);
@@ -130,6 +124,7 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
         const name = series.name || '';
         const color = series.color || colorScale(name);
         const dashStyle = get(series, 'dashStyle', defaultDashStyle);
+        const yAxisIndex = get(series, 'yAxis', 0);
 
         const prepared: PreparedLineSeries = {
             type: series.type,
@@ -159,12 +154,18 @@ export function prepareLineSeries(args: PrepareLineSeriesArgs) {
             linejoin: prepareLinejoin(dashStyle, series, seriesOptions),
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
-            yAxis: get(series, 'yAxis', 0),
-            tooltip: series.tooltip,
+            yAxis: yAxisIndex,
+            tooltip: {
+                ...series.tooltip,
+                valueFormat:
+                    series.tooltip?.valueFormat ??
+                    getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
+            },
             rangeSlider: {
                 ...seriesRangeSliderOptionsDefaults,
                 ...series.rangeSlider,
             },
+            custom: series.custom,
         };
 
         return prepared;

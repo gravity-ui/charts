@@ -991,4 +991,53 @@ test.describe('Line series', () => {
             expect(texts.slice().sort()).toEqual(['12', '7']);
         });
     });
+
+    test('Overrided tooltip.rows.cells', async ({page, mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y: 7, custom: {icon: '🚀'}},
+                            {x: 2, y: 30},
+                            {x: 3, y: 12},
+                        ],
+                    },
+                ],
+            },
+            tooltip: {
+                rows: [
+                    {
+                        cells: [
+                            {
+                                id: 'icon',
+                                source: 'data.custom.icon',
+                                width: '16px',
+                            },
+                            {
+                                id: 'name',
+                                source: 'series.name',
+                                align: 'start',
+                            },
+                            {
+                                id: 'value',
+                                source: 'data.y',
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const component = await mount(<ChartTestStory data={chartData} />);
+
+        const line = component.locator('.gcharts-line');
+        const lineBox = await getLocatorBoundingBox(line);
+        await page.mouse.move(Math.round(lineBox.x), Math.round(lineBox.y));
+
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toHaveScreenshot();
+    });
 });

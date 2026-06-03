@@ -6,8 +6,13 @@ import React from 'react';
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {render} from '@testing-library/react';
 
+import {registerSeriesPlugin} from '~core/series/seriesRegistry';
+
+import {linePlugin} from '../../../../plugins/line';
 import type {TooltipDataChunk} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
+
+registerSeriesPlugin(linePlugin);
 
 function makeLineChunk(
     name: string,

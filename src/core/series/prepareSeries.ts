@@ -1,10 +1,9 @@
 import {group} from 'd3-array';
 import {scaleOrdinal} from 'd3-scale';
 
-import type {ChartData} from '../../types';
+import type {ChartData, ChartXAxis, ChartYAxis} from '../../types';
 import {getSeriesNames} from '../utils';
 
-import type {PrepareSeriesArgs} from './plugin';
 import {getSeriesPlugin} from './seriesRegistry';
 import type {PreparedLegend, PreparedSeries} from './types';
 
@@ -13,11 +12,15 @@ export const getPreparedSeries = async ({
     seriesOptions,
     colors,
     preparedLegend,
+    xAxis,
+    yAxis,
 }: {
     seriesData: ChartData['series']['data'];
     seriesOptions: ChartData['series']['options'];
     colors: string[];
     preparedLegend?: PreparedLegend | null;
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis[];
 }) => {
     const seriesNames = getSeriesNames(seriesData);
     const colorScale = scaleOrdinal(seriesNames, colors);
@@ -38,21 +41,19 @@ export const getPreparedSeries = async ({
     const list = Array.from(groupedSeries);
     for (let i = 0; i < list.length; i++) {
         const [_groupId, seriesList] = list[i];
+        const plugin = getSeriesPlugin(seriesList[0].type);
         acc.push(
-            ...(await prepareSeries({
+            ...(await plugin.prepareSeries({
                 series: seriesList,
                 seriesOptions,
                 legend: preparedLegend,
                 colorScale,
                 colors,
+                xAxis,
+                yAxis,
             })),
         );
     }
 
     return acc;
 };
-
-export async function prepareSeries(args: PrepareSeriesArgs): Promise<PreparedSeries[]> {
-    const plugin = getSeriesPlugin(args.series[0].type);
-    return plugin.prepareSeries(args);
-}

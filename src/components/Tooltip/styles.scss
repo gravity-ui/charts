@@ -79,6 +79,24 @@
         }
     }
 
+    &__content-row-cell {
+        overflow: hidden;
+
+        max-width: 400px;
+        padding: 2px 4px;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        &:first-of-type {
+            padding-inline-start: 14px;
+        }
+
+        &:last-of-type {
+            padding-inline-end: 14px;
+        }
+    }
+
     &__content-row-totals-label {
         overflow: hidden;
 

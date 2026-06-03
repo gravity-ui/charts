@@ -47,6 +47,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
             },
             cursor: get(s, 'cursor', null),
             tooltip: s.tooltip,
+            custom: s.custom,
         };
 
         return preparedSeries;

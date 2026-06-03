@@ -1,4 +1,3 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
@@ -8,8 +7,10 @@ import {
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
-import type {PreparedAreaSeries, PreparedLegend} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedAreaSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getUniqId} from '~core/utils';
 
@@ -20,13 +21,6 @@ export const DEFAULT_LINE_WIDTH = 1;
 export const DEFAULT_MARKER = {
     ...DEFAULT_POINT_MARKER_OPTIONS,
     enabled: false,
-};
-
-type PrepareAreaSeriesArgs = {
-    colorScale: ScaleOrdinal<string, string>;
-    series: AreaSeries[];
-    seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
 };
 
 function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
@@ -66,8 +60,8 @@ function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
     }
 }
 
-export function prepareArea(args: PrepareAreaSeriesArgs) {
-    const {colorScale, series: seriesList, seriesOptions, legend} = args;
+export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
+    const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
     const defaultAreaWidth = get(seriesOptions, 'area.lineWidth', DEFAULT_LINE_WIDTH);
     const defaultOpacity = get(seriesOptions, 'area.opacity', 0.75);
 
@@ -75,6 +69,7 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
         const id = getUniqId();
         const name = series.name || '';
         const color = series.color || colorScale(name);
+        const yAxisIndex = get(series, 'yAxis', 0);
 
         const prepared: PreparedAreaSeries = {
             type: series.type,
@@ -104,10 +99,16 @@ export function prepareArea(args: PrepareAreaSeriesArgs) {
             },
             marker: prepareMarker(series, seriesOptions),
             cursor: get(series, 'cursor', null),
-            yAxis: get(series, 'yAxis', 0),
-            tooltip: series.tooltip,
+            yAxis: yAxisIndex,
+            tooltip: {
+                ...series.tooltip,
+                valueFormat:
+                    series.tooltip?.valueFormat ??
+                    getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
+            },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
             nullMode: series.nullMode,
+            custom: series.custom,
         };
 
         return prepared;

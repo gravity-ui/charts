@@ -1,6 +1,7 @@
 export {CustomShapeRenderer} from './utils';
 export {getFormattedValue} from '~core/utils';
 export {getDefaultTooltipHeaderFormat} from '~core/utils/tooltip';
+export {getTooltipColorSymbol} from '~core/tooltip/utils';
 export {
     FORMAT_UNITS_BITS,
     FORMAT_UNITS_BYTES,

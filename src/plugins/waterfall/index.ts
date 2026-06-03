@@ -11,9 +11,9 @@ import {renderWaterfall} from '~core/shapes/waterfall/renderer';
 import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import {filterOverlappingLabels} from '~core/utils';
 
-import type {WaterfallSeries} from '../../types';
+import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
 
-import {prepareWaterfallSeries} from './prepare';
+import {prepareWaterfallSeries} from './prepare-waterfall-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
@@ -47,17 +47,71 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: data, tooltipItems: data};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    const data = preparedData as PreparedWaterfallData[];
-    const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-    return renderWaterfall({plot}, data, seriesOptions, allowOverlap, dispatcher);
-}
-
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
-    prepareSeries: ({series, legend, colorScale, colors}) =>
-        prepareWaterfallSeries({series: series as WaterfallSeries[], legend, colorScale, colors}),
+    prepareSeries: prepareWaterfallSeries,
     prepareShapeData,
-    renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+        const data = preparedData as PreparedWaterfallData[];
+        const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
+        return renderWaterfall({plot}, data, seriesOptions, allowOverlap, dispatcher);
+    },
+    tooltip: {
+        prepareData: getTooltipData,
+        rows: (chunk) => {
+            const c = chunk as TooltipDataChunkWaterfall;
+            if (c.data.total) {
+                return [
+                    {
+                        id: 'totals',
+                        cells: [
+                            {
+                                id: 'name',
+                                source: () => 'Total',
+                                align: 'start',
+                            },
+                            {
+                                id: 'value',
+                                source: 'data.y',
+                                align: 'end',
+                            },
+                        ],
+                    },
+                ];
+            }
+
+            return [
+                {
+                    id: 'default',
+                    cells: [
+                        {
+                            id: 'name',
+                            source: 'series.name',
+                            align: 'start',
+                        },
+                        {
+                            id: 'value',
+                            source: 'data.y',
+                            align: 'end',
+                        },
+                    ],
+                },
+                {
+                    id: 'subtotal',
+                    cells: [
+                        {
+                            id: 'name',
+                            source: () => 'Subtotal',
+                            align: 'start',
+                        },
+                        {
+                            id: 'value',
+                            source: 'subTotal',
+                            align: 'end',
+                        },
+                    ],
+                },
+            ];
+        },
+    },
 };

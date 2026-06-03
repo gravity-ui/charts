@@ -1,7 +1,15 @@
 import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
-import type {ChartSeries, ChartSeriesOptions, ShapeDataWithLabels} from '../../types';
+import type {
+    ChartSeries,
+    ChartSeriesOptions,
+    ChartXAxis,
+    ChartYAxis,
+    ShapeDataWithLabels,
+    TooltipDataChunk,
+    TooltipRowCellItem,
+} from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
@@ -10,12 +18,14 @@ import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from './types';
 
-export interface PrepareSeriesArgs {
-    series: ChartSeries[];
+export interface PrepareSeriesArgs<T = ChartSeries> {
+    series: T[];
     seriesOptions?: ChartSeriesOptions;
     legend: PreparedLegend;
     colorScale: ScaleOrdinal<string, string>;
     colors: string[];
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis[];
 }
 
 export interface PrepareShapeDataArgs {
@@ -63,6 +73,28 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     ): PrepareShapeDataResult | Promise<PrepareShapeDataResult>;
     /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
-    /** Returns tooltip data for a given pointer position and prepared series. */
-    getTooltipData: GetTooltipDataFn;
+    tooltip: {
+        /** Returns tooltip data for a given pointer position and prepared series. */
+        prepareData: GetTooltipDataFn;
+        /**
+         * Default tooltip row definitions for each data chunk.
+         *
+         * - Static array: every chunk renders the same set of rows.
+         * - Function: called per chunk, allowing conditional extra rows
+         *   (e.g. waterfall adds a "Subtotal" row for non-total bars).
+         *
+         * Each entry maps to one rendered `<tr>`. The first entry is the *primary* row
+         * and is the only one that respects user overrides (`row.cells.items` /
+         * `row.renderer`). Extra entries are always rendered with the plugin's cells.
+         */
+        rows:
+            | ReadonlyArray<TooltipRowDef>
+            | ((chunk: TooltipDataChunk) => ReadonlyArray<TooltipRowDef>);
+    };
+}
+
+export interface TooltipRowDef {
+    /** Unique identifier within one chunk's row list. Used as part of the React key. */
+    id: string;
+    cells: ReadonlyArray<TooltipRowCellItem>;
 }

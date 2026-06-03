@@ -174,6 +174,52 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
     b: TooltipDataChunk<T>,
 ) => number;
 
+type TooltipRowCellItemSourceFn<T = MeaningfulAny> = (args: {item: TooltipDataChunk<T>}) => unknown;
+
+export interface TooltipRowCellItem {
+    /** cell name - used in tooltip rowRenderer(if defined) to transfer colors/names, etc. */
+    id: string;
+    /**
+     * What to render in the cell:
+     * - Data field: `'data.fieldName'` — lodash `get(chunk.data, 'fieldName')`.
+     * - Series field: `'series.fieldName'` — lodash `get(chunk.series, 'fieldName')`.
+     */
+    source: string | TooltipRowCellItemSourceFn;
+    /**
+     * Optional value format applied when the source resolves to a raw value.
+     *
+     * For the built-in `'value'` cell, format priority (highest to lowest):
+     * `cell.format` → `series.tooltip.valueFormat` → `tooltip.valueFormat`.
+     */
+    format?: ValueFormat;
+    align?: 'start' | 'center' | 'end';
+    /** Optional fixed width for the cell (e.g. `'16px'`). */
+    width?: string;
+}
+
+export interface ChartTooltipRowCells {
+    items?: TooltipRowCellItem[];
+}
+
+export interface ChartTooltipRow {
+    /**
+     * Custom renderer for a single tooltip row.
+     *
+     * Takes precedence over the deprecated top-level `rowRenderer`.
+     * If provided, `cells` is ignored for that row.
+     *
+     * The returned React element must be a `<tr>`. Apply the `className` arg to get
+     * the correct active/striped styles.
+     * If a string is returned, it is parsed as HTML and must be a `<tr>…</tr>` element.
+     */
+    renderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
+    /**
+     * Declarative cell configuration for each default tooltip row. Replaces the built-in cells entirely when provided.
+     * Ignored when `renderer` is set.
+     */
+    cells?: TooltipRowCellItem[];
+}
+
 export interface ChartTooltip<T = MeaningfulAny> {
     enabled?: boolean;
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
@@ -203,13 +249,27 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * ```
      */
     rowRenderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
+    /**
+     * Row-level configuration. Groups the custom row renderer and declarative cell overrides
+     * under a single key.
+     *
+     * `row.renderer` takes precedence over the deprecated top-level `rowRenderer`.
+     * `row.cells` is ignored when a renderer is active.
+     * @experimental This API is unstable and may change without notice.
+     */
+    rows?: ChartTooltipRow[];
     pin?: {
         enabled?: boolean;
         modifierKey?: 'altKey' | 'metaKey';
     };
     /** Show tooltip at most once per every ```throttle``` milliseconds */
     throttle?: number;
-    /** Formatting settings for tooltip value. */
+    /**
+     * Formatting settings for tooltip value.
+     *
+     * Lowest-priority fallback for value cells: overridden by `series.tooltip.valueFormat`,
+     * and then by `row.cells.items[].format`.
+     */
     valueFormat?: ValueFormat;
     /** Formatting settings for tooltip header row. */
     headerFormat?: ValueFormat;

@@ -1,8 +1,7 @@
-import {create} from 'd3-selection';
 import get from 'lodash/get';
 
 import {i18n} from '~core/i18n';
-import {getDataCategoryValue, getDefaultDateFormat} from '~core/utils';
+import {getDataCategoryValue} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {PreparedPieSeries} from '../../../hooks';
@@ -18,9 +17,7 @@ import type {
     TooltipDataChunkRadar,
     TooltipDataChunkSankey,
     TreemapSeriesData,
-    ValueFormat,
 } from '../../../types';
-import {appendLinePathElement} from '../../utils';
 
 export type HoveredValue = string | number | null | undefined;
 
@@ -48,33 +45,6 @@ function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
     return getRowData('y', data, yAxis);
 }
 
-export function getDefaultValueFormat({
-    axis,
-    closestPointsRange,
-    dateTimeLabelFormats,
-}: {
-    axis?: ChartXAxis | ChartYAxis | null;
-    closestPointsRange?: number;
-    dateTimeLabelFormats?: ChartTooltip['dateTimeLabelFormats'];
-}): ValueFormat | undefined {
-    switch (axis?.type) {
-        case 'linear':
-        case 'logarithmic': {
-            return {
-                type: 'number',
-            };
-        }
-        case 'datetime': {
-            return {
-                type: 'date',
-                format: getDefaultDateFormat(closestPointsRange, dateTimeLabelFormats),
-            };
-        }
-        default:
-            return undefined;
-    }
-}
-
 export const getMeasureValue = ({
     data,
     xAxis,
@@ -88,9 +58,7 @@ export const getMeasureValue = ({
 }) => {
     if (
         data.every((item) =>
-            ['pie', 'treemap', 'waterfall', 'sankey', 'heatmap', 'funnel'].includes(
-                item.series.type,
-            ),
+            ['pie', 'treemap', 'sankey', 'heatmap', 'funnel'].includes(item.series.type),
         )
     ) {
         return null;
@@ -268,33 +236,4 @@ export function getSortedHovered(args: {
             return hovered;
         }
     }
-}
-
-export function getTooltipRowColorSymbol({
-    series,
-    color,
-    height = 8,
-    width = 16,
-}: {
-    color?: string;
-    series?: TooltipDataChunk['series'];
-    height?: number;
-    width?: number;
-}) {
-    if (series?.type === 'line') {
-        const colorSymbol = create('svg').attr('height', height).attr('width', width);
-        const g = colorSymbol.append('g');
-        appendLinePathElement({
-            svgRootElement: g.node(),
-            height,
-            width,
-            color,
-            dashStyle: get(series, 'dashStyle'),
-            lineWidth: get(series, 'lineWidth'),
-        });
-
-        return colorSymbol.node();
-    }
-
-    return null;
 }

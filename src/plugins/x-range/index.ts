@@ -9,10 +9,12 @@ import {getTooltipData} from '~core/shapes/x-range/get-tooltip-data';
 import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
 import {renderXRange} from '~core/shapes/x-range/renderer';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getFormattedValue} from '~core/utils/format';
 
-import type {XRangeSeries} from '../../types';
+import type {TooltipDataChunkXRange, XRangeSeries} from '../../types';
 
-import {prepareXRangeSeries} from './prepare';
+import {prepareXRangeSeries} from './prepare-x-range-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale, boundsWidth, isRangeSlider} = args;
@@ -40,9 +42,39 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     type: 'x-range',
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareXRangeSeries({series: series as XRangeSeries[], seriesOptions, legend, colorScale}),
+    prepareSeries: prepareXRangeSeries,
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        rows: [
+            {
+                id: 'default',
+                cells: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        },
+                        width: '16px',
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {
+                        id: 'value',
+                        source: ({item}) => {
+                            const {data, series} = item as TooltipDataChunkXRange;
+                            const format = (series as unknown as PreparedXRangeSeries).tooltip
+                                ?.valueFormat;
+                            const x0 = getFormattedValue({value: data.x0, format}) ?? data.x0;
+                            const x1 = getFormattedValue({value: data.x1, format}) ?? data.x1;
+                            return `${x0} — ${x1}`;
+                        },
+                        align: 'end',
+                    },
+                ],
+            },
+        ],
+    },
 };

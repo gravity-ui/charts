@@ -55,6 +55,7 @@ export function prepareTreemap(args: PrepareTreemapSeriesArgs) {
                 ...s.sorting,
             },
             tooltip: s.tooltip,
+            custom: s.custom,
         };
 
         return preparedSeries;

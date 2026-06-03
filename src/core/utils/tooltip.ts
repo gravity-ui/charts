@@ -1,5 +1,5 @@
-import {getDefaultValueFormat} from '../../components/Tooltip/DefaultTooltipContent/utils';
 import type {ChartSeries, ChartTooltip, ChartXAxis, ChartYAxis} from '../../types';
+import {getDefaultValueFormat} from '../tooltip/utils';
 
 import {getMinSpaceBetween} from './array';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from './common';

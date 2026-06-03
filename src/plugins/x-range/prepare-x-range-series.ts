@@ -1,23 +1,17 @@
-import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DASH_STYLE, DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegend, PreparedXRangeSeries} from '~core/series/types';
+import type {PrepareSeriesArgs} from '~core/series/plugin';
+import type {PreparedXRangeSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
+import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
-import type {ChartSeriesOptions, XRangeSeries} from '../../types';
+import type {XRangeSeries} from '../../types';
 
-type PrepareXRangeSeriesArgs = {
-    colorScale: ScaleOrdinal<string, string>;
-    series: XRangeSeries[];
-    legend: PreparedLegend;
-    seriesOptions?: ChartSeriesOptions;
-};
-
-export function prepareXRangeSeries(args: PrepareXRangeSeriesArgs): PreparedXRangeSeries[] {
-    const {colorScale, series: seriesList, seriesOptions, legend} = args;
+export function prepareXRangeSeries(args: PrepareSeriesArgs<XRangeSeries>): PreparedXRangeSeries[] {
+    const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;
 
     return seriesList.map<PreparedXRangeSeries>((series) => {
         const name = series.name || '';
@@ -48,7 +42,10 @@ export function prepareXRangeSeries(args: PrepareXRangeSeriesArgs): PreparedXRan
                 seriesOptions?.['x-range']?.borderDashStyle ??
                 DASH_STYLE.Solid,
             cursor: get(series, 'cursor', null),
-            tooltip: series.tooltip,
+            tooltip: {
+                ...series.tooltip,
+                valueFormat: series.tooltip?.valueFormat ?? getDefaultValueFormat({axis: xAxis}),
+            },
             dataLabels: {
                 enabled: get(series, 'dataLabels.enabled', false),
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
@@ -56,6 +53,7 @@ export function prepareXRangeSeries(args: PrepareXRangeSeriesArgs): PreparedXRan
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
                 format: series.dataLabels?.format,
             },
+            custom: series.custom,
         };
     });
 }

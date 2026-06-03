@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
 import {prepareLineData} from '~core/shapes/line/prepare-data';
 import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
+import {getTooltipLineSymbol} from '~core/tooltip/utils';
 
 import type {LineSeries} from '../../types';
 
-import {prepareLineSeries} from './prepare';
+import {prepareLineSeries} from './prepare-line-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -54,9 +55,31 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareLineSeries({series: series as LineSeries[], seriesOptions, legend, colorScale}),
+    prepareSeries: prepareLineSeries,
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        rows: [
+            {
+                id: 'default',
+                cells: [
+                    {
+                        id: 'color',
+                        source: ({item}) => {
+                            const s = item.series as PreparedLineSeries;
+                            return getTooltipLineSymbol({
+                                color: s.color,
+                                dashStyle: s.dashStyle,
+                                lineWidth: s.lineWidth,
+                            });
+                        },
+                        width: '16px',
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.y', align: 'end'},
+                ],
+            },
+        ],
+    },
 };

@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/heatmap/get-tooltip-data';
 import {prepareHeatmapData} from '~core/shapes/heatmap/prepare-data';
 import {renderHeatmap} from '~core/shapes/heatmap/renderer';
 import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import type {HeatmapSeries} from '../../types';
 
-import {prepareHeatmapSeries} from './prepare';
+import {prepareHeatmapSeries} from './prepare-heatmap-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale} = args;
@@ -47,5 +48,25 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries> = {
         }),
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        rows: [
+            {
+                id: 'default',
+                cells: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        },
+                        width: '16px',
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.value', align: 'end'},
+                ],
+            },
+        ],
+    },
 };

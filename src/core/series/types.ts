@@ -18,6 +18,7 @@ import type {
     LineSeries,
     LineSeriesData,
     LineSeriesLineBaseStyle,
+    MeaningfulAny,
     PathLegendSymbolOptions,
     PieSeries,
     PieSeriesData,
@@ -144,6 +145,7 @@ type BasePreparedSeries = {
     };
     cursor: string | null;
     tooltip: ChartSeries['tooltip'];
+    custom: MeaningfulAny;
 };
 
 type BasePreparedAxisRelatedSeries = {

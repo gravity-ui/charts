@@ -91,6 +91,7 @@ export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
             cursor: get(series, 'cursor', null),
             marker: prepareMarker(series, seriesOptions),
             tooltip: series.tooltip,
+            custom: series.custom,
         };
 
         return preparedSeries;

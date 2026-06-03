@@ -74,6 +74,7 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                 areaOpacity: series.connectors?.areaOpacity ?? (isTrapezoid ? 0 : 0.25),
                 lineWidth: series.connectors?.lineWidth ?? 1,
             },
+            custom: series.custom,
         };
 
         return result;

@@ -9,10 +9,11 @@ import {getTooltipData} from '~core/shapes/scatter/get-tooltip-data';
 import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
 import {renderScatter} from '~core/shapes/scatter/renderer';
 import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
+import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import type {ScatterSeries} from '../../types';
 
-import {prepareScatterSeries} from './prepare';
+import {prepareScatterSeries} from './prepare-scatter-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
@@ -46,14 +47,28 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareScatterSeries({
-            series: series as ScatterSeries[],
-            seriesOptions,
-            legend,
-            colorScale,
-        }),
+    prepareSeries: prepareScatterSeries,
     prepareShapeData,
     renderShapes,
-    getTooltipData: getTooltipData as SeriesPlugin['getTooltipData'],
+    tooltip: {
+        prepareData: getTooltipData,
+        rows: [
+            {
+                id: 'default',
+                cells: [
+                    {
+                        id: 'color',
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        },
+                        width: '16px',
+                    },
+                    {id: 'name', source: 'name', align: 'start'},
+                    {id: 'value', source: 'data.y', align: 'end'},
+                ],
+            },
+        ],
+    },
 };
