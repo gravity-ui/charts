@@ -6,9 +6,11 @@ import {
     funnelBasicData,
     funnelContinuousLegendData,
     funnelHtmlLabelsData,
+    funnelMultilineLabelsData,
     funnelTrapezoidData,
     funnelTrapezoidWithConnectorsData,
 } from 'src/__stories__/__data__';
+import type {FunnelSeries} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
@@ -25,6 +27,39 @@ test.describe('Funnel series', () => {
 
     test('With HTML labels', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelHtmlLabelsData} />);
+        await expect(component).toHaveScreenshot();
+    });
+
+    test('With multiline labels (preserveLineBreaks: false)', async ({mount}) => {
+        const noPreserveData = {
+            ...funnelMultilineLabelsData,
+            series: {
+                data: funnelMultilineLabelsData.series.data.map((s) => ({
+                    ...s,
+                    dataLabels: {...(s as FunnelSeries).dataLabels, preserveLineBreaks: false},
+                })),
+            },
+        };
+        const component = await mount(<ChartTestStory data={noPreserveData} />);
+        await expect(component).toHaveScreenshot();
+    });
+
+    test('With multiline labels', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={funnelMultilineLabelsData} />);
+        await expect(component).toHaveScreenshot();
+    });
+
+    test('With multiline labels (HTML)', async ({mount}) => {
+        const htmlData = {
+            ...funnelMultilineLabelsData,
+            series: {
+                data: funnelMultilineLabelsData.series.data.map((s) => ({
+                    ...s,
+                    dataLabels: {...(s as FunnelSeries).dataLabels, html: true},
+                })),
+            },
+        };
+        const component = await mount(<ChartTestStory data={htmlData} />);
         await expect(component).toHaveScreenshot();
     });
 

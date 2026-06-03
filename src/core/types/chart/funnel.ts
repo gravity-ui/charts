@@ -91,6 +91,14 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
          * @default 'plot'
          */
         anchor?: 'plot' | 'shape';
+        /**
+         * When enabled, `\n` characters in `label` values are treated as line breaks.
+         * For SVG labels each line is rendered as a separate `<tspan>` element.
+         * For HTML labels (`html: true`) `white-space: pre-line` is applied so the browser
+         * preserves the newlines.
+         * @default false
+         */
+        preserveLineBreaks?: boolean;
     };
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: ChartLegendItem & {

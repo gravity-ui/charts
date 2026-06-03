@@ -248,6 +248,30 @@ export async function wrapText(args: {
     return acc;
 }
 
+export async function getMultilineTextInfo(args: {
+    text: string;
+    getTextSize: ReturnType<typeof getTextSizeFn>;
+}): Promise<{
+    lines: string[];
+    width: number;
+    height: number;
+    lineHeight: number;
+    hangingOffset: number;
+}> {
+    const {text, getTextSize} = args;
+    const lines = text.split('\n');
+    const measurements = await Promise.all(lines.map((l) => getTextSize(l)));
+    const lineHeight = measurements[0]?.height ?? 0;
+
+    return {
+        lines,
+        width: Math.max(...measurements.map((m) => m.width)),
+        height: lines.length * lineHeight,
+        lineHeight,
+        hangingOffset: measurements[0]?.hangingOffset ?? 0,
+    };
+}
+
 const entityMap = {
     '&': '&amp;',
     '<': '&lt;',

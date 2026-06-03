@@ -4,6 +4,8 @@ import type {BaseTextStyle} from '../types/chart/base';
 
 type RenderableLabelData = {
     text: string;
+    lines?: string[];
+    lineHeight?: number;
     x: number;
     y: number;
     textAnchor: 'start' | 'end' | 'middle';
@@ -21,7 +23,17 @@ export function renderDataLabels<T extends RenderableLabelData>(args: {
         .selectAll<SVGTextElement, T>('text')
         .data(data)
         .join('text')
-        .html((d) => d.text)
+        .html((d) => {
+            if (d.lines?.length) {
+                return d.lines
+                    .map(
+                        (line, i) =>
+                            `<tspan x="${d.x}" dy="${i === 0 ? 0 : (d.lineHeight ?? 0)}">${line}</tspan>`,
+                    )
+                    .join('');
+            }
+            return d.text;
+        })
         .attr('class', className)
         .attr('x', (d) => d.x)
         .attr('y', (d) => d.y)
