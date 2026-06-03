@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.54.0](https://github.com/gravity-ui/charts/compare/v1.53.3...v1.54.0) (2026-06-03)
+
+
+### Features
+
+* declarative tooltip row cells and per-series valueFormat ([#615](https://github.com/gravity-ui/charts/issues/615)) ([1b14382](https://github.com/gravity-ui/charts/commit/1b14382eea09d200ca2a550aeb4e2d1416be715c))
+* **funnel:** support multiline data labels via preserveLineBreaks ([#625](https://github.com/gravity-ui/charts/issues/625)) ([11e5449](https://github.com/gravity-ui/charts/commit/11e5449a68c9ffbb4aed00e3a6d3aab2de7940de))
+
 ## [1.53.3](https://github.com/gravity-ui/charts/compare/v1.53.2...v1.53.3) (2026-06-01)
 
 
