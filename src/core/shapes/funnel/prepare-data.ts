@@ -28,6 +28,12 @@ type LabelInfo = {
     series: PreparedFunnelSeries;
 };
 
+function getHtmlLabelStyle(series: PreparedFunnelSeries) {
+    return series.dataLabels.preserveLineBreaks
+        ? {...series.dataLabels.style, whiteSpace: 'pre-line' as const}
+        : series.dataLabels.style;
+}
+
 function getLineConnectorPaths(args: {points: [number, number][]}) {
     const {points} = args;
 
@@ -101,12 +107,9 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         let lineHeight: number | undefined;
 
         if (s.dataLabels.html) {
-            const htmlStyle = hasLineBreaks
-                ? {...s.dataLabels.style, whiteSpace: 'pre-line' as const}
-                : s.dataLabels.style;
             const size = await getLabelsSize({
                 labels: [labelContent],
-                style: htmlStyle,
+                style: getHtmlLabelStyle(s),
                 html: true,
             });
             width = size.maxWidth;
@@ -261,16 +264,12 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         }
 
         if (s.dataLabels.html) {
-            const htmlStyle =
-                s.dataLabels.preserveLineBreaks && text.includes('\n')
-                    ? {...s.dataLabels.style, whiteSpace: 'pre-line' as const}
-                    : s.dataLabels.style;
             htmlLabels.push({
                 x,
                 y,
                 content: text,
                 size: {width, height},
-                style: htmlStyle,
+                style: getHtmlLabelStyle(s),
             });
         } else {
             svgLabels.push({
