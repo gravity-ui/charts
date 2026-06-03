@@ -5,6 +5,7 @@ import {
     calculateNumericProperty,
     getFormattedValue,
     getLabelsSize,
+    getMultilineTextInfo,
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
@@ -19,6 +20,8 @@ type Args = {
 
 type LabelInfo = {
     text: string;
+    lines?: string[];
+    lineHeight?: number;
     width: number;
     height: number;
     hangingOffset: number;
@@ -88,19 +91,47 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         const labelContent =
             d.label ?? getFormattedValue({value: d.value, format: s.dataLabels.format});
 
-        const {width, height, hangingOffset} = s.dataLabels.html
-            ? await getLabelsSize({
-                  labels: [labelContent],
-                  style: s.dataLabels.style,
-                  html: true,
-              }).then((size) => ({
-                  width: size.maxWidth,
-                  height: size.maxHeight,
-                  hangingOffset: 0,
-              }))
-            : await getTextSize(labelContent);
+        const {preserveLineBreaks} = s.dataLabels;
+        const hasLineBreaks = preserveLineBreaks && labelContent.includes('\n');
 
-        labelInfos.push({text: labelContent, width, height, hangingOffset, series: s});
+        let width: number;
+        let height: number;
+        let hangingOffset: number;
+        let lines: string[] | undefined;
+        let lineHeight: number | undefined;
+
+        if (s.dataLabels.html) {
+            const htmlStyle = hasLineBreaks
+                ? {...s.dataLabels.style, whiteSpace: 'pre-line' as const}
+                : s.dataLabels.style;
+            const size = await getLabelsSize({
+                labels: [labelContent],
+                style: htmlStyle,
+                html: true,
+            });
+            width = size.maxWidth;
+            height = size.maxHeight;
+            hangingOffset = 0;
+        } else if (hasLineBreaks) {
+            const info = await getMultilineTextInfo({text: labelContent, getTextSize});
+            width = info.width;
+            height = info.height;
+            hangingOffset = info.hangingOffset;
+            lines = info.lines;
+            lineHeight = info.lineHeight;
+        } else {
+            ({width, height, hangingOffset} = await getTextSize(labelContent));
+        }
+
+        labelInfos.push({
+            text: labelContent,
+            lines,
+            lineHeight,
+            width,
+            height,
+            hangingOffset,
+            series: s,
+        });
 
         const {inside, align, padding} = s.dataLabels;
         if (!inside) {
@@ -185,7 +216,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         const info = labelInfos[index];
         if (!info) continue;
 
-        const {text, width, height, hangingOffset} = info;
+        const {text, lines, lineHeight, width, height, hangingOffset} = info;
         const {anchor, inside, padding} = s.dataLabels;
         const y = segmentY + itemHeight / 2 - height / 2 + hangingOffset;
 
@@ -230,18 +261,24 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
         }
 
         if (s.dataLabels.html) {
+            const htmlStyle =
+                s.dataLabels.preserveLineBreaks && text.includes('\n')
+                    ? {...s.dataLabels.style, whiteSpace: 'pre-line' as const}
+                    : s.dataLabels.style;
             htmlLabels.push({
                 x,
                 y,
                 content: text,
                 size: {width, height},
-                style: s.dataLabels.style,
+                style: htmlStyle,
             });
         } else {
             svgLabels.push({
                 x,
                 y,
                 text,
+                lines,
+                lineHeight,
                 style: s.dataLabels.style,
                 size: {width, height, hangingOffset},
                 textAnchor: 'start',

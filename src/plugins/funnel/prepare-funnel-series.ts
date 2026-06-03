@@ -47,6 +47,7 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                 anchor: series.dataLabels?.anchor ?? 'plot',
                 reserveSpace: series.dataLabels?.reserveSpace ?? true,
                 padding: series.dataLabels?.padding ?? DEFAULT_DATALABELS_PADDING,
+                preserveLineBreaks: series.dataLabels?.preserveLineBreaks ?? false,
             },
             visible: true,
             name: dataItem.name,

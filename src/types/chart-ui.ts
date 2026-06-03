@@ -3,6 +3,10 @@ import type {CSSProperties} from '~core/types/css';
 
 export interface LabelData {
     text: string;
+    /** Individual lines for multiline SVG rendering. When set, tspan elements are used instead of text. */
+    lines?: string[];
+    /** Pixel height of one line, used as tspan dy offset when lines is set. */
+    lineHeight?: number;
     x: number;
     y: number;
     style: BaseTextStyle;
