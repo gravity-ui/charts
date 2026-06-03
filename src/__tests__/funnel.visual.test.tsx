@@ -30,6 +30,20 @@ test.describe('Funnel series', () => {
         await expect(component).toHaveScreenshot();
     });
 
+    test('With multiline labels (preserveLineBreaks: false)', async ({mount}) => {
+        const noPreserveData = {
+            ...funnelMultilineLabelsData,
+            series: {
+                data: funnelMultilineLabelsData.series.data.map((s) => ({
+                    ...s,
+                    dataLabels: {...(s as FunnelSeries).dataLabels, preserveLineBreaks: false},
+                })),
+            },
+        };
+        const component = await mount(<ChartTestStory data={noPreserveData} />);
+        await expect(component).toHaveScreenshot();
+    });
+
     test('With multiline labels', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelMultilineLabelsData} />);
         await expect(component).toHaveScreenshot();
