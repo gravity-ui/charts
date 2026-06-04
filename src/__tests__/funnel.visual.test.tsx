@@ -14,6 +14,8 @@ import type {FunnelSeries} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
+import {getLocatorBoundingBox} from './utils';
+
 test.describe('Funnel series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelBasicData} />);
@@ -242,6 +244,55 @@ test.describe('Funnel series', () => {
                     await expect(component).toHaveScreenshot();
                 });
             });
+        });
+    });
+
+    test.describe('Tooltip', () => {
+        test('segment tooltip.valueFormat overrides chart tooltip.valueFormat', async ({
+            mount,
+            page,
+        }) => {
+            const data = {
+                series: {
+                    data: [
+                        {
+                            type: 'funnel' as const,
+                            name: 'Funnel',
+                            data: [
+                                {
+                                    value: 100,
+                                    name: 'Visit',
+                                    tooltip: {
+                                        valueFormat: {
+                                            type: 'custom' as const,
+                                            formatter: ({value}: {value: unknown}) =>
+                                                `custom:${value}`,
+                                        },
+                                    },
+                                },
+                                {value: 50, name: 'Purchase'},
+                            ],
+                        },
+                    ],
+                },
+                tooltip: {
+                    valueFormat: {
+                        type: 'custom' as const,
+                        formatter: ({value}: {value: unknown}) => `chart:${value}`,
+                    },
+                },
+                legend: {enabled: false},
+            };
+
+            const component = await mount(<ChartTestStory data={data} />);
+            const segment = component.locator('polygon').first();
+            const box = await getLocatorBoundingBox(segment);
+            await page.mouse.move(
+                Math.round(box.x + box.width / 2),
+                Math.round(box.y + box.height / 2),
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.getByText('custom:100')).toBeVisible();
         });
     });
 });

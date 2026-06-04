@@ -135,7 +135,10 @@ export const DefaultTooltipContent = ({
                 const active = closest && hovered.length > 1;
                 // All rows from the same chunk share the same stripe state for visual grouping.
                 const striped = (chunkIndex + 1) % 2 === 0;
-                const rowValueFormat = get(series, 'tooltip.valueFormat', valueFormat);
+                const rowValueFormat =
+                    (get(seriesItem, 'data.tooltip.valueFormat') as ValueFormat | undefined) ??
+                    (get(series, 'tooltip.valueFormat') as ValueFormat | undefined) ??
+                    valueFormat;
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
 
