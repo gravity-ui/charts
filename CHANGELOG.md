@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.0](https://github.com/gravity-ui/charts/compare/v1.54.0...v1.55.0) (2026-06-04)
+
+
+### Features
+
+* **funnel:** per-segment tooltip valueFormat ([#628](https://github.com/gravity-ui/charts/issues/628)) ([be2d9aa](https://github.com/gravity-ui/charts/commit/be2d9aa7466f9e6acbafa2186d4b174700a66f03))
+
 ## [1.54.0](https://github.com/gravity-ui/charts/compare/v1.53.3...v1.54.0) (2026-06-03)
 
 
