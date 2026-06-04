@@ -14,6 +14,9 @@ import type {FunnelSeries} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
+import {FunnelTooltipValueFormatStory} from './components/FunnelTooltipValueFormatStory';
+import {getLocatorBoundingBox} from './utils';
+
 test.describe('Funnel series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={funnelBasicData} />);
@@ -242,6 +245,27 @@ test.describe('Funnel series', () => {
                     await expect(component).toHaveScreenshot();
                 });
             });
+        });
+    });
+
+    test.describe('Tooltip', () => {
+        test('Segment tooltip.valueFormat overrides chart tooltip.valueFormat', async ({
+            mount,
+            page,
+        }) => {
+            const component = await mount(<FunnelTooltipValueFormatStory />);
+            const segment = component.locator('polygon').first();
+            const box = await getLocatorBoundingBox(segment);
+            await page.mouse.move(
+                Math.round(box.x + box.width / 2),
+                Math.round(box.y + box.height / 2),
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.locator('.gcharts-tooltip__content-row-cell')).toHaveText([
+                '',
+                'Visit',
+                'data:100',
+            ]);
         });
     });
 });

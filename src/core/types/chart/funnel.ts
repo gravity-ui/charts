@@ -1,7 +1,13 @@
 import type {DashStyle, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseDataLabels,
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    ValueFormat,
+} from './base';
 import type {ChartLegendItem, RectLegendSymbolOptions} from './legend';
 
 export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
@@ -14,6 +20,11 @@ export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** Individual series legend options. Has higher priority than legend options in series data */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;
+    };
+    /** Tooltip options for this funnel segment. Overrides series-level tooltip options. */
+    tooltip?: BaseSeriesData['tooltip'] & {
+        /** Formatting settings for tooltip value. */
+        valueFormat?: ValueFormat;
     };
 }
 
