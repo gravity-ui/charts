@@ -3,26 +3,16 @@
 set -euo pipefail
 
 IMAGE_NAME="mcr.microsoft.com/playwright"
-# Default image — must stay in sync with @playwright/test in package.json.
-IMAGE_TAG="v1.56.1-jammy"
+IMAGE_TAG="v1.56.1-jammy" # This version have to be synchronized with playwright version from package.json
 
 NODE_MODULES_CACHE_BASE="$HOME/.cache/uikit-playwright-docker-node-modules"
 REACT_VERSION="${REACT_VERSION:-}"
 
 if [[ -n "$REACT_VERSION" ]]; then
-  case "$REACT_VERSION" in
-    17)
-      # Playwright 1.31.2 is the last CT-react release with React-17-compatible
-      # mounting (ReactDOM.render). Image tag must match install-react.mjs.
-      IMAGE_TAG="v1.31.2-focal"
-      ;;
-    18|19)
-      ;;
-    *)
-      echo "REACT_VERSION must be one of: 17, 18, 19 (got: $REACT_VERSION)"
-      exit 1
-      ;;
-  esac
+  if [[ "$REACT_VERSION" != "17" && "$REACT_VERSION" != "18" && "$REACT_VERSION" != "19" ]]; then
+    echo "REACT_VERSION must be one of: 17, 18, 19 (got: $REACT_VERSION)"
+    exit 1
+  fi
   NODE_MODULES_CACHE_DIR="${NODE_MODULES_CACHE_BASE}-react${REACT_VERSION}"
 else
   NODE_MODULES_CACHE_DIR="$NODE_MODULES_CACHE_BASE"
@@ -39,6 +29,7 @@ run_command() {
     -v $(pwd):/work \
     -v "$NODE_MODULES_CACHE_DIR:/work/node_modules" \
     -e IS_DOCKER=1 \
+    -e "REACT_VERSION=$REACT_VERSION" \
     "$IMAGE_NAME:$IMAGE_TAG" \
     /bin/bash -c "$*"
 }

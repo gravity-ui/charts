@@ -11,9 +11,6 @@ const SUPPORTED = {
         typesReact: '17',
         typesReactDom: '17',
         testingLibraryReact: '12',
-        // Last @playwright/experimental-ct-react that mounts via ReactDOM.render
-        // instead of createRoot. Must match the playwright Docker image tag.
-        playwright: '1.31.2',
     },
     '18': {
         react: '18',
@@ -49,12 +46,6 @@ const pkgs = [
     `@types/react-dom@${pins.typesReactDom}`,
     `@testing-library/react@${pins.testingLibraryReact}`,
 ];
-if (pins.playwright) {
-    pkgs.push(
-        `@playwright/test@${pins.playwright}`,
-        `@playwright/experimental-ct-react@${pins.playwright}`,
-    );
-}
 
 stdout.write(`Installing React ${version} set: ${pkgs.join(' ')}\n`);
 
