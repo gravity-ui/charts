@@ -8,11 +8,20 @@ jobs:
     name: Visual Tests (React ${{ matrix.react }})
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+      image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        react: ['17', '18', '19']
+        include:
+          - react: '17'
+            image: 'mcr.microsoft.com/playwright:v1.31.2-focal'
+            extra_args: '-- --ignore-snapshots'
+          - react: '18'
+            image: 'mcr.microsoft.com/playwright:v1.56.1-jammy'
+            extra_args: ''
+          - react: '19'
+            image: 'mcr.microsoft.com/playwright:v1.56.1-jammy'
+            extra_args: ''
     steps:
       - uses: actions/checkout@v4
       - name: Install Packages
@@ -20,7 +29,7 @@ jobs:
       - name: Install React ${{ matrix.react }}
         run: node scripts/install-react.mjs ${{ matrix.react }}
       - name: Run Visual Tests
-        run: npm run playwright:visual
+        run: npm run playwright:visual ${{ matrix.extra_args }}
         env:
           CI: 'true'
       - name: Upload Playwright Report
@@ -35,11 +44,20 @@ jobs:
     name: Visual Tests Performance (React ${{ matrix.react }})
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+      image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        react: ['17', '18', '19']
+        include:
+          - react: '17'
+            image: 'mcr.microsoft.com/playwright:v1.31.2-focal'
+            extra_args: '-- --ignore-snapshots'
+          - react: '18'
+            image: 'mcr.microsoft.com/playwright:v1.56.1-jammy'
+            extra_args: ''
+          - react: '19'
+            image: 'mcr.microsoft.com/playwright:v1.56.1-jammy'
+            extra_args: ''
     steps:
       - uses: actions/checkout@v4
       - name: Install Packages
@@ -47,7 +65,7 @@ jobs:
       - name: Install React ${{ matrix.react }}
         run: node scripts/install-react.mjs ${{ matrix.react }}
       - name: Run Performance Tests
-        run: npm run playwright:perf
+        run: npm run playwright:perf ${{ matrix.extra_args }}
         env:
           CI: 'true'
       - name: Upload Playwright Report
