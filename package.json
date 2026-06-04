@@ -63,9 +63,15 @@
     "playwright:perf": "playwright test --project=chromium-perf --workers=1 --no-deps --config=playwright/playwright.config.ts",
     "playwright:update": "npm run playwright -- -u",
     "playwright:clear-cache": "rm -rf ./playwright/.cache",
+    "playwright:react17": "node scripts/install-react.mjs 17 && npm run playwright",
+    "playwright:react18": "node scripts/install-react.mjs 18 && npm run playwright",
+    "playwright:react19": "node scripts/install-react.mjs 19 && npm run playwright",
     "playwright:docker": "./scripts/playwright-docker.sh 'npm run playwright'",
     "playwright:docker:update": "./scripts/playwright-docker.sh 'npm run playwright:update'",
-    "playwright:docker:clear-cache": "./scripts/playwright-docker.sh clear-cache"
+    "playwright:docker:clear-cache": "./scripts/playwright-docker.sh clear-cache",
+    "playwright:docker:react17": "REACT_VERSION=17 ./scripts/playwright-docker.sh 'npm run playwright'",
+    "playwright:docker:react18": "REACT_VERSION=18 ./scripts/playwright-docker.sh 'npm run playwright'",
+    "playwright:docker:react19": "REACT_VERSION=19 ./scripts/playwright-docker.sh 'npm run playwright'"
   },
   "dependencies": {
     "@bem-react/classname": "^1.6.0",

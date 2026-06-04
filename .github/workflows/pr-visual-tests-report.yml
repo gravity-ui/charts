@@ -38,11 +38,16 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
           AWS_DEFAULT_REGION: ru-central1
           AWS_EC2_METADATA_DISABLED: true
+          PR_ID: ${{ steps.pr.outputs.id }}
         run: |
-          aws s3 cp playwright-report s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/ --endpoint-url=https://storage.yandexcloud.net --recursive
-          if [ -d playwright-report-perf ]; then
-            aws s3 cp playwright-report-perf s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/perf/ --endpoint-url=https://storage.yandexcloud.net --recursive
-          fi
+          for v in 17 18 19; do
+            if [ -d "playwright-report-react${v}" ]; then
+              aws s3 cp "playwright-report-react${v}" "s3://playwright-reports/charts/pulls/${PR_ID}/react${v}/" --endpoint-url=https://storage.yandexcloud.net --recursive
+            fi
+            if [ -d "playwright-report-perf-react${v}" ]; then
+              aws s3 cp "playwright-report-perf-react${v}" "s3://playwright-reports/charts/pulls/${PR_ID}/react${v}/perf/" --endpoint-url=https://storage.yandexcloud.net --recursive
+            fi
+          done
         shell: bash
       - name: Create Comment
         uses: marocchino/sticky-pull-request-comment@v2
@@ -51,5 +56,7 @@ jobs:
           number: ${{ steps.pr.outputs.id }}
           header: visual tests report
           message: |
-            [Visual Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/index.html) is ready.
-            [Performance Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/perf/index.html) is ready.
+            Visual Tests Reports:
+            - React 17: [visual](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/react17/index.html) · [perf](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/react17/perf/index.html)
+            - React 18: [visual](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/react18/index.html) · [perf](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/react18/perf/index.html)
+            - React 19: [visual](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/react19/index.html) · [perf](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/react19/perf/index.html)
