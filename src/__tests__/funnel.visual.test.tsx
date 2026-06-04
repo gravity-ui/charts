@@ -14,6 +14,7 @@ import type {FunnelSeries} from 'src/types';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 
+import {FunnelTooltipValueFormatStory} from './components/FunnelTooltipValueFormatStory';
 import {getLocatorBoundingBox} from './utils';
 
 test.describe('Funnel series', () => {
@@ -248,43 +249,11 @@ test.describe('Funnel series', () => {
     });
 
     test.describe('Tooltip', () => {
-        test('segment tooltip.valueFormat overrides chart tooltip.valueFormat', async ({
+        test('Segment tooltip.valueFormat overrides chart tooltip.valueFormat', async ({
             mount,
             page,
         }) => {
-            const data = {
-                series: {
-                    data: [
-                        {
-                            type: 'funnel' as const,
-                            name: 'Funnel',
-                            data: [
-                                {
-                                    value: 100,
-                                    name: 'Visit',
-                                    tooltip: {
-                                        valueFormat: {
-                                            type: 'custom' as const,
-                                            formatter: ({value}: {value: unknown}) =>
-                                                `custom:${value}`,
-                                        },
-                                    },
-                                },
-                                {value: 50, name: 'Purchase'},
-                            ],
-                        },
-                    ],
-                },
-                tooltip: {
-                    valueFormat: {
-                        type: 'custom' as const,
-                        formatter: ({value}: {value: unknown}) => `chart:${value}`,
-                    },
-                },
-                legend: {enabled: false},
-            };
-
-            const component = await mount(<ChartTestStory data={data} />);
+            const component = await mount(<FunnelTooltipValueFormatStory />);
             const segment = component.locator('polygon').first();
             const box = await getLocatorBoundingBox(segment);
             await page.mouse.move(
@@ -292,7 +261,11 @@ test.describe('Funnel series', () => {
                 Math.round(box.y + box.height / 2),
             );
             const tooltip = page.locator('.gcharts-tooltip');
-            await expect(tooltip.getByText('custom:100')).toBeVisible();
+            await expect(tooltip.locator('.gcharts-tooltip__content-row-cell')).toHaveText([
+                '',
+                'Visit',
+                'data:100',
+            ]);
         });
     });
 });
