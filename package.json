@@ -164,7 +164,7 @@
     "*.{scss}": [
       "stylelint --fix --quiet --report-needless-disables"
     ],
-    "*.{js,jsx,ts,tsx}": [
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "eslint --fix --quiet --report-unused-disable-directives"
     ],
     "*.{md,json,yml,yaml}": [
