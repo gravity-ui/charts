@@ -26,9 +26,7 @@ const SUPPORTED = {
 const version = argv[2];
 
 if (!version || !SUPPORTED[version]) {
-    stderr.write(
-        `Usage: node scripts/install-react.mjs <17|19>\nGot: ${version ?? '(nothing)'}\n`,
-    );
+    stderr.write(`Usage: node scripts/install-react.mjs <17|19>\nGot: ${version ?? '(nothing)'}\n`);
     exit(1);
 }
 
