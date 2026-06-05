@@ -31,6 +31,10 @@ export interface ShapeDataWithLabels {
     htmlLabels: HtmlItem[];
 }
 
+export interface SeriesDataWithLabels extends ShapeDataWithLabels {
+    series: {dataLabels: {allowOverlap: boolean}};
+}
+
 export interface ShapeDataWithHtmlItems {
     htmlElements: HtmlItem[];
 }

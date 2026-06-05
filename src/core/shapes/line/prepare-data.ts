@@ -1,10 +1,10 @@
-import type {HtmlItem, LabelData, ShapeDataWithLabels} from '../../../types';
+import type {HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '../../series/types';
-import {filterOverlappingLabels, preparePointDataLabels} from '../../utils';
+import {preparePointDataLabels} from '../../utils';
 import {buildHoverMarkerGetter} from '../marker';
 import type {MarkerItem} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
@@ -21,7 +21,6 @@ export const prepareLineData = async (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    otherLayers: ShapeDataWithLabels[];
 }): Promise<PreparedLineData[]> => {
     const {
         series,
@@ -33,7 +32,6 @@ export const prepareLineData = async (args: {
         split,
         isOutsideBounds,
         isRangeSlider,
-        otherLayers,
     } = args;
     const xMax = Math.max(...xScale.range());
 
@@ -87,17 +85,6 @@ export const prepareLineData = async (args: {
             });
             svgLabels = labelsData.svgLabels;
             htmlElements = labelsData.htmlLabels;
-        }
-
-        if (!s.dataLabels.allowOverlap) {
-            svgLabels = filterOverlappingLabels(
-                svgLabels,
-                otherLayers.map((l) => l.svgLabels).flat(),
-            );
-            htmlElements = filterOverlappingLabels(
-                htmlElements,
-                otherLayers.map((l) => l.htmlLabels).flat(),
-            );
         }
 
         markHiddenPointsOutOfYRange({

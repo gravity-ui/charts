@@ -10,7 +10,7 @@ import {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
 import {renderBarX} from '~core/shapes/bar-x/renderer';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
-import {filterOverlappingLabels} from '~core/utils';
+import {filterLayerLabels} from '~core/utils';
 
 import type {BarXSeries} from '../../types';
 
@@ -27,6 +27,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         boundsHeight,
         split,
         isRangeSlider,
+        otherLayers = [],
     } = args;
 
     if (!xAxis || !xScale || !yScale?.length || !split) {
@@ -45,20 +46,8 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         isRangeSlider,
     });
 
-    const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-    if (!allowOverlap) {
-        const filtered = filterOverlappingLabels(data.flatMap((d) => d.htmlLabels));
-        const [first, ...rest] = data;
-        if (first) {
-            const filteredData = [
-                {...first, htmlLabels: filtered},
-                ...rest.map((d) => ({...d, htmlLabels: [] as typeof d.htmlLabels})),
-            ];
-            return {renderData: filteredData, tooltipItems: filteredData};
-        }
-    }
-
-    return {renderData: data, tooltipItems: data};
+    const filteredData = filterLayerLabels(data, otherLayers);
+    return {renderData: filteredData, tooltipItems: filteredData};
 }
 
 function renderShapes({
