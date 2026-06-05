@@ -8,7 +8,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {otherLineAndBarData} from '../__stories__/__data__/other/line-and-bar';
 import type {ChartData} from '../types';
 
-test.describe.only('Multiple types of series on same chart', () => {
+test.describe('Multiple types of series on same chart', () => {
     test.beforeEach(async ({page}) => {
         // Cancel test with error when an uncaught exception happens within the page
         page.on('pageerror', (exception) => {
