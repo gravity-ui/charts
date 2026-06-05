@@ -1,6 +1,6 @@
 import sortBy from 'lodash/sortBy';
 
-import type {HtmlItem, LabelData} from '../../types';
+import type {HtmlItem, LabelData, SeriesDataWithLabels, ShapeDataWithLabels} from '../../types';
 
 export function getLeftPosition(label: LabelData) {
     switch (label.textAnchor) {
@@ -75,6 +75,31 @@ export function filterOverlappingLabels<T extends LabelData | HtmlItem>(
     });
 
     return result;
+}
+
+export function filterLayerLabels<T extends SeriesDataWithLabels>(
+    data: T[],
+    otherLayers: ShapeDataWithLabels[],
+): T[] {
+    const otherSvgLabels = otherLayers.flatMap((l) => l.svgLabels);
+    const otherHtmlLabels = otherLayers.flatMap((l) => l.htmlLabels);
+    const keptSvgLabels: LabelData[] = [];
+    const keptHtmlLabels: HtmlItem[] = [];
+
+    return data.map((d) => {
+        let svgLabels = d.svgLabels;
+        let htmlLabels = d.htmlLabels;
+        if (!d.series.dataLabels.allowOverlap) {
+            svgLabels = filterOverlappingLabels(svgLabels, [...otherSvgLabels, ...keptSvgLabels]);
+            htmlLabels = filterOverlappingLabels(htmlLabels, [
+                ...otherHtmlLabels,
+                ...keptHtmlLabels,
+            ]);
+        }
+        keptSvgLabels.push(...svgLabels);
+        keptHtmlLabels.push(...htmlLabels);
+        return {...d, svgLabels, htmlLabels};
+    });
 }
 
 export function getSvgLabelConstraintedPosition(args: {

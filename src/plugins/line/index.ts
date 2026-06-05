@@ -10,6 +10,7 @@ import {prepareLineData} from '~core/shapes/line/prepare-data';
 import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol} from '~core/tooltip/utils';
+import {filterLayerLabels} from '~core/utils';
 
 import type {LineSeries} from '../../types';
 
@@ -43,10 +44,10 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         split,
         isOutsideBounds: isOutsideBounds ?? (() => false),
         isRangeSlider,
-        otherLayers: otherLayers ?? [],
     });
 
-    return {renderData: data, tooltipItems: data};
+    const filteredData = filterLayerLabels(data, otherLayers ?? []);
+    return {renderData: filteredData, tooltipItems: filteredData};
 }
 
 function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {

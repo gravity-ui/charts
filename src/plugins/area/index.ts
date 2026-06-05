@@ -10,7 +10,7 @@ import {prepareAreaData} from '~core/shapes/area/prepare-data';
 import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
-import {filterOverlappingLabels} from '~core/utils';
+import {filterLayerLabels} from '~core/utils';
 
 import type {AreaSeries} from '../../types';
 
@@ -30,6 +30,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
             split,
             isOutsideBounds,
             isRangeSlider,
+            otherLayers = [],
         } = args;
 
         if (!xAxis || !xScale || !yScale?.length || !split) {
@@ -48,20 +49,8 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
             isRangeSlider,
         });
 
-        const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        if (!allowOverlap) {
-            const filtered = filterOverlappingLabels(data.flatMap((d) => d.htmlLabels));
-            const [first, ...rest] = data;
-            if (first) {
-                const filteredData = [
-                    {...first, htmlLabels: filtered},
-                    ...rest.map((d) => ({...d, htmlLabels: [] as typeof d.htmlLabels})),
-                ];
-                return {renderData: filteredData, tooltipItems: filteredData};
-            }
-        }
-
-        return {renderData: data, tooltipItems: data};
+        const filteredData = filterLayerLabels(data, otherLayers);
+        return {renderData: filteredData, tooltipItems: filteredData};
     },
     renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
         const data = preparedData as PreparedAreaData[];
