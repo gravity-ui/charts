@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.1](https://github.com/gravity-ui/charts/compare/v1.55.0...v1.55.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* data labels no longer overlap across different series types ([#631](https://github.com/gravity-ui/charts/issues/631)) ([f0c889e](https://github.com/gravity-ui/charts/commit/f0c889ec73e1c07df94714aa2767ec4423c037a1))
+
 ## [1.55.0](https://github.com/gravity-ui/charts/compare/v1.54.0...v1.55.0) (2026-06-04)
 
 
