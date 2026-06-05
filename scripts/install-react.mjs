@@ -4,6 +4,8 @@ import {readFileSync, writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {argv, cwd, exit, stderr, stdout} from 'node:process';
 
+// React 18 is the default in package.json; this script swaps the dev
+// environment to React 17 or React 19 for cross-version Playwright runs.
 const SUPPORTED = {
     17: {
         react: '17',
@@ -12,19 +14,12 @@ const SUPPORTED = {
         typesReactDom: '17',
         testingLibraryReact: '12',
     },
-    18: {
-        react: '18',
-        reactDom: '18',
-        typesReact: '18',
-        typesReactDom: '18',
-        testingLibraryReact: '16',
-    },
     19: {
         react: '19',
         reactDom: '19',
         typesReact: '19',
         typesReactDom: '19',
-        testingLibraryReact: 'latest',
+        testingLibraryReact: '16',
     },
 };
 
@@ -32,7 +27,7 @@ const version = argv[2];
 
 if (!version || !SUPPORTED[version]) {
     stderr.write(
-        `Usage: node scripts/install-react.mjs <17|18|19>\nGot: ${version ?? '(nothing)'}\n`,
+        `Usage: node scripts/install-react.mjs <17|19>\nGot: ${version ?? '(nothing)'}\n`,
     );
     exit(1);
 }

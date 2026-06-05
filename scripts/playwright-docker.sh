@@ -9,8 +9,8 @@ NODE_MODULES_CACHE_BASE="$HOME/.cache/uikit-playwright-docker-node-modules"
 REACT_VERSION="${REACT_VERSION:-}"
 
 if [[ -n "$REACT_VERSION" ]]; then
-  if [[ "$REACT_VERSION" != "17" && "$REACT_VERSION" != "18" && "$REACT_VERSION" != "19" ]]; then
-    echo "REACT_VERSION must be one of: 17, 18, 19 (got: $REACT_VERSION)"
+  if [[ "$REACT_VERSION" != "17" && "$REACT_VERSION" != "19" ]]; then
+    echo "REACT_VERSION must be one of: 17, 19 (got: $REACT_VERSION)"
     exit 1
   fi
   NODE_MODULES_CACHE_DIR="${NODE_MODULES_CACHE_BASE}-react${REACT_VERSION}"
