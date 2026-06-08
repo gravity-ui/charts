@@ -127,6 +127,7 @@ jobs:
         run: npm run playwright:visual
         env:
           CI: 'true'
+          REACT_VERSION: '19'
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -151,6 +152,7 @@ jobs:
         run: npm run playwright:perf
         env:
           CI: 'true'
+          REACT_VERSION: '19'
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4

@@ -6,6 +6,21 @@ import {argv, cwd, exit, stderr, stdout} from 'node:process';
 
 // React 18 is the default in package.json; this script swaps the dev
 // environment to React 17 or React 19 for cross-version Playwright runs.
+//
+// When promoting the default React version, or adding a new edge,
+// update every place the version is encoded:
+//   1. package.json devDeps (react, react-dom, @types/react,
+//      @types/react-dom) + regenerate package-lock.json.
+//   2. SUPPORTED below — drop the entry that's now the default, add
+//      any new edge.
+//   3. npm scripts in package.json (playwright:react*,
+//      playwright:docker:react*) — they encode REACT_VERSION.
+//   4. REACT_VERSION validation in scripts/playwright-docker.sh.
+//   5. Gated jobs in .github/workflows/pr-visual-tests.yml
+//      (visual_tests_react_* / visual_tests_perf_react_*).
+//   6. If React 17 support is dropped, also remove the
+//      'react-dom/client' Vite alias in playwright/playwright.config.ts
+//      and the playwright/shims/react-dom-client.ts shim.
 const SUPPORTED = {
     17: {
         react: '17',
