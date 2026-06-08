@@ -57,3 +57,106 @@ jobs:
           name: playwright-report-perf
           path: ./playwright-report
           retention-days: 1
+
+  # Validate the edges of the React peer range. Runs only on release-please
+  # PRs so regular PR CI stays fast; failure here blocks the release before
+  # it can be tagged and published.
+  visual_tests_react_17:
+    name: Visual Tests (React 17)
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please')
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Packages
+        run: npm ci
+      - name: Swap React to 17
+        run: node scripts/install-react.mjs 17
+      - name: Run Visual Tests
+        run: npm run playwright:visual
+        env:
+          CI: 'true'
+          REACT_VERSION: '17'
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-react17
+          path: ./playwright-report
+          retention-days: 1
+
+  visual_tests_perf_react_17:
+    name: Visual Tests Performance (React 17)
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please')
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Packages
+        run: npm ci
+      - name: Swap React to 17
+        run: node scripts/install-react.mjs 17
+      - name: Run Performance Tests
+        run: npm run playwright:perf
+        env:
+          CI: 'true'
+          REACT_VERSION: '17'
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-perf-react17
+          path: ./playwright-report
+          retention-days: 1
+
+  visual_tests_react_19:
+    name: Visual Tests (React 19)
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please')
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Packages
+        run: npm ci
+      - name: Swap React to 19
+        run: node scripts/install-react.mjs 19
+      - name: Run Visual Tests
+        run: npm run playwright:visual
+        env:
+          CI: 'true'
+          REACT_VERSION: '19'
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-react19
+          path: ./playwright-report
+          retention-days: 1
+
+  visual_tests_perf_react_19:
+    name: Visual Tests Performance (React 19)
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please')
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Packages
+        run: npm ci
+      - name: Swap React to 19
+        run: node scripts/install-react.mjs 19
+      - name: Run Performance Tests
+        run: npm run playwright:perf
+        env:
+          CI: 'true'
+          REACT_VERSION: '19'
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-perf-react19
+          path: ./playwright-report
+          retention-days: 1

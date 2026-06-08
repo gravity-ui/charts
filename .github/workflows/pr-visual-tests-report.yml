@@ -38,11 +38,43 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
           AWS_DEFAULT_REGION: ru-central1
           AWS_EC2_METADATA_DISABLED: true
+          PR_ID: ${{ steps.pr.outputs.id }}
+          S3_BASE: s3://playwright-reports/charts/pulls
         run: |
-          aws s3 cp playwright-report s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/ --endpoint-url=https://storage.yandexcloud.net --recursive
+          aws s3 cp playwright-report "${S3_BASE}/${PR_ID}/" --endpoint-url=https://storage.yandexcloud.net --recursive
           if [ -d playwright-report-perf ]; then
-            aws s3 cp playwright-report-perf s3://playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/perf/ --endpoint-url=https://storage.yandexcloud.net --recursive
+            aws s3 cp playwright-report-perf "${S3_BASE}/${PR_ID}/perf/" --endpoint-url=https://storage.yandexcloud.net --recursive
           fi
+          for v in 17 19; do
+            if [ -d "playwright-report-react${v}" ]; then
+              aws s3 cp "playwright-report-react${v}" "${S3_BASE}/${PR_ID}/react${v}/" --endpoint-url=https://storage.yandexcloud.net --recursive
+            fi
+            if [ -d "playwright-report-perf-react${v}" ]; then
+              aws s3 cp "playwright-report-perf-react${v}" "${S3_BASE}/${PR_ID}/react${v}/perf/" --endpoint-url=https://storage.yandexcloud.net --recursive
+            fi
+          done
+        shell: bash
+      - name: Build Comment Body
+        id: comment_body
+        env:
+          PR_ID: ${{ steps.pr.outputs.id }}
+          BASE_URL: https://storage.yandexcloud.net/playwright-reports/charts/pulls
+        run: |
+          {
+            echo 'message<<COMMENT_EOF'
+            echo "[Visual Tests Report](${BASE_URL}/${PR_ID}/index.html) is ready."
+            echo "[Performance Tests Report](${BASE_URL}/${PR_ID}/perf/index.html) is ready."
+            for v in 17 19; do
+              if [ -d "playwright-report-react${v}" ] || [ -d "playwright-report-perf-react${v}" ]; then
+                printf '\nReact %s: ' "${v}"
+                [ -d "playwright-report-react${v}" ] && printf '[visual](%s/%s/react%s/index.html)' "${BASE_URL}" "${PR_ID}" "${v}"
+                [ -d "playwright-report-react${v}" ] && [ -d "playwright-report-perf-react${v}" ] && printf ' · '
+                [ -d "playwright-report-perf-react${v}" ] && printf '[perf](%s/%s/react%s/perf/index.html)' "${BASE_URL}" "${PR_ID}" "${v}"
+                printf '\n'
+              fi
+            done
+            echo 'COMMENT_EOF'
+          } >> "$GITHUB_OUTPUT"
         shell: bash
       - name: Create Comment
         uses: marocchino/sticky-pull-request-comment@v2
@@ -50,6 +82,4 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           number: ${{ steps.pr.outputs.id }}
           header: visual tests report
-          message: |
-            [Visual Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/index.html) is ready.
-            [Performance Tests Report](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.id }}/perf/index.html) is ready.
+          message: ${{ steps.comment_body.outputs.message }}
