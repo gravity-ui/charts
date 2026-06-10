@@ -4,45 +4,23 @@ import type {PreparedFunnelData} from './types';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedFunnelData>): GetTooltipDataResult {
     const {data, position} = args;
-    const [pointerX, pointerY] = position;
+    const [, pointerY] = position;
     const items = data[0]?.items;
 
     if (!items?.length) {
         return {chunks: []};
     }
 
-    const exactMatch = items.find(
-        (item) =>
-            pointerX >= item.x &&
-            pointerX <= item.x + item.width &&
-            pointerY >= item.y &&
-            pointerY <= item.y + item.height,
-    );
+    let nearest = items[0];
+    let minDist = Infinity;
 
-    if (exactMatch) {
-        return {
-            chunks: [{data: exactMatch.data, series: exactMatch.series, closest: true}],
-        };
-    }
-
-    for (let i = 1; i < items.length; i++) {
-        const prev = items[i - 1];
-        const curr = items[i];
-        const connectorTop = prev.y + prev.height;
-        const connectorBottom = curr.y;
-
-        if (pointerY >= connectorTop && pointerY <= connectorBottom) {
-            const connectorLeft = Math.min(prev.x, curr.x);
-            const connectorRight = Math.max(prev.x + prev.width, curr.x + curr.width);
-
-            if (pointerX < connectorLeft || pointerX > connectorRight) {
-                continue;
-            }
-
-            const nearest = pointerY - connectorTop <= connectorBottom - pointerY ? prev : curr;
-            return {chunks: [{data: nearest.data, series: nearest.series, closest: true}]};
+    for (const item of items) {
+        const dist = Math.max(0, item.y - pointerY, pointerY - (item.y + item.height));
+        if (dist < minDist) {
+            minDist = dist;
+            nearest = item;
         }
     }
 
-    return {chunks: []};
+    return {chunks: [{data: nearest.data, series: nearest.series, closest: true}]};
 }
