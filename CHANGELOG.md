@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.0](https://github.com/gravity-ui/charts/compare/v1.55.2...v1.56.0) (2026-06-11)
+
+
+### Features
+
+* **funnel:** add per-segment opacity support ([#637](https://github.com/gravity-ui/charts/issues/637)) ([a3abdc7](https://github.com/gravity-ui/charts/commit/a3abdc72ce54ce0baa5187f67dea978a7717c2fe))
+
 ## [1.55.2](https://github.com/gravity-ui/charts/compare/v1.55.1...v1.55.2) (2026-06-11)
 
 
