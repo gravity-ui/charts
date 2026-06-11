@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.2](https://github.com/gravity-ui/charts/compare/v1.55.1...v1.55.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **funnel:** show tooltip in connector areas between segments ([#633](https://github.com/gravity-ui/charts/issues/633)) ([c813ac4](https://github.com/gravity-ui/charts/commit/c813ac496bc289f5572ed81882800db437c6fec1))
+
 ## [1.55.1](https://github.com/gravity-ui/charts/compare/v1.55.0...v1.55.1) (2026-06-05)
 
 
