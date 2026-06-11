@@ -17,6 +17,8 @@ export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     name: string;
     /** Initial data label of the funnel segment. If not specified, the value is used. */
     label?: string;
+    /** Individual opacity for the funnel segment. */
+    opacity?: number;
     /** Individual series legend options. Has higher priority than legend options in series data */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;

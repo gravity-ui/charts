@@ -31,6 +31,7 @@ export function renderFunnel(
         .join('polygon')
         .attr('points', (d) => d.points.map((p) => p.join(',')).join(' '))
         .attr('fill', (d) => d.color)
+        .attr('opacity', (d) => d.opacity)
         .attr('stroke', (d) => d.borderColor)
         .attr('stroke-width', (d) => d.borderWidth);
 

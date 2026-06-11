@@ -190,6 +190,7 @@ export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData>
             borderColor: '',
             borderWidth: 0,
             cursor: s.cursor,
+            opacity: s.opacity,
         };
         items.push(item);
 
