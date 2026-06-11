@@ -9,6 +9,10 @@ jobs:
   build-and-deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
+    # Dependabot PRs run in a restricted context without access to repository
+    # secrets, so the GitHub App token cannot be generated. Skip the docs
+    # preview for them — it is not needed for dependency bumps.
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
