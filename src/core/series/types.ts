@@ -446,6 +446,7 @@ export type PreparedFunnelSeries = {
         preserveLineBreaks: boolean;
     };
     connectors: Required<FunnelSeries['connectors']>;
+    opacity: number | null;
 } & BasePreparedSeries;
 
 export type PreparedXRangeSeries = {

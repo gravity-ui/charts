@@ -62,6 +62,7 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                 itemText: dataItem.legend?.itemText ?? dataItem.name,
             },
             cursor: get(series, 'cursor', null),
+            opacity: dataItem.opacity ?? null,
             tooltip: series.tooltip,
             connectors: {
                 enabled: isConnectorsEnabled,

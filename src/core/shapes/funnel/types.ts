@@ -17,6 +17,7 @@ export type FunnelItemData = {
     borderColor: string;
     borderWidth: number;
     cursor: string | null;
+    opacity: number | null;
 };
 
 export type FunnelConnectorData = {
