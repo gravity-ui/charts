@@ -14,6 +14,8 @@ import {
 } from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
+import {getLocatorBoundingBox} from './utils';
+
 test.describe('Scatter series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={scatterBasicData} />);
@@ -165,6 +167,36 @@ test.describe('Scatter series', () => {
         set(dataWithMinMax, 'yAxis[0].max', 1);
         component.update(<ChartTestStory data={dataWithMinMax} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Tooltip works correctly with y=0 on logarithmic axis', async ({mount, page}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series',
+                        data: [
+                            {x: 1, y: 10},
+                            {x: 2, y: 0},
+                            {x: 2, y: 100},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [{type: 'logarithmic'}],
+        };
+
+        const component = await mount(<ChartTestStory data={data} />);
+        const box = await getLocatorBoundingBox(
+            component.locator('.gcharts-marker__wrapper').last(),
+        );
+
+        // Hover near x=2 (the y=0 point's position)
+        await page.mouse.move(Math.round(box.x), Math.round(box.y));
+
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip.getByText('100', {exact: true})).toBeVisible();
     });
 
     test('x null values, nullMode=skip', async ({mount}) => {
