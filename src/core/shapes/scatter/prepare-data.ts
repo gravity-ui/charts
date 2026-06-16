@@ -91,7 +91,7 @@ export async function prepareScatterData(args: {
             const x = getXValue({point: d, xAxis, xScale});
             const y = getYValue({point: d, yAxis: seriesYAxis, yScale: seriesYScale});
 
-            if (!Number.isFinite(x) || !Number.isFinite(y)) {
+            if (x === null || y === null || !Number.isFinite(x) || !Number.isFinite(y)) {
                 return;
             }
 
