@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.1](https://github.com/gravity-ui/charts/compare/v1.56.0...v1.56.1) (2026-06-16)
+
+
+### Bug Fixes
+
+* **scatter:** tooltip on logarithmic axis with zero values ([#639](https://github.com/gravity-ui/charts/issues/639)) ([381ecec](https://github.com/gravity-ui/charts/commit/381ecec2a74f5e80741072f64f20d6f344de2798))
+
 ## [1.56.0](https://github.com/gravity-ui/charts/compare/v1.55.2...v1.56.0) (2026-06-11)
 
 
