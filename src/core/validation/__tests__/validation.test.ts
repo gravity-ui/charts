@@ -1,6 +1,7 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
+import '../../../plugins';
 import type {ChartData} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 

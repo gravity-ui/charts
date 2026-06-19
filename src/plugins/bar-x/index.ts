@@ -11,6 +11,7 @@ import {renderBarX} from '~core/shapes/bar-x/renderer';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
 
 import type {BarXSeries} from '../../types';
 
@@ -72,6 +73,11 @@ function renderShapes({
 export const barXPlugin: SeriesPlugin<BarXSeries> = {
     type: 'bar-x',
     prepareSeries: prepareBarXSeries,
+    validate: ({series, xAxis, yAxis}) => {
+        validateAxisPlotValues({series, xAxis, yAxis});
+        validateXYSeries({series, xAxis, yAxis});
+        validateStacking({series});
+    },
     prepareShapeData,
     renderShapes,
     tooltip: {

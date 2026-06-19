@@ -11,6 +11,7 @@ import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
 
 import type {LineSeries} from '../../types';
 
@@ -57,6 +58,10 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
     prepareSeries: prepareLineSeries,
+    validate: ({series, xAxis, yAxis}) => {
+        validateAxisPlotValues({series, xAxis, yAxis});
+        validateXYSeries({series, xAxis, yAxis});
+    },
     prepareShapeData,
     renderShapes,
     tooltip: {

@@ -10,6 +10,7 @@ import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
 import {renderScatter} from '~core/shapes/scatter/renderer';
 import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
 
 import type {ScatterSeries} from '../../types';
 
@@ -48,6 +49,10 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
     prepareSeries: prepareScatterSeries,
+    validate: ({series, xAxis, yAxis}) => {
+        validateAxisPlotValues({series, xAxis, yAxis});
+        validateXYSeries({series, xAxis, yAxis});
+    },
     prepareShapeData,
     renderShapes,
     tooltip: {
