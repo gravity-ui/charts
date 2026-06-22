@@ -15,3 +15,11 @@ export function getSeriesPlugin(type: string): SeriesPlugin {
     }
     return plugin;
 }
+
+export function hasSeriesPlugin(type: string): boolean {
+    return registry.has(type);
+}
+
+export function getRegisteredSeriesTypes(): string[] {
+    return [...registry.keys()];
+}

@@ -10,6 +10,7 @@ import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
 
 import type {BarYSeries} from '../../types';
 
@@ -43,6 +44,11 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const barYPlugin: SeriesPlugin<BarYSeries> = {
     type: 'bar-y',
     prepareSeries: prepareBarYSeries,
+    validate: ({series, xAxis, yAxis}) => {
+        validateAxisPlotValues({series, xAxis, yAxis});
+        validateXYSeries({series, xAxis, yAxis});
+        validateStacking({series});
+    },
     prepareShapeData,
     renderShapes,
     tooltip: {

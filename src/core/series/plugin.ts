@@ -57,6 +57,15 @@ export interface RenderShapesArgs {
     dispatcher?: Dispatch<object>;
 }
 
+export interface ValidateSeriesArgs<T = ChartSeries> {
+    /** The series being validated. */
+    series: T;
+    /** All series in the chart. Needed only by collection-level checks (e.g. treemap uniqueness); other types ignore it. */
+    allSeries: ChartSeries[];
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis[];
+}
+
 export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
@@ -67,6 +76,11 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     useClipPath?: boolean;
     /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
+    /**
+     * Validates type-specific series config. Called once per series by `validateData`.
+     * Should throw a `ChartError` on invalid input. Omit for types that need no validation.
+     */
+    validate?(args: ValidateSeriesArgs<T>): void;
     /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,

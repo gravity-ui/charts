@@ -1,3 +1,4 @@
+import {i18n} from '~core/i18n';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -11,7 +12,9 @@ import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
 
+import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaSeries} from '../../types';
 
 import {prepareAreaSeries} from './prepare-area-series';
@@ -19,6 +22,19 @@ import {prepareAreaSeries} from './prepare-area-series';
 export const areaPlugin: SeriesPlugin<AreaSeries> = {
     type: 'area',
     prepareSeries: prepareAreaSeries,
+    validate: ({series, xAxis, yAxis}) => {
+        validateAxisPlotValues({series, xAxis, yAxis});
+        validateXYSeries({series, xAxis, yAxis});
+        validateStacking({series});
+
+        const isStacking = ['normal', 'percent'].includes(series.stacking as string);
+        if (isStacking && series.nullMode === 'connect') {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: i18n('error', 'label_stacking-area-connect-null-mode'),
+            });
+        }
+    },
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
         const {
             series,

@@ -1,3 +1,4 @@
+import {i18n} from '~core/i18n';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -11,6 +12,7 @@ import {renderPie} from '~core/shapes/pie/renderer';
 import type {PreparedPieData} from '~core/shapes/pie/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
+import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {PieSeries} from '../../types';
 
 import {preparePieSeries} from './prepare-pie-series';
@@ -37,6 +39,16 @@ export const piePlugin: SeriesPlugin<PieSeries> = {
     useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
+    validate: ({series}) => {
+        series.data.forEach(({value}) => {
+            if (typeof value !== 'number' && value !== null) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_invalid-pie-data-value'),
+                });
+            }
+        });
+    },
     prepareShapeData,
     renderShapes,
     tooltip: {
