@@ -3,20 +3,18 @@ import get from 'lodash/get';
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import {DEFAULT_AXIS_TYPE} from '../constants';
 import {i18n} from '../i18n';
-import type {
-    AreaSeries,
-    BarXSeries,
-    BarYSeries,
-    ChartXAxis,
-    ChartYAxis,
-    LineSeries,
-    ScatterSeries,
-} from '../types';
+import type {ChartXAxis, ChartYAxis} from '../types';
 
-export type XYSeries = ScatterSeries | BarXSeries | BarYSeries | LineSeries | AreaSeries;
+type XYDataPoint = {x?: unknown; y?: unknown};
+
+type XYValidationSeries = {
+    name: string;
+    yAxis?: number;
+    data: XYDataPoint[];
+};
 
 export function validateXYSeries(args: {
-    series: XYSeries;
+    series: XYValidationSeries;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
 }) {
@@ -119,7 +117,7 @@ export function validateXYSeries(args: {
 }
 
 export function validateAxisPlotValues(args: {
-    series: XYSeries;
+    series: XYValidationSeries;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
 }) {
@@ -283,7 +281,7 @@ export function validateAxisPlotValues(args: {
     });
 }
 
-export function validateStacking({series}: {series: AreaSeries | BarXSeries | BarYSeries}) {
+export function validateStacking({series}: {series: {stacking?: string}}) {
     const availableStackingValues = ['normal', 'percent'];
 
     if (series.stacking && !availableStackingValues.includes(series.stacking)) {
