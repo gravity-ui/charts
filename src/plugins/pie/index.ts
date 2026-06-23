@@ -49,6 +49,7 @@ export const piePlugin: SeriesPlugin<PieSeries> = {
             }
         });
     },
+    getColorValue: (d) => Number(d.value),
     prepareShapeData,
     renderShapes,
     tooltip: {

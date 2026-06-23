@@ -35,6 +35,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
             });
         }
     },
+    getColorValue: (d) => Number(d.y),
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
         const {
             series,

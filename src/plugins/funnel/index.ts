@@ -37,6 +37,7 @@ export const funnelPlugin: SeriesPlugin<FunnelSeries> = {
     useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareFunnelSeries({series: series as FunnelSeries[], seriesOptions, legend, colors}),
+    getColorValue: (d) => Number(d.value),
     prepareShapeData,
     renderShapes,
     tooltip: {

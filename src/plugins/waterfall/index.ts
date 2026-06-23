@@ -50,6 +50,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
     prepareSeries: prepareWaterfallSeries,
+    getColorValue: (d) => Number(d.y),
     prepareShapeData,
     renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
         const data = preparedData as PreparedWaterfallData[];

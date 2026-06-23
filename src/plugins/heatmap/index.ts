@@ -46,6 +46,7 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries> = {
             legend,
             colorScale,
         }),
+    getColorValue: (d) => Number(d.value),
     prepareShapeData,
     renderShapes,
     tooltip: {

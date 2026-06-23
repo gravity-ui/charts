@@ -81,6 +81,12 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
      * Should throw a `ChartError` on invalid input. Omit for types that need no validation.
      */
     validate?(args: ValidateSeriesArgs<T>): void;
+    /**
+     * Returns the numeric value of a data point used to build the domain of a continuous color scale.
+     * Called by `getDomainForContinuousColorScale` over the raw series data (before shape data is prepared).
+     * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
+     */
+    getColorValue?(data: T['data'][number]): number;
     /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,

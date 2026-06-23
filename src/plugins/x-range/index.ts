@@ -43,6 +43,9 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     type: 'x-range',
     prepareSeries: prepareXRangeSeries,
+    // Use bar duration (x1 - x0) as the color value so that longer bars can be
+    // visually distinguished by color intensity.
+    getColorValue: (d) => Math.abs(Number(d.x1) - Number(d.x0)),
     prepareShapeData,
     renderShapes,
     tooltip: {
