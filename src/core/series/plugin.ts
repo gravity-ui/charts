@@ -67,6 +67,8 @@ export interface ValidateSeriesArgs<T = ChartSeries> {
 }
 
 export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
+    // --- Metadata ---
+
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
     /**
@@ -74,25 +76,38 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
      * Defaults to `true`. Set to `false` for series that render outside the plot area (e.g. pie, radar, treemap).
      */
     useClipPath?: boolean;
-    /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
-    prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
+
+    // --- Validation ---
+
     /**
      * Validates type-specific series config. Called once per series by `validateData`.
      * Should throw a `ChartError` on invalid input. Omit for types that need no validation.
      */
     validate?(args: ValidateSeriesArgs<T>): void;
+
+    // --- Data preparation ---
+
+    /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
+    prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
     /**
-     * Returns the numeric value of a data point used to build the domain of a continuous color scale.
-     * Called by `getDomainForContinuousColorScale` over the raw series data (before shape data is prepared).
+     * Returns the value of a data point that places it on a continuous color scale.
+     * `getDomainForContinuousColorScale` coerces the result to a number and builds the `[min, max]`
+     * domain from it, over the raw series data (before shape data is prepared).
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
-    getColorValue?(data: T['data'][number]): number;
+    getColorValue?(data: T['data'][number]): number | string | null | undefined;
     /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
     ): PrepareShapeDataResult | Promise<PrepareShapeDataResult>;
+
+    // --- Rendering ---
+
     /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
+
+    // --- Tooltip ---
+
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;

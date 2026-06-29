@@ -49,7 +49,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries> = {
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
     },
-    getColorValue: (d) => Number(d.x),
+    getColorValue: (d) => d.x,
     prepareShapeData,
     renderShapes,
     tooltip: {

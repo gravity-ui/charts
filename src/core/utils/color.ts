@@ -17,7 +17,7 @@ export function getDomainForContinuousColorScale(args: {
             );
         }
 
-        return s.data.map((d) => getColorValue(d));
+        return s.data.map((d) => Number(getColorValue(d)));
     });
 
     return [Math.min(...values), Math.max(...values)];

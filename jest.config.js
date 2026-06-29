@@ -21,5 +21,5 @@ module.exports = {
         '\\.(css|scss)$': '<rootDir>/src/__mocks__/styleMock.js',
         '^~core/(.*)$': '<rootDir>/src/core/$1',
     },
-    setupFiles: ['<rootDir>/src/setup-jsdom.ts'],
+    setupFiles: ['<rootDir>/src/setup-jsdom.ts', '<rootDir>/src/setup-plugins.ts'],
 };

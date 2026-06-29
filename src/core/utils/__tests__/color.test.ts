@@ -1,11 +1,9 @@
-// Populate the series registry so getSeriesPlugin works (see plugin registration gotcha).
-import '../../../plugins';
 import type {ChartData} from '../../../types';
 import {getDomainForContinuousColorScale} from '../color';
 
 type Series = ChartData['series']['data'];
 
-describe('utils/color/getDomainForContinuousColorScale', () => {
+describe('getDomainForContinuousColorScale', () => {
     // One case per supported type guards each plugin's field mapping individually,
     // so a regression in a single type (e.g. a swapped field) is caught.
     test.each<{type: string; data: unknown[]; expected: number[]}>([
