@@ -62,6 +62,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
     },
+    getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
     tooltip: {

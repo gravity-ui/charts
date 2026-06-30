@@ -2,46 +2,23 @@ import {range} from 'd3-array';
 import {scaleLinear} from 'd3-scale';
 
 import type {ChartData} from '../../types';
+import {getSeriesPlugin} from '../series/seriesRegistry';
 
 export function getDomainForContinuousColorScale(args: {
     series: ChartData['series']['data'];
 }): number[] {
     const {series} = args;
-    const values = series.reduce<number[]>((acc, s) => {
-        switch (s.type) {
-            case 'pie':
-            case 'heatmap':
-            case 'funnel': {
-                acc.push(...s.data.map((d) => Number(d.value)));
-                break;
-            }
-            case 'bar-y': {
-                acc.push(...s.data.map((d) => Number(d.x)));
-                break;
-            }
-            case 'scatter':
-            case 'bar-x':
-            case 'waterfall':
-            case 'line':
-            case 'area': {
-                acc.push(...s.data.map((d) => Number(d.y)));
-                break;
-            }
-            case 'x-range': {
-                // Use bar duration (x1 - x0) as the color domain value so that
-                // longer bars can be visually distinguished by color intensity.
-                acc.push(...s.data.map((d) => Math.abs(Number(d.x1) - Number(d.x0))));
-                break;
-            }
-            default: {
-                throw Error(
-                    `The method for calculation a domain for a continuous color scale for the "${s.type}" series is not defined`,
-                );
-            }
+    const values = series.flatMap((s) => {
+        const {getColorValue} = getSeriesPlugin(s.type);
+
+        if (!getColorValue) {
+            throw Error(
+                `The method for calculation a domain for a continuous color scale for the "${s.type}" series is not defined`,
+            );
         }
 
-        return acc;
-    }, []);
+        return s.data.map((d) => Number(getColorValue(d)));
+    });
 
     return [Math.min(...values), Math.max(...values)];
 }

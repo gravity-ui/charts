@@ -78,6 +78,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries> = {
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
     },
+    getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
     tooltip: {
