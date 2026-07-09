@@ -9,3 +9,5 @@ React charting library with 10+ chart types: area, bar, line, pie, scatter, tree
 - [Development](https://gravity-ui.github.io/charts/pages/development.html)
 - [API](https://gravity-ui.github.io/charts/pages/api/overview.html)
 - [Guides](https://gravity-ui.github.io/charts/pages/guides/tooltip.html)
+
+check
