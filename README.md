@@ -85,3 +85,14 @@ A declarative React charting library for Gravity UI apps — render line, area, 
 - **The data prop is `data`, shaped `{series: {data: [...]}}`.** Each entry in `series.data` is one series with its own `type` and `data` array — there is no top-level array of series.
 - **Nothing renders without a sized container.** `Chart` fills its parent, so give the wrapper an explicit height.
 - **Requires uikit setup.** Wrap in `ThemeProvider` and import `@gravity-ui/uikit/styles/styles.css`; `@gravity-ui/uikit` is a required peer dependency.
+
+### Useful docs
+
+- [Get started](./docs/diplodoc/pages/get-started.md)
+- [Theming](./docs/diplodoc/pages/guides/theming.md)
+- [Tooltip](./docs/diplodoc/pages/guides/tooltip.md)
+- [Legend](./docs/diplodoc/pages/guides/legend.md)
+- [HTML Content](./docs/diplodoc/pages/guides/html.md)
+- [Value Formatting](./docs/diplodoc/pages/guides/value-formatting.md)
+- [Data Labels](./docs/diplodoc/pages/guides/data-labels.md)
+- [Axis Types](./docs/diplodoc/pages/guides/axis-types.md)
