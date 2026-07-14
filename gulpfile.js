@@ -72,7 +72,19 @@ task('styles', () => {
 });
 
 task('copy-docs', (done) => {
-    utils.buildDocs();
+    utils.buildDocs({
+        outDir: path.resolve(BUILD_DIR, 'docs'),
+        sources: [
+            {
+                title: 'Guides',
+                kind: 'markdown',
+                // Diplodoc pages: top-level pages plus the guides/ subfolder.
+                baseDir: 'docs/diplodoc/pages',
+                outPrefix: '',
+                nameFromTitle: true,
+            },
+        ],
+    });
     done();
 });
 
