@@ -4,10 +4,9 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 
-import {xRangeBasicData, xRangeContinuousLegendData} from 'src/__stories__/__data__';
-import type {ChartData, DeepPartial, XRangeSeriesData} from 'src/types';
-
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {xRangeBasicData, xRangeContinuousLegendData} from '../__stories__/__data__';
+import type {ChartData, DeepPartial, XRangeSeriesData} from '../types';
 
 import {dragElementByCalculatedPosition, getLocatorBoundingBox} from './utils';
 

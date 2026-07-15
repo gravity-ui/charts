@@ -1,7 +1,7 @@
 import {select} from 'd3-selection';
 import {line} from 'd3-shape';
 
-import type {DashStyle} from 'src/core/constants';
+import type {DashStyle} from '../../constants';
 
 const linePathGenerator = line<{x: number; y: number}>()
     .x((d) => d.x)

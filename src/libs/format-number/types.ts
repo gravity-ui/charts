@@ -76,7 +76,6 @@ export interface FormatNumberOptions extends FormatOptions {
      * - `'b'` — billions (÷ 1 000 000 000).
      * - `'t'` — trillions (÷ 1 000 000 000 000).
      * - `null` — no unit suffix.
-     *
      * @deprecated Use `units` for custom scales. This option is fully ignored when `units` is set.
      */
     unit?: 'auto' | 'k' | 'm' | 'b' | 't' | null;

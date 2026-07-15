@@ -2,13 +2,12 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     waterfallBasicData,
     waterfallNullModeSkipData,
     waterfallNullModeZeroData,
-} from 'src/__stories__/__data__';
-
-import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+} from '../__stories__/__data__';
 import type {ChartData, WaterfallSeriesData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';

@@ -5,6 +5,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 import set from 'lodash/set';
 
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     areaSplitData,
     barXDatePlotLineData,
@@ -12,9 +13,7 @@ import {
     barYDatetimePlotLineData,
     barYPlotLinesData,
     lineTwoYAxisData,
-} from 'src/__stories__/__data__';
-
-import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+} from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
 test.describe('Plot Lines', () => {

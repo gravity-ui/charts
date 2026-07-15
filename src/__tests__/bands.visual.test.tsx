@@ -4,6 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     barXDatePlotBandsData,
     barXPlotBandsData,
@@ -16,9 +17,7 @@ import {
     barYWithYAxisPlotBandsInfinityData,
     lineDatetimePlotBandData,
     lineTwoYAxisData,
-} from 'src/__stories__/__data__';
-
-import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+} from '../__stories__/__data__';
 
 test.describe('Plot Bands', () => {
     test('Category Y Plot Bands', async ({mount}) => {

@@ -2,7 +2,6 @@ import type {FormatUnitScale} from './types';
 
 /**
  * Byte scale with binary base (`1024`) and localized postfixes.
- *
  * @example
  * ```ts
  * tooltip: {
@@ -28,7 +27,6 @@ export const FORMAT_UNITS_BYTES: FormatUnitScale = {
  * compactly as `K/M/B/T`. Postfixes are plain Latin letters and stay the
  * same regardless of language. The first entry has an empty postfix, so
  * values below `1000` render as plain numbers without a delimiter.
- *
  * @example
  * ```ts
  * tooltip: {
@@ -48,7 +46,6 @@ export const FORMAT_UNITS_NUMBERS: FormatUnitScale = {
 
 /**
  * Bit scale with decimal base (`1000`) and localized postfixes.
- *
  * @example
  * ```ts
  * tooltip: {
