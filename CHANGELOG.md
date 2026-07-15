@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.1](https://github.com/gravity-ui/charts/compare/v1.57.0...v1.57.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* remove baseUrl, use relative imports ([#647](https://github.com/gravity-ui/charts/issues/647)) ([5eafce4](https://github.com/gravity-ui/charts/commit/5eafce4812f9b15c6770071add38f5dc60289eb9))
+
 ## [1.57.0](https://github.com/gravity-ui/charts/compare/v1.56.1...v1.57.0) (2026-07-15)
 
 
