@@ -4,16 +4,15 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     barXGroupedColumnsData,
     barXStakingPercentData,
     tooltipOverflowedRowsData,
     tooltipOverflowedRowsHtmlData,
-} from 'src/__stories__/__data__';
-import {TIME_UNITS} from 'src/core/utils/time';
-import type {ChartData} from 'src/types';
-
-import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+} from '../__stories__/__data__';
+import {TIME_UNITS} from '../core/utils/time';
+import type {ChartData} from '../types';
 
 import {DrawerChartTestStory} from './components/DrawerChartTestStory';
 import {HoveredPlotsTestStory} from './components/HoveredPlotsTestStory';

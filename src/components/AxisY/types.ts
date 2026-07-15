@@ -1,5 +1,4 @@
-import type {DashStyle} from 'src/core/constants';
-
+import type {DashStyle} from '../../core/constants';
 import type {AxisPlotShape} from '../../core/types/chart/axis';
 import type {CSSProperties} from '../../core/types/css';
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';

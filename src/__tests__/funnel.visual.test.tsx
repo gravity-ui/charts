@@ -2,6 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
+import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     funnelBasicData,
     funnelContinuousLegendData,
@@ -9,10 +10,8 @@ import {
     funnelMultilineLabelsData,
     funnelTrapezoidData,
     funnelTrapezoidWithConnectorsData,
-} from 'src/__stories__/__data__';
-import type {FunnelSeries} from 'src/types';
-
-import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+} from '../__stories__/__data__';
+import type {FunnelSeries} from '../types';
 
 import {FunnelTooltipValueFormatStory} from './components/FunnelTooltipValueFormatStory';
 import {getLocatorBoundingBox} from './utils';

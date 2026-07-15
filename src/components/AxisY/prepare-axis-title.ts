@@ -1,4 +1,3 @@
-import type {PreparedAxis} from 'src/hooks';
 import {
     calculateCos,
     calculateSin,
@@ -7,6 +6,7 @@ import {
     getTextWithElipsis,
 } from '~core/utils';
 
+import type {PreparedAxis} from '../../hooks';
 import type {TextRowData} from '../types';
 import {getMultilineTitleContentRows} from '../utils/axis-title';
 

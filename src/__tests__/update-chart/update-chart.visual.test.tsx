@@ -2,7 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import type {ChartData} from 'src/types';
+import type {ChartData} from '../../types';
 
 import {ChartStory} from './ChartStory';
 

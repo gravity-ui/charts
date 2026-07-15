@@ -5,14 +5,13 @@
     "outDir": "build/esm",
     "module": "esnext",
     "jsx": "react",
-    "baseUrl": ".",
     "importHelpers": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "paths": {
-      "~playwright/*": ["playwright/*"],
-      "~core/*": ["src/core/*"],
-      "@gravity-ui/charts": ["src/index.ts"]
+      "~playwright/*": ["./playwright/*"],
+      "~core/*": ["./src/core/*"],
+      "@gravity-ui/charts": ["./src/index.ts"]
     }
   },
   "include": [
