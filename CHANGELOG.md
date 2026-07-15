@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.0](https://github.com/gravity-ui/charts/compare/v1.56.1...v1.57.0) (2026-07-15)
+
+
+### Features
+
+* improve agent docs ([#645](https://github.com/gravity-ui/charts/issues/645)) ([bbb8bfd](https://github.com/gravity-ui/charts/commit/bbb8bfd508185f71973a538a7968f7ed5e6970fe))
+
 ## [1.56.1](https://github.com/gravity-ui/charts/compare/v1.56.0...v1.56.1) (2026-06-16)
 
 
