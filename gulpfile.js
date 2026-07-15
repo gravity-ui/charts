@@ -1,5 +1,6 @@
 const path = require('node:path');
 
+const utils = require('@gravity-ui/gulp-utils');
 const {task, src, dest, series, parallel} = require('gulp');
 const sass = require('gulp-dart-sass');
 const replace = require('gulp-replace');
@@ -70,6 +71,23 @@ task('styles', () => {
         .pipe(dest(path.resolve(BUILD_DIR, 'cjs')));
 });
 
+task('copy-docs', (done) => {
+    utils.buildDocs({
+        outDir: path.resolve(BUILD_DIR, 'docs'),
+        sources: [
+            {
+                title: 'Guides',
+                kind: 'markdown',
+                // Diplodoc pages: top-level pages plus the guides/ subfolder.
+                baseDir: 'docs/diplodoc/pages',
+                outPrefix: '',
+                nameFromTitle: true,
+            },
+        ],
+    });
+    done();
+});
+
 task(
     'build',
     series([
@@ -78,6 +96,7 @@ task(
         parallel(['replace-aliases-esm', 'replace-aliases-cjs']),
         'copy-i18n',
         'styles',
+        'copy-docs',
     ]),
 );
 
