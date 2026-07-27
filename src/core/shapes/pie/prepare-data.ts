@@ -238,7 +238,6 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             .innerRadius((d) => d.data.radius + distance + connectorPadding)
             .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
-        let shouldStopLabelPlacement = false;
         series.forEach((d, index) => {
             if (!isPointDataLabelEnabled({data: d.data, series: d})) {
                 return;
@@ -344,7 +343,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                     (relatedSegment.endAngle - relatedSegment.startAngle) / 2;
 
                 if (overlap) {
-                    let shouldAdjustAngle = !shouldStopLabelPlacement;
+                    let shouldAdjustAngle = true;
                     const connectorPoints = getConnectorPoints(startAngle);
                     const pointA = connectorPoints[0];
                     const pointB = connectorPoints[connectorPoints.length - 1];
@@ -372,7 +371,6 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
                             if (inscribedAngle > 90) {
                                 shouldAdjustAngle = false;
-                                shouldStopLabelPlacement = true;
                             }
 
                             if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
@@ -385,7 +383,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             }
 
             const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
-            if (!isLabelOverlapped && label.maxWidth > 0 && !shouldStopLabelPlacement) {
+            if (!isLabelOverlapped && label.maxWidth > 0) {
                 labels.push(label);
 
                 if (shouldUseHtml) {
