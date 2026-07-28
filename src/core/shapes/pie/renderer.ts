@@ -15,13 +15,15 @@ import {setEllipsisForOverflowTexts} from '../../utils';
 import type {PieLabelData, PreparedPieData, SegmentData} from './types';
 
 const b = block('pie');
+// D3's default 3-digit rounding can make near-full arc endpoints identical.
+// Six digits keeps them distinct for all visually meaningful chart radii.
 const ARC_PATH_DIGITS = 6;
 
 interface ArcGeneratorWithDigits {
     digits(digits: number): unknown;
 }
 
-export function getPieArcPath(d: PieArcDatum<SegmentData>, outerRadius: number) {
+function getPieArcPath(d: PieArcDatum<SegmentData>, outerRadius: number) {
     const arcGenerator = arc<PieArcDatum<SegmentData>>()
         .innerRadius(d.data.pie.innerRadius)
         .outerRadius(outerRadius)

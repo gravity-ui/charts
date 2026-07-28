@@ -42,6 +42,8 @@ test.describe('Pie series', () => {
                         dataLabels: {enabled: true},
                         data: [
                             {name: 'Main', value: 100},
+                            // This value and chart size reproduce the narrow range where D3 does
+                            // not use its full-circle fallback, but rounding merges the arc endpoints.
                             {name: 'Small', value: 0.000025},
                         ],
                     },
