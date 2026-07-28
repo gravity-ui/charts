@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.57.1](https://github.com/gravity-ui/charts/compare/v1.57.0...v1.57.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **pie:** prevent segments from collapsing at specific chart sizes ([#651](https://github.com/gravity-ui/charts/issues/651)) ([712ee85](https://github.com/gravity-ui/charts/commit/712ee85712772a9d9e9c10256e14d5bc4501fc94))
+* remove baseUrl, use relative imports ([#647](https://github.com/gravity-ui/charts/issues/647)) ([5eafce4](https://github.com/gravity-ui/charts/commit/5eafce4812f9b15c6770071add38f5dc60289eb9))
+
 ## [1.57.0](https://github.com/gravity-ui/charts/compare/v1.56.1...v1.57.0) (2026-07-15)
 
 
