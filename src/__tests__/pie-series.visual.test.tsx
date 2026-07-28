@@ -33,6 +33,30 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Should render segments with very small fractional values', async ({mount}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: true},
+                        data: [
+                            {name: 'Main', value: 100},
+                            {name: 'Small', value: 0.000025},
+                        ],
+                    },
+                ],
+            },
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 592, height: 592}} />,
+        );
+
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('legend.justifyContent = start', async ({mount}) => {
         const data = cloneDeep(pieBasicData);
         set(data, 'legend.justifyContent', 'start');

@@ -15,6 +15,21 @@ import {setEllipsisForOverflowTexts} from '../../utils';
 import type {PieLabelData, PreparedPieData, SegmentData} from './types';
 
 const b = block('pie');
+const ARC_PATH_DIGITS = 6;
+
+interface ArcGeneratorWithDigits {
+    digits(digits: number): unknown;
+}
+
+export function getPieArcPath(d: PieArcDatum<SegmentData>, outerRadius: number) {
+    const arcGenerator = arc<PieArcDatum<SegmentData>>()
+        .innerRadius(d.data.pie.innerRadius)
+        .outerRadius(outerRadius)
+        .cornerRadius(d.data.pie.borderRadius);
+    (arcGenerator as typeof arcGenerator & ArcGeneratorWithDigits).digits(ARC_PATH_DIGITS);
+
+    return arcGenerator(d);
+}
 
 export function getHaloVisibility(d: PieArcDatum<SegmentData>) {
     const enabled = d.data.pie.halo.enabled && d.data.hovered;
@@ -57,13 +72,7 @@ export function renderPie(
             return [];
         })
         .join('path')
-        .attr('d', (d) => {
-            const arcGenerator = arc<PieArcDatum<SegmentData>>()
-                .innerRadius(d.data.pie.innerRadius)
-                .outerRadius(d.data.radius + d.data.pie.halo.size)
-                .cornerRadius(d.data.pie.borderRadius);
-            return arcGenerator(d);
-        })
+        .attr('d', (d) => getPieArcPath(d, d.data.radius + d.data.pie.halo.size))
         .attr('class', b('halo'))
         .attr('fill', (d) => d.data.color)
         .attr('opacity', (d) => d.data.pie.halo.opacity)
@@ -75,13 +84,7 @@ export function renderPie(
         .selectAll(segmentSelector)
         .data((pieData) => pieData.segments)
         .join('path')
-        .attr('d', (d) => {
-            const arcGenerator = arc<PieArcDatum<SegmentData>>()
-                .innerRadius(d.data.pie.innerRadius)
-                .outerRadius(d.data.radius)
-                .cornerRadius(d.data.pie.borderRadius);
-            return arcGenerator(d);
-        })
+        .attr('d', (d) => getPieArcPath(d, d.data.radius))
         .attr('class', b('segment'))
         .style('stroke', (d) => d.data.series.borderColor)
         .attr('fill', (d) => d.data.color)
