@@ -1,4 +1,3 @@
-import {groupBy} from 'lodash';
 import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
@@ -112,8 +111,20 @@ export async function getPreparedLegend(args: {
 }
 
 function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegend) {
-    const grouped = groupBy(series, (s) => s.legend.groupId);
-    return Object.values(grouped).reduce<LegendItemWithoutTextWidth[]>((acc, items) => {
+    const grouped = new Map<string, PreparedSeries[]>();
+
+    series.forEach((item) => {
+        const groupId = item.legend.groupId;
+        const items = grouped.get(groupId);
+
+        if (items) {
+            items.push(item);
+        } else {
+            grouped.set(groupId, [item]);
+        }
+    });
+
+    return Array.from(grouped.values()).reduce<LegendItemWithoutTextWidth[]>((acc, items) => {
         const s = items.find((item) => item.legend.enabled);
 
         if (s) {
