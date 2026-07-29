@@ -180,6 +180,49 @@ test.describe('Legend', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
+        test('Preserves series order for integer-like group ids', async ({mount}) => {
+            const data: ChartData = {
+                legend: {
+                    enabled: true,
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'First series',
+                            legend: {
+                                groupId: '10000',
+                            },
+                            data: [{x: 0, y: 1}],
+                        },
+                        {
+                            type: 'line',
+                            name: 'Second series',
+                            legend: {
+                                groupId: '1000',
+                            },
+                            data: [{x: 0, y: 2}],
+                        },
+                        {
+                            type: 'line',
+                            name: 'Third series',
+                            legend: {
+                                groupId: '999',
+                            },
+                            data: [{x: 0, y: 3}],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+
+            await expect(component.locator('.gcharts-legend__item text')).toHaveText([
+                'First series',
+                'Second series',
+                'Third series',
+            ]);
+        });
+
         test.describe('Vertical alignment (position left)', () => {
             const verticalAlignOptions: ChartLegend['verticalAlign'][] = [
                 'top',
