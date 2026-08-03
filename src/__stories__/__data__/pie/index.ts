@@ -1,5 +1,6 @@
 export * from './basic';
 export * from './continuous-legend';
+export * from './dense-multiline-html-labels';
 export * from './donut';
 export * from './donut-totals';
 export * from './html-labels';
