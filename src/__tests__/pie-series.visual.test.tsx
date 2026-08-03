@@ -344,6 +344,37 @@ test.describe('Pie series', () => {
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('skips label with invalid connector and continues placement', async ({mount}) => {
+            // Remove the expected-failure marker when applying this test with the fix for #649.
+            test.fail(true, 'Expected to fail on main until #649 is fixed');
+
+            const data: ChartData = {
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            borderWidth: 0,
+                            data: [
+                                {name: 'Small 0', value: 1, label: 'X00'},
+                                {name: 'Small 1', value: 1, label: 'X01'},
+                                {name: 'Small 2', value: 1, label: 'X02'},
+                                {name: 'Small 3', value: 1, label: 'X03'},
+                                {name: 'Small 4', value: 1, label: 'X04'},
+                                {name: 'Remainder', value: 355, label: 'X99'},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} styles={{width: 280}} />);
+            const labels = component.locator('.gcharts-pie__label');
+
+            await expect(labels).toHaveCount(5);
+            await expect(labels.filter({hasText: 'X04'})).toHaveCount(0);
+            await expect(labels.filter({hasText: 'X99'})).toBeVisible();
+        });
     });
 
     test.describe('Min radius', () => {
