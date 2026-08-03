@@ -346,6 +346,9 @@ test.describe('Pie series', () => {
         });
 
         test('skips label with invalid connector and continues placement', async ({mount}) => {
+            // Remove the expected-failure marker when applying this test with the fix for #649.
+            test.fail(true, 'Expected to fail on main until #649 is fixed');
+
             const data: ChartData = {
                 legend: {enabled: false},
                 series: {
