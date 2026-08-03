@@ -347,9 +347,6 @@ test.describe('Pie series', () => {
         });
 
         test('skips label with invalid connector and continues placement', async ({mount}) => {
-            // Remove the expected-failure marker when applying this test with the fix for #649.
-            test.fail(true, 'Expected to fail on main until #649 is fixed');
-
             const data: ChartData = {
                 legend: {enabled: false},
                 series: {
@@ -363,6 +360,8 @@ test.describe('Pie series', () => {
                                 {name: 'Small 2', value: 1, label: 'X02'},
                                 {name: 'Small 3', value: 1, label: 'X03'},
                                 {name: 'Small 4', value: 1, label: 'X04'},
+                                {name: 'Small 5', value: 1, label: 'X05'},
+                                {name: 'Small 6', value: 1, label: 'X06'},
                                 {name: 'Remainder', value: 355, label: 'X99'},
                             ],
                         },
@@ -372,8 +371,8 @@ test.describe('Pie series', () => {
             const component = await mount(<ChartTestStory data={data} styles={{width: 280}} />);
             const labels = component.locator('.gcharts-pie__label');
 
-            await expect(labels).toHaveCount(5);
-            await expect(labels.filter({hasText: 'X04'})).toHaveCount(0);
+            await expect(labels).toHaveCount(6);
+            await expect(labels.filter({hasText: 'X06'})).toHaveCount(0);
             await expect(labels.filter({hasText: 'X99'})).toBeVisible();
         });
     });
