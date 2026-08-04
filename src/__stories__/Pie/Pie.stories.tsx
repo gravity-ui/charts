@@ -13,6 +13,7 @@ import {
     pieDonutTotalsData,
     pieHtmlLabelsData,
     pieHtmlLegendData,
+    pieIntersectingConnectorData,
     piePlaygroundData,
     pieUserStylesData,
 } from '../__data__';
@@ -132,6 +133,14 @@ export const PieDenseMultilineHtmlLabels = {
     name: 'Dense multiline HTML labels',
     args: {
         data: pieDenseMultilineHtmlLabelsData,
+        style: {width: 280, height: 280},
+    },
+} satisfies Story;
+
+export const PieIntersectingConnector = {
+    name: 'Intersecting connector',
+    args: {
+        data: pieIntersectingConnectorData,
         style: {width: 280, height: 280},
     },
 } satisfies Story;
