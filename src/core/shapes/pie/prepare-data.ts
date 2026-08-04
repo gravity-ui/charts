@@ -370,10 +370,9 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                             const inscribedAngle = getInscribedAngle(pointA, pointB, pointC);
 
                             if (inscribedAngle > 90) {
+                                // Skip only this label; do not commit an invalid connector position.
                                 shouldAdjustAngle = false;
-                            }
-
-                            if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
+                            } else if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
                                 shouldAdjustAngle = false;
                                 overlap = false;
                             }

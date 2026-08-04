@@ -347,6 +347,8 @@ test.describe('Pie series', () => {
         });
 
         test('skips label with invalid connector and continues placement', async ({mount}) => {
+            const htmlLabel = (text: string) =>
+                `<div style="box-sizing: border-box; width: 28px; height: 52px; border: 1px solid currentColor">${text}</div>`;
             const data: ChartData = {
                 legend: {enabled: false},
                 series: {
@@ -354,26 +356,36 @@ test.describe('Pie series', () => {
                         {
                             type: 'pie',
                             borderWidth: 0,
+                            dataLabels: {
+                                html: true,
+                                connectorShape: 'straight-line',
+                            },
                             data: [
-                                {name: 'Small 0', value: 1, label: 'X00'},
-                                {name: 'Small 1', value: 1, label: 'X01'},
-                                {name: 'Small 2', value: 1, label: 'X02'},
-                                {name: 'Small 3', value: 1, label: 'X03'},
-                                {name: 'Small 4', value: 1, label: 'X04'},
-                                {name: 'Small 5', value: 1, label: 'X05'},
-                                {name: 'Small 6', value: 1, label: 'X06'},
-                                {name: 'Remainder', value: 355, label: 'X99'},
+                                {name: 'Small 0', value: 1, label: htmlLabel('X00')},
+                                {name: 'Small 1', value: 1, label: htmlLabel('X01')},
+                                {name: 'Small 2', value: 1, label: htmlLabel('X02')},
+                                {
+                                    name: 'Small 3',
+                                    value: 1,
+                                    label: htmlLabel('X03'),
+                                    color: '#D50000',
+                                },
+                                {name: 'Remainder', value: 356, label: htmlLabel('X99')},
                             ],
                         },
                     ],
                 },
             };
-            const component = await mount(<ChartTestStory data={data} styles={{width: 280}} />);
-            const labels = component.locator('.gcharts-pie__label');
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 280, height: 280}} />,
+            );
+            const labels = component.locator('.gcharts-chart__html-layer-item');
 
-            await expect(labels).toHaveCount(6);
-            await expect(labels.filter({hasText: 'X06'})).toHaveCount(0);
+            // X03 hits connector bend >90° while resolving overlap — skip only that label.
+            await expect(labels.filter({hasText: 'X03'})).toHaveCount(0);
             await expect(labels.filter({hasText: 'X99'})).toBeVisible();
+            await expect(labels.filter({hasText: 'X00'})).toBeVisible();
+            await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
         });
     });
 
