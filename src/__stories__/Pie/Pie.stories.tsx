@@ -8,6 +8,7 @@ import {ChartStory} from '../ChartStory';
 import {
     pieBasicData,
     pieContinuousLegendData,
+    pieDenseMultilineHtmlLabelsData,
     pieDonutData,
     pieDonutTotalsData,
     pieHtmlLabelsData,
@@ -124,5 +125,13 @@ export const PiePlayground = {
         data: {
             control: 'object',
         },
+    },
+} satisfies Story;
+
+export const PieDenseMultilineHtmlLabels = {
+    name: 'Dense multiline HTML labels',
+    args: {
+        data: pieDenseMultilineHtmlLabelsData,
+        style: {width: 280, height: 280},
     },
 } satisfies Story;

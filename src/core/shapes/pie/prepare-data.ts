@@ -238,7 +238,6 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             .innerRadius((d) => d.data.radius + distance + connectorPadding)
             .outerRadius((d) => d.data.radius + distance + connectorPadding);
 
-        let shouldStopLabelPlacement = false;
         series.forEach((d, index) => {
             if (!isPointDataLabelEnabled({data: d.data, series: d})) {
                 return;
@@ -344,7 +343,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                     (relatedSegment.endAngle - relatedSegment.startAngle) / 2;
 
                 if (overlap) {
-                    let shouldAdjustAngle = !shouldStopLabelPlacement;
+                    let shouldAdjustAngle = true;
                     const connectorPoints = getConnectorPoints(startAngle);
                     const pointA = connectorPoints[0];
                     const pointB = connectorPoints[connectorPoints.length - 1];
@@ -371,11 +370,9 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                             const inscribedAngle = getInscribedAngle(pointA, pointB, pointC);
 
                             if (inscribedAngle > 90) {
+                                // Skip only this label; do not commit an invalid connector position.
                                 shouldAdjustAngle = false;
-                                shouldStopLabelPlacement = true;
-                            }
-
-                            if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
+                            } else if (!isLabelsOverlapping(prevLabel, label, dataLabels.padding)) {
                                 shouldAdjustAngle = false;
                                 overlap = false;
                             }
@@ -385,7 +382,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             }
 
             const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
-            if (!isLabelOverlapped && label.maxWidth > 0 && !shouldStopLabelPlacement) {
+            if (!isLabelOverlapped && label.maxWidth > 0) {
                 labels.push(label);
 
                 if (shouldUseHtml) {

@@ -12,6 +12,7 @@ import {randomString} from '~core/utils';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     pieBasicData,
+    pieDenseMultilineHtmlLabelsData,
     pieNullModeSkipData,
     pieNullModeZeroData,
     piePlaygroundData,
@@ -346,9 +347,8 @@ test.describe('Pie series', () => {
         });
 
         test('skips label with invalid connector and continues placement', async ({mount}) => {
-            // Remove the expected-failure marker when applying this test with the fix for #649.
-            test.fail(true, 'Expected to fail on main until #649 is fixed');
-
+            const htmlLabel = (text: string) =>
+                `<div style="box-sizing: border-box; width: 28px; height: 52px; border: 1px solid currentColor">${text}</div>`;
             const data: ChartData = {
                 legend: {enabled: false},
                 series: {
@@ -356,24 +356,71 @@ test.describe('Pie series', () => {
                         {
                             type: 'pie',
                             borderWidth: 0,
+                            dataLabels: {
+                                html: true,
+                                connectorShape: 'straight-line',
+                            },
                             data: [
-                                {name: 'Small 0', value: 1, label: 'X00'},
-                                {name: 'Small 1', value: 1, label: 'X01'},
-                                {name: 'Small 2', value: 1, label: 'X02'},
-                                {name: 'Small 3', value: 1, label: 'X03'},
-                                {name: 'Small 4', value: 1, label: 'X04'},
-                                {name: 'Remainder', value: 355, label: 'X99'},
+                                {name: 'Small 0', value: 1, label: htmlLabel('X00')},
+                                {name: 'Small 1', value: 1, label: htmlLabel('X01')},
+                                {name: 'Small 2', value: 1, label: htmlLabel('X02')},
+                                {
+                                    name: 'Small 3',
+                                    value: 1,
+                                    label: htmlLabel('X03'),
+                                    color: '#D50000',
+                                },
+                                {name: 'Remainder', value: 356, label: htmlLabel('X99')},
                             ],
                         },
                     ],
                 },
             };
-            const component = await mount(<ChartTestStory data={data} styles={{width: 280}} />);
-            const labels = component.locator('.gcharts-pie__label');
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 280, height: 280}} />,
+            );
+            const labels = component.locator('.gcharts-chart__html-layer-item');
 
-            await expect(labels).toHaveCount(5);
-            await expect(labels.filter({hasText: 'X04'})).toHaveCount(0);
+            // X03 hits connector bend >90° while resolving overlap — skip only that label.
+            await expect(labels.filter({hasText: 'X03'})).toHaveCount(0);
             await expect(labels.filter({hasText: 'X99'})).toBeVisible();
+            await expect(labels.filter({hasText: 'X00'})).toBeVisible();
+            await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+        });
+    });
+
+    test.describe('Dense multiline HTML dataLabels', () => {
+        const segmentCount = pieDenseMultilineHtmlLabelsData.series.data[0].data.length;
+        const styles: React.CSSProperties = {width: '280px', height: '280px'};
+        const htmlLabels = '.gcharts-chart__html-layer-item';
+
+        test('skips only conflicting labels, subsequent labels still render', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory data={pieDenseMultilineHtmlLabelsData} styles={styles} />,
+            );
+            const labels = component.locator(htmlLabels);
+            const renderedCount = await labels.count();
+
+            // Some labels must be skipped due to overlap on a small pie...
+            expect(renderedCount).toBeGreaterThan(0);
+            expect(renderedCount).toBeLessThan(segmentCount);
+            // ...but placement must continue after a conflict (not stop for the rest of the circle).
+            // Late segments from the second half of the series should still be visible.
+            await expect(labels.filter({hasText: '512 (B)'}).first()).toBeVisible();
+            await expect(labels.filter({hasText: '1024 (B)'}).first()).toBeVisible();
+
+            await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+        });
+
+        test('allowOverlap: true renders all labels', async ({mount}) => {
+            const data = getModifiedData(pieDenseMultilineHtmlLabelsData, {
+                dataLabels: {allowOverlap: true},
+            });
+            const component = await mount(<ChartTestStory data={data} styles={styles} />);
+            const labels = component.locator(htmlLabels);
+
+            await expect(labels).toHaveCount(segmentCount);
+            await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
         });
     });
 
