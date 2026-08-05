@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.57.2](https://github.com/gravity-ui/charts/compare/v1.57.1...v1.57.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* dataLabels stop for the rest of the circle after connector bend … ([#650](https://github.com/gravity-ui/charts/issues/650)) ([05badd4](https://github.com/gravity-ui/charts/commit/05badd4ef7698e61b0f112c80ef11617a2491546))
+* **legend:** preserve series order for integer-like group IDs ([#653](https://github.com/gravity-ui/charts/issues/653)) ([33b6640](https://github.com/gravity-ui/charts/commit/33b66406fe3184de308404e4678db9b979980c9c))
+
 ## [1.57.1](https://github.com/gravity-ui/charts/compare/v1.57.0...v1.57.1) (2026-07-28)
 
 
