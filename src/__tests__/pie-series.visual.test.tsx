@@ -422,6 +422,114 @@ test.describe('Pie series', () => {
             await expect(labels).toHaveCount(segmentCount);
             await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
         });
+
+        test('Labels closing the circle should not overlap the first one', async ({mount}) => {
+            const label = (name: string, percent: string, value: string) =>
+                `${name}<br/>${percent} ${value}`;
+            const data: ChartData = {
+                chart: {margin: {bottom: 12}},
+                legend: {enabled: true},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            borderWidth: 0,
+                            dataLabels: {enabled: true, html: true, allowOverlap: false},
+                            data: [
+                                {
+                                    name: '400',
+                                    value: 0.3163888888888888,
+                                    label: label('400', '4.34%', '0.32'),
+                                    color: 'rgb(146,219,0)',
+                                },
+                                {
+                                    name: '401',
+                                    value: 0.006666666666666666,
+                                    label: label('401', '0.09%', '0.01'),
+                                    color: 'rgb(0,146,219)',
+                                },
+                                {
+                                    name: '403',
+                                    value: 3.06,
+                                    label: label('403', '41.98%', '3.06'),
+                                    color: 'rgb(219,183,0)',
+                                },
+                                {
+                                    name: '404',
+                                    value: 0.9824999999999999,
+                                    label: label('404', '13.48%', '0.98'),
+                                    color: 'rgb(219,0,0)',
+                                },
+                                {
+                                    name: '414',
+                                    value: 0,
+                                    label: label('414', '0.00%', '0.00'),
+                                    color: 'rgb(0,219,146)',
+                                },
+                                {
+                                    name: '429',
+                                    value: 0.034444444444444486,
+                                    label: label('429', '0.47%', '0.03'),
+                                    color: 'rgb(37,0,219)',
+                                },
+                                {
+                                    name: '499',
+                                    value: 2.8705555555555557,
+                                    label: label('499', '39.39%', '2.87'),
+                                    color: 'rgb(121,236,50)',
+                                },
+                                {
+                                    name: '500',
+                                    value: 0.0019444444444444444,
+                                    label: label('500', '0.03%', '0.00'),
+                                    color: 'rgb(14,63,103)',
+                                },
+                                {
+                                    name: '503',
+                                    value: 0.012222222222222225,
+                                    label: label('503', '0.17%', '0.01'),
+                                    color: 'rgb(242,231,28)',
+                                },
+                                {
+                                    name: '504',
+                                    value: 0.003611111111111111,
+                                    label: label('504', '0.05%', '0.00'),
+                                    color: 'rgb(121,43,12)',
+                                },
+                                {
+                                    name: '527',
+                                    value: 0,
+                                    label: label('527', '0.00%', '0.00'),
+                                    color: 'rgb(32,223,182)',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            const labels = component.locator('.gcharts-chart__html-layer-item');
+            await expect(labels.first()).toBeVisible();
+            const boxes = await labels.evaluateAll((nodes) =>
+                nodes.map((node) => node.getBoundingClientRect()),
+            );
+
+            expect(boxes.length).toBeGreaterThan(1);
+
+            // The last segments close the circle and end up next to the very first label,
+            // so they have to be checked against it and not only against their predecessor.
+            const overlapping = boxes.flatMap((a, i) =>
+                boxes.slice(i + 1).filter((b) => {
+                    const byX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+                    const byY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+
+                    return byX > 0 && byY > 0;
+                }),
+            );
+
+            expect(overlapping).toHaveLength(0);
+            await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
+        });
     });
 
     test.describe('Min radius', () => {

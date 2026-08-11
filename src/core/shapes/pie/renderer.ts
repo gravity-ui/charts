@@ -12,7 +12,7 @@ import type {PreparedSeriesOptions} from '../../series/types';
 import {setActiveState} from '../../shapes/utils';
 import {setEllipsisForOverflowTexts} from '../../utils';
 
-import type {PieLabelData, PreparedPieData, SegmentData} from './types';
+import type {PieSvgLabelData, PreparedPieData, SegmentData} from './types';
 
 const b = block('pie');
 // D3's default 3-digit rounding can make near-full arc endpoints identical.
@@ -94,7 +94,7 @@ export function renderPie(
 
     // render Labels
     shapesSelection
-        .selectAll<SVGTextElement, PieLabelData>('text')
+        .selectAll<SVGTextElement, PieSvgLabelData>('text')
         .data((pieData) => pieData.labels)
         .join('text')
         .html((d) => d.text)
@@ -189,14 +189,14 @@ export function renderPie(
 
                     return d;
                 });
-            const labelSelection = pieSelection.selectAll<BaseType, PieLabelData>(
+            const labelSelection = pieSelection.selectAll<BaseType, PieSvgLabelData>(
                 `.${b('label')} tspan`,
             );
-            const connectorSelection = pieSelection.selectAll<BaseType, PieLabelData>(
+            const connectorSelection = pieSelection.selectAll<BaseType, PieSvgLabelData>(
                 connectorSelector,
             );
             labelSelection.merge(connectorSelection).datum((d, i, elements) => {
-                return setActiveState<PieLabelData>({
+                return setActiveState<PieSvgLabelData>({
                     element: elements[i],
                     state: inactiveOptions,
                     active: Boolean(

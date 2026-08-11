@@ -2,6 +2,17 @@ import sortBy from 'lodash/sortBy';
 
 import type {HtmlItem, LabelData, SeriesDataWithLabels, ShapeDataWithLabels} from '../../types';
 
+function isHtmlItem(rect: LabelData | HtmlItem): rect is HtmlItem {
+    return !('textAnchor' in rect);
+}
+
+function getOverlapLeft(rect: LabelData | HtmlItem): number {
+    if (isHtmlItem(rect)) {
+        return rect.x;
+    }
+    return getLeftPosition(rect);
+}
+
 export function getLeftPosition(label: LabelData) {
     switch (label.textAnchor) {
         case 'start': {
@@ -24,9 +35,9 @@ export function getOverlappingByX(
     rect2: LabelData | HtmlItem,
     gap = 0,
 ) {
-    const left1 = 'textAnchor' in rect1 ? getLeftPosition(rect1) : rect1.x;
+    const left1 = getOverlapLeft(rect1);
     const right1 = left1 + rect1.size.width;
-    const left2 = 'textAnchor' in rect2 ? getLeftPosition(rect2) : rect2.x;
+    const left2 = getOverlapLeft(rect2);
     const right2 = left2 + rect2.size.width;
 
     return Math.max(0, Math.min(right1, right2) - Math.max(left1, left2) + gap);
@@ -37,10 +48,13 @@ export function getOverlappingByY(
     rect2: LabelData | HtmlItem,
     gap = 0,
 ) {
-    const top1 = rect1.y - rect1.size.height;
-    const bottom1 = rect1.y;
-    const top2 = rect2.y - rect2.size.height;
-    const bottom2 = rect2.y;
+    const isRect1Html = isHtmlItem(rect1);
+    const top1 = isRect1Html ? rect1.y : rect1.y - rect1.size.height;
+    const bottom1 = isRect1Html ? rect1.y + rect1.size.height : rect1.y;
+
+    const isRect2Html = isHtmlItem(rect2);
+    const top2 = isRect2Html ? rect2.y : rect2.y - rect2.size.height;
+    const bottom2 = isRect2Html ? rect2.y + rect2.size.height : rect2.y;
 
     return Math.max(0, Math.min(bottom1, bottom2) - Math.max(top1, top2) + gap);
 }
@@ -63,7 +77,7 @@ export function filterOverlappingLabels<T extends LabelData | HtmlItem>(
     const sorted = sortBy(
         labels,
         (d) => d.y,
-        (d) => ('textAnchor' in d ? getLeftPosition(d) : d.x),
+        (d) => getOverlapLeft(d),
     );
     sorted.forEach((label) => {
         if (

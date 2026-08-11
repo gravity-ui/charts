@@ -17,7 +17,14 @@ import {
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 
-import type {PieConnectorData, PieLabelData, PreparedPieData, SegmentData} from './types';
+import type {
+    PieConnectorData,
+    PieLabelData,
+    PieSvgLabelData,
+    PreparedPieData,
+    SegmentData,
+} from './types';
+import {getPieLabelText, isPieSvgLabel} from './types';
 import {getCurveFactory, getInscribedAngle, pieGenerator} from './utils';
 
 const FULL_CIRCLE = Math.PI * 2;
@@ -182,12 +189,21 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 labelHangingOffset = size.hangingOffset;
             }
 
-            const label: Partial<PieLabelData> = {
-                text,
-                size: {width: labelWidth, height: labelHeight, hangingOffset: labelHangingOffset},
-            };
-
-            acc[d.id] = label;
+            if (dataLabels.html) {
+                acc[d.id] = {
+                    content: text,
+                    size: {width: labelWidth, height: labelHeight},
+                };
+            } else {
+                acc[d.id] = {
+                    text,
+                    size: {
+                        width: labelWidth,
+                        height: labelHeight,
+                        hangingOffset: labelHangingOffset,
+                    },
+                };
+            }
         }
 
         return acc;
@@ -214,10 +230,11 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         const connectors: PieConnectorData[] = [];
 
         if (!hasDataLabels) {
-            return {labels, htmlLabels, connectors};
+            return {labels: [] as PieSvgLabelData[], htmlLabels, connectors};
         }
 
         const shouldUseHtml = dataLabels.html;
+
         let line = lineGenerator();
         const curveFactory = getCurveFactory(data);
         if (curveFactory) {
@@ -243,7 +260,17 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 return;
             }
             const prevLabel = labels[labels.length - 1];
-            const {text = '', size: labelSize} = labelsData[d.id];
+            /**
+             * Labels are placed clockwise, so the pie closes the circle: the last labels are
+             * neighbours of the very first one and can collide with it while `prevLabel` stays
+             * far away. Skipped when the first label is also the previous one — in that case
+             * the regular `prevLabel` check already covers it, and moving the label forward
+             * increases the distance between them instead of reducing it.
+             */
+            const firstLabel = labels.length > 1 ? labels[0] : undefined;
+            const labelEntry = labelsData[d.id];
+            const labelSize = labelEntry?.size;
+            const text = getPieLabelText(labelEntry);
             const labelWidth = labelSize?.width ?? 0;
             const labelHeight = labelSize?.height ?? 0;
 
@@ -271,7 +298,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                     x = x < 0 ? x - labelWidth : x;
                     y = y < 0 ? y - labelHeight : y;
                 } else {
-                    const hangingOffset = labelSize?.hangingOffset ?? 0;
+                    const hangingOffset =
+                        labelSize && 'hangingOffset' in labelSize
+                            ? (labelSize.hangingOffset ?? 0)
+                            : 0;
                     y = y < 0 ? y - labelHeight + hangingOffset : y + hangingOffset;
                 }
 
@@ -300,22 +330,23 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                     (relatedSegment.endAngle - relatedSegment.startAngle) / 2,
             );
             const [x, y] = getLabelPosition(midAngle);
-            const label: PieLabelData = {
-                text,
+            const labelShared = {
                 x,
                 y,
                 style: dataLabelsStyle,
                 size: {width: labelWidth, height: labelHeight},
                 maxWidth: labelWidth,
-                textAnchor: midAngle < Math.PI ? 'start' : 'end',
                 series: {id: d.id},
                 active: true,
                 segment: relatedSegment.data,
                 angle: midAngle,
             };
+            const label: PieLabelData = shouldUseHtml
+                ? {...labelShared, content: text}
+                : {...labelShared, text, textAnchor: midAngle < Math.PI ? 'start' : 'end'};
 
             if (!allowOverlow) {
-                const labelLeftPosition = shouldUseHtml ? label.x : getLeftPosition(label);
+                const labelLeftPosition = isPieSvgLabel(label) ? getLeftPosition(label) : label.x;
 
                 let newMaxWidth;
                 if (label.x > 0) {
@@ -357,14 +388,16 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                             const [newX, newY] = getLabelPosition(newAngle);
 
                             label.angle = newAngle;
-                            label.textAnchor = newAngle < Math.PI ? 'start' : 'end';
+                            if (isPieSvgLabel(label)) {
+                                label.textAnchor = newAngle < Math.PI ? 'start' : 'end';
+                            }
                             label.x = newX;
                             label.y = newY;
 
                             // See `getLabelPosition`: for HTML labels we return top-left,
                             // so shift x by labelWidth when textAnchor is 'end'.
                             const pointC: PointPosition =
-                                shouldUseHtml && label.textAnchor === 'end'
+                                !isPieSvgLabel(label) && newAngle >= Math.PI
                                     ? [newX + labelWidth, newY]
                                     : [newX, newY];
                             const inscribedAngle = getInscribedAngle(pointA, pointB, pointC);
@@ -381,16 +414,20 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 }
             }
 
+            if (!overlap && firstLabel) {
+                overlap = isLabelsOverlapping(firstLabel, label, dataLabels.padding);
+            }
+
             const isLabelOverlapped = !dataLabels.allowOverlap && overlap;
             if (!isLabelOverlapped && label.maxWidth > 0) {
                 labels.push(label);
 
-                if (shouldUseHtml) {
+                if (shouldUseHtml && !isPieSvgLabel(label)) {
                     const htmlLabelX = data.center[0] + label.x;
                     htmlLabels.push({
                         x: Math.max(0, htmlLabelX),
                         y: Math.max(0, data.center[1] + label.y),
-                        content: label.text,
+                        content: label.content,
                         size: label.size,
                         style: {
                             ...label.style,
@@ -416,7 +453,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         });
 
         return {
-            labels: shouldUseHtml ? [] : labels,
+            labels: shouldUseHtml ? [] : (labels as PieSvgLabelData[]),
             htmlLabels,
             connectors,
         };
@@ -440,6 +477,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             let maxLeftRightFreeSpace = Infinity;
             let labelsOverflow = 0;
             preparedLabels.labels.forEach((label) => {
+                if (!isPieSvgLabel(label)) {
+                    return;
+                }
+
                 const left = getLeftPosition(label);
 
                 let freeSpace = 0;
