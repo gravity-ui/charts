@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.3](https://github.com/gravity-ui/charts/compare/v1.57.2...v1.57.3) (2026-08-12)
+
+
+### Bug Fixes
+
+* **pie:** labels overlaps with first label ([#659](https://github.com/gravity-ui/charts/issues/659)) ([2548350](https://github.com/gravity-ui/charts/commit/2548350fe38be57ae87c84942f9e23bf4dee80bc))
+
 ## [1.57.2](https://github.com/gravity-ui/charts/compare/v1.57.1...v1.57.2) (2026-08-05)
 
 
