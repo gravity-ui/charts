@@ -3,6 +3,7 @@ export * from './continuous-legend';
 export * from './dense-multiline-html-labels';
 export * from './donut';
 export * from './donut-totals';
+export * from './event-loop-lag-by-host';
 export * from './html-labels';
 export * from './html-legend';
 export * from './null-modes';

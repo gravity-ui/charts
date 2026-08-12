@@ -1,6 +1,6 @@
 import type {PieArcDatum} from 'd3-shape';
 
-import type {ConnectorCurve, LabelData} from '../../../types';
+import type {ConnectorCurve, HtmlItem, LabelData} from '../../../types';
 import type {PreparedPieSeries} from '../../series/types';
 import type {SeriesShapeData} from '../types';
 
@@ -15,11 +15,40 @@ export type SegmentData = {
     radius: number;
 };
 
-export type PieLabelData = LabelData & {
+type PieLabelFields = {
     segment: SegmentData;
     angle: number;
     maxWidth: number;
+    style: LabelData['style'];
+    series: LabelData['series'];
+    active?: LabelData['active'];
 };
+
+export type PieSvgLabelData = LabelData & PieLabelFields;
+
+export type PieHtmlLabelData = HtmlItem & PieLabelFields;
+
+export type PieLabelData = PieSvgLabelData | PieHtmlLabelData;
+
+export function isPieSvgLabel(label: PieLabelData): label is PieSvgLabelData {
+    return 'textAnchor' in label;
+}
+
+export function getPieLabelText(label: Partial<PieLabelData> | undefined): string {
+    if (!label) {
+        return '';
+    }
+
+    if ('text' in label) {
+        return label.text ?? '';
+    }
+
+    if ('content' in label) {
+        return label.content ?? '';
+    }
+
+    return '';
+}
 
 export type PieConnectorData = {
     path: string | null;
@@ -29,7 +58,7 @@ export type PieConnectorData = {
 export type PreparedPieData = {
     id: string;
     segments: PieArcDatum<SegmentData>[];
-    labels: PieLabelData[];
+    labels: PieSvgLabelData[];
     connectors: PieConnectorData[];
     center: [number, number];
     innerRadius: number;
