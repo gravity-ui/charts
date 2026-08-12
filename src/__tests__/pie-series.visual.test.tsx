@@ -13,6 +13,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     pieBasicData,
     pieDenseMultilineHtmlLabelsData,
+    pieEventLoopLagByHostData,
     pieNullModeSkipData,
     pieNullModeZeroData,
     piePlaygroundData,
@@ -921,5 +922,10 @@ test.describe('Pie series', () => {
     test('nullMode=zero', async ({mount}) => {
         const component = await mount(<ChartTestStory data={pieNullModeZeroData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Event loop lag p99 by host', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={pieEventLoopLagByHostData} />);
+        await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
 });
