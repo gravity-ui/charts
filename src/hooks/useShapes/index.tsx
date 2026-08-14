@@ -114,6 +114,7 @@ export async function getShapes(args: Args) {
             isOutsideBounds,
             isRangeSlider,
             otherLayers: layers,
+            allSeries: visibleSeries,
         });
 
         if (renderData.length === 0) {
