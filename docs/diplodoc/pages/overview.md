@@ -19,7 +19,8 @@
 - `Radar`
 - `X-Range`
 
-{% cut "Examples from Storybook" %}
+<details>
+<summary>Examples from Storybook</summary>
 
 <iframe
     src="https://preview.gravity-ui.com/charts/iframe.html?args=&globals=&id=showcase--g-charts-showcase-story&viewMode=story"
@@ -28,4 +29,4 @@
     style="border-width: 1px;"
     ></iframe>
 
-{% endcut %}
+</details>

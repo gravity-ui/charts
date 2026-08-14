@@ -3,13 +3,14 @@
   "private": true,
   "scripts": {
     "docs:dev": "gulp -f ./gulpfile.docs.js",
-    "docs:build": "rm -rf ../dist-docs && npm run docs:build-api && TEMP_DIR=$(node ./scripts/docs-pre-build.js) && yfm -i $TEMP_DIR -o ../dist-docs; RC=$?; rm -rf $TEMP_DIR; npm run docs:post-build; exit $RC",
+    "docs:build": "rm -rf ../dist-docs && npm run docs:build-api && TEMP_DIR=$(node ./scripts/docs-pre-build.js) && trap 'rm -rf \"$TEMP_DIR\"' 0 && yfm -i \"$TEMP_DIR\" -o ../dist-docs && npm run docs:post-build && npm run docs:verify-build",
     "docs:build-api": "rm -rf ./docs/diplodoc/pages/api && typedoc",
     "docs:pre-build": "node ./scripts/docs-pre-build.js",
-    "docs:post-build": "node ./scripts/docs-post-build.js"
+    "docs:post-build": "node ./scripts/docs-post-build.js",
+    "docs:verify-build": "node ./scripts/docs-verify-build.js"
   },
   "devDependencies": {
-    "@diplodoc/cli": "^4.53.11",
+    "@diplodoc/cli": "4.59.13",
     "browser-sync": "^3.0.3",
     "gulp": "^5.0.0",
     "lodash": "^4.18.0",
