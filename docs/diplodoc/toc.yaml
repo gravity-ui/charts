@@ -26,8 +26,15 @@ items:
     href: ./pages/development.md
   - name: Guides
     items:
-      - name: Axis types
+      - name: Axes
+        items:
+          - name: Axis types
+            href: ./pages/guides/axes/axis-types.md
+          - name: Axis labels
+            href: ./pages/guides/axes/axis-labels.md
+      - name: Axis types (legacy URL)
         href: ./pages/guides/axis-types.md
+        hidden: true
       - name: Data labels
         href: ./pages/guides/data-labels.md
       - name: HTML content

@@ -95,7 +95,8 @@ A declarative React charting library for Gravity UI apps — render line, area, 
 - [HTML Content](./docs/diplodoc/pages/guides/html.md)
 - [Value Formatting](./docs/diplodoc/pages/guides/value-formatting.md)
 - [Data Labels](./docs/diplodoc/pages/guides/data-labels.md)
-- [Axis Types](./docs/diplodoc/pages/guides/axis-types.md)
+- [Axis Types](./docs/diplodoc/pages/guides/axes/axis-types.md)
+- [Axis Labels](./docs/diplodoc/pages/guides/axes/axis-labels.md)
 
 ## Documentation for AI agents
 
