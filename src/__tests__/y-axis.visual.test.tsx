@@ -445,6 +445,36 @@ test.describe('Y-axis', () => {
     });
 
     test.describe('Axis tick labels', () => {
+        test('Custom font size', async ({mount}) => {
+            const data: ChartData = {
+                xAxis: {visible: false},
+                yAxis: [
+                    {
+                        labels: {
+                            style: {
+                                fontSize: '18px',
+                            },
+                        },
+                    },
+                ],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Sales',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 1, y: 15},
+                                {x: 2, y: 12},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
         test('With text wrapping', async ({mount}) => {
             const longText = `Oh, mournful season that delights the eyes, Your farewell beauty captivates my spirit.`;
             const data: ChartData = {

@@ -143,6 +143,36 @@ test.describe('X-axis', () => {
     });
 
     test.describe('Axis tick labels', () => {
+        test('Custom font size', async ({mount}) => {
+            const data: ChartData = {
+                xAxis: {
+                    type: 'category',
+                    categories: ['January', 'February', 'March'],
+                    labels: {
+                        style: {
+                            fontSize: '18px',
+                        },
+                    },
+                },
+                yAxis: [{visible: false}],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Sales',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 1, y: 15},
+                                {x: 2, y: 12},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
         test('Rotated labels (-45 deg)', async ({mount}) => {
             const data: ChartData = {
                 xAxis: {

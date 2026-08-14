@@ -135,20 +135,8 @@ series: {
 
 ### Axis labels
 
-Only supported on category axes (`type: 'category'`). Rotation options are disabled when `html: true`.
-
-```javascript
-xAxis: {
-  type: 'category',
-  categories: [
-    '<span style="color:#4fc4b7"><b>Jan</b></span>',
-    '<span style="color:#e8684a"><b>Feb</b></span>',
-  ],
-  labels: {
-    html: true,
-  },
-}
-```
+For supported axis types, limitations, and a configuration example, see
+[HTML axis labels](./axes/axis-labels.md#html-labels).
 
 ### Legend
 
