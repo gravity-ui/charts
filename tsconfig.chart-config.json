@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ES2020", "ES2020.Intl"],
+    "noEmit": true,
+    "types": []
+  },
+  "files": ["src/chart-config.ts"],
+  // Intentionally empty: the root config also includes docs and test sources that are unrelated
+  // to the standalone ChartConfig entry point.
+  "include": []
+}

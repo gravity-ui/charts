@@ -92,9 +92,9 @@ export default [
         },
     },
 
-    // Allow devDependencies for config files
+    // Allow devDependencies for config and build scripts
     {
-        files: ['*.js', '*.mjs', '*.cjs', 'docs/**/*.js'],
+        files: ['*.js', '*.mjs', '*.cjs', 'docs/**/*.js', 'scripts/**/*.js'],
         rules: {
             'import/no-extraneous-dependencies': ['error', {devDependencies: true}],
         },
@@ -111,7 +111,11 @@ export default [
 
     // Unit test files
     {
-        files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+        files: [
+            '**/__tests__/**/*.[jt]s?(x)',
+            '**/?(*.)+(spec|test).[jt]s?(x)',
+            '**/*.artifact-test.js',
+        ],
         ...testingLibrary.configs['flat/react'],
         languageOptions: {
             globals: {

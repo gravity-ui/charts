@@ -8,6 +8,8 @@ const ts = require('gulp-typescript');
 const rimraf = require('rimraf');
 const {replaceTscAliasPaths} = require('tsc-alias');
 
+const {buildChartConfig} = require('./scripts/build-chart-config');
+
 const BUILD_DIR = path.resolve('dist');
 
 task('clean', (done) => {
@@ -58,6 +60,11 @@ task('replace-aliases-cjs', () => {
     return replaceAliases();
 });
 
+task('chart-config', (done) => {
+    buildChartConfig();
+    done();
+});
+
 task('copy-i18n', () => {
     return src(['src/**/i18n/**/*.json'])
         .pipe(dest(path.resolve(BUILD_DIR, 'esm')))
@@ -93,6 +100,7 @@ task(
     series([
         'clean',
         parallel(['compile-to-esm', 'compile-to-cjs']),
+        'chart-config',
         parallel(['replace-aliases-esm', 'replace-aliases-cjs']),
         'copy-i18n',
         'styles',
