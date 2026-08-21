@@ -50,7 +50,7 @@
     "prettier": "prettier '**/*.{md,yaml,yml,json}'",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:chart-config": "jest --config jest.chart-config.config.js --runInBand",
+    "test:chart-config": "jest --config jest.chart-config.config.js",
     "clean": "gulp clean",
     "build": "gulp",
     "build:chart-config": "node scripts/build-chart-config.js",

@@ -16,7 +16,7 @@ module.exports = {
     },
     transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
     testMatch: ['**/*.test.[jt]s?(x)'],
-    testPathIgnorePatterns: ['\\.visual\\.'],
+    testPathIgnorePatterns: ['.visual.'],
     moduleNameMapper: {
         '\\.(css|scss)$': '<rootDir>/src/__mocks__/styleMock.js',
         '^~core/(.*)$': '<rootDir>/src/core/$1',

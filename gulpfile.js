@@ -85,7 +85,7 @@ task('copy-docs', (done) => {
             {
                 title: 'Guides',
                 kind: 'markdown',
-                // Diplodoc pages: top-level pages plus the guides/ subfolder.
+                // Include all hand-written Diplodoc pages and their subfolders.
                 baseDir: 'docs/diplodoc/pages',
                 outPrefix: '',
                 nameFromTitle: true,

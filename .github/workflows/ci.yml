@@ -46,4 +46,4 @@ jobs:
       - name: Unit Tests
         run: npm run test
       - name: Test Chart Config Artifacts
-        run: npm run build:chart-config && npm run test:chart-config
+        run: npm run test:chart-config

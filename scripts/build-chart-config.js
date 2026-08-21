@@ -14,7 +14,8 @@ const DECLARATION_PATH = path.resolve(OUTPUT_DIR, 'chart-config.d.ts');
 const SCHEMA_PATH = path.resolve(OUTPUT_DIR, 'chart-config.schema.json');
 
 // A declaration bundle is standalone only while every package exposed by ChartConfig is inlined.
-// Add the owning package here whenever a new transitive public type appears in the bundle.
+// If validateDeclaration reports an external reference, find the package that exports that type
+// (starting from its import/module specifier) and add the package name here.
 const INLINED_DECLARATION_LIBRARIES = ['@gravity-ui/date-utils', 'd3-selection'];
 
 function getExternalDeclarationReferences(declaration, filePath) {
@@ -45,11 +46,14 @@ function getExternalDeclarationReferences(declaration, filePath) {
             ts.isImportEqualsDeclaration(node) &&
             ts.isExternalModuleReference(node.moduleReference)
         ) {
+            const expression = node.moduleReference.expression;
             references.add(
-                node.moduleReference.expression?.getText(sourceFile) || 'external module',
+                expression && ts.isStringLiteral(expression)
+                    ? expression.text
+                    : expression?.getText(sourceFile) || 'external module',
             );
         } else if (ts.isImportTypeNode(node)) {
-            references.add(node.argument.getText(sourceFile));
+            references.add(node.argument.literal?.text ?? node.argument.getText(sourceFile));
         }
 
         ts.forEachChild(node, visit);
@@ -118,8 +122,14 @@ function validateDeclaration(filePath, declaration) {
     const getSourceFile = compilerHost.getSourceFile.bind(compilerHost);
     const fileExists = compilerHost.fileExists.bind(compilerHost);
     const readFile = compilerHost.readFile.bind(compilerHost);
+    const getCanonicalFilePath = (candidatePath) => {
+        const resolvedPath = path.resolve(candidatePath);
+
+        return ts.sys.useCaseSensitiveFileNames ? resolvedPath : resolvedPath.toLowerCase();
+    };
+    const canonicalDeclarationFilePath = getCanonicalFilePath(declarationFilePath);
     const isDeclarationFile = (candidatePath) =>
-        path.resolve(candidatePath) === declarationFilePath;
+        getCanonicalFilePath(candidatePath) === canonicalDeclarationFilePath;
 
     compilerHost.fileExists = (candidatePath) =>
         isDeclarationFile(candidatePath) || fileExists(candidatePath);
@@ -267,11 +277,17 @@ function isCallbackArtifact(schema, rootSchema) {
     return isClosedEmptyObject(resolvedSchema) || isNullOnlySchema(resolvedSchema);
 }
 
-function normalizeSchemaNodes(schema, rootSchema) {
-    for (const childSchema of getSchemaChildren(schema)) {
-        normalizeSchemaNodes(childSchema, rootSchema);
+function normalizeSchemaNodes(schema, rootSchema, visited = new WeakSet()) {
+    if (!schema || typeof schema !== 'object' || Array.isArray(schema) || visited.has(schema)) {
+        return;
     }
 
+    visited.add(schema);
+
+    // Remove non-JSON properties before descending so discarded subtrees are not traversed.
+    // With functions: 'hide', ts-json-schema-generator represents callback-only properties as
+    // null or a closed empty object. Closed empty branches can also represent non-JSON class
+    // instances (for example Duration), so they are removed from unions below as well.
     if (schema.properties) {
         for (const [propertyName, propertySchema] of Object.entries(schema.properties)) {
             if (isCallbackArtifact(propertySchema, rootSchema)) {
@@ -291,9 +307,23 @@ function normalizeSchemaNodes(schema, rootSchema) {
             (childSchema) => !isClosedEmptyObject(resolveSchema(childSchema, rootSchema)),
         );
     }
+
+    for (const childSchema of getSchemaChildren(schema)) {
+        normalizeSchemaNodes(childSchema, rootSchema, visited);
+    }
 }
 
-function collectDefinitionReferences(schema, references, skipDefinitions = false) {
+function collectDefinitionReferences(
+    schema,
+    references,
+    skipDefinitions = false,
+    visited = new WeakSet(),
+) {
+    if (!schema || typeof schema !== 'object' || Array.isArray(schema) || visited.has(schema)) {
+        return;
+    }
+
+    visited.add(schema);
     const definitionName = getDefinitionName(schema.$ref);
 
     if (definitionName) {
@@ -309,7 +339,7 @@ function collectDefinitionReferences(schema, references, skipDefinitions = false
             continue;
         }
 
-        collectDefinitionReferences(childSchema, references, skipDefinitions);
+        collectDefinitionReferences(childSchema, references, skipDefinitions, visited);
     }
 }
 
@@ -348,33 +378,60 @@ function createSchemaValidator() {
 }
 
 function getInvalidDefaults(schema) {
-    const ajv = createSchemaValidator();
-    const invalidDefaults = [];
+    const defaultEntries = [];
 
     visitSchema(schema, (schemaNode) => {
         if (!Object.prototype.hasOwnProperty.call(schemaNode, 'default')) {
             return;
         }
 
-        // A node is compiled as a temporary root, so root definitions must be copied for its
-        // absolute #/definitions/* references. Local definitions take precedence if present.
         const schemaWithoutDefault = {
             ...schemaNode,
-            definitions: {...schema.definitions, ...schemaNode.definitions},
         };
         delete schemaWithoutDefault.default;
-        const validateDefault = ajv.compile(schemaWithoutDefault);
-
-        if (!validateDefault(schemaNode.default)) {
-            invalidDefaults.push({
-                errors: validateDefault.errors,
-                schema: schemaNode,
-                value: schemaNode.default,
-            });
-        }
+        defaultEntries.push({schema: schemaNode, schemaWithoutDefault, value: schemaNode.default});
     });
 
-    return invalidDefaults;
+    if (defaultEntries.length === 0) {
+        return [];
+    }
+
+    // Compile all default checks as one tuple so every item shares the root definitions. This
+    // avoids retaining a copy of the complete definitions map for every default value.
+    const defaultsSchema = {
+        type: 'array',
+        items: defaultEntries.map(({schemaWithoutDefault}) => schemaWithoutDefault),
+        minItems: defaultEntries.length,
+        maxItems: defaultEntries.length,
+        definitions: schema.definitions,
+    };
+    const validateDefaults = createSchemaValidator().compile(defaultsSchema);
+    const defaults = defaultEntries.map(({value}) => value);
+
+    if (validateDefaults(defaults)) {
+        return [];
+    }
+
+    const errorsByIndex = new Map();
+
+    for (const error of validateDefaults.errors || []) {
+        const indexMatch = error.instancePath.match(/^\/(\d+)(?:\/|$)/);
+
+        if (!indexMatch) {
+            continue;
+        }
+
+        const index = Number(indexMatch[1]);
+        const errors = errorsByIndex.get(index) || [];
+        errors.push(error);
+        errorsByIndex.set(index, errors);
+    }
+
+    return [...errorsByIndex].map(([index, errors]) => ({
+        errors,
+        schema: defaultEntries[index].schema,
+        value: defaultEntries[index].value,
+    }));
 }
 
 function removeInvalidDefaults(schema) {
@@ -418,6 +475,23 @@ function validateSchema(schema) {
         );
     }
 
+    visitSchema(schema, (schemaNode) => {
+        if (typeof schemaNode.$ref !== 'string') {
+            return;
+        }
+
+        const definitionName = getDefinitionName(schemaNode.$ref);
+
+        if (
+            /[<>\s]/.test(schemaNode.$ref) ||
+            (definitionName && !schema.definitions?.[definitionName])
+        ) {
+            throw new Error(
+                `chart-config.schema.json contains an invalid $ref: ${schemaNode.$ref}`,
+            );
+        }
+    });
+
     const ajv = createSchemaValidator();
 
     if (!ajv.validateSchema(schema)) {
@@ -447,17 +521,6 @@ function validateSchema(schema) {
     }
 
     visitSchema(schema, (schemaNode) => {
-        if (
-            typeof schemaNode.$ref === 'string' &&
-            (/[<>\s]/.test(schemaNode.$ref) ||
-                (getDefinitionName(schemaNode.$ref) &&
-                    !schema.definitions?.[getDefinitionName(schemaNode.$ref)]))
-        ) {
-            throw new Error(
-                `chart-config.schema.json contains an invalid $ref: ${schemaNode.$ref}`,
-            );
-        }
-
         for (const propertySchema of Object.values(schemaNode.properties || {})) {
             if (isCallbackArtifact(propertySchema, schema)) {
                 throw new Error('chart-config.schema.json contains a callback-only property');
@@ -500,10 +563,14 @@ function generateChartConfigArtifacts() {
     return {declaration, schema};
 }
 
-function writeChartConfigArtifacts({declaration, schema}) {
-    fs.mkdirSync(OUTPUT_DIR, {recursive: true});
-    fs.writeFileSync(DECLARATION_PATH, declaration);
-    fs.writeFileSync(SCHEMA_PATH, `${JSON.stringify(schema, null, 2)}\n`);
+function writeChartConfigArtifacts(
+    {declaration, schema},
+    {declarationPath = DECLARATION_PATH, schemaPath = SCHEMA_PATH} = {},
+) {
+    fs.mkdirSync(path.dirname(declarationPath), {recursive: true});
+    fs.mkdirSync(path.dirname(schemaPath), {recursive: true});
+    fs.writeFileSync(declarationPath, declaration);
+    fs.writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
 }
 
 function buildChartConfig() {
@@ -528,4 +595,5 @@ module.exports = {
     validateDeclaration,
     validateSchema,
     visitSchema,
+    writeChartConfigArtifacts,
 };
