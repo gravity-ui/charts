@@ -7,7 +7,22 @@ The package publishes two versioned config artifacts:
 
 ## Usage
 
-The declaration is a text asset, not a runtime JavaScript module. In Node.js, resolve and read it before registering it in Monaco:
+The declaration is a text asset, not a runtime JavaScript module. It must be loaded as text before it can be registered in Monaco. For example, Vite supports raw-file imports with the `?raw` suffix:
+
+```js
+import declaration from '@gravity-ui/charts/chart-config.d.ts?raw';
+
+monaco.languages.typescript.typescriptDefaults.addExtraLib(
+  declaration,
+  'file:///node_modules/@gravity-ui/charts/chart-config.d.ts',
+);
+```
+
+Other bundlers provide similar mechanisms for importing an asset as text.
+
+### Optional: Node.js build tooling
+
+Charts and Monaco run in the browser, but Node.js-based build tooling can resolve and read the declaration before including its contents in a browser application. In CommonJS:
 
 ```js
 const fs = require('node:fs');
@@ -15,26 +30,16 @@ const fs = require('node:fs');
 const declarationPath = require.resolve('@gravity-ui/charts/chart-config.d.ts');
 const declaration = fs.readFileSync(declarationPath, 'utf8');
 
-monaco.languages.typescript.typescriptDefaults.addExtraLib(
-  declaration,
-  'file:///node_modules/@gravity-ui/charts/chart-config.d.ts',
-);
-
 const schema = require('@gravity-ui/charts/chart-config.schema.json');
 ```
 
-In Node.js ESM, resolve the declaration to a file URL before reading it:
+In ESM:
 
 ```js
 import {readFile} from 'node:fs/promises';
 
 const declarationUrl = import.meta.resolve('@gravity-ui/charts/chart-config.d.ts');
 const declaration = await readFile(new URL(declarationUrl), 'utf8');
-
-monaco.languages.typescript.typescriptDefaults.addExtraLib(
-  declaration,
-  'file:///node_modules/@gravity-ui/charts/chart-config.d.ts',
-);
 ```
 
 In ESM runtimes that support JSON modules, load the schema with an import attribute:
@@ -42,8 +47,6 @@ In ESM runtimes that support JSON modules, load the schema with an import attrib
 ```js
 import schema from '@gravity-ui/charts/chart-config.schema.json' with {type: 'json'};
 ```
-
-Bundlers with raw-file imports can load the declaration through their corresponding raw asset mechanism, such as `?raw` in Vite.
 
 ## Versioning
 
