@@ -464,6 +464,49 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Interpolation settings', async ({mount}) => {
+        const sharedData = [
+            {x: 0, y: 10},
+            {x: 1, y: 60},
+            {x: 2, y: 20},
+            {x: 3, y: 80},
+            {x: 4, y: 30},
+            {x: 5, y: 70},
+            {x: 6, y: 40},
+        ];
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        name: 'Linear',
+                        type: 'line',
+                        data: sharedData,
+                        lineWidth: 2,
+                    },
+                    {
+                        name: 'Monotone',
+                        type: 'line',
+                        data: sharedData.map((d) => ({...d, y: (d.y as number) + 100})),
+                        lineWidth: 2,
+                        interpolation: {type: 'monotone'},
+                    },
+                    {
+                        name: 'Cardinal',
+                        type: 'line',
+                        data: sharedData.map((d) => ({...d, y: (d.y as number) + 200})),
+                        lineWidth: 2,
+                        interpolation: {type: 'cardinal', tension: 0.5},
+                    },
+                ],
+            },
+            xAxis: {type: 'linear', min: -0.5, max: 6.5},
+            yAxis: [{min: 0, max: 300, visible: false}],
+            legend: {enabled: false},
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
     test('Hover marker appears on closest series', async ({mount, page}) => {
         const chartData: ChartData = {
             series: {

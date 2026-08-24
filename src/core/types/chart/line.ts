@@ -55,6 +55,11 @@ export interface LineSeriesLineBaseStyle {
     opacity?: number | null;
 }
 
+export type LineSeriesInterpolation =
+    | {type: 'linear'}
+    | {type: 'monotone'}
+    | {type: 'cardinal'; tension?: number};
+
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
     type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
@@ -85,6 +90,16 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
      * @default 'skip'
      */
     nullMode?: 'connect' | 'zero' | 'skip';
+    /**
+     * Configures smooth curve interpolation between data points.
+     *
+     * - `'linear'`: Straight line segments (default behavior)
+     * - `'monotone'`: Smooth curve that preserves monotonicity and passes through every data point without introducing artificial extrema
+     * - `'cardinal'`: Cardinal spline with optional `tension` parameter (0–1, default 0)
+     *
+     * Markers, tooltips, and interactions remain attached to original data points regardless of interpolation.
+     */
+    interpolation?: LineSeriesInterpolation;
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */

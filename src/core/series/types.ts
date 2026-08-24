@@ -17,6 +17,7 @@ import type {
     HeatmapSeriesData,
     LineSeries,
     LineSeriesData,
+    LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     MeaningfulAny,
     PathLegendSymbolOptions,
@@ -307,6 +308,7 @@ export type PreparedLineSeries = {
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
+    interpolation?: LineSeriesInterpolation;
     opacity: number | null;
     yAxis: number;
 } & BasePreparedSeries &

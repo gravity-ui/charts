@@ -10,6 +10,10 @@ import {LinearAxisExample} from './axis-types/linear';
 import linearRaw from './axis-types/linear.tsx?raw';
 import {LogarithmicAxisExample} from './axis-types/logarithmic';
 import logarithmicRaw from './axis-types/logarithmic.tsx?raw';
+import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
+import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
+import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
+import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
 import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
 
@@ -41,5 +45,13 @@ export const registry: Record<string, ExampleModule> = {
     'value-formatting/quarterly-x-axis': {
         code: extractDisplayCode(quarterlyXAxisRaw),
         Component: QuarterlyXAxisExample,
+    },
+    'line-interpolation/monotone': {
+        code: extractDisplayCode(lineInterpolationMonotoneRaw),
+        Component: LineInterpolationMonotoneExample,
+    },
+    'line-interpolation/cardinal': {
+        code: extractDisplayCode(lineInterpolationCardinalRaw),
+        Component: LineInterpolationCardinalExample,
     },
 };
