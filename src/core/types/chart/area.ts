@@ -61,7 +61,6 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
-     * @default undefined
      */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */

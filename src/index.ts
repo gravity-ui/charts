@@ -1,5 +1,4 @@
 export {CustomShapeRenderer} from './utils';
-export type {ChartConfig} from './chart-config';
 export {getFormattedValue} from '~core/utils';
 export {getDefaultTooltipHeaderFormat} from '~core/utils/tooltip';
 export {getTooltipColorSymbol} from '~core/tooltip/utils';

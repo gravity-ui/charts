@@ -38,7 +38,7 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     borderColor?: string;
     /**
      * The width of the border surrounding each segment.
-     * @default '1px'
+     * @default 1
      */
     borderWidth?: number;
     /**

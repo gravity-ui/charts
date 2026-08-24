@@ -4,5 +4,5 @@ module.exports = {
     ...baseConfig,
     setupFiles: [],
     testMatch: ['<rootDir>/scripts/**/*.artifact-test.js'],
-    testPathIgnorePatterns: [],
+    testPathIgnorePatterns: ['/node_modules/'],
 };

@@ -20,24 +20,34 @@ const DECLARATION_PATH = path.resolve(__dirname, 'chart-config.d.ts');
 describe('chart config artifacts', () => {
     let declaration;
     let schema;
+    let warnSpy;
 
     beforeAll(() => {
+        warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
         ({declaration, schema} = generateChartConfigArtifacts());
     });
 
+    afterAll(() => {
+        warnSpy.mockRestore();
+    });
+
     test('generates a standalone declaration bundle', () => {
-        expect(getExternalDeclarationReferences(declaration, DECLARATION_PATH)).toEqual([]);
+        expect(getExternalDeclarationReferences(DECLARATION_PATH, declaration)).toEqual([]);
         expect(declaration).toContain('export interface ChartConfig');
+        // Guards against accidental inlining of a large dependency. Update if the type surface
+        // legitimately grows past this limit.
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
     test('validates declaration content without accessing the published file', () => {
+        // DECLARATION_PATH (scripts/chart-config.d.ts) never exists on disk; validateDeclaration
+        // uses it only as a virtual filename for the TypeScript compiler host.
         expect(() =>
             validateDeclaration(
                 DECLARATION_PATH,
                 'export interface BrokenDeclaration { value: MissingType; }',
             ),
-        ).toThrow();
+        ).toThrow(/MissingType|TS2304/);
     });
 
     test.each([
@@ -50,7 +60,7 @@ describe('chart config artifacts', () => {
         '/// <reference lib="esnext" />',
         "import External = require('external');",
     ])('detects an external declaration dependency: %s', (externalDeclaration) => {
-        expect(getExternalDeclarationReferences(externalDeclaration, DECLARATION_PATH)).not.toEqual(
+        expect(getExternalDeclarationReferences(DECLARATION_PATH, externalDeclaration)).not.toEqual(
             [],
         );
     });
@@ -60,7 +70,7 @@ describe('chart config artifacts', () => {
         ["type External = typeof import('external');", 'external'],
         ["import External = require('external');", 'external'],
     ])('reports an unquoted module name for %s', (externalDeclaration, moduleName) => {
-        expect(getExternalDeclarationReferences(externalDeclaration, DECLARATION_PATH)).toEqual([
+        expect(getExternalDeclarationReferences(DECLARATION_PATH, externalDeclaration)).toEqual([
             moduleName,
         ]);
     });
@@ -113,6 +123,47 @@ describe('chart config artifacts', () => {
         normalizeSchema(defaultSchema);
 
         expect(defaultSchema.definitions.Nested).not.toHaveProperty('default');
+    });
+
+    test('warns about every stripped invalid default with a JSON-pointer path', () => {
+        const defaultSchema = {
+            type: 'object',
+            properties: {
+                width: {type: 'number', default: '1px'},
+                label: {type: 'string', enum: ['a', 'b'], default: 'undefined'},
+            },
+        };
+
+        warnSpy.mockClear();
+        normalizeSchema(defaultSchema);
+
+        const warnings = warnSpy.mock.calls.map(([message]) => message);
+        expect(warnings).toEqual(
+            expect.arrayContaining([
+                expect.stringMatching(
+                    /stripping invalid @default at #\/properties\/width: "1px" \(must be number\)/,
+                ),
+                expect.stringMatching(
+                    /stripping invalid @default at #\/properties\/label: "undefined" \(/,
+                ),
+            ]),
+        );
+    });
+
+    test('reports invalid defaults with a JSON-pointer path to the offending node', () => {
+        const defaultSchema = {
+            type: 'object',
+            properties: {
+                inner: {type: 'object', properties: {flag: {type: 'boolean', default: 'nope'}}},
+            },
+        };
+
+        expect(getInvalidDefaults(defaultSchema)).toEqual([
+            expect.objectContaining({
+                path: '#/properties/inner/properties/flag',
+                value: 'nope',
+            }),
+        ]);
     });
 
     test('reports every invalid default while sharing root definitions', () => {
@@ -219,6 +270,79 @@ describe('chart config artifacts', () => {
     test('validates the generated schema', () => {
         expect(() => validateSchema(schema)).not.toThrow();
         expect(getInvalidDefaults(schema)).toEqual([]);
+    });
+
+    test.each([
+        [
+            'minimal line series',
+            {series: {data: [{type: 'line', name: 'S', data: [{x: 0, y: 1}]}]}},
+        ],
+        [
+            'minimal bar-x series',
+            {series: {data: [{type: 'bar-x', name: 'S', data: [{x: 'Jan', y: 10}]}]}},
+        ],
+        ['minimal pie series', {series: {data: [{type: 'pie', data: [{value: 1, name: 'A'}]}]}}],
+        [
+            'minimal area series',
+            {series: {data: [{type: 'area', name: 'S', data: [{x: 0, y: 1}]}]}},
+        ],
+        [
+            'line with xAxis and yAxis',
+            {
+                series: {data: [{type: 'line', name: 'S', data: [{x: 0, y: 1}]}]},
+                xAxis: {title: {text: 'Time'}},
+                yAxis: [{title: {text: 'Value'}}],
+            },
+        ],
+        [
+            'line with tooltip',
+            {
+                series: {data: [{type: 'line', name: 'S', data: [{x: 0, y: 1}]}]},
+                tooltip: {enabled: true},
+            },
+        ],
+        [
+            'line with split',
+            {
+                series: {data: [{type: 'line', name: 'S', data: [{x: 0, y: 1}]}]},
+                split: {enable: true},
+            },
+        ],
+        [
+            'two series',
+            {
+                series: {
+                    data: [
+                        {type: 'line', name: 'A', data: [{x: 0, y: 1}]},
+                        {type: 'area', name: 'B', data: [{x: 0, y: 2}]},
+                    ],
+                },
+            },
+        ],
+    ])('accepts a valid config: %s', (_label, config) => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        expect(validateConfig(config)).toBe(true);
+    });
+
+    test('schema definitions and properties match the committed snapshot', () => {
+        const snapshotPath = path.resolve(
+            __dirname,
+            '__snapshots__/chart-config.schema.summary.json',
+        );
+        const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+        const defs = schema.definitions || {};
+
+        const actual = {
+            definitions: Object.keys(defs).sort(),
+            properties: Object.fromEntries(
+                Object.entries(defs)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([name, def]) => [name, Object.keys(def.properties || {}).sort()])
+                    .filter(([, props]) => props.length > 0),
+            ),
+        };
+
+        expect(actual).toEqual(snapshot);
     });
 
     test('omits callback-only properties', () => {

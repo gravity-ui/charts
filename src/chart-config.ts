@@ -1,13 +1,14 @@
-import type {ChartData} from './core/types';
+import type {ChartData} from '~core/types';
 
 type JsonPrimitive = boolean | null | number | string;
 
-type JsonValue = JsonPrimitive | JsonValue[] | {[key: string]: JsonValue};
+export type JsonValue = JsonPrimitive | JsonValue[] | {[key: string]: JsonValue};
 
 /**
- * A chart configuration used to generate the published Monaco declaration bundle and JSON Schema.
+ * JSON-serializable chart configuration.
  *
- * Callback functions remain available in TypeScript declarations. The artifact build omits them
- * from JSON Schema because JSON cannot represent them.
+ * Covers all options that can be expressed without executable code. Callback-based options
+ * (event handlers, custom formatters, renderers) are available via `ChartData` when working
+ * directly with the React component.
  */
 export interface ChartConfig extends ChartData<JsonValue> {}

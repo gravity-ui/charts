@@ -7,6 +7,7 @@ const {createGenerator} = require('ts-json-schema-generator');
 const ts = require('typescript');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
+const PACKAGE_JSON = JSON.parse(fs.readFileSync(path.resolve(ROOT_DIR, 'package.json'), 'utf8'));
 const ENTRY_FILE = path.resolve(ROOT_DIR, 'src/chart-config.ts');
 const TSCONFIG_FILE = path.resolve(ROOT_DIR, 'tsconfig.chart-config.json');
 const OUTPUT_DIR = path.resolve(ROOT_DIR, 'dist/config');
@@ -18,7 +19,7 @@ const SCHEMA_PATH = path.resolve(OUTPUT_DIR, 'chart-config.schema.json');
 // (starting from its import/module specifier) and add the package name here.
 const INLINED_DECLARATION_LIBRARIES = ['@gravity-ui/date-utils', 'd3-selection'];
 
-function getExternalDeclarationReferences(declaration, filePath) {
+function getExternalDeclarationReferences(filePath, declaration) {
     const sourceFile = ts.createSourceFile(
         filePath,
         declaration,
@@ -65,7 +66,7 @@ function getExternalDeclarationReferences(declaration, filePath) {
 }
 
 function validateDeclaration(filePath, declaration) {
-    const externalReferences = getExternalDeclarationReferences(declaration, filePath);
+    const externalReferences = getExternalDeclarationReferences(filePath, declaration);
 
     if (externalReferences.length > 0) {
         throw new Error(
@@ -154,57 +155,74 @@ function validateDeclaration(filePath, declaration) {
     }
 }
 
-function getSchemaChildren(schema) {
-    const children = [];
-    const schemaMaps = [
-        schema.$defs,
-        schema.definitions,
-        schema.dependentSchemas,
-        schema.patternProperties,
-        schema.properties,
-    ];
-    const schemaArrays = [schema.allOf, schema.anyOf, schema.oneOf, schema.prefixItems];
-    const singleSchemas = [
-        schema.additionalItems,
-        schema.additionalProperties,
-        schema.contains,
-        schema.else,
-        schema.if,
-        schema.items,
-        schema.not,
-        schema.propertyNames,
-        schema.then,
-    ];
+const SCHEMA_CHILD_MAP_KEYS = [
+    '$defs',
+    'definitions',
+    'dependentSchemas',
+    'patternProperties',
+    'properties',
+];
+const SCHEMA_CHILD_ARRAY_KEYS = ['allOf', 'anyOf', 'oneOf', 'prefixItems'];
+const SCHEMA_CHILD_SINGLE_KEYS = [
+    'additionalItems',
+    'additionalProperties',
+    'contains',
+    'else',
+    'if',
+    'items',
+    'not',
+    'propertyNames',
+    'then',
+];
 
-    for (const schemaMap of schemaMaps) {
+function getSchemaChildEntries(schema) {
+    const entries = [];
+
+    for (const mapKey of SCHEMA_CHILD_MAP_KEYS) {
+        const schemaMap = schema[mapKey];
+
         if (schemaMap && typeof schemaMap === 'object' && !Array.isArray(schemaMap)) {
-            children.push(...Object.values(schemaMap));
+            for (const [key, child] of Object.entries(schemaMap)) {
+                entries.push([`${mapKey}/${key}`, child]);
+            }
         }
     }
 
-    for (const schemaArray of schemaArrays) {
+    for (const arrayKey of SCHEMA_CHILD_ARRAY_KEYS) {
+        const schemaArray = schema[arrayKey];
+
         if (Array.isArray(schemaArray)) {
-            children.push(...schemaArray);
+            schemaArray.forEach((child, index) => {
+                entries.push([`${arrayKey}/${index}`, child]);
+            });
         }
     }
 
-    for (const childSchema of singleSchemas) {
+    for (const singleKey of SCHEMA_CHILD_SINGLE_KEYS) {
+        const childSchema = schema[singleKey];
+
         if (Array.isArray(childSchema)) {
-            children.push(...childSchema);
+            childSchema.forEach((child, index) => {
+                entries.push([`${singleKey}/${index}`, child]);
+            });
         } else if (childSchema && typeof childSchema === 'object') {
-            children.push(childSchema);
+            entries.push([singleKey, childSchema]);
         }
     }
 
     if (schema.dependencies && typeof schema.dependencies === 'object') {
-        children.push(
-            ...Object.values(schema.dependencies).filter(
-                (dependency) => !Array.isArray(dependency),
-            ),
-        );
+        for (const [key, dependency] of Object.entries(schema.dependencies)) {
+            if (!Array.isArray(dependency) && dependency && typeof dependency === 'object') {
+                entries.push([`dependencies/${key}`, dependency]);
+            }
+        }
     }
 
-    return children;
+    return entries;
+}
+
+function getSchemaChildren(schema) {
+    return getSchemaChildEntries(schema).map(([, child]) => child);
 }
 
 function visitSchema(schema, visitor, visited = new WeakSet()) {
@@ -229,7 +247,11 @@ function getDefinitionName(reference) {
 
     const encodedName = reference.slice(prefix.length).split('/')[0];
 
-    return decodeURIComponent(encodedName).replaceAll('~1', '/').replaceAll('~0', '~');
+    try {
+        return decodeURIComponent(encodedName).replaceAll('~1', '/').replaceAll('~0', '~');
+    } catch {
+        return null;
+    }
 }
 
 function resolveSchema(schema, rootSchema, visited = new Set()) {
@@ -277,7 +299,12 @@ function isCallbackArtifact(schema, rootSchema) {
     return isClosedEmptyObject(resolvedSchema) || isNullOnlySchema(resolvedSchema);
 }
 
-function normalizeSchemaNodes(schema, rootSchema, visited = new WeakSet()) {
+function normalizeSchemaNodes(
+    schema,
+    rootSchema,
+    state = {changed: false},
+    visited = new WeakSet(),
+) {
     if (!schema || typeof schema !== 'object' || Array.isArray(schema) || visited.has(schema)) {
         return;
     }
@@ -298,18 +325,28 @@ function normalizeSchemaNodes(schema, rootSchema, visited = new WeakSet()) {
                 }
 
                 delete schema.properties[propertyName];
+                state.changed = true;
             }
         }
     }
 
     if (Array.isArray(schema.anyOf)) {
+        const before = schema.anyOf.length;
         schema.anyOf = schema.anyOf.filter(
             (childSchema) => !isClosedEmptyObject(resolveSchema(childSchema, rootSchema)),
         );
+
+        if (schema.anyOf.length !== before) {
+            state.changed = true;
+        }
+
+        if (schema.anyOf.length === 0) {
+            delete schema.anyOf;
+        }
     }
 
     for (const childSchema of getSchemaChildren(schema)) {
-        normalizeSchemaNodes(childSchema, rootSchema, visited);
+        normalizeSchemaNodes(childSchema, rootSchema, state, visited);
     }
 }
 
@@ -318,6 +355,9 @@ function collectDefinitionReferences(
     references,
     skipDefinitions = false,
     visited = new WeakSet(),
+    definitionValueSet = schema.definitions
+        ? new Set(Object.values(schema.definitions))
+        : new Set(),
 ) {
     if (!schema || typeof schema !== 'object' || Array.isArray(schema) || visited.has(schema)) {
         return;
@@ -331,15 +371,17 @@ function collectDefinitionReferences(
     }
 
     for (const childSchema of getSchemaChildren(schema)) {
-        if (
-            skipDefinitions &&
-            schema.definitions &&
-            Object.values(schema.definitions).includes(childSchema)
-        ) {
+        if (skipDefinitions && definitionValueSet.has(childSchema)) {
             continue;
         }
 
-        collectDefinitionReferences(childSchema, references, skipDefinitions, visited);
+        collectDefinitionReferences(
+            childSchema,
+            references,
+            skipDefinitions,
+            visited,
+            definitionValueSet,
+        );
     }
 }
 
@@ -379,18 +421,32 @@ function createSchemaValidator() {
 
 function getInvalidDefaults(schema) {
     const defaultEntries = [];
+    const visited = new WeakSet();
 
-    visitSchema(schema, (schemaNode) => {
-        if (!Object.prototype.hasOwnProperty.call(schemaNode, 'default')) {
+    const walk = (node, path) => {
+        if (!node || typeof node !== 'object' || Array.isArray(node) || visited.has(node)) {
             return;
         }
 
-        const schemaWithoutDefault = {
-            ...schemaNode,
-        };
-        delete schemaWithoutDefault.default;
-        defaultEntries.push({schema: schemaNode, schemaWithoutDefault, value: schemaNode.default});
-    });
+        visited.add(node);
+
+        if (Object.prototype.hasOwnProperty.call(node, 'default')) {
+            const schemaWithoutDefault = {...node};
+            delete schemaWithoutDefault.default;
+            defaultEntries.push({
+                schema: node,
+                path: path.length === 0 ? '#' : `#/${path.join('/')}`,
+                schemaWithoutDefault,
+                value: node.default,
+            });
+        }
+
+        for (const [segment, child] of getSchemaChildEntries(node)) {
+            walk(child, [...path, segment]);
+        }
+    };
+
+    walk(schema, []);
 
     if (defaultEntries.length === 0) {
         return [];
@@ -429,6 +485,7 @@ function getInvalidDefaults(schema) {
 
     return [...errorsByIndex].map(([index, errors]) => ({
         errors,
+        path: defaultEntries[index].path,
         schema: defaultEntries[index].schema,
         value: defaultEntries[index].value,
     }));
@@ -436,21 +493,30 @@ function getInvalidDefaults(schema) {
 
 function removeInvalidDefaults(schema) {
     for (const invalidDefault of getInvalidDefaults(schema)) {
-        delete invalidDefault.schema.default;
+        const {errors, path, schema: invalidSchema, value} = invalidDefault;
+        const reason = errors[0]?.message ?? 'invalid default';
+        console.warn(
+            `[chart-config] stripping invalid @default at ${path}: ${JSON.stringify(value)} (${reason})`,
+        );
+        delete invalidSchema.default;
     }
 }
 
 function normalizeSchema(schema) {
-    normalizeSchemaNodes(schema, schema);
-    removeUnusedDefinitions(schema);
+    // Run normalizeSchemaNodes to a fixpoint: a definition that only becomes callback-only after
+    // its own normalization wouldn't be detected by a single pass over its referencing nodes.
+    let state;
+
+    do {
+        state = {changed: false};
+        normalizeSchemaNodes(schema, schema, state);
+        removeUnusedDefinitions(schema);
+    } while (state.changed);
     removeInvalidDefaults(schema);
 
-    const chartConfig = schema.definitions?.ChartConfig;
-
-    if (chartConfig) {
-        chartConfig.description =
-            'JSON-serializable chart configuration. Options that require executable code are intentionally excluded.';
-    }
+    schema.$id = `${PACKAGE_JSON.name}/chart-config.schema.json@${PACKAGE_JSON.version}`;
+    schema.title = 'ChartConfig';
+    schema.version = PACKAGE_JSON.version;
 
     return schema;
 }
@@ -484,6 +550,7 @@ function validateSchema(schema) {
 
         if (
             /[<>\s]/.test(schemaNode.$ref) ||
+            definitionName === null ||
             (definitionName && !schema.definitions?.[definitionName])
         ) {
             throw new Error(
@@ -514,16 +581,12 @@ function validateSchema(schema) {
         throw new Error('chart-config.schema.json must reject unknown nested properties');
     }
 
-    const invalidDefaults = getInvalidDefaults(schema);
-
-    if (invalidDefaults.length > 0) {
-        throw new Error('chart-config.schema.json contains defaults that violate their schemas');
-    }
-
     visitSchema(schema, (schemaNode) => {
-        for (const propertySchema of Object.values(schemaNode.properties || {})) {
+        for (const [propertyName, propertySchema] of Object.entries(schemaNode.properties || {})) {
             if (isCallbackArtifact(propertySchema, schema)) {
-                throw new Error('chart-config.schema.json contains a callback-only property');
+                throw new Error(
+                    `chart-config.schema.json contains a callback-only property: "${propertyName}"`,
+                );
             }
         }
     });
@@ -567,8 +630,9 @@ function writeChartConfigArtifacts(
     {declaration, schema},
     {declarationPath = DECLARATION_PATH, schemaPath = SCHEMA_PATH} = {},
 ) {
-    fs.mkdirSync(path.dirname(declarationPath), {recursive: true});
-    fs.mkdirSync(path.dirname(schemaPath), {recursive: true});
+    for (const dir of new Set([path.dirname(declarationPath), path.dirname(schemaPath)])) {
+        fs.mkdirSync(dir, {recursive: true});
+    }
     fs.writeFileSync(declarationPath, declaration);
     fs.writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
 }

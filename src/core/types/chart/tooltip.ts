@@ -309,7 +309,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * `'value'` uses the numeric value of each series point: `y` for most series
                * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
                * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
-               * @default undefined (sorting disabled)
+               * Leave unset to disable sorting.
                */
               key?: 'value' | undefined;
               /**
