@@ -24,6 +24,10 @@ items:
     href: ./pages/get-started.md
   - name: Development
     href: ./pages/development.md
+  - name: Integrations
+    items:
+      - name: Chart config tooling
+        href: ./pages/integrations/chart-config.md
   - name: Guides
     items:
       - name: Axes

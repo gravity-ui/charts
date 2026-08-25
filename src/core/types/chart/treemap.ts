@@ -55,7 +55,7 @@ export interface TreemapSeries<T = MeaningfulAny> extends BaseSeries {
         enabled?: boolean;
         /**
          * The sorting direction.
-         * @default: 'desc'
+         * @default 'desc'
          */
         direction?: 'asc' | 'desc';
     };

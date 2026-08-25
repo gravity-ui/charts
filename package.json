@@ -8,9 +8,11 @@
   "types": "./dist/esm/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
+    "./chart-config.d.ts": "./dist/config/chart-config.d.ts",
+    "./chart-config.schema.json": "./dist/config/chart-config.schema.json",
     ".": {
       "import": {
-        "types": "./dist/esm/index.d.js",
+        "types": "./dist/esm/index.d.ts",
         "default": "./dist/esm/index.js"
       },
       "require": {
@@ -48,8 +50,10 @@
     "prettier": "prettier '**/*.{md,yaml,yml,json}'",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+    "test:chart-config": "jest --config jest.chart-config.config.js",
     "clean": "gulp clean",
     "build": "gulp",
+    "build:chart-config": "node scripts/build-chart-config.js",
     "start": "storybook dev -p 7007",
     "build-storybook": "storybook build -c .storybook -o storybook-static",
     "prepublishOnly": "npm run build",
@@ -122,6 +126,8 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.7.0",
+    "ajv": "^8.18.0",
+    "dts-bundle-generator": "^9.5.1",
     "eslint": "^9.39.4",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-storybook": "^10.2.16",
@@ -148,6 +154,7 @@
     "stylelint": "^15.11.0",
     "stylelint-use-logical": "^2.1.2",
     "ts-jest": "^29.2.5",
+    "ts-json-schema-generator": "^2.9.0",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "typescript": "^5.9.3",

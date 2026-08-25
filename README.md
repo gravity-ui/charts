@@ -51,6 +51,10 @@ export default function App() {
 
 `Chart` adapts to its parent's size, so the wrapping element must have a height.
 
+## Chart config tooling
+
+The package provides TypeScript declarations and JSON Schema for chart config validation, generation, and Monaco integration. See the [chart config tooling documentation](https://gravity-ui.github.io/charts/pages/integrations/chart-config.html) for setup and usage details.
+
 ## Documentation
 
 - [Overview](https://gravity-ui.github.io/charts/pages/overview.html)
