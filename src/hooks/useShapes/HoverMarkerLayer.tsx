@@ -4,7 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 
 import {renderHoverMarkers} from '~core/shapes/marker';
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {HoveredShapeData, SeriesShapeData} from '~core/shapes/types';
 
 interface Props {
     preparedData: SeriesShapeData[];
@@ -20,9 +20,8 @@ export const HoverMarkerLayer = ({preparedData, dispatcher, namespace}: Props) =
 
         const container = select(ref.current);
 
-        function handleHover(data?: {data: unknown}[]) {
-            const hoveredData = data?.map((d) => d.data) ?? [];
-            const items = preparedData.flatMap((d) => d.getHoverMarkers(hoveredData));
+        function handleHover(data?: HoveredShapeData[]) {
+            const items = preparedData.flatMap((d) => d.getHoverMarkers(data ?? []));
             renderHoverMarkers(container, items);
         }
 

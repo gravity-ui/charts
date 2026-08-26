@@ -90,7 +90,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
                             const lineItem = item as TooltipDataChunkLine;
                             const s = lineItem.series as PreparedLineSeries;
                             return getTooltipLineSymbol({
-                                color: lineItem.color,
+                                color: lineItem.color ?? s.color,
                                 dashStyle: s.dashStyle,
                                 lineWidth: s.lineWidth,
                             });

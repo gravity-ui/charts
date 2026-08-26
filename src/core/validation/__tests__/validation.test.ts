@@ -106,6 +106,13 @@ describe('validation/validateData', () => {
         {
             ...getValidGradient(),
             stops: [
+                {offset: 0, color: 'var(--series-color)'},
+                {offset: 1, color: '#000'},
+            ],
+        },
+        {
+            ...getValidGradient(),
+            stops: [
                 {offset: 0.75, color: '#fff'},
                 {offset: 0.25, color: '#000'},
             ],
@@ -121,6 +128,16 @@ describe('validation/validateData', () => {
         expect(() => validateData(data)).toThrow(
             expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
         );
+    });
+
+    test('validateData should preserve the palette fallback for an empty series color', () => {
+        const data: ChartData = {
+            series: {
+                data: [{type: 'line', color: '', name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        };
+
+        expect(() => validateData(data)).not.toThrow();
     });
 
     test('validateData should reject an invalid area fill color', () => {

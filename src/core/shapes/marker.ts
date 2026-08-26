@@ -6,7 +6,7 @@ import {block} from '../../utils';
 import {SymbolType} from '../constants';
 import {getSymbol} from '../utils';
 
-import type {MarkerItem} from './types';
+import type {HoveredShapeData, MarkerItem} from './types';
 
 const b = block('marker');
 const haloClassName = b('halo');
@@ -207,22 +207,32 @@ export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
     getFill: (point: HoverMarkerPoint) => string = (point) => point.color ?? series.color,
-): (hoveredData: unknown[]) => MarkerItem[] {
+): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
     if (normalState.enabled || !hoverState.enabled) return () => [];
 
-    const pointByData = new Map<unknown, HoverMarkerPoint>();
+    const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
         if (p.x !== null && p.y !== null && !p.hiddenInLine) {
-            pointByData.set(p.data, p);
+            const dataPoints = pointsByData.get(p.data) ?? [];
+            dataPoints.push(p);
+            pointsByData.set(p.data, dataPoints);
         }
     }
 
-    return (hoveredData: unknown[]) => {
+    return (hoveredData: HoveredShapeData[]) => {
         const items: MarkerItem[] = [];
-        for (const rawData of hoveredData) {
-            const point = pointByData.get(rawData);
+        for (const hovered of hoveredData) {
+            if (hovered.series?.id !== undefined && hovered.series.id !== series.id) {
+                continue;
+            }
+
+            const dataPoints = pointsByData.get(hovered.data);
+            const hasGeometry = hovered.x !== undefined && hovered.y1 !== undefined;
+            const point = hasGeometry
+                ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
+                : dataPoints?.[dataPoints.length - 1];
             if (!point || point.x === null || point.y === null) continue;
             items.push({
                 cx: point.x,
@@ -236,7 +246,7 @@ export function buildHoverMarkerGetter(
                 active: true,
                 clipped: false,
                 series: {id: series.id},
-                data: rawData,
+                data: hovered.data,
             });
         }
         return items;

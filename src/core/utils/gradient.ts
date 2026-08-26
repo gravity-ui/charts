@@ -5,6 +5,7 @@ import {select} from 'd3-selection';
 import type {GradientStop, LinearGradient} from '~core/types';
 
 const DEFAULT_GRADIENT_ANGLE = 180;
+const TRIGONOMETRIC_EPSILON = Number.EPSILON;
 
 export interface GradientBBox {
     xMin: number;
@@ -50,9 +51,12 @@ export function getGradientBBox(points: GradientPoint[]): GradientBBox | null {
  * The gradient line is sized to cover the full bounding box in the given direction.
  */
 export function gradientAngleToCoords(angle: number, bbox: GradientBBox): GradientCoords {
-    const rad = (angle * Math.PI) / 180;
-    const sin = Math.sin(rad);
-    const cos = Math.cos(rad);
+    const normalizedAngle = ((angle % 360) + 360) % 360;
+    const rad = (normalizedAngle * Math.PI) / 180;
+    const rawSin = Math.sin(rad);
+    const rawCos = Math.cos(rad);
+    const sin = Math.abs(rawSin) < TRIGONOMETRIC_EPSILON ? 0 : rawSin;
+    const cos = Math.abs(rawCos) < TRIGONOMETRIC_EPSILON ? 0 : rawCos;
 
     const cx = (bbox.xMin + bbox.xMax) / 2;
     const cy = (bbox.yMin + bbox.yMax) / 2;
@@ -84,26 +88,25 @@ function getGradientT(px: number, py: number, coords: GradientCoords): number {
 function interpolateGradientColor(t: number, stops: GradientStop[]): string {
     const sorted = [...stops].sort((a, b) => a.offset - b.offset);
 
-    if (t <= sorted[0].offset) {
+    if (t < sorted[0].offset) {
         return sorted[0].color;
     }
 
-    if (t >= sorted[sorted.length - 1].offset) {
-        return sorted[sorted.length - 1].color;
-    }
-
-    for (let i = 0; i < sorted.length - 1; i++) {
-        const lo = sorted[i];
-        const hi = sorted[i + 1];
-
-        if (t >= lo.offset && t <= hi.offset) {
-            const range = hi.offset - lo.offset;
-            const localT = range === 0 ? 0 : (t - lo.offset) / range;
-            return interpolateRgb(lo.color, hi.color)(localT);
+    let loIndex = -1;
+    for (let i = 0; i < sorted.length; i++) {
+        if (sorted[i].offset > t) {
+            break;
         }
+        loIndex = i;
     }
 
-    return sorted[sorted.length - 1].color;
+    if (loIndex === sorted.length - 1 || sorted[loIndex].offset === t) {
+        return sorted[loIndex].color;
+    }
+
+    const lo = sorted[loIndex];
+    const hi = sorted[loIndex + 1];
+    return interpolateRgb(lo.color, hi.color)((t - lo.offset) / (hi.offset - lo.offset));
 }
 
 /** Checks whether a value is a linear-gradient config. */

@@ -2,7 +2,6 @@ import type {TooltipDataChunk, TooltipDataChunkBarY} from '../../../../types';
 import {getHoveredValues, getSortedHovered} from '../utils';
 
 const createLineChunk = (name: string, value: number | null): TooltipDataChunk => ({
-    color: '#000000',
     data: {x: 1, y: value},
     series: {type: 'line', id: name, name},
 });

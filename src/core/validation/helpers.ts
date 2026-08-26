@@ -1,3 +1,4 @@
+import {color as parseColor} from 'd3-color';
 import get from 'lodash/get';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
@@ -297,7 +298,7 @@ export function validateStacking({series}: {series: {stacking?: string}}) {
 
 function isValidSeriesColor(color: unknown) {
     if (color === undefined || typeof color === 'string') {
-        return color === undefined || color.length > 0;
+        return true;
     }
 
     if (typeof color !== 'object' || color === null || Array.isArray(color)) {
@@ -327,7 +328,7 @@ function isValidSeriesColor(color: unknown) {
         const {color: stopColor, offset} = stop as {color?: unknown; offset?: unknown};
         if (
             typeof stopColor !== 'string' ||
-            stopColor.length === 0 ||
+            parseColor(stopColor) === null ||
             typeof offset !== 'number' ||
             !Number.isFinite(offset) ||
             offset < previousOffset ||

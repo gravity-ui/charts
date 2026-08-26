@@ -24,7 +24,7 @@ See the complete configuration in the [LineSeries API reference](../../api/Serie
 
 ## Color and linear gradients
 
-The `color` property accepts either a solid CSS color string or a linear gradient. A gradient contains at least two color stops with offsets in ascending order from `0` to `1`.
+The `color` property accepts either a solid CSS color string or a linear gradient. A gradient contains at least two color stops with offsets in non-decreasing order from `0` to `1`. Gradient stop colors support hex, rgb/rgba, hsl/hsla, and named color formats.
 
 The optional `angle` follows the CSS convention:
 
@@ -33,8 +33,9 @@ The optional `angle` follows the CSS convention:
 - `180` — top to bottom (default)
 - `270` — right to left
 
-Each point receives the gradient color at its position on the line. When markers are enabled, they
-use this color, and the tooltip symbol uses the same color for the hovered point.
+The gradient uses the bounding box of the points that participate in the rendered line. Zoom recalculates this box from the displayed points, and the range slider resolves its gradient independently, so their colors can differ. Each point receives the gradient color at its position on the line. Marker color priority is `data[].marker.color`, then `data[].color`, the gradient color at the point position, and finally the series color.
+
+Markers and the tooltip symbol use the resolved point color. The legend represents a gradient with its color at `t = 0.5`; it does not render a gradient symbol.
 
 The following example renders a left-to-right gradient line:
 

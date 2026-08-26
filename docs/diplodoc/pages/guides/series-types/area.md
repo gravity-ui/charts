@@ -28,10 +28,12 @@ The `color` property controls the line and, by default, the area fill. Use `fill
 
 Use `opacity` to change only the fill opacity. It does not affect the line.
 
-The legend uses a representative color from the area fill. The tooltip symbol instead matches the marker of the hovered point: `data[].marker.color` takes priority over `data[].color`, followed by the line gradient color at the point position and the series line color. Therefore, a separate `fillColor` can change the area and legend without changing the tooltip symbol.
+Line gradients use the bounding box of the points that participate in the rendered line. Fill gradients additionally include the area baseline. Zoom recalculates these boxes from the displayed points, and the range slider resolves its gradients independently, so their colors can differ.
+
+The legend represents the area fill gradient with its color at `t = 0.5`; it does not render a gradient symbol. The tooltip symbol instead matches the marker of the hovered point: `data[].marker.color` takes priority over `data[].color`, followed by the line gradient color at the point position and the series line color. Therefore, a separate `fillColor` can change the area and legend without changing the tooltip symbol.
 
 The following example combines a solid line with a top-to-bottom gradient fill:
 
 <div data-chart-example="series-types/area"></div>
 
-A gradient contains at least two color stops with offsets in ascending order from `0` to `1`. Its optional `angle` follows the CSS convention and defaults to `180` (top to bottom). See [LinearGradient](../../api/Series/Visual/interfaces/LinearGradient.md) and [GradientStop](../../api/Series/Visual/interfaces/GradientStop.md) for the complete configuration.
+A gradient contains at least two color stops with offsets in non-decreasing order from `0` to `1`. Gradient stop colors support hex, rgb/rgba, hsl/hsla, and named color formats. Its optional `angle` follows the CSS convention and defaults to `180` (top to bottom). See [LinearGradient](../../api/Series/Visual/interfaces/LinearGradient.md) and [GradientStop](../../api/Series/Visual/interfaces/GradientStop.md) for the complete configuration.

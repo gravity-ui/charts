@@ -1,5 +1,7 @@
 /** @jest-environment jsdom */
 
+import {curveLinear} from 'd3-shape';
+
 import type {PreparedLineSeries, PreparedSeriesOptions} from '../../../series/types';
 import type {LinearGradient} from '../../../types';
 import {renderLine} from '../renderer';
@@ -63,7 +65,7 @@ describe('renderLine gradient', () => {
             {x: 1000, y: 1000, hiddenInLine: true},
         ]);
 
-        renderLine({plot}, [data], {} as PreparedSeriesOptions);
+        renderLine({plot, getCurveFactory: () => curveLinear}, [data], {} as PreparedSeriesOptions);
 
         const path = plot.querySelector('path');
         const gradientElement = plot.querySelector('linearGradient');
@@ -80,9 +82,9 @@ describe('renderLine gradient', () => {
             {x: 100, y: 0},
         ]);
 
-        renderLine({plot}, [data], {} as PreparedSeriesOptions);
+        renderLine({plot, getCurveFactory: () => curveLinear}, [data], {} as PreparedSeriesOptions);
         const firstStroke = plot.querySelector('path')?.getAttribute('stroke');
-        renderLine({plot}, [data], {} as PreparedSeriesOptions);
+        renderLine({plot, getCurveFactory: () => curveLinear}, [data], {} as PreparedSeriesOptions);
         const secondStroke = plot.querySelector('path')?.getAttribute('stroke');
 
         expect(plot.querySelectorAll('defs.gradients')).toHaveLength(1);

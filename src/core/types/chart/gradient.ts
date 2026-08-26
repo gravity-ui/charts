@@ -2,7 +2,7 @@
 
 export interface GradientStop {
     /**
-     * Color of the stop (hex, rgba, named color).
+     * Color of the stop. Supported formats are hex, rgb/rgba, hsl/hsla, and named colors.
      * @minLength 1
      */
     color: string;
@@ -25,7 +25,8 @@ export interface LinearGradient {
      */
     angle?: number;
     /**
-     * Color stops in ascending offset order. At least two stops are required.
+     * Color stops in non-decreasing offset order. At least two stops are required.
+     * When offsets are equal, the last stop controls the color at that exact position.
      * @minItems 2
      */
     stops: GradientStop[];
