@@ -16,6 +16,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
                 continue;
             }
             acc.push({
+                color: p.color ?? p.series.color,
                 data: p.data,
                 series: p.series as AreaSeries,
                 x: p.x,

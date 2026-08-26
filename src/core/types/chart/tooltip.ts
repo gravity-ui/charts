@@ -62,6 +62,8 @@ export interface TooltipDataChunkLine<T = MeaningfulAny> {
 
 export interface TooltipDataChunkArea<T = MeaningfulAny> {
     data: AreaSeriesData<T>;
+    /** Resolved fill color of the marker for the hovered point. */
+    color: string;
     series: {
         type: AreaSeries['type'];
         id: string;

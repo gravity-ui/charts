@@ -254,6 +254,7 @@ export const prepareAreaData = async (args: {
                                     y0: yAxisTop + yMin - nextSectionStackHeight,
                                     x: xValue,
                                     y: yAxisTop + yValue - nextSectionStackHeight,
+                                    color: d.marker?.color ?? d.color,
                                     data: d,
                                     series: s,
                                 };
@@ -292,6 +293,7 @@ export const prepareAreaData = async (args: {
                                 y0: yAxisTop + yMin + prevSectionStackHeight,
                                 x: xValue,
                                 y: yAxisTop + yValue + prevSectionStackHeight,
+                                color: d.marker?.color ?? d.color,
                                 data: d,
                                 series: s,
                             });
@@ -301,6 +303,7 @@ export const prepareAreaData = async (args: {
                                     y0: yAxisTop + yMin + nextSectionStackHeight,
                                     x: xValue,
                                     y: yAxisTop + yValue + nextSectionStackHeight,
+                                    color: d.marker?.color ?? d.color,
                                     data: d,
                                     series: s,
                                 });
@@ -326,6 +329,7 @@ export const prepareAreaData = async (args: {
                             y0: yAxisTop + yMin,
                             x: xValue,
                             y: null,
+                            color: d.marker?.color ?? d.color,
                             data: d,
                             series: s,
                         });
@@ -357,6 +361,10 @@ export const prepareAreaData = async (args: {
                         ? getGradientColorAtPoint(point.x, point.y, s.gradient, gradientBBox)
                         : s.color;
                 };
+
+                for (const point of points) {
+                    point.color = getMarkerFill(point);
+                }
 
                 const markers =
                     s.marker.states.normal.enabled || hasPerPointNormalMarkers

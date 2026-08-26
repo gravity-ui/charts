@@ -28,6 +28,8 @@ The `color` property controls the line and, by default, the area fill. Use `fill
 
 Use `opacity` to change only the fill opacity. It does not affect the line.
 
+The legend uses a representative color from the area fill. The tooltip symbol instead matches the marker of the hovered point: `data[].marker.color` takes priority over `data[].color`, followed by the line gradient color at the point position and the series line color. Therefore, a separate `fillColor` can change the area and legend without changing the tooltip symbol.
+
 The following example combines a solid line with a top-to-bottom gradient fill:
 
 <div data-chart-example="series-types/area"></div>
