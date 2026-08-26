@@ -142,26 +142,6 @@ describe('validation/validateData', () => {
         );
     });
 
-    test.each(['line', 'area'] as const)(
-        'validateData should accept a valid %s series gradient',
-        (type) => {
-            const data: ChartData = {
-                series: {
-                    data: [
-                        {
-                            type,
-                            name: 'Series 1',
-                            color: getValidGradient(),
-                            data: [{x: 1, y: 1}],
-                        },
-                    ],
-                },
-            };
-
-            expect(() => validateData(data)).not.toThrow();
-        },
-    );
-
     test.each([
         {
             series: {

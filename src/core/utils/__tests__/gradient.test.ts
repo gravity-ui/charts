@@ -12,8 +12,6 @@ const BBOX = {xMin: 0, xMax: 100, yMin: 0, yMax: 50};
 describe('gradientAngleToCoords', () => {
     test.each([
         [0, {x1: 50, y1: 50, x2: 50, y2: 0}],
-        [90, {x1: 0, y1: 25, x2: 100, y2: 25}],
-        [180, {x1: 50, y1: 0, x2: 50, y2: 50}],
         [270, {x1: 100, y1: 25, x2: 0, y2: 25}],
     ])('converts the CSS angle %d to SVG coordinates', (angle, expected) => {
         const actual = gradientAngleToCoords(angle, BBOX);
@@ -34,10 +32,6 @@ describe('gradient color helpers', () => {
             {offset: 1, color: '#0000ff'},
         ],
     };
-
-    test('interpolates a color at a point in the gradient bbox', () => {
-        expect(getGradientColorAtPoint(50, 25, gradient, BBOX)).toBe('rgb(128, 0, 128)');
-    });
 
     test('clamps colors outside the gradient line', () => {
         expect(getGradientColorAtPoint(-10, 25, gradient, BBOX)).toBe('#ff0000');

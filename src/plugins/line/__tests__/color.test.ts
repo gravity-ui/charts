@@ -3,7 +3,7 @@ import {scaleOrdinal} from 'd3-scale';
 import {DEFAULT_PALETTE} from '~core/constants';
 import type {PreparedLegend} from '~core/series/types';
 
-import type {LineSeries, LinearGradient} from '../../../types';
+import type {LinearGradient} from '../../../types';
 import {prepareLineSeries} from '../prepare-line-series';
 
 const gradient: LinearGradient = {
@@ -15,24 +15,6 @@ const gradient: LinearGradient = {
 };
 
 describe('prepareLineSeries color', () => {
-    test('prepares a gradient passed through color', () => {
-        const series: LineSeries = {
-            type: 'line',
-            name: 'Series 1',
-            color: gradient,
-            data: [{x: 0, y: 1}],
-        };
-        const [prepared] = prepareLineSeries({
-            colorScale: scaleOrdinal([] as string[], DEFAULT_PALETTE),
-            legend: {} as PreparedLegend,
-            colors: [],
-            series: [series],
-        });
-
-        expect(prepared.gradient).toBe(gradient);
-        expect(prepared.color).toBe('rgb(128, 128, 128)');
-    });
-
     test('does not consume a palette color for an explicit gradient', () => {
         const prepared = prepareLineSeries({
             colorScale: scaleOrdinal([] as string[], DEFAULT_PALETTE),

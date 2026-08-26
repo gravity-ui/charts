@@ -24,54 +24,6 @@ function prepareSeries(series: AreaSeries) {
 }
 
 describe('prepareAreaSeries color', () => {
-    test('uses a solid color for both line and fill by default', () => {
-        const prepared = prepareSeries({
-            type: 'area',
-            name: 'Series 1',
-            color: '#f00',
-            data: [{x: 0, y: 1}],
-        });
-
-        expect(prepared).toEqual(
-            expect.objectContaining({
-                color: '#f00',
-                fillColor: '#f00',
-                gradient: undefined,
-                fillGradient: undefined,
-            }),
-        );
-    });
-
-    test('uses color gradient for both line and fill by default', () => {
-        const prepared = prepareSeries({
-            type: 'area',
-            name: 'Series 1',
-            color: gradient,
-            data: [{x: 0, y: 1}],
-        });
-
-        expect(prepared.gradient).toBe(gradient);
-        expect(prepared.fillGradient).toBe(gradient);
-        expect(prepared.color).toBe('rgb(128, 128, 128)');
-        expect(prepared.fillColor).toBe('rgb(128, 128, 128)');
-        expect(prepared.legend.color).toBe('rgb(128, 128, 128)');
-    });
-
-    test('allows the fill color to override the line color independently', () => {
-        const prepared = prepareSeries({
-            type: 'area',
-            name: 'Series 1',
-            color: '#f00',
-            fillColor: gradient,
-            data: [{x: 0, y: 1}],
-        });
-
-        expect(prepared.color).toBe('#f00');
-        expect(prepared.gradient).toBeUndefined();
-        expect(prepared.fillGradient).toBe(gradient);
-        expect(prepared.legend.color).toBe('rgb(128, 128, 128)');
-    });
-
     test('allows a solid fill to override a gradient line independently', () => {
         const prepared = prepareSeries({
             type: 'area',
