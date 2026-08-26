@@ -1,0 +1,22 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+  "extends": ["typedoc/tsdoc.json"],
+  "tagDefinitions": [
+    {
+      "tagName": "@maximum",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@minimum",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@minItems",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@minLength",
+      "syntaxKind": "block"
+    }
+  ]
+}

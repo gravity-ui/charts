@@ -91,7 +91,9 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
                         id: 'color',
                         source: ({item}) => {
                             const series = item.series as PreparedAreaSeries;
-                            return getTooltipColorSymbol({color: series.fillColor});
+                            return getTooltipColorSymbol({
+                                color: item.data.color ?? series.fillColor,
+                            });
                         },
                         width: '16px',
                     },

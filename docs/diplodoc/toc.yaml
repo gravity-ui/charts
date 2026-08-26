@@ -30,6 +30,12 @@ items:
         href: ./pages/integrations/chart-config.md
   - name: Guides
     items:
+      - name: Series types
+        items:
+          - name: Line
+            href: ./pages/guides/series-types/line.md
+          - name: Area
+            href: ./pages/guides/series-types/area.md
       - name: Axes
         items:
           - name: Axis types

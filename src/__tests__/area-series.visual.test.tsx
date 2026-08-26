@@ -1005,11 +1005,40 @@ test.describe('Area series', () => {
         });
     });
 
-    test.describe('Per-point tooltip.enabled', () => {
-        test('hidden point in one series leaves only the other in the tooltip', async ({
-            page,
-            mount,
-        }) => {
+    test.describe('Tooltip', () => {
+        test('uses the per-point color for the tooltip symbol', async ({page, mount}) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Series 1',
+                            color: '#ff0000',
+                            fillColor: '#0000ff',
+                            data: [
+                                {x: 1, y: 5},
+                                {x: 2, y: 10, color: '#00ff00'},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const area = component.locator('.gcharts-area__series');
+            const areaBox = await getLocatorBoundingBox(area);
+
+            await page.mouse.move(
+                Math.round(areaBox.x + areaBox.width),
+                Math.round(areaBox.y + areaBox.height / 2),
+            );
+
+            const tooltipRow = page.locator('.gcharts-tooltip__content-row');
+            await expect(tooltipRow).toBeVisible();
+            await expect(tooltipRow.locator('svg path')).toHaveAttribute('fill', '#00ff00');
+        });
+
+        test('per-point tooltip.enabled hides only that point', async ({page, mount}) => {
             const chartData: ChartData = {
                 series: {
                     data: [
