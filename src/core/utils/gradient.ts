@@ -74,7 +74,8 @@ function getGradientT(px: number, py: number, coords: GradientCoords): number {
     const len2 = dx * dx + dy * dy;
 
     if (len2 === 0) {
-        return 0;
+        // SVG renders a degenerate linear gradient using the last stop color.
+        return 1;
     }
 
     return Math.max(0, Math.min(1, ((px - coords.x1) * dx + (py - coords.y1) * dy) / len2));

@@ -38,6 +38,17 @@ describe('gradient color helpers', () => {
         expect(getGradientColorAtPoint(110, 25, gradient, BBOX)).toBe('#0000ff');
     });
 
+    test('uses the last stop for a horizontal bbox with a vertical gradient', () => {
+        expect(
+            getGradientColorAtPoint(
+                50,
+                25,
+                {...gradient, angle: 0},
+                {xMin: 0, xMax: 100, yMin: 25, yMax: 25},
+            ),
+        ).toBe('#0000ff');
+    });
+
     test('uses stop offsets when calculating the representative middle color', () => {
         expect(
             getGradientMidColor({
