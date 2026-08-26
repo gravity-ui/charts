@@ -3,6 +3,7 @@ import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {SeriesColor} from './gradient';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions} from './series';
@@ -65,8 +66,13 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
-    /** The main color of the series (hex, rgba) */
-    color?: string;
+    /** The solid or linear-gradient color of the line and the default color of the area fill. */
+    color?: SeriesColor;
+    /**
+     * An optional solid or linear-gradient override for the area fill.
+     * When omitted, the area fill inherits `color`.
+     */
+    fillColor?: SeriesColor;
     /**
      * Fill opacity for the area
      * @default 0.75

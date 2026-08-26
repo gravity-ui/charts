@@ -12,7 +12,7 @@ import type {PreparedAreaSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
-import {getUniqId} from '~core/utils';
+import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
 
 import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 
@@ -68,7 +68,13 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
     return seriesList.map<PreparedAreaSeries>((series) => {
         const id = getUniqId();
         const name = series.name || '';
-        const color = series.color || colorScale(name);
+        const lineColor = series.color || colorScale(name);
+        const areaFillColor = series.fillColor ?? lineColor;
+        const gradient = isLinearGradient(lineColor) ? lineColor : undefined;
+        const fillGradient = isLinearGradient(areaFillColor) ? areaFillColor : undefined;
+        const color = typeof lineColor === 'string' ? lineColor : getGradientMidColor(lineColor);
+        const fillColor =
+            typeof areaFillColor === 'string' ? areaFillColor : getGradientMidColor(areaFillColor);
         const yAxisIndex = get(series, 'yAxis', 0);
 
         const prepared: PreparedAreaSeries = {
@@ -80,6 +86,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             id,
             visible: get(series, 'visible', true),
             legend: {
+                color: fillColor,
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
                 groupId: series.legend?.groupId ?? getUniqId(),
@@ -108,6 +115,9 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
             nullMode: series.nullMode,
+            gradient,
+            fillColor,
+            fillGradient,
             custom: series.custom,
         };
 

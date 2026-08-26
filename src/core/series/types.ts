@@ -19,6 +19,7 @@ import type {
     LineSeriesData,
     LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
+    LinearGradient,
     MeaningfulAny,
     PathLegendSymbolOptions,
     PieSeries,
@@ -139,6 +140,7 @@ type BasePreparedSeries = {
     id: string;
     visible: boolean;
     legend: {
+        color?: string;
         groupId: string;
         itemText: string;
         enabled: boolean;
@@ -310,6 +312,7 @@ export type PreparedLineSeries = {
     linejoin: LineJoin;
     interpolation?: LineSeriesInterpolation;
     opacity: number | null;
+    gradient?: LinearGradient;
     yAxis: number;
 } & BasePreparedSeries &
     BasePreparedAxisRelatedSeries;
@@ -349,6 +352,9 @@ export type PreparedAreaSeries = {
             };
         };
     };
+    gradient?: LinearGradient;
+    fillColor: string;
+    fillGradient?: LinearGradient;
     yAxis: number;
 } & BasePreparedSeries &
     BasePreparedAxisRelatedSeries;

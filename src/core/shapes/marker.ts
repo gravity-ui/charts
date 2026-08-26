@@ -206,6 +206,7 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
+    getFill: (point: HoverMarkerPoint) => string = (point) => point.color ?? series.color,
 ): (hoveredData: unknown[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
@@ -228,7 +229,7 @@ export function buildHoverMarkerGetter(
                 cy: point.y,
                 radius: hoverState.radius,
                 symbolType: normalState.symbol,
-                fill: point.color ?? series.color,
+                fill: getFill(point),
                 stroke: hoverState.borderColor,
                 strokeWidth: hoverState.borderWidth,
                 opacity: 1,

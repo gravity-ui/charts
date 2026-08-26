@@ -4,6 +4,16 @@ import {CHART_ERROR_CODE} from '../../../libs';
 import type {ChartData} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
+function getValidGradient() {
+    return {
+        type: 'linear-gradient' as const,
+        stops: [
+            {offset: 0, color: '#fff'},
+            {offset: 1, color: '#000'},
+        ],
+    };
+}
+
 describe('validation/validateData', () => {
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',
@@ -69,6 +79,86 @@ describe('validation/validateData', () => {
             }
 
             expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+        },
+    );
+
+    test.each([
+        null,
+        42,
+        [],
+        {...getValidGradient(), type: 'radial-gradient'},
+        {...getValidGradient(), stops: []},
+        {...getValidGradient(), stops: [null, {offset: 1, color: '#000'}]},
+        {
+            ...getValidGradient(),
+            stops: [
+                {offset: '0', color: '#fff'},
+                {offset: 1, color: '#000'},
+            ],
+        },
+        {
+            ...getValidGradient(),
+            stops: [
+                {offset: 0, color: ''},
+                {offset: 1, color: '#000'},
+            ],
+        },
+        {
+            ...getValidGradient(),
+            stops: [
+                {offset: 0.75, color: '#fff'},
+                {offset: 0.25, color: '#000'},
+            ],
+        },
+        {...getValidGradient(), angle: Number.POSITIVE_INFINITY},
+    ])('validateData should reject an invalid series color (%j)', (color) => {
+        const data = {
+            series: {
+                data: [{type: 'line', color, name: 'Series 1', data: [{x: 1, y: 1}]}],
+            },
+        } as unknown as ChartData;
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test('validateData should reject an invalid area fill color', () => {
+        const data = {
+            series: {
+                data: [
+                    {
+                        type: 'area',
+                        name: 'Series 1',
+                        fillColor: {...getValidGradient(), stops: [{offset: 0, color: '#fff'}]},
+                        data: [{x: 1, y: 1}],
+                    },
+                ],
+            },
+        } as unknown as ChartData;
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test.each(['line', 'area'] as const)(
+        'validateData should accept a valid %s series gradient',
+        (type) => {
+            const data: ChartData = {
+                series: {
+                    data: [
+                        {
+                            type,
+                            name: 'Series 1',
+                            color: getValidGradient(),
+                            data: [{x: 1, y: 1}],
+                        },
+                    ],
+                },
+            };
+
+            expect(() => validateData(data)).not.toThrow();
         },
     );
 

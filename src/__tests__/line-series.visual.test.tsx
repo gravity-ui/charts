@@ -6,6 +6,7 @@ import {median} from 'd3-array';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     lineBasicData,
+    lineGradientData,
     lineNullModeConnectLinearXData,
     lineNullModeSkipLinearXData,
     lineNullModeZeroLinearXData,
@@ -27,6 +28,51 @@ test.describe('Line series', () => {
     test('Basic @webkit', async ({mount}) => {
         const component = await mount(<ChartTestStory data={lineBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Gradient', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={lineGradientData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Gradient hover marker uses the color at its position', async ({mount, page}) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Gradient line',
+                        color: {
+                            type: 'linear-gradient',
+                            angle: 90,
+                            stops: [
+                                {offset: 0, color: '#ff0000'},
+                                {offset: 1, color: '#0000ff'},
+                            ],
+                        },
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 5, y: 5},
+                            {x: 10, y: 10},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const line = component.locator('.gcharts-line > path');
+        const normalStroke = await line.getAttribute('stroke');
+        const lineBox = await getLocatorBoundingBox(line);
+
+        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + lineBox.height / 2);
+
+        await expect(component.locator('.gcharts-marker__symbol')).toHaveAttribute(
+            'fill',
+            'rgb(128, 0, 128)',
+        );
+        expect(await line.getAttribute('stroke')).not.toBe(normalStroke);
     });
 
     test('Logarithmic Y axis', async ({mount}) => {

@@ -17,6 +17,7 @@ import {
     preparePointDataLabels,
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
+import {getGradientBBox, getGradientColorAtPoint} from '../../utils/gradient';
 
 import type {PointData, PreparedAreaData} from './types';
 
@@ -342,6 +343,21 @@ export const prepareAreaData = async (args: {
                     (d) => d.marker?.states?.normal?.enabled,
                 );
 
+                const gradientBBox = s.gradient ? getGradientBBox(points) : null;
+
+                const getMarkerFill = (point: {
+                    color?: string;
+                    x: number | null;
+                    y: number | null;
+                }) => {
+                    if (point.color !== undefined) {
+                        return point.color;
+                    }
+                    return s.gradient && gradientBBox && point.x !== null && point.y !== null
+                        ? getGradientColorAtPoint(point.x, point.y, s.gradient, gradientBBox)
+                        : s.color;
+                };
+
                 const markers =
                     s.marker.states.normal.enabled || hasPerPointNormalMarkers
                         ? points.reduce<MarkerItem[]>((acc, p) => {
@@ -356,7 +372,7 @@ export const prepareAreaData = async (args: {
                                       cy: p.y,
                                       radius: normalState.radius,
                                       symbolType: normalState.symbol,
-                                      fill: p.color ?? s.color,
+                                      fill: getMarkerFill(p),
                                       stroke: normalState.borderColor,
                                       strokeWidth: normalState.borderWidth,
                                       opacity: 1,
@@ -381,7 +397,7 @@ export const prepareAreaData = async (args: {
                     annotations,
                     points,
                     markers,
-                    getHoverMarkers: buildHoverMarkerGetter(points, s),
+                    getHoverMarkers: buildHoverMarkerGetter(points, s, getMarkerFill),
                     svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,

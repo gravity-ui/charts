@@ -11,7 +11,11 @@ import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
-import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
+import {
+    validateAxisPlotValues,
+    validateSeriesColor,
+    validateXYSeries,
+} from '~core/validation/helpers';
 
 import type {LineSeries} from '../../types';
 
@@ -68,6 +72,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateInterpolation({series});
+        validateSeriesColor({color: series.color, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
     },
     getColorValue: (d) => d.y,

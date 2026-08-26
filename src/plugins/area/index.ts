@@ -12,7 +12,12 @@ import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
-import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
+import {
+    validateAxisPlotValues,
+    validateSeriesColor,
+    validateStacking,
+    validateXYSeries,
+} from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaSeries} from '../../types';
@@ -24,6 +29,8 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
     prepareSeries: prepareAreaSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
+        validateSeriesColor({color: series.color, seriesName: series.name});
+        validateSeriesColor({color: series.fillColor, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
 
@@ -82,10 +89,9 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
                 cells: [
                     {
                         id: 'color',
-                        source: 'color',
-                        format: {
-                            type: 'custom',
-                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        source: ({item}) => {
+                            const series = item.series as PreparedAreaSeries;
+                            return getTooltipColorSymbol({color: series.fillColor});
                         },
                         width: '16px',
                     },

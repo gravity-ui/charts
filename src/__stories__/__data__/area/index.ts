@@ -1,5 +1,6 @@
 export * from './annotations';
 export * from './basic';
+export * from './gradient';
 export * from './html-labels';
 export * from './negative-values';
 export * from './null-modes';
