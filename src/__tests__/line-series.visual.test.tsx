@@ -1015,6 +1015,49 @@ test.describe('Line series', () => {
         });
     });
 
+    test.describe('Tooltip', () => {
+        test('uses the computed marker color when the point has no color override', async ({
+            page,
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Gradient line',
+                            color: {
+                                type: 'linear-gradient',
+                                angle: 90,
+                                stops: [
+                                    {offset: 0, color: '#ff0000'},
+                                    {offset: 1, color: '#0000ff'},
+                                ],
+                            },
+                            data: [
+                                {x: 1, y: 5},
+                                {x: 2, y: 10},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const line = component.locator('.gcharts-line > path');
+            const lineBox = await getLocatorBoundingBox(line);
+
+            await page.mouse.move(
+                Math.round(lineBox.x + lineBox.width),
+                Math.round(lineBox.y + lineBox.height / 2),
+            );
+
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip).toHaveScreenshot();
+        });
+    });
+
     test.describe('Per-point tooltip.enabled', () => {
         test('hidden point in one series leaves only the other in the tooltip', async ({
             page,

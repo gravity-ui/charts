@@ -111,6 +111,10 @@ export const prepareLineData = async (args: {
                 : s.color;
         };
 
+        for (const point of points) {
+            point.color = getMarkerFill(point);
+        }
+
         const markers =
             s.marker.states.normal.enabled || hasPerPointNormalMarkers
                 ? points.reduce<MarkerItem[]>((result, p) => {

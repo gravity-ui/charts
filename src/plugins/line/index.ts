@@ -17,7 +17,7 @@ import {
     validateXYSeries,
 } from '~core/validation/helpers';
 
-import type {LineSeries} from '../../types';
+import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
@@ -87,9 +87,10 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
                     {
                         id: 'color',
                         source: ({item}) => {
-                            const s = item.series as PreparedLineSeries;
+                            const lineItem = item as TooltipDataChunkLine;
+                            const s = lineItem.series as PreparedLineSeries;
                             return getTooltipLineSymbol({
-                                color: s.color,
+                                color: lineItem.color,
                                 dashStyle: s.dashStyle,
                                 lineWidth: s.lineWidth,
                             });

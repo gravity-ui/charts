@@ -1042,26 +1042,6 @@ test.describe('Area series', () => {
                 },
             },
             {
-                name: 'uses the line gradient color at the hovered point',
-                expectedColor: '#0000ff',
-                series: {
-                    type: 'area',
-                    name: 'Gradient line',
-                    color: {
-                        type: 'linear-gradient',
-                        angle: 90,
-                        stops: [
-                            {offset: 0, color: '#ff0000'},
-                            {offset: 1, color: '#0000ff'},
-                        ],
-                    },
-                    data: [
-                        {x: 1, y: 5},
-                        {x: 2, y: 10},
-                    ],
-                },
-            },
-            {
                 name: 'does not use a separate fill gradient for the tooltip symbol',
                 expectedColor: '#ff0000',
                 series: {
@@ -1083,6 +1063,47 @@ test.describe('Area series', () => {
                 },
             },
         ];
+
+        test('uses the computed line color when the point has no color override', async ({
+            page,
+            mount,
+        }) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Gradient area',
+                            color: {
+                                type: 'linear-gradient',
+                                angle: 90,
+                                stops: [
+                                    {offset: 0, color: '#ff0000'},
+                                    {offset: 1, color: '#0000ff'},
+                                ],
+                            },
+                            data: [
+                                {x: 1, y: 5},
+                                {x: 2, y: 10},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const area = component.locator('.gcharts-area__series');
+            const areaBox = await getLocatorBoundingBox(area);
+
+            await page.mouse.move(
+                Math.round(areaBox.x + areaBox.width),
+                Math.round(areaBox.y + areaBox.height / 2),
+            );
+
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip).toHaveScreenshot();
+        });
 
         for (const {expectedColor, name, series} of tooltipColorCases) {
             test(name, async ({page, mount}) => {

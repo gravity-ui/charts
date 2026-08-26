@@ -33,7 +33,8 @@ The optional `angle` follows the CSS convention:
 - `180` — top to bottom (default)
 - `270` — right to left
 
-When markers are enabled, each marker receives the gradient color at its position on the line.
+Each point receives the gradient color at its position on the line. When markers are enabled, they
+use this color, and the tooltip symbol uses the same color for the hovered point.
 
 The following example renders a left-to-right gradient line:
 
