@@ -31,5 +31,6 @@ By default, line series connect data points with straight segments. The `interpo
 ## Notes
 
 - Curves pass through every original data point.
+- `monotone` requires data points to be ordered monotonically by their x values.
 - `nullMode` behavior is preserved: gaps and zero-fills are applied before interpolation.
 - To disable interpolation explicitly, set `interpolation: {type: 'linear'}` or omit the option entirely.

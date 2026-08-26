@@ -1,5 +1,4 @@
 export * from './annotations';
-export * from './interpolation';
 export * from './basic';
 export * from './data-labels';
 export * from './html-labels';

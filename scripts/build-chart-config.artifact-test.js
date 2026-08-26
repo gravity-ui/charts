@@ -309,6 +309,21 @@ describe('chart config artifacts', () => {
             },
         ],
         [
+            'line with cardinal interpolation',
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'S',
+                            data: [{x: 0, y: 1}],
+                            interpolation: {type: 'cardinal', tension: 0.5},
+                        },
+                    ],
+                },
+            },
+        ],
+        [
             'two series',
             {
                 series: {
@@ -322,6 +337,24 @@ describe('chart config artifacts', () => {
     ])('accepts a valid config: %s', (_label, config) => {
         const validateConfig = createSchemaValidator().compile(schema);
         expect(validateConfig(config)).toBe(true);
+    });
+
+    test.each([-0.1, 1.1])('rejects cardinal tension outside the 0–1 range: %s', (tension) => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const config = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'S',
+                        data: [{x: 0, y: 1}],
+                        interpolation: {type: 'cardinal', tension},
+                    },
+                ],
+            },
+        };
+
+        expect(validateConfig(config)).toBe(false);
     });
 
     test('schema definitions and properties match the committed snapshot', () => {

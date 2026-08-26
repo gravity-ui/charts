@@ -132,6 +132,46 @@ describe('validation/validateData', () => {
     );
 
     test.each([
+        null,
+        {type: 'invalid'},
+        {type: 'cardinal', tension: Number.NaN},
+        {type: 'cardinal', tension: -0.1},
+        {type: 'cardinal', tension: 1.1},
+    ])(
+        'validateData should reject invalid line interpolation (interpolation: %j)',
+        (interpolation) => {
+            const data = {
+                series: {
+                    data: [{type: 'line', name: 'Series 1', interpolation, data: [{x: 1, y: 1}]}],
+                },
+            } as unknown as ChartData;
+
+            expect(() => validateData(data)).toThrow(
+                expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+            );
+        },
+    );
+
+    test.each([
+        {type: 'linear'},
+        {type: 'monotone'},
+        {type: 'cardinal'},
+        {type: 'cardinal', tension: 0},
+        {type: 'cardinal', tension: 1},
+    ])(
+        'validateData should accept valid line interpolation (interpolation: %j)',
+        (interpolation) => {
+            const data = {
+                series: {
+                    data: [{type: 'line', name: 'Series 1', interpolation, data: [{x: 1, y: 1}]}],
+                },
+            } as ChartData;
+
+            expect(() => validateData(data)).not.toThrow();
+        },
+    );
+
+    test.each([
         [[{name: '1'} /* error */]],
         [[{name: '1'}, {name: '2', parentId: '1'} /* error */]],
         [

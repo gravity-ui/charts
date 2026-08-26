@@ -58,7 +58,16 @@ export interface LineSeriesLineBaseStyle {
 export type LineSeriesInterpolation =
     | {type: 'linear'}
     | {type: 'monotone'}
-    | {type: 'cardinal'; tension?: number};
+    | {
+          type: 'cardinal';
+          /**
+           * Controls how tightly the curve follows the control points.
+           * @minimum 0
+           * @maximum 1
+           * @default 0
+           */
+          tension?: number;
+      };
 
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
     type: typeof SERIES_TYPE.Line;
@@ -94,7 +103,7 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
      * Configures smooth curve interpolation between data points.
      *
      * - `'linear'`: Straight line segments (default behavior)
-     * - `'monotone'`: Smooth curve that preserves monotonicity and passes through every data point without introducing artificial extrema
+     * - `'monotone'`: Smooth curve for data ordered monotonically by x that passes through every data point without introducing artificial extrema
      * - `'cardinal'`: Cardinal spline with optional `tension` parameter (0–1, default 0)
      *
      * Markers, tooltips, and interactions remain attached to original data points regardless of interpolation.
