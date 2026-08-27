@@ -8,6 +8,7 @@ import set from 'lodash/set';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     areaBasicData,
+    areaGradientData,
     areaNullModeConnectCategoryXData,
     areaNullModeConnectLinearXData,
     areaNullModeSkipCategoryXData,
@@ -22,10 +23,64 @@ import type {ChartData} from '../types';
 import {generateSeriesData} from './__data__/utils';
 import {getAttachedLocator, getLocator, getLocatorBoundingBox} from './utils';
 
+interface TooltipColorCase {
+    expectedColor: string;
+    name: string;
+    series: ChartData['series']['data'][number];
+}
+
 test.describe('Area series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={areaBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Gradient', async ({mount}) => {
+        const component = await mount(<ChartTestStory data={areaGradientData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Gradient hover marker uses the line color at its position', async ({mount, page}) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'area',
+                        name: 'Gradient area',
+                        color: {
+                            type: 'linear-gradient',
+                            angle: 90,
+                            stops: [
+                                {offset: 0, color: '#ff0000'},
+                                {offset: 1, color: '#0000ff'},
+                            ],
+                        },
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 5, y: 5},
+                            {x: 10, y: 10},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const line = component.locator('.gcharts-area__line');
+        const region = component.locator('.gcharts-area__region');
+        const normalStroke = await line.getAttribute('stroke');
+        const normalFill = await region.getAttribute('fill');
+        const lineBox = await getLocatorBoundingBox(line);
+
+        await page.mouse.move(lineBox.x + lineBox.width / 2, lineBox.y + lineBox.height / 2);
+
+        await expect(component.locator('.gcharts-marker__symbol')).toHaveAttribute(
+            'fill',
+            'rgb(128, 0, 128)',
+        );
+        expect(await line.getAttribute('stroke')).not.toBe(normalStroke);
+        expect(await region.getAttribute('fill')).not.toBe(normalFill);
     });
 
     test('min-max-category', async ({mount}) => {
@@ -956,11 +1011,122 @@ test.describe('Area series', () => {
         });
     });
 
-    test.describe('Per-point tooltip.enabled', () => {
-        test('hidden point in one series leaves only the other in the tooltip', async ({
+    test.describe('Tooltip', () => {
+        const tooltipColorCases: TooltipColorCase[] = [
+            {
+                name: 'uses the per-point color for the tooltip symbol',
+                expectedColor: '#00ff00',
+                series: {
+                    type: 'area',
+                    name: 'Point color',
+                    color: '#ff0000',
+                    fillColor: '#0000ff',
+                    data: [
+                        {x: 1, y: 5},
+                        {x: 2, y: 10, color: '#00ff00'},
+                    ],
+                },
+            },
+            {
+                name: 'uses marker.color before the per-point color',
+                expectedColor: '#ffff00',
+                series: {
+                    type: 'area',
+                    name: 'Marker color',
+                    color: '#ff0000',
+                    fillColor: '#0000ff',
+                    data: [
+                        {x: 1, y: -5},
+                        {x: 2, y: -10, color: '#00ff00', marker: {color: '#ffff00'}},
+                    ],
+                },
+            },
+            {
+                name: 'does not use a separate fill gradient for the tooltip symbol',
+                expectedColor: '#ff0000',
+                series: {
+                    type: 'area',
+                    name: 'Gradient fill',
+                    color: '#ff0000',
+                    fillColor: {
+                        type: 'linear-gradient',
+                        angle: 90,
+                        stops: [
+                            {offset: 0, color: '#ffffff'},
+                            {offset: 1, color: '#000000'},
+                        ],
+                    },
+                    data: [
+                        {x: 1, y: 5},
+                        {x: 2, y: 10},
+                    ],
+                },
+            },
+        ];
+
+        test('uses the computed line color when the point has no color override', async ({
             page,
             mount,
         }) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Gradient area',
+                            color: {
+                                type: 'linear-gradient',
+                                angle: 90,
+                                stops: [
+                                    {offset: 0, color: '#ff0000'},
+                                    {offset: 1, color: '#0000ff'},
+                                ],
+                            },
+                            data: [
+                                {x: 1, y: 5},
+                                {x: 2, y: 10},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const area = component.locator('.gcharts-area__series');
+            const areaBox = await getLocatorBoundingBox(area);
+
+            await page.mouse.move(
+                Math.round(areaBox.x + areaBox.width),
+                Math.round(areaBox.y + areaBox.height / 2),
+            );
+
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip).toHaveScreenshot();
+        });
+
+        for (const {expectedColor, name, series} of tooltipColorCases) {
+            test(name, async ({page, mount}) => {
+                const chartData: ChartData = {
+                    legend: {enabled: false},
+                    series: {data: [series]},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                const area = component.locator('.gcharts-area__series');
+                const areaBox = await getLocatorBoundingBox(area);
+
+                await page.mouse.move(
+                    Math.round(areaBox.x + areaBox.width),
+                    Math.round(areaBox.y + areaBox.height / 2),
+                );
+
+                const tooltipRow = page.locator('.gcharts-tooltip__content-row');
+                await expect(tooltipRow).toBeVisible();
+                await expect(tooltipRow.locator('svg path')).toHaveAttribute('fill', expectedColor);
+            });
+        }
+
+        test('per-point tooltip.enabled hides only that point', async ({page, mount}) => {
             const chartData: ChartData = {
                 series: {
                     data: [

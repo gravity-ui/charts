@@ -11,9 +11,13 @@ import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
-import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
+import {
+    validateAxisPlotValues,
+    validateSeriesColor,
+    validateXYSeries,
+} from '~core/validation/helpers';
 
-import type {LineSeries} from '../../types';
+import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
@@ -68,6 +72,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateInterpolation({series});
+        validateSeriesColor({color: series.color, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
     },
     getColorValue: (d) => d.y,
@@ -82,9 +87,10 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
                     {
                         id: 'color',
                         source: ({item}) => {
-                            const s = item.series as PreparedLineSeries;
+                            const lineItem = item as TooltipDataChunkLine;
+                            const s = lineItem.series as PreparedLineSeries;
                             return getTooltipLineSymbol({
-                                color: s.color,
+                                color: lineItem.color ?? s.color,
                                 dashStyle: s.dashStyle,
                                 lineWidth: s.lineWidth,
                             });

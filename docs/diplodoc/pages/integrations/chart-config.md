@@ -65,6 +65,8 @@ monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
 
 Models whose URI matches `chart-config.json` will then be validated and autocompleted against the published schema.
 
+JSON Schema validates each gradient stop offset independently, but cannot enforce their order. At runtime, gradient offsets must be in non-decreasing order from `0` to `1`; otherwise chart data validation fails.
+
 ### Optional: Node.js build tooling
 
 Charts and Monaco run in the browser, but Node.js-based build tooling can resolve and read the declaration before including its contents in a browser application. In CommonJS:

@@ -5,6 +5,7 @@ import {ChartStory} from '../ChartStory';
 import {
     lineAnnotationsData,
     lineBasicData,
+    lineGradientData,
     lineHtmlLabelsData,
     linePlaygroundData,
     lineSplitData,
@@ -26,6 +27,13 @@ export const LineBasic = {
     name: 'Basic',
     args: {
         data: lineBasicData,
+    },
+} satisfies Story;
+
+export const LineGradient = {
+    name: 'Gradient',
+    args: {
+        data: lineGradientData,
     },
 } satisfies Story;
 

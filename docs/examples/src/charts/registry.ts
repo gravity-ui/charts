@@ -14,6 +14,10 @@ import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
 import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
 import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
+import {AreaSeriesExample} from './series-types/area';
+import areaSeriesRaw from './series-types/area.tsx?raw';
+import {LineSeriesExample} from './series-types/line';
+import lineSeriesRaw from './series-types/line.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
 import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
 
@@ -41,6 +45,14 @@ export const registry: Record<string, ExampleModule> = {
     'axis-types/category': {
         code: extractDisplayCode(categoryRaw),
         Component: CategoryAxisExample,
+    },
+    'series-types/line': {
+        code: extractDisplayCode(lineSeriesRaw),
+        Component: LineSeriesExample,
+    },
+    'series-types/area': {
+        code: extractDisplayCode(areaSeriesRaw),
+        Component: AreaSeriesExample,
     },
     'value-formatting/quarterly-x-axis': {
         code: extractDisplayCode(quarterlyXAxisRaw),

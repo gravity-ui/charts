@@ -55,6 +55,7 @@
     "FormatUnitScaleEntry",
     "FunnelSeries<JsonValue>",
     "FunnelSeriesData<JsonValue>",
+    "GradientStop",
     "Halo",
     "HeatmapSeries<JsonValue>",
     "HeatmapSeriesData<JsonValue>",
@@ -62,6 +63,7 @@
     "LineSeries<JsonValue>",
     "LineSeriesData<JsonValue>",
     "LineSeriesInterpolation",
+    "LinearGradient",
     "MeaningfulAny",
     "PieSeries<JsonValue>",
     "PieSeriesData<JsonValue>",
@@ -78,6 +80,7 @@
     "SankeySeriesData<JsonValue>",
     "ScatterSeries<JsonValue>",
     "ScatterSeriesData<JsonValue>",
+    "SeriesColor",
     "SplitPlotOptions",
     "TooltipRowCellItem",
     "TreemapSeries<JsonValue>",
@@ -97,6 +100,7 @@
       "custom",
       "data",
       "dataLabels",
+      "fillColor",
       "legend",
       "lineWidth",
       "marker",
@@ -439,6 +443,7 @@
       "tooltip",
       "value"
     ],
+    "GradientStop": ["color", "offset"],
     "Halo": ["enabled", "opacity", "size"],
     "HeatmapSeries<JsonValue>": [
       "borderColor",
@@ -498,6 +503,7 @@
       "x",
       "y"
     ],
+    "LinearGradient": ["angle", "stops", "type"],
     "PieSeries<JsonValue>": [
       "borderColor",
       "borderRadius",

@@ -3,6 +3,7 @@ import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {SeriesColor} from './gradient';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions} from './series';
@@ -74,8 +75,8 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
     data: LineSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
-    /** The main color of the series (hex, rgba) */
-    color?: string;
+    /** The solid or linear-gradient color of the series. */
+    color?: SeriesColor;
     /** Option for line stroke style */
     dashStyle?: DashStyle;
     /** Option for line cap style */

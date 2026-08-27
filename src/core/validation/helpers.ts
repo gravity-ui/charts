@@ -1,3 +1,4 @@
+import {color as parseColor} from 'd3-color';
 import get from 'lodash/get';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
@@ -290,6 +291,63 @@ export function validateStacking({series}: {series: {stacking?: string}}) {
             message: i18n('error', 'label_invalid-series-property', {
                 key: 'stacking',
                 values: availableStackingValues,
+            }),
+        });
+    }
+}
+
+function isValidSeriesColor(color: unknown) {
+    if (color === undefined || typeof color === 'string') {
+        return true;
+    }
+
+    if (typeof color !== 'object' || color === null || Array.isArray(color)) {
+        return false;
+    }
+
+    const gradient = color as {angle?: unknown; stops?: unknown; type?: unknown};
+    if (gradient.type !== 'linear-gradient' || !Array.isArray(gradient.stops)) {
+        return false;
+    }
+
+    const {angle, stops} = gradient;
+    if (angle !== undefined && (typeof angle !== 'number' || !Number.isFinite(angle))) {
+        return false;
+    }
+
+    if (stops.length < 2) {
+        return false;
+    }
+
+    let previousOffset = 0;
+    for (const stop of stops) {
+        if (typeof stop !== 'object' || stop === null || Array.isArray(stop)) {
+            return false;
+        }
+
+        const {color: stopColor, offset} = stop as {color?: unknown; offset?: unknown};
+        if (
+            typeof stopColor !== 'string' ||
+            parseColor(stopColor) === null ||
+            typeof offset !== 'number' ||
+            !Number.isFinite(offset) ||
+            offset < previousOffset ||
+            offset > 1
+        ) {
+            return false;
+        }
+        previousOffset = offset;
+    }
+
+    return true;
+}
+
+export function validateSeriesColor({color, seriesName}: {color: unknown; seriesName: string}) {
+    if (!isValidSeriesColor(color)) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-series-color', {
+                seriesName,
             }),
         });
     }

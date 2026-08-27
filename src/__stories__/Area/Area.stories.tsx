@@ -5,6 +5,7 @@ import {ChartStory} from '../ChartStory';
 import {
     areaAnnotationsData,
     areaBasicData,
+    areaGradientData,
     areaHtmlLabelsData,
     areaPlaygroundData,
     areaSplitData,
@@ -28,6 +29,13 @@ export const AreaBasic = {
     name: 'Basic',
     args: {
         data: areaBasicData,
+    },
+} satisfies Story;
+
+export const AreaGradient = {
+    name: 'Gradient',
+    args: {
+        data: areaGradientData,
     },
 } satisfies Story;
 

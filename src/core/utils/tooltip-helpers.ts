@@ -4,15 +4,16 @@ import groupBy from 'lodash/groupBy';
 
 import type {ChartSeries, ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
 
-export type ShapePoint = {
+export interface ShapePoint {
     x: number;
     y0: number;
     y1: number;
+    color?: string;
     data: ChartSeriesData;
     series: ChartSeries;
     subTotal?: number;
     sourceX?: number;
-};
+}
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
     data: TShapeData[];

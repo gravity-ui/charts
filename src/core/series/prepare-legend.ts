@@ -130,6 +130,7 @@ function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: Prepare
         if (s) {
             acc.push({
                 ...s,
+                color: s.legend.color ?? s.color,
                 id: s.legend.groupId,
                 name: s.legend.itemText,
                 text: s.legend.itemText,

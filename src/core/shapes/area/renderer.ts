@@ -9,12 +9,32 @@ import type {LabelData, TooltipDataChunkArea} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels} from '../../utils';
+import {
+    createGradientPaintResolver,
+    getBrighterGradient,
+    getGradientBBox,
+} from '../../utils/gradient';
 import {renderDataLabels} from '../data-labels';
 import {setActiveState} from '../utils';
 
 import type {PointData, PreparedAreaData} from './types';
 
 const b = block('area');
+
+function computeAreaBBox(data: PreparedAreaData) {
+    const bbox = getGradientBBox(data.points);
+    if (!bbox) {
+        return null;
+    }
+    for (const point of data.points) {
+        if (point.y === null || point.hiddenInLine) {
+            continue;
+        }
+        bbox.yMin = Math.min(bbox.yMin, point.y0);
+        bbox.yMax = Math.max(bbox.yMax, point.y0);
+    }
+    return bbox;
+}
 
 export function renderArea(
     elements: {
@@ -35,6 +55,33 @@ export function renderArea(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
+    const resolveGradientPaint = createGradientPaintResolver(elements.plot);
+    const getLineStroke = (data: PreparedAreaData, hovered = false, brightness?: number) => {
+        const {gradient} = data.series;
+        const state = hovered ? 'hover' : 'normal';
+        const paintGradient =
+            gradient && hovered ? getBrighterGradient(gradient, brightness) : gradient;
+
+        return resolveGradientPaint({
+            bbox: gradient ? getGradientBBox(data.points) : null,
+            fallbackColor: data.color,
+            gradient: paintGradient,
+            id: `${data.id}-gradient-line-${state}`,
+        });
+    };
+    const getAreaFill = (data: PreparedAreaData, hovered = false, brightness?: number) => {
+        const {fillColor, fillGradient} = data.series;
+        const state = hovered ? 'hover' : 'normal';
+        const paintGradient =
+            fillGradient && hovered ? getBrighterGradient(fillGradient, brightness) : fillGradient;
+
+        return resolveGradientPaint({
+            bbox: fillGradient ? computeAreaBBox(data) : null,
+            fallbackColor: fillColor,
+            gradient: paintGradient,
+            id: `${data.id}-gradient-area-${state}`,
+        });
+    };
 
     const shapeSelection = plotSvgElement
         .selectAll('shape')
@@ -48,7 +95,7 @@ export function renderArea(
         .attr('class', b('line'))
         .attr('d', (d) => line(d.points))
         .attr('fill', 'none')
-        .attr('stroke', (d) => d.color)
+        .attr('stroke', (d) => getLineStroke(d))
         .attr('stroke-width', (d) => d.width)
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round');
@@ -62,7 +109,7 @@ export function renderArea(
         .append('path')
         .attr('class', b('region'))
         .attr('d', (d) => area(d.points))
-        .attr('fill', (d) => d.color)
+        .attr('fill', (d) => getAreaFill(d))
         .attr('opacity', (d) => d.opacity);
 
     let dataLabels = preparedData.reduce((acc, d) => {
@@ -93,15 +140,29 @@ export function renderArea(
             if (d.hovered !== hovered) {
                 d.hovered = hovered;
 
-                let strokeColor = d.color || '';
-                if (d.hovered) {
-                    strokeColor =
-                        color(strokeColor)?.brighter(hoverOptions?.brightness).toString() ||
-                        strokeColor;
-                }
+                const getHoveredColor = (initialColor: string) => {
+                    return d.hovered
+                        ? color(initialColor)?.brighter(hoverOptions?.brightness).toString() ||
+                              initialColor
+                        : initialColor;
+                };
 
-                elementSelection.selectAll(`.${b('line')}`).attr('stroke', strokeColor);
-                elementSelection.selectAll(`.${b('region')}`).attr('fill', strokeColor);
+                elementSelection
+                    .selectAll(`.${b('line')}`)
+                    .attr(
+                        'stroke',
+                        d.series.gradient
+                            ? getLineStroke(d, d.hovered, hoverOptions?.brightness)
+                            : getHoveredColor(d.color),
+                    );
+                elementSelection
+                    .selectAll(`.${b('region')}`)
+                    .attr(
+                        'fill',
+                        d.series.fillGradient
+                            ? getAreaFill(d, d.hovered, hoverOptions?.brightness)
+                            : getHoveredColor(d.series.fillColor),
+                    );
             }
 
             return setActiveState<PreparedAreaData>({

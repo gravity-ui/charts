@@ -2,6 +2,7 @@ export * from './axis/common';
 export * from './array';
 export * from './color';
 export * from './format';
+export * from './gradient';
 export * from './labels';
 export * from './legend';
 export * from './math';

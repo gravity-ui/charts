@@ -9,7 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
-import {buildHoverMarkerGetter} from '../../shapes/marker';
+import {buildHoverMarkerGetter, getMarkerFill} from '../../shapes/marker';
 import type {MarkerItem} from '../../shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
 import {
@@ -17,6 +17,7 @@ import {
     preparePointDataLabels,
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
+import {setGradientPointFills} from '../../utils/gradient';
 
 import type {PointData, PreparedAreaData} from './types';
 
@@ -253,6 +254,7 @@ export const prepareAreaData = async (args: {
                                     y0: yAxisTop + yMin - nextSectionStackHeight,
                                     x: xValue,
                                     y: yAxisTop + yValue - nextSectionStackHeight,
+                                    color: d.marker?.color ?? d.color,
                                     data: d,
                                     series: s,
                                 };
@@ -291,6 +293,7 @@ export const prepareAreaData = async (args: {
                                 y0: yAxisTop + yMin + prevSectionStackHeight,
                                 x: xValue,
                                 y: yAxisTop + yValue + prevSectionStackHeight,
+                                color: d.marker?.color ?? d.color,
                                 data: d,
                                 series: s,
                             });
@@ -300,6 +303,7 @@ export const prepareAreaData = async (args: {
                                     y0: yAxisTop + yMin + nextSectionStackHeight,
                                     x: xValue,
                                     y: yAxisTop + yValue + nextSectionStackHeight,
+                                    color: d.marker?.color ?? d.color,
                                     data: d,
                                     series: s,
                                 });
@@ -325,6 +329,7 @@ export const prepareAreaData = async (args: {
                             y0: yAxisTop + yMin,
                             x: xValue,
                             y: null,
+                            color: d.marker?.color ?? d.color,
                             data: d,
                             series: s,
                         });
@@ -342,6 +347,8 @@ export const prepareAreaData = async (args: {
                     (d) => d.marker?.states?.normal?.enabled,
                 );
 
+                setGradientPointFills(points, s.gradient);
+
                 const markers =
                     s.marker.states.normal.enabled || hasPerPointNormalMarkers
                         ? points.reduce<MarkerItem[]>((acc, p) => {
@@ -356,7 +363,7 @@ export const prepareAreaData = async (args: {
                                       cy: p.y,
                                       radius: normalState.radius,
                                       symbolType: normalState.symbol,
-                                      fill: p.color ?? s.color,
+                                      fill: getMarkerFill(p, s.color),
                                       stroke: normalState.borderColor,
                                       strokeWidth: normalState.borderWidth,
                                       opacity: 1,

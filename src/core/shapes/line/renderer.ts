@@ -10,6 +10,11 @@ import type {LabelData, TooltipDataChunkLine} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {getLineDashArray} from '../../utils';
+import {
+    createGradientPaintResolver,
+    getBrighterGradient,
+    getGradientBBox,
+} from '../../utils/gradient';
 import {renderDataLabels} from '../data-labels';
 import {setActiveState} from '../utils';
 
@@ -37,13 +42,27 @@ export function renderLine(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
+    const resolveGradientPaint = createGradientPaintResolver(elements.plot);
+    const getStroke = (data: PreparedLineData, hovered = false, brightness?: number) => {
+        const {gradient} = data.series;
+        const state = hovered ? 'hover' : 'normal';
+        const paintGradient =
+            gradient && hovered ? getBrighterGradient(gradient, brightness) : gradient;
+
+        return resolveGradientPaint({
+            bbox: gradient ? getGradientBBox(data.points) : null,
+            fallbackColor: data.color,
+            gradient: paintGradient,
+            id: `${data.id}-gradient-line-${state}`,
+        });
+    };
     const lineSelection = plotSvgElement
         .selectAll('path')
         .data(preparedData)
         .join('path')
         .attr('d', (d) => line.curve(elements.getCurveFactory(d.interpolation))(d.points))
         .attr('fill', 'none')
-        .attr('stroke', (d) => d.color)
+        .attr('stroke', (d) => getStroke(d))
         .attr('stroke-width', (d) => d.lineWidth)
         .attr('stroke-linejoin', (d) => d.linejoin)
         .attr('stroke-linecap', (d) => d.linecap)
@@ -75,6 +94,9 @@ export function renderLine(
             if (d.hovered !== hovered) {
                 d.hovered = hovered;
                 elementSelection.attr('stroke', (dSelection) => {
+                    if (dSelection.series.gradient) {
+                        return getStroke(dSelection, dSelection.hovered, hoverOptions?.brightness);
+                    }
                     const initialColor = dSelection.color || '';
                     if (dSelection.hovered) {
                         return (

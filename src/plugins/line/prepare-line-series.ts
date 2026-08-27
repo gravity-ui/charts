@@ -18,7 +18,7 @@ import {
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
-import {getUniqId} from '~core/utils';
+import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
 
 import type {
     ChartSeriesOptions,
@@ -122,7 +122,10 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
     return seriesList.map<PreparedLineSeries>((series) => {
         const id = getUniqId();
         const name = series.name || '';
-        const color = series.color || colorScale(name);
+        const seriesColor = series.color || colorScale(name);
+        const gradient = isLinearGradient(seriesColor) ? seriesColor : undefined;
+        const color =
+            typeof seriesColor === 'string' ? seriesColor : getGradientMidColor(seriesColor);
         const dashStyle = get(series, 'dashStyle', defaultDashStyle);
         const yAxisIndex = get(series, 'yAxis', 0);
 
@@ -156,6 +159,7 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
             yAxis: yAxisIndex,
+            gradient,
             tooltip: {
                 ...series.tooltip,
                 valueFormat:

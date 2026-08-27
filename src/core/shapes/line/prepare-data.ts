@@ -5,7 +5,8 @@ import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedLineSeries, PreparedSeriesOptions} from '../../series/types';
 import {preparePointDataLabels} from '../../utils';
-import {buildHoverMarkerGetter} from '../marker';
+import {setGradientPointFills} from '../../utils/gradient';
+import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
 import type {MarkerItem} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
@@ -99,6 +100,8 @@ export const prepareLineData = async (args: {
         const normalState = s.marker.states.normal;
         const hasPerPointNormalMarkers = s.data.some((d) => d.marker?.states?.normal?.enabled);
 
+        setGradientPointFills(points, s.gradient);
+
         const markers =
             s.marker.states.normal.enabled || hasPerPointNormalMarkers
                 ? points.reduce<MarkerItem[]>((result, p) => {
@@ -112,7 +115,7 @@ export const prepareLineData = async (args: {
                               cy: p.y,
                               radius: normalState.radius,
                               symbolType: normalState.symbol,
-                              fill: p.color ?? s.color,
+                              fill: getMarkerFill(p, s.color),
                               stroke: normalState.borderColor,
                               strokeWidth: normalState.borderWidth,
                               opacity: 1,

@@ -287,6 +287,50 @@ describe('chart config artifacts', () => {
             {series: {data: [{type: 'area', name: 'S', data: [{x: 0, y: 1}]}]}},
         ],
         [
+            'line with gradient',
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'S',
+                            color: {
+                                type: 'linear-gradient',
+                                angle: 90,
+                                stops: [
+                                    {offset: 0, color: '#fff'},
+                                    {offset: 1, color: '#000'},
+                                ],
+                            },
+                            data: [{x: 0, y: 1}],
+                        },
+                    ],
+                },
+            },
+        ],
+        [
+            'area with independent line and fill colors',
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'S',
+                            color: '#000',
+                            fillColor: {
+                                type: 'linear-gradient',
+                                stops: [
+                                    {offset: 0, color: '#fff'},
+                                    {offset: 1, color: '#000'},
+                                ],
+                            },
+                            data: [{x: 0, y: 1}],
+                        },
+                    ],
+                },
+            },
+        ],
+        [
             'line with xAxis and yAxis',
             {
                 series: {data: [{type: 'line', name: 'S', data: [{x: 0, y: 1}]}]},
@@ -349,6 +393,27 @@ describe('chart config artifacts', () => {
                         name: 'S',
                         data: [{x: 0, y: 1}],
                         interpolation: {type: 'cardinal', tension},
+                    },
+                ],
+            },
+        };
+
+        expect(validateConfig(config)).toBe(false);
+    });
+
+    test('rejects a gradient with fewer than two stops', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const config = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'S',
+                        color: {
+                            type: 'linear-gradient',
+                            stops: [{offset: 0, color: '#fff'}],
+                        },
+                        data: [{x: 0, y: 1}],
                     },
                 ],
             },

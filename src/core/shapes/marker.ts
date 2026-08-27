@@ -6,17 +6,27 @@ import {block} from '../../utils';
 import {SymbolType} from '../constants';
 import {getSymbol} from '../utils';
 
-import type {MarkerItem} from './types';
+import type {HoveredShapeData, MarkerItem} from './types';
 
 const b = block('marker');
 const haloClassName = b('halo');
 const symbolClassName = b('symbol');
+
+interface MarkerFillPoint {
+    color?: string;
+    fill?: string;
+}
+
+export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): string {
+    return point.fill ?? point.color ?? seriesColor;
+}
 
 export interface BaseMarkerData {
     point: {
         x: number;
         y: number;
         color?: string;
+        fill?: string;
         data: unknown;
         series: {
             color: string;
@@ -71,7 +81,7 @@ export function renderMarker<T extends BaseMarkerData>(
             const haloSize = series.marker.states.hover.halo.size;
             return getMarkerSymbol(type, radius + haloSize);
         })
-        .attr('fill', (d) => d.point.color ?? d.point.series.color)
+        .attr('fill', (d) => getMarkerFill(d.point, d.point.series.color))
         .attr('opacity', (d) => d.point.series.marker.states.hover.halo.opacity)
         .attr('z-index', -1)
         .attr('visibility', getMarkerHaloVisibility);
@@ -79,7 +89,7 @@ export function renderMarker<T extends BaseMarkerData>(
         .append('path')
         .attr('class', symbolClassName)
         .call(setMarker, 'normal')
-        .attr('fill', (d) => d.point.color ?? d.point.series.color);
+        .attr('fill', (d) => getMarkerFill(d.point, d.point.series.color));
 
     return markerSelection;
 }
@@ -184,12 +194,11 @@ export function renderHoverMarkers(
         .attr('stroke-width', (d) => d.strokeWidth);
 }
 
-interface HoverMarkerPoint {
+interface HoverMarkerPoint extends MarkerFillPoint {
     data: unknown;
     x: number | null;
     y: number | null;
     hiddenInLine?: boolean;
-    color?: string;
 }
 
 interface HoverMarkerSeries {
@@ -206,36 +215,46 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
-): (hoveredData: unknown[]) => MarkerItem[] {
+): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
     if (normalState.enabled || !hoverState.enabled) return () => [];
 
-    const pointByData = new Map<unknown, HoverMarkerPoint>();
+    const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
         if (p.x !== null && p.y !== null && !p.hiddenInLine) {
-            pointByData.set(p.data, p);
+            const dataPoints = pointsByData.get(p.data) ?? [];
+            dataPoints.push(p);
+            pointsByData.set(p.data, dataPoints);
         }
     }
 
-    return (hoveredData: unknown[]) => {
+    return (hoveredData: HoveredShapeData[]) => {
         const items: MarkerItem[] = [];
-        for (const rawData of hoveredData) {
-            const point = pointByData.get(rawData);
+        for (const hovered of hoveredData) {
+            if (hovered.series?.id !== undefined && hovered.series.id !== series.id) {
+                continue;
+            }
+
+            const dataPoints = pointsByData.get(hovered.data);
+            const hasGeometry = hovered.x !== undefined && hovered.y1 !== undefined;
+            const point = hasGeometry
+                ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
+                : dataPoints?.[dataPoints.length - 1];
             if (!point || point.x === null || point.y === null) continue;
             items.push({
                 cx: point.x,
                 cy: point.y,
                 radius: hoverState.radius,
                 symbolType: normalState.symbol,
-                fill: point.color ?? series.color,
+                fill: getMarkerFill(point, series.color),
                 stroke: hoverState.borderColor,
                 strokeWidth: hoverState.borderWidth,
                 opacity: 1,
                 active: true,
                 clipped: false,
                 series: {id: series.id},
-                data: rawData,
+                data: hovered.data,
             });
         }
         return items;

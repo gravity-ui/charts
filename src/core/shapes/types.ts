@@ -17,11 +17,18 @@ export interface MarkerItem {
     data: unknown;
 }
 
+export interface HoveredShapeData {
+    data: unknown;
+    series?: {id?: string};
+    x?: number;
+    y1?: number;
+}
+
 export interface SeriesShapeData {
     htmlLabels: HtmlItem[];
     markers: MarkerItem[];
     annotations: AnnotationAnchor[];
-    getHoverMarkers(hoveredData: unknown[]): MarkerItem[];
+    getHoverMarkers(hoveredData: HoveredShapeData[]): MarkerItem[];
 }
 
 export interface TooltipItemData {
