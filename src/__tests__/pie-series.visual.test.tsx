@@ -20,6 +20,7 @@ import {
 } from '../__stories__/__data__';
 import type {ChartData, PieSeries} from '../types';
 
+import {PieDataLabelPercentageStory} from './components/PieDataLabelPercentageStory';
 import {getLocatorBoundingBox} from './utils';
 
 function getModifiedData(data: ChartData, pieSeries: Partial<PieSeries>) {
@@ -36,47 +37,34 @@ test.describe('Pie series', () => {
     });
 
     test.describe('Data label percentage among visible slices', () => {
-        const percentageFormatter = {
-            type: 'custom' as const,
-            formatter: ({value, percentage}: {value: unknown; percentage?: number}) =>
-                `${value} (${Math.round((percentage ?? 0) * 100)}%)`,
-        };
-
-        const baseData: ChartData = {
-            series: {
-                data: [
-                    {
-                        type: 'pie',
-                        dataLabels: {
-                            enabled: true,
-                            format: percentageFormatter,
-                        },
-                        data: [
-                            {name: 'A', value: 10, label: '10 (40%)'},
-                            {name: 'B', value: 10, label: '10 (40%)'},
-                            {name: 'C', value: 5, label: '5 (20%)'},
-                        ],
-                    },
-                ],
-            },
-            legend: {enabled: false},
-            tooltip: {enabled: false},
-        };
-
         test('all slices visible', async ({mount}) => {
+            let renderTime: number | undefined;
             const component = await mount(
-                <ChartTestStory data={baseData} styles={{width: 400, height: 400}} />,
+                <PieDataLabelPercentageStory
+                    onRender={(time) => {
+                        renderTime = time;
+                    }}
+                />,
             );
+
+            await component.locator('svg path').first().waitFor({state: 'attached'});
+            await expect.poll(() => renderTime).toBeTruthy();
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
         test('hidden slice recalculates percentages', async ({mount}) => {
-            const data = cloneDeep(baseData);
-            set(data, 'series.data[0].data[2].visible', false);
-
+            let renderTime: number | undefined;
             const component = await mount(
-                <ChartTestStory data={data} styles={{width: 400, height: 400}} />,
+                <PieDataLabelPercentageStory
+                    hideSliceC
+                    onRender={(time) => {
+                        renderTime = time;
+                    }}
+                />,
             );
+
+            await component.locator('svg path').first().waitFor({state: 'attached'});
+            await expect.poll(() => renderTime).toBeTruthy();
             await expect(component.locator('svg')).toHaveScreenshot();
         });
     });
