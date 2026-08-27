@@ -2,6 +2,7 @@ import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
+import type {CurveFactory} from 'd3-shape';
 import {line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
@@ -16,10 +17,13 @@ import type {PointData, PreparedLineData} from './types';
 
 const b = block('line');
 
+interface RenderLineElements {
+    getCurveFactory: (interpolation?: PreparedLineData['interpolation']) => CurveFactory;
+    plot: SVGGElement;
+}
+
 export function renderLine(
-    elements: {
-        plot: SVGGElement;
-    },
+    elements: RenderLineElements,
     preparedData: PreparedLineData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
@@ -27,7 +31,6 @@ export function renderLine(
     const plotSvgElement = select(elements.plot);
     const hoverOptions = get(seriesOptions, 'line.states.hover');
     const inactiveOptions = get(seriesOptions, 'line.states.inactive');
-
     const line = lineGenerator<PointData>()
         .defined((d) => d.y !== null && d.x !== null && !d.hiddenInLine)
         .x((d) => d.x as number)
@@ -38,7 +41,7 @@ export function renderLine(
         .selectAll('path')
         .data(preparedData)
         .join('path')
-        .attr('d', (d) => line(d.points))
+        .attr('d', (d) => line.curve(elements.getCurveFactory(d.interpolation))(d.points))
         .attr('fill', 'none')
         .attr('stroke', (d) => d.color)
         .attr('stroke-width', (d) => d.lineWidth)

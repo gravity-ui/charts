@@ -15,7 +15,9 @@ import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers
 
 import type {LineSeries} from '../../types';
 
+import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
+import {validateInterpolation} from './validation';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -52,7 +54,12 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 }
 
 function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderLine({plot}, preparedData as PreparedLineData[], seriesOptions, dispatcher);
+    return renderLine(
+        {plot, getCurveFactory},
+        preparedData as PreparedLineData[],
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
@@ -60,6 +67,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     prepareSeries: prepareLineSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
+        validateInterpolation({series});
         validateXYSeries({series, xAxis, yAxis});
     },
     getColorValue: (d) => d.y,

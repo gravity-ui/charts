@@ -152,6 +152,7 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
             dashStyle: dashStyle,
             linecap: prepareLinecap(dashStyle, series, seriesOptions) as LineCap,
             linejoin: prepareLinejoin(dashStyle, series, seriesOptions),
+            interpolation: series.interpolation,
             opacity: get(series, 'opacity', null),
             cursor: get(series, 'cursor', null),
             yAxis: yAxisIndex,

@@ -149,6 +149,7 @@ export const prepareLineData = async (args: {
             dashStyle: s.dashStyle,
             linecap: s.linecap,
             linejoin: s.linejoin,
+            interpolation: s.interpolation,
             opacity: (isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity,
         };
 

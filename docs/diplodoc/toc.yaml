@@ -41,6 +41,8 @@ items:
         hidden: true
       - name: Data labels
         href: ./pages/guides/data-labels.md
+      - name: Line interpolation
+        href: ./pages/guides/line-interpolation.md
       - name: HTML content
         href: ./pages/guides/html.md
       - name: Legend
