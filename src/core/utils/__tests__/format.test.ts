@@ -95,6 +95,27 @@ describe('getFormattedValue', () => {
     });
 
     describe('type: "custom"', () => {
+        test('passes pie context fields to formatter', () => {
+            const formatter = jest.fn(
+                ({value, percentage, name}) => `${name}:${value}:${percentage}`,
+            );
+
+            expect(
+                getFormattedValue({
+                    value: 10,
+                    percentage: 0.5,
+                    name: 'Slice A',
+                    format: {type: 'custom', formatter},
+                }),
+            ).toBe('Slice A:10:0.5');
+            expect(formatter).toHaveBeenCalledWith({
+                value: 10,
+                percentage: 0.5,
+                name: 'Slice A',
+                data: undefined,
+            });
+        });
+
         test('invokes formatter with raw value and returns its result', () => {
             const formatter = jest.fn(({value}) => `v:${value}`);
 

@@ -15,8 +15,8 @@ import {
     isPointDataLabelEnabled,
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
-import {getFormattedValue} from '../../utils/format';
 
+import {getPieDataLabelText, getPieSegmentPercentage} from './label-format';
 import type {
     PieConnectorData,
     PieLabelData,
@@ -158,6 +158,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         }
 
         const getTextSize = getTextSizeFn({style: dataLabelsStyle});
+        const total = series.reduce((sum, d) => sum + (d.value ?? 0), 0);
         const acc: Record<string, Partial<PieLabelData>> = {};
         for (let i = 0; i < series.length; i++) {
             const d = series[i];
@@ -166,10 +167,8 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 continue;
             }
 
-            const text = getFormattedValue({
-                value: d.data.label ?? d.data.value,
-                ...d.dataLabels,
-            });
+            const percentage = total > 0 ? (d.value ?? 0) / total : 0;
+            const text = getPieDataLabelText({data: d.data, dataLabels, percentage});
 
             let labelWidth = 0;
             let labelHeight = 0;
@@ -268,13 +267,15 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
              * increases the distance between them instead of reducing it.
              */
             const firstLabel = labels.length > 1 ? labels[0] : undefined;
+            const relatedSegment = data.segments[index];
             const labelEntry = labelsData[d.id];
             const labelSize = labelEntry?.size;
-            const text = getPieLabelText(labelEntry);
+            const percentage = getPieSegmentPercentage(relatedSegment);
+            const text = dataLabels.format
+                ? getPieDataLabelText({data: d.data, dataLabels, percentage})
+                : getPieLabelText(labelEntry);
             const labelWidth = labelSize?.width ?? 0;
             const labelHeight = labelSize?.height ?? 0;
-
-            const relatedSegment = data.segments[index];
 
             /**
              * Compute the label coordinates on the label arc for a given angle.

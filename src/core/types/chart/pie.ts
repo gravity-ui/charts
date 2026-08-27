@@ -63,6 +63,13 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
      * If not specified, the minimum radius is calculated as 30% of the height or width of the chart (the minimum value is taken) minus the halo effect.
      */
     minRadius?: string | number;
+    /**
+     * Data label options for pie segments.
+     *
+     * When `format` is set, labels are formatted from `point.value` (not static `point.label`).
+     * Custom formatters receive `percentage` — the slice share among currently visible
+     * slices (0..1), derived from the rendered segment angles.
+     */
     dataLabels?: BaseSeries['dataLabels'] & {
         /**
          * The distance of the data label from the pie's edge.

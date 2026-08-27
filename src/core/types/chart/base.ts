@@ -12,9 +12,29 @@ type DateFormat = {
     format?: string;
 };
 
+/**
+ * Arguments passed to a custom value formatter (`{ type: 'custom', formatter }`).
+ *
+ * Most series types provide only `value`. Pie chart data labels also pass
+ * `percentage`, `name`, and `data` so formatters can build dynamic slice labels.
+ */
+export interface CustomFormatContext {
+    /** Raw value being formatted (e.g. point value, axis tick, or category name). */
+    value: unknown;
+    /**
+     * Slice share among currently visible pie segments, in the range 0..1.
+     * Derived from rendered segment angles. Provided only for pie chart data labels.
+     */
+    percentage?: number;
+    /** Point or segment name. Provided only for pie chart data labels. */
+    name?: string;
+    /** Full point data object. Provided only for pie chart data labels. */
+    data?: MeaningfulAny;
+}
+
 export type CustomFormat = {
     type: 'custom';
-    formatter: (args: {value: unknown}) => string;
+    formatter: (args: CustomFormatContext) => string;
 };
 
 /**
