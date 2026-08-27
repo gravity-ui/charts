@@ -112,6 +112,11 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
         /**
+         * Returns series-specific fields passed to a custom tooltip value formatter.
+         * The shared tooltip renderer supplies `value`; plugins own all other context.
+         */
+        getValueFormatContext?(chunk: TooltipDataChunk): Record<string, unknown>;
+        /**
          * Default tooltip row definitions for each data chunk.
          *
          * - Static array: every chunk renders the same set of rows.

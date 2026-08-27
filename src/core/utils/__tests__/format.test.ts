@@ -105,6 +105,22 @@ describe('getFormattedValue', () => {
             expect(formatter).toHaveBeenCalledWith({value: 42});
         });
 
+        test('passes an explicitly provided formatter context', () => {
+            const formatter = jest.fn(
+                ({value, percentage}: {value: unknown; percentage: number}) =>
+                    `${value}:${percentage}`,
+            );
+
+            expect(
+                getFormattedValue({
+                    value: 42,
+                    format: {type: 'custom', formatter},
+                    context: {percentage: 0.25},
+                }),
+            ).toBe('42:0.25');
+            expect(formatter).toHaveBeenCalledWith({value: 42, percentage: 0.25});
+        });
+
         test('works for string values', () => {
             expect(
                 getFormattedValue({

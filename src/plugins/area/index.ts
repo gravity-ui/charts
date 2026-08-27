@@ -83,6 +83,10 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
     },
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            const areaItem = item as TooltipDataChunkArea;
+            return {percentage: areaItem.percentage, data: areaItem.data};
+        },
         rows: [
             {
                 id: 'default',

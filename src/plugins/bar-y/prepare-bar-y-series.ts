@@ -28,9 +28,16 @@ async function prepareDataLabels(series: BarYSeries) {
     const enabled = get(series, 'dataLabels.enabled', false);
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
-    const labels = enabled
-        ? series.data.map((d) => getFormattedValue({value: d.label ?? d.x, ...series.dataLabels}))
-        : [];
+    const labels =
+        enabled && series.stacking !== 'percent'
+            ? series.data.map((d) =>
+                  getFormattedValue({
+                      value: d.label ?? d.x,
+                      format: series.dataLabels?.format,
+                      context: {data: d, percentage: undefined},
+                  }),
+              )
+            : [];
     const {maxHeight = 0, maxWidth = 0} = await getLabelsSize({
         labels,
         style,

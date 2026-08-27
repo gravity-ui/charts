@@ -218,7 +218,7 @@ The `halfYear` granularity (6-month ticks) is **opt-in**: it only activates when
 
 When the built-in `number` and `date` formatters aren't enough — and the `units` option above doesn't fit either — use `{ type: 'custom' }` to provide your own formatter function. This is the right escape hatch when the output isn't a single scaled number: locale-aware currency rendering, pluralization, value + delta concatenation, or any other domain-specific shape.
 
-The `formatter` receives `{value}` and must return a string. The same `ValueFormat` shape is accepted everywhere values are formatted — tooltip rows, tooltip headers, data labels, totals.
+The `formatter` receives `{value}` and must return a string. Series-specific data label and tooltip formatters can also receive computed context described below. The same `ValueFormat` shape is accepted everywhere values are formatted — tooltip rows, tooltip headers, data labels, totals.
 
 **Example:** Render a value as locale-aware currency with a signed delta against a baseline (e.g. `"$1,234.56 (+2.3%)"` or `"1 234,56 € (−0,8 %)"`). This combines `Intl.NumberFormat`'s `style: 'currency'` mode with a comparison that depends on external state — neither piece is expressible declaratively.
 
@@ -256,5 +256,32 @@ const formatRevenue = ({value}) => {
   tooltip: {
     valueFormat: {type: 'custom', formatter: formatRevenue},
   },
+}
+```
+
+### Computed percentage context
+
+Pie and percent-stacked series expose their computed share to custom formatters. Set the formatter on `series.dataLabels.format` and/or `series.tooltip.valueFormat`; its `percentage` field is a decimal fraction in the `0..1` range.
+
+- Pie formatters receive `{value, percentage, name, data}`. The percentage is calculated from currently visible slices and updates when legend visibility changes.
+- `area`, `bar-x`, and `bar-y` formatters receive `{value, percentage, data}`. `percentage` is present when `stacking` is `percent` and reflects the point's share in its visible stack.
+
+```javascript
+const shareFormat = {
+  type: 'custom',
+  formatter: ({value, percentage}) =>
+    `${value} (${new Intl.NumberFormat('en', {style: 'percent'}).format(percentage)})`,
+};
+
+series: {
+  data: [{
+    type: 'pie',
+    data: [
+      {name: 'Desktop', value: 60},
+      {name: 'Mobile', value: 40},
+    ],
+    dataLabels: {format: shareFormat},
+    tooltip: {valueFormat: shareFormat},
+  }],
 }
 ```

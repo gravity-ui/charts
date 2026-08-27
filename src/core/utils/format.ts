@@ -5,7 +5,7 @@ import capitalize from 'lodash/capitalize';
 
 import {formatNumber, getDefaultUnit} from '../../libs';
 import type {FormatOptions} from '../../libs/format-number/types';
-import type {ValueFormat} from '../../types';
+import type {CustomFormatContext, ValueFormat} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_DATE_FORMAT} from '../constants';
 
@@ -73,11 +73,14 @@ function getFormattedDate(args: {value: DateTimeInput; format?: string}) {
     return String(value);
 }
 
-export function getFormattedValue(args: {
+export function getFormattedValue<
+    TContext extends CustomFormatContext = CustomFormatContext,
+>(args: {
     value: string | number | undefined | null;
-    format?: ValueFormat;
+    format?: ValueFormat<TContext>;
+    context?: Omit<TContext, 'value'>;
 }) {
-    const {value, format} = args;
+    const {value, format, context} = args;
 
     switch (format?.type) {
         case 'number': {
@@ -90,7 +93,7 @@ export function getFormattedValue(args: {
             return getFormattedDate({value, format: format.format});
         }
         case 'custom': {
-            return format.formatter?.({value});
+            return format.formatter?.({value, ...context} as unknown as TContext);
         }
     }
 

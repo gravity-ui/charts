@@ -201,6 +201,12 @@ export const prepareAreaData = async (args: {
                     const rawData = seriesData.get(x);
                     const d = rawData ?? SYNTHETIC_POINT;
                     let yDataValue = d.y ?? null;
+                    const percentage =
+                        s.stacking === 'percent'
+                            ? stackValues[x] > 0 && Number(yDataValue) > 0
+                                ? Number(yDataValue) / stackValues[x]
+                                : 0
+                            : undefined;
                     const pointAnnotation =
                         d.annotation && !isRangeSlider
                             ? await prepareAnnotation({
@@ -243,6 +249,7 @@ export const prepareAreaData = async (args: {
                                 y: yAxisTop + yValue - prevSectionStackHeight,
                                 color: d.marker?.color ?? d.color,
                                 data: d,
+                                percentage,
                                 series: s,
                                 annotation: pointAnnotation,
                             };
@@ -256,6 +263,7 @@ export const prepareAreaData = async (args: {
                                     y: yAxisTop + yValue - nextSectionStackHeight,
                                     color: d.marker?.color ?? d.color,
                                     data: d,
+                                    percentage,
                                     series: s,
                                 };
                                 points.push(point2);
@@ -295,6 +303,7 @@ export const prepareAreaData = async (args: {
                                 y: yAxisTop + yValue + prevSectionStackHeight,
                                 color: d.marker?.color ?? d.color,
                                 data: d,
+                                percentage,
                                 series: s,
                             });
 
@@ -305,6 +314,7 @@ export const prepareAreaData = async (args: {
                                     y: yAxisTop + yValue + nextSectionStackHeight,
                                     color: d.marker?.color ?? d.color,
                                     data: d,
+                                    percentage,
                                     series: s,
                                 });
                             }
@@ -331,6 +341,7 @@ export const prepareAreaData = async (args: {
                             y: null,
                             color: d.marker?.color ?? d.color,
                             data: d,
+                            percentage,
                             series: s,
                         });
                     }
@@ -413,6 +424,10 @@ export const prepareAreaData = async (args: {
                         xMax,
                         yAxisTop: itemYAxisTop,
                         isOutsideBounds,
+                        getFormatContext: (point) => ({
+                            data: point.data,
+                            percentage: point.percentage,
+                        }),
                     });
                     item.svgLabels.push(...labelsData.svgLabels);
                     item.htmlLabels.push(...labelsData.htmlLabels);

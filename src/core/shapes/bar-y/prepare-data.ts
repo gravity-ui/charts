@@ -94,7 +94,12 @@ export async function prepareBarYData(args: {
                 : measureValues;
 
             let ratio = 1;
+            let percentTotal = 0;
             if (series.some((s) => s.stacking === 'percent')) {
+                percentTotal = sortedData.reduce((acc, item) => {
+                    const value = Number(item.data.x);
+                    return Number.isFinite(value) ? acc + value : acc;
+                }, 0);
                 const sum = sortedData.reduce((acc, item) => {
                     if (item.data.x) {
                         return acc + xLinearScale(Number(item.data.x));
@@ -102,7 +107,7 @@ export async function prepareBarYData(args: {
                     return acc;
                 }, 0);
 
-                ratio = xLinearScale.range()[1] / sum;
+                ratio = sum === 0 ? 0 : xLinearScale.range()[1] / sum;
             }
 
             sortedData.forEach(({data, series: s}, xValueIndex) => {
@@ -171,6 +176,12 @@ export async function prepareBarYData(args: {
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
+                    percentage:
+                        s.stacking === 'percent'
+                            ? percentTotal > 0
+                                ? xValue / percentTotal
+                                : 0
+                            : undefined,
                     isLastStackItem,
                 };
 
@@ -197,7 +208,11 @@ export async function prepareBarYData(args: {
         const dataLabels = prepared.series.dataLabels;
         if (isPointDataLabelEnabled({data: prepared.data, series: prepared.series})) {
             const data = prepared.data;
-            const content = getFormattedValue({value: data.label ?? data.x, ...dataLabels});
+            const content = getFormattedValue({
+                value: data.label ?? data.x,
+                format: dataLabels.format,
+                context: {data, percentage: prepared.percentage},
+            });
 
             const y = prepared.y + prepared.height / 2;
             if (dataLabels.html) {

@@ -19,6 +19,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
             acc.push({
                 color: getMarkerFill(p, p.series.color),
                 data: p.data,
+                percentage: p.percentage,
                 series: p.series as AreaSeries,
                 x: p.x,
                 y0: p.y0,

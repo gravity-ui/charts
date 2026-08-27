@@ -13,7 +13,7 @@ import type {PreparedPieData} from '~core/shapes/pie/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {PieSeries} from '../../types';
+import type {PieSeries, TooltipDataChunkPie} from '../../types';
 
 import {preparePieSeries} from './prepare-pie-series';
 
@@ -54,6 +54,14 @@ export const piePlugin: SeriesPlugin<PieSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            const pieItem = item as TooltipDataChunkPie;
+            return {
+                percentage: pieItem.percentage,
+                name: pieItem.data.name,
+                data: pieItem.data,
+            };
+        },
         rows: [
             {
                 id: 'default',

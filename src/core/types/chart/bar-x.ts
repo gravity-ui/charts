@@ -2,7 +2,14 @@ import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseDataLabels,
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    CustomFormatContext,
+    ValueFormat,
+} from './base';
 import type {RectLegendSymbolOptions} from './legend';
 import type {ChartSeriesOptions, ChartSeriesRangeSliderOptions} from './series';
 
@@ -37,7 +44,18 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     annotation?: ChartPointAnnotation;
 }
 
-export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
+export interface BarXFormatContext<T = MeaningfulAny> extends CustomFormatContext {
+    data: BarXSeriesData<T>;
+    /** Value share in the stack. Provided only when `stacking` is `percent`. */
+    percentage?: number;
+}
+
+export type BarXValueFormat<T = MeaningfulAny> = ValueFormat<BarXFormatContext<T>>;
+
+export interface BarXSeries<T = MeaningfulAny> extends Omit<
+    BaseSeries<T>,
+    'dataLabels' | 'tooltip'
+> {
     type: typeof SERIES_TYPE.BarX;
     data: BarXSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -62,14 +80,20 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
      * @default true
      */
     grouping?: boolean;
-    dataLabels?: BaseSeries['dataLabels'] &
+    dataLabels?: Omit<BaseDataLabels, 'format'> &
         ChartSeriesOptions['dataLabels'] & {
+            /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
+            format?: BarXValueFormat<T>;
             /**
              * Whether to align the data label inside or outside the box
              * @default false
              */
             inside?: boolean;
         };
+    tooltip?: Omit<NonNullable<BaseSeries<T>['tooltip']>, 'valueFormat'> & {
+        /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */
+        valueFormat?: BarXValueFormat<T>;
+    };
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;

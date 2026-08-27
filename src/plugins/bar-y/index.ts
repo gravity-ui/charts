@@ -12,7 +12,7 @@ import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
 
-import type {BarYSeries} from '../../types';
+import type {BarYSeries, TooltipDataChunkBarY} from '../../types';
 
 import {prepareBarYSeries} from './prepare-bar-y-series';
 
@@ -54,6 +54,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            const barItem = item as TooltipDataChunkBarY;
+            return {percentage: barItem.percentage, data: barItem.data};
+        },
         rows: [
             {
                 id: 'default',

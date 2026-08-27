@@ -13,7 +13,7 @@ import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
 
-import type {BarXSeries} from '../../types';
+import type {BarXSeries, TooltipDataChunkBarX} from '../../types';
 
 import {prepareBarXSeries} from './prepare-bar-x-series';
 
@@ -83,6 +83,10 @@ export const barXPlugin: SeriesPlugin<BarXSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            const barItem = item as TooltipDataChunkBarX;
+            return {percentage: barItem.percentage, data: barItem.data};
+        },
         rows: [
             {
                 id: 'default',
