@@ -2,6 +2,8 @@
   "definitions": [
     "AreaMarkerOptions",
     "AreaMarkerSymbol",
+    "AreaRangeSeries<JsonValue>",
+    "AreaRangeSeriesData<JsonValue>",
     "AreaSeries<JsonValue>",
     "AreaSeriesData<JsonValue>",
     "AxisCrosshair",
@@ -94,6 +96,34 @@
   ],
   "properties": {
     "AreaMarkerOptions": ["borderColor", "borderWidth", "color", "enabled", "radius", "symbol"],
+    "AreaRangeSeries<JsonValue>": [
+      "color",
+      "cursor",
+      "custom",
+      "data",
+      "dataLabels",
+      "fillColor",
+      "legend",
+      "lineWidth",
+      "name",
+      "nullMode",
+      "opacity",
+      "rangeSlider",
+      "tooltip",
+      "type",
+      "visible",
+      "yAxis"
+    ],
+    "AreaRangeSeriesData<JsonValue>": [
+      "color",
+      "custom",
+      "dataLabels",
+      "high",
+      "label",
+      "low",
+      "tooltip",
+      "x"
+    ],
     "AreaSeries<JsonValue>": [
       "color",
       "cursor",
@@ -273,6 +303,7 @@
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",
+      "area-range",
       "bar-x",
       "bar-y",
       "dataLabels",

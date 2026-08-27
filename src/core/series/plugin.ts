@@ -18,6 +18,13 @@ import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from './types';
 
+export type AxisDomainValue = number | string | null | undefined;
+
+export interface SeriesAxisDomainValues<T extends ChartSeries> {
+    x?: (data: T['data'][number]) => AxisDomainValue | AxisDomainValue[];
+    y?: (data: T['data'][number]) => AxisDomainValue | AxisDomainValue[];
+}
+
 export interface PrepareSeriesArgs<T = ChartSeries> {
     series: T[];
     seriesOptions?: ChartSeriesOptions;
@@ -96,6 +103,7 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
+    getAxisDomainValues?: SeriesAxisDomainValues<T>;
     /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,

@@ -4,8 +4,9 @@ import get from 'lodash/get';
 import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';
 
-import type {BaseTextStyle, ChartSeries, ChartSeriesData, XRangeSeries} from '../../types';
+import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 import {DEFAULT_AXIS_LABEL_FONT_SIZE, SERIES_TYPE} from '../constants';
+import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {PreparedWaterfallSeries, StackedSeries} from '../series/types';
 import {getSeriesStackId} from '../series/utils';
 
@@ -76,19 +77,20 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
     const groupedSeries = group(series, (item) => item.type);
 
     const values = Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
+        const getDomainValues = getSeriesPlugin(type).getAxisDomainValues?.x;
+        if (getDomainValues) {
+            seriesList.forEach((s) => {
+                (s.data as unknown[]).forEach((d) => {
+                    const value = getDomainValues(d);
+                    acc.push(...(Array.isArray(value) ? value : [value]));
+                });
+            });
+            return acc;
+        }
+
         switch (type) {
             case 'bar-y': {
                 acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[], 'y', 'x'));
-                break;
-            }
-            case 'x-range': {
-                (seriesList as unknown as XRangeSeries[]).forEach((s) => {
-                    s.data.forEach((d) => {
-                        if (!isNil(d.x0) && !isNil(d.x1)) {
-                            acc.push(d.x0, d.x1);
-                        }
-                    });
-                });
                 break;
             }
             default: {
@@ -127,6 +129,17 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
     const groupedSeries = group(series, (item) => item.type);
 
     const items = Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
+        const getDomainValues = getSeriesPlugin(type).getAxisDomainValues?.y;
+        if (getDomainValues) {
+            seriesList.forEach((s) => {
+                (s.data as unknown[]).forEach((d) => {
+                    const value = getDomainValues(d);
+                    acc.push(...(Array.isArray(value) ? value : [value]));
+                });
+            });
+            return acc;
+        }
+
         switch (type) {
             case 'area':
             case 'bar-x': {

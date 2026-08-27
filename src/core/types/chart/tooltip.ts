@@ -4,6 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {RendererElement} from '../renderer';
 
 import type {AreaSeries, AreaSeriesData} from './area';
+import type {AreaRangeSeries, AreaRangeSeriesData} from './area-range';
 import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
@@ -74,6 +75,17 @@ export interface TooltipDataChunkArea<T = MeaningfulAny> {
     };
 }
 
+export interface TooltipDataChunkAreaRange<T = MeaningfulAny> {
+    data: AreaRangeSeriesData<T>;
+    color?: string;
+    series: {
+        type: AreaRangeSeries['type'];
+        id: string;
+        name: string;
+        tooltip?: BaseSeries['tooltip'];
+    };
+}
+
 export interface TooltipDataChunkTreemap<T = MeaningfulAny> {
     data: TreemapSeriesData<T>;
     series: TreemapSeries<T>;
@@ -125,6 +137,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkScatter<T>
     | TooltipDataChunkLine<T>
     | TooltipDataChunkArea<T>
+    | TooltipDataChunkAreaRange<T>
     | TooltipDataChunkTreemap<T>
     | TooltipDataChunkSankey<T>
     | TooltipDataChunkWaterfall<T>
