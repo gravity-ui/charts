@@ -264,7 +264,7 @@ const formatRevenue = ({value}) => {
 Pie and percent-stacked series expose their computed share to custom formatters. Set the formatter on `series.dataLabels.format` and/or `series.tooltip.valueFormat`; its `percentage` field is a decimal fraction in the `0..1` range.
 
 - Pie formatters receive `{value, percentage, name, data}`. The percentage is calculated from currently visible slices and updates when legend visibility changes.
-- `area`, `bar-x`, and `bar-y` formatters receive `{value, percentage, data}`. `percentage` is present when `stacking` is `percent` and reflects the point's share in its visible stack.
+- `area`, `bar-x`, and `bar-y` formatters receive `{value, percentage, data}`. `percentage` is present when `stacking` is `percent` and reflects the point's share in its visible stack. Percent stacking accepts only non-negative values.
 
 ```javascript
 const shareFormat = {

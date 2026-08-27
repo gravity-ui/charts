@@ -11,9 +11,14 @@ import {renderBarX} from '~core/shapes/bar-x/renderer';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
-import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
+import {
+    validateAxisPlotValues,
+    validatePercentStackingValues,
+    validateStacking,
+    validateXYSeries,
+} from '~core/validation/helpers';
 
-import type {BarXSeries, TooltipDataChunkBarX} from '../../types';
+import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
 
 import {prepareBarXSeries} from './prepare-bar-x-series';
 
@@ -70,13 +75,14 @@ function renderShapes({
     );
 }
 
-export const barXPlugin: SeriesPlugin<BarXSeries> = {
+export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
     prepareSeries: prepareBarXSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validatePercentStackingValues({series, valueKey: 'y'});
     },
     getColorValue: (d) => d.y,
     prepareShapeData,
@@ -84,8 +90,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValueFormatContext: (item) => {
-            const barItem = item as TooltipDataChunkBarX;
-            return {percentage: barItem.percentage, data: barItem.data};
+            return {percentage: item.percentage, data: item.data};
         },
         rows: [
             {

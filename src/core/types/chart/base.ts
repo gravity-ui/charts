@@ -23,7 +23,8 @@ export interface PercentageFormatContext {
 
 export interface CustomFormat<TContext extends CustomFormatContext = CustomFormatContext> {
     type: 'custom';
-    formatter: (args: TContext) => string;
+    // Keep specialized series formatters assignable to the formatter in BaseSeries.
+    formatter: <TFormatterContext extends TContext>(args: TFormatterContext) => string;
 }
 
 /**

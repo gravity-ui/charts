@@ -98,7 +98,7 @@ export async function prepareBarYData(args: {
             if (series.some((s) => s.stacking === 'percent')) {
                 percentTotal = sortedData.reduce((acc, item) => {
                     const value = Number(item.data.x);
-                    return Number.isFinite(value) ? acc + value : acc;
+                    return Number.isFinite(value) && value > 0 ? acc + value : acc;
                 }, 0);
                 const sum = sortedData.reduce((acc, item) => {
                     if (item.data.x) {
@@ -178,7 +178,7 @@ export async function prepareBarYData(args: {
                     series: s,
                     percentage:
                         s.stacking === 'percent'
-                            ? percentTotal > 0
+                            ? percentTotal > 0 && xValue > 0
                                 ? xValue / percentTotal
                                 : 0
                             : undefined,

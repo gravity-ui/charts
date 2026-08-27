@@ -6,6 +6,7 @@ import type {
     ChartSeriesOptions,
     ChartXAxis,
     ChartYAxis,
+    CustomFormatContext,
     ShapeDataWithLabels,
     TooltipDataChunk,
     TooltipRowCellItem,
@@ -66,7 +67,11 @@ export interface ValidateSeriesArgs<T = ChartSeries> {
     yAxis?: ChartYAxis[];
 }
 
-export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
+export interface SeriesPlugin<
+    T extends ChartSeries = ChartSeries,
+    TTooltipChunk extends TooltipDataChunk = TooltipDataChunk,
+    TFormatContext extends CustomFormatContext = CustomFormatContext,
+> {
     // --- Metadata ---
 
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
@@ -115,7 +120,7 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
          * Returns series-specific fields passed to a custom tooltip value formatter.
          * The shared tooltip renderer supplies `value`; plugins own all other context.
          */
-        getValueFormatContext?(chunk: TooltipDataChunk): Record<string, unknown>;
+        getValueFormatContext?(chunk: TTooltipChunk): Omit<TFormatContext, 'value'>;
         /**
          * Default tooltip row definitions for each data chunk.
          *

@@ -219,6 +219,42 @@ describe('validation/validateData', () => {
     );
 
     test.each([
+        {
+            series: {
+                data: [{type: 'area', name: 'Area', stacking: 'percent', data: [{x: 1, y: -1}]}],
+            },
+        },
+        {
+            series: {
+                data: [{type: 'bar-x', name: 'Bar X', stacking: 'percent', data: [{x: 1, y: -1}]}],
+            },
+        },
+        {
+            series: {
+                data: [{type: 'bar-y', name: 'Bar Y', stacking: 'percent', data: [{x: -1, y: 1}]}],
+            },
+        },
+    ])('validateData should reject negative percent-stacking values (data: %j)', (data) => {
+        expect(() => validateData(data as ChartData)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test('validateData should allow negative values for normal stacking', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {type: 'area', name: 'Area', stacking: 'normal', data: [{x: 1, y: -1}]},
+                    {type: 'bar-x', name: 'Bar X', stacking: 'normal', data: [{x: 1, y: -1}]},
+                    {type: 'bar-y', name: 'Bar Y', stacking: 'normal', data: [{x: -1, y: 1}]},
+                ],
+            },
+        };
+
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test.each([
         null,
         {type: 'invalid'},
         {type: 'cardinal', tension: Number.NaN},

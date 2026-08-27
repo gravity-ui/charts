@@ -44,10 +44,7 @@ export interface PieFormatContext<T = MeaningfulAny>
 
 export type PieValueFormat<T = MeaningfulAny> = ValueFormat<PieFormatContext<T>>;
 
-export interface PieSeries<T = MeaningfulAny> extends Omit<
-    BaseSeries<T>,
-    'dataLabels' | 'tooltip'
-> {
+export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.Pie;
     data: PieSeriesData<T>[];
     /**
@@ -107,7 +104,7 @@ export interface PieSeries<T = MeaningfulAny> extends Omit<
          */
         connectorCurve?: ConnectorCurve;
     };
-    tooltip?: Omit<NonNullable<BaseSeries<T>['tooltip']>, 'valueFormat'> & {
+    tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
         /** Formatting settings for tooltip values. Custom formatters receive the visible slice percentage. */
         valueFormat?: PieValueFormat<T>;
     };

@@ -11,6 +11,29 @@ async function hoverCenter(page: Page, locator: Locator) {
     await page.mouse.move(Math.round(box.x + box.width / 2), Math.round(box.y + box.height / 2));
 }
 
+async function checkBarPercentStack(args: {
+    component: Locator;
+    page: Page;
+    seriesType: 'bar-x' | 'bar-y';
+}) {
+    const {component, page, seriesType} = args;
+    const labels = component.locator(`.gcharts-${seriesType}__label`);
+
+    await expect(labels).toContainText(['25 (25%)', '75 (75%)']);
+
+    await hoverCenter(page, component.locator(`.gcharts-${seriesType}__segment`).first());
+    const tooltip = page.locator('.gcharts-tooltip');
+    await expect(tooltip).toContainText('25 (25%)');
+    await expect(tooltip).toContainText('75 (75%)');
+
+    await component.locator('.gcharts-legend__item', {hasText: 'Second'}).click();
+    await expect(labels).toHaveCount(1);
+    await expect(labels.first()).toHaveText('75 (100%)');
+
+    await hoverCenter(page, component.locator(`.gcharts-${seriesType}__segment`).first());
+    await expect(tooltip).toContainText('75 (100%)');
+}
+
 test.describe('Percentage formatter context', () => {
     test('pie labels and tooltip follow currently visible slices', async ({mount, page}) => {
         const component = await mount(<PercentageFormatTestStory seriesType="pie" />);
@@ -26,43 +49,15 @@ test.describe('Percentage formatter context', () => {
         await expect(page.locator('.gcharts-tooltip')).toContainText('75 (100%)');
     });
 
-    test('bar-x percent stack exposes percentages in labels and tooltip', async ({mount, page}) => {
-        const component = await mount(<PercentageFormatTestStory seriesType="bar-x" />);
-        const labels = component.locator('.gcharts-bar-x__label');
-
-        await expect(labels).toContainText(['25 (25%)', '75 (75%)']);
-
-        await hoverCenter(page, component.locator('.gcharts-bar-x__segment').first());
-        const tooltip = page.locator('.gcharts-tooltip');
-        await expect(tooltip).toContainText('25 (25%)');
-        await expect(tooltip).toContainText('75 (75%)');
-
-        await component.locator('.gcharts-legend__item', {hasText: 'Second'}).click();
-        await expect(labels).toHaveCount(1);
-        await expect(labels.first()).toHaveText('75 (100%)');
-
-        await hoverCenter(page, component.locator('.gcharts-bar-x__segment').first());
-        await expect(tooltip).toContainText('75 (100%)');
-    });
-
-    test('bar-y percent stack exposes percentages in labels and tooltip', async ({mount, page}) => {
-        const component = await mount(<PercentageFormatTestStory seriesType="bar-y" />);
-        const labels = component.locator('.gcharts-bar-y__label');
-
-        await expect(labels).toContainText(['25 (25%)', '75 (75%)']);
-
-        await hoverCenter(page, component.locator('.gcharts-bar-y__segment').first());
-        const tooltip = page.locator('.gcharts-tooltip');
-        await expect(tooltip).toContainText('25 (25%)');
-        await expect(tooltip).toContainText('75 (75%)');
-
-        await component.locator('.gcharts-legend__item', {hasText: 'Second'}).click();
-        await expect(labels).toHaveCount(1);
-        await expect(labels.first()).toHaveText('75 (100%)');
-
-        await hoverCenter(page, component.locator('.gcharts-bar-y__segment').first());
-        await expect(tooltip).toContainText('75 (100%)');
-    });
+    for (const seriesType of ['bar-x', 'bar-y'] as const) {
+        test(`${seriesType} percent stack exposes percentages in labels and tooltip`, async ({
+            mount,
+            page,
+        }) => {
+            const component = await mount(<PercentageFormatTestStory seriesType={seriesType} />);
+            await checkBarPercentStack({component, page, seriesType});
+        });
+    }
 
     test('area percent stack exposes percentages in labels and tooltip', async ({mount, page}) => {
         const component = await mount(<PercentageFormatTestStory seriesType="area" />);
@@ -82,5 +77,24 @@ test.describe('Percentage formatter context', () => {
 
         await hoverCenter(page, labels.first());
         await expect(tooltip).toContainText('75 (100%)');
+    });
+
+    test('area percent stack includes isolated points in percentages', async ({mount, page}) => {
+        const component = await mount(<PercentageFormatTestStory seriesType="area-sparse" />);
+        const labels = component.locator('.gcharts-area__label');
+
+        await expect(labels.filter({hasText: '10 (50%)'})).toHaveCount(2);
+        await expect(labels.filter({hasText: '10 (100%)'})).toHaveCount(2);
+
+        await hoverCenter(page, labels.filter({hasText: '10 (50%)'}).first());
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip.getByText('10 (50%)', {exact: true})).toHaveCount(2);
+
+        await component.locator('.gcharts-legend__item', {hasText: 'Second'}).click();
+        await expect(labels).toHaveCount(1);
+        await expect(labels.first()).toHaveText('10 (100%)');
+
+        await hoverCenter(page, labels.first());
+        await expect(tooltip).toContainText('10 (100%)');
     });
 });

@@ -69,10 +69,7 @@ export interface AreaFormatContext<T = MeaningfulAny> extends CustomFormatContex
 
 export type AreaValueFormat<T = MeaningfulAny> = ValueFormat<AreaFormatContext<T>>;
 
-export interface AreaSeries<T = MeaningfulAny> extends Omit<
-    BaseSeries<T>,
-    'dataLabels' | 'tooltip'
-> {
+export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.Area;
     data: AreaSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
@@ -80,6 +77,7 @@ export interface AreaSeries<T = MeaningfulAny> extends Omit<
     /**
      * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
+     * Percent stacking supports only non-negative values.
      */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
@@ -88,7 +86,7 @@ export interface AreaSeries<T = MeaningfulAny> extends Omit<
         /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
         format?: AreaValueFormat<T>;
     };
-    tooltip?: Omit<NonNullable<BaseSeries<T>['tooltip']>, 'valueFormat'> & {
+    tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
         /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */
         valueFormat?: AreaValueFormat<T>;
     };

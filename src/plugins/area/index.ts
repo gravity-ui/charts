@@ -14,17 +14,18 @@ import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {
     validateAxisPlotValues,
+    validatePercentStackingValues,
     validateSeriesColor,
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaSeries, TooltipDataChunkArea} from '../../types';
+import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
 
 import {prepareAreaSeries} from './prepare-area-series';
 
-export const areaPlugin: SeriesPlugin<AreaSeries> = {
+export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
     prepareSeries: prepareAreaSeries,
     validate: ({series, xAxis, yAxis}) => {
@@ -33,6 +34,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
         validateSeriesColor({color: series.fillColor, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validatePercentStackingValues({series, valueKey: 'y'});
 
         const isStacking = ['normal', 'percent'].includes(series.stacking as string);
         if (isStacking && series.nullMode === 'connect') {
@@ -84,8 +86,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValueFormatContext: (item) => {
-            const areaItem = item as TooltipDataChunkArea;
-            return {percentage: areaItem.percentage, data: areaItem.data};
+            return {percentage: item.percentage, data: item.data};
         },
         rows: [
             {

@@ -93,7 +93,7 @@ export function getFormattedValue<
             return getFormattedDate({value, format: format.format});
         }
         case 'custom': {
-            return format.formatter?.({value, ...context} as unknown as TContext);
+            return format.formatter?.({value, ...context} as TContext);
         }
     }
 
