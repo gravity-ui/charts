@@ -1,6 +1,7 @@
 {
   "error": {
     "label_inconsistent-stack-labels-options": "Stack label style, format, padding and allowOverlap must match for participating series \"{{firstSeries}}\" and \"{{secondSeries}}\" in the same stack.",
+    "label_invalid-area-range-bounds": "The low value must not exceed the high value in the \"{{seriesName}}\" area-range series",
     "label_no-data": "No data",
     "label_unknown-plugin": "Unknown plugin type \"{{type}}\"",
     "label_unknown-error": "Unknown error",

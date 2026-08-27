@@ -1,6 +1,7 @@
 import {registerSeriesPlugin} from '~core/series/seriesRegistry';
 
 import {areaPlugin} from './area';
+import {areaRangePlugin} from './area-range';
 import {barXPlugin} from './bar-x';
 import {barYPlugin} from './bar-y';
 import {funnelPlugin} from './funnel';
@@ -15,6 +16,7 @@ import {waterfallPlugin} from './waterfall';
 import {xRangePlugin} from './x-range';
 
 registerSeriesPlugin(areaPlugin);
+registerSeriesPlugin(areaRangePlugin);
 registerSeriesPlugin(barXPlugin);
 registerSeriesPlugin(barYPlugin);
 registerSeriesPlugin(funnelPlugin);
