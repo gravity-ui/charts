@@ -50,7 +50,10 @@ export default [
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
-            'jsdoc/check-tag-names': ['warn', {definedTags: ['minimum', 'maximum']}],
+            'jsdoc/check-tag-names': [
+                'warn',
+                {definedTags: ['minimum', 'maximum', 'minItems', 'minLength']},
+            ],
             'valid-jsdoc': 'off',
             'no-param-reassign': 'off',
             complexity: 'off',

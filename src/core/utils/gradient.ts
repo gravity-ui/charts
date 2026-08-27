@@ -4,6 +4,8 @@ import {select} from 'd3-selection';
 
 import type {GradientStop, LinearGradient} from '~core/types';
 
+import {getUniqId} from './misc';
+
 const DEFAULT_GRADIENT_ANGLE = 180;
 const TRIGONOMETRIC_EPSILON = Number.EPSILON;
 
@@ -25,6 +27,18 @@ interface GradientPoint {
     hiddenInLine?: boolean;
     x: number | null;
     y: number | null;
+}
+
+interface GradientFillPoint extends GradientPoint {
+    color?: string;
+    fill?: string;
+}
+
+export interface GradientPaintOptions {
+    bbox: GradientBBox | null;
+    fallbackColor: string;
+    gradient?: LinearGradient;
+    id: string;
 }
 
 /** Returns the bounding box of points that participate in a rendered path. */
@@ -85,28 +99,30 @@ function getGradientT(px: number, py: number, coords: GradientCoords): number {
     return Math.max(0, Math.min(1, ((px - coords.x1) * dx + (py - coords.y1) * dy) / len2));
 }
 
-function interpolateGradientColor(t: number, stops: GradientStop[]): string {
-    const sorted = [...stops].sort((a, b) => a.offset - b.offset);
-
-    if (t < sorted[0].offset) {
-        return sorted[0].color;
+function interpolateGradientColor(t: number, sortedStops: GradientStop[]): string {
+    if (t < sortedStops[0].offset) {
+        return sortedStops[0].color;
     }
 
     let loIndex = -1;
-    for (let i = 0; i < sorted.length; i++) {
-        if (sorted[i].offset > t) {
+    for (let i = 0; i < sortedStops.length; i++) {
+        if (sortedStops[i].offset > t) {
             break;
         }
         loIndex = i;
     }
 
-    if (loIndex === sorted.length - 1 || sorted[loIndex].offset === t) {
-        return sorted[loIndex].color;
+    if (loIndex === sortedStops.length - 1 || sortedStops[loIndex].offset === t) {
+        return sortedStops[loIndex].color;
     }
 
-    const lo = sorted[loIndex];
-    const hi = sorted[loIndex + 1];
+    const lo = sortedStops[loIndex];
+    const hi = sortedStops[loIndex + 1];
     return interpolateRgb(lo.color, hi.color)((t - lo.offset) / (hi.offset - lo.offset));
+}
+
+function sortGradientStops(stops: GradientStop[]): GradientStop[] {
+    return [...stops].sort((a, b) => a.offset - b.offset);
 }
 
 /** Checks whether a value is a linear-gradient config. */
@@ -122,7 +138,7 @@ export function isLinearGradient(color: unknown): color is LinearGradient {
 
 /** Returns the color at the middle (t = 0.5) of the gradient. */
 export function getGradientMidColor(gradient: LinearGradient): string {
-    return interpolateGradientColor(0.5, gradient.stops);
+    return interpolateGradientColor(0.5, sortGradientStops(gradient.stops));
 }
 
 /** Returns a copy of the gradient with every valid stop color brightened. */
@@ -143,21 +159,65 @@ export function getGradientColorAtPoint(
     gradient: LinearGradient,
     bbox: GradientBBox,
 ): string {
-    const coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox);
-    const t = getGradientT(px, py, coords);
-    return interpolateGradientColor(t, gradient.stops);
+    return createGradientColorResolver(gradient, bbox)(px, py);
 }
 
-let gradientIdCounter = 0;
+/** Creates a point color resolver with precomputed coordinates and sorted stops. */
+export function createGradientColorResolver(
+    gradient: LinearGradient,
+    bbox: GradientBBox,
+): (px: number, py: number) => string {
+    const coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox);
+    const sortedStops = sortGradientStops(gradient.stops);
+
+    return (px, py) => {
+        const t = getGradientT(px, py, coords);
+        return interpolateGradientColor(t, sortedStops);
+    };
+}
+
+/** Resolves gradient fills for points without an explicit color. */
+export function setGradientPointFills(
+    points: GradientFillPoint[],
+    gradient?: LinearGradient,
+): void {
+    if (!gradient) {
+        return;
+    }
+
+    const bbox = getGradientBBox(points);
+    if (!bbox) {
+        return;
+    }
+
+    const getGradientColor = createGradientColorResolver(gradient, bbox);
+    for (const point of points) {
+        if (point.color === undefined && point.x !== null && point.y !== null) {
+            point.fill = getGradientColor(point.x, point.y);
+        }
+    }
+}
+
+function getUniqueGradientId(container: SVGGElement, preferredId: string): string {
+    const document = container.ownerDocument;
+    let id = preferredId;
+
+    while (document.getElementById(id)) {
+        id = `${preferredId}-${getUniqId()}`;
+    }
+
+    return id;
+}
 
 /**
- * Ensures a <linearGradient> def exists in the container's <defs> and returns its id.
+ * Creates a <linearGradient> def in the container's <defs> and returns its id.
  * Uses gradientUnits="userSpaceOnUse" with coordinates derived from the bbox and angle.
  */
-export function ensureGradientDef(
+function createGradientDef(
     container: SVGGElement,
     gradient: LinearGradient,
     bbox: GradientBBox,
+    preferredId: string,
 ): string {
     if (!container.ownerSVGElement) {
         return '';
@@ -167,7 +227,7 @@ export function ensureGradientDef(
     if (defs.empty()) {
         defs = containerSelection.append('defs').attr('class', 'gradients');
     }
-    const id = `chart-gradient-${gradientIdCounter++}`;
+    const id = getUniqueGradientId(container, preferredId);
     const coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox);
     const grad = defs
         .append('linearGradient')
@@ -181,4 +241,25 @@ export function ensureGradientDef(
         grad.append('stop').attr('offset', stop.offset).attr('stop-color', stop.color);
     }
     return id;
+}
+
+/** Creates a per-render resolver that reuses gradient definitions by paint id. */
+export function createGradientPaintResolver(container: SVGGElement) {
+    const ids = new Map<string, string>();
+
+    return ({bbox, fallbackColor, gradient, id: preferredId}: GradientPaintOptions): string => {
+        if (!gradient || !bbox) {
+            return fallbackColor;
+        }
+
+        let id = ids.get(preferredId);
+        if (!id) {
+            id = createGradientDef(container, gradient, bbox, preferredId);
+            if (id) {
+                ids.set(preferredId, id);
+            }
+        }
+
+        return id ? `url(#${id})` : fallbackColor;
+    };
 }

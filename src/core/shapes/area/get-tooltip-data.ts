@@ -4,6 +4,7 @@ import type {
     GetTooltipDataResult,
     ShapePoint,
 } from '../../utils/tooltip-helpers';
+import {getMarkerFill} from '../marker';
 
 import type {PreparedAreaData} from './types';
 
@@ -16,7 +17,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
                 continue;
             }
             acc.push({
-                color: p.color ?? p.series.color,
+                color: getMarkerFill(p, p.series.color),
                 data: p.data,
                 series: p.series as AreaSeries,
                 x: p.x,

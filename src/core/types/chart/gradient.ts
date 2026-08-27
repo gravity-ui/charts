@@ -1,5 +1,3 @@
-/* eslint-disable jsdoc/check-tag-names */
-
 export interface GradientStop {
     /**
      * Color of the stop. Supported formats are hex, rgb/rgba, hsl/hsla, and named colors.

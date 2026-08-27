@@ -10,7 +10,11 @@ import type {LabelData, TooltipDataChunkLine} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {getLineDashArray} from '../../utils';
-import {ensureGradientDef, getBrighterGradient, getGradientBBox} from '../../utils/gradient';
+import {
+    createGradientPaintResolver,
+    getBrighterGradient,
+    getGradientBBox,
+} from '../../utils/gradient';
 import {renderDataLabels} from '../data-labels';
 import {setActiveState} from '../utils';
 
@@ -21,45 +25,6 @@ const b = block('line');
 interface RenderLineElements {
     getCurveFactory: (interpolation?: PreparedLineData['interpolation']) => CurveFactory;
     plot: SVGGElement;
-}
-
-interface LineGradientIds {
-    hover?: string;
-    normal?: string;
-}
-
-const gradientIds = new WeakMap<PreparedLineData, LineGradientIds>();
-
-function strokeRef(
-    data: PreparedLineData,
-    plot: SVGGElement,
-    hovered = false,
-    brightness?: number,
-): string {
-    const {gradient} = data.series;
-    if (!gradient) {
-        return data.color;
-    }
-
-    const bbox = getGradientBBox(data.points);
-    if (!bbox) {
-        return data.color;
-    }
-    const state = hovered ? 'hover' : 'normal';
-    const ids = gradientIds.get(data) ?? {};
-    let id = ids[state];
-    if (!id) {
-        id = ensureGradientDef(
-            plot,
-            hovered ? getBrighterGradient(gradient, brightness) : gradient,
-            bbox,
-        );
-        if (id) {
-            ids[state] = id;
-            gradientIds.set(data, ids);
-        }
-    }
-    return id ? `url(#${id})` : data.color;
 }
 
 export function renderLine(
@@ -77,14 +42,27 @@ export function renderLine(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
-    preparedData.forEach((data) => gradientIds.delete(data));
+    const resolveGradientPaint = createGradientPaintResolver(elements.plot);
+    const getStroke = (data: PreparedLineData, hovered = false, brightness?: number) => {
+        const {gradient} = data.series;
+        const state = hovered ? 'hover' : 'normal';
+        const paintGradient =
+            gradient && hovered ? getBrighterGradient(gradient, brightness) : gradient;
+
+        return resolveGradientPaint({
+            bbox: gradient ? getGradientBBox(data.points) : null,
+            fallbackColor: data.color,
+            gradient: paintGradient,
+            id: `${data.id}-gradient-line-${state}`,
+        });
+    };
     const lineSelection = plotSvgElement
         .selectAll('path')
         .data(preparedData)
         .join('path')
         .attr('d', (d) => line.curve(elements.getCurveFactory(d.interpolation))(d.points))
         .attr('fill', 'none')
-        .attr('stroke', (d) => strokeRef(d, elements.plot))
+        .attr('stroke', (d) => getStroke(d))
         .attr('stroke-width', (d) => d.lineWidth)
         .attr('stroke-linejoin', (d) => d.linejoin)
         .attr('stroke-linecap', (d) => d.linecap)
@@ -117,12 +95,7 @@ export function renderLine(
                 d.hovered = hovered;
                 elementSelection.attr('stroke', (dSelection) => {
                     if (dSelection.series.gradient) {
-                        return strokeRef(
-                            dSelection,
-                            elements.plot,
-                            dSelection.hovered,
-                            hoverOptions?.brightness,
-                        );
+                        return getStroke(dSelection, dSelection.hovered, hoverOptions?.brightness);
                     }
                     const initialColor = dSelection.color || '';
                     if (dSelection.hovered) {

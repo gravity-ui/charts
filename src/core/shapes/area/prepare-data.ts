@@ -9,7 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
-import {buildHoverMarkerGetter} from '../../shapes/marker';
+import {buildHoverMarkerGetter, getMarkerFill} from '../../shapes/marker';
 import type {MarkerItem} from '../../shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
 import {
@@ -17,7 +17,7 @@ import {
     preparePointDataLabels,
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
-import {getGradientBBox, getGradientColorAtPoint} from '../../utils/gradient';
+import {setGradientPointFills} from '../../utils/gradient';
 
 import type {PointData, PreparedAreaData} from './types';
 
@@ -347,24 +347,7 @@ export const prepareAreaData = async (args: {
                     (d) => d.marker?.states?.normal?.enabled,
                 );
 
-                const gradientBBox = s.gradient ? getGradientBBox(points) : null;
-
-                const getMarkerFill = (point: {
-                    color?: string;
-                    x: number | null;
-                    y: number | null;
-                }) => {
-                    if (point.color !== undefined) {
-                        return point.color;
-                    }
-                    return s.gradient && gradientBBox && point.x !== null && point.y !== null
-                        ? getGradientColorAtPoint(point.x, point.y, s.gradient, gradientBBox)
-                        : s.color;
-                };
-
-                for (const point of points) {
-                    point.color = getMarkerFill(point);
-                }
+                setGradientPointFills(points, s.gradient);
 
                 const markers =
                     s.marker.states.normal.enabled || hasPerPointNormalMarkers
@@ -380,7 +363,7 @@ export const prepareAreaData = async (args: {
                                       cy: p.y,
                                       radius: normalState.radius,
                                       symbolType: normalState.symbol,
-                                      fill: getMarkerFill(p),
+                                      fill: getMarkerFill(p, s.color),
                                       stroke: normalState.borderColor,
                                       strokeWidth: normalState.borderWidth,
                                       opacity: 1,
@@ -405,7 +388,7 @@ export const prepareAreaData = async (args: {
                     annotations,
                     points,
                     markers,
-                    getHoverMarkers: buildHoverMarkerGetter(points, s, getMarkerFill),
+                    getHoverMarkers: buildHoverMarkerGetter(points, s),
                     svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,

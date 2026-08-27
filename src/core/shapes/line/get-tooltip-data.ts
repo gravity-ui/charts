@@ -4,6 +4,7 @@ import type {
     GetTooltipDataResult,
     ShapePoint,
 } from '../../utils/tooltip-helpers';
+import {getMarkerFill} from '../marker';
 
 import type {PreparedLineData} from './types';
 
@@ -14,7 +15,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedLineData>): GetT
         for (const p of d.points) {
             if (p.y !== null && p.x !== null && !p.hiddenInLine) {
                 acc.push({
-                    color: p.color ?? p.series.color,
+                    color: getMarkerFill(p, p.series.color),
                     data: p.data,
                     series: p.series as LineSeries,
                     x: p.x,

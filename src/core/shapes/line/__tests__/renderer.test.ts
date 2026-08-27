@@ -69,7 +69,7 @@ describe('renderLine gradient', () => {
 
         const path = plot.querySelector('path');
         const gradientElement = plot.querySelector('linearGradient');
-        expect(path?.getAttribute('stroke')).toMatch(/^url\(#chart-gradient-\d+\)$/);
+        expect(path?.getAttribute('stroke')).toBe('url(#line-1-gradient-line-normal)');
         expect(gradientElement?.getAttribute('x1')).toBe('0');
         expect(gradientElement?.getAttribute('x2')).toBe('100');
         expect(gradientElement?.querySelectorAll('stop')).toHaveLength(2);
@@ -89,7 +89,37 @@ describe('renderLine gradient', () => {
 
         expect(plot.querySelectorAll('defs.gradients')).toHaveLength(1);
         expect(plot.querySelectorAll('linearGradient')).toHaveLength(1);
-        expect(secondStroke).not.toBe(firstStroke);
+        expect(secondStroke).toBe(firstStroke);
         expect(secondStroke).toBe(`url(#${plot.querySelector('linearGradient')?.id})`);
+    });
+
+    test('avoids gradient id collisions between plots with the same series id', () => {
+        const firstPlot = createPlot();
+        const secondPlot = createPlot();
+        const points = [
+            {x: 0, y: 50},
+            {x: 100, y: 0},
+        ];
+
+        renderLine(
+            {plot: firstPlot, getCurveFactory: () => curveLinear},
+            [createPreparedData(points)],
+            {} as PreparedSeriesOptions,
+        );
+        renderLine(
+            {plot: secondPlot, getCurveFactory: () => curveLinear},
+            [createPreparedData(points)],
+            {} as PreparedSeriesOptions,
+        );
+
+        const firstGradientId = firstPlot.querySelector('linearGradient')?.id;
+        const secondGradientId = secondPlot.querySelector('linearGradient')?.id;
+        expect(secondGradientId).not.toBe(firstGradientId);
+        expect(firstPlot.querySelector('path')?.getAttribute('stroke')).toBe(
+            `url(#${firstGradientId})`,
+        );
+        expect(secondPlot.querySelector('path')?.getAttribute('stroke')).toBe(
+            `url(#${secondGradientId})`,
+        );
     });
 });

@@ -69,7 +69,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
         const id = getUniqId();
         const name = series.name || '';
         const lineColor = series.color || colorScale(name);
-        const areaFillColor = series.fillColor ?? lineColor;
+        const areaFillColor = series.fillColor || lineColor;
         const gradient = isLinearGradient(lineColor) ? lineColor : undefined;
         const fillGradient = isLinearGradient(areaFillColor) ? areaFillColor : undefined;
         const color = typeof lineColor === 'string' ? lineColor : getGradientMidColor(lineColor);

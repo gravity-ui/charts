@@ -12,11 +12,21 @@ const b = block('marker');
 const haloClassName = b('halo');
 const symbolClassName = b('symbol');
 
+interface MarkerFillPoint {
+    color?: string;
+    fill?: string;
+}
+
+export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): string {
+    return point.fill ?? point.color ?? seriesColor;
+}
+
 export interface BaseMarkerData {
     point: {
         x: number;
         y: number;
         color?: string;
+        fill?: string;
         data: unknown;
         series: {
             color: string;
@@ -71,7 +81,7 @@ export function renderMarker<T extends BaseMarkerData>(
             const haloSize = series.marker.states.hover.halo.size;
             return getMarkerSymbol(type, radius + haloSize);
         })
-        .attr('fill', (d) => d.point.color ?? d.point.series.color)
+        .attr('fill', (d) => getMarkerFill(d.point, d.point.series.color))
         .attr('opacity', (d) => d.point.series.marker.states.hover.halo.opacity)
         .attr('z-index', -1)
         .attr('visibility', getMarkerHaloVisibility);
@@ -79,7 +89,7 @@ export function renderMarker<T extends BaseMarkerData>(
         .append('path')
         .attr('class', symbolClassName)
         .call(setMarker, 'normal')
-        .attr('fill', (d) => d.point.color ?? d.point.series.color);
+        .attr('fill', (d) => getMarkerFill(d.point, d.point.series.color));
 
     return markerSelection;
 }
@@ -184,12 +194,11 @@ export function renderHoverMarkers(
         .attr('stroke-width', (d) => d.strokeWidth);
 }
 
-interface HoverMarkerPoint {
+interface HoverMarkerPoint extends MarkerFillPoint {
     data: unknown;
     x: number | null;
     y: number | null;
     hiddenInLine?: boolean;
-    color?: string;
 }
 
 interface HoverMarkerSeries {
@@ -206,7 +215,6 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
-    getFill: (point: HoverMarkerPoint) => string = (point) => point.color ?? series.color,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
@@ -239,7 +247,7 @@ export function buildHoverMarkerGetter(
                 cy: point.y,
                 radius: hoverState.radius,
                 symbolType: normalState.symbol,
-                fill: getFill(point),
+                fill: getMarkerFill(point, series.color),
                 stroke: hoverState.borderColor,
                 strokeWidth: hoverState.borderWidth,
                 opacity: 1,

@@ -24,6 +24,19 @@ function prepareSeries(series: AreaSeries) {
 }
 
 describe('prepareAreaSeries color', () => {
+    test('falls back to the line color for an empty fill color', () => {
+        const prepared = prepareSeries({
+            type: 'area',
+            name: 'Series 1',
+            color: '#f00',
+            fillColor: '',
+            data: [{x: 0, y: 1}],
+        });
+
+        expect(prepared.fillColor).toBe('#f00');
+        expect(prepared.legend.color).toBe('#f00');
+    });
+
     test('allows a solid fill to override a gradient line independently', () => {
         const prepared = prepareSeries({
             type: 'area',

@@ -5,6 +5,7 @@ import {
     getGradientMidColor,
     gradientAngleToCoords,
     isLinearGradient,
+    setGradientPointFills,
 } from '../gradient';
 
 const BBOX = {xMin: 0, xMax: 100, yMin: 0, yMax: 50};
@@ -12,6 +13,9 @@ const BBOX = {xMin: 0, xMax: 100, yMin: 0, yMax: 50};
 describe('gradientAngleToCoords', () => {
     test.each([
         [0, {x1: 50, y1: 50, x2: 50, y2: 0}],
+        [45, {x1: 12.5, y1: 62.5, x2: 87.5, y2: -12.5}],
+        [90, {x1: 0, y1: 25, x2: 100, y2: 25}],
+        [180, {x1: 50, y1: 0, x2: 50, y2: 50}],
         [270, {x1: 100, y1: 25, x2: 0, y2: 25}],
     ])('converts the CSS angle %d to SVG coordinates', (angle, expected) => {
         const actual = gradientAngleToCoords(angle, BBOX);
@@ -36,6 +40,20 @@ describe('gradient color helpers', () => {
     test('clamps colors outside the gradient line', () => {
         expect(getGradientColorAtPoint(-10, 25, gradient, BBOX)).toBe('#ff0000');
         expect(getGradientColorAtPoint(110, 25, gradient, BBOX)).toBe('#0000ff');
+    });
+
+    test('stores resolved fills without overwriting configured point colors', () => {
+        const points = [
+            {x: 0, y: 25, color: 'green'},
+            {x: 100, y: 25},
+        ];
+
+        setGradientPointFills(points, gradient);
+
+        expect(points).toEqual([
+            {x: 0, y: 25, color: 'green'},
+            {x: 100, y: 25, fill: '#0000ff'},
+        ]);
     });
 
     test.each([0, 360])(
