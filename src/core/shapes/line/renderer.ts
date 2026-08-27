@@ -2,7 +2,8 @@ import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
-import {curveCardinal, curveLinear, curveMonotoneX, line as lineGenerator} from 'd3-shape';
+import type {CurveFactory} from 'd3-shape';
+import {line as lineGenerator} from 'd3-shape';
 import get from 'lodash/get';
 
 import type {LabelData, TooltipDataChunkLine} from '../../../types';
@@ -16,10 +17,13 @@ import type {PointData, PreparedLineData} from './types';
 
 const b = block('line');
 
+interface RenderLineElements {
+    getCurveFactory: (interpolation?: PreparedLineData['interpolation']) => CurveFactory;
+    plot: SVGGElement;
+}
+
 export function renderLine(
-    elements: {
-        plot: SVGGElement;
-    },
+    elements: RenderLineElements,
     preparedData: PreparedLineData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
@@ -27,32 +31,17 @@ export function renderLine(
     const plotSvgElement = select(elements.plot);
     const hoverOptions = get(seriesOptions, 'line.states.hover');
     const inactiveOptions = get(seriesOptions, 'line.states.inactive');
+    const line = lineGenerator<PointData>()
+        .defined((d) => d.y !== null && d.x !== null && !d.hiddenInLine)
+        .x((d) => d.x as number)
+        .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
     const lineSelection = plotSvgElement
         .selectAll('path')
         .data(preparedData)
         .join('path')
-        .attr('d', (d) => {
-            let curve = curveLinear;
-            if (d.interpolation) {
-                switch (d.interpolation.type) {
-                    case 'monotone':
-                        curve = curveMonotoneX;
-                        break;
-                    case 'cardinal':
-                        curve = curveCardinal.tension(d.interpolation.tension ?? 0);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return lineGenerator<PointData>()
-                .defined((p) => p.y !== null && p.x !== null && !p.hiddenInLine)
-                .x((p) => p.x as number)
-                .y((p) => p.y as number)
-                .curve(curve)(d.points);
-        })
+        .attr('d', (d) => line.curve(elements.getCurveFactory(d.interpolation))(d.points))
         .attr('fill', 'none')
         .attr('stroke', (d) => d.color)
         .attr('stroke-width', (d) => d.lineWidth)

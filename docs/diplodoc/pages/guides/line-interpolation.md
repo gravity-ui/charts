@@ -32,5 +32,6 @@ By default, line series connect data points with straight segments. The `interpo
 
 - Curves pass through every original data point.
 - `monotone` requires data points to be ordered monotonically by their x values.
+- With `cardinal` and `tension < 1`, the curve can overshoot the data extrema between points. Such portions may be clipped at the plot boundary. Use `monotone` when preserving extrema is important.
 - `nullMode` behavior is preserved: gaps and zero-fills are applied before interpolation.
 - To disable interpolation explicitly, set `interpolation: {type: 'linear'}` or omit the option entirely.
