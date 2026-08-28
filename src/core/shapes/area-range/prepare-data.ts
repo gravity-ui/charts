@@ -6,13 +6,14 @@ import {getXValue, getYValue} from '../../shapes/utils';
 import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '../../utils';
 import {createGradientColorResolver, getGradientBBox} from '../../utils/gradient';
 
+import {formatAreaRangeDataLabel} from './format';
 import type {AreaRangePointData, PreparedAreaRangeData} from './types';
 
 function getRangeBBox(points: AreaRangePointData[]) {
     return getGradientBBox(
         points.flatMap((point) => [
-            {x: point.x, y: point.low},
-            {x: point.x, y: point.high},
+            {x: point.x, y: point.y0},
+            {x: point.x, y: point.y1},
         ]),
     );
 }
@@ -43,7 +44,7 @@ export async function prepareAreaRangeData(args: {
         const points: AreaRangePointData[] = [];
 
         for (const data of item.data) {
-            if (item.nullMode === 'connect' && (data.low === null || data.high === null)) {
+            if (item.nullMode === 'connect' && (data.y0 === null || data.y1 === null)) {
                 continue;
             }
 
@@ -52,31 +53,33 @@ export async function prepareAreaRangeData(args: {
                 continue;
             }
 
-            const low =
-                data.low === null
+            const y0 =
+                data.y0 === null
                     ? null
-                    : getYValue({point: {y: data.low}, yAxis: seriesYAxis, yScale: seriesYScale});
-            const high =
-                data.high === null
+                    : getYValue({point: {y: data.y0}, yAxis: seriesYAxis, yScale: seriesYScale});
+            const y1 =
+                data.y1 === null
                     ? null
-                    : getYValue({point: {y: data.high}, yAxis: seriesYAxis, yScale: seriesYScale});
-            const absoluteLow = low === null ? null : yAxisTop + low;
-            const absoluteHigh = high === null ? null : yAxisTop + high;
+                    : getYValue({point: {y: data.y1}, yAxis: seriesYAxis, yScale: seriesYScale});
+            const absoluteY0 = y0 === null ? null : yAxisTop + y0;
+            const absoluteY1 = y1 === null ? null : yAxisTop + y1;
             const y =
-                absoluteLow === null || absoluteHigh === null
+                absoluteY0 === null || absoluteY1 === null
                     ? null
-                    : absoluteHigh + (absoluteLow - absoluteHigh) / 2;
+                    : absoluteY1 + (absoluteY0 - absoluteY1) / 2;
 
             points.push({
                 x,
-                low: absoluteLow,
-                high: absoluteHigh,
+                y0: absoluteY0,
+                y1: absoluteY1,
                 y,
                 color: data.color,
                 data,
                 series: item,
             });
         }
+
+        points.sort((a, b) => a.x - b.x);
 
         if (item.gradient) {
             const bbox = getRangeBBox(points);
@@ -111,11 +114,14 @@ export async function prepareAreaRangeData(args: {
                 ...point,
                 data: {
                     ...point.data,
-                    y: point.data.label ?? `${point.data.low} – ${point.data.high}`,
+                    y: formatAreaRangeDataLabel({
+                        data: point.data,
+                        format: item.dataLabels.format,
+                    }),
                 },
             }));
             const labels = await preparePointDataLabels({
-                series: item,
+                series: {...item, dataLabels: {...item.dataLabels, format: undefined}},
                 points: labelPoints,
                 xMax,
                 yAxisTop,

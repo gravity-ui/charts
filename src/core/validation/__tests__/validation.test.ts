@@ -167,8 +167,8 @@ describe('validation/validateData', () => {
                         type: 'area-range',
                         name: 'Series 1',
                         data: [
-                            {x: 1, low: 2, high: 5},
-                            {x: 2, low: null, high: null},
+                            {x: 1, y0: 2, y1: 5},
+                            {x: 2, y0: null, y1: null},
                         ],
                     },
                 ],
@@ -178,14 +178,14 @@ describe('validation/validateData', () => {
         expect(() => validateData(data)).not.toThrow();
     });
 
-    test('validateData should reject an area range with low greater than high', () => {
+    test('validateData should reject an area range with y0 greater than y1', () => {
         const data: ChartData = {
             series: {
                 data: [
                     {
                         type: 'area-range',
                         name: 'Series 1',
-                        data: [{x: 1, low: 5, high: 2}],
+                        data: [{x: 1, y0: 5, y1: 2}],
                     },
                 ],
             },

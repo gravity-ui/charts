@@ -72,6 +72,7 @@ function renderShapes({
 
 export const barXPlugin: SeriesPlugin<BarXSeries> = {
     type: 'bar-x',
+    zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});

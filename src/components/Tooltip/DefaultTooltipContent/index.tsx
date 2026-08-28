@@ -156,12 +156,13 @@ export const DefaultTooltipContent = ({
                         (rows ? rows[rowIndex]?.renderer : undefined) ?? tooltipRowRenderer;
 
                     if (typeof rowRenderer === 'function') {
+                        const valueCell = rowCells.find((c) => c.id === 'value');
                         const name = getTooltipRowCellValue({
                             cell: rowCells.find((c) => c.id === 'name'),
                             tooltipDataChunk: seriesItem,
                         });
                         const value = getTooltipRowCellValue({
-                            cell: rowCells.find((c) => c.id === 'value'),
+                            cell: valueCell,
                             tooltipDataChunk: seriesItem,
                         });
                         const color = getTooltipRowCellValue({
@@ -173,10 +174,16 @@ export const DefaultTooltipContent = ({
                             name,
                             color,
                             value,
-                            formattedValue: getFormattedValue({
-                                value,
-                                format: rowValueFormat,
-                            }),
+                            formattedValue: valueCell?.formatValue
+                                ? valueCell.formatValue({
+                                      item: seriesItem,
+                                      value,
+                                      format: valueCell.format ?? rowValueFormat,
+                                  })
+                                : getFormattedValue({
+                                      value,
+                                      format: valueCell?.format ?? rowValueFormat,
+                                  }),
                             striped,
                             active,
                             className: b('content-row', {active, striped}),
@@ -199,11 +206,15 @@ export const DefaultTooltipContent = ({
                             return null;
                         }
 
-                        const cellFormattedValue = getFormattedValue({
-                            value: cellValue,
-                            format:
-                                cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
-                        });
+                        const cellFormat =
+                            cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format;
+                        const cellFormattedValue = cell.formatValue
+                            ? cell.formatValue({
+                                  item: seriesItem,
+                                  value: cellValue,
+                                  format: cellFormat,
+                              })
+                            : getFormattedValue({value: cellValue, format: cellFormat});
                         return {
                             formattedValue: cellFormattedValue,
                             align: cell.align,

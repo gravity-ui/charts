@@ -193,6 +193,12 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
 
 type TooltipRowCellItemSourceFn<T = MeaningfulAny> = (args: {item: TooltipDataChunk<T>}) => unknown;
 
+export interface TooltipRowCellFormatValueArgs {
+    item: TooltipDataChunk;
+    value: unknown;
+    format?: ValueFormat;
+}
+
 export interface TooltipRowCellItem {
     /** cell name - used in tooltip rowRenderer(if defined) to transfer colors/names, etc. */
     id: string;
@@ -209,6 +215,7 @@ export interface TooltipRowCellItem {
      * `cell.format` → `series.tooltip.valueFormat` → `tooltip.valueFormat`.
      */
     format?: ValueFormat;
+    formatValue?: (args: TooltipRowCellFormatValueArgs) => string;
     align?: 'start' | 'center' | 'end';
     /** Optional fixed width for the cell (e.g. `'16px'`). */
     width?: string;

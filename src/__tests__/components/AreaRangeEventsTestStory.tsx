@@ -11,7 +11,7 @@ export function AreaRangeEventsTestStory({data}: {data: ChartData}) {
             ...data.chart,
             events: {
                 ...data.chart?.events,
-                click: ({point}) => setClicked(`${point.low} – ${point.high}`),
+                click: ({point}) => setClicked(`${point.y0} – ${point.y1}`),
             },
         },
     };

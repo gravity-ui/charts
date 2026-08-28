@@ -13,7 +13,7 @@ const meta: Meta<typeof Chart> = {
         docs: {
             description: {
                 component:
-                    'An area range chart displays the interval between a low and a high value for every point on the x-axis.',
+                    'An area range chart displays the interval between two y-axis values for every point on the x-axis.',
             },
         },
     },

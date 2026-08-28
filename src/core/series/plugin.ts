@@ -11,6 +11,7 @@ import type {
     TooltipRowCellItem,
 } from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
+import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, TooltipItemData} from '../shapes/types';
@@ -53,6 +54,18 @@ export interface PrepareShapeDataArgs {
 export interface PrepareShapeDataResult {
     renderData: SeriesShapeData[];
     tooltipItems: TooltipItemData[];
+}
+
+export interface GetTooltipValueArgs {
+    item: TooltipDataChunk;
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis;
+}
+
+export interface SeriesPluginZoomOptions {
+    types: ZoomType[];
+    defaultType?: ZoomType;
+    preserveAdjacentPoints?: boolean;
 }
 
 export interface RenderShapesArgs {
@@ -104,6 +117,7 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
     getAxisDomainValues?: SeriesAxisDomainValues<T>;
+    zoom?: SeriesPluginZoomOptions;
     /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
@@ -119,6 +133,7 @@ export interface SeriesPlugin<T extends ChartSeries = ChartSeries> {
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
+        getValue?: (args: GetTooltipValueArgs) => string | number | null | undefined;
         /**
          * Default tooltip row definitions for each data chunk.
          *
