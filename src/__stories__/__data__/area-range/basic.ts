@@ -41,7 +41,7 @@ export const areaRangeBasicData: ChartData = {
             {
                 name: 'Temperatures',
                 type: 'area-range',
-                data: temperatures.map<AreaRangeSeriesData>(([x, low, high]) => ({x, low, high})),
+                data: temperatures.map<AreaRangeSeriesData>(([x, y0, y1]) => ({x, y0, y1})),
                 tooltip: {
                     valueFormat: {type: 'number', precision: 1},
                 },

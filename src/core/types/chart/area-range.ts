@@ -8,8 +8,8 @@ import type {ChartSeriesRangeSliderOptions} from './series';
 
 export interface AreaRangeSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     x?: string | number;
-    low: number | null;
-    high: number | null;
+    y0: number | null;
+    y1: number | null;
     label?: string | number;
 }
 

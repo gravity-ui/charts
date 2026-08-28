@@ -6,8 +6,8 @@ export interface AreaRangePointData {
     color?: string;
     data: AreaRangeSeriesData;
     fill?: string;
-    high: number | null;
-    low: number | null;
+    y0: number | null;
+    y1: number | null;
     series: PreparedAreaRangeSeries;
     x: number;
     y: number | null;

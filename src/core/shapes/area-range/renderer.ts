@@ -24,8 +24,8 @@ const b = block('area-range');
 function getRangeBBox(data: PreparedAreaRangeData) {
     return getGradientBBox(
         data.points.flatMap((point) => [
-            {x: point.x, y: point.low},
-            {x: point.x, y: point.high},
+            {x: point.x, y: point.y0},
+            {x: point.x, y: point.y1},
         ]),
     );
 }
@@ -69,17 +69,17 @@ export function renderAreaRange(
 
     const upperLine = lineGenerator<AreaRangePointData>()
         .x((point) => point.x)
-        .defined((point) => point.high !== null && point.low !== null)
-        .y((point) => point.high as number);
+        .defined((point) => point.y1 !== null && point.y0 !== null)
+        .y((point) => point.y1 as number);
     const lowerLine = lineGenerator<AreaRangePointData>()
         .x((point) => point.x)
-        .defined((point) => point.high !== null && point.low !== null)
-        .y((point) => point.low as number);
+        .defined((point) => point.y1 !== null && point.y0 !== null)
+        .y((point) => point.y0 as number);
     const area = areaGenerator<AreaRangePointData>()
         .x((point) => point.x)
-        .defined((point) => point.high !== null && point.low !== null)
-        .y0((point) => point.low as number)
-        .y1((point) => point.high as number);
+        .defined((point) => point.y1 !== null && point.y0 !== null)
+        .y0((point) => point.y0 as number)
+        .y1((point) => point.y1 as number);
 
     plotSvgElement.selectAll('*').remove();
     const shapeSelection = plotSvgElement
@@ -97,7 +97,7 @@ export function renderAreaRange(
         .attr('opacity', (data) => data.opacity);
     shapeSelection
         .append('path')
-        .attr('class', `${b('line')} ${b('line', {bound: 'high'})}`)
+        .attr('class', `${b('line')} ${b('line', {bound: 'y1'})}`)
         .attr('d', (data) => upperLine(data.points))
         .attr('fill', 'none')
         .attr('stroke', (data) => getLineStroke(data))
@@ -106,7 +106,7 @@ export function renderAreaRange(
         .attr('stroke-linecap', 'round');
     shapeSelection
         .append('path')
-        .attr('class', `${b('line')} ${b('line', {bound: 'low'})}`)
+        .attr('class', `${b('line')} ${b('line', {bound: 'y0'})}`)
         .attr('d', (data) => lowerLine(data.points))
         .attr('fill', 'none')
         .attr('stroke', (data) => getLineStroke(data))

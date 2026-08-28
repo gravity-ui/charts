@@ -42,6 +42,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     type: 'x-range',
+    zoom: {types: ['x'], defaultType: 'x'},
     prepareSeries: prepareXRangeSeries,
     getAxisDomainValues: {
         x: (d) => [d.x0, d.x1],

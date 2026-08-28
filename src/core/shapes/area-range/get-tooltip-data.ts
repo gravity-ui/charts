@@ -12,7 +12,7 @@ export function getTooltipData(
 ): GetTooltipDataResult {
     const xLookupPoints = args.data.reduce<ShapePoint[]>((acc, item) => {
         item.points.forEach((point) => {
-            if (point.low === null || point.high === null) {
+            if (point.y0 === null || point.y1 === null) {
                 return;
             }
 
@@ -21,8 +21,8 @@ export function getTooltipData(
                 data: point.data,
                 series: point.series as unknown as AreaRangeSeries,
                 x: point.x,
-                y0: Math.min(point.low, point.high),
-                y1: Math.max(point.low, point.high),
+                y0: Math.min(point.y0, point.y1),
+                y1: Math.max(point.y0, point.y1),
             });
         });
         return acc;

@@ -130,11 +130,11 @@
       "color",
       "custom",
       "dataLabels",
-      "high",
       "label",
-      "low",
       "tooltip",
-      "x"
+      "x",
+      "y0",
+      "y1"
     ],
     "AreaSeries<JsonValue>": [
       "color",

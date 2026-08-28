@@ -33,6 +33,10 @@ function area(opts: {data: {x: number; y: number}[]; stacking?: 'normal' | 'perc
     };
 }
 
+function areaRange(data: {x: number; y0: number; y1: number}[]) {
+    return {type: 'area-range', data};
+}
+
 function categoryXAxis(categories: string[]): ChartXAxis {
     return {type: 'category', categories} as ChartXAxis;
 }
@@ -57,6 +61,28 @@ describe('zoom/getZoomedSeriesData', () => {
             zoomState: {},
         });
         expect(result.preparedSeries).toBe(series);
+    });
+
+    test('preserves adjacent area-range points for x filtering', () => {
+        const series = [
+            areaRange([
+                {x: 0, y0: 1, y1: 5},
+                {x: 1, y0: 2, y1: 6},
+                {x: 2, y0: 3, y1: 7},
+                {x: 3, y0: 4, y1: 8},
+            ]),
+        ];
+        const result = getZoomedSeriesData({
+            seriesData: series as unknown as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [1, 2]},
+        });
+
+        expect(result.preparedSeries[0].data).toEqual([
+            {x: 1, y0: 2, y1: 6},
+            {x: 2, y0: 3, y1: 7},
+        ]);
+        expect(result.preparedShapesSeries[0].data).toEqual(series[0].data);
     });
 
     describe('stacked bar-x + xy zoom', () => {
