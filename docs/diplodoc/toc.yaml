@@ -45,10 +45,11 @@ items:
       - name: Axis types (legacy URL)
         href: ./pages/guides/axis-types.md
         hidden: true
+      - name: Line interpolation (legacy URL)
+        href: ./pages/guides/line-interpolation.md
+        hidden: true
       - name: Data labels
         href: ./pages/guides/data-labels.md
-      - name: Line interpolation
-        href: ./pages/guides/line-interpolation.md
       - name: HTML content
         href: ./pages/guides/html.md
       - name: Legend
