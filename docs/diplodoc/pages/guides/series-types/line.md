@@ -42,3 +42,54 @@ The following example renders a left-to-right gradient line:
 <div data-chart-example="series-types/line"></div>
 
 See [LinearGradient](../../api/Series/Visual/interfaces/LinearGradient.md) and [GradientStop](../../api/Series/Visual/interfaces/GradientStop.md) for the complete gradient configuration.
+
+## Data label placement
+
+By default, a label is drawn above its point and shifted into the plot area when it does not fit. Line series can try several positions instead and decide what to do when none of them fits.
+
+### Automatic placement
+
+`placement: 'auto'` tries the positions top, bottom, left and right in order and takes the first one where the label box does not cross a line of any line series and does not overlap already placed labels. When labels of several series compete for the same spot, the series listed first in `series.data` wins.
+
+```javascript
+{
+  type: 'line',
+  dataLabels: {enabled: true, placement: 'auto'},
+}
+```
+
+<div data-chart-example="data-labels/placement-auto"></div>
+
+### Custom order and fixed position
+
+An array sets the exact positions to try. A single position pins the label there:
+
+```javascript
+{
+  type: 'line',
+  dataLabels: {enabled: true, placement: ['bottom']},
+}
+```
+
+<div data-chart-example="data-labels/placement-fixed"></div>
+
+### Fallback
+
+`placementFallback` decides what happens when none of the positions fits: `show` (default) draws the label at the first position anyway, `hide` hides it.
+
+```javascript
+{
+  type: 'line',
+  dataLabels: {enabled: true, placement: ['bottom'], placementFallback: 'hide'},
+}
+```
+
+<div data-chart-example="data-labels/placement-fallback-hide"></div>
+
+Notes:
+
+- `allowOverlap: true` lets the label be placed over other labels; lines are still avoided.
+- Both SVG and HTML labels (`html: true`) support placement.
+- With [line interpolation](../line-interpolation.md) the collision check follows the rendered curve.
+
+See [LineSeriesDataLabels](../../api/Series/Line/interfaces/LineSeriesDataLabels.md) for the complete data label configuration.

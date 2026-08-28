@@ -41,6 +41,11 @@ export interface PrepareShapeDataArgs {
     isOutsideBounds?: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
     otherLayers?: ShapeDataWithLabels[];
+    /**
+     * All visible series of the chart in config order, including the ones from other layers.
+     * Every layer receives the same list, so a plugin can account for series outside its own layer.
+     */
+    allSeries?: PreparedSeries[];
 }
 
 export interface PrepareShapeDataResult {

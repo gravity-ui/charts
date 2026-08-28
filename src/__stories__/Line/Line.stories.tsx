@@ -5,6 +5,7 @@ import {ChartStory} from '../ChartStory';
 import {
     lineAnnotationsData,
     lineBasicData,
+    lineDataLabelsPlacementData,
     lineGradientData,
     lineHtmlLabelsData,
     linePlaygroundData,
@@ -48,6 +49,13 @@ export const LineHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: lineHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const LineDataLabelsPlacement = {
+    name: 'Auto placement of data labels',
+    args: {
+        data: lineDataLabelsPlacementData,
     },
 } satisfies Story;
 

@@ -2,7 +2,7 @@ import type {DashStyle, LineCap, LineJoin, SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {SeriesColor} from './gradient';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
@@ -70,9 +70,36 @@ export type LineSeriesInterpolation =
           tension?: number;
       };
 
+export type LineSeriesDataLabelPlacementPosition = 'top' | 'bottom' | 'left' | 'right';
+
+export type LineSeriesDataLabelPlacementFallback = 'show' | 'hide';
+
+export interface LineSeriesDataLabels extends BaseDataLabels {
+    /**
+     * Candidate positions relative to the point, tried in order: `auto` tries the
+     * built-in order (top, bottom, left, right), an array sets the exact order to try.
+     * The label box of every candidate is shifted into the plot area first; a position
+     * fits when the shifted box does not cross a visible line of any line series and
+     * does not overlap already placed labels (unless `allowOverlap` is set).
+     * @default ['top']
+     */
+    placement?: 'auto' | LineSeriesDataLabelPlacementPosition[];
+    /**
+     * What to do when none of the `placement` positions fits: `show` draws the label
+     * at the first position anyway (crossing lines and labels is allowed then),
+     * `hide` hides the label.
+     * @default 'show'
+     */
+    placementFallback?: LineSeriesDataLabelPlacementFallback;
+}
+
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
     type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
+    /**
+     * Options for the series data labels, appearing next to each data point.
+     */
+    dataLabels?: LineSeriesDataLabels;
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
     /** The solid or linear-gradient color of the series. */
