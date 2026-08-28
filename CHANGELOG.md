@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.58.0](https://github.com/gravity-ui/charts/compare/v1.57.3...v1.58.0) (2026-08-27)
+
+
+### Features
+
+* add chart config declarations and JSON Schema ([#667](https://github.com/gravity-ui/charts/issues/667)) ([799c9b4](https://github.com/gravity-ui/charts/commit/799c9b476e7dca361f7ae37fa9bf2438f8d54db3))
+* add gradient colors for line and area series ([#669](https://github.com/gravity-ui/charts/issues/669)) ([e0a5830](https://github.com/gravity-ui/charts/commit/e0a583016fe087158a463467b960db80cf5d84a5))
+* add interpolation option for line series ([#668](https://github.com/gravity-ui/charts/issues/668)) ([e57fc55](https://github.com/gravity-ui/charts/commit/e57fc553b29f564b42d6cc2b6084411210f41b76))
+
+
+### Bug Fixes
+
+* **docs:** prevent publishing builds with missing assets ([#664](https://github.com/gravity-ui/charts/issues/664)) ([8d306bd](https://github.com/gravity-ui/charts/commit/8d306bdaaf26e8a5255dae28e763fb46eeb42ecd))
+
 ## [1.57.3](https://github.com/gravity-ui/charts/compare/v1.57.2...v1.57.3) (2026-08-12)
 
 
