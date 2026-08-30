@@ -8,10 +8,12 @@ import {render} from '@testing-library/react';
 
 import {registerSeriesPlugin} from '~core/series/seriesRegistry';
 
+import {areaPlugin} from '../../../../plugins/area';
 import {linePlugin} from '../../../../plugins/line';
 import type {TooltipDataChunk} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
+registerSeriesPlugin(areaPlugin);
 registerSeriesPlugin(linePlugin);
 
 function makeLineChunk(
@@ -64,5 +66,31 @@ describe('DefaultTooltipContent — valueFormat precedence', () => {
 
         expect(seriesFormatter).toHaveBeenCalledWith({value: 10});
         expect(chartFormatter).toHaveBeenCalledWith({value: 20});
+    });
+});
+
+describe('DefaultTooltipContent — custom row renderer', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    test('receives the resolved area marker color as a CSS color string', () => {
+        const rowRenderer = jest.fn(() => '<tr></tr>');
+        const hovered: TooltipDataChunk[] = [
+            {
+                color: '#ff0000',
+                data: {x: 1, y: 10},
+                series: {
+                    type: 'area',
+                    id: 'area',
+                    name: 'Area',
+                    color: '#0000ff',
+                } as never,
+            },
+        ];
+
+        renderTooltip(<DefaultTooltipContent hovered={hovered} rowRenderer={rowRenderer} />);
+
+        expect(rowRenderer).toHaveBeenCalledWith(expect.objectContaining({color: '#ff0000'}));
     });
 });
