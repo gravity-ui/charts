@@ -16,6 +16,15 @@ import {getSymbolType, getUniqId} from '~core/utils';
 
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 
+const DEFAULT_CLUSTER_DISTANCE = 40;
+const DEFAULT_CLUSTER_MINIMUM_SIZE = 2;
+const DEFAULT_CLUSTER_RADIUS = 8;
+const DEFAULT_CLUSTER_DATALABELS_STYLE = {
+    ...DEFAULT_DATALABELS_STYLE,
+    fontSize: '10px',
+    fontColor: 'var(--g-color-text-light-primary)',
+};
+
 function prepareMarker(
     series: ScatterSeries,
     seriesOptions: ChartSeriesOptions | undefined,
@@ -85,6 +94,27 @@ export function prepareScatterSeries(
                 itemText: s.legend?.itemText ?? name,
             },
             data: prepareSeriesData(s),
+            cluster: {
+                enabled: s.cluster?.enabled ?? false,
+                distance: Math.max(1, s.cluster?.distance ?? DEFAULT_CLUSTER_DISTANCE),
+                minimumClusterSize: Math.max(
+                    2,
+                    Math.floor(s.cluster?.minimumClusterSize ?? DEFAULT_CLUSTER_MINIMUM_SIZE),
+                ),
+                marker: {
+                    color: s.cluster?.marker?.color,
+                    radius: Math.max(1, s.cluster?.marker?.radius ?? DEFAULT_CLUSTER_RADIUS),
+                },
+                dataLabels: {
+                    enabled: s.cluster?.dataLabels?.enabled ?? true,
+                    format: s.cluster?.dataLabels?.format,
+                    style: Object.assign(
+                        {},
+                        DEFAULT_CLUSTER_DATALABELS_STYLE,
+                        s.cluster?.dataLabels?.style,
+                    ),
+                },
+            },
             dataLabels: {
                 enabled: s.dataLabels?.enabled || false,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, s.dataLabels?.style),
