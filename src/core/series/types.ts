@@ -110,8 +110,9 @@ export interface PreparedLegendRow {
 }
 
 export interface PreparedLegendOptions extends Required<
-    Omit<ChartLegend, 'title' | 'colorScale' | 'width'>
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'events'>
 > {
+    events: ChartLegend['events'];
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;
     /** Nonnegative chart width after chart margins, before legend and axis space is deducted. */
@@ -149,6 +150,7 @@ export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boole
 export type LegendItem = {
     id: string;
     color: string;
+    custom: MeaningfulAny;
     height: number;
     name: string;
     text: string;
