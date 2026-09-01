@@ -10,9 +10,14 @@ import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
-import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
+import {
+    validateAxisPlotValues,
+    validatePercentStackingValues,
+    validateStacking,
+    validateXYSeries,
+} from '~core/validation/helpers';
 
-import type {BarYSeries} from '../../types';
+import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
 
 import {prepareBarYSeries} from './prepare-bar-y-series';
 
@@ -41,19 +46,23 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
     return renderBarY({plot}, preparedData[0] as BarYShapesArgs, seriesOptions, dispatcher);
 }
 
-export const barYPlugin: SeriesPlugin<BarYSeries> = {
+export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
     prepareSeries: prepareBarYSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validatePercentStackingValues({series, valueKey: 'x'});
     },
     getColorValue: (d) => d.x,
     prepareShapeData,
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            return {percentage: item.percentage, data: item.data};
+        },
         rows: [
             {
                 id: 'default',

@@ -3,7 +3,15 @@ import type {BaseType} from 'd3-selection';
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseDataLabels,
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    CustomFormatContext,
+    PercentageFormatContext,
+    ValueFormat,
+} from './base';
 import type {ChartLegendItem, RectLegendSymbolOptions} from './legend';
 
 export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
@@ -27,6 +35,14 @@ export interface PieSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 
 export type ConnectorShape = 'straight-line' | 'polyline';
 export type ConnectorCurve = 'linear' | 'basic';
+
+export interface PieFormatContext<T = MeaningfulAny>
+    extends CustomFormatContext, PercentageFormatContext {
+    name: string;
+    data: PieSeriesData<T>;
+}
+
+export type PieValueFormat<T = MeaningfulAny> = ValueFormat<PieFormatContext<T>>;
 
 export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.Pie;
@@ -63,7 +79,9 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
      * If not specified, the minimum radius is calculated as 30% of the height or width of the chart (the minimum value is taken) minus the halo effect.
      */
     minRadius?: string | number;
-    dataLabels?: BaseSeries['dataLabels'] & {
+    dataLabels?: Omit<BaseDataLabels, 'format'> & {
+        /** Formatting settings for labels. Custom formatters receive the visible slice percentage. */
+        format?: PieValueFormat<T>;
         /**
          * The distance of the data label from the pie's edge.
          * @default 30
@@ -85,6 +103,10 @@ export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
          * @default 'basic'
          */
         connectorCurve?: ConnectorCurve;
+    };
+    tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
+        /** Formatting settings for tooltip values. Custom formatters receive the visible slice percentage. */
+        valueFormat?: PieValueFormat<T>;
     };
     /** Individual series legend options. Has higher priority than legend options in chart data */
     legend?: ChartLegendItem & {

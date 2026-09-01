@@ -1,3 +1,4 @@
+import type {CustomFormatContext, ValueFormat} from '../../../types';
 import {getFormattedValue} from '../format';
 
 describe('getFormattedValue', () => {
@@ -103,6 +104,26 @@ describe('getFormattedValue', () => {
             );
             expect(formatter).toHaveBeenCalledTimes(1);
             expect(formatter).toHaveBeenCalledWith({value: 42});
+        });
+
+        test('passes an explicitly provided formatter context', () => {
+            interface TestFormatContext extends CustomFormatContext {
+                percentage: number;
+            }
+
+            const formatter = jest.fn(
+                ({value, percentage}: TestFormatContext) => `${value}:${percentage}`,
+            );
+            const format: ValueFormat<TestFormatContext> = {type: 'custom', formatter};
+
+            expect(
+                getFormattedValue({
+                    value: 42,
+                    format,
+                    context: {percentage: 0.25},
+                }),
+            ).toBe('42:0.25');
+            expect(formatter).toHaveBeenCalledWith({value: 42, percentage: 0.25});
         });
 
         test('works for string values', () => {

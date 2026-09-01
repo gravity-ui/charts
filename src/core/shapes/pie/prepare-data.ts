@@ -15,8 +15,8 @@ import {
     isPointDataLabelEnabled,
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
-import {getFormattedValue} from '../../utils/format';
 
+import {getPieDataLabelText, getPiePercentages} from './label-format';
 import type {
     PieConnectorData,
     PieLabelData,
@@ -77,11 +77,13 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
         items,
         labels,
         hasDataLabels,
+        percentages,
     }: {
         stackId: string;
         items: PreparedPieSeries[];
         labels: Record<string, Partial<PieLabelData>>;
         hasDataLabels: boolean;
+        percentages: Map<string, number>;
     }) => {
         const series = items[0];
         const {center, borderWidth, borderColor, borderRadius, dataLabels} = series;
@@ -127,6 +129,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
             acc.push({
                 value: item.value,
+                percentage: percentages.get(item.id) ?? 0,
                 color: item.color,
                 opacity: item.opacity,
                 series: item,
@@ -147,9 +150,11 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
     const getLabels = async ({
         series,
         hasDataLabels,
+        percentages,
     }: {
         series: PreparedPieSeries[];
         hasDataLabels: boolean;
+        percentages: Map<string, number>;
     }) => {
         const {dataLabels} = series[0];
 
@@ -166,9 +171,10 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 continue;
             }
 
-            const text = getFormattedValue({
-                value: d.data.label ?? d.data.value,
-                ...d.dataLabels,
+            const text = getPieDataLabelText({
+                data: d.data,
+                format: d.dataLabels.format,
+                percentage: percentages.get(d.id) ?? 0,
             });
 
             let labelWidth = 0;
@@ -461,12 +467,19 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
     return Promise.all(
         Array.from(groupedPieSeries).map(async ([stackId, items]) => {
+            const percentages = getPiePercentages(items);
             const hasDataLabels = shouldPrepareSeriesDataLabels({
                 dataLabels: items[0].dataLabels,
                 data: items.map((it) => it.data),
             });
-            const seriesLabels = await getLabels({series: items, hasDataLabels});
-            const data = prepareItem({stackId, items, labels: seriesLabels, hasDataLabels});
+            const seriesLabels = await getLabels({series: items, hasDataLabels, percentages});
+            const data = prepareItem({
+                stackId,
+                items,
+                labels: seriesLabels,
+                hasDataLabels,
+                percentages,
+            });
             const preparedLabels = prepareLabels({
                 data,
                 labels: seriesLabels,

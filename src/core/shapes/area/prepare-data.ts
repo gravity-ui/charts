@@ -1,6 +1,5 @@
 import {group, min, sort} from 'd3-array';
 import type {ScaleLogarithmic} from 'd3-scale';
-import isNil from 'lodash/isNil';
 import round from 'lodash/round';
 
 import type {AreaSeriesData} from '../../../types';
@@ -131,12 +130,9 @@ export const prepareAreaData = async (args: {
                         return;
                     }
 
-                    s.data.forEach((d, index) => {
-                        const yDataValue = d.y ?? null;
-                        if (
-                            yDataValue &&
-                            !(isNil(s.data[index - 1]?.y) && isNil(s.data[index + 1]?.y))
-                        ) {
+                    s.data.forEach((d) => {
+                        const yDataValue = Number(d.y);
+                        if (Number.isFinite(yDataValue) && yDataValue > 0) {
                             const x = String(
                                 xAxis.type === 'category'
                                     ? getDataCategoryValue({
@@ -146,7 +142,7 @@ export const prepareAreaData = async (args: {
                                       })
                                     : d.x,
                             );
-                            stackValues[x] += Number(yDataValue);
+                            stackValues[x] += yDataValue;
                         }
                     });
                 });
@@ -213,6 +209,12 @@ export const prepareAreaData = async (args: {
                     const rawData = seriesData.get(x);
                     const d = rawData ?? SYNTHETIC_POINT;
                     let yDataValue = d.y ?? null;
+                    const percentage =
+                        s.stacking === 'percent'
+                            ? stackValues[x] > 0 && Number(yDataValue) > 0
+                                ? Number(yDataValue) / stackValues[x]
+                                : 0
+                            : undefined;
                     const pointAnnotation =
                         d.annotation && !isRangeSlider
                             ? await prepareAnnotation({
@@ -254,6 +256,7 @@ export const prepareAreaData = async (args: {
                                 y: roundCoordinate(yAxisTop + yValue - prevSectionStackHeight),
                                 color: d.marker?.color ?? d.color,
                                 data: d,
+                                percentage,
                                 series: s,
                                 annotation: pointAnnotation,
                             };
@@ -274,6 +277,7 @@ export const prepareAreaData = async (args: {
                                     y: roundCoordinate(yAxisTop + yValue - nextSectionStackHeight),
                                     color: d.marker?.color ?? d.color,
                                     data: d,
+                                    percentage,
                                     series: s,
                                 };
                                 points.push(point2);
@@ -317,6 +321,7 @@ export const prepareAreaData = async (args: {
                                 y: roundCoordinate(yAxisTop + yValue + prevSectionStackHeight),
                                 color: d.marker?.color ?? d.color,
                                 data: d,
+                                percentage,
                                 series: s,
                             });
 
@@ -330,6 +335,7 @@ export const prepareAreaData = async (args: {
                                     y: roundCoordinate(yAxisTop + yValue + nextSectionStackHeight),
                                     color: d.marker?.color ?? d.color,
                                     data: d,
+                                    percentage,
                                     series: s,
                                 });
                             }
@@ -356,6 +362,7 @@ export const prepareAreaData = async (args: {
                             y: null,
                             color: d.marker?.color ?? d.color,
                             data: d,
+                            percentage,
                             series: s,
                         });
                     }
@@ -438,6 +445,10 @@ export const prepareAreaData = async (args: {
                         xMax,
                         yAxisTop: itemYAxisTop,
                         isOutsideBounds,
+                        getFormatContext: (point) => ({
+                            data: point.data,
+                            percentage: point.percentage,
+                        }),
                     });
                     item.svgLabels.push(...labelsData.svgLabels);
                     item.htmlLabels.push(...labelsData.htmlLabels);

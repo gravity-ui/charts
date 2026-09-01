@@ -1,7 +1,14 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseDataLabels,
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    CustomFormatContext,
+    ValueFormat,
+} from './base';
 import type {RectLegendSymbolOptions} from './legend';
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -23,6 +30,14 @@ export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** Individual opacity for the bar. */
     opacity?: number;
 }
+
+export interface BarYFormatContext<T = MeaningfulAny> extends CustomFormatContext {
+    data: BarYSeriesData<T>;
+    /** Value share in the stack. Provided only when `stacking` is `percent`. */
+    percentage?: number;
+}
+
+export type BarYValueFormat<T = MeaningfulAny> = ValueFormat<BarYFormatContext<T>>;
 
 export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.BarY;
@@ -48,6 +63,7 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
+     * Percent stacking supports only non-negative values.
      */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
@@ -58,13 +74,19 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
      * @default true
      */
     grouping?: boolean;
-    dataLabels?: BaseSeries['dataLabels'] & {
+    dataLabels?: Omit<BaseDataLabels, 'format'> & {
+        /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
+        format?: BarYValueFormat<T>;
         /**
          * Whether to align the data label inside or outside the box.
          * For charts with a percentage stack, it is always true.
          * @default false
          */
         inside?: boolean;
+    };
+    tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
+        /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */
+        valueFormat?: BarYValueFormat<T>;
     };
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {

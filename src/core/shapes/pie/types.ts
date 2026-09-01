@@ -6,6 +6,7 @@ import type {SeriesShapeData} from '../types';
 
 export type SegmentData = {
     value: number;
+    percentage: number;
     color: string;
     opacity: number | null;
     series: PreparedPieSeries;

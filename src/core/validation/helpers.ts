@@ -6,13 +6,42 @@ import {DEFAULT_AXIS_TYPE} from '../constants';
 import {i18n} from '../i18n';
 import type {ChartXAxis, ChartYAxis} from '../types';
 
-type XYDataPoint = {x?: unknown; y?: unknown};
+interface XYDataPoint {
+    x?: unknown;
+    y?: unknown;
+}
 
-type XYValidationSeries = {
+interface XYValidationSeries {
     name: string;
     yAxis?: number;
     data: XYDataPoint[];
-};
+}
+
+interface PercentStackingValidationSeries extends XYValidationSeries {
+    stacking?: 'normal' | 'percent';
+}
+
+export function validatePercentStackingValues(args: {
+    series: PercentStackingValidationSeries;
+    valueKey: keyof XYDataPoint;
+}) {
+    const {series, valueKey} = args;
+    if (
+        series.stacking === 'percent' &&
+        series.data.some((point) => {
+            const value = point[valueKey];
+            return typeof value === 'number' && value < 0;
+        })
+    ) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-percent-stacking-value', {
+                key: valueKey,
+                seriesName: series.name,
+            }),
+        });
+    }
+}
 
 export function validateXYSeries(args: {
     series: XYValidationSeries;

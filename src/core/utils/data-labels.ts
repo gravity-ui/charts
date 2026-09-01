@@ -1,19 +1,19 @@
 import type {HtmlItem, LabelData} from '../../types';
-import type {BaseTextStyle, ValueFormat} from '../types/chart/base';
+import type {BaseTextStyle, CustomFormatContext, ValueFormat} from '../types/chart/base';
 
 import {getFormattedValue} from './format';
 import {getLabelsSize, getTextSizeFn} from './text';
 
-type PointLabelSeries = {
+interface PointLabelSeries<TContext extends CustomFormatContext = CustomFormatContext> {
     id: string;
     dataLabels: {
         style: BaseTextStyle;
         html: boolean;
         padding: number;
-        format?: ValueFormat;
+        format?: ValueFormat<TContext>;
         enabled?: boolean;
     };
-};
+}
 
 /**
  * Resolves the effective dataLabels visibility for a point: point-level setting wins
@@ -44,7 +44,7 @@ export function shouldPrepareSeriesDataLabels(series: {
     return Boolean(series.data?.some((d) => d.dataLabels?.enabled === true));
 }
 
-type LabelPoint = {
+interface LabelPoint {
     x: number | null;
     y: number | null;
     data: {
@@ -52,7 +52,7 @@ type LabelPoint = {
         label?: string | number | null;
         y?: string | number | null;
     };
-};
+}
 
 /**
  * Shared "above-point" dataLabels algorithm used by line, area, and scatter series.
@@ -69,20 +69,25 @@ type LabelPoint = {
  *
  * Overlap filtering is intentionally left to the caller.
  */
-export async function preparePointDataLabels<S extends PointLabelSeries, P extends LabelPoint>({
+export async function preparePointDataLabels<
+    TContext extends CustomFormatContext = CustomFormatContext,
+    P extends LabelPoint = LabelPoint,
+>({
     series,
     points,
     xMax,
     yAxisTop,
     isOutsideBounds,
     anchorYOffset = 0,
+    getFormatContext,
 }: {
-    series: S;
+    series: PointLabelSeries<TContext>;
     points: P[];
     xMax: number;
     yAxisTop: number;
     isOutsideBounds: (x: number, y: number) => boolean;
     anchorYOffset?: number;
+    getFormatContext?: (point: P) => Omit<TContext, 'value'>;
 }): Promise<{svgLabels: LabelData[]; htmlLabels: HtmlItem[]}> {
     const svgLabels: LabelData[] = [];
     const htmlLabels: HtmlItem[] = [];
@@ -102,7 +107,8 @@ export async function preparePointDataLabels<S extends PointLabelSeries, P exten
 
         const text = getFormattedValue({
             value: point.data.label ?? point.data.y,
-            ...series.dataLabels,
+            format: series.dataLabels.format,
+            context: getFormatContext?.(point),
         });
 
         const anchorY = point.y - anchorYOffset;

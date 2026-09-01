@@ -12,10 +12,20 @@ type DateFormat = {
     format?: string;
 };
 
-export type CustomFormat = {
+export interface CustomFormatContext {
+    value: unknown;
+}
+
+export interface PercentageFormatContext {
+    /** Value share in the range 0..1. */
+    percentage: number;
+}
+
+export interface CustomFormat<TContext extends CustomFormatContext = CustomFormatContext> {
     type: 'custom';
-    formatter: (args: {value: unknown}) => string;
-};
+    // Keep specialized series formatters assignable to the formatter in BaseSeries.
+    formatter: <TFormatterContext extends TContext>(args: TFormatterContext) => string;
+}
 
 /**
  * Specifies how a value should be formatted for display.
@@ -48,7 +58,10 @@ export type CustomFormat = {
  *   },
  * }
  */
-export type ValueFormat = NumberFormat | DateFormat | CustomFormat;
+export type ValueFormat<TContext extends CustomFormatContext = CustomFormatContext> =
+    | NumberFormat
+    | DateFormat
+    | CustomFormat<TContext>;
 
 export interface BaseDataLabels {
     /**

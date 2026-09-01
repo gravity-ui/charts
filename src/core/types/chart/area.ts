@@ -2,7 +2,14 @@ import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseDataLabels,
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    CustomFormatContext,
+    ValueFormat,
+} from './base';
 import type {SeriesColor} from './gradient';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
@@ -54,6 +61,14 @@ export interface AreaMarkerOptions extends PointMarkerOptions {
     symbol?: AreaMarkerSymbol;
 }
 
+export interface AreaFormatContext<T = MeaningfulAny> extends CustomFormatContext {
+    data: AreaSeriesData<T>;
+    /** Value share in the stack. Provided only when `stacking` is `percent`. */
+    percentage?: number;
+}
+
+export type AreaValueFormat<T = MeaningfulAny> = ValueFormat<AreaFormatContext<T>>;
+
 export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.Area;
     data: AreaSeriesData<T>[];
@@ -62,10 +77,19 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
+     * Percent stacking supports only non-negative values.
      */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
+    dataLabels?: Omit<BaseDataLabels, 'format'> & {
+        /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
+        format?: AreaValueFormat<T>;
+    };
+    tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
+        /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */
+        valueFormat?: AreaValueFormat<T>;
+    };
     /** The solid or linear-gradient color of the line and the default color of the area fill. */
     color?: SeriesColor;
     /**

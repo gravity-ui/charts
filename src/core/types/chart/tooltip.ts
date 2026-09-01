@@ -22,20 +22,26 @@ import type {XRangeSeries, XRangeSeriesData} from './x-range';
 export interface TooltipDataChunkBarX<T = MeaningfulAny> {
     data: BarXSeriesData<T>;
     series: BarXSeries<T>;
+    /** Value share in the stack. Present only for percent stacking. */
+    percentage?: number;
 }
 
 export interface TooltipDataChunkBarY<T = MeaningfulAny> {
     data: BarYSeriesData<T>;
     series: BarYSeries<T>;
+    /** Value share in the stack. Present only for percent stacking. */
+    percentage?: number;
 }
 
 export interface TooltipDataChunkPie<T = MeaningfulAny> {
     data: PieSeriesData<T>;
+    /** Slice share among currently visible segments, in the range 0..1. */
+    percentage: number;
     series: {
         type: PieSeries['type'];
         id: string;
         name: string;
-        tooltip?: BaseSeries['tooltip'];
+        tooltip?: PieSeries<T>['tooltip'];
     };
 }
 
@@ -66,11 +72,13 @@ export interface TooltipDataChunkArea<T = MeaningfulAny> {
     data: AreaSeriesData<T>;
     /** Resolved fill color of the marker for the hovered point, when available. */
     color?: string;
+    /** Value share in the stack. Present only for percent stacking. */
+    percentage?: number;
     series: {
         type: AreaSeries['type'];
         id: string;
         name: string;
-        tooltip?: BaseSeries['tooltip'];
+        tooltip?: AreaSeries<T>['tooltip'];
     };
 }
 
