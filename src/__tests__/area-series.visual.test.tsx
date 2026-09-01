@@ -312,6 +312,44 @@ test.describe('Area series', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
+        test('Positioning when the top of a percent stack is on the plot edge', async ({mount}) => {
+            const chartData: ChartData = {
+                chart: {margin: {top: 20}},
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            name: 'top',
+                            type: 'area',
+                            stacking: 'percent',
+                            dataLabels: {enabled: true},
+                            data: [
+                                {x: 1, y: 1631},
+                                {x: 2, y: 1587},
+                                {x: 3, y: 1652},
+                                {x: 4, y: 1610},
+                            ],
+                        },
+                        {
+                            name: 'bottom',
+                            type: 'area',
+                            stacking: 'percent',
+                            dataLabels: {enabled: true},
+                            data: [
+                                {x: 1, y: 96},
+                                {x: 2, y: 79},
+                                {x: 3, y: 86},
+                                {x: 4, y: 75},
+                            ],
+                        },
+                    ],
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
         test('Labels for out-of-bounds points are hidden when min/max set on axes', async ({
             mount,
         }) => {
