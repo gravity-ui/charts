@@ -21,6 +21,18 @@ import {setGradientPointFills} from '../../utils/gradient';
 
 import type {PointData, PreparedAreaData} from './types';
 
+// Stacked coordinates are rounded once, after the section offset has been
+// applied. Rounding every section before it goes into the accumulator instead
+// leaves each of them up to 0.005px off, and those errors do not cancel out from
+// three sections on. Either way the top of a percent stack, which belongs exactly
+// on the plot edge, ends up a fraction of a pixel outside it.
+const roundCoordinate = (value: number) => {
+    const rounded = round(value, 2);
+    // `round` keeps the sign of a negative zero; normalize it so that a coordinate
+    // does not depend on the side the accumulated noise came from.
+    return rounded === 0 ? 0 : rounded;
+};
+
 const SYNTHETIC_POINT: AreaSeriesData = {
     x: 0,
     y: 0,
@@ -218,7 +230,7 @@ export const prepareAreaData = async (args: {
                         yDataValue = Number(yDataValue) * ratio[x];
                     }
 
-                    let yValue = getYValue({
+                    const yValue = getYValue({
                         point: {
                             y: yDataValue,
                         },
@@ -227,7 +239,6 @@ export const prepareAreaData = async (args: {
                     });
 
                     if (typeof yDataValue === 'number' && yValue !== null) {
-                        yValue = round(yValue, 2);
                         const prevPoint = seriesData.get(xValues[xIdx - 1]?.[0]);
                         const nextPoint = seriesData.get(xValues[xIdx + 1]?.[0]);
                         const currentPointStackHeight = Math.abs(yMin - yValue);
@@ -238,9 +249,9 @@ export const prepareAreaData = async (args: {
                             let nextSectionStackHeight = positiveStackHeights?.next ?? 0;
 
                             const point = {
-                                y0: yAxisTop + yMin - prevSectionStackHeight,
+                                y0: roundCoordinate(yAxisTop + yMin - prevSectionStackHeight),
                                 x: xValue,
-                                y: yAxisTop + yValue - prevSectionStackHeight,
+                                y: roundCoordinate(yAxisTop + yValue - prevSectionStackHeight),
                                 color: d.marker?.color ?? d.color,
                                 data: d,
                                 series: s,
@@ -249,11 +260,18 @@ export const prepareAreaData = async (args: {
 
                             points.push(point);
 
-                            if (prevSectionStackHeight !== nextSectionStackHeight) {
+                            // Sections are compared at the precision the coordinates are
+                            // rounded to: a thinner step collapses into the same point
+                            // anyway, and a second one would only duplicate the point
+                            // together with its marker and its data label.
+                            if (
+                                roundCoordinate(prevSectionStackHeight) !==
+                                roundCoordinate(nextSectionStackHeight)
+                            ) {
                                 const point2 = {
-                                    y0: yAxisTop + yMin - nextSectionStackHeight,
+                                    y0: roundCoordinate(yAxisTop + yMin - nextSectionStackHeight),
                                     x: xValue,
-                                    y: yAxisTop + yValue - nextSectionStackHeight,
+                                    y: roundCoordinate(yAxisTop + yValue - nextSectionStackHeight),
                                     color: d.marker?.color ?? d.color,
                                     data: d,
                                     series: s,
@@ -261,10 +279,14 @@ export const prepareAreaData = async (args: {
                                 points.push(point2);
 
                                 if (isPercentStacking) {
-                                    const newYValue =
+                                    const newYValue = roundCoordinate(
                                         yAxisTop +
-                                        yValue -
-                                        Math.max(prevSectionStackHeight, nextSectionStackHeight);
+                                            yValue -
+                                            Math.max(
+                                                prevSectionStackHeight,
+                                                nextSectionStackHeight,
+                                            ),
+                                    );
                                     point.y = newYValue;
                                     point2.y = newYValue;
                                 }
@@ -290,19 +312,22 @@ export const prepareAreaData = async (args: {
                             let nextSectionStackHeight = negativeStackHeights?.next ?? 0;
 
                             points.push({
-                                y0: yAxisTop + yMin + prevSectionStackHeight,
+                                y0: roundCoordinate(yAxisTop + yMin + prevSectionStackHeight),
                                 x: xValue,
-                                y: yAxisTop + yValue + prevSectionStackHeight,
+                                y: roundCoordinate(yAxisTop + yValue + prevSectionStackHeight),
                                 color: d.marker?.color ?? d.color,
                                 data: d,
                                 series: s,
                             });
 
-                            if (prevSectionStackHeight !== nextSectionStackHeight) {
+                            if (
+                                roundCoordinate(prevSectionStackHeight) !==
+                                roundCoordinate(nextSectionStackHeight)
+                            ) {
                                 points.push({
-                                    y0: yAxisTop + yMin + nextSectionStackHeight,
+                                    y0: roundCoordinate(yAxisTop + yMin + nextSectionStackHeight),
                                     x: xValue,
-                                    y: yAxisTop + yValue + nextSectionStackHeight,
+                                    y: roundCoordinate(yAxisTop + yValue + nextSectionStackHeight),
                                     color: d.marker?.color ?? d.color,
                                     data: d,
                                     series: s,
@@ -326,7 +351,7 @@ export const prepareAreaData = async (args: {
                         }
                     } else {
                         points.push({
-                            y0: yAxisTop + yMin,
+                            y0: roundCoordinate(yAxisTop + yMin),
                             x: xValue,
                             y: null,
                             color: d.marker?.color ?? d.color,

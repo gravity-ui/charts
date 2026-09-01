@@ -54,6 +54,8 @@ export function useChartInnerHandlers(props: Props) {
         tooltipThrottle,
     } = props;
 
+    // Strict on purpose, unlike `createIsOutsideBounds`: these are pointer
+    // coordinates, so there is no scale rounding to compensate for.
     const isOutsideBounds = React.useCallback(
         (x: number, y: number) => {
             return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
