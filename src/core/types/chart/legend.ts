@@ -1,4 +1,17 @@
+import type {MeaningfulAny} from '../misc';
+
 import type {BaseTextStyle} from './base';
+
+export interface ChartLegendItemClickData {
+    id: string;
+    name: string;
+    visible: boolean;
+    custom?: MeaningfulAny;
+}
+
+export interface ChartLegendEvents {
+    itemClick?: (data: ChartLegendItemClickData, event: MouseEvent) => void;
+}
 
 export interface ChartLegendItem {
     enabled?: boolean;
@@ -12,6 +25,7 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
+    events?: ChartLegendEvents;
     /**
      * Different types for different color schemes.
      * If the color scheme is continuous, a gradient legend will be drawn.
