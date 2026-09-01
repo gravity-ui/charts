@@ -65,6 +65,76 @@ test.describe('X-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('explicit values define the X and Y ticks', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 4, y: 40},
+                            {x: 10, y: 100},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                min: 0,
+                max: 10,
+                ticks: {values: [-5, 0, 4, 10, 15]},
+            },
+            yAxis: [
+                {
+                    min: 0,
+                    max: 100,
+                    ticks: {values: [-10, 0, 40, 100, 120]},
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+
+        await expect(component.locator('.gcharts-x-axis__tick text')).toHaveText(['0', '4', '10']);
+        await expect(component.locator('.gcharts-y-axis__tick text')).toHaveText([
+            '0',
+            '40',
+            '100',
+        ]);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('explicit values select category indices', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 20},
+                            {x: 2, y: 30},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['January', 'February', 'March'],
+                ticks: {values: [0, 2]},
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+
+        await expect(component.locator('.gcharts-x-axis__tick text')).toHaveText([
+            'January',
+            'March',
+        ]);
+    });
+
     test.describe('Html in categories', () => {
         const baseData: ChartData = {
             legend: {

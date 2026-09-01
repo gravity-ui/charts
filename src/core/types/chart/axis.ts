@@ -156,6 +156,21 @@ export interface ChartAxisTickMarks {
     length?: number;
 }
 
+export interface ChartAxisTicks {
+    /**
+     * Pixel interval of the tick marks. Not applicable to categorized axis.
+     * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
+     * @deprecated use `interval` instead
+     */
+    pixelInterval?: number;
+    /**
+     * Interval of the tick marks(absolute or relative to the chart area). Not applicable to categorized axis.
+     * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
+     */
+    interval?: number | string;
+    values?: number[];
+}
+
 export interface ChartAxis {
     categories?: string[];
     /** Configure a crosshair that follows either the mouse pointer or the hovered point. */
@@ -205,19 +220,7 @@ export interface ChartAxis {
          */
         enabled?: boolean;
     };
-    ticks?: {
-        /**
-         * Pixel interval of the tick marks. Not applicable to categorized axis.
-         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
-         * @deprecated use `interval` instead
-         */
-        pixelInterval?: number;
-        /**
-         * Interval of the tick marks(absolute or relative to the chart area). Not applicable to categorized axis.
-         * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
-         */
-        interval?: number | string;
-    };
+    ticks?: ChartAxisTicks;
     /**
      * Padding of the max value relative to the length of the axis.
      * A padding of 0.05 will make a 100px axis 5px longer.
