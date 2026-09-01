@@ -1,61 +1,12 @@
 import intersection from 'lodash/intersection';
 import merge from 'lodash/merge';
 
-import {SERIES_TYPE, ZOOM_TYPE, brushDefaults} from '~core/constants';
+import {brushDefaults} from '~core/constants';
 import type {ZoomType} from '~core/constants';
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
 
 import type {PreparedZoom} from '../../../hooks/types';
 import type {ChartBrush, ChartSeries, ChartZoom} from '../../../types';
-
-function mapSeriesTypeToZoomType(seriesType: ChartSeries['type']): ZoomType[] {
-    switch (seriesType) {
-        case SERIES_TYPE.Area: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.BarX: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY];
-        }
-        case SERIES_TYPE.XRange: {
-            return [ZOOM_TYPE.X];
-        }
-        case SERIES_TYPE.BarY: {
-            return [ZOOM_TYPE.Y, ZOOM_TYPE.XY];
-        }
-        case SERIES_TYPE.Line: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.Scatter: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        case SERIES_TYPE.Waterfall: {
-            return [ZOOM_TYPE.X, ZOOM_TYPE.XY, ZOOM_TYPE.Y];
-        }
-        default: {
-            return [];
-        }
-    }
-}
-
-function getDefaultZoomType(seriesType: ChartSeries['type']): ZoomType | undefined {
-    switch (seriesType) {
-        case SERIES_TYPE.BarY: {
-            return ZOOM_TYPE.Y;
-        }
-        case SERIES_TYPE.Scatter: {
-            return ZOOM_TYPE.XY;
-        }
-        case SERIES_TYPE.Area:
-        case SERIES_TYPE.BarX:
-        case SERIES_TYPE.XRange:
-        case SERIES_TYPE.Line:
-        case SERIES_TYPE.Waterfall: {
-            return ZOOM_TYPE.X;
-        }
-        default: {
-            return undefined;
-        }
-    }
-}
 
 export function getZoomType(args: {
     seriesData: ChartSeries[];
@@ -63,7 +14,7 @@ export function getZoomType(args: {
 }): ZoomType | undefined {
     const {seriesData, zoomType} = args;
     const possibleZoomTypes: ZoomType[][] = seriesData.map((s) => {
-        return mapSeriesTypeToZoomType(s.type);
+        return getSeriesPlugin(s.type).zoom?.types ?? [];
     });
     const availableZoomTypes = intersection(...possibleZoomTypes) as ZoomType[];
 
@@ -73,7 +24,7 @@ export function getZoomType(args: {
 
     const possibleDefaultZoomTypes: ZoomType[] = seriesData
         .map((s) => {
-            return getDefaultZoomType(s.type);
+            return getSeriesPlugin(s.type).zoom?.defaultType;
         })
         .filter(Boolean) as ZoomType[];
     const availableDefaultZoomTypes = intersection(

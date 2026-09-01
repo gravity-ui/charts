@@ -43,6 +43,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const barYPlugin: SeriesPlugin<BarYSeries> = {
     type: 'bar-y',
+    zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});

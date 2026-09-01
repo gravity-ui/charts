@@ -1,6 +1,7 @@
 import get from 'lodash/get';
 
 import {i18n} from '~core/i18n';
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import {getDataCategoryValue} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
@@ -96,6 +97,11 @@ export function getHoveredValues(args: {
 
     return hovered.map((seriesItem) => {
         const {data, series} = seriesItem;
+        const getPluginValue = getSeriesPlugin(series.type).tooltip.getValue;
+
+        if (getPluginValue) {
+            return getPluginValue({item: seriesItem, xAxis, yAxis});
+        }
 
         switch (series.type) {
             case 'area':

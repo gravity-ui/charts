@@ -1,12 +1,10 @@
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
-import {SERIES_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries, PreparedZoomableSeries} from '../series';
-import type {ChartAxisType, ChartSeries, ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
+import {getSeriesPlugin} from '../series/seriesRegistry';
+import type {ChartAxisType, ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
 
 import type {ZoomState} from './types';
-
-const SERIES_TYPE_WITH_HIDDEN_POINTS: ChartSeries['type'][] = [SERIES_TYPE.Area, SERIES_TYPE.Line];
 
 function isValueInRange(args: {
     axis?: ChartXAxis | ChartYAxis | PreparedAxis | null;
@@ -90,7 +88,8 @@ export function getZoomedSeriesData(args: {
 
         const filteredData: ChartSeriesData[] = [];
         const filteredShapesData: ChartSeriesData[] | undefined =
-            SERIES_TYPE_WITH_HIDDEN_POINTS.includes(seriesItem.type) && xAxis?.type !== 'category'
+            getSeriesPlugin(seriesItem.type).zoom?.preserveAdjacentPoints &&
+            xAxis?.type !== 'category'
                 ? []
                 : undefined;
 

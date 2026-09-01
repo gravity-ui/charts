@@ -9,6 +9,12 @@ const AREA_SERIES: ChartSeries = {
     type: SERIES_TYPE.Area,
 };
 
+const AREA_RANGE_SERIES: ChartSeries = {
+    data: [],
+    name: 'AreaRange',
+    type: SERIES_TYPE.AreaRange,
+};
+
 const BAR_X_SERIES: ChartSeries = {
     data: [],
     name: 'BarX',
@@ -65,6 +71,7 @@ const WATERFALL_SERIES: ChartSeries = {
 describe('zoom/getZoomType', () => {
     test.each([
         {seriesData: [AREA_SERIES], expected: ZOOM_TYPE.X},
+        {seriesData: [AREA_RANGE_SERIES], expected: ZOOM_TYPE.X},
         {seriesData: [LINE_SERIES], expected: ZOOM_TYPE.X},
         {seriesData: [BAR_X_SERIES], expected: ZOOM_TYPE.X},
         {seriesData: [BAR_Y_SERIES], expected: ZOOM_TYPE.Y},
@@ -81,6 +88,7 @@ describe('zoom/getZoomType', () => {
 
     test.each([
         {seriesData: [AREA_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
+        {seriesData: [AREA_RANGE_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [LINE_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [BAR_X_SERIES], zoomType: ZOOM_TYPE.XY, expected: ZOOM_TYPE.XY},
         {seriesData: [BAR_X_SERIES], zoomType: ZOOM_TYPE.Y, expected: ZOOM_TYPE.X},

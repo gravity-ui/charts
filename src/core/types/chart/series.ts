@@ -4,6 +4,7 @@ import type {SVGTextAttributes} from '../renderer';
 
 import type {ChartAnnotationSeriesOptions} from './annotation';
 import type {AreaSeries, AreaSeriesData} from './area';
+import type {AreaRangeSeries, AreaRangeSeriesData} from './area-range';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
@@ -26,6 +27,7 @@ export type ChartSeries<T = MeaningfulAny> =
     | BarYSeries<T>
     | LineSeries<T>
     | AreaSeries<T>
+    | AreaRangeSeries<T>
     | TreemapSeries<T>
     | WaterfallSeries<T>
     | SankeySeries<T>
@@ -41,6 +43,7 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | BarYSeriesData<T>
     | LineSeriesData<T>
     | AreaSeriesData<T>
+    | AreaRangeSeriesData<T>
     | TreemapSeriesData<T>
     | WaterfallSeriesData<T>
     | SankeySeriesData<T>
@@ -269,6 +272,13 @@ export interface ChartSeriesOptions {
         marker?: PointMarkerOptions;
         /** Default annotation settings for all area data points */
         annotation?: ChartAnnotationSeriesOptions;
+    };
+    'area-range'?: {
+        lineWidth?: number;
+        states?: {
+            hover?: BasicHoverState;
+            inactive?: BasicInactiveState;
+        };
     };
     treemap?: {
         /** Options for the series states that provide additional styling information to the series. */

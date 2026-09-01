@@ -8,11 +8,13 @@ import {render} from '@testing-library/react';
 
 import {registerSeriesPlugin} from '~core/series/seriesRegistry';
 
+import {areaRangePlugin} from '../../../../plugins/area-range';
 import {linePlugin} from '../../../../plugins/line';
 import type {TooltipDataChunk} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
 registerSeriesPlugin(linePlugin);
+registerSeriesPlugin(areaRangePlugin);
 
 function makeLineChunk(
     name: string,
@@ -64,5 +66,28 @@ describe('DefaultTooltipContent — valueFormat precedence', () => {
 
         expect(seriesFormatter).toHaveBeenCalledWith({value: 10});
         expect(chartFormatter).toHaveBeenCalledWith({value: 20});
+    });
+
+    test('area-range formats each boundary exactly once', () => {
+        const formatter = jest.fn(({value}) => `formatted:${value}`);
+        const hovered: TooltipDataChunk[] = [
+            {
+                data: {x: 1, y0: 5, y1: 10},
+                series: {
+                    type: 'area-range',
+                    id: 'range',
+                    name: 'Range',
+                    tooltip: {valueFormat: {type: 'custom', formatter}},
+                } as never,
+            },
+        ];
+        const {container} = renderTooltip(
+            <DefaultTooltipContent hovered={hovered} yAxis={{type: 'linear'}} />,
+        );
+
+        expect(container.textContent).toContain('formatted:5 – formatted:10');
+        expect(formatter).toHaveBeenCalledTimes(2);
+        expect(formatter).toHaveBeenNthCalledWith(1, {value: 5});
+        expect(formatter).toHaveBeenNthCalledWith(2, {value: 10});
     });
 });

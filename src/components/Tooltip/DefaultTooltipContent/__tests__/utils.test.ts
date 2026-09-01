@@ -1,5 +1,9 @@
-import type {TooltipDataChunk, TooltipDataChunkBarY} from '../../../../types';
-import {getHoveredValues, getSortedHovered} from '../utils';
+import type {
+    TooltipDataChunk,
+    TooltipDataChunkAreaRange,
+    TooltipDataChunkBarY,
+} from '../../../../types';
+import {getBuiltInAggregatedValue, getHoveredValues, getSortedHovered} from '../utils';
 
 const createLineChunk = (name: string, value: number | null): TooltipDataChunk => ({
     data: {x: 1, y: value},
@@ -8,6 +12,10 @@ const createLineChunk = (name: string, value: number | null): TooltipDataChunk =
 const createBarYChunk = (name: string, value: number): TooltipDataChunkBarY => ({
     data: {x: value, y: 1},
     series: {type: 'bar-y', name, data: []},
+});
+const createAreaRangeChunk = (name: string, y0: number, y1: number): TooltipDataChunkAreaRange => ({
+    data: {x: 1, y0, y1},
+    series: {type: 'area-range', id: name, name},
 });
 
 const ASC = {key: 'value' as const, direction: 'asc' as const};
@@ -133,5 +141,19 @@ describe('getSortedHovered', () => {
             xAxis: {type: 'linear'},
         });
         expect(getHoveredValues({hovered: result, xAxis: {type: 'linear'}})).toEqual([10, 50, 100]);
+    });
+
+    it('uses area-range width for sorting and totals', () => {
+        const hovered: TooltipDataChunk[] = [
+            createAreaRangeChunk('Wide', 10, 30),
+            createAreaRangeChunk('Narrow', 10, 15),
+            createAreaRangeChunk('Medium', 10, 20),
+        ];
+        const result = getSortedHovered({hovered, sorting: ASC, yAxis: {type: 'linear'}});
+        const values = getHoveredValues({hovered: result, yAxis: {type: 'linear'}});
+
+        expect(values).toEqual([5, 10, 20]);
+        expect(result.map((chunk) => chunk.series.name)).toEqual(['Narrow', 'Medium', 'Wide']);
+        expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(35);
     });
 });

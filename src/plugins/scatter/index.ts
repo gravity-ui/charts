@@ -48,6 +48,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
+    zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     prepareSeries: prepareScatterSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});

@@ -159,6 +159,43 @@ describe('validation/validateData', () => {
         );
     });
 
+    test('validateData should accept an area range series', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'area-range',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y0: 2, y1: 5},
+                            {x: 2, y0: null, y1: null},
+                        ],
+                    },
+                ],
+            },
+        };
+
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('validateData should reject an area range with y0 greater than y1', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'area-range',
+                        name: 'Series 1',
+                        data: [{x: 1, y0: 5, y1: 2}],
+                    },
+                ],
+            },
+        };
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
     test.each([
         {
             series: {
