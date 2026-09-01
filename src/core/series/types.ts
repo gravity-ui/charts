@@ -17,6 +17,8 @@ import type {
     HeatmapSeriesData,
     LineSeries,
     LineSeriesData,
+    LineSeriesDataLabelPlacementFallback,
+    LineSeriesDataLabelPlacementPosition,
     LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     LinearGradient,
@@ -288,6 +290,8 @@ export type PreparedLineSeries = {
         allowOverlap: boolean;
         html: boolean;
         format?: ValueFormat;
+        placement: 'auto' | LineSeriesDataLabelPlacementPosition[];
+        placementFallback: LineSeriesDataLabelPlacementFallback;
     };
     marker: {
         states: {

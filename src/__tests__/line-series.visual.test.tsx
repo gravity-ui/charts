@@ -12,7 +12,7 @@ import {
     lineNullModeZeroLinearXData,
     lineTwoYAxisData,
 } from '../__stories__/__data__';
-import type {ChartData} from '../types';
+import type {ChartData, LineSeries} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
 import {getAttachedLocator, getLocator, getLocatorBoundingBox} from './utils';
@@ -345,6 +345,215 @@ test.describe('Line series', () => {
                 const x = Number(await labels.nth(i).getAttribute('x'));
                 expect(x).toBeGreaterThanOrEqual(0);
             }
+        });
+
+        test.describe('Placement', () => {
+            const risingColor = '#4a90e2';
+            const fallingColor = '#e0554a';
+            const crossingSeries: LineSeries[] = [
+                {
+                    type: 'line',
+                    name: 'Rising',
+                    color: risingColor,
+                    data: [
+                        {x: 0, y: 30},
+                        {x: 1, y: 35},
+                        {x: 2, y: 40},
+                        {x: 3, y: 45},
+                        {x: 4, y: 50},
+                    ],
+                    dataLabels: {
+                        enabled: true,
+                        placement: 'auto',
+                        style: {fontColor: risingColor},
+                    },
+                },
+                {
+                    type: 'line',
+                    name: 'Falling',
+                    color: fallingColor,
+                    data: [
+                        {x: 0, y: 50},
+                        {x: 1, y: 45},
+                        {x: 2, y: 40},
+                        {x: 3, y: 35},
+                        {x: 4, y: 30},
+                    ],
+                    dataLabels: {
+                        enabled: true,
+                        placement: 'auto',
+                        style: {fontColor: fallingColor},
+                    },
+                },
+            ];
+
+            test('Two crossing series (auto)', async ({mount}) => {
+                const chartData: ChartData = {
+                    series: {data: crossingSeries},
+                    yAxis: [{min: 10, max: 70}],
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Fixed bottom position', async ({mount}) => {
+                const chartData: ChartData = {
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Series',
+                                color: risingColor,
+                                data: [
+                                    {x: 0, y: 10},
+                                    {x: 1, y: 30},
+                                    {x: 2, y: 20},
+                                    {x: 3, y: 40},
+                                ],
+                                dataLabels: {
+                                    enabled: true,
+                                    placement: ['bottom'],
+                                    style: {fontColor: risingColor},
+                                },
+                            },
+                        ],
+                    },
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Fallback hide', async ({mount}) => {
+                // Same data as the fixed bottom case, but positions that do not
+                // fit cleanly hide the label instead of being shown at the first position
+                const chartData: ChartData = {
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Series',
+                                color: risingColor,
+                                data: [
+                                    {x: 0, y: 10},
+                                    {x: 1, y: 30},
+                                    {x: 2, y: 20},
+                                    {x: 3, y: 40},
+                                ],
+                                dataLabels: {
+                                    enabled: true,
+                                    placement: ['bottom'],
+                                    placementFallback: 'hide',
+                                    style: {fontColor: risingColor},
+                                },
+                            },
+                        ],
+                    },
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Fallback show keeps labels visible on steep lines', async ({mount}) => {
+                // Full-diagonal lines reject every candidate, so the labels
+                // degrade to the first position (top) instead of disappearing
+                const chartData: ChartData = {
+                    series: {
+                        data: crossingSeries.map((s) => ({
+                            ...s,
+                            data: s.data.map((d, i) => ({
+                                ...d,
+                                y: s.name === 'Rising' ? 10 + i * 15 : 70 - i * 15,
+                            })),
+                        })),
+                    },
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Html labels', async ({mount}) => {
+                const chartData: ChartData = {
+                    series: {
+                        data: crossingSeries.map((s) => ({
+                            ...s,
+                            dataLabels: {...s.dataLabels, html: true},
+                        })),
+                    },
+                    yAxis: [{min: 10, max: 70}],
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Labels avoid lines of other series', async ({mount}) => {
+                // The barrier line right above the labeled one blocks every "top"
+                // candidate, so the labels have to go below their own line
+                const chartData: ChartData = {
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Labeled',
+                                color: risingColor,
+                                data: new Array(5).fill(null).map((_, i) => ({x: i, y: 40})),
+                                dataLabels: {
+                                    enabled: true,
+                                    placement: 'auto',
+                                    style: {fontColor: risingColor},
+                                },
+                            },
+                            {
+                                type: 'line',
+                                name: 'Barrier',
+                                color: fallingColor,
+                                data: new Array(5).fill(null).map((_, i) => ({x: i, y: 44})),
+                            },
+                        ],
+                    },
+                    yAxis: [{min: 0, max: 60}],
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
+
+            test('Labels follow an interpolated line', async ({mount}) => {
+                // The cardinal curve bulges far away from the chords between the
+                // points, so the labels have to avoid the curve, not the chords
+                const chartData: ChartData = {
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Curve',
+                                color: risingColor,
+                                interpolation: {type: 'cardinal', tension: 0},
+                                data: [
+                                    {x: 0, y: 30},
+                                    {x: 1, y: 30},
+                                    {x: 2, y: 80},
+                                    {x: 3, y: 30},
+                                    {x: 4, y: 30},
+                                ],
+                                dataLabels: {
+                                    enabled: true,
+                                    placement: 'auto',
+                                    style: {fontColor: risingColor},
+                                },
+                            },
+                        ],
+                    },
+                    yAxis: [{min: 0, max: 100}],
+                    legend: {enabled: false},
+                };
+                const component = await mount(<ChartTestStory data={chartData} />);
+                await expect(component.locator('svg')).toHaveScreenshot();
+            });
         });
 
         test('Overlapping html labels should not be displayed (by default)', async ({mount}) => {

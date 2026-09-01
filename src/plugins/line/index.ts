@@ -35,6 +35,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         isOutsideBounds,
         isRangeSlider,
         otherLayers,
+        allSeries,
     } = args;
 
     if (!xAxis || !xScale || !yScale?.length || !split) {
@@ -51,6 +52,9 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         split,
         isOutsideBounds: isOutsideBounds ?? (() => false),
         isRangeSlider,
+        otherLayers,
+        allSeries,
+        getCurveFactory,
     });
 
     const filteredData = filterLayerLabels(data, otherLayers ?? []);
