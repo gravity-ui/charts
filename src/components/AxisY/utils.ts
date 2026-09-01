@@ -1,5 +1,6 @@
 import {
     getDomainDataYBySeries,
+    getExplicitAxisTickValues,
     getMinSpaceBetween,
     getTicksCountByPixelInterval,
     isBandScale,
@@ -20,6 +21,14 @@ export function getTickValues({
     labelLineHeight: number;
     series: PreparedSeries[] | ChartSeries[];
 }) {
+    const explicitValues = getExplicitAxisTickValues({axis, scale});
+
+    if (explicitValues) {
+        return explicitValues
+            .map(({position, value}) => ({y: position, value}))
+            .sort((left, right) => right.y - left.y);
+    }
+
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
         const height = Math.abs(range[0] - range[1]);

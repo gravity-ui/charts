@@ -10,6 +10,11 @@ import type {AxisDirection} from '../types';
 
 type Ticks = number[] | string[] | Date[];
 
+interface ExplicitAxisTickValue {
+    position: number;
+    value: number | string;
+}
+
 export function getTicksCountByPixelInterval({
     axis,
     axisWidth,
@@ -40,6 +45,49 @@ export function isTimeScale(
     }
 
     return scale.domain()[0] instanceof Date;
+}
+
+export function getExplicitAxisTickValues({
+    axis,
+    scale,
+}: {
+    axis: PreparedAxis;
+    scale: ChartScale;
+}): ExplicitAxisTickValue[] | undefined {
+    const values = axis.ticks.values;
+
+    if (!values) {
+        return undefined;
+    }
+
+    const range = scale.range();
+    const rangeMin = Math.min(...range);
+    const rangeMax = Math.max(...range);
+
+    if (isBandScale(scale)) {
+        const domain = scale.domain();
+        const offset = scale.bandwidth() / 2;
+
+        return values.flatMap((value) => {
+            const category = domain[value];
+            const scaledValue = category === undefined ? undefined : scale(category);
+            const position = scaledValue === undefined ? NaN : scaledValue + offset;
+
+            return Number.isFinite(position) && position >= rangeMin && position <= rangeMax
+                ? [{position, value: category}]
+                : [];
+        });
+    }
+
+    const scaleValue = scale as (value: number | Date) => number;
+
+    return values.flatMap((value) => {
+        const position = Number(scaleValue(axis.type === 'datetime' ? new Date(value) : value));
+
+        return Number.isFinite(position) && position >= rangeMin && position <= rangeMax
+            ? [{position, value}]
+            : [];
+    });
 }
 
 export function getXAxisOffset() {

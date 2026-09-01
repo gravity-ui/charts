@@ -211,6 +211,7 @@ export const getPreparedXAxis = async ({
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },
         ticks: {
+            values: xAxis?.ticks?.values,
             pixelInterval: xAxis?.ticks?.interval
                 ? calculateNumericProperty({
                       base: width,

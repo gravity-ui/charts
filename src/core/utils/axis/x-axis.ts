@@ -4,7 +4,12 @@ import {getMinSpaceBetween} from '../array';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
 import {getScaleTicks} from '../ticks';
 
-import {getTicksCountByPixelInterval, isBandScale, thinOut} from './common';
+import {
+    getExplicitAxisTickValues,
+    getTicksCountByPixelInterval,
+    isBandScale,
+    thinOut,
+} from './common';
 
 const DEFAULT_TICKS_COUNT = 10;
 
@@ -56,6 +61,14 @@ export function getXAxisTickValues({
     scale: ChartScale;
     series?: ChartSeries[] | PreparedSeries[];
 }): TickValue[] {
+    const explicitValues = getExplicitAxisTickValues({axis, scale});
+
+    if (explicitValues) {
+        return explicitValues
+            .map(({position, value}) => ({x: position, value}))
+            .sort((left, right) => left.x - right.x);
+    }
+
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
         const axisWidth = Math.abs(range[0] - range[1]);
