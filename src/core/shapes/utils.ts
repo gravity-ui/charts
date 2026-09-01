@@ -5,7 +5,6 @@ import {select} from 'd3-selection';
 import get from 'lodash/get';
 
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
-import {PLOT_BOUNDS_PIXEL_TOLERANCE} from '../constants';
 import type {ChartScale} from '../scales/types';
 import type {BasicInactiveState} from '../types';
 import {getDataCategoryValue} from '../utils';
@@ -90,6 +89,20 @@ export function getYValue(args: {
 
     return point.y === null ? null : yLinearScale(point.y as number);
 }
+
+/**
+ * Sub-pixel slack for "does this point belong to the plot area?" checks.
+ *
+ * A point that mathematically lands exactly on a plot edge can come back from
+ * the scales as `-1e-14` (or `499.9999` on the opposite side) — formally out of
+ * bounds, visually indistinguishable from the edge itself. Without the slack such
+ * a point silently loses its data label and gets its marker clipped, and the set
+ * of affected points changes with every resize.
+ *
+ * Half a pixel matches the ±0.5 of a 1px centered stroke and far exceeds any
+ * plausible float error.
+ */
+const PLOT_BOUNDS_PIXEL_TOLERANCE = 0.5;
 
 /**
  * Builds the "is this point outside the plot area?" predicate shared by data

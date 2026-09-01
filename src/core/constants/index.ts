@@ -5,7 +5,6 @@ export * from './defaults';
 export * from './layout-algorithms';
 export * from './line-styles';
 export * from './palette';
-export * from './plot';
 export * from './symbol-types';
 export * from './tooltip';
 export * from './typography';
