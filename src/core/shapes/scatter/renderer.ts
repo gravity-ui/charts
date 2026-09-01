@@ -44,9 +44,12 @@ export function renderScatter(
 
     renderDataLabels({
         container: svgElement,
-        data: preparedData.svgLabels ?? [],
+        data: [...(preparedData.svgLabels ?? []), ...preparedData.clusterLabels],
         className: b('label'),
-    });
+    })
+        .attr('class', (data) => ('cluster' in data ? b('cluster-label') : b('label')))
+        .attr('dominant-baseline', (data) => ('cluster' in data ? 'central' : null))
+        .attr('pointer-events', (data) => ('cluster' in data ? 'none' : null));
 
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;
