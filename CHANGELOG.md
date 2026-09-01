@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.59.0](https://github.com/gravity-ui/charts/compare/v1.58.0...v1.59.0) (2026-09-01)
+
+
+### Features
+
+* auto placement of dataLabels for line series ([#660](https://github.com/gravity-ui/charts/issues/660)) ([b049b88](https://github.com/gravity-ui/charts/commit/b049b88332065e6b477e462807c4a328689b9f9b))
+
+
+### Bug Fixes
+
+* keep data labels of the top series in a percent stack ([#682](https://github.com/gravity-ui/charts/issues/682)) ([93ef435](https://github.com/gravity-ui/charts/commit/93ef435f4759c09559848ea2da45e72df9720c63))
+
 ## [1.58.0](https://github.com/gravity-ui/charts/compare/v1.57.3...v1.58.0) (2026-08-27)
 
 
