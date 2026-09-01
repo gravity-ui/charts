@@ -128,6 +128,6 @@ Notes:
 
 - `allowOverlap: true` lets the label be placed over other labels; lines are still avoided.
 - Both SVG and HTML labels (`html: true`) support placement.
-- With [line interpolation](../line-interpolation.md) the collision check follows the rendered curve.
+- With [line interpolation](#line-interpolation) the collision check follows the rendered curve.
 
 See [LineSeriesDataLabels](../../api/Series/Line/interfaces/LineSeriesDataLabels.md) for the complete data label configuration.
