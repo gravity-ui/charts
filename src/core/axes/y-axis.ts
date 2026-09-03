@@ -235,6 +235,7 @@ export const getPreparedYAxis = ({
                     enabled: gridEnabled,
                 },
                 ticks: {
+                    values: axisItem.ticks?.values,
                     pixelInterval: axisItem.ticks?.interval
                         ? calculateNumericProperty({
                               base: height,
