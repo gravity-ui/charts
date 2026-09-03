@@ -20,7 +20,7 @@ import {
 } from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaSeries, TooltipDataChunkArea} from '../../types';
+import type {AreaSeries} from '../../types';
 
 import {prepareAreaSeries} from './prepare-area-series';
 
@@ -89,10 +89,10 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
                 cells: [
                     {
                         id: 'color',
-                        source: ({item}) => {
-                            const areaItem = item as TooltipDataChunkArea;
-                            const s = areaItem.series as PreparedAreaSeries;
-                            return getTooltipColorSymbol({color: areaItem.color ?? s.color});
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
                         },
                         width: '16px',
                     },
