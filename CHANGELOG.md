@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.1](https://github.com/gravity-ui/charts/compare/v1.59.0...v1.59.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **tooltip:** give a custom rowRenderer the series color for area and line ([#687](https://github.com/gravity-ui/charts/issues/687)) ([acc00a8](https://github.com/gravity-ui/charts/commit/acc00a81f63a0af4ed2170f7667da3b71948c638))
+
 ## [1.59.0](https://github.com/gravity-ui/charts/compare/v1.58.0...v1.59.0) (2026-09-01)
 
 
