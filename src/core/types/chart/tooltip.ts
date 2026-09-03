@@ -167,7 +167,7 @@ export type ChartTooltipRowRendererArgs = {
      * it has one, and from the series color otherwise; for a gradient series it is the
      * gradient sampled at that point.
      *
-     * Not provided for series types whose tooltip has no color cell (e.g. `waterfall`).
+     * `undefined` for series types whose tooltip has no color cell (e.g. `waterfall`).
      * When `rows[].cells` overrides the color cell, its `source` decides the value instead.
      */
     color?: string;

@@ -12,12 +12,14 @@ import {getTooltipColorSymbol, getTooltipLineSymbol} from '~core/tooltip/utils';
 import {areaPlugin} from '../../../../plugins/area';
 import {barXPlugin} from '../../../../plugins/bar-x';
 import {linePlugin} from '../../../../plugins/line';
+import {waterfallPlugin} from '../../../../plugins/waterfall';
 import type {ChartTooltip, ChartTooltipRowRendererArgs, TooltipDataChunk} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
 registerSeriesPlugin(areaPlugin);
 registerSeriesPlugin(barXPlugin);
 registerSeriesPlugin(linePlugin);
+registerSeriesPlugin(waterfallPlugin);
 
 function makeLineChunk(
     name: string,
@@ -77,7 +79,7 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
         document.body.innerHTML = '';
     });
 
-    function renderWithRowRenderer(hovered: TooltipDataChunk[]) {
+    function collectRowRendererColors(hovered: TooltipDataChunk[]) {
         // Collected through a mock rather than a closure variable, so a re-render cannot
         // silently duplicate the recorded values.
         const rowRenderer = jest.fn<
@@ -111,7 +113,7 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
                 series: {type, id: 's', name: 'S', color: '#ff0000'},
             });
 
-            expect(renderWithRowRenderer(hovered)).toEqual(['#ff0000']);
+            expect(collectRowRendererColors(hovered)).toEqual(['#ff0000']);
         },
     );
 
@@ -121,7 +123,7 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
             series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
         });
 
-        expect(renderWithRowRenderer(hovered)).toEqual(['#abcdef']);
+        expect(collectRowRendererColors(hovered)).toEqual(['#abcdef']);
     });
 
     test('falls back to the point color before the series color', () => {
@@ -130,7 +132,7 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
             series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
         });
 
-        expect(renderWithRowRenderer(hovered)).toEqual(['#222222']);
+        expect(collectRowRendererColors(hovered)).toEqual(['#222222']);
     });
 
     test('the color resolved on the chunk wins over the point and the series', () => {
@@ -140,7 +142,19 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
             series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
         });
 
-        expect(renderWithRowRenderer(hovered)).toEqual(['#111111']);
+        expect(collectRowRendererColors(hovered)).toEqual(['#111111']);
+    });
+
+    // `waterfall` rows carry no color cell at all, so nothing resolves. The declared contract is
+    // `color?: string`, which means absence has to reach the renderer as `undefined`, not `null`.
+    test('passes undefined when the row has no color cell', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10, total: false},
+            series: {type: 'waterfall', id: 's', name: 'S', color: '#abcdef'},
+        });
+
+        // waterfall renders a `default` and a `subtotal` row for a non-total point
+        expect(collectRowRendererColors(hovered)).toStrictEqual([undefined, undefined]);
     });
 
     test('a string cell source configured on the row still wins', () => {

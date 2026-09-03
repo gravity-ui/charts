@@ -164,10 +164,13 @@ export const DefaultTooltipContent = ({
                             cell: rowCells.find((c) => c.id === 'value'),
                             tooltipDataChunk: seriesItem,
                         });
-                        const color = getTooltipRowCellValue({
-                            cell: rowCells.find((c) => c.id === 'color'),
-                            tooltipDataChunk: seriesItem,
-                        });
+                        // The resolver yields `null` when the row has no color cell at all
+                        // (e.g. waterfall); the renderer contract spells absence as `undefined`.
+                        const color =
+                            getTooltipRowCellValue({
+                                cell: rowCells.find((c) => c.id === 'color'),
+                                tooltipDataChunk: seriesItem,
+                            }) ?? undefined;
                         const result = rowRenderer({
                             id: key,
                             name,
