@@ -90,7 +90,8 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
     bboxWidth: number;
 };
 
-export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>> & {
+export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale' | 'events'>> & {
+    events: ChartLegend['events'];
     hangingOffset: number;
     height: number;
     lineHeight: number;
@@ -120,6 +121,7 @@ export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boole
 export type LegendItem = {
     id: string;
     color: string;
+    custom: MeaningfulAny;
     height: number;
     name: string;
     text: string;
