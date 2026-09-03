@@ -81,6 +81,9 @@
     "RectLegendSymbolOptions",
     "SankeySeries<JsonValue>",
     "SankeySeriesData<JsonValue>",
+    "ScatterClusterDataLabelsOptions",
+    "ScatterClusterMarkerOptions",
+    "ScatterClusterOptions",
     "ScatterSeries<JsonValue>",
     "ScatterSeriesData<JsonValue>",
     "SeriesColor",
@@ -582,7 +585,11 @@
       "visible"
     ],
     "SankeySeriesData<JsonValue>": ["color", "custom", "dataLabels", "links", "name", "tooltip"],
+    "ScatterClusterDataLabelsOptions": ["enabled", "format", "style"],
+    "ScatterClusterMarkerOptions": ["color", "radius"],
+    "ScatterClusterOptions": ["dataLabels", "distance", "enabled", "marker", "minimumClusterSize"],
     "ScatterSeries<JsonValue>": [
+      "cluster",
       "color",
       "cursor",
       "custom",

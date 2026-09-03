@@ -1,9 +1,42 @@
 import type {SERIES_TYPE, SymbolType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    BaseTextStyle,
+    ValueFormat,
+} from './base';
 import type {RectLegendSymbolOptions} from './legend';
 import type {ChartSeriesRangeSliderOptions} from './series';
+
+export interface ScatterClusterData<T = MeaningfulAny> extends BaseSeriesData<T> {
+    x?: string | number | null;
+    y?: string | number | null;
+    clusterSize: number;
+    clusteredData: ScatterSeriesData<T>[];
+    radius?: number;
+}
+
+export interface ScatterClusterMarkerOptions {
+    color?: string;
+    radius?: number;
+}
+
+export interface ScatterClusterDataLabelsOptions {
+    enabled?: boolean;
+    format?: ValueFormat;
+    style?: Partial<BaseTextStyle>;
+}
+
+export interface ScatterClusterOptions {
+    enabled?: boolean;
+    distance?: number;
+    minimumClusterSize?: number;
+    marker?: ScatterClusterMarkerOptions;
+    dataLabels?: ScatterClusterDataLabelsOptions;
+}
 
 export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -56,6 +89,7 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';
+    cluster?: ScatterClusterOptions;
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */

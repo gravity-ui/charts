@@ -12,9 +12,20 @@ import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
 
-import type {ScatterSeries} from '../../types';
+import type {
+    ScatterClusterData,
+    ScatterSeries,
+    ScatterSeriesData,
+    TooltipDataChunk,
+} from '../../types';
 
 import {prepareScatterSeries} from './prepare-scatter-series';
+
+function getScatterTooltipValue({item}: {item: TooltipDataChunk}) {
+    const data = item.data as ScatterSeriesData | ScatterClusterData;
+
+    return 'clusteredData' in data ? data.clusterSize : data.y;
+}
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
@@ -72,7 +83,7 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
                         width: '16px',
                     },
                     {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.y', align: 'end'},
+                    {id: 'value', source: getScatterTooltipValue, align: 'end'},
                 ],
             },
         ],

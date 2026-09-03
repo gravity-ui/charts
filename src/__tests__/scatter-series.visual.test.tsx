@@ -7,6 +7,7 @@ import set from 'lodash/set';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     scatterBasicData,
+    scatterClusteringData,
     scatterContinuousLegendData,
     scatterDataLabelsData,
     scatterNullModeSkipLinearXData,
@@ -14,6 +15,7 @@ import {
 } from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
+import {ScatterClusterEventsTestStory} from './components/ScatterClusterEventsTestStory';
 import {getLocatorBoundingBox} from './utils';
 
 test.describe('Scatter series', () => {
@@ -24,6 +26,24 @@ test.describe('Scatter series', () => {
 
     test('Continues legend', async ({mount}) => {
         const component = await mount(<ChartTestStory data={scatterContinuousLegendData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Clustering exposes the source points in tooltip and click events', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(
+            <ScatterClusterEventsTestStory data={scatterClusteringData} />,
+        );
+        const cluster = component.locator('.gcharts-scatter__cluster-label').first();
+        const box = await getLocatorBoundingBox(cluster);
+
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await expect(page.locator('.gcharts-tooltip')).toContainText('3');
+
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        await expect(component.locator('[data-qa="clicked-cluster"]')).toHaveText('3:a,b,c');
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
