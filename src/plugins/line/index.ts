@@ -84,27 +84,35 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        rows: [
-            {
-                id: 'default',
-                cells: [
-                    {
-                        id: 'color',
-                        source: ({item}) => {
-                            const lineItem = item as TooltipDataChunkLine;
-                            const s = lineItem.series as PreparedLineSeries;
-                            return getTooltipLineSymbol({
-                                color: lineItem.color ?? s.color,
-                                dashStyle: s.dashStyle,
-                                lineWidth: s.lineWidth,
-                            });
+        // The line symbol needs the series stroke options, which a `format` formatter cannot
+        // reach on its own — so the rows are built per chunk and close over them. `source` stays
+        // a plain value lookup, which is what a custom `rowRenderer` receives as `color`.
+        rows: (chunk) => {
+            const s = (chunk as TooltipDataChunkLine).series as PreparedLineSeries;
+
+            return [
+                {
+                    id: 'default',
+                    cells: [
+                        {
+                            id: 'color',
+                            source: 'color',
+                            format: {
+                                type: 'custom',
+                                formatter: ({value}) =>
+                                    getTooltipLineSymbol({
+                                        color: String(value),
+                                        dashStyle: s.dashStyle,
+                                        lineWidth: s.lineWidth,
+                                    }),
+                            },
+                            width: '16px',
                         },
-                        width: '16px',
-                    },
-                    {id: 'name', source: 'name', align: 'start'},
-                    {id: 'value', source: 'data.y', align: 'end'},
-                ],
-            },
-        ],
+                        {id: 'name', source: 'name', align: 'start'},
+                        {id: 'value', source: 'data.y', align: 'end'},
+                    ],
+                },
+            ];
+        },
     },
 };
