@@ -108,7 +108,7 @@ describe('getFormattedValue', () => {
 
         test('passes an explicitly provided formatter context', () => {
             interface TestFormatContext extends CustomFormatContext {
-                percentage: number;
+                percentage?: number;
             }
 
             const formatter = jest.fn(

@@ -17,14 +17,13 @@ export interface CustomFormatContext {
 }
 
 export interface PercentageFormatContext {
-    /** Value share in the range 0..1. */
-    percentage: number;
+    /** Value share in the range 0..1, when available. */
+    percentage?: number;
 }
 
 export interface CustomFormat<TContext extends CustomFormatContext = CustomFormatContext> {
     type: 'custom';
-    // Keep specialized series formatters assignable to the formatter in BaseSeries.
-    formatter: <TFormatterContext extends TContext>(args: TFormatterContext) => string;
+    formatter: (args: TContext) => string;
 }
 
 /**

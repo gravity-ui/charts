@@ -39,6 +39,31 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations preserve formatter context requirements', () => {
+        const usage = `
+            const pieFormat: PieValueFormat = {
+                type: 'custom',
+                formatter: ({percentage, name}) => percentage?.toFixed(2) ?? name,
+            };
+            const pie: PieSeries = {
+                type: 'pie', data: [], dataLabels: {format: pieFormat},
+            };
+            // @ts-expect-error A value-only formatter cannot require pie context.
+            const shared: ValueFormat = pieFormat;
+            const line: LineSeries = {type: 'line', name: 'L', data: []};
+            // @ts-expect-error Line labels do not provide pie metadata.
+            line.dataLabels = {format: pieFormat};
+            const legacy: ValueFormat = {type: 'custom', formatter: ({value}) => String(value)};
+            pie.dataLabels = {format: legacy};
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
     test('validates declaration content without accessing the published file', () => {
         // DECLARATION_PATH (scripts/chart-config.d.ts) never exists on disk; validateDeclaration
         // uses it only as a virtual filename for the TypeScript compiler host.

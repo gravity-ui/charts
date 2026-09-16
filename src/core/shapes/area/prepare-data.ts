@@ -117,23 +117,12 @@ export const prepareAreaData = async (args: {
 
             const xValues = getXValues(seriesStack, xAxis, xScale);
 
-            const isPercentStacking = seriesStack.some((s) => s.stacking === 'percent');
-            const stackValues = Object.fromEntries(xValues.map(([key]) => [key, 0]));
-            const ratio = Object.fromEntries(xValues.map(([key]) => [key, 1]));
-
-            if (isPercentStacking) {
-                seriesStack.forEach((s) => {
-                    const yAxisIndex = s.yAxis;
-                    const seriesYScale = yScale[yAxisIndex];
-
-                    if (!seriesYScale) {
-                        return;
-                    }
-
-                    s.data.forEach((d) => {
-                        const yDataValue = Number(d.y);
-                        if (Number.isFinite(yDataValue) && yDataValue > 0) {
-                            const x = String(
+            const seriesDataMaps = new Map(
+                seriesStack.map((s) => [
+                    s,
+                    new Map(
+                        s.data.map((d) => [
+                            String(
                                 xAxis.type === 'category'
                                     ? getDataCategoryValue({
                                           axisDirection: 'x',
@@ -141,16 +130,42 @@ export const prepareAreaData = async (args: {
                                           data: d,
                                       })
                                     : d.x,
-                            );
-                            stackValues[x] += yDataValue;
+                            ),
+                            d,
+                        ]),
+                    ),
+                ]),
+            );
+            const isPercentStacking = seriesStack.some((s) => s.stacking === 'percent');
+            const stackValues: Record<string, number> = {};
+            const ratio: Record<string, number> = {};
+            if (isPercentStacking) {
+                xValues.forEach(([x], index) => {
+                    let stackTotal = 0;
+                    let percentageTotal = 0;
+                    seriesStack.forEach((s) => {
+                        if (!yScale[s.yAxis]) {
+                            return;
+                        }
+                        const data = seriesDataMaps.get(s);
+                        if (!data) {
+                            return;
+                        }
+                        const value = Number(data.get(x)?.y ?? 0);
+                        if (!Number.isFinite(value)) {
+                            return;
+                        }
+                        percentageTotal += Math.max(0, value);
+                        // An isolated point between explicit nulls contributes no
+                        // height to either section. Missing points are synthetic zeros.
+                        const prev = data.get(xValues[index - 1]?.[0]);
+                        const next = data.get(xValues[index + 1]?.[0]);
+                        if (s.nullMode === 'zero' || prev?.y !== null || next?.y !== null) {
+                            stackTotal += value;
                         }
                     });
-                });
-
-                xValues.forEach(([x]) => {
-                    if (stackValues[x]) {
-                        ratio[x] = 100 / stackValues[x];
-                    }
+                    stackValues[x] = percentageTotal;
+                    ratio[x] = stackTotal ? 100 / stackTotal : 1;
                 });
             }
 
@@ -189,18 +204,10 @@ export const prepareAreaData = async (args: {
                         yAxis: seriesYAxis,
                         yScale: seriesYScale,
                     }) ?? 0;
-                const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
-                    const key = String(
-                        xAxis.type === 'category'
-                            ? getDataCategoryValue({
-                                  axisDirection: 'x',
-                                  categories: xAxis.categories || [],
-                                  data: d,
-                              })
-                            : d.x,
-                    );
-                    return m.set(key, d);
-                }, new Map());
+                const seriesData = seriesDataMaps.get(s);
+                if (!seriesData) {
+                    continue;
+                }
                 const annotationOpts = seriesOptions?.area?.annotation;
                 const points: PointData[] = [];
 

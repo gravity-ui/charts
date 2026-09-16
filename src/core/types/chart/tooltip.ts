@@ -35,8 +35,8 @@ export interface TooltipDataChunkBarY<T = MeaningfulAny> {
 
 export interface TooltipDataChunkPie<T = MeaningfulAny> {
     data: PieSeriesData<T>;
-    /** Slice share among currently visible segments, in the range 0..1. */
-    percentage: number;
+    /** Slice share among currently visible segments, in the range 0..1. May be absent in manually supplied chunks. */
+    percentage?: number;
     series: {
         type: PieSeries['type'];
         id: string;

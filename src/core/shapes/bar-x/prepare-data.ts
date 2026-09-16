@@ -345,8 +345,8 @@ export const prepareBarXData = async (args: {
                         positiveStackHeight > 0 ? currentPlotHeight / positiveStackHeight : 0;
                     stackItems.forEach((item) => {
                         item.percentage =
-                            item.series.stacking === 'percent' && positiveStackHeight > 0
-                                ? item._height / positiveStackHeight
+                            item.series.stacking === 'percent' && positiveStackSum > 0
+                                ? Math.max(0, Number(item.data.y ?? 0)) / positiveStackSum
                                 : item.series.stacking === 'percent'
                                   ? 0
                                   : undefined;

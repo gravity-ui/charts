@@ -129,7 +129,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
 
             acc.push({
                 value: item.value,
-                percentage: percentages.get(item.id) ?? 0,
+                percentage: percentages.get(item.id),
                 color: item.color,
                 opacity: item.opacity,
                 series: item,
@@ -174,7 +174,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
             const text = getPieDataLabelText({
                 data: d.data,
                 format: d.dataLabels.format,
-                percentage: percentages.get(d.id) ?? 0,
+                percentage: percentages.get(d.id),
             });
 
             let labelWidth = 0;

@@ -22,7 +22,7 @@ export function getPiePercentages(
 export function getPieDataLabelText(args: {
     data: PieSeriesData;
     format?: PieValueFormat;
-    percentage: number;
+    percentage?: number;
 }): string {
     const {data, format, percentage} = args;
 

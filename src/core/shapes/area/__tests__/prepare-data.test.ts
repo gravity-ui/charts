@@ -66,3 +66,17 @@ describe('prepareAreaData: percent stacking', () => {
         },
     );
 });
+
+test.each(['skip', 'zero'] as const)(
+    'percent area with explicit nulls keeps its top at 100%% (nullMode: %s)',
+    async (nullMode) => {
+        const args = buildArgs(200);
+        args.series[0].data = [10, 10, 10].map((y, x) => ({x, y}));
+        args.series[1].data = [null, 10, null].map((y, x) => ({x, y}));
+        args.series[1].nullMode = nullMode;
+        const result = await prepareAreaData(args);
+        const top = result.find((item) => item.series.name === 'top');
+        expect(top?.points.map((point) => point.y)).toEqual([0, 0, 0]);
+        expect(top?.points.map((point) => point.percentage)).toEqual([1, 0.5, 1]);
+    },
+);

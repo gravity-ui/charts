@@ -87,7 +87,7 @@ export async function preparePointDataLabels<
     yAxisTop: number;
     isOutsideBounds: (x: number, y: number) => boolean;
     anchorYOffset?: number;
-    getFormatContext?: (point: P) => Omit<TContext, 'value'>;
+    getFormatContext: (point: P) => Omit<TContext, 'value'>;
 }): Promise<{svgLabels: LabelData[]; htmlLabels: HtmlItem[]}> {
     const svgLabels: LabelData[] = [];
     const htmlLabels: HtmlItem[] = [];
@@ -108,7 +108,7 @@ export async function preparePointDataLabels<
         const text = getFormattedValue({
             value: point.data.label ?? point.data.y,
             format: series.dataLabels.format,
-            context: getFormatContext?.(point),
+            context: getFormatContext(point),
         });
 
         const anchorY = point.y - anchorYOffset;

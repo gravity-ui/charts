@@ -39,7 +39,7 @@ export interface BarYFormatContext<T = MeaningfulAny> extends CustomFormatContex
 
 export type BarYValueFormat<T = MeaningfulAny> = ValueFormat<BarYFormatContext<T>>;
 
-export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
+export interface BarYSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
     type: typeof SERIES_TYPE.BarY;
     data: BarYSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

@@ -69,7 +69,7 @@ export interface AreaFormatContext<T = MeaningfulAny> extends CustomFormatContex
 
 export type AreaValueFormat<T = MeaningfulAny> = ValueFormat<AreaFormatContext<T>>;
 
-export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
+export interface AreaSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
     type: typeof SERIES_TYPE.Area;
     data: AreaSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

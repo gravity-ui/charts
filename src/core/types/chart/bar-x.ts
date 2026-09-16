@@ -52,7 +52,7 @@ export interface BarXFormatContext<T = MeaningfulAny> extends CustomFormatContex
 
 export type BarXValueFormat<T = MeaningfulAny> = ValueFormat<BarXFormatContext<T>>;
 
-export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
+export interface BarXSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
     type: typeof SERIES_TYPE.BarX;
     data: BarXSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

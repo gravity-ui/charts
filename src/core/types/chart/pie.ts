@@ -44,7 +44,7 @@ export interface PieFormatContext<T = MeaningfulAny>
 
 export type PieValueFormat<T = MeaningfulAny> = ValueFormat<PieFormatContext<T>>;
 
-export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
+export interface PieSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
     type: typeof SERIES_TYPE.Pie;
     data: PieSeriesData<T>[];
     /**
