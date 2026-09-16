@@ -65,3 +65,7 @@ series: {
   ];
 }
 ```
+
+## Placement
+
+Line series can choose where a label goes and what to do when it does not fit — see [Data label placement](./series-types/line.md#data-label-placement) in the Line series guide.

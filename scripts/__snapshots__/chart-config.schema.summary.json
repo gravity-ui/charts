@@ -65,6 +65,9 @@
     "JsonValue",
     "LineSeries<JsonValue>",
     "LineSeriesData<JsonValue>",
+    "LineSeriesDataLabelPlacementFallback",
+    "LineSeriesDataLabelPlacementPosition",
+    "LineSeriesDataLabels",
     "LineSeriesInterpolation",
     "LinearGradient",
     "MeaningfulAny",
@@ -478,6 +481,7 @@
       "x",
       "y"
     ],
+    "LinearGradient": ["angle", "stops", "type"],
     "LineSeries<JsonValue>": [
       "color",
       "cursor",
@@ -511,7 +515,16 @@
       "x",
       "y"
     ],
-    "LinearGradient": ["angle", "stops", "type"],
+    "LineSeriesDataLabels": [
+      "allowOverlap",
+      "enabled",
+      "format",
+      "html",
+      "padding",
+      "placement",
+      "placementFallback",
+      "style"
+    ],
     "PieSeries<JsonValue>": [
       "borderColor",
       "borderRadius",

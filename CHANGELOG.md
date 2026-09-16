@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.59.1](https://github.com/gravity-ui/charts/compare/v1.59.0...v1.59.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **tooltip:** give a custom rowRenderer the series color for area and line ([#687](https://github.com/gravity-ui/charts/issues/687)) ([acc00a8](https://github.com/gravity-ui/charts/commit/acc00a81f63a0af4ed2170f7667da3b71948c638))
+
+## [1.59.0](https://github.com/gravity-ui/charts/compare/v1.58.0...v1.59.0) (2026-09-01)
+
+
+### Features
+
+* auto placement of dataLabels for line series ([#660](https://github.com/gravity-ui/charts/issues/660)) ([b049b88](https://github.com/gravity-ui/charts/commit/b049b88332065e6b477e462807c4a328689b9f9b))
+
+
+### Bug Fixes
+
+* keep data labels of the top series in a percent stack ([#682](https://github.com/gravity-ui/charts/issues/682)) ([93ef435](https://github.com/gravity-ui/charts/commit/93ef435f4759c09559848ea2da45e72df9720c63))
+
+## [1.58.0](https://github.com/gravity-ui/charts/compare/v1.57.3...v1.58.0) (2026-08-27)
+
+
+### Features
+
+* add chart config declarations and JSON Schema ([#667](https://github.com/gravity-ui/charts/issues/667)) ([799c9b4](https://github.com/gravity-ui/charts/commit/799c9b476e7dca361f7ae37fa9bf2438f8d54db3))
+* add gradient colors for line and area series ([#669](https://github.com/gravity-ui/charts/issues/669)) ([e0a5830](https://github.com/gravity-ui/charts/commit/e0a583016fe087158a463467b960db80cf5d84a5))
+* add interpolation option for line series ([#668](https://github.com/gravity-ui/charts/issues/668)) ([e57fc55](https://github.com/gravity-ui/charts/commit/e57fc553b29f564b42d6cc2b6084411210f41b76))
+
+
+### Bug Fixes
+
+* **docs:** prevent publishing builds with missing assets ([#664](https://github.com/gravity-ui/charts/issues/664)) ([8d306bd](https://github.com/gravity-ui/charts/commit/8d306bdaaf26e8a5255dae28e763fb46eeb42ecd))
+
 ## [1.57.3](https://github.com/gravity-ui/charts/compare/v1.57.2...v1.57.3) (2026-08-12)
 
 

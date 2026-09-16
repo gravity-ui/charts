@@ -24,12 +24,23 @@ import type {
     ChartSeriesOptions,
     LineSeries,
     LineSeriesData,
+    LineSeriesDataLabels,
     RectLegendSymbolOptions,
 } from '../../types';
 
 export const DEFAULT_LEGEND_SYMBOL_SIZE = 16;
 export const DEFAULT_LINE_WIDTH = 1;
 export const DEFAULT_DASH_STYLE = DASH_STYLE.Solid;
+
+export function resolveLabelPlacement(
+    placement?: LineSeriesDataLabels['placement'],
+): PreparedLineSeries['dataLabels']['placement'] {
+    if (placement === 'auto') {
+        return placement;
+    }
+
+    return placement?.length ? placement : ['top'];
+}
 
 export const DEFAULT_MARKER = {
     ...DEFAULT_POINT_MARKER_OPTIONS,
@@ -150,6 +161,8 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
                 allowOverlap: get(series, 'dataLabels.allowOverlap', false),
                 html: get(series, 'dataLabels.html', false),
                 format: series.dataLabels?.format,
+                placement: resolveLabelPlacement(series.dataLabels?.placement),
+                placementFallback: series.dataLabels?.placementFallback ?? 'show',
             },
             marker: prepareMarker(series, seriesOptions),
             dashStyle: dashStyle,

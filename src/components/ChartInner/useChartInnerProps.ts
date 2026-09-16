@@ -9,6 +9,7 @@ import {getLegendComponents, getPreparedLegend} from '~core/series/prepare-legen
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
 import type {TooltipItemData} from '~core/shapes/types';
+import {createIsOutsideBounds} from '~core/shapes/utils';
 import {
     getChartDimensions,
     getEffectiveXRange,
@@ -325,9 +326,7 @@ export function useChartInnerProps(props: Props) {
                 split: preparedSplit,
                 htmlLayout,
                 clipPathId,
-                isOutsideBounds: (x: number, y: number) => {
-                    return x < 0 || x > boundsWidth || y < 0 || y > boundsHeight;
-                },
+                isOutsideBounds: createIsOutsideBounds({boundsWidth, boundsHeight}),
                 zoomState: effectiveZoomState,
             });
 

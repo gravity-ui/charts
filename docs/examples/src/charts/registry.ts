@@ -10,6 +10,12 @@ import {LinearAxisExample} from './axis-types/linear';
 import linearRaw from './axis-types/linear.tsx?raw';
 import {LogarithmicAxisExample} from './axis-types/logarithmic';
 import logarithmicRaw from './axis-types/logarithmic.tsx?raw';
+import {DataLabelsPlacementAutoExample} from './data-labels/placement-auto';
+import dataLabelsPlacementAutoRaw from './data-labels/placement-auto.tsx?raw';
+import {DataLabelsPlacementFallbackHideExample} from './data-labels/placement-fallback-hide';
+import dataLabelsPlacementFallbackHideRaw from './data-labels/placement-fallback-hide.tsx?raw';
+import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
+import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
 import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
 import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
@@ -65,5 +71,17 @@ export const registry: Record<string, ExampleModule> = {
     'line-interpolation/cardinal': {
         code: extractDisplayCode(lineInterpolationCardinalRaw),
         Component: LineInterpolationCardinalExample,
+    },
+    'data-labels/placement-auto': {
+        code: extractDisplayCode(dataLabelsPlacementAutoRaw),
+        Component: DataLabelsPlacementAutoExample,
+    },
+    'data-labels/placement-fixed': {
+        code: extractDisplayCode(dataLabelsPlacementFixedRaw),
+        Component: DataLabelsPlacementFixedExample,
+    },
+    'data-labels/placement-fallback-hide': {
+        code: extractDisplayCode(dataLabelsPlacementFallbackHideRaw),
+        Component: DataLabelsPlacementFallbackHideExample,
     },
 };

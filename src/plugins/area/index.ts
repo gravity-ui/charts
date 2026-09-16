@@ -94,10 +94,10 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
                 cells: [
                     {
                         id: 'color',
-                        source: ({item}) => {
-                            const areaItem = item as TooltipDataChunkArea;
-                            const s = areaItem.series as PreparedAreaSeries;
-                            return getTooltipColorSymbol({color: areaItem.color ?? s.color});
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
                         },
                         width: '16px',
                     },
