@@ -235,13 +235,13 @@ export const getPreparedYAxis = ({
                     enabled: gridEnabled,
                 },
                 ticks: {
-                    values: axisItem.ticks?.values,
                     pixelInterval: axisItem.ticks?.interval
                         ? calculateNumericProperty({
                               base: height,
                               value: axisItem.ticks?.interval,
                           })
                         : axisItem.ticks?.pixelInterval,
+                    values: axisItem.ticks?.values,
                 },
                 tickMarks: {
                     enabled:

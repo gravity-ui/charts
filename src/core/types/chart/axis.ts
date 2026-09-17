@@ -158,16 +158,27 @@ export interface ChartAxisTickMarks {
 
 export interface ChartAxisTicks {
     /**
+     * Interval of the tick marks (absolute or relative to the chart area). Not applicable to categorized axis.
+     * The specified value is a pixel-based hint; the interval between ticks can be greater or less depending on the data.
+     */
+    interval?: number | string;
+    /**
      * Pixel interval of the tick marks. Not applicable to categorized axis.
      * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
      * @deprecated use `interval` instead
      */
     pixelInterval?: number;
     /**
-     * Interval of the tick marks(absolute or relative to the chart area). Not applicable to categorized axis.
-     * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
+     * Explicit values of the rendered ticks. These values do not change the axis domain and are not thinned automatically.
+     *
+     * The value type depends on the axis scale:
+     * - For `linear` and `logarithmic` axes: numeric value
+     * - For `datetime` axes: timestamp (milliseconds since Unix epoch)
+     * - For `category` axes: index of the element after applying `order`, but before applying `min` and `max`
+     *
+     * Duplicate values and values outside the current domain are ignored. An empty array hides all ticks.
+     * This option takes precedence over `interval` and `pixelInterval` when rendering ticks.
      */
-    interval?: number | string;
     values?: number[];
 }
 

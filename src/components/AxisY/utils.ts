@@ -10,7 +10,7 @@ import {
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
 import type {ChartSeries} from '../../types';
 
-export function getTickValues({
+export function getAutomaticTickValues({
     scale,
     axis,
     labelLineHeight,
@@ -21,14 +21,6 @@ export function getTickValues({
     labelLineHeight: number;
     series: PreparedSeries[] | ChartSeries[];
 }) {
-    const explicitValues = getExplicitAxisTickValues({axis, scale});
-
-    if (explicitValues) {
-        return explicitValues
-            .map(({position, value}) => ({y: position, value}))
-            .sort((left, right) => right.y - left.y);
-    }
-
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
         const height = Math.abs(range[0] - range[1]);
@@ -140,4 +132,14 @@ export function getTickValues({
     }
 
     return [];
+}
+
+export function getTickValues(args: Parameters<typeof getAutomaticTickValues>[0]) {
+    const explicitValues = getExplicitAxisTickValues({axis: args.axis, scale: args.scale});
+
+    if (explicitValues !== undefined) {
+        return explicitValues.map(({position, value}) => ({y: position, value}));
+    }
+
+    return getAutomaticTickValues(args);
 }

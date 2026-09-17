@@ -61,33 +61,58 @@ export function getExplicitAxisTickValues({
     }
 
     const range = scale.range();
-    const rangeMin = Math.min(...range);
-    const rangeMax = Math.max(...range);
+    if (Math.min(...range) === Math.max(...range)) {
+        return [];
+    }
+
+    const uniqueValues = [...new Set(values)];
+    const getPosition = getXTickPosition({
+        scale: scale as AxisScale<AxisDomain>,
+        offset: 0,
+    });
 
     if (isBandScale(scale)) {
         const domain = scale.domain();
-        const offset = scale.bandwidth() / 2;
+        const domainIndexes = new Map(domain.map((value, index) => [value, index]));
 
-        return values.flatMap((value) => {
-            const category = domain[value];
-            const scaledValue = category === undefined ? undefined : scale(category);
-            const position = scaledValue === undefined ? NaN : scaledValue + offset;
+        return uniqueValues
+            .flatMap((value) => {
+                const category = typeof value === 'number' ? domain[value] : value;
+                const position = category === undefined ? NaN : getPosition(category);
 
-            return Number.isFinite(position) && position >= rangeMin && position <= rangeMax
-                ? [{position, value: category}]
-                : [];
-        });
+                return category !== undefined &&
+                    domainIndexes.has(category) &&
+                    Number.isFinite(position)
+                    ? [{position, value: category}]
+                    : [];
+            })
+            .sort(
+                (left, right) =>
+                    (domainIndexes.get(left.value as string) ?? Infinity) -
+                    (domainIndexes.get(right.value as string) ?? Infinity),
+            );
     }
 
-    const scaleValue = scale as (value: number | Date) => number;
+    const domain = scale.domain().map(Number);
+    const domainMin = Math.min(...domain);
+    const domainMax = Math.max(...domain);
 
-    return values.flatMap((value) => {
-        const position = Number(scaleValue(axis.type === 'datetime' ? new Date(value) : value));
+    return uniqueValues
+        .flatMap((value) => {
+            const numericValue = Number(value);
 
-        return Number.isFinite(position) && position >= rangeMin && position <= rangeMax
-            ? [{position, value}]
-            : [];
-    });
+            if (
+                !Number.isFinite(numericValue) ||
+                numericValue < domainMin ||
+                numericValue > domainMax
+            ) {
+                return [];
+            }
+
+            const position = getPosition(value);
+            return Number.isFinite(position) ? [{position, value}] : [];
+        })
+        .sort((left, right) => Number(left.value) - Number(right.value));
 }
 
 export function getXAxisOffset() {

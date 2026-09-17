@@ -215,7 +215,10 @@ export async function prepareXAxisData({
                 maxLabelWidth = Math.max(maxLabelWidth, size.width);
             }
 
-            const currentSpacing = Math.abs(values[0].x - values[1].x) - axis.labels.padding * 2;
+            const currentSpacing = Math.max(
+                0,
+                getMinSpaceBetween(values, (value) => value.x) - axis.labels.padding * 2,
+            );
 
             if (maxLabelWidth > currentSpacing) {
                 values = getXAxisTickValues({
@@ -230,7 +233,10 @@ export async function prepareXAxisData({
 
         const labelMaxWidth =
             values.length > 1
-                ? Math.abs(values[0].x - values[1].x) - axis.labels.padding * 2
+                ? Math.max(
+                      0,
+                      getMinSpaceBetween(values, (value) => value.x) - axis.labels.padding * 2,
+                  )
                 : axisWidth;
 
         for (let i = 0; i < values.length; i++) {
