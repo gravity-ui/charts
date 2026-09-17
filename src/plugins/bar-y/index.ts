@@ -53,7 +53,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
-        validatePercentStackingValues({series, valueKey: 'x'});
+        validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
     getColorValue: (d) => d.x,
     prepareShapeData,

@@ -39,20 +39,31 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
-    test('standalone declarations preserve formatter context requirements', () => {
+    test('standalone declarations preserve BaseSeries compatibility and safe formatters', () => {
         const usage = `
             const pieFormat: PieValueFormat = {
                 type: 'custom',
-                formatter: ({percentage, name}) => percentage?.toFixed(2) ?? name,
+                formatter: ({percentage, name, value}) => percentage?.toFixed(2) ?? name ?? String(value),
             };
-            const pie: PieSeries = {
-                type: 'pie', data: [], dataLabels: {format: pieFormat},
-            };
-            // @ts-expect-error A value-only formatter cannot require pie context.
+            const pie: PieSeries = {type: 'pie', data: [], dataLabels: {format: pieFormat}};
             const shared: ValueFormat = pieFormat;
-            const line: LineSeries = {type: 'line', name: 'L', data: []};
-            // @ts-expect-error Line labels do not provide pie metadata.
-            line.dataLabels = {format: pieFormat};
+            const line: LineSeries = {type: 'line', name: 'L', data: [], dataLabels: {format: shared}};
+            function applyDefaults<T extends BaseSeries>(series: T): T { return series; }
+            applyDefaults(pie);
+            applyDefaults(line);
+            const plainPie: PieSeries = {type: 'pie', data: []};
+            const area: AreaSeries = {type: 'area', name: 'A', data: []};
+            const barX: BarXSeries = {type: 'bar-x', name: 'A', data: []};
+            const barY: BarYSeries = {type: 'bar-y', name: 'A', data: []};
+            [plainPie, area, barX, barY].forEach(series => applyDefaults(series));
+            const strictFormat: ValueFormat<{value: unknown; percentage: number}> = {
+                type: 'custom', formatter: ({percentage}) => percentage.toFixed(2),
+            };
+            // @ts-expect-error A value-only formatter cannot require percentage.
+            const unsafe: ValueFormat = strictFormat;
+            line.dataLabels = {format: unsafe};
+            // @ts-expect-error Series contexts allow percentage to be absent.
+            pie.dataLabels = {format: strictFormat};
             const legacy: ValueFormat = {type: 'custom', formatter: ({value}) => String(value)};
             pie.dataLabels = {format: legacy};
         `;

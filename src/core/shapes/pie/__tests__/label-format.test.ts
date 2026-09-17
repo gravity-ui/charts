@@ -33,7 +33,7 @@ describe('pie label format', () => {
         };
         const formatter = jest.fn(
             ({value, percentage, name, data: contextData}: PieFormatContext<{source: string}>) =>
-                `${value} (${percentage}) ${name}:${contextData.custom?.source}`,
+                `${value} (${percentage}) ${name}:${contextData?.custom?.source}`,
         );
         const format: PieValueFormat<{source: string}> = {type: 'custom', formatter};
 

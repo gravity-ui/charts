@@ -10,6 +10,8 @@ import type {
     BarYSeries,
     BarYValueFormat,
     BaseSeries,
+    BaseSeriesData,
+    CustomFormatContext,
     LineSeries,
     PieFormatContext,
     PieSeries,
@@ -23,8 +25,8 @@ interface PointCustom {
     source: string;
 }
 
-function isBaseSeries<T extends Omit<BaseSeries, 'dataLabels' | 'tooltip'>>(_series?: T) {
-    return true;
+interface PointFormatContext extends CustomFormatContext {
+    data?: BaseSeriesData<PointCustom>;
 }
 
 describe('series-specific format contexts', () => {
@@ -40,77 +42,109 @@ describe('series-specific format contexts', () => {
                 },
             },
         };
-        const base: Omit<BaseSeries, 'dataLabels' | 'tooltip'> = pie;
+        const base: BaseSeries = pie;
 
         expect(base).toBe(pie);
-        expect([
-            isBaseSeries<PieSeries<PointCustom>>(),
-            isBaseSeries<AreaSeries<PointCustom>>(),
-            isBaseSeries<BarXSeries<PointCustom>>(),
-            isBaseSeries<BarYSeries<PointCustom>>(),
-        ]).toEqual([true, true, true, true]);
     });
 
     test('accept legacy BaseSeries formatting in specialized series', () => {
         const format: ValueFormat = {type: 'custom', formatter: ({value}) => String(value)};
-        const base: BaseSeries = {dataLabels: {format}, tooltip: {valueFormat: format}};
+        const base: BaseSeries = {
+            visible: true,
+            dataLabels: {format},
+            tooltip: {valueFormat: format},
+        };
         const pie: PieSeries = {...base, type: 'pie', data: []};
         const area: AreaSeries = {...base, type: 'area', name: 'A', data: []};
         const barX: BarXSeries = {...base, type: 'bar-x', name: 'A', data: []};
         const barY: BarYSeries = {...base, type: 'bar-y', name: 'A', data: []};
         for (const series of [pie, area, barX, barY]) {
+            const common: BaseSeries = series;
+            expect(common.visible).toBe(true);
             expect(series.dataLabels?.format).toBe(format);
             expect(series.tooltip?.valueFormat).toBe(format);
         }
         expect(getFormattedValue({value: 1, format})).toBe('1');
     });
 
-    test('require specialized context without allowing formatter widening', () => {
+    test('reuse optional series contexts in value-only helpers and line labels', () => {
         const pieFormat: PieValueFormat = {
             type: 'custom',
-            formatter: ({percentage, name}) => percentage?.toFixed(2) ?? name,
+            formatter: ({percentage, name, value}) =>
+                percentage?.toFixed(2) ?? name ?? String(value),
         };
-        const areaFormat: AreaValueFormat = {type: 'custom', formatter: ({data}) => String(data.y)};
+        const areaFormat: AreaValueFormat = {
+            type: 'custom',
+            formatter: ({data, value}) => String(data?.y ?? value),
+        };
         const barXFormat: BarXValueFormat = areaFormat;
-        const barYFormat: BarYValueFormat = {type: 'custom', formatter: ({data}) => String(data.x)};
-        // Type-only checks: these calls would be unsafe at runtime.
-        const invalidCalls = () => {
-            // @ts-expect-error Pie requires name and data.
-            const shared: ValueFormat = pieFormat;
-            const line: LineSeries = {type: 'line', name: 'L', data: []};
-            // @ts-expect-error Line formatters only receive value.
-            line.dataLabels = {format: pieFormat};
-            // @ts-expect-error BaseSeries must not erase the required context either.
-            const base: BaseSeries = {dataLabels: {format: pieFormat}};
-            // @ts-expect-error Required pie context is missing.
-            getFormattedValue({value: 1, format: pieFormat});
-            // @ts-expect-error Partial pie context is insufficient.
-            getFormattedValue({value: 1, format: pieFormat, context: {percentage: 0.25}});
-            // @ts-expect-error Explicit generic arguments must also require context.
-            getFormattedValue<PieFormatContext>({value: 1, format: pieFormat});
-            // @ts-expect-error Area formatters require point data.
-            getFormattedValue({value: 1, format: areaFormat});
-            // @ts-expect-error Bar-x formatters require point data.
-            getFormattedValue({value: 1, format: barXFormat});
-            // @ts-expect-error Bar-y formatters require point data.
-            getFormattedValue({value: 1, format: barYFormat});
-            return {shared, line, base};
+        const barYFormat: BarYValueFormat = {
+            type: 'custom',
+            formatter: ({data, value}) => String(data?.x ?? value),
         };
-        expect(invalidCalls).toBeDefined();
+        for (const format of [pieFormat, areaFormat, barXFormat, barYFormat]) {
+            const shared: ValueFormat = format;
+            const line: LineSeries = {type: 'line', name: 'L', data: [], dataLabels: {format}};
+            expect(getFormattedValue({value: 1, format: shared})).toBe('1');
+            expect(getFormattedValue({value: 1, format: line.dataLabels?.format})).toBe('1');
+        }
+        expect(getFormattedValue<PieFormatContext>({value: 1, format: pieFormat})).toBe('1');
         expect(
             getFormattedValue({
                 value: 1,
                 format: pieFormat,
-                context: {percentage: 0.25, name: 'A', data: {name: 'A', value: 1}},
+                context: {percentage: 0.25},
             }),
         ).toBe('0.25');
-        expect(
-            getFormattedValue({
-                value: 1,
-                format: pieFormat,
-                context: {name: 'A', data: {name: 'A', value: 1}},
-            }),
-        ).toBe('A');
+    });
+
+    test('allow existing BaseSeries helpers with and without custom formatters', () => {
+        function applyDefaults<T extends BaseSeries>(series: T): T {
+            series.visible ??= true;
+            return series;
+        }
+        const pie: PieSeries<PointCustom> = {type: 'pie', data: []};
+        const area: AreaSeries<PointCustom> = {type: 'area', name: 'A', data: []};
+        const barX: BarXSeries<PointCustom> = {type: 'bar-x', name: 'A', data: []};
+        const barY: BarYSeries<PointCustom> = {type: 'bar-y', name: 'A', data: []};
+        for (const series of [pie, area, barX, barY]) {
+            const base: BaseSeries = applyDefaults(series);
+            expect(base.visible).toBe(true);
+            const format: ValueFormat<PointFormatContext> = {
+                type: 'custom',
+                formatter: ({data, value}) => data?.custom?.source ?? String(value),
+            };
+            series.dataLabels = {format};
+            expect(
+                getFormattedValue({value: 1, format: applyDefaults(series).dataLabels?.format}),
+            ).toBe('1');
+        }
+    });
+
+    test('still require context for explicitly strict custom formatters', () => {
+        interface RequiredPieContext extends PieFormatContext {
+            percentage: number;
+        }
+        const format: ValueFormat<RequiredPieContext> = {
+            type: 'custom',
+            formatter: ({percentage}) => percentage.toFixed(2),
+        };
+        // Compile-time errors also demonstrate why this callback cannot receive value alone.
+        const invalidCalls = () => {
+            // @ts-expect-error Required percentage cannot be widened to a value-only formatter.
+            const shared: ValueFormat = format;
+            // @ts-expect-error The series contract allows percentage to be absent.
+            const pieFormat: PieValueFormat = format;
+            // @ts-expect-error Required formatter context is missing.
+            getFormattedValue({value: 1, format});
+            // @ts-expect-error Explicit generic arguments must also preserve required context.
+            getFormattedValue<RequiredPieContext>({value: 1, format});
+            // @ts-expect-error An empty context does not provide the required percentage.
+            getFormattedValue({value: 1, format, context: {}});
+            return {shared, pieFormat};
+        };
+        expect(invalidCalls).toThrow(TypeError);
+        expect(getFormattedValue({value: 1, format, context: {percentage: 0.25}})).toBe('0.25');
     });
 
     test('accept legacy pie chunks for ChartTooltipContent', () => {

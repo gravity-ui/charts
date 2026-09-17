@@ -73,11 +73,16 @@ function getFormattedDate(args: {value: DateTimeInput; format?: string}) {
     return String(value);
 }
 
-export function getFormattedValue(args: {
+interface FormattedValueArgs<TContext extends CustomFormatContext> {
     value: string | number | undefined | null;
-    format?: ValueFormat;
-    context?: Omit<CustomFormatContext, 'value'>;
-}): string;
+    format?: ValueFormat<TContext>;
+    context?: Omit<TContext, 'value'>;
+}
+
+export function getFormattedValue<TContext extends CustomFormatContext = CustomFormatContext>(
+    args: FormattedValueArgs<TContext> &
+        (CustomFormatContext extends TContext ? unknown : {context: Omit<TContext, 'value'>}),
+): string;
 export function getFormattedValue<TContext extends CustomFormatContext>(args: {
     value: string | number | undefined | null;
     format?: ValueFormat<TContext>;

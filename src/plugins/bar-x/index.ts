@@ -82,7 +82,11 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
-        validatePercentStackingValues({series, valueKey: 'y'});
+        validatePercentStackingValues({
+            series,
+            valueKey: 'y',
+            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+        });
     },
     getColorValue: (d) => d.y,
     prepareShapeData,

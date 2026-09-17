@@ -38,13 +38,13 @@ export type ConnectorCurve = 'linear' | 'basic';
 
 export interface PieFormatContext<T = MeaningfulAny>
     extends CustomFormatContext, PercentageFormatContext {
-    name: string;
-    data: PieSeriesData<T>;
+    name?: string;
+    data?: PieSeriesData<T>;
 }
 
 export type PieValueFormat<T = MeaningfulAny> = ValueFormat<PieFormatContext<T>>;
 
-export interface PieSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
+export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.Pie;
     data: PieSeriesData<T>[];
     /**

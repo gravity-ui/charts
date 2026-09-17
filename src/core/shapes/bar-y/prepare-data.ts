@@ -16,6 +16,7 @@ import {
 } from '../../utils';
 import {getBarYLayout, groupBarYDataByYValue} from '../../utils/bar-y';
 import {getFormattedValue} from '../../utils/format';
+import {getPositiveShare} from '../../utils/percentage';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
@@ -96,16 +97,14 @@ export async function prepareBarYData(args: {
             let ratio = 1;
             let percentTotal = 0;
             if (series.some((s) => s.stacking === 'percent')) {
-                percentTotal = sortedData.reduce((acc, item) => {
+                let sum = 0;
+                for (const item of sortedData) {
                     const value = Number(item.data.x);
-                    return Number.isFinite(value) && value > 0 ? acc + value : acc;
-                }, 0);
-                const sum = sortedData.reduce((acc, item) => {
-                    if (item.data.x) {
-                        return acc + xLinearScale(Number(item.data.x));
+                    if (Number.isFinite(value) && value > 0) {
+                        percentTotal += value;
+                        sum += xLinearScale(value);
                     }
-                    return acc;
-                }, 0);
+                }
 
                 ratio = sum === 0 ? 0 : xLinearScale.range()[1] / sum;
             }
@@ -178,9 +177,7 @@ export async function prepareBarYData(args: {
                     series: s,
                     percentage:
                         s.stacking === 'percent'
-                            ? percentTotal > 0 && xValue > 0
-                                ? xValue / percentTotal
-                                : 0
+                            ? getPositiveShare(xValue, percentTotal)
                             : undefined,
                     isLastStackItem,
                 };

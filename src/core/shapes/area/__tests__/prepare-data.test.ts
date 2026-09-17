@@ -80,3 +80,30 @@ test.each(['skip', 'zero'] as const)(
         expect(top?.points.map((point) => point.percentage)).toEqual([1, 0.5, 1]);
     },
 );
+
+test.each([undefined, 'normal'] as const)(
+    'area omits percentage with stacking=%s',
+    async (stacking) => {
+        const args = buildArgs(200);
+        args.series.forEach((series) => {
+            series.stacking = stacking;
+            series.dataLabels.enabled = false;
+        });
+        const result = await prepareAreaData(args);
+        expect(result.flatMap((item) => item.points.map((point) => point.percentage))).toEqual(
+            Array(8).fill(undefined),
+        );
+    },
+);
+
+test('area returns zero shares and finite geometry for an empty total', async () => {
+    const args = buildArgs(200);
+    args.series.forEach((series) => {
+        series.data = series.data.map((point) => ({...point, y: 0}));
+        series.dataLabels.enabled = false;
+    });
+    const result = await prepareAreaData(args);
+    const points = result.flatMap((item) => item.points);
+    expect(points.map((point) => point.percentage)).toEqual(Array(8).fill(0));
+    expect(points.map((point) => point.y)).toEqual(Array(8).fill(200));
+});

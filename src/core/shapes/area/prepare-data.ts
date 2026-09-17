@@ -17,6 +17,7 @@ import {
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {setGradientPointFills} from '../../utils/gradient';
+import {getPositiveShare} from '../../utils/percentage';
 
 import type {PointData, PreparedAreaData} from './types';
 
@@ -218,9 +219,7 @@ export const prepareAreaData = async (args: {
                     let yDataValue = d.y ?? null;
                     const percentage =
                         s.stacking === 'percent'
-                            ? stackValues[x] > 0 && Number(yDataValue) > 0
-                                ? Number(yDataValue) / stackValues[x]
-                                : 0
+                            ? getPositiveShare(Number(yDataValue), stackValues[x])
                             : undefined;
                     const pointAnnotation =
                         d.annotation && !isRangeSlider

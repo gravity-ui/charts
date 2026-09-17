@@ -24,12 +24,17 @@ interface PercentStackingValidationSeries extends XYValidationSeries {
 export function validatePercentStackingValues(args: {
     series: PercentStackingValidationSeries;
     valueKey: keyof XYDataPoint;
+    valueAxisType?: ChartXAxis['type'];
 }) {
-    const {series, valueKey} = args;
+    const {series, valueKey, valueAxisType} = args;
     if (
         series.stacking === 'percent' &&
         series.data.some((point) => {
-            const value = point[valueKey];
+            const rawValue = point[valueKey];
+            const value =
+                typeof rawValue === 'string' && valueAxisType !== 'category'
+                    ? Number(rawValue)
+                    : rawValue;
             return typeof value === 'number' && value < 0;
         })
     ) {

@@ -34,7 +34,11 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         validateSeriesColor({color: series.fillColor, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
-        validatePercentStackingValues({series, valueKey: 'y'});
+        validatePercentStackingValues({
+            series,
+            valueKey: 'y',
+            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+        });
 
         const isStacking = ['normal', 'percent'].includes(series.stacking as string);
         if (isStacking && series.nullMode === 'connect') {

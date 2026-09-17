@@ -19,6 +19,7 @@ import {
 } from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
+import {getPositiveShare} from '../../utils/percentage';
 
 import type {PreparedBarXData} from './types';
 
@@ -345,11 +346,9 @@ export const prepareBarXData = async (args: {
                         positiveStackHeight > 0 ? currentPlotHeight / positiveStackHeight : 0;
                     stackItems.forEach((item) => {
                         item.percentage =
-                            item.series.stacking === 'percent' && positiveStackSum > 0
-                                ? Math.max(0, Number(item.data.y ?? 0)) / positiveStackSum
-                                : item.series.stacking === 'percent'
-                                  ? 0
-                                  : undefined;
+                            item.series.stacking === 'percent'
+                                ? getPositiveShare(Number(item.data.y ?? 0), positiveStackSum)
+                                : undefined;
                         item.height = item._height * ratio;
                         item.y = currentPlotTop + currentPlotHeight - item.height - acc;
 

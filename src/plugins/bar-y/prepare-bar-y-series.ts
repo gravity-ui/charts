@@ -28,13 +28,15 @@ async function prepareDataLabels(series: BarYSeries) {
     const enabled = get(series, 'dataLabels.enabled', false);
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
+    // Percent labels are always inside the bars, so they do not affect axis padding.
+    // Measure them during shape preparation, when the stack percentage is available.
     const labels =
         enabled && series.stacking !== 'percent'
             ? series.data.map((d) =>
                   getFormattedValue({
                       value: d.label ?? d.x,
                       format: series.dataLabels?.format,
-                      context: {data: d, percentage: undefined},
+                      context: {data: d},
                   }),
               )
             : [];

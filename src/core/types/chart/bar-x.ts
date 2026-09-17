@@ -8,6 +8,7 @@ import type {
     BaseSeriesData,
     BaseSeriesLegend,
     CustomFormatContext,
+    PercentageFormatContext,
     ValueFormat,
 } from './base';
 import type {RectLegendSymbolOptions} from './legend';
@@ -44,15 +45,17 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     annotation?: ChartPointAnnotation;
 }
 
-export interface BarXFormatContext<T = MeaningfulAny> extends CustomFormatContext {
-    data: BarXSeriesData<T>;
-    /** Value share in the stack. Provided only when `stacking` is `percent`. */
-    percentage?: number;
+/**
+ * Formatter context. `percentage` is provided only for percent stacking.
+ */
+export interface BarXFormatContext<T = MeaningfulAny>
+    extends CustomFormatContext, PercentageFormatContext {
+    data?: BarXSeriesData<T>;
 }
 
 export type BarXValueFormat<T = MeaningfulAny> = ValueFormat<BarXFormatContext<T>>;
 
-export interface BarXSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
+export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.BarX;
     data: BarXSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

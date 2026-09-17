@@ -240,6 +240,48 @@ describe('validation/validateData', () => {
         );
     });
 
+    describe.each(['area', 'bar-x', 'bar-y'] as const)('%s percent stacking', (type) => {
+        test.each(['linear', 'datetime', 'logarithmic'] as const)(
+            'rejects negative numeric strings on a %s value axis',
+            (axisType) => {
+                const data: ChartData = {
+                    ...(type === 'bar-y' ? {xAxis: {type: axisType}} : {yAxis: [{type: axisType}]}),
+                    series: {
+                        data: [
+                            {
+                                type,
+                                name: 'Negative',
+                                stacking: 'percent',
+                                data: [type === 'bar-y' ? {x: '-5', y: 1} : {x: 1, y: '-5'}],
+                            },
+                        ],
+                    },
+                };
+                expect(() => validateData(data)).toThrow(
+                    expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+                );
+            },
+        );
+
+        test('preserves category names that look like negative numbers', () => {
+            const axis = {type: 'category' as const, categories: ['-5']};
+            const data: ChartData = {
+                ...(type === 'bar-y' ? {xAxis: axis} : {yAxis: [axis]}),
+                series: {
+                    data: [
+                        {
+                            type,
+                            name: 'Category',
+                            stacking: 'percent',
+                            data: [type === 'bar-y' ? {x: '-5', y: 1} : {x: 1, y: '-5'}],
+                        },
+                    ],
+                },
+            };
+            expect(() => validateData(data)).not.toThrow();
+        });
+    });
+
     test('validateData should allow negative values for normal stacking', () => {
         const data: ChartData = {
             series: {

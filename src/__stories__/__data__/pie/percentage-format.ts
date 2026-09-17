@@ -6,7 +6,7 @@ const percentFormatter = new Intl.NumberFormat('en', {
 });
 
 function formatValueAndPercentage({name, value, percentage}: PieFormatContext) {
-    const label = `${name}: ${value}`;
+    const label = name === undefined ? String(value) : `${name}: ${value}`;
     return percentage === undefined ? label : `${label} (${percentFormatter.format(percentage)})`;
 }
 

@@ -8,6 +8,7 @@ import type {
     BaseSeriesData,
     BaseSeriesLegend,
     CustomFormatContext,
+    PercentageFormatContext,
     ValueFormat,
 } from './base';
 import type {SeriesColor} from './gradient';
@@ -61,15 +62,18 @@ export interface AreaMarkerOptions extends PointMarkerOptions {
     symbol?: AreaMarkerSymbol;
 }
 
-export interface AreaFormatContext<T = MeaningfulAny> extends CustomFormatContext {
-    data: AreaSeriesData<T>;
-    /** Value share in the stack. Provided only when `stacking` is `percent`. */
-    percentage?: number;
+/**
+ * Formatter context. `percentage` is provided only for percent stacking.
+ * Shares include isolated data points even when gaps prevent them from contributing to the filled area.
+ */
+export interface AreaFormatContext<T = MeaningfulAny>
+    extends CustomFormatContext, PercentageFormatContext {
+    data?: AreaSeriesData<T>;
 }
 
 export type AreaValueFormat<T = MeaningfulAny> = ValueFormat<AreaFormatContext<T>>;
 
-export interface AreaSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels' | 'tooltip'> {
+export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.Area;
     data: AreaSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */
