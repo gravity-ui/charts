@@ -8,4 +8,5 @@ export * from './html-labels';
 export * from './html-legend';
 export * from './null-modes';
 export * from './playground';
+export * from './percentage-format';
 export * from './user-styles';

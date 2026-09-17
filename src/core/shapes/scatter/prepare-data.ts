@@ -138,6 +138,7 @@ export async function prepareScatterData(args: {
                 .map((m) => m.point);
 
             const {svgLabels, htmlLabels} = await preparePointDataLabels({
+                getFormatContext: () => ({}),
                 series: s,
                 points: seriesPoints,
                 xMax,

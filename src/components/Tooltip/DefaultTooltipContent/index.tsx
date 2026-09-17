@@ -141,6 +141,8 @@ export const DefaultTooltipContent = ({
                     valueFormat;
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
+                const valueFormatContext =
+                    plugin?.tooltip.getValueFormatContext?.(seriesItem) ?? {};
 
                 let tooltipRows = rows ?? plugin?.tooltip.rows ?? [];
                 if (typeof tooltipRows === 'function') {
@@ -179,6 +181,7 @@ export const DefaultTooltipContent = ({
                             formattedValue: getFormattedValue({
                                 value,
                                 format: rowValueFormat,
+                                context: valueFormatContext,
                             }),
                             striped,
                             active,
@@ -206,6 +209,7 @@ export const DefaultTooltipContent = ({
                             value: cellValue,
                             format:
                                 cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
+                            context: valueFormatContext,
                         });
                         return {
                             formattedValue: cellFormattedValue,

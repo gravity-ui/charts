@@ -1,6 +1,5 @@
 import {group, min, sort} from 'd3-array';
 import type {ScaleLogarithmic} from 'd3-scale';
-import isNil from 'lodash/isNil';
 import round from 'lodash/round';
 
 import type {AreaSeriesData} from '../../../types';
@@ -18,6 +17,7 @@ import {
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {setGradientPointFills} from '../../utils/gradient';
+import {getPositiveShare} from '../../utils/percentage';
 
 import type {PointData, PreparedAreaData} from './types';
 
@@ -118,26 +118,12 @@ export const prepareAreaData = async (args: {
 
             const xValues = getXValues(seriesStack, xAxis, xScale);
 
-            const isPercentStacking = seriesStack.some((s) => s.stacking === 'percent');
-            const stackValues = Object.fromEntries(xValues.map(([key]) => [key, 0]));
-            const ratio = Object.fromEntries(xValues.map(([key]) => [key, 1]));
-
-            if (isPercentStacking) {
-                seriesStack.forEach((s) => {
-                    const yAxisIndex = s.yAxis;
-                    const seriesYScale = yScale[yAxisIndex];
-
-                    if (!seriesYScale) {
-                        return;
-                    }
-
-                    s.data.forEach((d, index) => {
-                        const yDataValue = d.y ?? null;
-                        if (
-                            yDataValue &&
-                            !(isNil(s.data[index - 1]?.y) && isNil(s.data[index + 1]?.y))
-                        ) {
-                            const x = String(
+            const seriesDataMaps = new Map(
+                seriesStack.map((s) => [
+                    s,
+                    new Map(
+                        s.data.map((d) => [
+                            String(
                                 xAxis.type === 'category'
                                     ? getDataCategoryValue({
                                           axisDirection: 'x',
@@ -145,16 +131,42 @@ export const prepareAreaData = async (args: {
                                           data: d,
                                       })
                                     : d.x,
-                            );
-                            stackValues[x] += Number(yDataValue);
+                            ),
+                            d,
+                        ]),
+                    ),
+                ]),
+            );
+            const isPercentStacking = seriesStack.some((s) => s.stacking === 'percent');
+            const stackValues: Record<string, number> = {};
+            const ratio: Record<string, number> = {};
+            if (isPercentStacking) {
+                xValues.forEach(([x], index) => {
+                    let stackTotal = 0;
+                    let percentageTotal = 0;
+                    seriesStack.forEach((s) => {
+                        if (!yScale[s.yAxis]) {
+                            return;
+                        }
+                        const data = seriesDataMaps.get(s);
+                        if (!data) {
+                            return;
+                        }
+                        const value = Number(data.get(x)?.y ?? 0);
+                        if (!Number.isFinite(value)) {
+                            return;
+                        }
+                        percentageTotal += Math.max(0, value);
+                        // An isolated point between explicit nulls contributes no
+                        // height to either section. Missing points are synthetic zeros.
+                        const prev = data.get(xValues[index - 1]?.[0]);
+                        const next = data.get(xValues[index + 1]?.[0]);
+                        if (s.nullMode === 'zero' || prev?.y !== null || next?.y !== null) {
+                            stackTotal += value;
                         }
                     });
-                });
-
-                xValues.forEach(([x]) => {
-                    if (stackValues[x]) {
-                        ratio[x] = 100 / stackValues[x];
-                    }
+                    stackValues[x] = percentageTotal;
+                    ratio[x] = stackTotal ? 100 / stackTotal : 1;
                 });
             }
 
@@ -193,18 +205,10 @@ export const prepareAreaData = async (args: {
                         yAxis: seriesYAxis,
                         yScale: seriesYScale,
                     }) ?? 0;
-                const seriesData = s.data.reduce<Map<string, AreaSeriesData>>((m, d) => {
-                    const key = String(
-                        xAxis.type === 'category'
-                            ? getDataCategoryValue({
-                                  axisDirection: 'x',
-                                  categories: xAxis.categories || [],
-                                  data: d,
-                              })
-                            : d.x,
-                    );
-                    return m.set(key, d);
-                }, new Map());
+                const seriesData = seriesDataMaps.get(s);
+                if (!seriesData) {
+                    continue;
+                }
                 const annotationOpts = seriesOptions?.area?.annotation;
                 const points: PointData[] = [];
 
@@ -213,6 +217,10 @@ export const prepareAreaData = async (args: {
                     const rawData = seriesData.get(x);
                     const d = rawData ?? SYNTHETIC_POINT;
                     let yDataValue = d.y ?? null;
+                    const percentage =
+                        s.stacking === 'percent'
+                            ? getPositiveShare(Number(yDataValue), stackValues[x])
+                            : undefined;
                     const pointAnnotation =
                         d.annotation && !isRangeSlider
                             ? await prepareAnnotation({
@@ -254,6 +262,7 @@ export const prepareAreaData = async (args: {
                                 y: roundCoordinate(yAxisTop + yValue - prevSectionStackHeight),
                                 color: d.marker?.color ?? d.color,
                                 data: d,
+                                percentage,
                                 series: s,
                                 annotation: pointAnnotation,
                             };
@@ -274,6 +283,7 @@ export const prepareAreaData = async (args: {
                                     y: roundCoordinate(yAxisTop + yValue - nextSectionStackHeight),
                                     color: d.marker?.color ?? d.color,
                                     data: d,
+                                    percentage,
                                     series: s,
                                 };
                                 points.push(point2);
@@ -317,6 +327,7 @@ export const prepareAreaData = async (args: {
                                 y: roundCoordinate(yAxisTop + yValue + prevSectionStackHeight),
                                 color: d.marker?.color ?? d.color,
                                 data: d,
+                                percentage,
                                 series: s,
                             });
 
@@ -330,6 +341,7 @@ export const prepareAreaData = async (args: {
                                     y: roundCoordinate(yAxisTop + yValue + nextSectionStackHeight),
                                     color: d.marker?.color ?? d.color,
                                     data: d,
+                                    percentage,
                                     series: s,
                                 });
                             }
@@ -356,6 +368,7 @@ export const prepareAreaData = async (args: {
                             y: null,
                             color: d.marker?.color ?? d.color,
                             data: d,
+                            percentage,
                             series: s,
                         });
                     }
@@ -438,6 +451,10 @@ export const prepareAreaData = async (args: {
                         xMax,
                         yAxisTop: itemYAxisTop,
                         isOutsideBounds,
+                        getFormatContext: (point) => ({
+                            data: point.data,
+                            percentage: point.percentage,
+                        }),
                     });
                     item.svgLabels.push(...labelsData.svgLabels);
                     item.htmlLabels.push(...labelsData.htmlLabels);
