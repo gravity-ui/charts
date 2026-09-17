@@ -219,6 +219,28 @@ export const Legend = (props: Props) => {
             svgElement.style('opacity', 0);
 
             const isMac = navigator.platform.toUpperCase().includes('MAC');
+            const handleItemClick = (event: MouseEvent, item: LegendItem) => {
+                legend.events?.itemClick?.(
+                    {
+                        id: item.id,
+                        name: item.name,
+                        visible: Boolean(item.visible),
+                        custom: item.custom,
+                    },
+                    event,
+                );
+
+                if (event.defaultPrevented) {
+                    return;
+                }
+
+                onItemClick({
+                    id: item.id,
+                    name: item.name,
+                    metaKey: isMac ? event.metaKey : event.ctrlKey,
+                });
+                onUpdate?.();
+            };
 
             const htmlElement = select(htmlLayout);
             htmlElement.selectAll('[data-legend]').remove();
@@ -248,13 +270,8 @@ export const Legend = (props: Props) => {
                         .enter()
                         .append('g')
                         .attr('class', b('item'))
-                        .on('click', function (e, d) {
-                            onItemClick({
-                                id: d.id,
-                                name: d.name,
-                                metaKey: isMac ? e.metaKey : e.ctrlKey,
-                            });
-                            onUpdate?.();
+                        .on('click', function (event: MouseEvent, item) {
+                            handleItemClick(event, item);
                         });
 
                     const getXPosition = (i: number) => {
@@ -296,13 +313,8 @@ export const Legend = (props: Props) => {
                                 }
                                 return '0px';
                             })
-                            .on('click', function (e, d) {
-                                onItemClick({
-                                    id: d.id,
-                                    name: d.name,
-                                    metaKey: isMac ? e.metaKey : e.ctrlKey,
-                                });
-                                onUpdate?.();
+                            .on('click', function (event: MouseEvent, item) {
+                                handleItemClick(event, item);
                             })
                             .html((d) => d.text);
                     } else {

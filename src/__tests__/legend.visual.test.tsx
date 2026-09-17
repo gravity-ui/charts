@@ -9,6 +9,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import type {ChartData, ChartLegend} from '../types';
 
+import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
 
 const pieOverflowedLegendItemsData: ChartData = {
@@ -127,6 +128,32 @@ test.describe('Legend', () => {
             // When clicking on the legend again, the chart should return to its original state.
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
+        });
+
+        test('Item click event runs before the default SVG legend action', async ({mount}) => {
+            const component = await mount(<LegendItemClickTestStory />);
+            const legendItems = component.locator('.gcharts-legend__item text');
+
+            await legendItems.first().click();
+
+            await expect(component.locator('[data-qa="clicked-legend-item"]')).toHaveText(
+                'First series:true:first',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_unselected/);
+        });
+
+        test('Item click event can prevent the default HTML legend action', async ({mount}) => {
+            const component = await mount(
+                <LegendItemClickTestStory html={true} preventDefault={true} />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item-text-html');
+
+            await legendItems.first().click();
+
+            await expect(component.locator('[data-qa="clicked-legend-item"]')).toHaveText(
+                'First series:true:first',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text-html_selected/);
         });
 
         const positions = ['top', 'bottom', 'left', 'right'] as const;
