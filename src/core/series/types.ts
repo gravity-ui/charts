@@ -164,6 +164,20 @@ type BasePreparedAxisRelatedSeries = {
 export type PreparedScatterSeries = {
     type: ScatterSeries['type'];
     data: ScatterSeriesData[];
+    cluster: {
+        enabled: boolean;
+        distance: number;
+        minimumClusterSize: number;
+        marker: {
+            color?: string;
+            radius: number;
+        };
+        dataLabels: {
+            enabled: boolean;
+            format?: ValueFormat;
+            style: BaseTextStyle;
+        };
+    };
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;
