@@ -78,7 +78,17 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
 
     const debuncedHandleResize = React.useMemo(() => {
         debounced.current?.cancel();
-        debounced.current = debounce(handleResize, 200);
+        debounced.current = debounce(
+            (options) => {
+                if (typeof React.startTransition === 'function') {
+                    React.startTransition(() => handleResize(options));
+                } else {
+                    handleResize(options);
+                }
+            },
+            200,
+            {maxWait: 200},
+        );
         return debounced.current;
     }, [handleResize]);
 
