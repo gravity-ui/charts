@@ -216,7 +216,13 @@ export async function prepareYAxisData({
     const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
 
     const labelMaxHeight =
-        values.length > 1 ? values[0].y - values[1].y - axis.labels.padding * 2 : axisHeight;
+        values.length > 1
+            ? Math.max(
+                  0,
+                  getMinSpaceBetween<{y: number}>(values, (value) => value.y) -
+                      axis.labels.padding * 2,
+              )
+            : axisHeight;
 
     for (let i = 0; i < values.length; i++) {
         const tickValue = values[i];

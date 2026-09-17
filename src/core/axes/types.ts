@@ -101,7 +101,7 @@ type PreparedBaseAxis = Omit<
     maxPadding: number;
     ticks: {
         pixelInterval?: number;
-        values?: number[];
+        values?: (number | string)[];
     };
     tickMarks: PreparedAxisTickMarks;
     plotIndex: number;

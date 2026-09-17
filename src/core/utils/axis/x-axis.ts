@@ -50,7 +50,7 @@ function getTicksCount(args: {
     return DEFAULT_TICKS_COUNT;
 }
 
-export function getXAxisTickValues({
+export function getAutomaticXAxisTickValues({
     axis,
     labelLineHeight,
     scale,
@@ -61,14 +61,6 @@ export function getXAxisTickValues({
     scale: ChartScale;
     series?: ChartSeries[] | PreparedSeries[];
 }): TickValue[] {
-    const explicitValues = getExplicitAxisTickValues({axis, scale});
-
-    if (explicitValues) {
-        return explicitValues
-            .map(({position, value}) => ({x: position, value}))
-            .sort((left, right) => left.x - right.x);
-    }
-
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
         const axisWidth = Math.abs(range[0] - range[1]);
@@ -171,4 +163,14 @@ export function getXAxisTickValues({
     }
 
     return [];
+}
+
+export function getXAxisTickValues(args: Parameters<typeof getAutomaticXAxisTickValues>[0]) {
+    const explicitValues = getExplicitAxisTickValues({axis: args.axis, scale: args.scale});
+
+    if (explicitValues !== undefined) {
+        return explicitValues.map(({position, value}) => ({x: position, value}));
+    }
+
+    return getAutomaticXAxisTickValues(args);
 }
