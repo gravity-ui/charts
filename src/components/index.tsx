@@ -78,10 +78,15 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
 
     const debuncedHandleResize = React.useMemo(() => {
         debounced.current?.cancel();
+        const startTransition = (
+            React as typeof React & {
+                startTransition?: (callback: () => void) => void;
+            }
+        ).startTransition;
         debounced.current = debounce(
             (options) => {
-                if (typeof React.startTransition === 'function') {
-                    React.startTransition(() => handleResize(options));
+                if (typeof startTransition === 'function') {
+                    startTransition(() => handleResize(options));
                 } else {
                     handleResize(options);
                 }
