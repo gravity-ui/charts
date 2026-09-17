@@ -133,6 +133,41 @@ describe('Chart/reflow', () => {
         });
     });
 
+    test('continuous container resize triggers onResize after maxWait', async () => {
+        jest.useFakeTimers();
+        const onResize = jest.fn();
+
+        const {container} = renderChart(<Chart data={data} onResize={onResize} />);
+
+        await act(async () => {
+            jest.runAllTimers();
+        });
+        onResize.mockClear();
+
+        Object.defineProperty(container, 'clientWidth', {value: 600, configurable: true});
+        act(() => {
+            __triggerResizeObserver(container);
+        });
+
+        await act(async () => {
+            jest.advanceTimersByTime(100);
+        });
+
+        Object.defineProperty(container, 'clientWidth', {value: 700, configurable: true});
+        act(() => {
+            __triggerResizeObserver(container);
+        });
+
+        await act(async () => {
+            jest.advanceTimersByTime(100);
+        });
+
+        expect(onResize).toHaveBeenCalledTimes(1);
+        expect(onResize).toHaveBeenCalledWith({
+            dimensions: {width: 700, height: 400},
+        });
+    });
+
     test('ResizeObserver does not trigger onResize when dimensions stay the same', async () => {
         jest.useFakeTimers();
         const onResize = jest.fn();
