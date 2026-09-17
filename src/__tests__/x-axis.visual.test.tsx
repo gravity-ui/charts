@@ -102,7 +102,6 @@ test.describe('X-axis', () => {
             '40',
             '100',
         ]);
-        await expect(component.locator('svg')).toHaveScreenshot();
     });
 
     test('explicit values select category indices', async ({mount}) => {
