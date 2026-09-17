@@ -4,7 +4,12 @@ import {getMinSpaceBetween} from '../array';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
 import {getScaleTicks} from '../ticks';
 
-import {getTicksCountByPixelInterval, isBandScale, thinOut} from './common';
+import {
+    getExplicitAxisTickValues,
+    getTicksCountByPixelInterval,
+    isBandScale,
+    thinOut,
+} from './common';
 
 const DEFAULT_TICKS_COUNT = 10;
 
@@ -45,7 +50,7 @@ function getTicksCount(args: {
     return DEFAULT_TICKS_COUNT;
 }
 
-export function getXAxisTickValues({
+export function getAutomaticXAxisTickValues({
     axis,
     labelLineHeight,
     scale,
@@ -158,4 +163,14 @@ export function getXAxisTickValues({
     }
 
     return [];
+}
+
+export function getXAxisTickValues(args: Parameters<typeof getAutomaticXAxisTickValues>[0]) {
+    const explicitValues = getExplicitAxisTickValues({axis: args.axis, scale: args.scale});
+
+    if (explicitValues !== undefined) {
+        return explicitValues.map(({position, value}) => ({x: position, value}));
+    }
+
+    return getAutomaticXAxisTickValues(args);
 }

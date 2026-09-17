@@ -10,6 +10,11 @@ import type {AxisDirection} from '../types';
 
 type Ticks = number[] | string[] | Date[];
 
+interface ExplicitAxisTickValue {
+    position: number;
+    value: number | string;
+}
+
 export function getTicksCountByPixelInterval({
     axis,
     axisWidth,
@@ -40,6 +45,74 @@ export function isTimeScale(
     }
 
     return scale.domain()[0] instanceof Date;
+}
+
+export function getExplicitAxisTickValues({
+    axis,
+    scale,
+}: {
+    axis: PreparedAxis;
+    scale: ChartScale;
+}): ExplicitAxisTickValue[] | undefined {
+    const values = axis.ticks.values;
+
+    if (!values) {
+        return undefined;
+    }
+
+    const range = scale.range();
+    if (Math.min(...range) === Math.max(...range)) {
+        return [];
+    }
+
+    const uniqueValues = [...new Set(values)];
+    const getPosition = getXTickPosition({
+        scale: scale as AxisScale<AxisDomain>,
+        offset: 0,
+    });
+
+    if (isBandScale(scale)) {
+        const domain = scale.domain();
+        const domainIndexes = new Map(domain.map((value, index) => [value, index]));
+
+        return uniqueValues
+            .flatMap((value) => {
+                const category = typeof value === 'number' ? domain[value] : value;
+                const position = category === undefined ? NaN : getPosition(category);
+
+                return category !== undefined &&
+                    domainIndexes.has(category) &&
+                    Number.isFinite(position)
+                    ? [{position, value: category}]
+                    : [];
+            })
+            .sort(
+                (left, right) =>
+                    (domainIndexes.get(left.value as string) ?? Infinity) -
+                    (domainIndexes.get(right.value as string) ?? Infinity),
+            );
+    }
+
+    const domain = scale.domain().map(Number);
+    const domainMin = Math.min(...domain);
+    const domainMax = Math.max(...domain);
+
+    return uniqueValues
+        .flatMap((value) => {
+            const numericValue = Number(value);
+
+            if (
+                !Number.isFinite(numericValue) ||
+                numericValue < domainMin ||
+                numericValue > domainMax
+            ) {
+                return [];
+            }
+
+            const position = getPosition(value);
+            return Number.isFinite(position) ? [{position, value}] : [];
+        })
+        .sort((left, right) => Number(left.value) - Number(right.value));
 }
 
 export function getXAxisOffset() {

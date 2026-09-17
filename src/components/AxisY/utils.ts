@@ -1,5 +1,6 @@
 import {
     getDomainDataYBySeries,
+    getExplicitAxisTickValues,
     getMinSpaceBetween,
     getTicksCountByPixelInterval,
     isBandScale,
@@ -9,7 +10,7 @@ import {
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
 import type {ChartSeries} from '../../types';
 
-export function getTickValues({
+export function getAutomaticTickValues({
     scale,
     axis,
     labelLineHeight,
@@ -131,4 +132,14 @@ export function getTickValues({
     }
 
     return [];
+}
+
+export function getTickValues(args: Parameters<typeof getAutomaticTickValues>[0]) {
+    const explicitValues = getExplicitAxisTickValues({axis: args.axis, scale: args.scale});
+
+    if (explicitValues !== undefined) {
+        return explicitValues.map(({position, value}) => ({y: position, value}));
+    }
+
+    return getAutomaticTickValues(args);
 }
