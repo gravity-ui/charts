@@ -75,6 +75,90 @@ describe('chart config artifacts', () => {
         ).not.toThrow();
     });
 
+    test('standalone declarations expose stack labels only on supported series and plugin options', () => {
+        const usage = `
+            const labels: StackLabelsOptions = {
+                enabled: true, padding: 8, allowOverlap: false, style: {fontSize: '12px'},
+                format: {type: 'custom', formatter: ({value}) => String(value)},
+            };
+            const options: ChartSeriesOptions = {
+                'bar-x': {stackLabels: labels}, 'bar-y': {stackLabels: labels},
+                area: {stackLabels: labels},
+            };
+            const area: AreaSeries = {type: 'area', name: 'A', data: [], stackLabels: labels};
+            const barX: BarXSeries = {type: 'bar-x', name: 'X', data: [], stackLabels: labels};
+            const barY: BarYSeries = {type: 'bar-y', name: 'Y', data: [], stackLabels: labels};
+            // @ts-expect-error Line series do not support stack labels.
+            const line: LineSeries = {type: 'line', name: 'L', data: [], stackLabels: labels};
+            // @ts-expect-error Stack labels are not supported by all series.
+            const series: BaseSeries = {stackLabels: labels};
+            // @ts-expect-error Point data labels do not contain stack settings.
+            const pointLabels: BaseDataLabels = {stackLabels: labels};
+            // @ts-expect-error Line does not support stack labels.
+            options.line = {stackLabels: labels};
+            void [area, barX, barY, line, series, pointLabels];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test.each(['bar-x', 'bar-y', 'area'])('schema supports stack labels for %s', (type) => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const config = {
+            series: {
+                data: [
+                    {
+                        type,
+                        name: 'A',
+                        stacking: 'normal',
+                        data: [{x: 0, y: 1}],
+                        stackLabels: {
+                            enabled: true,
+                            style: {fontSize: '14px'},
+                            padding: 6,
+                            allowOverlap: true,
+                            format: {type: 'number', precision: 1},
+                        },
+                    },
+                ],
+                options: {
+                    [type]: {
+                        stackLabels: {
+                            enabled: true,
+                            padding: 8,
+                            allowOverlap: false,
+                            style: {fontSize: '12px'},
+                            format: {type: 'number', precision: 2},
+                        },
+                    },
+                },
+            },
+        };
+        expect(validateConfig(config)).toBe(true);
+        config.series.data[0].stackLabels.enabled = 'yes';
+        expect(validateConfig(config)).toBe(false);
+        config.series.data[0].stackLabels.enabled = true;
+        config.series.options[type].stackLabels.enabled = 'yes';
+        expect(validateConfig(config)).toBe(false);
+    });
+
+    test('schema rejects stack labels on unsupported plugins and series', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const series = {type: 'line', name: 'A', data: [{x: 0, y: 1}]};
+        expect(
+            validateConfig({
+                series: {data: [series], options: {line: {stackLabels: {enabled: true}}}},
+            }),
+        ).toBe(false);
+        expect(validateConfig({series: {data: [{...series, stackLabels: {enabled: true}}]}})).toBe(
+            false,
+        );
+    });
+
     test('validates declaration content without accessing the published file', () => {
         // DECLARATION_PATH (scripts/chart-config.d.ts) never exists on disk; validateDeclaration
         // uses it only as a virtual filename for the TypeScript compiler host.

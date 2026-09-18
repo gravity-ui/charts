@@ -1,6 +1,5 @@
 import type {CurveFactory} from 'd3-shape';
 
-import type {ShapeDataWithLabels} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
@@ -13,7 +12,7 @@ import type {
 } from '../../series/types';
 import {setGradientPointFills} from '../../utils/gradient';
 import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
-import type {MarkerItem} from '../types';
+import type {MarkerItem, ShapeLabels} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {PlacementRect, PlacementSegment} from './auto-placement';
@@ -25,7 +24,7 @@ import {
 } from './auto-placement';
 import type {PointData, PreparedLineData} from './types';
 
-function isLabeledLineLayer(layer: ShapeDataWithLabels): boolean {
+function isLabeledLineLayer(layer: ShapeLabels): boolean {
     const layerSeries = (layer as Partial<PreparedLineData>).series;
     return layerSeries?.type === 'line' && layerSeries.dataLabels.enabled;
 }
@@ -40,7 +39,7 @@ export const prepareLineData = async (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    otherLayers?: ShapeDataWithLabels[];
+    otherLayers?: ShapeLabels[];
     allSeries?: PreparedSeries[];
     getCurveFactory?: (interpolation?: PreparedLineSeries['interpolation']) => CurveFactory;
 }): Promise<PreparedLineData[]> => {

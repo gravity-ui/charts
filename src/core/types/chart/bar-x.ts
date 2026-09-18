@@ -12,7 +12,7 @@ import type {
     ValueFormat,
 } from './base';
 import type {RectLegendSymbolOptions} from './legend';
-import type {ChartSeriesOptions, ChartSeriesRangeSliderOptions} from './series';
+import type {ChartSeriesOptions, ChartSeriesRangeSliderOptions, StackLabelsOptions} from './series';
 
 export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -75,6 +75,8 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
+    /** Override plugin stack label options. Only enabled series contribute to totals. */
+    stackLabels?: StackLabelsOptions;
     /**
      * Whether to group non-stacked columns or to let them render independent of each other.
      * When false columns will be laid out individually and overlap each other.

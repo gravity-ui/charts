@@ -14,7 +14,7 @@ import type {
 import type {SeriesColor} from './gradient';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
-import type {ChartSeriesRangeSliderOptions} from './series';
+import type {ChartSeriesRangeSliderOptions, StackLabelsOptions} from './series';
 
 export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -86,6 +86,8 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
+    /** Override plugin stack label options. Only enabled series contribute to totals. */
+    stackLabels?: StackLabelsOptions;
     dataLabels?: Omit<BaseDataLabels, 'format'> & {
         /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
         format?: AreaValueFormat<T>;

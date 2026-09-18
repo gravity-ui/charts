@@ -6,6 +6,7 @@ import type {ChartAnnotationSeriesOptions} from './annotation';
 import type {AreaSeries, AreaSeriesData} from './area';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
+import type {BaseTextStyle, ValueFormat} from './base';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
 import type {Halo} from './halo';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
@@ -82,6 +83,33 @@ export interface BasicInactiveState {
     opacity?: number;
 }
 
+/**
+ * Raw totals of visible stacked series. Participants in one stack and value axis must
+ * resolve to identical style, format, padding and allowOverlap settings or validation fails.
+ */
+export interface StackLabelsOptions {
+    /**
+     * Include the visible series in stack totals. Series-level values override plugin options.
+     * @default false
+     */
+    enabled?: boolean;
+    /** Format the raw sum, including for percent stacks. Custom formatters receive `{value}`. */
+    format?: ValueFormat;
+    /** Text styles, merged with plugin defaults. */
+    style?: Partial<BaseTextStyle>;
+    /**
+     * Distance from the stack boundary in pixels. Labels are kept inside the plot.
+     * @default 5
+     */
+    padding?: number;
+    /**
+     * Allow totals to overlap other labels. Otherwise overlapping totals are hidden.
+     * Segment labels in the same plugin layer take priority, even for small top segments.
+     * @default false
+     */
+    allowOverlap?: boolean;
+}
+
 export interface ChartSeriesOptions {
     /** Individual data label for each point. */
     dataLabels?: {
@@ -91,6 +119,8 @@ export interface ChartSeriesOptions {
         renderer?: (args: DataLabelRendererData) => SVGTextAttributes;
     };
     'bar-x'?: {
+        /** Total labels for each visible stack, grouped by category, stackId and value axis. */
+        stackLabels?: StackLabelsOptions;
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
@@ -138,6 +168,8 @@ export interface ChartSeriesOptions {
         annotation?: ChartAnnotationSeriesOptions;
     };
     'bar-y'?: {
+        /** Total labels for each visible stack, grouped by category and stackId. */
+        stackLabels?: StackLabelsOptions;
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
@@ -250,6 +282,8 @@ export interface ChartSeriesOptions {
         annotation?: ChartAnnotationSeriesOptions;
     };
     area?: {
+        /** Total labels on the outer stack boundary, grouped by X value, stackId and value axis. */
+        stackLabels?: StackLabelsOptions;
         /**
          * Pixel width of the graph line.
          * @default 1

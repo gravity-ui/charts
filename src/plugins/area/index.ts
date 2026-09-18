@@ -22,13 +22,21 @@ import {
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
+import {prepareStackLabels, renderStackLabels} from '../stack-labels';
+import {validateStackLabelsOptions} from '../stack-labels-options';
 
 import {prepareAreaSeries} from './prepare-area-series';
+import {getAreaStackLabelAnchors} from './stack-labels';
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
     prepareSeries: prepareAreaSeries,
-    validate: ({series, xAxis, yAxis}) => {
+    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateStackLabelsOptions({
+            series,
+            allSeries,
+            options: seriesOptions?.area?.stackLabels,
+        });
         validateAxisPlotValues({series, xAxis, yAxis});
         validateSeriesColor({color: series.color, seriesName: series.name});
         validateSeriesColor({color: series.fillColor, seriesName: series.name});
@@ -80,12 +88,25 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         });
 
         const filteredData = filterLayerLabels(data, otherLayers);
-        return {renderData: filteredData, tooltipItems: filteredData};
+        const labels = await prepareStackLabels({
+            ...args,
+            anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
+            otherLayers: [...otherLayers, ...filteredData],
+        });
+        return {renderData: filteredData, tooltipItems: filteredData, labels};
     },
-    renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+    renderShapes: function ({
+        plot,
+        preparedData,
+        seriesOptions,
+        dispatcher,
+        labels,
+    }: RenderShapesArgs) {
         const data = preparedData as PreparedAreaData[];
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        return renderArea({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        const cleanup = renderArea({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        renderStackLabels(plot, labels);
+        return cleanup;
     },
     tooltip: {
         prepareData: getTooltipData,

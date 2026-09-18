@@ -199,6 +199,7 @@ export type PreparedBarXSeries = {
     data: BarXSeriesData[];
     stackId: string;
     stacking: BarXSeries['stacking'];
+    stackLabels?: BarXSeries['stackLabels'];
     valueAxis: 'y';
     dataLabels: {
         enabled: boolean;
@@ -219,6 +220,7 @@ export type PreparedBarYSeries = {
     data: BarYSeriesData[];
     stackId: string;
     stacking: BarYSeries['stacking'];
+    stackLabels?: BarYSeries['stackLabels'];
     valueAxis: 'x';
     dataLabels: {
         padding: number;
@@ -329,6 +331,7 @@ export type PreparedAreaSeries = {
     type: AreaSeries['type'];
     data: AreaSeriesData[];
     stacking: AreaSeries['stacking'];
+    stackLabels?: AreaSeries['stackLabels'];
     stackId: string;
     valueAxis: 'y';
     lineWidth: number;

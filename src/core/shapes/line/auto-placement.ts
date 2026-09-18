@@ -1,12 +1,7 @@
 import type {CurveFactory} from 'd3-shape';
 import {line as lineGenerator} from 'd3-shape';
 
-import type {
-    HtmlItem,
-    LabelData,
-    LineSeriesDataLabelPlacementPosition,
-    ShapeDataWithLabels,
-} from '../../../types';
+import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../../types';
 import type {PreparedLineSeries} from '../../series/types';
 import {
     getFormattedValue,
@@ -15,6 +10,7 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
+import type {ShapeLabels} from '../types';
 
 import type {PointData} from './types';
 
@@ -321,9 +317,7 @@ export function pickLabelPlacement(args: {
 }
 
 /** Label bounds of the other layers as placement obstacles. */
-export function getObstacleRectsFromLayers(
-    layers: Partial<ShapeDataWithLabels>[],
-): PlacementRect[] {
+export function getObstacleRectsFromLayers(layers: Partial<ShapeLabels>[]): PlacementRect[] {
     return getLayerLabelRects(layers).map(({x, y, size}) => ({
         height: size.height,
         width: size.width,

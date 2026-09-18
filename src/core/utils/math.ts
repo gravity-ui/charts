@@ -1,5 +1,31 @@
 import isNil from 'lodash/isNil';
 
+function shiftDecimal(value: number, places: number): number {
+    const [coefficient, exponent = '0'] = String(value).split('e');
+    return Number(`${coefficient}e${Number(exponent) + places}`);
+}
+
+/** Sum decimal values as safe integers; use native addition outside that range. */
+export function sumDecimals(values: readonly number[]): number {
+    const precision = values.reduce((max, value) => {
+        const [coefficient, exponent = '0'] = String(value).split('e');
+        return Math.max(max, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
+    }, 0);
+
+    let total = 0;
+    for (const value of values) {
+        // Exponent shifts avoid rounding from multiplication by powers of ten.
+        const scaled = shiftDecimal(value, precision);
+        const next = total + scaled;
+        if (!Number.isSafeInteger(scaled) || !Number.isSafeInteger(next)) {
+            return values.reduce((sum, item) => sum + item, 0);
+        }
+        total = next;
+    }
+
+    return shiftDecimal(total, -precision);
+}
+
 const isStringValueInPercent = (value = '') => {
     return value.endsWith('%') && !Number.isNaN(Number.parseFloat(value));
 };

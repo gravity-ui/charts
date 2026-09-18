@@ -16,6 +16,7 @@ Where to set it:
 | Tooltip header    | `tooltip.headerFormat`                                                         |
 | Tooltip totals    | `tooltip.totals.valueFormat`                                                   |
 | Data labels       | `series.dataLabels.format`                                                     |
+| Stack totals      | `series.stackLabels.format` or `series.options[type].stackLabels.format`       |
 | Axis tick labels  | `xAxis.labels.numberFormat` / `yAxis.labels.numberFormat` (numeric axes only)  |
 
 ## Numbers
@@ -258,6 +259,10 @@ const formatRevenue = ({value}) => {
   },
 }
 ```
+
+### Stack totals
+
+`stackLabels.format` accepts all `ValueFormat` variants and formats the raw sum of participating visible series, including in percent stacks. Custom formatters receive `{value}`. See [Stack total labels](./data-labels.md#stack-total-labels) for configuration.
 
 ### Computed percentage context
 

@@ -1,9 +1,9 @@
 import sortBy from 'lodash/sortBy';
 
-import type {LabelData, SeriesDataWithLabels, ShapeDataWithLabels} from '../../types';
-import type {LabelRect} from '../shapes/types';
+import type {SeriesDataWithLabels} from '../../types';
+import type {LabelRect, ShapeLabels, SvgLabel} from '../shapes/types';
 
-function isSvgLabel(rect: LabelRect): rect is LabelData {
+function isSvgLabel(rect: LabelRect): rect is SvgLabel {
     return 'textAnchor' in rect;
 }
 
@@ -14,7 +14,7 @@ function getOverlapLeft(rect: LabelRect): number {
     return getLeftPosition(rect);
 }
 
-export function getLeftPosition(label: LabelData) {
+export function getLeftPosition(label: SvgLabel) {
     switch (label.textAnchor) {
         case 'start': {
             return label.x;
@@ -41,7 +41,7 @@ export function getLabelRect(label: LabelRect): LabelRect {
     };
 }
 
-export function getLayerLabelRects(layers: Partial<ShapeDataWithLabels>[]): LabelRect[] {
+export function getLayerLabelRects(layers: Partial<ShapeLabels>[]): LabelRect[] {
     return layers.flatMap((layer) => [
         ...(layer.svgLabels ?? []).map(getLabelRect),
         ...(layer.htmlLabels ?? []),
@@ -96,7 +96,7 @@ export function filterOverlappingLabels<T extends LabelRect>(labels: T[], obstac
 
 export function filterLayerLabels<T extends SeriesDataWithLabels>(
     data: T[],
-    otherLayers: ShapeDataWithLabels[],
+    otherLayers: ShapeLabels[],
 ): T[] {
     const otherLabels = getLayerLabelRects(otherLayers);
     const keptLabels: LabelRect[] = [];

@@ -8,12 +8,11 @@ import type {ChartScale} from '~core/scales/types';
 import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
-import type {TooltipItemData} from '~core/shapes/types';
+import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
 import {getSeriesClipPathId} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
 import type {ZoomState} from '~core/zoom/types';
 
-import type {ShapeDataWithLabels} from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 
 import {SeriesShapes} from './SeriesShapes';
@@ -93,7 +92,7 @@ export async function getShapes(args: Args) {
 
     const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
-    const layers: ShapeDataWithLabels[] = [];
+    const layers: ShapeLabels[] = [];
 
     const groupedSeriesItems = Array.from(groupedSeries);
     for (let index = groupedSeriesItems.length - 1; index >= 0; index--) {
@@ -101,7 +100,7 @@ export async function getShapes(args: Args) {
         const seriesType = chartSeries[0].type;
         const plugin = getSeriesPlugin(seriesType);
 
-        const {renderData, tooltipItems} = await plugin.prepareShapeData({
+        const {renderData, tooltipItems, labels} = await plugin.prepareShapeData({
             series: chartSeries,
             boundsWidth,
             boundsHeight,
@@ -134,6 +133,7 @@ export async function getShapes(args: Args) {
                 key={groupKey}
                 plugin={plugin}
                 preparedData={renderData}
+                labels={labels}
                 boundsWidth={boundsWidth}
                 boundsHeight={boundsHeight}
                 clipPathId={resolvedClipPathId}
@@ -144,7 +144,10 @@ export async function getShapes(args: Args) {
             />
         );
         shapesData.splice(index, 0, ...tooltipItems);
-        layers.push(...(renderData as unknown as ShapeDataWithLabels[]));
+        layers.push(...renderData);
+        if (labels?.length) {
+            layers.push({svgLabels: labels, htmlLabels: []});
+        }
     }
 
     return {shapes, shapesData};

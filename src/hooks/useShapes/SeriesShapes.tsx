@@ -4,7 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 
 import type {SeriesPlugin} from '~core/series/plugin';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {SeriesShapeData, SvgLabel} from '~core/shapes/types';
 
 import {block} from '../../utils';
 
@@ -22,6 +22,7 @@ interface Props {
     namespace: string;
     plugin: SeriesPlugin;
     preparedData: SeriesShapeData[];
+    labels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
 }
 
@@ -34,6 +35,7 @@ export const SeriesShapes = ({
     namespace,
     plugin,
     preparedData,
+    labels,
     seriesOptions,
 }: Props) => {
     const b = block(plugin.type);
@@ -45,13 +47,14 @@ export const SeriesShapes = ({
             plugin.renderShapes({
                 plot: ref.current,
                 preparedData,
+                labels,
                 seriesOptions,
                 boundsWidth,
                 boundsHeight,
                 dispatcher,
             }) ?? undefined
         );
-    }, [boundsHeight, boundsWidth, dispatcher, plugin, preparedData, seriesOptions]);
+    }, [boundsHeight, boundsWidth, dispatcher, plugin, preparedData, labels, seriesOptions]);
 
     const markers = React.useMemo(() => preparedData.flatMap((d) => d.markers), [preparedData]);
     const annotations = React.useMemo(
