@@ -4,7 +4,6 @@ import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 
 import {i18nFactory} from '~core/i18n';
-import {runInTransition} from '~core/utils';
 import {validateData} from '~core/validation';
 
 import '../plugins';
@@ -82,13 +81,7 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     );
 
     const throttledHandleResize = React.useMemo(() => {
-        return throttle(
-            (options?: HandleResizeOptions) => {
-                runInTransition(() => handleResize(options));
-            },
-            RESIZE_UPDATE_INTERVAL,
-            {leading: false},
-        );
+        return throttle(handleResize, RESIZE_UPDATE_INTERVAL, {leading: false});
     }, [handleResize]);
 
     React.useImperativeHandle(

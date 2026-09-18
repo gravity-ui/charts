@@ -11,6 +11,7 @@ export type ResizeInteractionMetrics = {
     interactionCount: number;
     interactionP95: number;
     resizeCount: number;
+    renderedResizeCount: number;
 };
 
 function getPercentile(values: number[], percentile: number) {
@@ -50,6 +51,25 @@ export function ResizeInteractionPerformanceStory({data}: {data: ChartData}) {
         setInteractionCount(0);
         setMetrics(undefined);
 
+        let renderedResizeCount = 0;
+        const seriesElement = containerRef.current?.querySelector('.gcharts-line');
+        let previousPath = seriesElement?.querySelector('path')?.getAttribute('d');
+        const observer = new MutationObserver(() => {
+            const path = seriesElement?.querySelector('path')?.getAttribute('d');
+            if (path && path !== previousPath) {
+                renderedResizeCount++;
+                previousPath = path;
+            }
+        });
+        if (seriesElement) {
+            observer.observe(seriesElement, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['d'],
+            });
+        }
+
         let stopped = false;
         let interactionTimer = 0;
         const scheduleInteraction = () => {
@@ -76,12 +96,14 @@ export function ResizeInteractionPerformanceStory({data}: {data: ChartData}) {
                 requestAnimationFrame(resize);
             } else {
                 stopped = true;
+                observer.disconnect();
                 window.clearTimeout(interactionTimer);
                 window.setTimeout(() => {
                     setMetrics({
                         interactionCount: interactionLatencies.current.length,
                         interactionP95: getPercentile(interactionLatencies.current, 0.95),
                         resizeCount: resizeCount.current,
+                        renderedResizeCount,
                     });
                 }, SETTLE_DELAY);
             }

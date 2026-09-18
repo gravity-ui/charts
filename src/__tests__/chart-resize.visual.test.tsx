@@ -8,7 +8,7 @@ import type {ChartData, LineSeries} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
 
-const INTERACTION_P95_LIMIT = 200;
+const INTERACTION_P95_LIMIT = 50;
 
 test('continuous resize keeps interaction updates responsive @perf', async ({mount}) => {
     test.setTimeout(30_000);
@@ -31,7 +31,7 @@ test('continuous resize keeps interaction updates responsive @perf', async ({mou
     const data: ChartData = {series: {data: series}};
     const component = await mount(<ResizeInteractionPerformanceStory data={data} />);
 
-    await component.locator('svg').waitFor({state: 'visible'});
+    await component.locator('.gcharts-line path').first().waitFor({state: 'visible'});
     await component.getByTestId('start-measurement').click();
 
     const metricsNode = component.getByTestId('metrics');
@@ -40,6 +40,7 @@ test('continuous resize keeps interaction updates responsive @perf', async ({mou
 
     console.info('continuous resize metrics', metrics);
     expect(metrics.resizeCount).toBeGreaterThanOrEqual(5);
+    expect(metrics.renderedResizeCount).toBeGreaterThanOrEqual(5);
     expect(metrics.interactionCount).toBeGreaterThanOrEqual(10);
     expect(metrics.interactionP95).toBeLessThan(INTERACTION_P95_LIMIT);
 });

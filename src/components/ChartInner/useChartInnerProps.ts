@@ -17,7 +17,6 @@ import {
     getYAxisWidth,
     getZoomedSeriesData,
     isAxisRelatedSeries,
-    runInTransition,
 } from '~core/utils';
 
 import {createScales, getAxes, getShapes, getSplit, getVisibleSeries, useZoom} from '../../hooks';
@@ -252,6 +251,12 @@ export function useChartInnerProps(props: Props) {
                 preparedLegend,
             });
 
+            // Async preparation otherwise stays in one microtask chain and blocks input.
+            if (dimensionsChanged) {
+                await new Promise<void>((resolve) => setTimeout(resolve, 0));
+                if (currentRunRef.current !== currentRun) return;
+            }
+
             const axes = await getAxes({
                 height,
                 preparedChart,
@@ -318,6 +323,12 @@ export function useChartInnerProps(props: Props) {
                 await calculateAxisBasedProps();
             }
 
+            // Allow pending input before preparing the point geometry.
+            if (dimensionsChanged) {
+                await new Promise<void>((resolve) => setTimeout(resolve, 0));
+                if (currentRunRef.current !== currentRun) return;
+            }
+
             const {shapes, shapesData} = await getShapes({
                 boundsWidth,
                 boundsHeight,
@@ -376,20 +387,16 @@ export function useChartInnerProps(props: Props) {
 
             if (currentRunRef.current === currentRun) {
                 if (!isEqual(prevStateValue.current, newStateValue)) {
-                    const updateState = () => {
-                        setState(newStateValue);
-                        prevStateValue.current = newStateValue;
-                    };
-
-                    if (dimensionsChanged) {
-                        runInTransition(updateState);
-                    } else {
-                        updateState();
-                    }
+                    setState(newStateValue);
+                    prevStateValue.current = newStateValue;
                 }
                 previousChartData.current = data;
             }
         })();
+
+        return () => {
+            currentRunRef.current = currentRun + 1;
+        };
     }, [
         height,
         width,
