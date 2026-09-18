@@ -105,7 +105,7 @@ export const prepareAreaData = async (args: {
                 const plotIndex = seriesYAxis.plotIndex;
                 return plotIndex;
             },
-            (s) => s.stackId,
+            (s) => JSON.stringify([s.yAxis, s.stackId]),
         ),
     );
 
