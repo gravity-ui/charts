@@ -11,7 +11,7 @@ import type {PreparedLineSeries} from '../../series/types';
 import {
     getFormattedValue,
     getLabelsSize,
-    getLeftPosition,
+    getLayerLabelRects,
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
@@ -320,28 +320,16 @@ export function pickLabelPlacement(args: {
     return null;
 }
 
-/**
- * Label rects of the other layers as placement obstacles. Some plugins do not fill
- * the label fields at all (layers reach here through an unsafe cast in getShapes),
- * so both lists are treated as optional.
- */
+/** Label bounds of the other layers as placement obstacles. */
 export function getObstacleRectsFromLayers(
     layers: Partial<ShapeDataWithLabels>[],
 ): PlacementRect[] {
-    return layers.flatMap((layer) => [
-        ...(layer.svgLabels ?? []).map((l) => ({
-            height: l.size.height,
-            width: l.size.width,
-            x: getLeftPosition(l),
-            y: l.y - (l.size.hangingOffset ?? 0),
-        })),
-        ...(layer.htmlLabels ?? []).map((l) => ({
-            height: l.size.height,
-            width: l.size.width,
-            x: l.x,
-            y: l.y,
-        })),
-    ]);
+    return getLayerLabelRects(layers).map(({x, y, size}) => ({
+        height: size.height,
+        width: size.width,
+        x,
+        y,
+    }));
 }
 
 interface LabelSize {

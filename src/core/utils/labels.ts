@@ -1,13 +1,14 @@
 import sortBy from 'lodash/sortBy';
 
-import type {HtmlItem, LabelData, SeriesDataWithLabels, ShapeDataWithLabels} from '../../types';
+import type {LabelData, SeriesDataWithLabels, ShapeDataWithLabels} from '../../types';
+import type {LabelRect} from '../shapes/types';
 
-function isHtmlItem(rect: LabelData | HtmlItem): rect is HtmlItem {
-    return !('textAnchor' in rect);
+function isSvgLabel(rect: LabelRect): rect is LabelData {
+    return 'textAnchor' in rect;
 }
 
-function getOverlapLeft(rect: LabelData | HtmlItem): number {
-    if (isHtmlItem(rect)) {
+function getOverlapLeft(rect: LabelRect): number {
+    if (!isSvgLabel(rect)) {
         return rect.x;
     }
     return getLeftPosition(rect);
@@ -30,11 +31,24 @@ export function getLeftPosition(label: LabelData) {
     }
 }
 
-export function getOverlappingByX(
-    rect1: LabelData | HtmlItem,
-    rect2: LabelData | HtmlItem,
-    gap = 0,
-) {
+/** Normalize SVG and HTML labels to visible bounds with a top-left origin. */
+export function getLabelRect(label: LabelRect): LabelRect {
+    if (!isSvgLabel(label)) return label;
+    return {
+        x: getLeftPosition(label),
+        y: label.y - (label.size.hangingOffset ?? 0),
+        size: label.size,
+    };
+}
+
+export function getLayerLabelRects(layers: Partial<ShapeDataWithLabels>[]): LabelRect[] {
+    return layers.flatMap((layer) => [
+        ...(layer.svgLabels ?? []).map(getLabelRect),
+        ...(layer.htmlLabels ?? []),
+    ]);
+}
+
+export function getOverlappingByX(rect1: LabelRect, rect2: LabelRect, gap = 0) {
     const left1 = getOverlapLeft(rect1);
     const right1 = left1 + rect1.size.width;
     const left2 = getOverlapLeft(rect2);
@@ -43,36 +57,25 @@ export function getOverlappingByX(
     return Math.max(0, Math.min(right1, right2) - Math.max(left1, left2) + gap);
 }
 
-export function getOverlappingByY(
-    rect1: LabelData | HtmlItem,
-    rect2: LabelData | HtmlItem,
-    gap = 0,
-) {
-    const isRect1Html = isHtmlItem(rect1);
-    const top1 = isRect1Html ? rect1.y : rect1.y - rect1.size.height;
-    const bottom1 = isRect1Html ? rect1.y + rect1.size.height : rect1.y;
+export function getOverlappingByY(rect1: LabelRect, rect2: LabelRect, gap = 0) {
+    const isRect1Bounds = !isSvgLabel(rect1);
+    const top1 = isRect1Bounds ? rect1.y : rect1.y - rect1.size.height;
+    const bottom1 = isRect1Bounds ? rect1.y + rect1.size.height : rect1.y;
 
-    const isRect2Html = isHtmlItem(rect2);
-    const top2 = isRect2Html ? rect2.y : rect2.y - rect2.size.height;
-    const bottom2 = isRect2Html ? rect2.y + rect2.size.height : rect2.y;
+    const isRect2Bounds = !isSvgLabel(rect2);
+    const top2 = isRect2Bounds ? rect2.y : rect2.y - rect2.size.height;
+    const bottom2 = isRect2Bounds ? rect2.y + rect2.size.height : rect2.y;
 
     return Math.max(0, Math.min(bottom1, bottom2) - Math.max(top1, top2) + gap);
 }
 
-export function isLabelsOverlapping<T extends LabelData | HtmlItem>(
-    label1: T,
-    label2: T,
-    padding = 0,
-) {
+export function isLabelsOverlapping(label1: LabelRect, label2: LabelRect, padding = 0) {
     return Boolean(
         getOverlappingByX(label1, label2, padding) && getOverlappingByY(label1, label2, padding),
     );
 }
 
-export function filterOverlappingLabels<T extends LabelData | HtmlItem>(
-    labels: T[],
-    renderedSvgLabels?: T[],
-) {
+export function filterOverlappingLabels<T extends LabelRect>(labels: T[], obstacles?: LabelRect[]) {
     const result: T[] = [];
     const sorted = sortBy(
         labels,
@@ -81,7 +84,7 @@ export function filterOverlappingLabels<T extends LabelData | HtmlItem>(
     );
     sorted.forEach((label) => {
         if (
-            !renderedSvgLabels?.some((l) => isLabelsOverlapping(label, l)) &&
+            !obstacles?.some((l) => isLabelsOverlapping(label, l)) &&
             !result.some((l) => isLabelsOverlapping(label, l))
         ) {
             result.push(label);
@@ -95,23 +98,24 @@ export function filterLayerLabels<T extends SeriesDataWithLabels>(
     data: T[],
     otherLayers: ShapeDataWithLabels[],
 ): T[] {
-    const otherSvgLabels = otherLayers.flatMap((l) => l.svgLabels);
-    const otherHtmlLabels = otherLayers.flatMap((l) => l.htmlLabels);
-    const keptSvgLabels: LabelData[] = [];
-    const keptHtmlLabels: HtmlItem[] = [];
+    const otherLabels = getLayerLabelRects(otherLayers);
+    const keptLabels: LabelRect[] = [];
 
     return data.map((d) => {
         let svgLabels = d.svgLabels;
         let htmlLabels = d.htmlLabels;
         if (!d.series.dataLabels.allowOverlap) {
-            svgLabels = filterOverlappingLabels(svgLabels, [...otherSvgLabels, ...keptSvgLabels]);
+            const obstacles = [...otherLabels, ...keptLabels];
+            svgLabels = filterOverlappingLabels(
+                svgLabels.map((label) => ({...getLabelRect(label), label})),
+                obstacles,
+            ).map(({label}) => label);
             htmlLabels = filterOverlappingLabels(htmlLabels, [
-                ...otherHtmlLabels,
-                ...keptHtmlLabels,
+                ...obstacles,
+                ...svgLabels.map(getLabelRect),
             ]);
         }
-        keptSvgLabels.push(...svgLabels);
-        keptHtmlLabels.push(...htmlLabels);
+        keptLabels.push(...svgLabels.map(getLabelRect), ...htmlLabels);
         return {...d, svgLabels, htmlLabels};
     });
 }
