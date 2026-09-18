@@ -7,14 +7,13 @@ import type {
     ChartXAxis,
     ChartYAxis,
     CustomFormatContext,
-    ShapeDataWithLabels,
     TooltipDataChunk,
     TooltipRowCellItem,
 } from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
-import type {SeriesShapeData, TooltipItemData} from '../shapes/types';
+import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from './types';
@@ -41,7 +40,7 @@ export interface PrepareShapeDataArgs {
     split?: PreparedSplit;
     isOutsideBounds?: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    otherLayers?: ShapeDataWithLabels[];
+    otherLayers?: ShapeLabels[];
     /**
      * All visible series of the chart in config order, including the ones from other layers.
      * Every layer receives the same list, so a plugin can account for series outside its own layer.
@@ -52,11 +51,14 @@ export interface PrepareShapeDataArgs {
 export interface PrepareShapeDataResult {
     renderData: SeriesShapeData[];
     tooltipItems: TooltipItemData[];
+    /** Labels belonging to the whole plugin layer, independent of any one series. */
+    labels?: SvgLabel[];
 }
 
 export interface RenderShapesArgs {
     plot: SVGGElement;
     preparedData: SeriesShapeData[];
+    labels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
     boundsWidth: number;
     boundsHeight: number;
@@ -68,6 +70,7 @@ export interface ValidateSeriesArgs<T = ChartSeries> {
     series: T;
     /** All series in the chart. Needed only by collection-level checks (e.g. treemap uniqueness); other types ignore it. */
     allSeries: ChartSeries[];
+    seriesOptions?: ChartSeriesOptions;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
 }

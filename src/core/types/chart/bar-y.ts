@@ -11,6 +11,7 @@ import type {
     ValueFormat,
 } from './base';
 import type {RectLegendSymbolOptions} from './legend';
+import type {StackLabelsOptions} from './series';
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
@@ -71,6 +72,8 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
+    /** Override plugin stack label options. Only enabled series contribute to totals. */
+    stackLabels?: StackLabelsOptions;
     /**
      * Whether to group non-stacked columns or to let them render independent of each other.
      * When false columns will be laid out individually and overlap each other.

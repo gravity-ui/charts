@@ -18,8 +18,11 @@ import {
 } from '~core/validation/helpers';
 
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
+import {prepareStackLabels, renderStackLabels} from '../stack-labels';
+import {validateStackLabelsOptions} from '../stack-labels-options';
 
 import {prepareBarYSeries} from './prepare-bar-y-series';
+import {getBarYStackLabelAnchors} from './stack-labels';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale, boundsHeight, boundsWidth} = args;
@@ -39,17 +42,39 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         yScale,
     });
 
-    return {renderData: [data], tooltipItems: data.shapes};
+    const labels = await prepareStackLabels({
+        ...args,
+        anchors: args.isRangeSlider
+            ? []
+            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions}),
+        otherLayers: [
+            ...(args.otherLayers ?? []),
+            {svgLabels: data.labels, htmlLabels: data.htmlLabels},
+        ],
+    });
+    return {renderData: [data], tooltipItems: data.shapes, labels};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderBarY({plot}, preparedData[0] as BarYShapesArgs, seriesOptions, dispatcher);
+function renderShapes({plot, preparedData, seriesOptions, dispatcher, labels}: RenderShapesArgs) {
+    const cleanup = renderBarY(
+        {plot},
+        preparedData[0] as BarYShapesArgs,
+        seriesOptions,
+        dispatcher,
+    );
+    renderStackLabels(plot, labels);
+    return cleanup;
 }
 
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
     prepareSeries: prepareBarYSeries,
-    validate: ({series, xAxis, yAxis}) => {
+    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateStackLabelsOptions({
+            series,
+            allSeries,
+            options: seriesOptions?.['bar-y']?.stackLabels,
+        });
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});

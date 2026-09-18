@@ -16,6 +16,8 @@ import {DataLabelsPlacementFallbackHideExample} from './data-labels/placement-fa
 import dataLabelsPlacementFallbackHideRaw from './data-labels/placement-fallback-hide.tsx?raw';
 import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
 import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
+import {StackLabelsExample} from './data-labels/stack-labels';
+import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
 import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
 import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
@@ -38,6 +40,10 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'data-labels/stack-labels': {
+        code: extractDisplayCode(stackLabelsRaw),
+        Component: StackLabelsExample,
+    },
     'axis-labels/font-size': {
         code: extractDisplayCode(axisLabelFontSizeRaw),
         Component: AxisLabelFontSizeExample,

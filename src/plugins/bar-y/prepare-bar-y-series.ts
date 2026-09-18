@@ -83,6 +83,7 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                 },
                 data: prepareSeriesData(series),
                 stacking: series.stacking,
+                stackLabels: series.stackLabels,
                 stackId: getSeriesStackId(series),
                 valueAxis: 'x',
                 dataLabels: await prepareDataLabels(series),
