@@ -6,6 +6,7 @@ import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 
 import {i18n} from '~core/i18n';
+import type {PluginTooltipRowCell} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import {getFormattedValue} from '~core/utils/format';
 
@@ -141,6 +142,8 @@ export const DefaultTooltipContent = ({
                     valueFormat;
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
+                const valueFormatContext =
+                    plugin?.tooltip.getValueFormatContext?.(seriesItem) ?? {};
 
                 let tooltipRows = rows ?? plugin?.tooltip.rows ?? [];
                 if (typeof tooltipRows === 'function') {
@@ -148,7 +151,7 @@ export const DefaultTooltipContent = ({
                 }
 
                 return tooltipRows.map((row, rowIndex) => {
-                    const rowCells: ReadonlyArray<TooltipRowCellItem> = row.cells ?? [];
+                    const rowCells: ReadonlyArray<PluginTooltipRowCell> = row.cells ?? [];
                     const rowId = 'id' in row ? row.id : String(rowIndex);
                     const key = `${seriesId}_${chunkIndex}_${rowId}`;
 
@@ -165,10 +168,13 @@ export const DefaultTooltipContent = ({
                             cell: valueCell,
                             tooltipDataChunk: seriesItem,
                         });
-                        const color = getTooltipRowCellValue({
-                            cell: rowCells.find((c) => c.id === 'color'),
-                            tooltipDataChunk: seriesItem,
-                        });
+                        // The resolver yields `null` when the row has no color cell at all
+                        // (e.g. waterfall); the renderer contract spells absence as `undefined`.
+                        const color =
+                            getTooltipRowCellValue({
+                                cell: rowCells.find((c) => c.id === 'color'),
+                                tooltipDataChunk: seriesItem,
+                            }) ?? undefined;
                         const result = rowRenderer({
                             id: key,
                             name,
@@ -178,11 +184,12 @@ export const DefaultTooltipContent = ({
                                 ? valueCell.formatValue({
                                       item: seriesItem,
                                       value,
-                                      format: valueCell.format ?? rowValueFormat,
+                                      format: rowValueFormat,
                                   })
                                 : getFormattedValue({
                                       value,
-                                      format: valueCell?.format ?? rowValueFormat,
+                                      format: rowValueFormat,
+                                      context: valueFormatContext,
                                   }),
                             striped,
                             active,
@@ -214,7 +221,11 @@ export const DefaultTooltipContent = ({
                                   value: cellValue,
                                   format: cellFormat,
                               })
-                            : getFormattedValue({value: cellValue, format: cellFormat});
+                            : getFormattedValue({
+                                  value: cellValue,
+                                  format: cellFormat,
+                                  context: valueFormatContext,
+                              });
                         return {
                             formattedValue: cellFormattedValue,
                             align: cell.align,

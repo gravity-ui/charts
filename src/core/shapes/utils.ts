@@ -90,10 +90,38 @@ export function getYValue(args: {
     return point.y === null ? null : yLinearScale(point.y as number);
 }
 
-// Slack for d3 scale rounding (a `500` edge can come back as `499.9999`).
-// Half a pixel matches the ±0.5 of a 1px centered stroke and far exceeds any
-// plausible float error.
-const Y_RANGE_PIXEL_TOLERANCE = 0.5;
+/**
+ * Sub-pixel slack for "does this point belong to the plot area?" checks.
+ *
+ * A point that mathematically lands exactly on a plot edge can come back from
+ * the scales as `-1e-14` (or `499.9999` on the opposite side) — formally out of
+ * bounds, visually indistinguishable from the edge itself. Without the slack such
+ * a point silently loses its data label and gets its marker clipped, and the set
+ * of affected points changes with every resize.
+ *
+ * Half a pixel matches the ±0.5 of a 1px centered stroke and far exceeds any
+ * plausible float error.
+ */
+const PLOT_BOUNDS_PIXEL_TOLERANCE = 0.5;
+
+/**
+ * Builds the "is this point outside the plot area?" predicate shared by data
+ * label placement and marker clipping.
+ *
+ * The check is deliberately not strict: coordinates come out of the scales (and,
+ * for stacked shapes, out of an accumulation of scaled values), so a point that
+ * belongs exactly on an edge may be off by a fraction of a pixel in either
+ * direction. See {@link PLOT_BOUNDS_PIXEL_TOLERANCE}.
+ */
+export function createIsOutsideBounds(args: {boundsWidth: number; boundsHeight: number}) {
+    const {boundsWidth, boundsHeight} = args;
+
+    return (x: number, y: number) =>
+        x < -PLOT_BOUNDS_PIXEL_TOLERANCE ||
+        x > boundsWidth + PLOT_BOUNDS_PIXEL_TOLERANCE ||
+        y < -PLOT_BOUNDS_PIXEL_TOLERANCE ||
+        y > boundsHeight + PLOT_BOUNDS_PIXEL_TOLERANCE;
+}
 
 /**
  * Hides out-of-range points from line/area path generators via `hiddenInLine`.
@@ -144,9 +172,11 @@ export function markHiddenPointsOutOfYRange<
             }
         }
 
+        // Deliberately the same slack as the plot-bounds check, even though this
+        // rectangle is the series' own scale range rather than the whole plot.
         return (
-            point.y >= yMinPx - Y_RANGE_PIXEL_TOLERANCE &&
-            point.y <= yMaxPx + Y_RANGE_PIXEL_TOLERANCE
+            point.y >= yMinPx - PLOT_BOUNDS_PIXEL_TOLERANCE &&
+            point.y <= yMaxPx + PLOT_BOUNDS_PIXEL_TOLERANCE
         );
     };
 

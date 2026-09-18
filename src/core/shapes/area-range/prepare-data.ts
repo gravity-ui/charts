@@ -4,19 +4,11 @@ import type {ChartScale} from '../../scales/types';
 import type {PreparedAreaRangeSeries} from '../../series/types';
 import {getXValue, getYValue} from '../../shapes/utils';
 import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '../../utils';
-import {createGradientColorResolver, getGradientBBox} from '../../utils/gradient';
+import {createGradientColorResolver} from '../../utils/gradient';
 
 import {formatAreaRangeDataLabel} from './format';
 import type {AreaRangePointData, PreparedAreaRangeData} from './types';
-
-function getRangeBBox(points: AreaRangePointData[]) {
-    return getGradientBBox(
-        points.flatMap((point) => [
-            {x: point.x, y: point.y0},
-            {x: point.x, y: point.y1},
-        ]),
-    );
-}
+import {getRangeBBox, markHiddenRangePoints} from './utils';
 
 export async function prepareAreaRangeData(args: {
     series: PreparedAreaRangeSeries[];
@@ -80,6 +72,7 @@ export async function prepareAreaRangeData(args: {
         }
 
         points.sort((a, b) => a.x - b.x);
+        markHiddenRangePoints({points, yScale: seriesYScale, yAxis: seriesYAxis, yAxisTop});
 
         if (item.gradient) {
             const bbox = getRangeBBox(points);
@@ -110,19 +103,15 @@ export async function prepareAreaRangeData(args: {
         };
 
         if (!isRangeSlider && shouldPrepareSeriesDataLabels(item)) {
-            const labelPoints = points.map((point) => ({
-                ...point,
-                data: {
-                    ...point.data,
-                    y: formatAreaRangeDataLabel({
+            const labels = await preparePointDataLabels({
+                series: item,
+                points: points.filter((point) => !point.hiddenInTooltip),
+                getFormatContext: () => ({}),
+                getLabelText: (point) =>
+                    formatAreaRangeDataLabel({
                         data: point.data,
                         format: item.dataLabels.format,
                     }),
-                },
-            }));
-            const labels = await preparePointDataLabels({
-                series: {...item, dataLabels: {...item.dataLabels, format: undefined}},
-                points: labelPoints,
                 xMax,
                 yAxisTop,
                 isOutsideBounds,

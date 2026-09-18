@@ -3,13 +3,16 @@ import type {
     AreaRangeSeriesData,
     AreaSeries,
     AreaSeriesData,
+    AreaValueFormat,
     BarXSeries,
     BarXSeriesData,
+    BarXValueFormat,
     BarYSeries,
     BarYSeriesData,
+    BarYValueFormat,
+    BaseSeries,
     BaseTextStyle,
     ChartLegend,
-    ChartSeries,
     ChartSeriesRangeSliderOptions,
     ConnectorCurve,
     ConnectorShape,
@@ -19,6 +22,8 @@ import type {
     HeatmapSeriesData,
     LineSeries,
     LineSeriesData,
+    LineSeriesDataLabelPlacementFallback,
+    LineSeriesDataLabelPlacementPosition,
     LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     LinearGradient,
@@ -26,6 +31,7 @@ import type {
     PathLegendSymbolOptions,
     PieSeries,
     PieSeriesData,
+    PieValueFormat,
     RadarSeries,
     RadarSeriesCategory,
     RadarSeriesData,
@@ -136,7 +142,7 @@ export type PreparedHaloOptions = {
     size: number;
 };
 
-type BasePreparedSeries = {
+type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
     color: string;
     name: string;
     id: string;
@@ -149,7 +155,7 @@ type BasePreparedSeries = {
         symbol: PreparedLegendSymbol;
     };
     cursor: string | null;
-    tooltip: ChartSeries['tooltip'];
+    tooltip: TTooltip;
     custom: MeaningfulAny;
 };
 
@@ -203,11 +209,11 @@ export type PreparedBarXSeries = {
         allowOverlap: boolean;
         padding: number;
         html: boolean;
-        format?: ValueFormat;
+        format?: BarXValueFormat;
     };
     borderRadius: number;
     yAxis: number;
-} & BasePreparedSeries &
+} & BasePreparedSeries<BarXSeries['tooltip']> &
     BasePreparedAxisRelatedSeries;
 
 export type PreparedBarYSeries = {
@@ -224,13 +230,13 @@ export type PreparedBarYSeries = {
         maxHeight: number;
         maxWidth: number;
         html: boolean;
-        format?: ValueFormat;
+        format?: BarYValueFormat;
         allowOverlap: boolean;
     };
     borderRadius: number;
     borderWidth: number;
     borderColor: string;
-} & BasePreparedSeries;
+} & BasePreparedSeries<BarYSeries['tooltip']>;
 
 export type PreparedHeatmapSeries = {
     type: HeatmapSeries['type'];
@@ -268,7 +274,7 @@ export type PreparedPieSeries = {
         distance: number;
         connectorCurve: ConnectorCurve;
         html: boolean;
-        format?: ValueFormat;
+        format?: PieValueFormat;
     };
     states: {
         hover: {
@@ -277,7 +283,7 @@ export type PreparedPieSeries = {
     };
     renderCustomShape?: PieSeries['renderCustomShape'];
     opacity: number | null;
-} & BasePreparedSeries;
+} & BasePreparedSeries<PieSeries['tooltip']>;
 
 export type PreparedLineSeries = {
     type: LineSeries['type'];
@@ -290,6 +296,8 @@ export type PreparedLineSeries = {
         allowOverlap: boolean;
         html: boolean;
         format?: ValueFormat;
+        placement: 'auto' | LineSeriesDataLabelPlacementPosition[];
+        placementFallback: LineSeriesDataLabelPlacementFallback;
     };
     marker: {
         states: {
@@ -334,7 +342,7 @@ export type PreparedAreaSeries = {
         padding: number;
         allowOverlap: boolean;
         html: boolean;
-        format?: ValueFormat;
+        format?: AreaValueFormat;
     };
     marker: {
         states: {
@@ -358,7 +366,7 @@ export type PreparedAreaSeries = {
     fillColor: string;
     fillGradient?: LinearGradient;
     yAxis: number;
-} & BasePreparedSeries &
+} & BasePreparedSeries<AreaSeries['tooltip']> &
     BasePreparedAxisRelatedSeries;
 
 export type PreparedAreaRangeSeries = {

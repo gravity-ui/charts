@@ -16,6 +16,7 @@ import {
 } from '../../utils';
 import {getBarYLayout, groupBarYDataByYValue} from '../../utils/bar-y';
 import {getFormattedValue} from '../../utils/format';
+import {getPositiveShare} from '../../utils/percentage';
 
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
@@ -94,15 +95,18 @@ export async function prepareBarYData(args: {
                 : measureValues;
 
             let ratio = 1;
+            let percentTotal = 0;
             if (series.some((s) => s.stacking === 'percent')) {
-                const sum = sortedData.reduce((acc, item) => {
-                    if (item.data.x) {
-                        return acc + xLinearScale(Number(item.data.x));
+                let sum = 0;
+                for (const item of sortedData) {
+                    const value = Number(item.data.x);
+                    if (Number.isFinite(value) && value > 0) {
+                        percentTotal += value;
+                        sum += xLinearScale(value);
                     }
-                    return acc;
-                }, 0);
+                }
 
-                ratio = xLinearScale.range()[1] / sum;
+                ratio = sum === 0 ? 0 : xLinearScale.range()[1] / sum;
             }
 
             sortedData.forEach(({data, series: s}, xValueIndex) => {
@@ -171,6 +175,10 @@ export async function prepareBarYData(args: {
                     opacity: get(data, 'opacity', null),
                     data,
                     series: s,
+                    percentage:
+                        s.stacking === 'percent'
+                            ? getPositiveShare(xValue, percentTotal)
+                            : undefined,
                     isLastStackItem,
                 };
 
@@ -197,7 +205,11 @@ export async function prepareBarYData(args: {
         const dataLabels = prepared.series.dataLabels;
         if (isPointDataLabelEnabled({data: prepared.data, series: prepared.series})) {
             const data = prepared.data;
-            const content = getFormattedValue({value: data.label ?? data.x, ...dataLabels});
+            const content = getFormattedValue({
+                value: data.label ?? data.x,
+                format: dataLabels.format,
+                context: {data, percentage: prepared.percentage},
+            });
 
             const y = prepared.y + prepared.height / 2;
             if (dataLabels.html) {

@@ -9,6 +9,7 @@ export interface ShapePoint {
     y0: number;
     y1: number;
     color?: string;
+    percentage?: number;
     data: ChartSeriesData;
     series: ChartSeries;
     subTotal?: number;

@@ -4,17 +4,24 @@
 import React from 'react';
 
 import {ThemeProvider} from '@gravity-ui/uikit';
-import {render} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 
 import {registerSeriesPlugin} from '~core/series/seriesRegistry';
+import {getTooltipColorSymbol, getTooltipLineSymbol} from '~core/tooltip/utils';
 
+import {areaPlugin} from '../../../../plugins/area';
 import {areaRangePlugin} from '../../../../plugins/area-range';
+import {barXPlugin} from '../../../../plugins/bar-x';
 import {linePlugin} from '../../../../plugins/line';
-import type {TooltipDataChunk} from '../../../../types';
+import {waterfallPlugin} from '../../../../plugins/waterfall';
+import type {ChartTooltip, ChartTooltipRowRendererArgs, TooltipDataChunk} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
+registerSeriesPlugin(areaPlugin);
+registerSeriesPlugin(barXPlugin);
 registerSeriesPlugin(linePlugin);
 registerSeriesPlugin(areaRangePlugin);
+registerSeriesPlugin(waterfallPlugin);
 
 function makeLineChunk(
     name: string,
@@ -85,9 +92,242 @@ describe('DefaultTooltipContent — valueFormat precedence', () => {
             <DefaultTooltipContent hovered={hovered} yAxis={{type: 'linear'}} />,
         );
 
-        expect(container.textContent).toContain('formatted:5 – formatted:10');
+        expect(container.textContent).toContain('formatted:5 — formatted:10');
         expect(formatter).toHaveBeenCalledTimes(2);
         expect(formatter).toHaveBeenNthCalledWith(1, {value: 5});
         expect(formatter).toHaveBeenNthCalledWith(2, {value: 10});
+    });
+});
+
+describe('DefaultTooltipContent — area-range values', () => {
+    const hovered: TooltipDataChunk[] = [
+        {
+            data: {x: 1, y0: 5, y1: 10},
+            series: {type: 'area-range', id: 'range', name: 'Range'},
+        },
+    ];
+
+    test('passes width and independently formatted boundaries to rowRenderer', () => {
+        const formatter = jest.fn(({value}) => `value:${value}`);
+        const rowRenderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                rowRenderer={rowRenderer}
+                valueFormat={{type: 'custom', formatter}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(rowRenderer).toHaveBeenCalledWith(
+            expect.objectContaining({
+                value: 5,
+                formattedValue: 'value:5 — value:10',
+            }),
+        );
+        expect(formatter).toHaveBeenCalledTimes(2);
+        expect(formatter).toHaveBeenNthCalledWith(1, {value: 5});
+        expect(formatter).toHaveBeenNthCalledWith(2, {value: 10});
+    });
+
+    test('rowRenderer retains row value formatting when user cells specify another format', () => {
+        const cellFormatter = jest.fn(({value}) => `cell:${value}`);
+        const renderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[makeLineChunk('Line', 5)]}
+                rows={[
+                    {
+                        renderer,
+                        cells: [
+                            {
+                                id: 'value',
+                                source: 'data.y',
+                                format: {type: 'custom', formatter: cellFormatter},
+                            },
+                        ],
+                    },
+                ]}
+                valueFormat={{type: 'custom', formatter: ({value}) => `row:${value}`}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(renderer).toHaveBeenCalledWith(
+            expect.objectContaining({value: 5, formattedValue: 'row:5'}),
+        );
+        expect(cellFormatter).not.toHaveBeenCalled();
+    });
+
+    test('built-in totals sum widths', () => {
+        const {container} = renderTooltip(
+            <DefaultTooltipContent
+                hovered={[
+                    ...hovered,
+                    {
+                        data: {x: 1, y0: 3, y1: 6},
+                        series: {type: 'area-range', id: 'second', name: 'Second'},
+                    },
+                ]}
+                totals={{enabled: true, label: 'Total width'}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(container.textContent).toContain('5 — 10');
+        expect(container.textContent).toContain('3 — 6');
+        expect(container.textContent).toContain('Total width8');
+    });
+});
+
+describe('DefaultTooltipContent — rowRenderer color argument', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    function collectRowRendererColors(hovered: TooltipDataChunk[]) {
+        // Collected through a mock rather than a closure variable, so a re-render cannot
+        // silently duplicate the recorded values.
+        const rowRenderer = jest.fn<
+            ReturnType<NonNullable<ChartTooltip['rowRenderer']>>,
+            [ChartTooltipRowRendererArgs]
+        >(({id}) => <tr key={id} />);
+
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                rowRenderer={rowRenderer}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+
+        return rowRenderer.mock.calls.map(([args]) => args.color);
+    }
+
+    function makeChunk(props: Record<string, unknown>) {
+        return [props] as unknown as TooltipDataChunk[];
+    }
+
+    // `bar-x` is the control: its color cell is not built from a function `source`, so it stays
+    // green either way. Only `area` and `line` regress.
+    test.each([['area'], ['area-range'], ['line'], ['bar-x']])(
+        '%s series passes a raw color to rowRenderer',
+        (type) => {
+            const hovered = makeChunk({
+                data: {x: 1, y: 10, y0: 5, y1: 10},
+                color: '#ff0000',
+                series: {type, id: 's', name: 'S', color: '#ff0000'},
+            });
+
+            expect(collectRowRendererColors(hovered)).toEqual(['#ff0000']);
+        },
+    );
+
+    test('falls back to the series color when neither the chunk nor the point carries one', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10},
+            series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
+        });
+
+        expect(collectRowRendererColors(hovered)).toEqual(['#abcdef']);
+    });
+
+    test('falls back to the point color before the series color', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10, color: '#222222'},
+            series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
+        });
+
+        expect(collectRowRendererColors(hovered)).toEqual(['#222222']);
+    });
+
+    test('the color resolved on the chunk wins over the point and the series', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10, color: '#222222'},
+            color: '#111111',
+            series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
+        });
+
+        expect(collectRowRendererColors(hovered)).toEqual(['#111111']);
+    });
+
+    // `waterfall` rows carry no color cell at all, so nothing resolves. The declared contract is
+    // `color?: string`, which means absence has to reach the renderer as `undefined`, not `null`.
+    test('passes undefined when the row has no color cell', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10, total: false},
+            series: {type: 'waterfall', id: 's', name: 'S', color: '#abcdef'},
+        });
+
+        // waterfall renders a `default` and a `subtotal` row for a non-total point
+        expect(collectRowRendererColors(hovered)).toStrictEqual([undefined, undefined]);
+    });
+
+    test('a string cell source configured on the row still wins', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10, custom: {swatch: '#123456'}},
+            color: '#111111',
+            series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
+        });
+        const renderer = jest.fn<
+            ReturnType<NonNullable<ChartTooltip['rowRenderer']>>,
+            [ChartTooltipRowRendererArgs]
+        >(({id}) => <tr key={id} />);
+
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                rows={[{cells: [{id: 'color', source: 'data.custom.swatch'}], renderer}]}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+
+        expect(renderer.mock.calls.map(([args]) => args.color)).toEqual(['#123456']);
+    });
+});
+
+describe('DefaultTooltipContent — default color cell rendering', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    function getColorCellHtml(chunk: Record<string, unknown>) {
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[chunk] as unknown as TooltipDataChunk[]}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+
+        return screen.getAllByRole('cell')[0].innerHTML;
+    }
+
+    // Without a custom row the cell must still render the built-in swatch. For `line` the symbol
+    // depends on the series stroke options, which reach the formatter through a closure — so this
+    // guards the half of the wiring the rowRenderer tests do not touch.
+    test('line renders the series line symbol with its stroke options', () => {
+        const html = getColorCellHtml({
+            data: {x: 1, y: 10},
+            color: '#ff0000',
+            series: {
+                type: 'line',
+                id: 's',
+                name: 'S',
+                color: '#ff0000',
+                dashStyle: 'Dash',
+                lineWidth: 3,
+            },
+        });
+
+        expect(html).toContain(
+            getTooltipLineSymbol({color: '#ff0000', dashStyle: 'Dash', lineWidth: 3}),
+        );
+    });
+
+    test('area renders the built-in color swatch', () => {
+        const html = getColorCellHtml({
+            data: {x: 1, y: 10},
+            color: '#ff0000',
+            series: {type: 'area', id: 's', name: 'S', color: '#ff0000'},
+        });
+
+        expect(html).toContain(getTooltipColorSymbol({color: '#ff0000'}));
     });
 });

@@ -7,6 +7,9 @@ import {CategoryAxisExample} from '../../docs/examples/src/charts/axis-types/cat
 import {DatetimeAxisExample} from '../../docs/examples/src/charts/axis-types/datetime';
 import {LinearAxisExample} from '../../docs/examples/src/charts/axis-types/linear';
 import {LogarithmicAxisExample} from '../../docs/examples/src/charts/axis-types/logarithmic';
+import {DataLabelsPlacementAutoExample} from '../../docs/examples/src/charts/data-labels/placement-auto';
+import {DataLabelsPlacementFallbackHideExample} from '../../docs/examples/src/charts/data-labels/placement-fallback-hide';
+import {DataLabelsPlacementFixedExample} from '../../docs/examples/src/charts/data-labels/placement-fixed';
 
 const CONTAINER_STYLE: React.CSSProperties = {
     width: 600,
@@ -57,6 +60,35 @@ test.describe('Docs examples: Axis Types', () => {
         const component = await mount(
             <div style={CONTAINER_STYLE}>
                 <CategoryAxisExample />
+            </div>,
+        );
+        await expect(component.locator('svg')).toBeVisible();
+    });
+});
+
+test.describe('Docs examples: Data Labels', () => {
+    test('automatic placement', async ({mount}) => {
+        const component = await mount(
+            <div style={CONTAINER_STYLE}>
+                <DataLabelsPlacementAutoExample />
+            </div>,
+        );
+        await expect(component.locator('svg')).toBeVisible();
+    });
+
+    test('fixed position', async ({mount}) => {
+        const component = await mount(
+            <div style={CONTAINER_STYLE}>
+                <DataLabelsPlacementFixedExample />
+            </div>,
+        );
+        await expect(component.locator('svg')).toBeVisible();
+    });
+
+    test('hide fallback', async ({mount}) => {
+        const component = await mount(
+            <div style={CONTAINER_STYLE}>
+                <DataLabelsPlacementFallbackHideExample />
             </div>,
         );
         await expect(component.locator('svg')).toBeVisible();

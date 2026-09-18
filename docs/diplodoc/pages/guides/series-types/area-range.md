@@ -30,4 +30,10 @@ The `color` property controls both boundary lines and, by default, the range fil
 
 Hovering the chart highlights the selected range and shows both formatted boundaries in the tooltip. Built-in tooltip sorting and totals use the range width (`y1 - y0`) as the point value. Chart `pointermove` and `click` events receive the original point, including its `y0` and `y1` values.
 
+A custom `rowRenderer` receives the width as `value` and the formatted interval as `formattedValue` when using the default row. The built-in `sum` total adds widths; it does not merge overlapping intervals. Use a custom aggregation when your application needs a different interpretation.
+
+Value formatters run once for each boundary. An explicit point `label` is formatted once instead. Incomplete points affect neither gradient bounds nor tooltip lookup. A complete interval wholly outside the visible Y range is also excluded from tooltip lookup.
+
+Area range supports `x`, `y`, and `xy` zoom (`x` by default). Y filtering retains any interval that overlaps the selected range, including one that contains the entire viewport. X zoom and the range slider preserve neighboring points on continuous axes so the band reaches the viewport edges.
+
 <div data-chart-example="series-types/area-range"></div>

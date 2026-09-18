@@ -9,26 +9,14 @@ import type {LabelData, TooltipDataChunkAreaRange} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels} from '../../utils';
-import {
-    createGradientPaintResolver,
-    getBrighterGradient,
-    getGradientBBox,
-} from '../../utils/gradient';
+import {createGradientPaintResolver, getBrighterGradient} from '../../utils/gradient';
 import {renderDataLabels} from '../data-labels';
 import {setActiveState} from '../utils';
 
 import type {AreaRangePointData, PreparedAreaRangeData} from './types';
+import {getRangeBBox} from './utils';
 
 const b = block('area-range');
-
-function getRangeBBox(data: PreparedAreaRangeData) {
-    return getGradientBBox(
-        data.points.flatMap((point) => [
-            {x: point.x, y: point.y0},
-            {x: point.x, y: point.y1},
-        ]),
-    );
-}
 
 export function renderAreaRange(
     elements: {plot: SVGGElement},
@@ -48,7 +36,7 @@ export function renderAreaRange(
                 ? getBrighterGradient(data.series.gradient, hoverOptions?.brightness)
                 : data.series.gradient;
         return resolveGradientPaint({
-            bbox: gradient ? getRangeBBox(data) : null,
+            bbox: gradient ? getRangeBBox(data.points) : null,
             fallbackColor: data.color,
             gradient,
             id: `${data.id}-gradient-area-range-line-${hovered ? 'hover' : 'normal'}`,
@@ -60,7 +48,7 @@ export function renderAreaRange(
                 ? getBrighterGradient(data.series.fillGradient, hoverOptions?.brightness)
                 : data.series.fillGradient;
         return resolveGradientPaint({
-            bbox: gradient ? getRangeBBox(data) : null,
+            bbox: gradient ? getRangeBBox(data.points) : null,
             fallbackColor: data.series.fillColor,
             gradient,
             id: `${data.id}-gradient-area-range-fill-${hovered ? 'hover' : 'normal'}`,
@@ -69,15 +57,15 @@ export function renderAreaRange(
 
     const upperLine = lineGenerator<AreaRangePointData>()
         .x((point) => point.x)
-        .defined((point) => point.y1 !== null && point.y0 !== null)
+        .defined((point) => !point.hiddenInLine && point.y1 !== null && point.y0 !== null)
         .y((point) => point.y1 as number);
     const lowerLine = lineGenerator<AreaRangePointData>()
         .x((point) => point.x)
-        .defined((point) => point.y1 !== null && point.y0 !== null)
+        .defined((point) => !point.hiddenInLine && point.y1 !== null && point.y0 !== null)
         .y((point) => point.y0 as number);
     const area = areaGenerator<AreaRangePointData>()
         .x((point) => point.x)
-        .defined((point) => point.y1 !== null && point.y0 !== null)
+        .defined((point) => !point.hiddenInLine && point.y1 !== null && point.y0 !== null)
         .y0((point) => point.y0 as number)
         .y1((point) => point.y1 as number);
 

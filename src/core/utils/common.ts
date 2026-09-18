@@ -81,7 +81,7 @@ export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
         if (getDomainValues) {
             seriesList.forEach((s) => {
                 (s.data as unknown[]).forEach((d) => {
-                    const value = getDomainValues(d);
+                    const value = getDomainValues(d as ChartSeriesData);
                     acc.push(...(Array.isArray(value) ? value : [value]));
                 });
             });
@@ -133,7 +133,7 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
         if (getDomainValues) {
             seriesList.forEach((s) => {
                 (s.data as unknown[]).forEach((d) => {
-                    const value = getDomainValues(d);
+                    const value = getDomainValues(d as ChartSeriesData);
                     acc.push(...(Array.isArray(value) ? value : [value]));
                 });
             });

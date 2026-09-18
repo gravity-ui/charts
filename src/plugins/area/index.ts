@@ -14,17 +14,18 @@ import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {
     validateAxisPlotValues,
+    validatePercentStackingValues,
     validateSeriesColor,
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaSeries, TooltipDataChunkArea} from '../../types';
+import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
 
 import {prepareAreaSeries} from './prepare-area-series';
 
-export const areaPlugin: SeriesPlugin<AreaSeries> = {
+export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
     prepareSeries: prepareAreaSeries,
@@ -34,6 +35,11 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
         validateSeriesColor({color: series.fillColor, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validatePercentStackingValues({
+            series,
+            valueKey: 'y',
+            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+        });
 
         const isStacking = ['normal', 'percent'].includes(series.stacking as string);
         if (isStacking && series.nullMode === 'connect') {
@@ -84,16 +90,19 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
     },
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            return {percentage: item.percentage, data: item.data};
+        },
         rows: [
             {
                 id: 'default',
                 cells: [
                     {
                         id: 'color',
-                        source: ({item}) => {
-                            const areaItem = item as TooltipDataChunkArea;
-                            const s = areaItem.series as PreparedAreaSeries;
-                            return getTooltipColorSymbol({color: areaItem.color ?? s.color});
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
                         },
                         width: '16px',
                     },

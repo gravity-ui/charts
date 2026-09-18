@@ -6,6 +6,8 @@ export interface AreaRangePointData {
     color?: string;
     data: AreaRangeSeriesData;
     fill?: string;
+    hiddenInLine?: boolean;
+    hiddenInTooltip?: boolean;
     y0: number | null;
     y1: number | null;
     series: PreparedAreaRangeSeries;

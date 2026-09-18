@@ -6,7 +6,7 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedAreaRangeSeries} from '~core/series/types';
-import {formatAreaRange} from '~core/shapes/area-range/format';
+import {formatAreaRange, getAreaRangeWidth} from '~core/shapes/area-range/format';
 import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
 import {prepareAreaRangeData} from '~core/shapes/area-range/prepare-data';
 import {renderAreaRange} from '~core/shapes/area-range/renderer';
@@ -26,12 +26,17 @@ import {prepareAreaRangeSeries} from './prepare-area-range-series';
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
     type: 'area-range',
-    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
+    zoom: {
+        types: ['x', 'xy', 'y'],
+        defaultType: 'x',
+        preserveAdjacentPoints: true,
+        isYInRange: ({y0, y1}, [min, max]) => y0 !== null && y1 !== null && y0 <= max && y1 >= min,
+    },
     prepareSeries: prepareAreaRangeSeries,
     getAxisDomainValues: {
         y: (data) => (data.y0 === null || data.y1 === null ? [] : [data.y0, data.y1]),
     },
-    getColorValue: (data) => (data.y0 === null || data.y1 === null ? null : data.y1 - data.y0),
+    getColorValue: getAreaRangeWidth,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({
             series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y0}))},
@@ -101,33 +106,25 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
     },
     tooltip: {
         prepareData: getTooltipData,
-        getValue: ({item}) => {
-            const {y0, y1} = (item as TooltipDataChunkAreaRange).data;
-
-            return y0 === null || y1 === null ? null : y1 - y0;
-        },
+        getValue: ({item}) => getAreaRangeWidth((item as TooltipDataChunkAreaRange).data),
         rows: [
             {
                 id: 'default',
                 cells: [
                     {
                         id: 'color',
-                        source: ({item}) =>
-                            getTooltipColorSymbol({
-                                color:
-                                    (item as TooltipDataChunkAreaRange).color ??
-                                    (item.series as unknown as PreparedAreaRangeSeries).color,
-                            }),
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        },
                         width: '16px',
                     },
                     {id: 'name', source: 'series.name', align: 'start'},
                     {
                         id: 'value',
-                        source: ({item}) => {
-                            const {y0, y1} = (item as TooltipDataChunkAreaRange).data;
-
-                            return y0 === null || y1 === null ? null : y1 - y0;
-                        },
+                        source: ({item}) =>
+                            getAreaRangeWidth((item as TooltipDataChunkAreaRange).data),
                         formatValue: ({item, format}) => {
                             const {y0, y1} = (item as TooltipDataChunkAreaRange).data;
 
