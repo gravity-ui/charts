@@ -17,6 +17,7 @@ import {
     getYAxisWidth,
     getZoomedSeriesData,
     isAxisRelatedSeries,
+    runInTransition,
 } from '~core/utils';
 
 import {createScales, getAxes, getShapes, getSplit, getVisibleSeries, useZoom} from '../../hooks';
@@ -155,10 +156,15 @@ export function useChartInnerProps(props: Props) {
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
+    const previousDimensions = React.useRef({height, width});
     const currentRunRef = React.useRef(0);
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const dimensionsChanged =
+            previousDimensions.current.height !== height ||
+            previousDimensions.current.width !== width;
+        previousDimensions.current = {height, width};
 
         (async function () {
             const chartDataChanged = !(
@@ -370,8 +376,16 @@ export function useChartInnerProps(props: Props) {
 
             if (currentRunRef.current === currentRun) {
                 if (!isEqual(prevStateValue.current, newStateValue)) {
-                    setState(newStateValue);
-                    prevStateValue.current = newStateValue;
+                    const updateState = () => {
+                        setState(newStateValue);
+                        prevStateValue.current = newStateValue;
+                    };
+
+                    if (dimensionsChanged) {
+                        runInTransition(updateState);
+                    } else {
+                        updateState();
+                    }
                 }
                 previousChartData.current = data;
             }

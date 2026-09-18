@@ -1,15 +1,18 @@
 import React from 'react';
 
-import type {DebouncedFunc} from 'lodash';
 import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle';
 
 import {i18nFactory} from '~core/i18n';
+import {runInTransition} from '~core/utils';
 import {validateData} from '~core/validation';
 
 import '../plugins';
 import type {ChartData} from '../types';
 
 import {ChartInner} from './ChartInner';
+
+const RESIZE_UPDATE_INTERVAL = 200;
 
 export * from './Tooltip/ChartTooltipContent';
 
@@ -43,9 +46,6 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     const {data, lang, onResize, onReady} = props;
     const validatedData = React.useRef<ChartData>();
     const ref = React.useRef<HTMLDivElement>(null);
-    const debounced = React.useRef<
-        DebouncedFunc<(options?: HandleResizeOptions) => void> | undefined
-    >();
     const [dimensions, setDimensions] = React.useState<ChartDimentions>();
 
     if (validatedData.current !== data) {
@@ -76,25 +76,19 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         }
     }, []);
 
-    const debuncedHandleResize = React.useMemo(() => {
-        debounced.current?.cancel();
-        const startTransition = (
-            React as typeof React & {
-                startTransition?: (callback: () => void) => void;
-            }
-        ).startTransition;
-        debounced.current = debounce(
-            (options) => {
-                if (typeof startTransition === 'function') {
-                    startTransition(() => handleResize(options));
-                } else {
-                    handleResize(options);
-                }
+    const debouncedHandleResize = React.useMemo(
+        () => debounce(handleResize, RESIZE_UPDATE_INTERVAL),
+        [handleResize],
+    );
+
+    const throttledHandleResize = React.useMemo(() => {
+        return throttle(
+            (options?: HandleResizeOptions) => {
+                runInTransition(() => handleResize(options));
             },
-            200,
-            {maxWait: 200},
+            RESIZE_UPDATE_INTERVAL,
+            {leading: false},
         );
-        return debounced.current;
     }, [handleResize]);
 
     React.useImperativeHandle(
@@ -104,11 +98,11 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
                 if (options?.immediate) {
                     handleResize({force: true});
                 } else {
-                    debuncedHandleResize({force: true});
+                    debouncedHandleResize({force: true});
                 }
             },
         }),
-        [debuncedHandleResize, handleResize],
+        [debouncedHandleResize, handleResize],
     );
 
     React.useEffect(() => {
@@ -123,14 +117,18 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
             return undefined;
         }
 
-        const observer = new ResizeObserver(() => debuncedHandleResize());
+        const observer = new ResizeObserver(() => throttledHandleResize());
         observer.observe(parentElement);
 
         return () => {
             observer.disconnect();
-            debuncedHandleResize.cancel();
+            throttledHandleResize.cancel();
         };
-    }, [debuncedHandleResize]);
+    }, [throttledHandleResize]);
+
+    React.useEffect(() => {
+        return () => debouncedHandleResize.cancel();
+    }, [debouncedHandleResize]);
 
     React.useEffect(() => {
         if (typeof onResize === 'function') {
