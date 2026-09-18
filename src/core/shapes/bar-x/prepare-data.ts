@@ -166,7 +166,7 @@ export const prepareBarXData = async (args: {
                     data[key] = {};
                 }
 
-                const stackId = getSeriesStackId(s as StackedSeries);
+                const stackId = JSON.stringify([s.yAxis, getSeriesStackId(s as StackedSeries)]);
                 if (!data[key][stackId]) {
                     data[key][stackId] = [];
                 }
@@ -332,7 +332,7 @@ export const prepareBarXData = async (args: {
                     }
                 }
 
-                if (series.some((s) => s.stacking === 'percent')) {
+                if (yValues.some((item) => item.series.stacking === 'percent')) {
                     const currentPlot = split.plots[plotIndexes[plotDataIndex]];
                     const currentPlotHeight = currentPlot?.height ?? plotHeight;
                     const currentPlotTop = currentPlot?.top ?? 0;

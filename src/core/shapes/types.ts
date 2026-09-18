@@ -2,6 +2,16 @@ import type {HtmlItem} from '../../types';
 import type {SymbolType} from '../constants';
 import type {AnnotationAnchor} from '../series/types';
 
+/**
+ * Shared label coordinates and dimensions.
+ * SVG coordinates may use a text anchor and baseline instead of the top-left corner.
+ */
+export interface LabelRect {
+    x: number;
+    y: number;
+    size: {width: number; height: number};
+}
+
 export interface MarkerItem {
     cx: number;
     cy: number;

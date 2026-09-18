@@ -1,7 +1,7 @@
 import type {PreparedAxis} from '../../../hooks';
-import type {LabelData} from '../../../types';
+import type {HtmlItem, LabelData, SeriesDataWithLabels} from '../../../types';
 import {formatAxisTickLabel} from '../format';
-import {filterOverlappingLabels} from '../labels';
+import {filterLayerLabels, filterOverlappingLabels, getLayerLabelRects} from '../labels';
 import {TIME_UNITS} from '../time';
 
 describe('filterOverlappingLabels', () => {
@@ -60,6 +60,52 @@ describe('filterOverlappingLabels', () => {
         const labels = [label1, label2];
         expect(filterOverlappingLabels(labels as LabelData[])).toEqual([label1, label2]);
     });
+});
+
+test('layer label bounds account for SVG alignment and allow missing label lists', () => {
+    const svgLabel: LabelData = {
+        text: '30',
+        series: {id: 'point-series'},
+        x: 100,
+        y: 52,
+        textAnchor: 'end',
+        style: {fontSize: '12px'},
+        size: {width: 20, height: 12, hangingOffset: 2},
+    };
+    const htmlLabel: HtmlItem = {x: 10, y: 20, size: {width: 30, height: 12}, content: 'label'};
+
+    expect(getLayerLabelRects([{svgLabels: [svgLabel]}, {}, {htmlLabels: [htmlLabel]}])).toEqual([
+        {x: 80, y: 50, size: svgLabel.size},
+        htmlLabel,
+    ]);
+});
+
+test('HTML labels avoid the full multiline SVG bounds, accounting for the hanging baseline', () => {
+    const svgLabel: LabelData = {
+        text: 'Point\n30',
+        series: {id: 'point-series'},
+        lines: ['Point', '30'],
+        lineHeight: 12,
+        x: 100,
+        y: 52,
+        textAnchor: 'middle',
+        style: {fontSize: '12px'},
+        size: {width: 30, height: 24, hangingOffset: 2},
+    };
+    const above: HtmlItem = {x: 90, y: 35, size: {width: 20, height: 12}, content: 'above'};
+    const overlapping: HtmlItem = {...above, y: 70, content: 'overlapping'};
+    const data: SeriesDataWithLabels = {
+        series: {dataLabels: {allowOverlap: false}},
+        svgLabels: [],
+        htmlLabels: [above, overlapping],
+    };
+    const layers = [{svgLabels: [svgLabel], htmlLabels: []}];
+    expect(filterLayerLabels([data], layers)[0].htmlLabels).toEqual([above]);
+    expect(data.htmlLabels).toEqual([above, overlapping]);
+    expect(
+        filterLayerLabels([{...data, series: {dataLabels: {allowOverlap: true}}}], layers)[0]
+            .htmlLabels,
+    ).toEqual([above, overlapping]);
 });
 
 // Helper: create a minimal PreparedAxis mock for datetime type

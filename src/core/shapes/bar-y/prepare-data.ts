@@ -96,7 +96,7 @@ export async function prepareBarYData(args: {
 
             let ratio = 1;
             let percentTotal = 0;
-            if (series.some((s) => s.stacking === 'percent')) {
+            if (measureValues.some((item) => item.series.stacking === 'percent')) {
                 let sum = 0;
                 for (const item of sortedData) {
                     const value = Number(item.data.x);
