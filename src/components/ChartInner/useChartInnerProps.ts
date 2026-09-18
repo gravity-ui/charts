@@ -155,10 +155,15 @@ export function useChartInnerProps(props: Props) {
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
+    const previousDimensions = React.useRef({height, width});
     const currentRunRef = React.useRef(0);
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const dimensionsChanged =
+            previousDimensions.current.height !== height ||
+            previousDimensions.current.width !== width;
+        previousDimensions.current = {height, width};
 
         (async function () {
             const chartDataChanged = !(
@@ -246,6 +251,12 @@ export function useChartInnerProps(props: Props) {
                 preparedLegend,
             });
 
+            // Async preparation otherwise stays in one microtask chain and blocks input.
+            if (dimensionsChanged) {
+                await new Promise<void>((resolve) => setTimeout(resolve, 0));
+                if (currentRunRef.current !== currentRun) return;
+            }
+
             const axes = await getAxes({
                 height,
                 preparedChart,
@@ -312,6 +323,12 @@ export function useChartInnerProps(props: Props) {
                 await calculateAxisBasedProps();
             }
 
+            // Allow pending input before preparing the point geometry.
+            if (dimensionsChanged) {
+                await new Promise<void>((resolve) => setTimeout(resolve, 0));
+                if (currentRunRef.current !== currentRun) return;
+            }
+
             const {shapes, shapesData} = await getShapes({
                 boundsWidth,
                 boundsHeight,
@@ -376,6 +393,10 @@ export function useChartInnerProps(props: Props) {
                 previousChartData.current = data;
             }
         })();
+
+        return () => {
+            currentRunRef.current = currentRun + 1;
+        };
     }, [
         height,
         width,
