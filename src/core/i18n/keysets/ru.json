@@ -1,5 +1,6 @@
 {
   "error": {
+    "label_invalid-area-range-bounds": "Нижняя граница не должна превышать верхнюю в серии area-range «{{seriesName}}»",
     "label_no-data": "Нет данных",
     "label_unknown-plugin": "Неизвестный тип плагина \"{{type}}\"",
     "label_unknown-error": "Неизвестная ошибка",
