@@ -12,7 +12,7 @@ export function getTooltipData(
 ): GetTooltipDataResult {
     const xLookupPoints = args.data.reduce<ShapePoint[]>((acc, item) => {
         item.points.forEach((point) => {
-            if (point.y0 === null || point.y1 === null) {
+            if (point.hiddenInTooltip || point.y0 === null || point.y1 === null) {
                 return;
             }
 

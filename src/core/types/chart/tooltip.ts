@@ -193,7 +193,9 @@ export type ChartTooltipRowRendererArgs = {
      */
     color?: string;
     striped?: boolean;
+    /** Scalar point value; area-range uses its width (y1 - y0). */
     value: string | number | null | undefined;
+    /** Display value; the default area-range row formats both boundaries independently. */
     formattedValue?: string;
     hovered?: TooltipDataChunk<unknown>[];
     /**
@@ -209,12 +211,6 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
 ) => number;
 
 type TooltipRowCellItemSourceFn<T = MeaningfulAny> = (args: {item: TooltipDataChunk<T>}) => unknown;
-
-export interface TooltipRowCellFormatValueArgs {
-    item: TooltipDataChunk;
-    value: unknown;
-    format?: ValueFormat;
-}
 
 export interface TooltipRowCellItem {
     /** cell name - used in tooltip rowRenderer(if defined) to transfer colors/names, etc. */
@@ -232,7 +228,6 @@ export interface TooltipRowCellItem {
      * `cell.format` → `series.tooltip.valueFormat` → `tooltip.valueFormat`.
      */
     format?: ValueFormat;
-    formatValue?: (args: TooltipRowCellFormatValueArgs) => string;
     align?: 'start' | 'center' | 'end';
     /** Optional fixed width for the cell (e.g. `'16px'`). */
     width?: string;
@@ -319,6 +314,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /**
          * The aggregation method for calculating totals.
          * It can be a built-in function (e.g., 'sum') or a custom function.
+         * Area-range contributes its width (y1 - y0); 'sum' adds widths, not interval unions.
          * @default 'sum'
          */
         aggregation?:
@@ -350,6 +346,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * `'value'` uses the numeric value of each series point: `y` for most series
                * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
                * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
+               * Area-range uses its width (y1 - y0).
                * Leave unset to disable sorting.
                */
               key?: 'value' | undefined;

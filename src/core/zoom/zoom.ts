@@ -83,15 +83,13 @@ export function getZoomedSeriesData(args: {
     const zoomedShapesSeriesData: PreparedSeries[] = [];
 
     seriesData.forEach((seriesItem) => {
+        const zoomOptions = getSeriesPlugin(seriesItem.type).zoom;
         let prevPointInRange = false;
         let currentPointInRange = false;
 
         const filteredData: ChartSeriesData[] = [];
         const filteredShapesData: ChartSeriesData[] | undefined =
-            getSeriesPlugin(seriesItem.type).zoom?.preserveAdjacentPoints &&
-            xAxis?.type !== 'category'
-                ? []
-                : undefined;
+            zoomOptions?.preserveAdjacentPoints && xAxis?.type !== 'category' ? [] : undefined;
 
         if (!isPreparedZoomableSeries(seriesItem)) {
             return;
@@ -152,12 +150,14 @@ export function getZoomedSeriesData(args: {
                 if (zoomStateY) {
                     const [yMin, yMax] = zoomStateY;
                     const y = 'y' in point ? (point.y ?? undefined) : undefined;
-                    inYRange = isValueInRange({
-                        axis: yAxis?.[yAxisIndex],
-                        value: y,
-                        min: yMin,
-                        max: yMax,
-                    });
+                    inYRange = zoomOptions?.isYInRange
+                        ? zoomOptions.isYInRange(point, [yMin, yMax])
+                        : isValueInRange({
+                              axis: yAxis?.[yAxisIndex],
+                              value: y,
+                              min: yMin,
+                              max: yMax,
+                          });
                 } else {
                     inYRange = false;
                 }

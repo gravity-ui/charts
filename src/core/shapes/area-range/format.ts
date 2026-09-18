@@ -6,7 +6,11 @@ export function formatAreaRange(args: {y0: number; y1: number; format?: ValueFor
     const formattedY0 = getFormattedValue({value: y0, format});
     const formattedY1 = getFormattedValue({value: y1, format});
 
-    return `${formattedY0} – ${formattedY1}`;
+    return `${formattedY0} — ${formattedY1}`;
+}
+
+export function getAreaRangeWidth({y0, y1}: AreaRangeSeriesData) {
+    return y0 === null || y1 === null ? null : y1 - y0;
 }
 
 export function formatAreaRangeDataLabel(args: {data: AreaRangeSeriesData; format?: ValueFormat}) {

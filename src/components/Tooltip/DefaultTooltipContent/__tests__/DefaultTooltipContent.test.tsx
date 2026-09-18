@@ -10,8 +10,8 @@ import {registerSeriesPlugin} from '~core/series/seriesRegistry';
 import {getTooltipColorSymbol, getTooltipLineSymbol} from '~core/tooltip/utils';
 
 import {areaPlugin} from '../../../../plugins/area';
-import {barXPlugin} from '../../../../plugins/bar-x';
 import {areaRangePlugin} from '../../../../plugins/area-range';
+import {barXPlugin} from '../../../../plugins/bar-x';
 import {linePlugin} from '../../../../plugins/line';
 import {waterfallPlugin} from '../../../../plugins/waterfall';
 import type {ChartTooltip, ChartTooltipRowRendererArgs, TooltipDataChunk} from '../../../../types';
@@ -20,8 +20,8 @@ import {DefaultTooltipContent} from '../index';
 registerSeriesPlugin(areaPlugin);
 registerSeriesPlugin(barXPlugin);
 registerSeriesPlugin(linePlugin);
-registerSeriesPlugin(waterfallPlugin);
 registerSeriesPlugin(areaRangePlugin);
+registerSeriesPlugin(waterfallPlugin);
 
 function makeLineChunk(
     name: string,
@@ -92,10 +92,88 @@ describe('DefaultTooltipContent — valueFormat precedence', () => {
             <DefaultTooltipContent hovered={hovered} yAxis={{type: 'linear'}} />,
         );
 
-        expect(container.textContent).toContain('formatted:5 – formatted:10');
+        expect(container.textContent).toContain('formatted:5 — formatted:10');
         expect(formatter).toHaveBeenCalledTimes(2);
         expect(formatter).toHaveBeenNthCalledWith(1, {value: 5});
         expect(formatter).toHaveBeenNthCalledWith(2, {value: 10});
+    });
+});
+
+describe('DefaultTooltipContent — area-range values', () => {
+    const hovered: TooltipDataChunk[] = [
+        {
+            data: {x: 1, y0: 5, y1: 10},
+            series: {type: 'area-range', id: 'range', name: 'Range'},
+        },
+    ];
+
+    test('passes width and independently formatted boundaries to rowRenderer', () => {
+        const formatter = jest.fn(({value}) => `value:${value}`);
+        const rowRenderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                rowRenderer={rowRenderer}
+                valueFormat={{type: 'custom', formatter}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(rowRenderer).toHaveBeenCalledWith(
+            expect.objectContaining({
+                value: 5,
+                formattedValue: 'value:5 — value:10',
+            }),
+        );
+        expect(formatter).toHaveBeenCalledTimes(2);
+        expect(formatter).toHaveBeenNthCalledWith(1, {value: 5});
+        expect(formatter).toHaveBeenNthCalledWith(2, {value: 10});
+    });
+
+    test('rowRenderer retains row value formatting when user cells specify another format', () => {
+        const cellFormatter = jest.fn(({value}) => `cell:${value}`);
+        const renderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[makeLineChunk('Line', 5)]}
+                rows={[
+                    {
+                        renderer,
+                        cells: [
+                            {
+                                id: 'value',
+                                source: 'data.y',
+                                format: {type: 'custom', formatter: cellFormatter},
+                            },
+                        ],
+                    },
+                ]}
+                valueFormat={{type: 'custom', formatter: ({value}) => `row:${value}`}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(renderer).toHaveBeenCalledWith(
+            expect.objectContaining({value: 5, formattedValue: 'row:5'}),
+        );
+        expect(cellFormatter).not.toHaveBeenCalled();
+    });
+
+    test('built-in totals sum widths', () => {
+        const {container} = renderTooltip(
+            <DefaultTooltipContent
+                hovered={[
+                    ...hovered,
+                    {
+                        data: {x: 1, y0: 3, y1: 6},
+                        series: {type: 'area-range', id: 'second', name: 'Second'},
+                    },
+                ]}
+                totals={{enabled: true, label: 'Total width'}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(container.textContent).toContain('5 — 10');
+        expect(container.textContent).toContain('3 — 6');
+        expect(container.textContent).toContain('Total width8');
     });
 });
 
@@ -129,11 +207,11 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
 
     // `bar-x` is the control: its color cell is not built from a function `source`, so it stays
     // green either way. Only `area` and `line` regress.
-    test.each([['area'], ['line'], ['bar-x']])(
+    test.each([['area'], ['area-range'], ['line'], ['bar-x']])(
         '%s series passes a raw color to rowRenderer',
         (type) => {
             const hovered = makeChunk({
-                data: {x: 1, y: 10},
+                data: {x: 1, y: 10, y0: 5, y1: 10},
                 color: '#ff0000',
                 series: {type, id: 's', name: 'S', color: '#ff0000'},
             });

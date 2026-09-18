@@ -307,8 +307,11 @@ export interface ChartSeriesOptions {
         /** Default annotation settings for all area data points */
         annotation?: ChartAnnotationSeriesOptions;
     };
+    /** Default appearance and interaction settings for area-range series. */
     'area-range'?: {
+        /** Width of both boundary lines in pixels. @default 1 */
         lineWidth?: number;
+        /** Styling of hovered and inactive bands. */
         states?: {
             hover?: BasicHoverState;
             inactive?: BasicInactiveState;
