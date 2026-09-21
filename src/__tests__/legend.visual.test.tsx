@@ -7,7 +7,7 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
-import type {ChartData, ChartLegend} from '../types';
+import type {ChartData, ChartLegend, PieSeries} from '../types';
 
 import {LONG_TEXT} from './constants';
 
@@ -133,6 +133,56 @@ test.describe('Legend', () => {
 
         positions.forEach((position) => {
             test.describe(`Position ${position}`, () => {
+                for (const html of [false, true]) {
+                    test(`Explicit width (${html ? 'html' : 'svg'})`, async ({mount}) => {
+                        const data = cloneDeep(pieOverflowedLegendItemsData);
+                        data.chart = {margin: {left: 10, right: 30}};
+                        data.legend = {enabled: true, position, width: 230, html};
+                        const points = (data.series.data[0] as PieSeries).data;
+                        points[0].name = 'First moderately long legend label';
+                        points[1].name = 'Second moderately long legend label';
+                        points[2].name = LONG_TEXT;
+
+                        const component = await mount(
+                            <ChartTestStory data={data} styles={{width: 1000}} />,
+                        );
+                        const plotBounds = component.locator('clipPath rect').first();
+                        const legendLines = component.locator('.gcharts-legend__line');
+                        const labels = component.locator(
+                            html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item text',
+                        );
+                        const isVertical = position === 'left' || position === 'right';
+
+                        for (const width of [230, 600, 230]) {
+                            if (data.legend.width !== width) {
+                                data.legend = {...data.legend, width};
+                                await component.update(
+                                    <ChartTestStory data={data} styles={{width: 1000}} />,
+                                );
+                            }
+
+                            await expect(plotBounds).toHaveAttribute(
+                                'width',
+                                String(960 - (isVertical ? width + 15 : 0)),
+                            );
+                            await expect(legendLines).toHaveCount(width === 230 ? 3 : 2);
+                            await expect(labels.last()).toBeVisible();
+                            await expect
+                                .poll(async () => {
+                                    const box = await labels.last().boundingBox();
+                                    return box?.width;
+                                })
+                                .toBeLessThanOrEqual(width - 15 + 1);
+                            await expect
+                                .poll(async () => {
+                                    const box = await labels.last().boundingBox();
+                                    return box?.width;
+                                })
+                                .toBeGreaterThan(width - 35);
+                        }
+                    });
+                }
+
                 test('Basic', async ({mount}) => {
                     const data = cloneDeep(pieOverflowedLegendItemsData);
                     set(data, 'legend.position', position);

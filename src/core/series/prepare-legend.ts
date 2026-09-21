@@ -102,7 +102,8 @@ export async function getPreparedLegend(args: {
             height: titleHeight,
             align: get(legend, 'title.align', 'left'),
         },
-        width: legendWidth,
+        width: legend?.width,
+        resolvedWidth: legendWidth,
         ticks,
         colorScale,
         html: get(legend, 'html', false),
@@ -159,8 +160,10 @@ async function getGroupedLegendItems(args: {
         const resultItem = clone(item) as LegendItem;
         resultItem.text = item.name;
 
-        const maxTextWidth =
-            maxLegendWidth - resultItem.symbol.bboxWidth - resultItem.symbol.padding;
+        const maxTextWidth = Math.max(
+            0,
+            maxLegendWidth - resultItem.symbol.bboxWidth - resultItem.symbol.padding,
+        );
 
         let textHeight = 0;
         let textWidth = 0;
@@ -325,6 +328,10 @@ function getMaxLegendWidth(args: {
 }): number {
     const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
 
+    if (preparedLegend.type === 'discrete' && preparedLegend.width !== undefined) {
+        return preparedLegend.width;
+    }
+
     if (isVerticalPosition) {
         return (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2;
     }
@@ -400,7 +407,7 @@ export async function getLegendComponents(args: {
         }
 
         preparedLegend.height = legendHeight;
-        preparedLegend.width = Math.max(maxLegendWidth, preparedLegend.width);
+        preparedLegend.resolvedWidth = Math.max(maxLegendWidth, preparedLegend.resolvedWidth);
     }
 
     const offset = getLegendOffset({
@@ -409,9 +416,18 @@ export async function getLegendComponents(args: {
         chartWidth,
         chartHeight,
         chartMargin,
-        legendWidth: preparedLegend.width,
+        legendWidth: preparedLegend.resolvedWidth,
         legendHeight: preparedLegend.height,
     });
+
+    if (preparedLegend.type === 'discrete' && !isVerticalPosition) {
+        const remainingWidth = chartWidth - chartMargin.left - chartMargin.right - maxLegendWidth;
+        if (preparedLegend.align === 'right') {
+            offset.left += remainingWidth;
+        } else if (preparedLegend.align === 'center') {
+            offset.left += remainingWidth / 2;
+        }
+    }
 
     return {
         legendConfig: {
@@ -419,7 +435,7 @@ export async function getLegendComponents(args: {
             pagination,
             maxWidth: maxLegendWidth,
             height: preparedLegend.height,
-            width: preparedLegend.width,
+            width: preparedLegend.resolvedWidth,
         },
         legendItems: items,
     };

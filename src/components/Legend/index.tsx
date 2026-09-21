@@ -387,7 +387,7 @@ export const Legend = (props: Props) => {
                 let left = 0;
                 switch (legend.align) {
                     case 'right': {
-                        left = config.offset.left + config.maxWidth - legend.width;
+                        left = config.offset.left + config.maxWidth - legend.resolvedWidth;
                         break;
                     }
                     case 'left': {
@@ -395,7 +395,7 @@ export const Legend = (props: Props) => {
                         break;
                     }
                     case 'center': {
-                        left = config.offset.left + config.maxWidth / 2 - legend.width / 2;
+                        left = config.offset.left + config.maxWidth / 2 - legend.resolvedWidth / 2;
                         break;
                     }
                 }
@@ -413,7 +413,7 @@ export const Legend = (props: Props) => {
                 svgElement.call(createGradientRect, {
                     y: legend.title.height + legend.title.margin,
                     height: rectHeight,
-                    width: legend.width,
+                    width: legend.resolvedWidth,
                     interpolator: getContinuesColorFn({
                         values: [0, 1],
                         colors: legend.colorScale.colors,
@@ -422,10 +422,13 @@ export const Legend = (props: Props) => {
                 });
 
                 // ticks
-                const scale = scaleLinear(domain, [0, legend.width]) as AxisScale<AxisDomain>;
+                const scale = scaleLinear(domain, [
+                    0,
+                    legend.resolvedWidth,
+                ]) as AxisScale<AxisDomain>;
                 const xAxisGenerator = await axisBottom({
                     domain: {
-                        size: legend.width,
+                        size: legend.resolvedWidth,
                         color: 'transparent',
                     },
                     htmlLayout,
@@ -449,7 +452,7 @@ export const Legend = (props: Props) => {
                     .attr('class', legendAxisClassname)
                     .attr('transform', `translate(0, ${tickTop})`)
                     .call(xAxisGenerator);
-                legendWidth = legend.width;
+                legendWidth = legend.resolvedWidth;
             }
 
             const legendTitleClassname = b('title');
@@ -461,11 +464,11 @@ export const Legend = (props: Props) => {
                 let dx = 0;
                 switch (legend.title.align) {
                     case 'center': {
-                        dx = legend.width / 2 - titleWidth / 2;
+                        dx = legend.resolvedWidth / 2 - titleWidth / 2;
                         break;
                     }
                     case 'right': {
-                        dx = legend.width - titleWidth;
+                        dx = legend.resolvedWidth - titleWidth;
                         break;
                     }
                     case 'left':

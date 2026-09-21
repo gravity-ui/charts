@@ -69,7 +69,12 @@ export interface ChartLegend extends ChartLegendItem {
          **/
         domain?: number[];
     };
-    /* Width of the legend */
+    /**
+     * Width of the legend in pixels.
+     * For discrete legends, controls the allocated width, item wrapping, and label truncation.
+     * Defaults to the available chart width for top/bottom positions and half of it for left/right.
+     * For continuous legends, controls the gradient width and defaults to 200.
+     */
     width?: number;
     /**
      * Allows to use any html-tags to display the content.

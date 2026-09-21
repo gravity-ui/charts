@@ -94,7 +94,11 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
     bboxWidth: number;
 };
 
-export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>> & {
+export interface PreparedLegend extends Required<
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width'>
+> {
+    width?: number;
+    resolvedWidth: number;
     hangingOffset: number;
     height: number;
     lineHeight: number;
@@ -117,7 +121,7 @@ export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>>
         domain: number[];
         stops: number[];
     };
-};
+}
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
 
