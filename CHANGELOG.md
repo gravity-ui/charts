@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.60.0](https://github.com/gravity-ui/charts/compare/v1.59.1...v1.60.0) (2026-09-18)
+
+
+### Features
+
+* add stack total labels for bar and area charts ([#690](https://github.com/gravity-ui/charts/issues/690)) ([8773fa0](https://github.com/gravity-ui/charts/commit/8773fa0aa0d3d351af7ce4c4306e3305da348a1d))
+* expose percentage in data label and tooltip formatters ([#672](https://github.com/gravity-ui/charts/issues/672)) ([79edceb](https://github.com/gravity-ui/charts/commit/79edceb283d1965c42a1f3031c21f76f4b6af17f))
+
+
+### Bug Fixes
+
+* isolate stacks and correct data label overlap ([#693](https://github.com/gravity-ui/charts/issues/693)) ([df8db62](https://github.com/gravity-ui/charts/commit/df8db6264bc04c9f06e21568ddfda2d0c0d89bcc))
+
 ## [1.59.1](https://github.com/gravity-ui/charts/compare/v1.59.0...v1.59.1) (2026-09-03)
 
 
