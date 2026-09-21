@@ -19,7 +19,7 @@ jest.mock('../../utils', () => ({
 const chartWidth = 1000;
 const chartMargin = {left: 10, right: 30, top: 10, bottom: 10};
 
-async function prepareLegend(legend: ChartLegend) {
+async function prepareLegend(legend: ChartLegend, width = chartWidth) {
     const seriesData: ChartData['series']['data'] = [
         {
             type: 'pie',
@@ -38,7 +38,7 @@ async function prepareLegend(legend: ChartLegend) {
         preparedLegend,
     });
     const components = await getLegendComponents({
-        chartWidth,
+        chartWidth: width,
         chartHeight: 400,
         chartMargin,
         series,
@@ -127,6 +127,56 @@ describe.each(['left', 'right', 'top', 'bottom'] as const)(
             expect(legendConfig.maxWidth).toBe(expectedWidth);
             expect(preparedLegend.width).toBeUndefined();
             expect(preparedLegend.resolvedWidth).toBe(expectedWidth);
+        });
+
+        test('caps an explicit width to the available chart width', async () => {
+            const {legendConfig, legendItems, preparedLegend, series} = await prepareLegend({
+                enabled: true,
+                position,
+                width: 2000,
+            });
+            const availableWidth = chartWidth - chartMargin.left - chartMargin.right;
+            expect(preparedLegend.width).toBe(2000);
+            expect(preparedLegend.resolvedWidth).toBe(availableWidth);
+            expect(legendConfig.width).toBe(availableWidth);
+            expect(legendConfig.maxWidth).toBe(availableWidth);
+            expect(legendConfig.offset.left).toBeGreaterThanOrEqual(chartMargin.left);
+            const longItem = legendItems.flat()[2];
+            expect(
+                longItem.textWidth + longItem.symbol.bboxWidth + longItem.symbol.padding,
+            ).toBeLessThanOrEqual(availableWidth);
+
+            const {boundsWidth} = getChartDimensions({
+                height: 400,
+                width: chartWidth,
+                margin: chartMargin,
+                preparedLegend,
+                preparedSeries: series,
+                preparedXAxis: null,
+                preparedYAxis: null,
+                legendConfig,
+            });
+            expect(boundsWidth).toBe(
+                position === 'left' || position === 'right' ? 0 : availableWidth,
+            );
+        });
+
+        test.each([
+            {width: 0, containerWidth: 1000},
+            {width: -10, containerWidth: 1000},
+            {width: 600, containerWidth: 20},
+            {width: undefined, containerWidth: 20},
+        ])('keeps empty legend geometry nonnegative (%j)', async ({width, containerWidth}) => {
+            const {legendConfig, legendItems, preparedLegend} = await prepareLegend(
+                {enabled: true, position, width},
+                containerWidth,
+            );
+            expect(preparedLegend.width).toBe(width);
+            expect(preparedLegend.resolvedWidth).toBe(0);
+            expect(legendConfig.width).toBe(0);
+            expect(legendConfig.maxWidth).toBe(0);
+            expect(legendConfig.height).toBe(0);
+            expect(legendItems).toEqual([]);
         });
     },
 );

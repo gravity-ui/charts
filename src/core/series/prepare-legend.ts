@@ -150,6 +150,10 @@ async function getGroupedLegendItems(args: {
     preparedLegend: PreparedLegend;
 }) {
     const {maxLegendWidth, items, preparedLegend} = args;
+    if (maxLegendWidth <= 0) {
+        return [];
+    }
+
     const result: LegendItem[][] = [[]];
     let textWidthsInLine: number[] = [0];
     let lineIndex = 0;
@@ -327,16 +331,17 @@ function getMaxLegendWidth(args: {
     isVerticalPosition: boolean;
 }): number {
     const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
+    const availableWidth = Math.max(0, chartWidth - chartMargin.right - chartMargin.left);
 
     if (preparedLegend.type === 'discrete' && preparedLegend.width !== undefined) {
-        return preparedLegend.width;
+        return Math.max(0, Math.min(preparedLegend.width, availableWidth));
     }
 
     if (isVerticalPosition) {
-        return (chartWidth - chartMargin.right - chartMargin.left - preparedLegend.margin) / 2;
+        return Math.max(0, (availableWidth - preparedLegend.margin) / 2);
     }
 
-    return chartWidth - chartMargin.right - chartMargin.left;
+    return availableWidth;
 }
 
 function getMaxLegendHeight(args: {
@@ -407,7 +412,7 @@ export async function getLegendComponents(args: {
         }
 
         preparedLegend.height = legendHeight;
-        preparedLegend.resolvedWidth = Math.max(maxLegendWidth, preparedLegend.resolvedWidth);
+        preparedLegend.resolvedWidth = maxLegendWidth;
     }
 
     const offset = getLegendOffset({

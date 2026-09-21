@@ -72,6 +72,8 @@ export interface ChartLegend extends ChartLegendItem {
     /**
      * Width of the legend in pixels.
      * For discrete legends, controls the allocated width, item wrapping, and label truncation.
+     * Capped at the chart width excluding chart margins. If a side legend leaves no room for the plot,
+     * the plot and axes are not drawn.
      * Defaults to the available chart width for top/bottom positions and half of it for left/right.
      * For continuous legends, controls the gradient width and defaults to 200.
      */

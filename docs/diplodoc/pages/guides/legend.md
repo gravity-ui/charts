@@ -8,7 +8,7 @@ The visibility of the legend is controlled by the `enabled` property within its 
 
 ## Legend width
 
-Set `legend.width` to allocate a fixed width in pixels. For a discrete legend, this width is also used to wrap items onto new rows and truncate long labels, including HTML labels.
+Set `legend.width` to allocate a fixed width in pixels. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.
 
 ```javascript
 legend: {

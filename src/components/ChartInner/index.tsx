@@ -115,6 +115,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     });
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
+    const hasPlotArea = boundsWidth > 0 && boundsHeight > 0;
     const debouncedBoundsWidth = useDebouncedValue({
         value: boundsWidth,
         delay: DEBOUNCED_VALUE_DELAY,
@@ -208,6 +209,9 @@ export const ChartInner = (props: ChartInnerProps) => {
 
     const setYAxisDataItems = React.useCallback(async () => {
         const items: AxisYData[] = [];
+        if (boundsWidth <= 0 || boundsHeight <= 0) {
+            return items;
+        }
         for (let i = 0; i < yAxis.length; i++) {
             const axis = yAxis[i];
             const scale = yScale?.[i];
@@ -241,6 +245,9 @@ export const ChartInner = (props: ChartInnerProps) => {
 
     const setXAxisDataItems = React.useCallback(async () => {
         const items: AxisXData[] = [];
+        if (boundsWidth <= 0 || boundsHeight <= 0) {
+            return items;
+        }
         const axis = xAxis;
         const scale = xScale;
         if (axis && scale) {
@@ -339,56 +346,60 @@ export const ChartInner = (props: ChartInnerProps) => {
             </defs>
             {preparedTitle && <Title {...preparedTitle} htmlLayout={htmlLayout} />}
             <g transform={`translate(0, ${boundsOffsetTop})`}>
-                {preparedSplit?.plots.map((plot, index) => {
-                    return <PlotTitle key={`plot-${index}`} title={plot.title} />;
-                })}
+                {hasPlotArea &&
+                    preparedSplit?.plots.map((plot, index) => {
+                        return <PlotTitle key={`plot-${index}`} title={plot.title} />;
+                    })}
             </g>
-            <g
-                className={b('content')}
-                width={boundsWidth}
-                height={boundsHeight}
-                transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
-                ref={plotRef}
-            >
-                {Boolean(xScale && xAxisDataItems.length) && (
-                    <React.Fragment>
-                        {xAxisDataItems.map((axisData) => {
-                            return (
-                                <AxisX
-                                    key={axisData.id}
-                                    htmlLayout={htmlLayout}
-                                    plotAfterRef={plotAfterRef}
-                                    plotBeforeRef={plotBeforeRef}
-                                    preparedAxisData={axisData}
-                                />
-                            );
-                        })}
-                    </React.Fragment>
-                )}
-                {Boolean(yAxisDataItems.length) && (
-                    <React.Fragment>
-                        {yAxisDataItems.map((axisData, index) => {
-                            if (!axisData) {
-                                return null;
-                            }
+            {hasPlotArea && (
+                <g
+                    className={b('content')}
+                    width={boundsWidth}
+                    height={boundsHeight}
+                    transform={`translate(${[boundsOffsetLeft, boundsOffsetTop].join(',')})`}
+                    ref={plotRef}
+                >
+                    {Boolean(xScale && xAxisDataItems.length) && (
+                        <React.Fragment>
+                            {xAxisDataItems.map((axisData) => {
+                                return (
+                                    <AxisX
+                                        key={axisData.id}
+                                        htmlLayout={htmlLayout}
+                                        plotAfterRef={plotAfterRef}
+                                        plotBeforeRef={plotBeforeRef}
+                                        preparedAxisData={axisData}
+                                    />
+                                );
+                            })}
+                        </React.Fragment>
+                    )}
+                    {Boolean(yAxisDataItems.length) && (
+                        <React.Fragment>
+                            {yAxisDataItems.map((axisData, index) => {
+                                if (!axisData) {
+                                    return null;
+                                }
 
-                            return (
-                                <AxisY
-                                    key={index}
-                                    htmlLayout={htmlLayout}
-                                    plotAfterRef={plotAfterRef}
-                                    plotBeforeRef={plotBeforeRef}
-                                    preparedAxisData={axisData}
-                                />
-                            );
-                        })}
-                    </React.Fragment>
-                )}
-                <g ref={plotBeforeRef} />
-                {shapes}
-                <g ref={plotAfterRef} />
-            </g>
-            {xAxis?.rangeSlider?.enabled &&
+                                return (
+                                    <AxisY
+                                        key={index}
+                                        htmlLayout={htmlLayout}
+                                        plotAfterRef={plotAfterRef}
+                                        plotBeforeRef={plotBeforeRef}
+                                        preparedAxisData={axisData}
+                                    />
+                                );
+                            })}
+                        </React.Fragment>
+                    )}
+                    <g ref={plotBeforeRef} />
+                    {shapes}
+                    <g ref={plotAfterRef} />
+                </g>
+            )}
+            {hasPlotArea &&
+                xAxis?.rangeSlider?.enabled &&
                 preparedChart &&
                 preparedLegend &&
                 debouncedAllPreparedSeries &&
@@ -452,7 +463,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     } as React.CSSProperties
                 }
             />
-            {Object.keys(zoomState).length > 0 && preparedChart?.zoom && (
+            {hasPlotArea && Object.keys(zoomState).length > 0 && preparedChart?.zoom && (
                 <Button
                     className={b('reset-zoom-button')}
                     onClick={() => {
@@ -475,15 +486,17 @@ export const ChartInner = (props: ChartInnerProps) => {
                     </ButtonIcon>
                 </Button>
             )}
-            <Tooltip
-                dispatcher={dispatcher}
-                tooltip={preparedTooltip}
-                svgContainer={svgRef.current}
-                xAxis={xAxis}
-                yAxis={yAxis[0]}
-                onOutsideClick={unpinTooltip}
-                tooltipPinned={tooltipPinned}
-            />
+            {hasPlotArea && (
+                <Tooltip
+                    dispatcher={dispatcher}
+                    tooltip={preparedTooltip}
+                    svgContainer={svgRef.current}
+                    xAxis={xAxis}
+                    yAxis={yAxis[0]}
+                    onOutsideClick={unpinTooltip}
+                    tooltipPinned={tooltipPinned}
+                />
+            )}
         </div>
     );
 };
