@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
@@ -10,6 +11,12 @@ import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 
 import {LONG_TEXT} from './constants';
+
+async function expectSvgWidth(locator: Locator, width: number) {
+    await expect
+        .poll(async () => Number.parseFloat((await locator.getAttribute('width')) ?? ''))
+        .toBeCloseTo(width, 5);
+}
 
 const pieOverflowedLegendItemsData: ChartData = {
     legend: {
@@ -72,6 +79,41 @@ const lineLegendWidthSeries: LineSeries[] = [
 }));
 
 test.describe('Legend', () => {
+    for (const position of ['left', 'bottom'] as const) {
+        test(`Continuous pixel strings preserve width and alignment (${position})`, async ({
+            mount,
+        }) => {
+            const data = cloneDeep(pieOverflowedLegendItemsData);
+            data.chart = {margin: {left: 10, right: 30}};
+            data.legend = {
+                enabled: true,
+                type: 'continuous',
+                position,
+                width: '230.5px',
+                colorScale: {colors: ['#e8f1fa', '#348bdc'], domain: [0, 10]},
+            };
+            const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
+            const gradient = component.locator('.gcharts-legend image');
+            const alignmentWidth = position === 'left' ? (960 - 15) / 2 : 960;
+            for (const {width, pixels} of [
+                {width: '230.5px', pixels: 230.5},
+                {width: 120, pixels: 120},
+                {width: '230.5px', pixels: 230.5},
+            ] as const) {
+                data.legend = {...data.legend, width};
+                await component.update(<ChartTestStory data={data} styles={{width: 1000}} />);
+                await expectSvgWidth(gradient, pixels);
+                await expect
+                    .poll(async () => {
+                        const chartBox = await component.locator('svg').first().boundingBox();
+                        const gradientBox = await gradient.boundingBox();
+                        return chartBox && gradientBox ? gradientBox.x - chartBox.x : undefined;
+                    })
+                    .toBeCloseTo(10 + (alignmentWidth - pixels) / 2, 0);
+            }
+        });
+    }
+
     for (const position of ['top', 'bottom', 'left', 'right'] as const) {
         test(`Continuous percentage width respects chart margins (${position})`, async ({
             mount,
@@ -83,14 +125,18 @@ test.describe('Legend', () => {
                 type: 'continuous',
                 position,
                 width: '150%',
+                margin: 35,
                 colorScale: {colors: ['#e8f1fa', '#348bdc'], domain: [0, 10]},
             };
             const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
             const gradient = component.locator('.gcharts-legend image');
+            const plotBounds = component.locator('clipPath rect').first();
+            const isVertical = position === 'left' || position === 'right';
 
             for (const {containerWidth, width, ratio} of [
                 {containerWidth: 1000, width: '25%', ratio: 0.25},
                 {containerWidth: 500, width: '25%', ratio: 0.25},
+                {containerWidth: 1000, width: '25%', ratio: 0.25},
                 {containerWidth: 1000, width: '150%', ratio: 1},
                 {containerWidth: 500, width: '150%', ratio: 1},
             ] as const) {
@@ -106,7 +152,11 @@ test.describe('Legend', () => {
                 } else if (position === 'top' || position === 'bottom') {
                     expectedLeft += (availableWidth - gradientWidth) / 2;
                 }
-                await expect(gradient).toHaveAttribute('width', String(gradientWidth));
+                await expectSvgWidth(gradient, gradientWidth);
+                await expectSvgWidth(
+                    plotBounds,
+                    Math.max(0, availableWidth - (isVertical ? gradientWidth + 35 : 0)),
+                );
                 await expect
                     .poll(async () => {
                         const chartBox = await component.locator('svg').first().boundingBox();
@@ -125,8 +175,8 @@ test.describe('Legend', () => {
             series: {data: lineLegendWidthSeries},
         };
         const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
-        await expect(component.locator('.gcharts-legend')).toHaveAttribute('width', '960');
-        await expect(component.locator('clipPath rect').first()).toHaveAttribute('width', '0');
+        await expectSvgWidth(component.locator('.gcharts-legend'), 960);
+        await expectSvgWidth(component.locator('clipPath rect').first(), 0);
         await expect(component.locator('.gcharts-chart__content')).toHaveCount(0);
         await expect(component.locator('.gcharts-line')).toHaveCount(0);
         await expect(component.locator('.gcharts-x-axis, .gcharts-y-axis')).toHaveCount(0);
@@ -152,43 +202,13 @@ test.describe('Legend', () => {
         for (const containerWidth of [1000, 500, 1000]) {
             await component.update(<ChartTestStory data={data} styles={{width: containerWidth}} />);
             const legendWidth = (containerWidth - 40) * 0.25;
-            await expect(legend).toHaveAttribute('width', String(legendWidth));
-            await expect(plotBounds).toHaveAttribute(
-                'width',
-                String(containerWidth - 40 - legendWidth - 35),
-            );
+            await expectSvgWidth(legend, legendWidth);
+            await expectSvgWidth(plotBounds, containerWidth - 40 - legendWidth - 35);
             // The default circle has area 8² px²; reserve its diameter and 5px label padding.
             const symbolAndPaddingWidth = 2 * Math.sqrt(64 / Math.PI) + 5;
             await expect
                 .poll(async () => (await label.boundingBox())?.width)
                 .toBeLessThanOrEqual(legendWidth - symbolAndPaddingWidth + 1);
-        }
-    });
-
-    test('Percentage width resizes (continuous)', async ({mount}) => {
-        const data = cloneDeep(pieOverflowedLegendItemsData);
-        data.chart = {margin: {left: 10, right: 30}};
-        data.legend = {
-            enabled: true,
-            type: 'continuous',
-            position: 'left',
-            align: 'left',
-            width: '25%',
-            margin: 35,
-            colorScale: {colors: ['#e8f1fa', '#348bdc'], domain: [0, 10]},
-        };
-        const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
-        const gradient = component.locator('.gcharts-legend image');
-        const plotBounds = component.locator('clipPath rect').first();
-
-        for (const containerWidth of [1000, 500, 1000]) {
-            await component.update(<ChartTestStory data={data} styles={{width: containerWidth}} />);
-            const legendWidth = (containerWidth - 40) * 0.25;
-            await expect(gradient).toHaveAttribute('width', String(legendWidth));
-            await expect(plotBounds).toHaveAttribute(
-                'width',
-                String(containerWidth - 40 - legendWidth - 35),
-            );
         }
     });
 
@@ -227,10 +247,7 @@ test.describe('Legend', () => {
                 };
                 const component = await mount(<ChartTestStory data={data} styles={{width: 500}} />);
                 await expect(component.locator('.gcharts-legend')).toBeVisible();
-                await expect(component.locator('clipPath rect').first()).toHaveAttribute(
-                    'width',
-                    '0',
-                );
+                await expectSvgWidth(component.locator('clipPath rect').first(), 0);
                 await expect(component.locator('.gcharts-chart__content')).toHaveCount(0);
                 await expect(component.locator('.gcharts-line')).toHaveCount(0);
                 await expect(component.locator('.gcharts-x-axis, .gcharts-y-axis')).toHaveCount(0);
@@ -348,9 +365,13 @@ test.describe('Legend', () => {
                         );
                         const isVertical = position === 'left' || position === 'right';
 
-                        for (const width of [230, 600, 230]) {
-                            if (data.legend.width !== width) {
-                                data.legend = {...data.legend, width};
+                        for (const configuredWidth of [230, '600px', '230px'] as const) {
+                            const width =
+                                typeof configuredWidth === 'number'
+                                    ? configuredWidth
+                                    : Number.parseFloat(configuredWidth);
+                            if (data.legend.width !== configuredWidth) {
+                                data.legend = {...data.legend, width: configuredWidth};
                                 await component.update(
                                     <ChartTestStory data={data} styles={{width: 1000}} />,
                                 );

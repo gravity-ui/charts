@@ -70,7 +70,8 @@ export interface ChartLegend extends ChartLegendItem {
         domain?: number[];
     };
     /**
-     * Width of the legend as a finite, nonnegative pixel number or decimal percentage (e.g. '25%').
+     * Width of the legend as a finite, nonnegative pixel value (e.g. 200 or '200px')
+     * or decimal percentage (e.g. '25%'). Pixel strings behave identically to pixel numbers.
      * Percentages are relative to the chart width after left/right chart margins,
      * before legend or axis space is deducted, and are recalculated on resize.
      * Percentages above 100% use 100% for both legend types.
@@ -83,7 +84,7 @@ export interface ChartLegend extends ChartLegendItem {
      * Continuous pixel widths are not capped at the available chart width.
      * @minimum 0
      */
-    width?: number | `${number}%`;
+    width?: number | `${number}px` | `${number}%`;
     /**
      * Allows to use any html-tags to display the content.
      * @default false

@@ -1,10 +1,11 @@
 import isEmpty from 'lodash/isEmpty';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import {PERCENTAGE_SIZE_REGEXP, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
+import {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {getRegisteredSeriesTypes, getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartData, ChartTooltip} from '../types';
+import {parseLegendWidth} from '../utils/legend';
 
 import {validateAxes} from './validate-axes';
 
@@ -58,14 +59,7 @@ function validateLegend({legend}: {legend: ChartData['legend']}) {
         return;
     }
 
-    const isValidWidth =
-        typeof width === 'number'
-            ? Number.isFinite(width) && width >= 0
-            : typeof width === 'string' &&
-              PERCENTAGE_SIZE_REGEXP.test(width) &&
-              Number.isFinite(Number(width.slice(0, -1)));
-
-    if (!isValidWidth) {
+    if (!parseLegendWidth(width)) {
         throw new ChartError({
             code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-legend-width'),

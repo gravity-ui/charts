@@ -2,42 +2,21 @@ import clone from 'lodash/clone';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 
-import type {BaseTextStyle, ChartData, ChartLegend, LegendConfig} from '../../types';
+import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
 import type {PreparedChart} from '../chart/types';
-import {CONTINUOUS_LEGEND_SIZE, PERCENTAGE_SIZE_REGEXP, legendDefaults} from '../constants';
+import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
 import {
     getDefaultColorStops,
     getDomainForContinuousColorScale,
     getLabelsSize,
     getTextSizeFn,
     getTextWithElipsis,
+    parseLegendWidth,
 } from '../utils';
 
 import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
-
-function resolveLegendWidth(args: {
-    width: ChartLegend['width'];
-    availableWidth: number;
-}): number | undefined {
-    const {width, availableWidth} = args;
-    if (typeof width === 'number') {
-        return Number.isFinite(width) && width >= 0 ? width : undefined;
-    }
-
-    if (typeof width !== 'string' || !PERCENTAGE_SIZE_REGEXP.test(width)) {
-        return undefined;
-    }
-
-    const percentage = Number(width.slice(0, -1));
-    if (!Number.isFinite(percentage)) {
-        return undefined;
-    }
-
-    // Cap before multiplication so even very large finite percentages cannot overflow.
-    return availableWidth * (Math.min(percentage, 100) / 100);
-}
 
 export async function getPreparedLegend(args: {
     legend: ChartData['legend'];
@@ -48,7 +27,12 @@ export async function getPreparedLegend(args: {
 }): Promise<PreparedLegend> {
     const {legend, series, chartWidth, chartMargin} = args;
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
-    const width = resolveLegendWidth({width: legend?.width, availableWidth});
+    const parsedWidth = parseLegendWidth(legend?.width);
+    let width = parsedWidth?.value;
+    if (parsedWidth?.isPercentage) {
+        // Cap before multiplication so even very large finite percentages cannot overflow.
+        width = availableWidth * (Math.min(parsedWidth.value, 100) / 100);
+    }
     const position = legend?.position ?? 'bottom';
     const margin = legend?.margin ?? legendDefaults.margin;
     const seriesWithEnabledLegend = series.filter((s) => s.legend?.enabled !== false);
@@ -134,6 +118,7 @@ export async function getPreparedLegend(args: {
         },
         configuredWidth: legend?.width,
         resolvedWidth: legendWidth,
+        hasPercentageWidth: parsedWidth?.isPercentage ?? false,
         ticks,
         colorScale,
         html: get(legend, 'html', false),
@@ -395,8 +380,7 @@ export async function getLegendComponents(args: {
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
     // Side percentage gradients align inside their allocated width, just like discrete legends.
-    const hasPercentageSideWidth =
-        isVerticalPosition && typeof preparedLegend.configuredWidth === 'string';
+    const hasPercentageSideWidth = isVerticalPosition && preparedLegend.hasPercentageWidth;
     const maxLegendWidth =
         preparedLegend.type === 'discrete' || hasPercentageSideWidth
             ? preparedLegend.resolvedWidth

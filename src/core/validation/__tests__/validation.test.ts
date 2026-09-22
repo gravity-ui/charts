@@ -28,7 +28,19 @@ describe('validation/validateData', () => {
         '',
         '%',
         '25',
-        '25px',
+        'px',
+        '.px',
+        '25em',
+        '25.px',
+        '25.5.5px',
+        '-25px',
+        ' 25px',
+        '25px ',
+        '25px\n',
+        '1e2px',
+        'NaNpx',
+        'Infinitypx',
+        `${'9'.repeat(400)}px`,
         '25px%',
         '25.%',
         '25.5.5%',
@@ -76,16 +88,27 @@ describe('validation/validateData', () => {
         }
     });
 
-    test.each<ChartLegend['width']>([undefined, 0, 0.5, 230, '0%', '.5%', '12.5%', '150%'])(
-        'accepts legend width %j',
-        (width) => {
-            const data: ChartData = {
-                series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
-                legend: {width},
-            };
-            expect(() => validateData(data)).not.toThrow();
-        },
-    );
+    test.each<ChartLegend['width']>([
+        undefined,
+        0,
+        0.5,
+        230,
+        '0px',
+        '.5px',
+        '12.5px',
+        '25px',
+        '230px',
+        '0%',
+        '.5%',
+        '12.5%',
+        '150%',
+    ])('accepts legend width %j', (width) => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+            legend: {width},
+        };
+        expect(() => validateData(data)).not.toThrow();
+    });
 
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',

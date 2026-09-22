@@ -87,3 +87,19 @@ export const PercentageWidth = {
         },
     },
 };
+
+export const PixelStringWidth = {
+    ...PercentageWidth,
+    name: 'Pixel string width',
+    args: {
+        ...PercentageWidth.args,
+        width: '200px',
+    },
+    argTypes: {
+        ...PercentageWidth.argTypes,
+        width: {
+            control: 'text',
+            description: 'Pixel strings (e.g. 200px) behave identically to numeric pixel widths.',
+        },
+    },
+};

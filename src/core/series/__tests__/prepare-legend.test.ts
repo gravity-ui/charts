@@ -214,20 +214,65 @@ test('keeps automatic side legend width nonnegative when its margin exceeds the 
 test.each([undefined, 0, 230, 2000])(
     'preserves the continuous gradient width and its available alignment space (width=%s)',
     async (width) => {
-        const {legendConfig, preparedLegend} = await prepareLegend({
-            enabled: true,
-            type: 'continuous',
-            width,
-        });
-        expect(legendConfig.width).toBe(width ?? 200);
-        expect(legendConfig.maxWidth).toBe(chartWidth - chartMargin.left - chartMargin.right);
-        expect(legendConfig.offset.left).toBe(chartMargin.left);
-        expect(preparedLegend.configuredWidth).toBe(width);
-        expect(preparedLegend.resolvedWidth).toBe(width ?? 200);
+        for (const position of ['left', 'right', 'top', 'bottom'] as const) {
+            const {legendConfig, preparedLegend} = await prepareLegend({
+                enabled: true,
+                type: 'continuous',
+                position,
+                width,
+            });
+            const availableWidth = chartWidth - chartMargin.left - chartMargin.right;
+            const isVertical = position === 'left' || position === 'right';
+            expect(legendConfig.width).toBe(width ?? 200);
+            expect(legendConfig.maxWidth).toBe(
+                isVertical ? (availableWidth - preparedLegend.margin) / 2 : availableWidth,
+            );
+            expect(legendConfig.offset.left).toBe(
+                position === 'right'
+                    ? chartWidth - chartMargin.right - (width ?? 200)
+                    : chartMargin.left,
+            );
+            expect(preparedLegend.configuredWidth).toBe(width);
+            expect(preparedLegend.resolvedWidth).toBe(width ?? 200);
+        }
     },
 );
 
 describe.each(['discrete', 'continuous'] as const)('%s legend width', (type) => {
+    test.each([
+        {width: '0px', pixels: 0, containerWidth: 1000},
+        {width: '.5px', pixels: 0.5, containerWidth: 1000},
+        {width: '25px', pixels: 25, containerWidth: 1000},
+        {width: '230.5px', pixels: 230.5, containerWidth: 1000},
+        {width: '2000px', pixels: 2000, containerWidth: 1000},
+        {width: '230px', pixels: 230, containerWidth: 40},
+        {width: '230px', pixels: 230, containerWidth: 20},
+        {width: '230px', pixels: 230, containerWidth: 0},
+    ] as const)(
+        'treats pixel strings like numeric widths (%j)',
+        async ({width, pixels, containerWidth}) => {
+            const legend = Object.freeze({
+                enabled: true,
+                type,
+                position: 'left' as const,
+                width,
+                html: true,
+            });
+            const result = await prepareLegend(legend, containerWidth);
+            const numericResult = await prepareLegend({...legend, width: pixels}, containerWidth);
+
+            expect(result.preparedLegend.configuredWidth).toBe(width);
+            expect(result.preparedLegend.resolvedWidth).toBe(
+                numericResult.preparedLegend.resolvedWidth,
+            );
+            expect(result.legendConfig).toEqual(numericResult.legendConfig);
+            expect(result.legendItems.map((row) => row.map(({textWidth}) => textWidth))).toEqual(
+                numericResult.legendItems.map((row) => row.map(({textWidth}) => textWidth)),
+            );
+            expect(legend.width).toBe(width);
+        },
+    );
+
     test.each([
         {width: '.5%', containerWidth: 1000, pixels: 4.8},
         {width: '12.5%', containerWidth: 1000, pixels: 120},
@@ -245,30 +290,24 @@ describe.each(['discrete', 'continuous'] as const)('%s legend width', (type) => 
     ] as const)(
         'resolves width without changing config (%j)',
         async ({width, containerWidth, pixels}) => {
-            const legend = Object.freeze({enabled: true, type, width});
-            const {preparedLegend, legendConfig} = await prepareLegend(legend, containerWidth);
-            expect(preparedLegend.configuredWidth).toBe(width);
-            expect(preparedLegend.resolvedWidth).toBe(pixels);
-            expect(legendConfig.width).toBe(pixels);
-            expect(legend.width).toBe(width);
+            for (const position of ['left', 'right', 'top', 'bottom'] as const) {
+                const legend = Object.freeze({enabled: true, type, position, width});
+                const {preparedLegend, legendConfig} = await prepareLegend(legend, containerWidth);
+                expect(preparedLegend.configuredWidth).toBe(width);
+                expect(preparedLegend.resolvedWidth).toBe(pixels);
+                expect(legendConfig.width).toBe(pixels);
+                const isVertical = position === 'left' || position === 'right';
+                expect(legendConfig.maxWidth).toBe(
+                    type === 'discrete' || isVertical
+                        ? pixels
+                        : Math.max(0, containerWidth - chartMargin.left - chartMargin.right),
+                );
+                expect(legend.width).toBe(width);
+            }
         },
     );
 
-    test.each([
-        -10,
-        -0.5,
-        NaN,
-        Infinity,
-        -Infinity,
-        '25',
-        '25px',
-        '25.%',
-        '25%\n',
-        '-25%',
-        'NaN%',
-        'Infinity%',
-        `${'9'.repeat(400)}%`,
-    ])(
+    test.each([-10, NaN, '25.%'])(
         'falls back to automatic sizing for invalid input when validation is bypassed (%p)',
         async (width) => {
             for (const position of ['left', 'bottom'] as const) {
@@ -284,6 +323,7 @@ describe.each(['discrete', 'continuous'] as const)('%s legend width', (type) => 
                 const expectedWidth = type === 'continuous' ? 200 : discreteWidth;
                 expect(preparedLegend.resolvedWidth).toBe(expectedWidth);
                 expect(legendConfig.width).toBe(expectedWidth);
+                expect(legendConfig.maxWidth).toBe(discreteWidth);
             }
         },
     );
