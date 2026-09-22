@@ -1,8 +1,13 @@
 import {sort} from 'd3-array';
 import get from 'lodash/get';
+import merge from 'lodash/merge';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
-import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
+import {
+    DEFAULT_DATALABELS_PADDING,
+    DEFAULT_HALO_OPTIONS,
+    DEFAULT_POINT_MARKER_OPTIONS,
+} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedAreaRangeSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
@@ -40,6 +45,23 @@ export function prepareAreaRangeSeries(
         const fillColor =
             typeof areaFillColor === 'string' ? areaFillColor : getGradientMidColor(areaFillColor);
         const yAxisIndex = get(series, 'yAxis', 0);
+        const marker = {
+            ...DEFAULT_POINT_MARKER_OPTIONS,
+            enabled: false,
+            ...seriesOptions?.['area-range']?.marker,
+            ...series.marker,
+        };
+        const hoverMarker = merge(
+            {
+                ...marker,
+                color: undefined,
+                enabled: true,
+                borderWidth: 1,
+                borderColor: '#ffffff',
+                halo: {...DEFAULT_HALO_OPTIONS},
+            },
+            seriesOptions?.['area-range']?.states?.hover?.marker,
+        );
 
         return {
             type: series.type,
@@ -57,6 +79,7 @@ export function prepareAreaRangeSeries(
             data: prepareSeriesData(series, xAxis),
             opacity: get(series, 'opacity', 0.75),
             lineWidth: get(series, 'lineWidth', defaultLineWidth),
+            marker: {states: {normal: marker, hover: hoverMarker}},
             cursor: get(series, 'cursor', null),
             tooltip: {
                 ...series.tooltip,

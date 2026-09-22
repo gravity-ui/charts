@@ -36,4 +36,37 @@ Value formatters run once for each boundary. An explicit point `label` is format
 
 Area range supports `x`, `y`, and `xy` zoom (`x` by default). Y filtering retains any interval that overlaps the selected range, including one that contains the entire viewport. X zoom and the range slider preserve neighboring points on continuous axes so the band reaches the viewport edges.
 
+## Boundary markers
+
+By default, normal markers are hidden and hovering a point shows markers on both visible boundaries, with a white border and halo. Coincident boundaries share one marker. Incomplete points and boundaries outside the visible plot have no markers.
+
+Set `series.data[].marker.enabled` to show normal markers. Defaults for all area-range series are configured in `series.options['area-range'].marker`; per-series values take precedence. A point's `marker.states.normal.enabled` overrides the series setting for that point. Point `marker.color` overrides the point color and series marker color. Without an explicit marker color, each boundary uses its position in the series gradient.
+
+Configure hover markers and halos through `series.options['area-range'].states.hover.marker`:
+
+```javascript
+series: {
+  options: {
+    'area-range': {
+      marker: {enabled: false, radius: 4},
+      states: {
+        hover: {
+          marker: {enabled: true, radius: 6, halo: {enabled: true, size: 8, opacity: 0.25}},
+        },
+      },
+    },
+  },
+  data: [
+    {
+      type: 'area-range',
+      name: 'Expected range',
+      data: [
+        {x: 0, y0: 18, y1: 26},
+        {x: 1, y0: 20, y1: 29, marker: {states: {normal: {enabled: true}}}},
+      ],
+    },
+  ],
+}
+```
+
 <div data-chart-example="series-types/area-range"></div>

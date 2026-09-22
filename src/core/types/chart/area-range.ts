@@ -1,6 +1,7 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
+import type {AreaMarkerOptions, AreaSeriesData} from './area';
 import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {SeriesColor} from './gradient';
 import type {RectLegendSymbolOptions} from './legend';
@@ -15,6 +16,8 @@ export interface AreaRangeSeriesData<T = MeaningfulAny> extends BaseSeriesData<T
     y1: number | null;
     /** Optional label formatted with dataLabels.format. Otherwise both boundaries are formatted separately. */
     label?: string | number;
+    /** Marker color and normal-state visibility for both boundaries of this point. */
+    marker?: AreaSeriesData<T>['marker'];
 }
 
 /** A band between two Y values at each X position. Incomplete points do not contribute to the Y domain. */
@@ -31,6 +34,8 @@ export interface AreaRangeSeries<T = MeaningfulAny> extends BaseSeries<T> {
     opacity?: number;
     /** Width of both boundary lines in pixels. @default 1 */
     lineWidth?: number;
+    /** Marker options for both boundaries. Normal markers are hidden by default. */
+    marker?: AreaMarkerOptions;
     /** Per-series legend settings, overriding chart-level settings. */
     legend?: BaseSeriesLegend & {
         symbol?: RectLegendSymbolOptions;

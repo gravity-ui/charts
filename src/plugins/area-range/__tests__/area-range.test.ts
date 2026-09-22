@@ -1,10 +1,15 @@
 /** @jest-environment jsdom */
 
-import {scaleBand, scaleLinear} from 'd3-scale';
+import {scaleBand, scaleLinear, scaleOrdinal} from 'd3-scale';
+import cloneDeep from 'lodash/cloneDeep';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {PreparedAreaRangeSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {
+    PreparedAreaRangeSeries,
+    PreparedLegend,
+    PreparedSeriesOptions,
+} from '~core/series/types';
 import {formatAreaRangeDataLabel} from '~core/shapes/area-range/format';
 import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
 import {prepareAreaRangeData} from '~core/shapes/area-range/prepare-data';
@@ -12,35 +17,31 @@ import {renderAreaRange} from '~core/shapes/area-range/renderer';
 import {getRangeBBox} from '~core/shapes/area-range/utils';
 import {getDomainDataXBySeries} from '~core/utils/common';
 
-import type {AreaRangeSeriesData} from '../../../types';
+import type {AreaRangeSeries, AreaRangeSeriesData, ChartSeriesOptions} from '../../../types';
 import {areaRangePlugin} from '../index';
+import {prepareAreaRangeSeries} from '../prepare-area-range-series';
 
-function createSeries(data: AreaRangeSeriesData[]): PreparedAreaRangeSeries {
-    return {
-        color: '#5282ff',
-        data,
-        dataLabels: {
-            allowOverlap: false,
-            enabled: false,
-            html: false,
-            padding: 0,
-            style: {},
-        },
-        fillColor: '#5282ff',
-        id: 'area-range',
-        lineWidth: 1,
-        name: 'Area range',
-        nullMode: 'skip',
-        opacity: 0.75,
-        type: 'area-range',
-        visible: true,
-        yAxis: 0,
-    } as PreparedAreaRangeSeries;
+function createSeries(
+    data: AreaRangeSeriesData[],
+    config: Partial<AreaRangeSeries> = {},
+    seriesOptions?: ChartSeriesOptions,
+): PreparedAreaRangeSeries {
+    return prepareAreaRangeSeries({
+        series: [{type: 'area-range', name: 'Area range', ...config, data}],
+        seriesOptions,
+        colors: [],
+        colorScale: scaleOrdinal<string, string>().range(['#5282ff']),
+        legend: {enabled: false} as PreparedLegend,
+    })[0];
 }
 
-function createArgs(data: AreaRangeSeriesData[]) {
+function createArgs(
+    data: AreaRangeSeriesData[],
+    config?: Partial<AreaRangeSeries>,
+    seriesOptions?: ChartSeriesOptions,
+) {
     return {
-        series: [createSeries(data)],
+        series: [createSeries(data, config, seriesOptions)],
         xAxis: {type: 'linear'} as PreparedXAxis,
         xScale: scaleLinear().domain([0, 4]).range([0, 400]),
         yAxis: [{type: 'linear', plotIndex: 0}] as PreparedYAxis[],
@@ -51,6 +52,193 @@ function createArgs(data: AreaRangeSeriesData[]) {
 }
 
 describe('area-range plugin', () => {
+    describe('boundary markers', () => {
+        test('shows both hover boundaries and halos by default for a real tooltip selection', async () => {
+            const args = createArgs([{x: 1, y0: 5, y1: 10}]);
+            const data = await prepareAreaRangeData(args);
+            const selected =
+                getTooltipData({data, position: [100, 160], boundsWidth: 400, boundsHeight: 200})
+                    .xLookupPoints ?? [];
+            expect(data[0].markers).toEqual([]);
+            expect(
+                data[0].getHoverMarkers(
+                    selected.map((point) => ({...point, series: args.series[0]})),
+                ),
+            ).toEqual([
+                expect.objectContaining({
+                    cx: 100,
+                    cy: 175,
+                    radius: 4,
+                    stroke: '#ffffff',
+                    strokeWidth: 1,
+                    halo: {size: 6, opacity: 0.25},
+                }),
+                expect.objectContaining({
+                    cx: 100,
+                    cy: 150,
+                    radius: 4,
+                    stroke: '#ffffff',
+                    strokeWidth: 1,
+                    halo: {size: 6, opacity: 0.25},
+                }),
+            ]);
+            expect(data[0].getHoverMarkers([])).toEqual([]);
+            expect(
+                data[0].getHoverMarkers([
+                    {data: args.series[0].data[0], series: {id: 'another-series'}},
+                ]),
+            ).toEqual([]);
+        });
+
+        test('resolves global, series and point options without duplicating permanent markers', async () => {
+            const points: AreaRangeSeriesData[] = [
+                {x: 1, y0: 5, y1: 10},
+                {x: 2, y0: 6, y1: 12, marker: {color: 'red', states: {normal: {enabled: false}}}},
+            ];
+            const options: ChartSeriesOptions = {
+                'area-range': {
+                    marker: {enabled: true, radius: 9, color: 'blue'},
+                    states: {
+                        hover: {
+                            marker: {
+                                radius: 7,
+                                borderColor: 'green',
+                                borderWidth: 2,
+                                halo: {size: 10, opacity: 0.5},
+                            },
+                        },
+                    },
+                },
+            };
+            const originalOptions = cloneDeep(options);
+            const args = createArgs(points, {marker: {radius: 5, symbol: 'square'}}, options);
+            const [result] = await prepareAreaRangeData(args);
+            expect(result.markers).toHaveLength(2);
+            expect(
+                result.markers.every(
+                    (marker) =>
+                        marker.data === points[0] &&
+                        marker.radius === 5 &&
+                        marker.symbolType === 'square' &&
+                        marker.fill === 'blue',
+                ),
+            ).toBe(true);
+            expect(result.getHoverMarkers([{data: points[0]}])).toEqual([]);
+            const hover = result.getHoverMarkers([{data: points[1]}]);
+            expect(hover).toHaveLength(2);
+            expect(hover[0]).toEqual(
+                expect.objectContaining({
+                    fill: 'red',
+                    radius: 7,
+                    stroke: 'green',
+                    strokeWidth: 2,
+                    halo: {size: 10, opacity: 0.5},
+                }),
+            );
+            expect(options).toEqual(originalOptions);
+        });
+
+        test('supports point-only normal markers and independently disabling hover or halo', async () => {
+            const points: AreaRangeSeriesData[] = [
+                {x: 1, y0: 5, y1: 10, marker: {color: 'red', states: {normal: {enabled: true}}}},
+                {x: 2, y0: 5, y1: 10},
+            ];
+            const [disabled] = await prepareAreaRangeData(
+                createArgs(
+                    points,
+                    {},
+                    {'area-range': {states: {hover: {marker: {enabled: false}}}}},
+                ),
+            );
+            expect(disabled.markers).toHaveLength(2);
+            expect(
+                disabled.markers.every(
+                    (marker) => marker.fill === 'red' && marker.hover === undefined,
+                ),
+            ).toBe(true);
+            expect(disabled.getHoverMarkers([{data: points[1]}])).toEqual([]);
+            const [noHalo] = await prepareAreaRangeData(
+                createArgs(
+                    points,
+                    {},
+                    {
+                        'area-range': {
+                            states: {hover: {marker: {color: 'purple', halo: {enabled: false}}}},
+                        },
+                    },
+                ),
+            );
+            const hovered = noHalo.getHoverMarkers([{data: points[1]}]);
+            expect(hovered).toHaveLength(2);
+            expect(
+                hovered.every((marker) => marker.halo === undefined && marker.fill === 'purple'),
+            ).toBe(true);
+            expect(createSeries(points).marker.states.hover.halo).toEqual({
+                enabled: true,
+                size: 6,
+                opacity: 0.25,
+            });
+        });
+
+        test('omits missing and off-screen boundaries and deduplicates a zero-width interval', async () => {
+            const points: AreaRangeSeriesData[] = [
+                {x: 0, y0: null, y1: 10},
+                {x: 1, y0: -10, y1: 20},
+                {x: 2, y0: 25, y1: 50},
+                {x: 3, y0: 10, y1: 10},
+                {x: 4, y0: 50, y1: 60},
+                {x: 5, y0: 10, y1: 20},
+            ];
+            const args = createArgs(points, {marker: {enabled: true}});
+            Object.assign(args.yAxis[0], {min: 0, max: 40});
+            args.yScale[0].clamp(true);
+            const [normal] = await prepareAreaRangeData(args);
+            expect(normal.markers.map(({cx, cy}) => [cx, cy]).sort((a, b) => a[0] - b[0])).toEqual([
+                [100, 100],
+                [200, 75],
+                [300, 150],
+            ]);
+            args.series[0].marker.states.normal.enabled = false;
+            const [hover] = await prepareAreaRangeData(args);
+            expect(
+                hover
+                    .getHoverMarkers(points.map((data) => ({data})))
+                    .map(({cx, cy}) => [cx, cy])
+                    .sort((a, b) => a[0] - b[0]),
+            ).toEqual([
+                [100, 100],
+                [200, 75],
+                [300, 150],
+            ]);
+        });
+
+        test('uses each boundary gradient color and preserves explicit point colors', async () => {
+            const points: AreaRangeSeriesData[] = [
+                {x: 1, y0: 0, y1: 40},
+                {x: 2, y0: 0, y1: 40, marker: {color: 'red'}},
+            ];
+            const [result] = await prepareAreaRangeData(
+                createArgs(points, {
+                    color: {
+                        type: 'linear-gradient',
+                        angle: 180,
+                        stops: [
+                            {offset: 0, color: '#000000'},
+                            {offset: 1, color: '#ffffff'},
+                        ],
+                    },
+                }),
+            );
+            expect(
+                result.getHoverMarkers([{data: points[0]}]).map((marker) => marker.fill),
+            ).toEqual(['#ffffff', '#000000']);
+            expect(
+                result.getHoverMarkers([{data: points[1]}]).map((marker) => marker.fill),
+            ).toEqual(['red', 'red']);
+            expect(result.points[1].data).toBe(points[1]);
+        });
+    });
+
     test('excludes incomplete points from the y domain', () => {
         const getYDomainValues = areaRangePlugin.getAxisDomainValues?.y;
 

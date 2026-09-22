@@ -33,6 +33,8 @@ export interface MarkerItem {
     clipped: boolean;
     series: {id: string};
     data: unknown;
+    halo?: {size: number; opacity: number};
+    hover?: Pick<MarkerItem, 'radius' | 'symbolType' | 'fill' | 'stroke' | 'strokeWidth' | 'halo'>;
 }
 
 export interface HoveredShapeData {

@@ -57,6 +57,7 @@ import type {
     SeriesOptionsDefaults,
     SymbolType,
 } from '../constants';
+import type {PointMarkerOptions} from '../types/chart/marker';
 
 export type PreparedAnnotation = {
     label: {
@@ -378,6 +379,15 @@ export type PreparedAreaRangeSeries = {
     lineWidth: number;
     opacity: number;
     nullMode: AreaRangeSeries['nullMode'];
+    marker: {
+        states: {
+            normal: Required<Omit<PointMarkerOptions, 'color'>> & {color?: string};
+            hover: Required<Omit<PointMarkerOptions, 'color'>> & {
+                color?: string;
+                halo: PreparedHaloOptions;
+            };
+        };
+    };
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;

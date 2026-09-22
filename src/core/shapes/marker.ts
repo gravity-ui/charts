@@ -151,7 +151,7 @@ export function selectMarkerSymbol<T>(parentSelection: Selection<BaseType, T, nu
 export function renderMarkers(
     container: Selection<SVGGElement, unknown, null, undefined>,
     markers: MarkerItem[],
-): void {
+) {
     container.selectAll('*').remove();
 
     const selection = container
@@ -161,8 +161,26 @@ export function renderMarkers(
         .attr('class', b('wrapper'))
         .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
 
+    return setMarkerStyles(selection);
+}
+
+export function setMarkerStyles<P extends BaseType, D>(
+    selection: Selection<SVGGElement, MarkerItem, P, D>,
+) {
     selection
-        .append('path')
+        .selectAll<SVGPathElement, MarkerItem>(`.${haloClassName}`)
+        .data((d) => (d.halo && !d.clipped ? [d] : []))
+        .join('path')
+        .lower()
+        .attr('class', haloClassName)
+        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + (d.halo?.size ?? 0)))
+        .attr('fill', (d) => d.fill)
+        .attr('opacity', (d) => d.halo?.opacity ?? 0);
+
+    selection
+        .selectAll<SVGPathElement, MarkerItem>(`.${symbolClassName}`)
+        .data((d) => [d])
+        .join('path')
         .attr('class', b('symbol'))
         .attr('d', (d) =>
             d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth),
@@ -170,28 +188,14 @@ export function renderMarkers(
         .attr('fill', (d) => d.fill)
         .attr('stroke', (d) => d.stroke)
         .attr('stroke-width', (d) => d.strokeWidth);
+    return selection;
 }
 
 export function renderHoverMarkers(
     container: Selection<SVGGElement, unknown, null, undefined>,
     hoverMarkers: MarkerItem[],
 ): void {
-    container.selectAll('*').remove();
-
-    if (hoverMarkers.length === 0) return;
-
-    container
-        .selectAll<SVGGElement, MarkerItem>('g')
-        .data(hoverMarkers)
-        .join('g')
-        .attr('class', b('wrapper'))
-        .attr('transform', (d) => `translate(${d.cx},${d.cy})`)
-        .append('path')
-        .attr('class', b('symbol'))
-        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth))
-        .attr('fill', (d) => d.fill)
-        .attr('stroke', (d) => d.stroke)
-        .attr('stroke-width', (d) => d.strokeWidth);
+    renderMarkers(container, hoverMarkers);
 }
 
 interface HoverMarkerPoint extends MarkerFillPoint {

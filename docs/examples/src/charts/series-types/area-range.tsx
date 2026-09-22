@@ -5,6 +5,11 @@ import type {ChartData} from '@gravity-ui/charts';
 
 const data: ChartData = {
     series: {
+        options: {
+            'area-range': {
+                states: {hover: {marker: {radius: 6, halo: {size: 8}}}},
+            },
+        },
         data: [
             {
                 type: 'area-range',

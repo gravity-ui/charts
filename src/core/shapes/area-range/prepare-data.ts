@@ -7,6 +7,7 @@ import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '../../utils
 import {createGradientColorResolver} from '../../utils/gradient';
 
 import {formatAreaRangeDataLabel} from './format';
+import {prepareAreaRangeMarkers} from './markers';
 import type {AreaRangePointData, PreparedAreaRangeData} from './types';
 import {getRangeBBox, markHiddenRangePoints} from './utils';
 
@@ -90,11 +91,17 @@ export async function prepareAreaRangeData(args: {
             active: true,
             annotations: [],
             color: item.color,
-            getHoverMarkers: () => [],
+            ...prepareAreaRangeMarkers({
+                points,
+                series: item,
+                yAxis: seriesYAxis,
+                yScale: seriesYScale,
+                yAxisTop,
+                isOutsideBounds,
+            }),
             hovered: false,
             htmlLabels: [],
             id: item.id,
-            markers: [],
             opacity: item.opacity,
             points,
             series: item,

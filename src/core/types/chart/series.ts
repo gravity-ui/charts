@@ -311,9 +311,14 @@ export interface ChartSeriesOptions {
     'area-range'?: {
         /** Width of both boundary lines in pixels. @default 1 */
         lineWidth?: number;
+        /** Default marker options for both boundaries of area-range points. */
+        marker?: PointMarkerOptions;
         /** Styling of hovered and inactive bands. */
         states?: {
-            hover?: BasicHoverState;
+            hover?: BasicHoverState & {
+                /** Marker appearance on both hovered boundaries, including the halo. */
+                marker?: PointMarkerOptions & {halo?: Halo};
+            };
             inactive?: BasicInactiveState;
         };
     };
