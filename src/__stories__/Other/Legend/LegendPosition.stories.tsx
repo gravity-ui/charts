@@ -80,6 +80,10 @@ export const PercentageWidth = {
     },
     argTypes: {
         ...LegendPosition.argTypes,
-        width: {control: 'text'},
+        width: {
+            control: 'text',
+            description:
+                'Percentage of chart width excluding left/right margins (e.g. 25%). Values above 100% are capped at 100%.',
+        },
     },
 };

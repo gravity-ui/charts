@@ -1,5 +1,6 @@
 {
   "error": {
+    "label_invalid-legend-width": "legend.width must be a finite, nonnegative pixel number or decimal percentage.",
     "label_inconsistent-stack-labels-options": "Stack label style, format, padding and allowOverlap must match for participating series \"{{firstSeries}}\" and \"{{secondSeries}}\" in the same stack.",
     "label_no-data": "No data",
     "label_unknown-plugin": "Unknown plugin type \"{{type}}\"",

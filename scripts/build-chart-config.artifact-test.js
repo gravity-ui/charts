@@ -41,10 +41,12 @@ describe('chart config artifacts', () => {
 
     test('schema supports pixel and percentage legend widths', () => {
         const validateConfig = createSchemaValidator().compile(schema);
-        for (const width of [230, '12.5%']) {
+        for (const width of [0, 0.5, 230, '0%', '12.5%', '150%']) {
             expect(validateConfig({series: {data: []}, legend: {width}})).toBe(true);
         }
-        expect(validateConfig({series: {data: []}, legend: {width: true}})).toBe(false);
+        for (const width of [-10, -0.5, NaN, Infinity, -Infinity, true]) {
+            expect(validateConfig({series: {data: []}, legend: {width}})).toBe(false);
+        }
     });
 
     test('standalone declarations preserve series compatibility, formatters and legend widths', () => {

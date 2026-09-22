@@ -1,8 +1,12 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
+import {i18nFactory} from '../../i18n';
 import type {ChartData, ChartLegend} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
+
+import en from '../../i18n/keysets/en.json';
+import ru from '../../i18n/keysets/ru.json';
 
 function getValidGradient() {
     return {
@@ -16,20 +20,30 @@ function getValidGradient() {
 
 describe('validation/validateData', () => {
     test.each([
+        -10,
+        -0.5,
+        NaN,
+        Infinity,
+        -Infinity,
         '',
         '%',
         '25',
         '25px',
         '25px%',
+        '25.%',
         '25.5.5%',
         '-25%',
         ' 25%',
         '25%\n',
+        '25%\r',
+        '25%\r\n',
+        '25%\u2028',
+        '25%\u2029',
         '1e2%',
         'NaN%',
         'Infinity%',
         `${'9'.repeat(400)}%`,
-    ])('rejects invalid legend width %j', (width) => {
+    ])('rejects invalid legend width %p', (width) => {
         const data: ChartData = {
             series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
             legend: {width: width as ChartLegend['width']},
@@ -39,7 +53,30 @@ describe('validation/validateData', () => {
         );
     });
 
-    test.each<ChartLegend['width']>([undefined, 0, -10, 230, '0%', '.5%', '12.5%', '150%'])(
+    test.each([
+        {lang: 'en', keyset: en},
+        {lang: 'ru', keyset: ru},
+    ])('localizes invalid legend width errors ($lang)', ({lang, keyset}) => {
+        const previousLang = i18nFactory.lang ?? 'en';
+        try {
+            i18nFactory.setLang(lang);
+            expect(() =>
+                validateData({
+                    series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+                    legend: {width: '25.%'},
+                }),
+            ).toThrow(
+                expect.objectContaining({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: keyset.error['label_invalid-legend-width'],
+                }),
+            );
+        } finally {
+            i18nFactory.setLang(previousLang);
+        }
+    });
+
+    test.each<ChartLegend['width']>([undefined, 0, 0.5, 230, '0%', '.5%', '12.5%', '150%'])(
         'accepts legend width %j',
         (width) => {
             const data: ChartData = {

@@ -54,15 +54,21 @@ function validateTooltip({tooltip}: {tooltip?: ChartTooltip}) {
 
 function validateLegend({legend}: {legend: ChartData['legend']}) {
     const width = legend?.width;
-    if (typeof width !== 'string') {
+    if (width === undefined) {
         return;
     }
 
-    if (!PERCENTAGE_SIZE_REGEXP.test(width) || !Number.isFinite(Number(width.slice(0, -1)))) {
+    const isValidWidth =
+        typeof width === 'number'
+            ? Number.isFinite(width) && width >= 0
+            : typeof width === 'string' &&
+              PERCENTAGE_SIZE_REGEXP.test(width) &&
+              Number.isFinite(Number(width.slice(0, -1)));
+
+    if (!isValidWidth) {
         throw new ChartError({
             code: CHART_ERROR_CODE.INVALID_DATA,
-            message:
-                'legend.width must be a pixel number or a finite, nonnegative decimal percentage',
+            message: i18n('error', 'label_invalid-legend-width'),
         });
     }
 }

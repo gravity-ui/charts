@@ -70,14 +70,18 @@ export interface ChartLegend extends ChartLegendItem {
         domain?: number[];
     };
     /**
-     * Width of the legend in pixels or as a nonnegative decimal percentage (e.g. '25%').
+     * Width of the legend as a finite, nonnegative pixel number or decimal percentage (e.g. '25%').
      * Percentages are relative to the chart width after left/right chart margins,
      * before legend or axis space is deducted, and are recalculated on resize.
+     * Percentages above 100% use 100% for both legend types.
      * For discrete legends, controls the allocated width, item wrapping, and label truncation.
-     * Capped at the chart width excluding chart margins. If a side legend leaves no room for the plot,
+     * Discrete widths are clamped between zero and the chart width excluding chart margins.
+     * If a side legend leaves no room for the plot,
      * the plot and axes are not drawn.
      * Defaults to the available chart width for top/bottom positions and half of it for left/right.
      * For continuous legends, controls the gradient width and defaults to 200.
+     * Continuous pixel widths are not capped at the available chart width.
+     * @minimum 0
      */
     width?: number | `${number}%`;
     /**
