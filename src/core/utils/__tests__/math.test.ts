@@ -14,7 +14,6 @@ describe('calculateNumericProperty', () => {
         {value: '-25px', expected: -25},
         {value: '25%', base: 200, expected: 50},
         {value: '-25%', base: 200, expected: -50},
-        // A zero base is valid and must pass the numeric base check.
         {value: '25%', base: 0, expected: 0},
         {value: '25%', expected: undefined},
         {value: '25.5.5px', expected: 25.5},

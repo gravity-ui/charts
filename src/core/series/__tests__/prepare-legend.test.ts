@@ -268,38 +268,33 @@ describe.each(['discrete', 'continuous'] as const)('%s legend width', (type) => 
     );
 
     test.each([
-        {width: '.5%', containerWidth: 1000, pixels: 4.8, horizontalAlignmentWidth: 960},
-        {width: '12.5%', containerWidth: 1000, pixels: 120, horizontalAlignmentWidth: 960},
-        {width: '0%', containerWidth: 1000, pixels: 0, horizontalAlignmentWidth: 960},
-        {width: '100%', containerWidth: 1000, pixels: 960, horizontalAlignmentWidth: 960},
-        {width: '150%', containerWidth: 1000, pixels: 960, horizontalAlignmentWidth: 960},
-        {width: '25%', containerWidth: 40, pixels: 0, horizontalAlignmentWidth: 0},
-        {width: '25%', containerWidth: 20, pixels: 0, horizontalAlignmentWidth: 0},
-        {width: '25%', containerWidth: 0, pixels: 0, horizontalAlignmentWidth: 0},
+        {width: '.5%', containerWidth: 1000, pixels: 4.8},
+        {width: '12.5%', containerWidth: 1000, pixels: 120},
+        {width: '0%', containerWidth: 1000, pixels: 0},
+        {width: '100%', containerWidth: 1000, pixels: 960},
+        {width: '150%', containerWidth: 1000, pixels: 960},
+        {width: '25%', containerWidth: 50, pixels: 2.5},
+        {width: '25%', containerWidth: 40, pixels: 0},
+        {width: '25%', containerWidth: 20, pixels: 0},
+        {width: '25%', containerWidth: 0, pixels: 0},
         {
             width: `${'9'.repeat(308)}%` as ChartLegend['width'],
             containerWidth: 1000,
             pixels: 960,
-            horizontalAlignmentWidth: 960,
         },
     ] as const)(
-        'resolves width without changing config (%j)',
-        async ({width, containerWidth, pixels, horizontalAlignmentWidth}) => {
-            const expectedMaxWidths = {
-                discrete: {left: pixels, right: pixels, top: pixels, bottom: pixels},
-                continuous: {
-                    left: pixels,
-                    right: pixels,
-                    top: horizontalAlignmentWidth,
-                    bottom: horizontalAlignmentWidth,
-                },
-            };
+        'resolves percentages to the equivalent pixel layout without changing config (%j)',
+        async ({width, containerWidth, pixels}) => {
             for (const position of ['left', 'right', 'top', 'bottom'] as const) {
                 const legend = Object.freeze({enabled: true, type, position, width});
                 const {preparedLegend, legendConfig} = await prepareLegend(legend, containerWidth);
+                const numericResult = await prepareLegend(
+                    {...legend, width: pixels},
+                    containerWidth,
+                );
                 expect(preparedLegend.resolvedWidth).toBe(pixels);
                 expect(legendConfig.width).toBe(pixels);
-                expect(legendConfig.maxWidth).toBe(expectedMaxWidths[type][position]);
+                expect(legendConfig).toEqual(numericResult.legendConfig);
                 expect(legend.width).toBe(width);
             }
         },

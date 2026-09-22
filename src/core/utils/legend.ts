@@ -4,7 +4,6 @@ import {PERCENTAGE_SIZE_REGEXP, PIXEL_SIZE_REGEXP} from '../constants/dimensions
 
 import {parseNumericProperty} from './math';
 
-/** Validates legend widths before using the shared numeric-property parser. */
 export function parseLegendWidth(width: unknown): ReturnType<typeof parseNumericProperty> {
     if (typeof width !== 'number' && typeof width !== 'string') {
         return undefined;

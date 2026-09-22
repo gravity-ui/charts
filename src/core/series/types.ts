@@ -99,8 +99,6 @@ export interface PreparedLegend extends Required<
 > {
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;
-    /** Whether a valid percentage width was provided. */
-    hasPercentageWidth: boolean;
     hangingOffset: number;
     height: number;
     lineHeight: number;

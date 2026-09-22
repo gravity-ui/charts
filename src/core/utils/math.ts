@@ -32,11 +32,9 @@ interface ParsedNumericProperty {
 }
 
 /**
- * Parses a numeric property without scaling percentages, so callers can validate or cap them first.
- * Preserves the permissive numeric prefix parsing used by calculateNumericProperty.
- * Numeric inputs, including NaN and infinities, are preserved in the returned value.
- * Callers must reject non-finite values where required.
- * Callers requiring strict validation must check the input first, as parseLegendWidth does.
+ * Parses numeric values and units without scaling percentages.
+ * Preserves numeric prefixes and numeric NaN/Infinity for compatibility.
+ * Callers requiring strict validation must check format and finiteness (see parseLegendWidth).
  */
 export function parseNumericProperty(
     value?: string | number | null,
@@ -58,18 +56,15 @@ export function parseNumericProperty(
         return undefined;
     }
 
-    // TODO: Apply strict decimal-format and finite-value validation to other numeric config fields
-    // after auditing compatibility. parseLegendWidth already validates these; preserve signed values
-    // for coordinates and offsets rather than applying the legend's nonnegative constraint globally.
-    // https://github.com/gravity-ui/charts/issues/702
+    // TODO: Enforce strict formats and finite values after a compatibility audit.
+    // Preserve signed coordinates and offsets: https://github.com/gravity-ui/charts/issues/702
     const parsedValue = Number.parseFloat(value);
     return Number.isNaN(parsedValue) ? undefined : {value: parsedValue, unit};
 }
 
 /**
  * Calculates a numeric property based on the given arguments.
- * Uses parseNumericProperty for conversion, not strict validation; legend widths are prevalidated
- * by parseLegendWidth before layout.
+ * Uses permissive parsing; see parseNumericProperty for validation limits.
  * @param {object} args - The arguments for the calculation.
  * @param {string | number | null} args.value - The value to calculate the property for.
  * @param {number} args.base - The base value to use in the calculation.

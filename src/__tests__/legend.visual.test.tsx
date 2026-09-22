@@ -82,9 +82,7 @@ const lineLegendWidthSeries: LineSeries[] = [
 
 test.describe('Legend', () => {
     for (const position of ['left', 'right', 'top', 'bottom'] as const) {
-        test(`Continuous pixel strings preserve width and alignment (${position})`, async ({
-            mount,
-        }) => {
+        test(`Continuous width formats preserve pixel layout (${position})`, async ({mount}) => {
             const data = cloneDeep(pieOverflowedLegendItemsData);
             const chartWidth = 1000;
             const chartMargin = {left: 10, right: 30};
@@ -101,13 +99,14 @@ test.describe('Legend', () => {
             );
             const gradient = component.locator('.gcharts-legend image');
             const availableWidth = chartWidth - chartMargin.left - chartMargin.right;
-            // Side pixel gradients are centered in half the space left after the legend margin.
+            // Side gradients are centered in half the space left after the legend margin.
             const alignmentWidth =
                 position === 'left' || position === 'right'
                     ? (availableWidth - legendDefaults.margin) / 2
                     : availableWidth;
             for (const {width, pixels} of [
                 {width: '230.5px', pixels: 230.5},
+                {width: '12.5%', pixels: 120},
                 {width: 120, pixels: 120},
                 {width: '230.5px', pixels: 230.5},
             ] as const) {
@@ -134,13 +133,14 @@ test.describe('Legend', () => {
             mount,
         }) => {
             const data = cloneDeep(pieOverflowedLegendItemsData);
+            const legendMargin = 35;
             data.chart = {margin: {left: 10, right: 30}};
             data.legend = {
                 enabled: true,
                 type: 'continuous',
                 position,
                 width: '150%',
-                margin: 35,
+                margin: legendMargin,
                 colorScale: {colors: ['#e8f1fa', '#348bdc'], domain: [0, 10]},
             };
             const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
@@ -161,16 +161,15 @@ test.describe('Legend', () => {
                 );
                 const availableWidth = containerWidth - 40;
                 const gradientWidth = availableWidth * ratio;
-                let expectedLeft = 10;
-                if (position === 'right') {
-                    expectedLeft += availableWidth - gradientWidth;
-                } else if (position === 'top' || position === 'bottom') {
-                    expectedLeft += (availableWidth - gradientWidth) / 2;
-                }
+                const alignmentWidth = isVertical
+                    ? Math.max(0, (availableWidth - legendMargin) / 2)
+                    : availableWidth;
+                const offsetLeft = position === 'right' ? containerWidth - 30 - gradientWidth : 10;
+                const expectedLeft = offsetLeft + (alignmentWidth - gradientWidth) / 2;
                 await expectSvgWidth(gradient, gradientWidth);
                 await expectSvgWidth(
                     plotBounds,
-                    Math.max(0, availableWidth - (isVertical ? gradientWidth + 35 : 0)),
+                    Math.max(0, availableWidth - (isVertical ? gradientWidth + legendMargin : 0)),
                 );
                 await expect
                     .poll(async () => {

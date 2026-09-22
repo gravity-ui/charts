@@ -99,7 +99,7 @@ export const PixelStringWidth = {
         ...PercentageWidth.argTypes,
         width: {
             control: 'text',
-            description: 'Pixel strings (e.g. 200px) behave identically to numeric pixel widths.',
+            description: 'Legend width in pixels (e.g. 200px).',
         },
     },
 };

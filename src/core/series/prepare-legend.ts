@@ -117,7 +117,6 @@ export async function getPreparedLegend(args: {
             align: get(legend, 'title.align', 'left'),
         },
         resolvedWidth: legendWidth,
-        hasPercentageWidth: parsedWidth?.unit === '%',
         ticks,
         colorScale,
         html: get(legend, 'html', false),
@@ -378,10 +377,8 @@ export async function getLegendComponents(args: {
 
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
-    // Side percentage gradients align inside their allocated width, just like discrete legends.
-    const hasPercentageSideWidth = isVerticalPosition && preparedLegend.hasPercentageWidth;
     const maxLegendWidth =
-        preparedLegend.type === 'discrete' || hasPercentageSideWidth
+        preparedLegend.type === 'discrete'
             ? preparedLegend.resolvedWidth
             : getDefaultLegendWidth({
                   availableWidth: Math.max(0, chartWidth - chartMargin.left - chartMargin.right),
