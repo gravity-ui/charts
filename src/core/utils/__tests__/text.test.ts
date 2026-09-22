@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
-import {getTextSizeFn} from '../text';
+import {decodeHtmlEntities, getTextSizeFn} from '../text';
 
 test.each([
     {decodeEntities: undefined, width: 1},
@@ -20,4 +20,16 @@ test.each([
     } finally {
         getContext.mockRestore();
     }
+});
+
+test.each([
+    ['<foo> & <bar>', '<foo> & <bar>'],
+    ['<img src="x">', '<img src="x">'],
+    ['<img src="x"> &amp;', '<img src="x"> &'],
+    ['&lt;foo&gt; &quot;bar&quot; &copy; &#169; &#x1F600;', '<foo> "bar" © © 😀'],
+    ['&amp;lt; &amp;lt;', '&lt; &lt;'],
+    ['<!-- comment --> <![CDATA[text]]> &amp;', '<!-- comment --> <![CDATA[text]]> &'],
+    ['  first\r\n\tsecond  ', '  first\r\n\tsecond  '],
+])('decodes entities once without interpreting tags: %s', (text, expected) => {
+    expect(decodeHtmlEntities(text)).toBe(expected);
 });
