@@ -26,16 +26,47 @@ export function sumDecimals(values: readonly number[]): number {
     return shiftDecimal(total, -precision);
 }
 
-const isStringValueInPercent = (value = '') => {
-    return value.endsWith('%') && !Number.isNaN(Number.parseFloat(value));
-};
+interface ParsedNumericProperty {
+    value: number;
+    unit: 'px' | '%';
+}
 
-const isStringValueInPixel = (value = '') => {
-    return value.endsWith('px') && !Number.isNaN(Number.parseFloat(value));
-};
+/**
+ * Parses a numeric property without scaling percentages, so callers can validate or cap them first.
+ * Preserves the permissive numeric prefix parsing used by calculateNumericProperty.
+ * Callers requiring strict validation must check the input first, as parseLegendWidth does.
+ */
+export function parseNumericProperty(
+    value?: string | number | null,
+): ParsedNumericProperty | undefined {
+    if (isNil(value)) {
+        return undefined;
+    }
+
+    if (typeof value === 'number') {
+        return {value, unit: 'px'};
+    }
+
+    let unit: ParsedNumericProperty['unit'];
+    if (value.endsWith('%')) {
+        unit = '%';
+    } else if (value.endsWith('px')) {
+        unit = 'px';
+    } else {
+        return undefined;
+    }
+
+    // TODO: Apply strict decimal-format and finite-value validation to other numeric config fields
+    // after auditing compatibility. parseLegendWidth already validates these; preserve signed values
+    // for coordinates and offsets rather than applying the legend's nonnegative constraint globally.
+    const parsedValue = Number.parseFloat(value);
+    return Number.isNaN(parsedValue) ? undefined : {value: parsedValue, unit};
+}
 
 /**
  * Calculates a numeric property based on the given arguments.
+ * Uses parseNumericProperty for conversion, not strict validation; legend widths are prevalidated
+ * by parseLegendWidth before layout.
  * @param {object} args - The arguments for the calculation.
  * @param {string | number | null} args.value - The value to calculate the property for.
  * @param {number} args.base - The base value to use in the calculation.
@@ -53,26 +84,17 @@ const isStringValueInPixel = (value = '') => {
  * console.log(result5); // Output: undefined
  */
 export const calculateNumericProperty = (args: {value?: string | number | null; base?: number}) => {
-    const {value = '', base} = args;
-
-    if (isNil(value)) {
+    const {base} = args;
+    const parsed = parseNumericProperty(args.value);
+    if (!parsed) {
         return undefined;
     }
 
-    if (typeof value === 'string') {
-        if (isStringValueInPercent(value) && typeof base === 'number') {
-            const fraction = Number.parseFloat(value) / 100;
-            return base * fraction;
-        }
-
-        if (isStringValueInPixel(value)) {
-            return Number.parseFloat(value);
-        }
-
-        return undefined;
+    if (parsed.unit === '%') {
+        return typeof base === 'number' ? base * (parsed.value / 100) : undefined;
     }
 
-    return value;
+    return parsed.value;
 };
 
 export function calculateCos(deg: number, precision = 2) {

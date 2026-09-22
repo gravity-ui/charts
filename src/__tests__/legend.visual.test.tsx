@@ -8,11 +8,13 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
+import {legendDefaults} from '../core/constants';
 import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 
 import {LONG_TEXT} from './constants';
 
 async function expectSvgWidth(locator: Locator, width: number) {
+    await expect(locator).toHaveAttribute('width', /^\d/);
     await expect
         .poll(async () => Number.parseFloat((await locator.getAttribute('width')) ?? ''))
         .toBeCloseTo(width, 5);
@@ -79,12 +81,14 @@ const lineLegendWidthSeries: LineSeries[] = [
 }));
 
 test.describe('Legend', () => {
-    for (const position of ['left', 'bottom'] as const) {
+    for (const position of ['left', 'right', 'top', 'bottom'] as const) {
         test(`Continuous pixel strings preserve width and alignment (${position})`, async ({
             mount,
         }) => {
             const data = cloneDeep(pieOverflowedLegendItemsData);
-            data.chart = {margin: {left: 10, right: 30}};
+            const chartWidth = 1000;
+            const chartMargin = {left: 10, right: 30};
+            data.chart = {margin: chartMargin};
             data.legend = {
                 enabled: true,
                 type: 'continuous',
@@ -92,24 +96,35 @@ test.describe('Legend', () => {
                 width: '230.5px',
                 colorScale: {colors: ['#e8f1fa', '#348bdc'], domain: [0, 10]},
             };
-            const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: chartWidth}} />,
+            );
             const gradient = component.locator('.gcharts-legend image');
-            const alignmentWidth = position === 'left' ? (960 - 15) / 2 : 960;
+            const availableWidth = chartWidth - chartMargin.left - chartMargin.right;
+            // Side pixel gradients are centered in half the space left after the legend margin.
+            const alignmentWidth =
+                position === 'left' || position === 'right'
+                    ? (availableWidth - legendDefaults.margin) / 2
+                    : availableWidth;
             for (const {width, pixels} of [
                 {width: '230.5px', pixels: 230.5},
                 {width: 120, pixels: 120},
                 {width: '230.5px', pixels: 230.5},
             ] as const) {
                 data.legend = {...data.legend, width};
-                await component.update(<ChartTestStory data={data} styles={{width: 1000}} />);
+                await component.update(<ChartTestStory data={data} styles={{width: chartWidth}} />);
                 await expectSvgWidth(gradient, pixels);
+                const offsetLeft =
+                    position === 'right'
+                        ? chartWidth - chartMargin.right - pixels
+                        : chartMargin.left;
                 await expect
                     .poll(async () => {
                         const chartBox = await component.locator('svg').first().boundingBox();
                         const gradientBox = await gradient.boundingBox();
                         return chartBox && gradientBox ? gradientBox.x - chartBox.x : undefined;
                     })
-                    .toBeCloseTo(10 + (alignmentWidth - pixels) / 2, 0);
+                    .toBeCloseTo(offsetLeft + (alignmentWidth - pixels) / 2, 0);
             }
         });
     }

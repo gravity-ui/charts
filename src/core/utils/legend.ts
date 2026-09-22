@@ -2,31 +2,24 @@ import type {Selection} from 'd3-selection';
 
 import {PERCENTAGE_SIZE_REGEXP, PIXEL_SIZE_REGEXP} from '../constants/dimensions';
 
-interface ParsedLegendWidth {
-    value: number;
-    isPercentage: boolean;
-}
+import {parseNumericProperty} from './math';
 
-export function parseLegendWidth(width: unknown): ParsedLegendWidth | undefined {
-    if (typeof width === 'number') {
-        return Number.isFinite(width) && width >= 0
-            ? {value: width, isPercentage: false}
-            : undefined;
-    }
-
-    if (typeof width !== 'string') {
+/** Validates legend widths before using the shared numeric-property parser. */
+export function parseLegendWidth(width: unknown): ReturnType<typeof parseNumericProperty> {
+    if (typeof width !== 'number' && typeof width !== 'string') {
         return undefined;
     }
 
-    // Match the pixel/percentage units used by calculateNumericProperty, while preserving
-    // legend validation: only finite, nonnegative decimal strings are accepted.
-    const isPercentage = PERCENTAGE_SIZE_REGEXP.test(width);
-    if (!isPercentage && !PIXEL_SIZE_REGEXP.test(width)) {
+    if (
+        typeof width === 'string' &&
+        !PERCENTAGE_SIZE_REGEXP.test(width) &&
+        !PIXEL_SIZE_REGEXP.test(width)
+    ) {
         return undefined;
     }
 
-    const value = Number(width.slice(0, isPercentage ? -1 : -2));
-    return Number.isFinite(value) ? {value, isPercentage} : undefined;
+    const parsed = parseNumericProperty(width);
+    return parsed && Number.isFinite(parsed.value) && parsed.value >= 0 ? parsed : undefined;
 }
 
 export function createGradientRect(

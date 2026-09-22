@@ -29,7 +29,7 @@ export async function getPreparedLegend(args: {
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
     const parsedWidth = parseLegendWidth(legend?.width);
     let width = parsedWidth?.value;
-    if (parsedWidth?.isPercentage) {
+    if (parsedWidth?.unit === '%') {
         // Cap before multiplication so even very large finite percentages cannot overflow.
         width = availableWidth * (Math.min(parsedWidth.value, 100) / 100);
     }
@@ -116,9 +116,8 @@ export async function getPreparedLegend(args: {
             height: titleHeight,
             align: get(legend, 'title.align', 'left'),
         },
-        configuredWidth: legend?.width,
         resolvedWidth: legendWidth,
-        hasPercentageWidth: parsedWidth?.isPercentage ?? false,
+        hasPercentageWidth: parsedWidth?.unit === '%',
         ticks,
         colorScale,
         html: get(legend, 'html', false),
