@@ -75,7 +75,9 @@ export function decodeLegendLabel(text: string) {
     labelDecoder ??= document.createElement('div');
     // Escape tag delimiters so only entities are decoded, never label markup.
     labelDecoder.innerHTML = text.replace(/</g, '&lt;');
-    return labelDecoder.textContent ?? '';
+    const result = labelDecoder.textContent ?? '';
+    labelDecoder.textContent = '';
+    return result;
 }
 
 async function measureHtmlLegendLabels(
