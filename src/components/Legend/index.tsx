@@ -210,6 +210,7 @@ export const Legend = (props: Props) => {
     }, [config.maxWidth]);
 
     React.useEffect(() => {
+        // Preserve the current page on height changes while it remains valid.
         setPageIndex((current) => Math.min(current, pageCount - 1));
     }, [pageCount]);
 

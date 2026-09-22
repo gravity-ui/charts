@@ -1,5 +1,3 @@
-import {htmlToDOM} from 'html-react-parser';
-
 import type {BaseTextStyle} from '../../types';
 import {getLabelsSize, getTextSizeFn, getTextWithElipsis} from '../utils';
 
@@ -68,14 +66,16 @@ export async function wrapLegendLabel(args: {
     return rows;
 }
 
+let labelDecoder: HTMLDivElement | undefined;
+
 export function decodeLegendLabel(text: string) {
     if (!text.includes('&')) {
         return text;
     }
-    // Escape tag delimiters so the parser only decodes entities, never label markup.
-    return htmlToDOM(text.replace(/</g, '&lt;'))
-        .map((node) => (node.type === 'text' ? node.data : ''))
-        .join('');
+    labelDecoder ??= document.createElement('div');
+    // Escape tag delimiters so only entities are decoded, never label markup.
+    labelDecoder.innerHTML = text.replace(/</g, '&lt;');
+    return labelDecoder.textContent ?? '';
 }
 
 async function measureHtmlLegendLabels(
@@ -84,6 +84,9 @@ async function measureHtmlLegendLabels(
     style: BaseTextStyle,
     lineHeight: number,
 ) {
+    if (!items.length) {
+        return [];
+    }
     const container = document.createElement('div');
     Object.assign(container.style, {
         position: 'absolute',
@@ -97,6 +100,7 @@ async function measureHtmlLegendLabels(
     const elements = items.map((item, i) => {
         const element = document.createElement('div');
         Object.assign(element.style, {
+            // Labels intentionally overlap; only their individual dimensions are measured.
             position: 'absolute',
             display: 'inline-block',
             maxWidth: `${widths[i]}px`,
@@ -157,7 +161,11 @@ export async function prepareLegendItems(args: {
     legend: PreparedLegend;
 }): Promise<LegendItem[]> {
     const {items, maxLegendWidth, legend} = args;
-    const preparedItems = items.map((item) => ({...item, text: item.name, textWidth: 0}));
+    const preparedItems: LegendItem[] = items.map((item) => ({
+        ...item,
+        text: item.name,
+        textWidth: 0,
+    }));
     const widths = preparedItems.map((item) =>
         Math.max(0, maxLegendWidth - item.symbol.bboxWidth - item.symbol.padding),
     );
@@ -169,15 +177,12 @@ export async function prepareLegendItems(args: {
             legend.itemStyle,
             legend.lineHeight,
         );
-        return preparedItems.map((item, i) => {
-            const textRowCount = Math.min(sizes[i].rows, legend.itemMaxRowCount);
-            return {
-                ...item,
-                textWidth: sizes[i].width,
-                textRowCount,
-                height: textRowCount * legend.lineHeight,
-            };
-        });
+        for (const [i, item] of preparedItems.entries()) {
+            item.textWidth = sizes[i].width;
+            item.textRowCount = Math.min(sizes[i].rows, legend.itemMaxRowCount);
+            item.height = item.textRowCount * legend.lineHeight;
+        }
+        return preparedItems;
     }
 
     const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});

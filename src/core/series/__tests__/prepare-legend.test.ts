@@ -283,32 +283,36 @@ describe('multiline legend labels', () => {
         }
     });
 
-    test.each([0, -10, 10, 2000])('keeps multiline widths bounded (width=%s)', async (width) => {
-        const {legendItems, legendConfig} = await prepareLegend({
-            enabled: true,
-            width,
-            itemMaxRowCount: 3,
-        });
-        expect(legendConfig.width).toBe(Math.max(0, Math.min(width, 960)));
-        for (const item of legendItems.flat()) {
-            expect(item.textWidth).toBeGreaterThanOrEqual(0);
-            expect(item.textWidth).toBeLessThanOrEqual(
-                Math.max(0, legendConfig.width - item.symbol.bboxWidth - item.symbol.padding),
-            );
-        }
-    });
-
-    test.each([0, 35])(
-        'does not produce negative heights or empty pages at height=%s',
-        async (height) => {
-            const {legendItems, legendConfig} = await prepareLegend(
-                {enabled: true, position: 'left', width: 130, itemMaxRowCount: 3},
-                chartWidth,
-                height,
-            );
-            expect(legendItems).toEqual([]);
-            expect(legendConfig.height).toBe(0);
-            expect(legendConfig.pagination).toBeUndefined();
+    test.each([0, -10, 10, 20, 2000])(
+        'keeps multiline widths bounded (width=%s)',
+        async (width) => {
+            const {legendItems, legendConfig} = await prepareLegend({
+                enabled: true,
+                width,
+                itemMaxRowCount: 3,
+            });
+            expect(legendConfig.width).toBe(Math.max(0, Math.min(width, 960)));
+            for (const item of legendItems.flat()) {
+                expect(item.textWidth).toBeGreaterThanOrEqual(0);
+                expect(item.textWidth).toBeLessThanOrEqual(
+                    Math.max(0, legendConfig.width - item.symbol.bboxWidth - item.symbol.padding),
+                );
+            }
         },
     );
+
+    test.each([
+        {height: 0, title: undefined},
+        {height: 35, title: undefined},
+        {height: 35, title: {text: 'Title', margin: 50}},
+    ])('does not produce negative heights or empty pages (%j)', async ({height, title}) => {
+        const {legendItems, legendConfig, preparedLegend} = await prepareLegend(
+            {enabled: true, position: 'left', width: 130, itemMaxRowCount: 3, title},
+            chartWidth,
+            height,
+        );
+        expect(legendItems).toEqual([]);
+        expect(legendConfig.height).toBe(preparedLegend.title.height + preparedLegend.title.margin);
+        expect(legendConfig.pagination).toBeUndefined();
+    });
 });

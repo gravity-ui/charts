@@ -1,3 +1,5 @@
+/** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
+
 import {decodeLegendLabel, wrapLegendLabel} from '../legend-label';
 
 const getTextWidth = async (text: string) => Array.from(text).length * 10;
@@ -28,6 +30,8 @@ test.each([
     ['<img src="x"> &amp;', '<img src="x"> &'],
     ['&lt;foo&gt; &quot;bar&quot; &copy; &#169; &#x1F600;', '<foo> "bar" © © 😀'],
     ['&amp;lt; &amp;lt;', '&lt; &lt;'],
+    ['<!-- comment --> <![CDATA[text]]> &amp;', '<!-- comment --> <![CDATA[text]]> &'],
+    ['  first\r\n\tsecond  ', '  first\r\n\tsecond  '],
 ])('decodes entities once without interpreting tags: %s', (text, expected) => {
     expect(decodeLegendLabel(text)).toBe(expected);
 });
