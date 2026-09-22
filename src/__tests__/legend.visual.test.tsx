@@ -972,7 +972,7 @@ test.describe('Legend', () => {
             await legendItems.first().click();
 
             await expect(component.locator('[data-qa="clicked-legend-item"]')).toHaveText(
-                'First series:true:first',
+                'First series:true',
             );
             await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_unselected/);
         });
@@ -986,7 +986,7 @@ test.describe('Legend', () => {
             await legendItems.first().click();
 
             await expect(component.locator('[data-qa="clicked-legend-item"]')).toHaveText(
-                'First series:true:first',
+                'First series:true',
             );
             await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text-html_selected/);
         });

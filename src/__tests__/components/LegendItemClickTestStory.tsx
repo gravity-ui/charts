@@ -17,8 +17,7 @@ export const LegendItemClickTestStory = ({html = false, preventDefault = false}:
                 html,
                 events: {
                     itemClick: (item, event) => {
-                        const custom = item.custom as {key: string};
-                        setClickedItem(`${item.name}:${item.visible}:${custom.key}`);
+                        setClickedItem(`${item.name}:${item.visible}`);
 
                         if (preventDefault) {
                             event.preventDefault();
@@ -31,7 +30,6 @@ export const LegendItemClickTestStory = ({html = false, preventDefault = false}:
                     {
                         type: 'line',
                         name: 'First series',
-                        custom: {key: 'first'},
                         data: [
                             {x: 0, y: 1},
                             {x: 1, y: 2},
@@ -40,7 +38,6 @@ export const LegendItemClickTestStory = ({html = false, preventDefault = false}:
                     {
                         type: 'line',
                         name: 'Second series',
-                        custom: {key: 'second'},
                         data: [
                             {x: 0, y: 2},
                             {x: 1, y: 1},

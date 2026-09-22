@@ -1,12 +1,9 @@
-import type {MeaningfulAny} from '../misc';
-
 import type {BaseTextStyle} from './base';
 
 export interface ChartLegendItemClickData {
     id: string;
     name: string;
     visible: boolean;
-    custom?: MeaningfulAny;
 }
 
 export interface ChartLegendEvents {

@@ -150,7 +150,6 @@ export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boole
 export type LegendItem = {
     id: string;
     color: string;
-    custom: MeaningfulAny;
     height: number;
     name: string;
     text: string;

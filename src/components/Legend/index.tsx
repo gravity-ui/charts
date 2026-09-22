@@ -206,7 +206,6 @@ export const Legend = (props: Props) => {
                         id: item.id,
                         name: item.name,
                         visible: Boolean(item.visible),
-                        custom: item.custom,
                     },
                     event,
                 );
