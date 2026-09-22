@@ -533,6 +533,33 @@ test.describe('Multiline legend labels', () => {
             });
         }
 
+        test(`groups truncated text by width (html=${html})`, async ({mount}) => {
+            const data: ChartData = {
+                legend: {enabled: true, width: 220, itemMaxRowCount: 2, html},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            dataLabels: {enabled: false},
+                            data: [
+                                {name: 'A\nB\nC', value: 1},
+                                {name: 'Short', value: 1},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            const line = component.locator('.gcharts-legend__line');
+            await expect(line).toHaveCount(1);
+            await expect(line.locator('.gcharts-legend__item')).toHaveCount(2);
+            const targets = component.locator('.gcharts-legend__item > rect[fill="transparent"]');
+            const first = await getLegendBox(targets.first());
+            const second = await getLegendBox(targets.last());
+            expect(second.x).toBeGreaterThan(first.x + first.width);
+            expect(second.y).toBe(first.y);
+        });
+
         test(`reflows on resize and preserves selection (html=${html})`, async ({mount}) => {
             const data: ChartData = {
                 legend: {enabled: true, position: 'left', itemMaxRowCount: 4, html},
@@ -612,8 +639,10 @@ test.describe('Multiline legend labels', () => {
             const counter = component.locator('.gcharts-legend__pagination-counter');
             await expect(counter).toHaveText('1/2');
             const labelBox = await getLegendBox(labels.first());
-            const counterBox = await getLegendBox(counter);
-            expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(counterBox.y + 2);
+            const paginationBox = await getLegendBox(
+                component.locator('.gcharts-legend__pagination-arrow rect').first(),
+            );
+            expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(paginationBox.y);
             if (!html) {
                 await expect(labels.first().locator('tspan').last()).toContainText('…');
             }
@@ -628,4 +657,61 @@ test.describe('Multiline legend labels', () => {
             await expect(labels.first()).toHaveClass(/unselected/);
         });
     }
+});
+
+test('Multiline legend keeps SVG tags literal and measures decoded entities once', async ({
+    mount,
+}) => {
+    const names = ['<foo> & <bar>', '<img src="x"> &amp;', '&amp;lt; &amp;lt; &amp;lt;'];
+    const data: ChartData = {
+        legend: {enabled: true, width: 180, itemMaxRowCount: 3},
+        series: {
+            data: [
+                {
+                    type: 'pie',
+                    dataLabels: {enabled: false},
+                    data: names.map((name) => ({name, value: 1})),
+                },
+            ],
+        },
+    };
+    const component = await mount(<ChartTestStory data={data} />);
+    const labels = component.locator('.gcharts-legend__item-text');
+    await expect(labels).toHaveText(['<foo> & <bar>', '<img src="x"> &', '&lt; &lt; &lt;']);
+    await expect(labels.locator('foo, bar, img')).toHaveCount(0);
+    const targets = component.locator('.gcharts-legend__item > rect[fill="transparent"]');
+    for (let i = 0; i < names.length; i++) {
+        const textBox = await getLegendBox(labels.nth(i));
+        const targetBox = await getLegendBox(targets.nth(i));
+        expect(textBox.x + textBox.width).toBeLessThanOrEqual(targetBox.x + targetBox.width + 1);
+    }
+});
+
+test('Multiline legend resets an invalid page after height changes', async ({mount}) => {
+    const data: ChartData = {
+        legend: {enabled: true, position: 'left', width: 160, itemMaxRowCount: 3},
+        series: {
+            data: [
+                {
+                    type: 'pie',
+                    dataLabels: {enabled: false},
+                    data: range(6).map((i) => ({name: `Series ${i}\nSecond\nThird`, value: 1})),
+                },
+            ],
+        },
+    };
+    const component = await mount(<ChartTestStory data={data} styles={{height: 100}} />);
+    const counter = component.locator('.gcharts-legend__pagination-counter');
+    await expect(counter).toBeVisible();
+    const pageCount = Number((await counter.textContent())?.split('/')[1]);
+    expect(pageCount).toBeGreaterThan(1);
+    const next = component.locator('.gcharts-legend__pagination-arrow').last();
+    for (let i = 2; i <= pageCount; i++) {
+        await next.click();
+        await expect(counter).toHaveText(`${i}/${pageCount}`);
+    }
+    await component.update(<ChartTestStory data={data} styles={{height: 500}} />);
+    await expect(counter).toHaveCount(0);
+    await component.update(<ChartTestStory data={data} styles={{height: 100}} />);
+    await expect(counter).toHaveText(`1/${pageCount}`);
 });

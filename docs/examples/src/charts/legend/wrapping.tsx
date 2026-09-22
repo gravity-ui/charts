@@ -21,7 +21,7 @@ const data: ChartData = {
                         value: 40,
                     },
                     {name: 'Domestic small business customers', value: 30},
-                    {name: 'Other', value: 20},
+                    {name: 'First line\nSecond line', value: 20},
                     {
                         name: 'VeryLongUnbrokenIdentifierThatWillWrapWithinTheLegendWidth',
                         value: 10,

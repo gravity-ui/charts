@@ -1,9 +1,10 @@
-import {wrapLegendLabel} from '../legend-label';
+import {decodeLegendLabel, wrapLegendLabel} from '../legend-label';
 
 const getTextWidth = async (text: string) => Array.from(text).length * 10;
 
 test.each([
     {text: 'one two three', width: 70, maxRowCount: 3, rows: ['one two', 'three']},
+    {text: 'one two', width: 60, maxRowCount: 2, rows: ['one', 'two']},
     {text: 'one two three four', width: 70, maxRowCount: 2, rows: ['one two', 'three…']},
     {text: 'ABCDEFGHIJK', width: 40, maxRowCount: 3, rows: ['ABCD', 'EFGH', 'IJK']},
     {text: 'ABCDEFGHIJK', width: 40, maxRowCount: 2, rows: ['ABCD', 'EFG…']},
@@ -19,4 +20,14 @@ test.each([
     for (const row of result) {
         expect(await getTextWidth(row)).toBeLessThanOrEqual(Math.max(0, args.width));
     }
+});
+
+test.each([
+    ['<foo> & <bar>', '<foo> & <bar>'],
+    ['<img src="x">', '<img src="x">'],
+    ['<img src="x"> &amp;', '<img src="x"> &'],
+    ['&lt;foo&gt; &quot;bar&quot; &copy; &#169; &#x1F600;', '<foo> "bar" © © 😀'],
+    ['&amp;lt; &amp;lt;', '&lt; &lt;'],
+])('decodes entities once without interpreting tags: %s', (text, expected) => {
+    expect(decodeLegendLabel(text)).toBe(expected);
 });

@@ -1,5 +1,3 @@
-/** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
-
 import type {ChartData, ChartLegend} from '../../../types';
 import {getChartDimensions} from '../../layout/chart-dimensions';
 import {getLegendComponents, getPreparedLegend} from '../prepare-legend';
@@ -265,6 +263,11 @@ describe('multiline legend labels', () => {
             {start: 2, end: 3},
         ]);
         expect(preparedLegend.height).toBe(92);
+        for (const item of legendItems.slice(0, 2).flat()) {
+            expect(item.textRowCount).toBe(2);
+            expect(item.height).toBe(2 * preparedLegend.lineHeight);
+            expect(item.textRows?.join('')).toBe(item.name);
+        }
         expect(legendItems[2][0].textRowCount).toBe(4);
         expect(legendItems[2][0].textRows?.[3].endsWith('…')).toBe(true);
         for (const page of legendConfig.pagination?.pages ?? []) {

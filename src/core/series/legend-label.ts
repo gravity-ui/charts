@@ -1,5 +1,7 @@
+import {htmlToDOM} from 'html-react-parser';
+
 import type {BaseTextStyle} from '../../types';
-import {getTextSizeFn, getTextWithElipsis} from '../utils';
+import {getLabelsSize, getTextSizeFn, getTextWithElipsis} from '../utils';
 
 import type {LegendItem, PreparedLegend} from './types';
 
@@ -66,49 +68,142 @@ export async function wrapLegendLabel(args: {
     return rows;
 }
 
-export function createLegendLabelMeasurer(style: BaseTextStyle, lineHeight: number, html: boolean) {
-    const getTextSize = getTextSizeFn({style});
-    const widths = new Map<string, number>();
-    const element = document.createElement('div');
-    if (html) {
+export function decodeLegendLabel(text: string) {
+    if (!text.includes('&')) {
+        return text;
+    }
+    // Escape tag delimiters so the parser only decodes entities, never label markup.
+    return htmlToDOM(text.replace(/</g, '&lt;'))
+        .map((node) => (node.type === 'text' ? node.data : ''))
+        .join('');
+}
+
+async function measureHtmlLegendLabels(
+    items: LegendItem[],
+    widths: number[],
+    style: BaseTextStyle,
+    lineHeight: number,
+) {
+    const container = document.createElement('div');
+    Object.assign(container.style, {
+        position: 'absolute',
+        visibility: 'hidden',
+        top: '-10000px',
+        width: `${Math.max(0, ...widths)}px`,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        lineHeight: `${lineHeight}px`,
+    });
+    const elements = items.map((item, i) => {
+        const element = document.createElement('div');
         Object.assign(element.style, {
             position: 'absolute',
-            visibility: 'hidden',
             display: 'inline-block',
-            top: '-10000px',
-            fontSize: style.fontSize,
-            fontWeight: style.fontWeight,
-            lineHeight: `${lineHeight}px`,
+            maxWidth: `${widths[i]}px`,
             whiteSpace: 'pre-wrap',
             overflowWrap: 'anywhere',
         });
-        document.body.appendChild(element);
-    }
-    return {
-        async getTextWidth(text: string) {
-            if (!widths.has(text)) {
-                widths.set(text, (await getTextSize(text)).width);
-            }
-            return widths.get(text) ?? 0;
-        },
-        decode(text: string) {
-            element.innerHTML = text;
-            return element.textContent ?? '';
-        },
-        async measureHtml(text: string, width: number) {
-            element.innerHTML = text;
-            element.style.maxWidth = `${width}px`;
-            await document.fonts.ready;
+        element.innerHTML = item.text;
+        container.appendChild(element);
+        return element;
+    });
+    document.body.appendChild(container);
+    try {
+        await document.fonts.ready;
+        // All DOM writes precede the reads, so labels share a single layout pass.
+        return elements.map((element, i) => {
             const rect = element.getBoundingClientRect();
             return {
-                width: Math.min(width, rect.width),
+                width: Math.min(widths[i], rect.width),
                 rows: Math.max(1, Math.ceil(rect.height / lineHeight)),
             };
-        },
-        destroy() {
-            element.remove();
-        },
+        });
+    } finally {
+        container.remove();
+    }
+}
+
+async function prepareSingleLineLegendItem(
+    item: LegendItem,
+    maxWidth: number,
+    legend: PreparedLegend,
+    getTextSize: ReturnType<typeof getTextSizeFn>,
+) {
+    const {width, height} = legend.html
+        ? await getLabelsSize({labels: [item.text], html: true, style: legend.itemStyle}).then(
+              ({maxWidth: w, maxHeight: h}) => ({width: w, height: h}),
+          )
+        : await getTextSize(item.text);
+    item.height = height;
+    item.textWidth = width;
+    if (width > maxWidth) {
+        item.overflowed = true;
+        if (legend.html) {
+            item.textWidth = maxWidth;
+        } else {
+            item.text = await getTextWithElipsis({
+                text: item.text,
+                getTextWidth: async (text) => (await getTextSize(text)).width,
+                maxWidth,
+            });
+            item.textWidth = (await getTextSize(item.text)).width;
+        }
+    }
+}
+
+export async function prepareLegendItems(args: {
+    items: Omit<LegendItem, 'textWidth'>[];
+    maxLegendWidth: number;
+    legend: PreparedLegend;
+}): Promise<LegendItem[]> {
+    const {items, maxLegendWidth, legend} = args;
+    const preparedItems = items.map((item) => ({...item, text: item.name, textWidth: 0}));
+    const widths = preparedItems.map((item) =>
+        Math.max(0, maxLegendWidth - item.symbol.bboxWidth - item.symbol.padding),
+    );
+    const multiline = legend.itemMaxRowCount > 1;
+    if (multiline && legend.html) {
+        const sizes = await measureHtmlLegendLabels(
+            preparedItems,
+            widths,
+            legend.itemStyle,
+            legend.lineHeight,
+        );
+        return preparedItems.map((item, i) => {
+            const textRowCount = Math.min(sizes[i].rows, legend.itemMaxRowCount);
+            return {
+                ...item,
+                textWidth: sizes[i].width,
+                textRowCount,
+                height: textRowCount * legend.lineHeight,
+            };
+        });
+    }
+
+    const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});
+    const cache = new Map<string, number>();
+    const getTextWidth = async (text: string) => {
+        if (!cache.has(text)) {
+            cache.set(text, (await getTextSize(text)).width);
+        }
+        return cache.get(text) ?? 0;
     };
+    for (const [i, item] of preparedItems.entries()) {
+        if (!multiline) {
+            await prepareSingleLineLegendItem(item, widths[i], legend, getTextSize);
+            continue;
+        }
+        item.textRows = await wrapLegendLabel({
+            text: decodeLegendLabel(item.text),
+            width: widths[i],
+            maxRowCount: legend.itemMaxRowCount,
+            getTextWidth,
+        });
+        item.textWidth = Math.max(0, ...(await Promise.all(item.textRows.map(getTextWidth))));
+        item.textRowCount = item.textRows.length;
+        item.height = Math.max(1, item.textRowCount) * legend.lineHeight;
+    }
+    return preparedItems;
 }
 
 export async function limitLegendItemRows(
@@ -116,7 +211,7 @@ export async function limitLegendItemRows(
     maxRows: number,
     legend: PreparedLegend,
 ) {
-    const getTextSize = getTextSizeFn({style: legend.itemStyle});
+    const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: false});
     for (const item of items) {
         if ((item.textRowCount ?? 1) <= maxRows) {
             continue;

@@ -290,7 +290,13 @@ function unescapeHtml(str: string) {
 }
 
 let measureCanvas: HTMLCanvasElement | null = null;
-export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
+export function getTextSizeFn({
+    style,
+    decodeEntities = true,
+}: {
+    style?: BaseTextStyle;
+    decodeEntities?: boolean;
+}) {
     const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
     const context = canvas.getContext('2d');
     if (!context) {
@@ -318,7 +324,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
             : defaultFontWeight;
         const fontSize = style?.fontSize ? resolveCSSVar(style.fontSize) : defaultFontSize;
         context.font = `${fontWeight} ${fontSize} ${defaultFontFamily}`;
-        const textMetric = context.measureText(unescapeHtml(str));
+        const textMetric = context.measureText(decodeEntities ? unescapeHtml(str) : str);
 
         // we calculate hanging based on an approximate algorithm from chromium
         // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=32;drc=7cf6ac3dd6dca800fbc0d28e80a7732d4ea90340?q=member_hanging_&ss=chromium%2Fchromium%2Fsrc

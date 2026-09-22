@@ -203,10 +203,15 @@ export const Legend = (props: Props) => {
     const {chartSeries, legend, items = [], config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
     const [pageIndex, setPageIndex] = React.useState(0);
+    const pageCount = config.pagination?.pages.length ?? 1;
 
     React.useEffect(() => {
         setPageIndex(0);
     }, [config.maxWidth]);
+
+    React.useEffect(() => {
+        setPageIndex((current) => Math.min(current, pageCount - 1));
+    }, [pageCount]);
 
     React.useEffect(() => {
         async function prepareLegend() {
@@ -338,7 +343,7 @@ export const Legend = (props: Props) => {
                             })
                             .html((d) => d.text);
                     } else {
-                        const text = legendItemTemplate
+                        const textSelection = legendItemTemplate
                             .append('text')
                             .attr('x', function (legendItem, i) {
                                 return (
@@ -360,7 +365,9 @@ export const Legend = (props: Props) => {
                             })
                             .html((d) => (d.textRows ? '' : d.text))
                             .style('font-size', legend.itemStyle.fontSize);
-                        text.filter((d) => Boolean(d.textRows))
+                        textSelection
+                            .filter((d) => Boolean(d.textRows))
+                            // Match the measured font weight while preserving legacy single-line styling.
                             .style('font-weight', () => legend.itemStyle.fontWeight ?? null)
                             .each(function (d) {
                                 const label = select(this);
@@ -369,6 +376,7 @@ export const Legend = (props: Props) => {
                                     .data(d.textRows ?? [])
                                     .enter()
                                     .append('tspan')
+                                    // WebKit otherwise clips the first row instead of inheriting the text baseline.
                                     .style('dominant-baseline', 'hanging')
                                     .attr('x', label.attr('x'))
                                     .attr(
