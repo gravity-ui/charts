@@ -55,10 +55,11 @@ describe('chart config artifacts', () => {
             legend.width = '12.5%';
             legend.width = '230px';
             legend.width = '.5px';
-            // @ts-expect-error Other CSS units are not supported.
+            // String formats are checked at runtime and fall back to automatic sizing.
             legend.width = '230em';
-            // @ts-expect-error String widths must include a unit.
             legend.width = '230';
+            // @ts-expect-error Booleans are not supported.
+            legend.width = true;
             const pieFormat: PieValueFormat = {
                 type: 'custom',
                 formatter: ({percentage, name, value}) => percentage?.toFixed(2) ?? name ?? String(value),

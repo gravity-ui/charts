@@ -34,6 +34,15 @@ describe('calculateNumericProperty', () => {
 });
 
 describe('parseNumericProperty', () => {
+    test.each([true, false, {}, [], {endsWith: true}])(
+        'handles invalid values from untyped configs (%j)',
+        (value) => {
+            const untypedValue = value as unknown as string;
+            expect(parseNumericProperty(untypedValue)).toBeUndefined();
+            expect(calculateNumericProperty({value: untypedValue, base: 200})).toBeUndefined();
+        },
+    );
+
     test.each([
         {value: '12.5%', expected: 12.5},
         {value: `${'9'.repeat(308)}%`, expected: 1e308},

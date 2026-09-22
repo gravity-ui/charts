@@ -220,9 +220,7 @@ test.each([undefined, 0, 230, 2000])(
             const availableWidth = chartWidth - chartMargin.left - chartMargin.right;
             const isVertical = position === 'left' || position === 'right';
             expect(legendConfig.width).toBe(width ?? 200);
-            expect(legendConfig.maxWidth).toBe(
-                isVertical ? (availableWidth - preparedLegend.margin) / 2 : availableWidth,
-            );
+            expect(legendConfig.maxWidth).toBe(isVertical ? (width ?? 200) : availableWidth);
             expect(legendConfig.offset.left).toBe(
                 position === 'right'
                     ? chartWidth - chartMargin.right - (width ?? 200)
@@ -300,8 +298,8 @@ describe.each(['discrete', 'continuous'] as const)('%s legend width', (type) => 
         },
     );
 
-    test.each([-10, NaN, '25.%'])(
-        'falls back to automatic sizing for invalid input when validation is bypassed (%p)',
+    test.each([-10, NaN, Infinity, -Infinity, '25.%', '25px\n', true, {}, null])(
+        'falls back to automatic sizing for invalid input (%p)',
         async (width) => {
             for (const position of ['left', 'bottom'] as const) {
                 const {legendConfig, preparedLegend} = await prepareLegend({
@@ -316,8 +314,37 @@ describe.each(['discrete', 'continuous'] as const)('%s legend width', (type) => 
                 const expectedWidth = type === 'continuous' ? 200 : discreteWidth;
                 expect(preparedLegend.resolvedWidth).toBe(expectedWidth);
                 expect(legendConfig.width).toBe(expectedWidth);
-                expect(legendConfig.maxWidth).toBe(discreteWidth);
+                expect(legendConfig.maxWidth).toBe(
+                    type === 'continuous' && position === 'left' ? expectedWidth : discreteWidth,
+                );
             }
+        },
+    );
+});
+
+describe.each(['left', 'right'] as const)('continuous side legend, position=%s', (position) => {
+    test.each([
+        {width: undefined, containerWidth: 800, pixels: 200},
+        {width: '35%', containerWidth: 800, pixels: 266},
+        {width: 0, containerWidth: 800, pixels: 0},
+        {width: 2000, containerWidth: 800, pixels: 2000},
+        {width: '150%', containerWidth: 800, pixels: 760},
+        {width: '35%', containerWidth: 0, pixels: 0},
+        {width: '35%', containerWidth: 20, pixels: 0},
+    ])(
+        'does not add alignment space around the gradient (%j)',
+        async ({width, containerWidth, pixels}) => {
+            const {legendConfig} = await prepareLegend(
+                {enabled: true, type: 'continuous', position, width},
+                containerWidth,
+            );
+            expect(legendConfig.width).toBe(pixels);
+            expect(legendConfig.maxWidth).toBe(pixels);
+            expect(legendConfig.offset.left).toBe(
+                position === 'left'
+                    ? chartMargin.left
+                    : containerWidth - chartMargin.right - pixels,
+            );
         },
     );
 });

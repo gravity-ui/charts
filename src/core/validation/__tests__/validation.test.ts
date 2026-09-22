@@ -1,12 +1,8 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
-import {i18nFactory} from '../../i18n';
 import type {ChartData, ChartLegend} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
-
-import en from '../../i18n/keysets/en.json';
-import ru from '../../i18n/keysets/ru.json';
 
 function getValidGradient() {
     return {
@@ -57,36 +53,13 @@ describe('validation/validateData', () => {
         'NaN%',
         'Infinity%',
         `${'9'.repeat(400)}%`,
-    ])('rejects invalid legend width %p', (width) => {
-        const data: ChartData = {
-            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
-            legend: {width: width as ChartLegend['width']},
-        };
-        expect(() => validateData(data)).toThrow(
-            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
-        );
-    });
-
-    test.each([
-        {lang: 'en', keyset: en},
-        {lang: 'ru', keyset: ru},
-    ])('localizes invalid legend width errors ($lang)', ({lang, keyset}) => {
-        const previousLang = i18nFactory.lang ?? 'en';
-        try {
-            i18nFactory.setLang(lang);
-            expect(() =>
-                validateData({
-                    series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
-                    legend: {width: '25.%'},
-                }),
-            ).toThrow(
-                expect.objectContaining({
-                    code: CHART_ERROR_CODE.INVALID_DATA,
-                    message: keyset.error['label_invalid-legend-width'],
-                }),
-            );
-        } finally {
-            i18nFactory.setLang(previousLang);
+    ])('does not fail chart validation for invalid legend width %p', (width) => {
+        for (const enabled of [true, false]) {
+            const data: ChartData = {
+                series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+                legend: {width, enabled},
+            };
+            expect(() => validateData(data)).not.toThrow();
         }
     });
 

@@ -73,7 +73,7 @@ export interface ChartLegend extends ChartLegendItem {
      * Width of the legend as a finite, nonnegative pixel value (e.g. 200 or '200px')
      * or decimal percentage (e.g. '25%').
      * Strings must use decimal notation without a sign, whitespace, or exponent.
-     * These restrictions are checked at runtime; the TypeScript type is less restrictive.
+     * Invalid values fall back to automatic sizing at runtime.
      * Percentages are relative to the chart width after left/right chart margins,
      * before legend or axis space is deducted, and are recalculated on resize.
      * Percentages above 100% use 100% for both legend types.
@@ -86,7 +86,7 @@ export interface ChartLegend extends ChartLegendItem {
      * Continuous pixel widths are not capped at the available chart width.
      * @minimum 0
      */
-    width?: number | `${number}px` | `${number}%`;
+    width?: number | string;
     /**
      * Allows to use any html-tags to display the content.
      * @default false

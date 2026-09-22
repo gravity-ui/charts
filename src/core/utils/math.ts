@@ -47,6 +47,10 @@ export function parseNumericProperty(
         return {value, unit: 'px'};
     }
 
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+
     let unit: ParsedNumericProperty['unit'];
     if (value.endsWith('%')) {
         unit = '%';

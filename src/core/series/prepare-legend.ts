@@ -91,7 +91,7 @@ export async function getPreparedLegend(args: {
             height += lineHeight;
             legendWidth =
                 width === undefined
-                    ? getDefaultLegendWidth({availableWidth, position, margin})
+                    ? getDefaultDiscreteLegendWidth({availableWidth, position, margin})
                     : Math.max(0, Math.min(width, availableWidth));
         }
     }
@@ -117,6 +117,7 @@ export async function getPreparedLegend(args: {
             align: get(legend, 'title.align', 'left'),
         },
         resolvedWidth: legendWidth,
+        availableWidth,
         ticks,
         colorScale,
         html: get(legend, 'html', false),
@@ -337,7 +338,7 @@ function getLegendOffset(args: {
     }
 }
 
-function getDefaultLegendWidth(args: {
+function getDefaultDiscreteLegendWidth(args: {
     availableWidth: number;
     position: PreparedLegend['position'];
     margin: number;
@@ -378,13 +379,9 @@ export async function getLegendComponents(args: {
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
     const maxLegendWidth =
-        preparedLegend.type === 'discrete'
+        preparedLegend.type === 'discrete' || isVerticalPosition
             ? preparedLegend.resolvedWidth
-            : getDefaultLegendWidth({
-                  availableWidth: Math.max(0, chartWidth - chartMargin.left - chartMargin.right),
-                  position: preparedLegend.position,
-                  margin: preparedLegend.margin,
-              });
+            : preparedLegend.availableWidth;
     const maxLegendHeight = getMaxLegendHeight({
         chartHeight,
         chartMargin,
@@ -434,7 +431,7 @@ export async function getLegendComponents(args: {
     });
 
     if (preparedLegend.type === 'discrete' && !isVerticalPosition) {
-        const remainingWidth = chartWidth - chartMargin.left - chartMargin.right - maxLegendWidth;
+        const remainingWidth = preparedLegend.availableWidth - maxLegendWidth;
         if (preparedLegend.align === 'right') {
             offset.left += remainingWidth;
         } else if (preparedLegend.align === 'center') {
