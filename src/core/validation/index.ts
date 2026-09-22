@@ -1,7 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
+import {PERCENTAGE_SIZE_REGEXP, TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {getRegisteredSeriesTypes, getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartData, ChartTooltip} from '../types';
@@ -52,6 +52,21 @@ function validateTooltip({tooltip}: {tooltip?: ChartTooltip}) {
     }
 }
 
+function validateLegend({legend}: {legend: ChartData['legend']}) {
+    const width = legend?.width;
+    if (typeof width !== 'string') {
+        return;
+    }
+
+    if (!PERCENTAGE_SIZE_REGEXP.test(width) || !Number.isFinite(Number(width.slice(0, -1)))) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message:
+                'legend.width must be a pixel number or a finite, nonnegative decimal percentage',
+        });
+    }
+}
+
 export function validateData(data?: ChartData) {
     if (
         isEmpty(data) ||
@@ -67,6 +82,7 @@ export function validateData(data?: ChartData) {
 
     validateAxes({xAxis: data.xAxis, yAxis: data.yAxis});
     validateTooltip({tooltip: data.tooltip});
+    validateLegend({legend: data.legend});
 
     if (data.series.data.some((s) => isEmpty(s.data))) {
         throw new ChartError({

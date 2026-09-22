@@ -17,11 +17,30 @@ import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
+function resolveLegendWidth(args: {
+    width: PreparedLegend['width'];
+    chartWidth: number;
+    chartMargin: PreparedChart['margin'];
+}): number | undefined {
+    const {width, chartWidth, chartMargin} = args;
+    if (typeof width !== 'string') {
+        return width;
+    }
+
+    const percentage = Number(width.slice(0, -1));
+    const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
+    // A valid, finite percentage can still overflow when converted to pixels.
+    return Math.min(Number.MAX_VALUE, availableWidth * (percentage / 100));
+}
+
 export async function getPreparedLegend(args: {
     legend: ChartData['legend'];
     series: ChartData['series']['data'];
+    chartWidth: number;
+    chartMargin: PreparedChart['margin'];
 }): Promise<PreparedLegend> {
-    const {legend, series} = args;
+    const {legend, series, chartWidth, chartMargin} = args;
+    const width = resolveLegendWidth({width: legend?.width, chartWidth, chartMargin});
     const seriesWithEnabledLegend = series.filter((s) => s.legend?.enabled !== false);
     const enabled = Boolean(
         typeof legend?.enabled === 'boolean' ? legend?.enabled : seriesWithEnabledLegend.length > 1,
@@ -67,7 +86,7 @@ export async function getPreparedLegend(args: {
     if (enabled) {
         height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
-            legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
+            legendWidth = width ?? CONTINUOUS_LEGEND_SIZE.width;
             height += CONTINUOUS_LEGEND_SIZE.height;
             height += ticks.labelsLineHeight + ticks.labelsMargin;
 
@@ -78,7 +97,7 @@ export async function getPreparedLegend(args: {
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
             height += lineHeight;
-            legendWidth = get(legend, 'width', lineWidth);
+            legendWidth = width ?? lineWidth;
         }
     }
     return {
@@ -334,7 +353,7 @@ function getMaxLegendWidth(args: {
     const availableWidth = Math.max(0, chartWidth - chartMargin.right - chartMargin.left);
 
     if (preparedLegend.type === 'discrete' && preparedLegend.width !== undefined) {
-        return Math.max(0, Math.min(preparedLegend.width, availableWidth));
+        return Math.max(0, Math.min(preparedLegend.resolvedWidth, availableWidth));
     }
 
     if (isVerticalPosition) {

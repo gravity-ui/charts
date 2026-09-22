@@ -39,8 +39,20 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
-    test('standalone declarations preserve BaseSeries compatibility and safe formatters', () => {
+    test('schema supports pixel and percentage legend widths', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const width of [230, '12.5%']) {
+            expect(validateConfig({series: {data: []}, legend: {width}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {width: true}})).toBe(false);
+    });
+
+    test('standalone declarations preserve series compatibility, formatters and legend widths', () => {
         const usage = `
+            const legend: ChartLegend = {width: 230};
+            legend.width = '12.5%';
+            // @ts-expect-error Pixel strings are not supported.
+            legend.width = '230px';
             const pieFormat: PieValueFormat = {
                 type: 'custom',
                 formatter: ({percentage, name, value}) => percentage?.toFixed(2) ?? name ?? String(value),

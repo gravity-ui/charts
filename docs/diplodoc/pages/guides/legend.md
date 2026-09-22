@@ -8,13 +8,15 @@ The visibility of the legend is controlled by the `enabled` property within its 
 
 ## Legend width
 
-Set `legend.width` to allocate a fixed width in pixels. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.
+Set `legend.width` to a number in pixels or a nonnegative decimal percentage such as `'25%'`. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.
+
+Percentages use the chart width after left/right chart margins, before legend or axis space is deducted, and are recalculated on resize. The external `legend.margin` is added separately.
 
 ```javascript
 legend: {
   enabled: true,
   position: 'left',
-  width: 230,
+  width: '25%',
 }
 ```
 

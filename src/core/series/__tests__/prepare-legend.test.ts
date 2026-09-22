@@ -30,7 +30,12 @@ async function prepareLegend(legend: ChartLegend, width = chartWidth) {
             ],
         },
     ];
-    const preparedLegend = await getPreparedLegend({legend, series: seriesData});
+    const preparedLegend = await getPreparedLegend({
+        legend,
+        series: seriesData,
+        chartWidth: width,
+        chartMargin,
+    });
     const series = await getPreparedSeries({
         seriesData,
         seriesOptions: undefined,
@@ -211,3 +216,32 @@ test.each([undefined, 230])(
         expect(preparedLegend.resolvedWidth).toBe(width ?? 200);
     },
 );
+
+describe.each(['discrete', 'continuous'] as const)('%s percentage legend width', (type) => {
+    test.each([
+        {width: '12.5%', containerWidth: 1000, pixels: 120},
+        {width: '0%', containerWidth: 1000, pixels: 0},
+        {width: '150%', containerWidth: 1000, pixels: 1440},
+        {width: '25%', containerWidth: 20, pixels: 0},
+        {width: '25%', containerWidth: 0, pixels: 0},
+        {
+            width: `${'9'.repeat(308)}%` as ChartLegend['width'],
+            containerWidth: 1000,
+            pixels: Number.MAX_VALUE,
+        },
+    ] as const)(
+        'resolves width without changing config (%j)',
+        async ({width, containerWidth, pixels}) => {
+            const legend = Object.freeze({enabled: true, type, width});
+            const {preparedLegend, legendConfig} = await prepareLegend(legend, containerWidth);
+            const availableWidth = Math.max(
+                0,
+                containerWidth - chartMargin.left - chartMargin.right,
+            );
+            const expectedWidth = type === 'discrete' ? Math.min(pixels, availableWidth) : pixels;
+            expect(preparedLegend.width).toBe(width);
+            expect(preparedLegend.resolvedWidth).toBe(expectedWidth);
+            expect(legendConfig.width).toBe(expectedWidth);
+        },
+    );
+});

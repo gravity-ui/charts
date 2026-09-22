@@ -1,7 +1,7 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
-import type {ChartData} from '../../types';
+import type {ChartData, ChartLegend} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
 function getValidGradient() {
@@ -15,6 +15,41 @@ function getValidGradient() {
 }
 
 describe('validation/validateData', () => {
+    test.each([
+        '',
+        '%',
+        '25',
+        '25px',
+        '25px%',
+        '25.5.5%',
+        '-25%',
+        ' 25%',
+        '25%\n',
+        '1e2%',
+        'NaN%',
+        'Infinity%',
+        `${'9'.repeat(400)}%`,
+    ])('rejects invalid legend width %j', (width) => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+            legend: {width: width as ChartLegend['width']},
+        };
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test.each<ChartLegend['width']>([undefined, 0, -10, 230, '0%', '.5%', '12.5%', '150%'])(
+        'accepts legend width %j',
+        (width) => {
+            const data: ChartData = {
+                series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+                legend: {width},
+            };
+            expect(() => validateData(data)).not.toThrow();
+        },
+    );
+
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',
         (data) => {

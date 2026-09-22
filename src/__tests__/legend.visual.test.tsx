@@ -72,6 +72,64 @@ const lineLegendWidthSeries: LineSeries[] = [
 }));
 
 test.describe('Legend', () => {
+    test('Percentage width resizes (discrete)', async ({mount}) => {
+        const data = cloneDeep(pieOverflowedLegendItemsData);
+        data.chart = {margin: {left: 10, right: 30}};
+        data.legend = {
+            enabled: true,
+            type: 'discrete',
+            position: 'left',
+            align: 'left',
+            width: '25%',
+            margin: 35,
+            html: true,
+        };
+        const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
+        const legend = component.locator('.gcharts-legend');
+        const label = component.locator('.gcharts-legend__item-text-html').last();
+        const plotBounds = component.locator('clipPath rect').first();
+
+        for (const containerWidth of [1000, 500, 1000]) {
+            await component.update(<ChartTestStory data={data} styles={{width: containerWidth}} />);
+            const legendWidth = (containerWidth - 40) * 0.25;
+            await expect(legend).toHaveAttribute('width', String(legendWidth));
+            await expect(plotBounds).toHaveAttribute(
+                'width',
+                String(containerWidth - 40 - legendWidth - 35),
+            );
+            await expect
+                .poll(async () => (await label.boundingBox())?.width)
+                .toBeLessThanOrEqual(legendWidth - 15 + 1);
+        }
+    });
+
+    test('Percentage width resizes (continuous)', async ({mount}) => {
+        const data = cloneDeep(pieOverflowedLegendItemsData);
+        data.chart = {margin: {left: 10, right: 30}};
+        data.legend = {
+            enabled: true,
+            type: 'continuous',
+            position: 'left',
+            align: 'left',
+            width: '25%',
+            margin: 35,
+            colorScale: {colors: ['#e8f1fa', '#348bdc'], domain: [0, 10]},
+        };
+        const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
+        const gradient = component.locator('.gcharts-legend image');
+        const plotBounds = component.locator('clipPath rect').first();
+
+        for (const containerWidth of [1000, 500, 1000]) {
+            await component.update(<ChartTestStory data={data} styles={{width: containerWidth}} />);
+            const legendWidth = (containerWidth - 40) * 0.25;
+            await expect(gradient).toHaveAttribute('width', String(legendWidth));
+            await expect(plotBounds).toHaveAttribute(
+                'width',
+                String(containerWidth - 40 - legendWidth - 35),
+            );
+        }
+    });
+
     test.describe('Discrete', () => {
         test.describe('Width larger than chart', () => {
             test('Bottom SVG legend in a 400px chart', async ({mount}) => {
