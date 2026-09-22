@@ -84,8 +84,10 @@ export interface ChartLegend extends ChartLegendItem {
      * Defaults to the available chart width for top/bottom positions and half of it for left/right.
      * For continuous legends, controls the gradient width and defaults to 200.
      * Continuous pixel widths are not capped at the available chart width.
-     * For left/right continuous legends, pixel widths align within half the width remaining after
-     * chart margins and legend.margin; percentage widths align within their allocated legend width.
+     * For left/right continuous legends, pixel widths align within an area of width
+     * max(0, (availableWidth - legend.margin) / 2), where availableWidth is the chart width
+     * after left/right chart margins, clamped to zero.
+     * Percentage widths align within their allocated legend width.
      * @minimum 0
      */
     width?: number | `${number}px` | `${number}%`;

@@ -14,7 +14,7 @@ import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 import {LONG_TEXT} from './constants';
 
 async function expectSvgWidth(locator: Locator, width: number) {
-    await expect(locator).toHaveAttribute('width', /^\d/);
+    await expect(locator).toHaveAttribute('width', /^-?(?:\d|\.\d)/);
     await expect
         .poll(async () => Number.parseFloat((await locator.getAttribute('width')) ?? ''))
         .toBeCloseTo(width, 5);

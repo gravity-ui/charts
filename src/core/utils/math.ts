@@ -34,6 +34,8 @@ interface ParsedNumericProperty {
 /**
  * Parses a numeric property without scaling percentages, so callers can validate or cap them first.
  * Preserves the permissive numeric prefix parsing used by calculateNumericProperty.
+ * Numeric inputs, including NaN and infinities, are preserved in the returned value.
+ * Callers must reject non-finite values where required.
  * Callers requiring strict validation must check the input first, as parseLegendWidth does.
  */
 export function parseNumericProperty(
@@ -59,6 +61,7 @@ export function parseNumericProperty(
     // TODO: Apply strict decimal-format and finite-value validation to other numeric config fields
     // after auditing compatibility. parseLegendWidth already validates these; preserve signed values
     // for coordinates and offsets rather than applying the legend's nonnegative constraint globally.
+    // https://github.com/gravity-ui/charts/issues/702
     const parsedValue = Number.parseFloat(value);
     return Number.isNaN(parsedValue) ? undefined : {value: parsedValue, unit};
 }
