@@ -82,6 +82,10 @@ export async function getShapes(args: Args) {
         zoomState,
     } = args;
 
+    if (boundsWidth <= 0 || boundsHeight <= 0) {
+        return {shapes: [], shapesData: []};
+    }
+
     const visibleSeries = getOnlyVisibleSeries(series);
     const groupedSeries = group(visibleSeries, (item) => {
         if (item.type === 'line') {

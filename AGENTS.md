@@ -18,6 +18,7 @@
 # Tests
 
 - Add a focused regression test for the changed invariant. Inspect every changed visual snapshot and keep unrelated snapshots unchanged; avoid assertions based only on incidental text or markup.
+- When reviewing layout and dimension math, explicitly trace through boundary cases: zero width, width exceeding available space, and negative computed values.
 
 # Data preparation and rendering
 

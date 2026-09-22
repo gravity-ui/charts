@@ -20,10 +20,14 @@ export const LegendPosition = {
         align: 'center',
         verticalAlign: 'top',
         justifyContent: 'center',
+        width: undefined,
     },
     argTypes: {
         enabled: {
             control: 'boolean',
+        },
+        width: {
+            control: 'number',
         },
         position: {
             control: 'inline-radio',
@@ -44,6 +48,7 @@ export const LegendPosition = {
     },
     render: (args: {
         enabled: boolean;
+        width?: number;
         position: 'top' | 'bottom' | 'left' | 'right';
         align: 'left' | 'center' | 'right';
         verticalAlign: 'top' | 'center' | 'bottom';
@@ -53,6 +58,7 @@ export const LegendPosition = {
             ...legendPositionData,
             legend: {
                 enabled: args.enabled,
+                width: args.width,
                 position: args.position,
                 align: args.align,
                 verticalAlign: args.verticalAlign,

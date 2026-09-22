@@ -167,7 +167,7 @@ export function getChartDimensions({
     const leftOffset = getLeftOffset({preparedLegend, legendConfig});
 
     const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
-    const adjustedBoundsWidth = boundsWidth - rightOffset - leftOffset;
+    const adjustedBoundsWidth = Math.max(0, boundsWidth - rightOffset - leftOffset);
 
     return {boundsWidth: adjustedBoundsWidth, boundsHeight};
 }
