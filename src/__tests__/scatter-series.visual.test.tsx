@@ -38,11 +38,13 @@ test.describe('Scatter series', () => {
         );
         const cluster = component.locator('.gcharts-scatter__cluster-label').first();
         const box = await getLocatorBoundingBox(cluster);
+        const x = Math.round(box.x + box.width / 2);
+        const y = Math.round(box.y + box.height / 2);
 
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.move(x, y);
         await expect(page.locator('.gcharts-tooltip')).toContainText('3');
 
-        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.click(x, y);
         await expect(component.locator('[data-qa="clicked-cluster"]')).toHaveText('3:a,b,c');
         await expect(component.locator('svg')).toHaveScreenshot();
     });
