@@ -275,6 +275,7 @@
       "enabled",
       "html",
       "itemDistance",
+      "itemMaxRowCount",
       "itemStyle",
       "justifyContent",
       "margin",

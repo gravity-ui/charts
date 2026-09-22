@@ -89,37 +89,37 @@ async function appendPaginator(args: {
         getTextSize(paginationCounterText),
     ]);
 
-    paginationLine
-        .append('text')
-        .text('▲')
-        .attr('class', function () {
-            return b('pagination-arrow', {inactive: pageIndex === 0});
-        })
-        .style('font-size', legend.itemStyle.fontSize)
-        .on('click', function () {
-            if (pageIndex - 1 >= 0) {
-                onArrowClick(pageIndex - 1);
-            }
-        });
+    const appendArrow = (text: string, x: number, nextPageIndex: number) => {
+        const inactive = nextPageIndex < 0 || nextPageIndex >= maxPage;
+        const arrow = paginationLine
+            .append('g')
+            .attr('class', b('pagination-arrow', {inactive}))
+            .attr('transform', `translate(${x}, 0)`)
+            .on('click', () => {
+                if (!inactive) {
+                    onArrowClick(nextPageIndex);
+                }
+            });
+        arrow
+            .append('rect')
+            .attr('y', -legend.lineHeight / 2)
+            .attr('width', arrowIcon.width)
+            .attr('height', legend.lineHeight)
+            .attr('fill', 'transparent');
+        arrow
+            .append('text')
+            .text(text)
+            .style('font-size', legend.itemStyle.fontSize)
+            .style('dominant-baseline', 'middle');
+    };
+    appendArrow('▲', 0, pageIndex - 1);
     paginationLine
         .append('text')
         .text(paginationCounterText)
         .attr('class', b('pagination-counter'))
         .attr('x', arrowIcon.width)
         .style('font-size', legend.itemStyle.fontSize);
-    paginationLine
-        .append('text')
-        .text('▼')
-        .attr('class', function () {
-            return b('pagination-arrow', {inactive: pageIndex === maxPage - 1});
-        })
-        .attr('x', arrowIcon.width + counter.width)
-        .style('font-size', legend.itemStyle.fontSize)
-        .on('click', function () {
-            if (pageIndex + 1 < maxPage) {
-                onArrowClick(pageIndex + 1);
-            }
-        });
+    appendArrow('▼', arrowIcon.width + counter.width, pageIndex + 1);
     paginationLine.attr('transform', transform);
 }
 
@@ -230,8 +230,12 @@ export const Legend = (props: Props) => {
             let legendLeft = 0;
             let legendTop = 0;
             if (legend.type === 'discrete') {
-                const start = config.pagination?.pages[pageIndex]?.start;
-                const end = config.pagination?.pages[pageIndex]?.end;
+                const resolvedPageIndex = Math.min(
+                    pageIndex,
+                    (config.pagination?.pages.length ?? 1) - 1,
+                );
+                const start = config.pagination?.pages[resolvedPageIndex]?.start;
+                const end = config.pagination?.pages[resolvedPageIndex]?.end;
                 const pageItems =
                     typeof start === 'number' && typeof end === 'number'
                         ? items.slice(start, end)
@@ -271,6 +275,17 @@ export const Legend = (props: Props) => {
 
                     const legendLineHeight = Math.max(...line.map((l) => l.height));
                     renderLegendSymbol({selection: legendItemTemplate, legend, legendLineHeight});
+                    if (legend.itemMaxRowCount > 1) {
+                        legendItemTemplate
+                            .append('rect')
+                            .attr('x', (_, i) => getXPosition(i))
+                            .attr(
+                                'width',
+                                (d) => d.symbol.bboxWidth + d.symbol.padding + d.textWidth,
+                            )
+                            .attr('height', legendLineHeight)
+                            .attr('fill', 'transparent');
+                    }
 
                     if (htmlLegendLine) {
                         htmlLegendLine
@@ -279,14 +294,31 @@ export const Legend = (props: Props) => {
                             .enter()
                             .append('div')
                             .attr('class', function (d) {
-                                const mods = {selected: d.visible, unselected: !d.visible};
+                                const mods = {
+                                    selected: d.visible,
+                                    unselected: !d.visible,
+                                    multiline: legend.itemMaxRowCount > 1,
+                                };
                                 return b('item-text-html', mods);
                             })
                             .style('font-size', legend.itemStyle.fontSize)
                             .style('position', 'absolute')
+                            .style('font-weight', () =>
+                                legend.itemMaxRowCount > 1
+                                    ? (legend.itemStyle.fontWeight ?? null)
+                                    : null,
+                            )
+                            .style('line-height', () =>
+                                legend.itemMaxRowCount > 1 ? `${legend.lineHeight}px` : null,
+                            )
+                            .style('-webkit-line-clamp', (d) =>
+                                d.textRowCount ? String(d.textRowCount) : null,
+                            )
+                            .style('max-height', (d) => (d.textRowCount ? `${d.height}px` : null))
                             .style('max-width', function (d) {
                                 return `${d.textWidth}px`;
                             })
+                            .style('width', (d) => (d.textRowCount ? `${d.textWidth}px` : null))
                             .style('left', function (d, i) {
                                 return `${getXPosition(i) + d.symbol.bboxWidth + d.symbol.padding}px`;
                             })
@@ -306,7 +338,7 @@ export const Legend = (props: Props) => {
                             })
                             .html((d) => d.text);
                     } else {
-                        legendItemTemplate
+                        const text = legendItemTemplate
                             .append('text')
                             .attr('x', function (legendItem, i) {
                                 return (
@@ -315,14 +347,39 @@ export const Legend = (props: Props) => {
                                     legendItem.symbol.padding
                                 );
                             })
-                            .attr('y', legend.hangingOffset)
+                            .attr(
+                                'y',
+                                (d) =>
+                                    legend.hangingOffset +
+                                    (d.textRows ? (legendLineHeight - d.height) / 2 : 0),
+                            )
                             .attr('height', legend.height)
                             .attr('class', function (d) {
                                 const mods = {selected: d.visible, unselected: !d.visible};
                                 return b('item-text', mods);
                             })
-                            .html((d) => d.text)
+                            .html((d) => (d.textRows ? '' : d.text))
                             .style('font-size', legend.itemStyle.fontSize);
+                        text.filter((d) => Boolean(d.textRows))
+                            .style('font-weight', () => legend.itemStyle.fontWeight ?? null)
+                            .each(function (d) {
+                                const label = select(this);
+                                label
+                                    .selectAll('tspan')
+                                    .data(d.textRows ?? [])
+                                    .enter()
+                                    .append('tspan')
+                                    .style('dominant-baseline', 'hanging')
+                                    .attr('x', label.attr('x'))
+                                    .attr(
+                                        'y',
+                                        (_, i) =>
+                                            legend.hangingOffset +
+                                            (legendLineHeight - d.height) / 2 +
+                                            i * legend.lineHeight,
+                                    )
+                                    .text((row) => row);
+                            });
                     }
 
                     let contentWidth = 0;
@@ -355,7 +412,10 @@ export const Legend = (props: Props) => {
                         }
                     }
 
-                    const top = legendLineHeights.reduce((acc, h) => acc + h, 0);
+                    const top =
+                        legend.title.height +
+                        legend.title.margin +
+                        legendLineHeights.reduce((acc, h) => acc + h, 0);
                     legendLineHeights.push(legendLineHeight);
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
@@ -367,7 +427,7 @@ export const Legend = (props: Props) => {
                     )})`;
                     await appendPaginator({
                         container: svgElement,
-                        pageIndex: pageIndex,
+                        pageIndex: resolvedPageIndex,
                         legend,
                         transform,
                         pages: config.pagination.pages,

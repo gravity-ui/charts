@@ -20,6 +20,16 @@ legend: {
 
 Without an explicit width, a discrete legend uses the available chart width for `top` and `bottom` positions, or half the available width after subtracting the legend margin for `left` and `right` positions. A continuous legend uses `width` for its gradient and defaults to 200 pixels.
 
+## Wrapping long labels
+
+Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap text inside each discrete legend item. The default is `1` (single-line truncation). This works with SVG and HTML labels in all legend positions.
+
+Labels wrap within the legend width after subtracting the marker and its padding. Explicit line breaks are preserved, long unbroken words are split, and the final visible row is ellipsized when needed. HTML labels also support `<br>`.
+
+Labels reflow on resize. Pagination keeps items together, reducing the row count only when an item is taller than a page.
+
+<div data-chart-example="legend/wrapping"></div>
+
 ## Overriding legend labels
 
 By default, the legend uses the name property of the series or individual data point (depending on the visualization type) for its entries. You can override this behavior by defining a custom label that will be displayed exclusively in the legend. This is useful when you want to provide a simplified, abbreviated, or more descriptive name in the legend compared to the main data point identification.

@@ -45,6 +45,16 @@
         white-space: nowrap;
         text-overflow: ellipsis;
 
+        &_multiline {
+            /* Required for multi-line ellipsis with -webkit-line-clamp. */
+            /* stylelint-disable-next-line value-no-vendor-prefix */
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
         &_unselected {
             color: var(--g-color-text-hint);
         }

@@ -568,3 +568,12 @@ describe('validation/validateData', () => {
         );
     });
 });
+
+test.each([0, -1, 1.5, NaN, Infinity])('rejects legend.itemMaxRowCount=%s', (itemMaxRowCount) => {
+    expect(() =>
+        validateData({
+            legend: {itemMaxRowCount},
+            series: {data: [{type: 'line', name: 'A', data: [{x: 0, y: 1}]}]},
+        }),
+    ).toThrow('legend.itemMaxRowCount must be a positive integer');
+});

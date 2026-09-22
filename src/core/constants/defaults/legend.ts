@@ -5,6 +5,7 @@ export const legendDefaults = {
     verticalAlign: 'top' as Required<ChartLegend>['verticalAlign'],
     justifyContent: 'center' as Required<ChartLegend>['justifyContent'],
     itemDistance: 20,
+    itemMaxRowCount: 1,
     margin: 15,
     itemStyle: {
         fontSize: '12px',

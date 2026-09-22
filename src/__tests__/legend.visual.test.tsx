@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
@@ -456,4 +457,175 @@ test.describe('Legend', () => {
             });
         });
     });
+});
+
+async function getLegendBox(locator: Locator) {
+    const box = await locator.boundingBox();
+    if (!box) {
+        throw new Error('Expected a visible legend element');
+    }
+    return box;
+}
+
+test.describe('Multiline legend labels', () => {
+    for (const html of [false, true]) {
+        for (const position of ['left', 'bottom'] as const) {
+            const webkit = !html && position === 'left' ? ' @webkit' : '';
+            test(`wraps, ellipsizes and selects (${position}, html=${html})${webkit}`, async ({
+                mount,
+                browserName,
+            }) => {
+                const names = [
+                    'Revenue from the international enterprise customer segment including recurring subscriptions and support',
+                    'Short',
+                    'ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                    'First line\nSecond line',
+                ];
+                const data: ChartData = {
+                    legend: {enabled: true, position, width: 180, itemMaxRowCount: 3, html},
+                    series: {
+                        data: [
+                            {
+                                type: 'pie',
+                                dataLabels: {enabled: false},
+                                data: names.map((name, index) => {
+                                    let label = name;
+                                    if (html) {
+                                        label =
+                                            index === 0
+                                                ? `<b>${name}</b>`
+                                                : name.replace('\n', '<br>');
+                                    }
+                                    return {name: label, value: 1};
+                                }),
+                            },
+                        ],
+                    },
+                };
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: 500, height: 500}} />,
+                );
+                const labels = component.locator(
+                    html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
+                );
+                await expect(labels).toHaveCount(4);
+                const longBox = await getLegendBox(labels.first());
+                const shortBox = await getLegendBox(labels.nth(1));
+                expect(longBox.height).toBeGreaterThan(shortBox.height * 2);
+                expect(longBox.width).toBeLessThanOrEqual(166);
+                if (!html) {
+                    await expect(labels.first().locator('tspan')).toHaveCount(3);
+                    await expect(labels.first().locator('tspan').last()).toContainText('…');
+                    await expect(labels.last().locator('tspan')).toHaveCount(2);
+                }
+                // WebKit clipped the first SVG row unless each tspan had an explicit hanging baseline.
+                if (browserName === 'chromium' || (!html && position === 'left')) {
+                    await expect(component).toHaveScreenshot();
+                }
+                // The last visible text row belongs to the same click target as the first.
+                if (html) {
+                    await labels.first().click({position: {x: 5, y: longBox.height - 3}});
+                } else {
+                    await labels.first().locator('tspan').last().click();
+                }
+                await expect(labels.nth(1)).toHaveClass(/unselected/);
+                await expect(labels.first()).not.toHaveClass(/unselected/);
+            });
+        }
+
+        test(`reflows on resize and preserves selection (html=${html})`, async ({mount}) => {
+            const data: ChartData = {
+                legend: {enabled: true, position: 'left', itemMaxRowCount: 4, html},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            dataLabels: {enabled: false},
+                            data: [
+                                {name: 'Revenue from international enterprise customers', value: 1},
+                                {name: 'Short', value: 1},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 400, height: 400}} />,
+            );
+            const labels = component.locator(
+                html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
+            );
+            await expect(labels).toHaveCount(2);
+            await labels.first().click();
+            await expect(labels.last()).toHaveClass(/unselected/);
+            const before = (await getLegendBox(labels.first())).height;
+            await component.update(
+                <ChartTestStory data={data} styles={{width: 800, height: 400}} />,
+            );
+            await expect
+                .poll(async () => (await labels.first().boundingBox())?.height ?? before)
+                .toBeLessThan(before);
+            await expect(labels.last()).toHaveClass(/unselected/);
+            const targets = html
+                ? labels
+                : component.locator('.gcharts-legend__item > rect[fill="transparent"]');
+            const first = await getLegendBox(targets.first());
+            const second = await getLegendBox(targets.last());
+            expect(
+                second.y >= first.y + first.height - 1 || second.x >= first.x + first.width,
+            ).toBe(true);
+        });
+
+        test(`paginates whole items and caps oversized labels (html=${html})${html ? '' : ' @webkit'}`, async ({
+            mount,
+            browserName,
+        }) => {
+            const data: ChartData = {
+                legend: {
+                    enabled: true,
+                    position: 'left',
+                    width: 160,
+                    itemMaxRowCount: 30,
+                    html,
+                    title: {text: 'Legend'},
+                },
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            dataLabels: {enabled: false},
+                            data: [
+                                {name: 'A very long label '.repeat(30), value: 1},
+                                {name: 'A second item with several words', value: 1},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 400, height: 150}} />,
+            );
+            const labels = component.locator(
+                html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
+            );
+            await expect(labels).toHaveCount(1);
+            const counter = component.locator('.gcharts-legend__pagination-counter');
+            await expect(counter).toHaveText('1/2');
+            const labelBox = await getLegendBox(labels.first());
+            const counterBox = await getLegendBox(counter);
+            expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(counterBox.y + 2);
+            if (!html) {
+                await expect(labels.first().locator('tspan').last()).toContainText('…');
+            }
+            if (browserName === 'chromium') {
+                await expect(component).toHaveScreenshot();
+            }
+            await component.locator('.gcharts-legend__pagination-arrow').last().click();
+            await expect(counter).toHaveText('2/2');
+            await expect(labels).toHaveCount(1);
+            await labels.first().click();
+            await component.locator('.gcharts-legend__pagination-arrow').first().click();
+            await expect(labels.first()).toHaveClass(/unselected/);
+        });
+    }
 });

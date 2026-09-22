@@ -125,7 +125,7 @@ export interface PreparedLegend extends Required<
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
 
-export type LegendItem = {
+export interface LegendItem {
     id: string;
     color: string;
     height: number;
@@ -133,10 +133,12 @@ export type LegendItem = {
     text: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
+    textRows?: string[];
+    textRowCount?: number;
     dashStyle?: DashStyle;
     overflowed?: boolean;
     visible?: boolean;
-};
+}
 
 export type PreparedHaloOptions = {
     enabled: boolean;

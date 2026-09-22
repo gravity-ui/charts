@@ -13,6 +13,7 @@ import {
     getTextWithElipsis,
 } from '../utils';
 
+import {createLegendLabelMeasurer, limitLegendItemRows, wrapLegendLabel} from './legend-label';
 import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
@@ -22,6 +23,7 @@ export async function getPreparedLegend(args: {
     series: ChartData['series']['data'];
 }): Promise<PreparedLegend> {
     const {legend, series} = args;
+    const itemMaxRowCount = legend?.itemMaxRowCount ?? legendDefaults.itemMaxRowCount;
     const seriesWithEnabledLegend = series.filter((s) => s.legend?.enabled !== false);
     const enabled = Boolean(
         typeof legend?.enabled === 'boolean' ? legend?.enabled : seriesWithEnabledLegend.length > 1,
@@ -89,6 +91,7 @@ export async function getPreparedLegend(args: {
         hangingOffset: itemHangingOffset,
         height,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
+        itemMaxRowCount,
         itemStyle: computedItemStyle,
         lineHeight,
         margin: get(legend, 'margin', legendDefaults.margin),
@@ -159,82 +162,118 @@ async function getGroupedLegendItems(args: {
     let lineIndex = 0;
 
     const getLegendItemTextSize = getTextSizeFn({style: preparedLegend.itemStyle});
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const resultItem = clone(item) as LegendItem;
-        resultItem.text = item.name;
+    const multiline = preparedLegend.itemMaxRowCount > 1;
+    const measurer = multiline
+        ? createLegendLabelMeasurer(
+              preparedLegend.itemStyle,
+              preparedLegend.lineHeight,
+              preparedLegend.html,
+          )
+        : undefined;
+    try {
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const resultItem = clone(item) as LegendItem;
+            resultItem.text = item.name;
 
-        const maxTextWidth = Math.max(
-            0,
-            maxLegendWidth - resultItem.symbol.bboxWidth - resultItem.symbol.padding,
-        );
+            const maxTextWidth = Math.max(
+                0,
+                maxLegendWidth - resultItem.symbol.bboxWidth - resultItem.symbol.padding,
+            );
 
-        let textHeight = 0;
-        let textWidth = 0;
-        if (preparedLegend.html) {
-            const textSize = await getLabelsSize({
-                labels: [resultItem.text],
-                html: true,
-                style: preparedLegend.itemStyle,
-            });
-            textHeight = textSize.maxHeight;
-            textWidth = textSize.maxWidth;
-        } else {
-            const textSize = await getLegendItemTextSize(resultItem.text);
-            textHeight = textSize.height;
-            textWidth = textSize.width;
-        }
-
-        resultItem.height = textHeight;
-
-        if (textWidth > maxTextWidth) {
-            resultItem.overflowed = true;
-
-            if (preparedLegend.html) {
-                resultItem.textWidth = maxTextWidth;
+            if (measurer) {
+                if (preparedLegend.html) {
+                    const size = await measurer.measureHtml(resultItem.text, maxTextWidth);
+                    resultItem.textWidth = size.width;
+                    resultItem.textRowCount = Math.min(size.rows, preparedLegend.itemMaxRowCount);
+                    resultItem.overflowed = size.rows > preparedLegend.itemMaxRowCount;
+                } else {
+                    resultItem.textRows = await wrapLegendLabel({
+                        text: measurer.decode(resultItem.text),
+                        width: maxTextWidth,
+                        maxRowCount: preparedLegend.itemMaxRowCount,
+                        getTextWidth: measurer.getTextWidth,
+                    });
+                    resultItem.textWidth = Math.max(
+                        0,
+                        ...(await Promise.all(resultItem.textRows.map(measurer.getTextWidth))),
+                    );
+                    resultItem.textRowCount = resultItem.textRows.length;
+                }
+                resultItem.height =
+                    Math.max(1, resultItem.textRowCount) * preparedLegend.lineHeight;
             } else {
-                resultItem.text = await getTextWithElipsis({
-                    text: resultItem.text,
-                    getTextWidth: async (s: string) => (await getLegendItemTextSize(s)).width,
-                    maxWidth: maxTextWidth,
-                });
-                resultItem.textWidth = (await getLegendItemTextSize(resultItem.text)).width;
+                let textHeight = 0;
+                let textWidth = 0;
+                if (preparedLegend.html) {
+                    const textSize = await getLabelsSize({
+                        labels: [resultItem.text],
+                        html: true,
+                        style: preparedLegend.itemStyle,
+                    });
+                    textHeight = textSize.maxHeight;
+                    textWidth = textSize.maxWidth;
+                } else {
+                    const textSize = await getLegendItemTextSize(resultItem.text);
+                    textHeight = textSize.height;
+                    textWidth = textSize.width;
+                }
+
+                resultItem.height = textHeight;
+
+                if (textWidth > maxTextWidth) {
+                    resultItem.overflowed = true;
+
+                    if (preparedLegend.html) {
+                        resultItem.textWidth = maxTextWidth;
+                    } else {
+                        resultItem.text = await getTextWithElipsis({
+                            text: resultItem.text,
+                            getTextWidth: async (s: string) =>
+                                (await getLegendItemTextSize(s)).width,
+                            maxWidth: maxTextWidth,
+                        });
+                        resultItem.textWidth = (await getLegendItemTextSize(resultItem.text)).width;
+                    }
+                } else {
+                    resultItem.textWidth = textWidth;
+                }
             }
-        } else {
-            resultItem.textWidth = textWidth;
+
+            textWidthsInLine.push(resultItem.textWidth);
+            const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
+
+            if (!result[lineIndex]) {
+                result[lineIndex] = [];
+            }
+
+            result[lineIndex].push(resultItem);
+            const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
+                return acc + symbol.bboxWidth + symbol.padding;
+            }, 0);
+            const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
+            const isOverflowedAsOnlyItemInLine =
+                resultItem.overflowed && result[lineIndex].length === 1;
+            const isCurrentLineOverMaxWidth =
+                maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
+
+            if (isOverflowedAsOnlyItemInLine) {
+                lineIndex += 1;
+                textWidthsInLine = [];
+            } else if (isCurrentLineOverMaxWidth) {
+                result[lineIndex].pop();
+                lineIndex += 1;
+                textWidthsInLine = [resultItem.textWidth];
+                const nextLineIndex = lineIndex;
+                result[nextLineIndex] = [];
+                result[nextLineIndex].push(resultItem);
+            }
         }
 
-        textWidthsInLine.push(resultItem.textWidth);
-        const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
-
-        if (!result[lineIndex]) {
-            result[lineIndex] = [];
-        }
-
-        result[lineIndex].push(resultItem);
-        const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
-            return acc + symbol.bboxWidth + symbol.padding;
-        }, 0);
-        const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
-        const isOverflowedAsOnlyItemInLine =
-            resultItem.overflowed && result[lineIndex].length === 1;
-        const isCurrentLineOverMaxWidth =
-            maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
-
-        if (isOverflowedAsOnlyItemInLine) {
-            lineIndex += 1;
-            textWidthsInLine = [];
-        } else if (isCurrentLineOverMaxWidth) {
-            result[lineIndex].pop();
-            lineIndex += 1;
-            textWidthsInLine = [resultItem.textWidth];
-            const nextLineIndex = lineIndex;
-            result[nextLineIndex] = [];
-            result[nextLineIndex].push(resultItem);
-        }
+        return result.filter((line) => line.length);
+    } finally {
+        measurer?.destroy();
     }
-
-    return result;
 }
 
 function getPagination(args: {
@@ -254,7 +293,10 @@ function getPagination(args: {
         const legendLineHeight = Math.max(...item.map(({height}) => height));
         currentHeight += legendLineHeight;
 
-        if (currentHeight > maxLegendHeight - paginatorHeight) {
+        if (
+            currentHeight > maxLegendHeight - paginatorHeight &&
+            pages[currentPageIndex].start < i
+        ) {
             pages[currentPageIndex].end = i;
             currentPageIndex += 1;
             currentHeight = legendLineHeight;
@@ -376,14 +418,17 @@ export async function getLegendComponents(args: {
         preparedLegend,
         isVerticalPosition,
     });
-    const maxLegendHeight = getMaxLegendHeight({
-        chartHeight,
-        chartMargin,
-        preparedLegend,
-        isVerticalPosition,
-    });
+    const maxLegendHeight = Math.max(
+        0,
+        getMaxLegendHeight({
+            chartHeight,
+            chartMargin,
+            preparedLegend,
+            isVerticalPosition,
+        }),
+    );
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
-    const items = await getGroupedLegendItems({
+    let items = await getGroupedLegendItems({
         maxLegendWidth,
         items: flattenLegendItems,
         preparedLegend,
@@ -392,6 +437,8 @@ export async function getLegendComponents(args: {
     let pagination: LegendConfig['pagination'] | undefined;
 
     if (preparedLegend.type === 'discrete') {
+        const titleHeight = preparedLegend.title.height + preparedLegend.title.margin;
+        const contentHeight = Math.max(0, maxLegendHeight - titleHeight);
         const lineHeights = items.reduce<number[]>((acc, item) => {
             if (item.length) {
                 acc.push(Math.max(...item.map(({height}) => height)));
@@ -401,17 +448,28 @@ export async function getLegendComponents(args: {
         }, []);
         let legendHeight = lineHeights.reduce((acc, height) => acc + height, 0);
 
-        if (maxLegendHeight < legendHeight) {
-            const lines = Math.floor(maxLegendHeight / preparedLegend.lineHeight);
+        if (contentHeight < legendHeight) {
+            const lines = Math.floor(contentHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
-            pagination = getPagination({
-                items,
-                maxLegendHeight: legendHeight,
-                paginatorHeight: preparedLegend.lineHeight,
-            });
+            if (preparedLegend.itemMaxRowCount > 1) {
+                const maxRows = Math.max(0, lines - 1);
+                if (maxRows === 0) {
+                    items = [];
+                    legendHeight = 0;
+                } else {
+                    await limitLegendItemRows(items.flat(), maxRows, preparedLegend);
+                }
+            }
+            pagination = items.length
+                ? getPagination({
+                      items,
+                      maxLegendHeight: legendHeight,
+                      paginatorHeight: preparedLegend.lineHeight,
+                  })
+                : undefined;
         }
 
-        preparedLegend.height = legendHeight;
+        preparedLegend.height = legendHeight + titleHeight;
         preparedLegend.resolvedWidth = maxLegendWidth;
     }
 
