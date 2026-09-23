@@ -39,6 +39,37 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations support automatic legend width and size limits', () => {
+        const usage = `
+            const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};
+            const fixedLegend: ChartLegend = {width: 230, maxWidth: 100};
+            const continuousLegend: ChartLegend = {type: 'continuous', maxWidth: '120px'};
+            // @ts-expect-error A maximum width must be a number or string.
+            const invalidLegend: ChartLegend = {maxWidth: true};
+            void [autoLegend, fixedLegend, continuousLegend, invalidLegend];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema supports automatic legend width and numeric or string limits', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const maxWidth of [230, '230px', '30.5%']) {
+            expect(
+                validateConfig({
+                    series: {data: []},
+                    legend: {position: 'left', width: 'auto', maxWidth},
+                }),
+            ).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: true}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(false);
+    });
+
     test('standalone declarations preserve BaseSeries compatibility and safe formatters', () => {
         const usage = `
             const pieFormat: PieValueFormat = {

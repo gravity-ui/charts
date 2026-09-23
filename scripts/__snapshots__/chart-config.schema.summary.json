@@ -278,6 +278,7 @@
       "itemStyle",
       "justifyContent",
       "margin",
+      "maxWidth",
       "position",
       "title",
       "type",

@@ -6,6 +6,7 @@ import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
 import type {PreparedChart} from '../chart/types';
 import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
 import {
+    calculateNumericProperty,
     getDefaultColorStops,
     getDomainForContinuousColorScale,
     getLabelsSize,
@@ -67,7 +68,8 @@ export async function getPreparedLegend(args: {
     if (enabled) {
         height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
-            legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
+            legendWidth =
+                typeof legend?.width === 'number' ? legend.width : CONTINUOUS_LEGEND_SIZE.width;
             height += CONTINUOUS_LEGEND_SIZE.height;
             height += ticks.labelsLineHeight + ticks.labelsMargin;
 
@@ -78,7 +80,7 @@ export async function getPreparedLegend(args: {
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
             height += lineHeight;
-            legendWidth = get(legend, 'width', lineWidth);
+            legendWidth = typeof legend?.width === 'number' ? legend.width : lineWidth;
         }
     }
     return {
@@ -97,12 +99,17 @@ export async function getPreparedLegend(args: {
             enable: isTitleEnabled,
             hangingOffset: titleHangingOffset,
             text: titleText,
+            resolvedText: titleText,
+            width: titleTextSize.width,
+            resolvedWidth: titleTextSize.width,
             margin: titleMargin,
             style: titleStyle,
             height: titleHeight,
             align: get(legend, 'title.align', 'left'),
         },
         width: legend?.width,
+        maxWidth: legend?.maxWidth,
+        constrainContent: false,
         resolvedWidth: legendWidth,
         ticks,
         colorScale,
@@ -150,7 +157,7 @@ async function getGroupedLegendItems(args: {
     preparedLegend: PreparedLegend;
 }) {
     const {maxLegendWidth, items, preparedLegend} = args;
-    if (maxLegendWidth <= 0) {
+    if (maxLegendWidth <= 0 || items.length === 0) {
         return [];
     }
 
@@ -333,15 +340,33 @@ function getMaxLegendWidth(args: {
     const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
     const availableWidth = Math.max(0, chartWidth - chartMargin.right - chartMargin.left);
 
-    if (preparedLegend.type === 'discrete' && preparedLegend.width !== undefined) {
-        return Math.max(0, Math.min(preparedLegend.width, availableWidth));
+    const resolvedMaxWidth = calculateNumericProperty({
+        value: preparedLegend.maxWidth,
+        base: availableWidth,
+    });
+    const maxWidth =
+        resolvedMaxWidth !== undefined && Number.isFinite(resolvedMaxWidth)
+            ? Math.max(0, resolvedMaxWidth)
+            : Infinity;
+    const autoWidth =
+        preparedLegend.type === 'discrete' && preparedLegend.width === 'auto' && isVerticalPosition;
+    preparedLegend.constrainContent = autoWidth || Number.isFinite(maxWidth);
+    const availableLegendWidth =
+        preparedLegend.constrainContent && isVerticalPosition
+            ? Math.max(0, availableWidth - preparedLegend.margin)
+            : availableWidth;
+    const defaultWidth = isVerticalPosition
+        ? Math.max(0, (availableWidth - preparedLegend.margin) / 2)
+        : availableWidth;
+    let width =
+        autoWidth || (preparedLegend.type === 'continuous' && preparedLegend.constrainContent)
+            ? availableLegendWidth
+            : defaultWidth;
+    if (preparedLegend.type === 'discrete' && typeof preparedLegend.width === 'number') {
+        width = preparedLegend.width;
     }
 
-    if (isVerticalPosition) {
-        return Math.max(0, (availableWidth - preparedLegend.margin) / 2);
-    }
-
-    return availableWidth;
+    return Math.max(0, Math.min(width, maxWidth, availableLegendWidth));
 }
 
 function getMaxLegendHeight(args: {
@@ -370,18 +395,21 @@ export async function getLegendComponents(args: {
 
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
-    const maxLegendWidth = getMaxLegendWidth({
+    let maxLegendWidth = getMaxLegendWidth({
         chartWidth,
         chartMargin,
         preparedLegend,
         isVerticalPosition,
     });
-    const maxLegendHeight = getMaxLegendHeight({
-        chartHeight,
-        chartMargin,
-        preparedLegend,
-        isVerticalPosition,
-    });
+    const maxLegendHeight = Math.max(
+        0,
+        getMaxLegendHeight({
+            chartHeight,
+            chartMargin,
+            preparedLegend,
+            isVerticalPosition,
+        }),
+    );
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
     const items = await getGroupedLegendItems({
         maxLegendWidth,
@@ -401,8 +429,12 @@ export async function getLegendComponents(args: {
         }, []);
         let legendHeight = lineHeights.reduce((acc, height) => acc + height, 0);
 
-        if (maxLegendHeight < legendHeight) {
-            const lines = Math.floor(maxLegendHeight / preparedLegend.lineHeight);
+        const titleHeight = preparedLegend.constrainContent
+            ? preparedLegend.title.height + preparedLegend.title.margin
+            : 0;
+        const availableHeight = Math.max(0, maxLegendHeight - titleHeight);
+        if (availableHeight < legendHeight) {
+            const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
             pagination = getPagination({
                 items,
@@ -411,8 +443,63 @@ export async function getLegendComponents(args: {
             });
         }
 
-        preparedLegend.height = legendHeight;
+        if (preparedLegend.width === 'auto' && isVerticalPosition) {
+            const rowWidths = items.map((row) =>
+                row.reduce(
+                    (width, item) =>
+                        width + item.textWidth + item.symbol.bboxWidth + item.symbol.padding,
+                    Math.max(0, row.length - 1) * preparedLegend.itemDistance,
+                ),
+            );
+            let paginationWidth = 0;
+            if (pagination) {
+                const pageCount = pagination.pages.length;
+                const measure = getTextSizeFn({style: preparedLegend.itemStyle});
+                const [up, down, ...counters] = await Promise.all([
+                    measure('▲'),
+                    measure('▼'),
+                    ...pagination.pages.map((_, index) => measure(`${index + 1}/${pageCount}`)),
+                ]);
+                paginationWidth =
+                    up.width + down.width + Math.max(0, ...counters.map(({width}) => width));
+            }
+            maxLegendWidth = Math.min(
+                maxLegendWidth,
+                Math.max(0, ...rowWidths, preparedLegend.title.width, paginationWidth),
+            );
+        }
+        preparedLegend.height = legendHeight + titleHeight;
         preparedLegend.resolvedWidth = maxLegendWidth;
+    } else if (preparedLegend.constrainContent) {
+        preparedLegend.resolvedWidth = Math.min(
+            maxLegendWidth,
+            Math.max(
+                0,
+                typeof preparedLegend.width === 'number'
+                    ? preparedLegend.width
+                    : CONTINUOUS_LEGEND_SIZE.width,
+            ),
+        );
+        if (isVerticalPosition) {
+            maxLegendWidth = preparedLegend.resolvedWidth;
+        }
+    }
+
+    preparedLegend.title.resolvedText = preparedLegend.title.text;
+    preparedLegend.title.resolvedWidth = preparedLegend.title.width;
+    if (
+        preparedLegend.constrainContent &&
+        preparedLegend.title.width > preparedLegend.resolvedWidth
+    ) {
+        const measure = getTextSizeFn({style: preparedLegend.title.style});
+        preparedLegend.title.resolvedText = await getTextWithElipsis({
+            text: preparedLegend.title.text,
+            maxWidth: preparedLegend.resolvedWidth,
+            getTextWidth: async (text) => (await measure(text)).width,
+        });
+        preparedLegend.title.resolvedWidth = (
+            await measure(preparedLegend.title.resolvedText)
+        ).width;
     }
 
     const offset = getLegendOffset({

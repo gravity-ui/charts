@@ -95,10 +95,12 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
 };
 
 export interface PreparedLegend extends Required<
-    Omit<ChartLegend, 'title' | 'colorScale' | 'width'>
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth'>
 > {
-    width?: number;
+    width?: ChartLegend['width'];
+    maxWidth?: ChartLegend['maxWidth'];
     resolvedWidth: number;
+    constrainContent: boolean;
     hangingOffset: number;
     height: number;
     lineHeight: number;
@@ -106,6 +108,9 @@ export interface PreparedLegend extends Required<
         enable: boolean;
         hangingOffset: number;
         text: string;
+        resolvedText: string;
+        width: number;
+        resolvedWidth: number;
         margin: number;
         style: BaseTextStyle;
         height: number;

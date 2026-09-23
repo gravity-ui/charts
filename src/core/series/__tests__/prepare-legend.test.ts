@@ -19,15 +19,17 @@ jest.mock('../../utils', () => ({
 const chartWidth = 1000;
 const chartMargin = {left: 10, right: 30, top: 10, bottom: 10};
 
-async function prepareLegend(legend: ChartLegend, width = chartWidth) {
+async function prepareLegend(
+    legend: ChartLegend,
+    width = chartWidth,
+    options: {names?: string[]; height?: number} = {},
+) {
     const seriesData: ChartData['series']['data'] = [
         {
             type: 'pie',
-            data: [
-                {name: 'A'.repeat(20), value: 1},
-                {name: 'B'.repeat(20), value: 1},
-                {name: 'C'.repeat(100), value: 1},
-            ],
+            data: (options.names ?? ['A'.repeat(20), 'B'.repeat(20), 'C'.repeat(100)]).map(
+                (name) => ({name, value: 1}),
+            ),
         },
     ];
     const preparedLegend = await getPreparedLegend({legend, series: seriesData});
@@ -39,7 +41,7 @@ async function prepareLegend(legend: ChartLegend, width = chartWidth) {
     });
     const components = await getLegendComponents({
         chartWidth: width,
-        chartHeight: 400,
+        chartHeight: options.height ?? 400,
         chartMargin,
         series,
         preparedLegend,
@@ -211,3 +213,228 @@ test.each([undefined, 230])(
         expect(preparedLegend.resolvedWidth).toBe(width ?? 200);
     },
 );
+
+describe('content-based legend width', () => {
+    test.each(['left', 'right'] as const)(
+        'fits short rows and reserves the resolved width on the %s',
+        async (position) => {
+            const legend = Object.freeze({
+                enabled: true,
+                position,
+                width: 'auto' as const,
+                maxWidth: '30%',
+            });
+            const {preparedLegend, legendConfig, legendItems, series} = await prepareLegend(
+                legend,
+                1000,
+                {names: ['A', 'BB']},
+            );
+            const measuredWidth = legendItems[0].reduce(
+                (sum, item) => sum + item.textWidth + item.symbol.bboxWidth + item.symbol.padding,
+                preparedLegend.itemDistance,
+            );
+            expect(legendConfig.width).toBe(measuredWidth);
+            expect(measuredWidth).toBeLessThan(288);
+            expect(
+                getChartDimensions({
+                    height: 400,
+                    width: 1000,
+                    margin: chartMargin,
+                    preparedLegend,
+                    preparedSeries: series,
+                    preparedXAxis: null,
+                    preparedYAxis: null,
+                    legendConfig,
+                }).boundsWidth,
+            ).toBe(960 - measuredWidth - preparedLegend.margin);
+            expect(legend.width).toBe('auto');
+            expect(legend.maxWidth).toBe('30%');
+        },
+    );
+
+    test.each([false, true])('caps long labels and keeps raw text (html=%s)', async (html) => {
+        const {legendItems, legendConfig} = await prepareLegend({
+            enabled: true,
+            position: 'right',
+            width: 'auto',
+            maxWidth: 100,
+            html,
+        });
+        expect(legendConfig.width).toBeLessThanOrEqual(100);
+        for (const item of legendItems.flat()) {
+            expect(
+                item.textWidth + item.symbol.bboxWidth + item.symbol.padding,
+            ).toBeLessThanOrEqual(100);
+            expect(item.overflowed).toBe(true);
+        }
+        expect(legendItems.flat()[2].name).toBe('C'.repeat(100));
+    });
+
+    test('includes the title and truncates it without changing the config', async () => {
+        const legend: ChartLegend = {
+            enabled: true,
+            position: 'left',
+            width: 'auto',
+            title: {text: 'Legend title'},
+        };
+        const {legendConfig, preparedLegend} = await prepareLegend(legend, 1000, {names: ['A']});
+        expect(legendConfig.width).toBe(120);
+        expect(legendConfig.height).toBe(14 + 14 + 4);
+        expect(preparedLegend.title.resolvedText).toBe('Legend title');
+        const capped = await prepareLegend({...legend, maxWidth: 80}, 1000, {names: ['A']});
+        expect(capped.legendConfig.width).toBe(80);
+        expect(capped.preparedLegend.title.resolvedWidth).toBeLessThanOrEqual(80);
+        expect(capped.preparedLegend.title.resolvedText.endsWith('…')).toBe(true);
+        expect(legend.title?.text).toBe('Legend title');
+    });
+
+    test('includes the paginator when it is wider than any row', async () => {
+        // Large item spacing forces one item per row without increasing the width of that row.
+        const {legendConfig} = await prepareLegend(
+            {enabled: true, position: 'left', width: 'auto', itemDistance: 1000},
+            1000,
+            {names: Array(20).fill('A'), height: 80},
+        );
+        expect(legendConfig.pagination?.pages.length).toBeGreaterThan(1);
+        expect(legendConfig.width).toBe(50); // two arrows and the widest n/n counter
+    });
+
+    test('measures rows on every page', async () => {
+        const {legendConfig, legendItems} = await prepareLegend(
+            {enabled: true, position: 'left', width: 'auto', itemDistance: 1000},
+            1000,
+            {names: ['A', 'B', 'C', 'D', 'Longest label'], height: 80},
+        );
+        expect(legendConfig.pagination?.pages.length).toBeGreaterThan(1);
+        const widest = legendItems[legendItems.length - 1][0];
+        expect(legendConfig.width).toBe(
+            widest.textWidth + widest.symbol.bboxWidth + widest.symbol.padding,
+        );
+    });
+
+    test('recalculates on resize and content changes', async () => {
+        const legend: ChartLegend = {
+            enabled: true,
+            position: 'left',
+            width: 'auto',
+            maxWidth: '25%',
+        };
+        const result = await prepareLegend(legend);
+        const resized = await getLegendComponents({
+            chartWidth: 400,
+            chartHeight: 400,
+            chartMargin,
+            series: result.series,
+            preparedLegend: result.preparedLegend,
+        });
+        expect(resized.legendConfig.width).toBeLessThanOrEqual(90);
+        const grown = await getLegendComponents({
+            chartWidth: 1000,
+            chartHeight: 400,
+            chartMargin,
+            series: result.series,
+            preparedLegend: result.preparedLegend,
+        });
+        expect(grown.legendConfig.width).toBe(result.legendConfig.width);
+        const short = await prepareLegend(legend, 1000, {names: ['A']});
+        const long = await prepareLegend(legend, 1000, {names: ['AAAA']});
+        expect(long.legendConfig.width).toBeGreaterThan(short.legendConfig.width);
+    });
+
+    test.each([0, 20, 1000])(
+        'handles empty legends and unavailable space (chart width=%s)',
+        async (width) => {
+            const {legendConfig, legendItems} = await prepareLegend(
+                {enabled: true, position: 'left', width: 'auto'},
+                width,
+                {names: []},
+            );
+            expect(legendConfig.width).toBe(0);
+            expect(legendConfig.height).toBe(0);
+            expect(legendItems.flat()).toEqual([]);
+        },
+    );
+
+    test.each([undefined, 2000, '2000px', '200%', 'invalid', NaN, Infinity])(
+        'never exceeds available space (maxWidth=%s)',
+        async (maxWidth) => {
+            const {legendConfig} = await prepareLegend({
+                enabled: true,
+                position: 'right',
+                width: 'auto',
+                maxWidth,
+            });
+            expect(legendConfig.width).toBeLessThanOrEqual(945);
+            expect(legendConfig.width).toBeGreaterThan(0);
+        },
+    );
+});
+
+describe('legend maxWidth', () => {
+    test.each([230, '230px', '23.958333333333336%'])(
+        'caps omitted and explicit widths (%s)',
+        async (maxWidth) => {
+            for (const width of [undefined, 600, 100]) {
+                const {legendConfig, preparedLegend} = await prepareLegend({
+                    enabled: true,
+                    position: 'left',
+                    width,
+                    maxWidth,
+                });
+                expect(legendConfig.width).toBeCloseTo(width === 100 ? 100 : 230);
+                expect(preparedLegend.maxWidth).toBe(maxWidth);
+            }
+        },
+    );
+
+    test.each([0, -1, '-10px', '-10%'])('clamps nonpositive limits (%s)', async (maxWidth) => {
+        const {legendConfig, legendItems} = await prepareLegend({
+            enabled: true,
+            position: 'right',
+            maxWidth,
+        });
+        expect(legendConfig.width).toBe(0);
+        expect(legendConfig.height).toBe(0);
+        expect(legendItems).toEqual([]);
+    });
+
+    test.each(['invalid', '50em', NaN, Infinity])(
+        'ignores invalid limits (%s)',
+        async (maxWidth) => {
+            const {legendConfig} = await prepareLegend({enabled: true, position: 'left', maxWidth});
+            expect(legendConfig.width).toBe(472.5);
+        },
+    );
+
+    test.each(['left', 'right', 'top', 'bottom'] as const)(
+        'caps continuous gradients at %s',
+        async (position) => {
+            for (const width of [undefined, 80, 500]) {
+                const {legendConfig} = await prepareLegend({
+                    enabled: true,
+                    type: 'continuous',
+                    position,
+                    width,
+                    maxWidth: '12.5%',
+                });
+                expect(legendConfig.width).toBe(width === 80 ? 80 : 120);
+                expect(legendConfig.maxWidth).toBe(
+                    legendConfig.width === 80 && (position === 'left' || position === 'right')
+                        ? 80
+                        : 120,
+                );
+            }
+        },
+    );
+});
+
+test('does not add a half-chart cap to explicit continuous widths with maxWidth', async () => {
+    const {legendConfig} = await prepareLegend({
+        enabled: true,
+        type: 'continuous',
+        position: 'left',
+        width: 600,
+        maxWidth: 800,
+    });
+    expect(legendConfig.width).toBe(600);
+});

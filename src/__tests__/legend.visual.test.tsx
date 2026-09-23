@@ -73,6 +73,105 @@ const lineLegendWidthSeries: LineSeries[] = [
 
 test.describe('Legend', () => {
     test.describe('Discrete', () => {
+        test.describe('Content-based width', () => {
+            for (const html of [false, true]) {
+                test(`title, pagination and resize (${html ? 'html' : 'svg'})`, async ({mount}) => {
+                    const data: ChartData = {
+                        chart: {margin: {left: 10, right: 30}},
+                        legend: {
+                            enabled: true,
+                            position: 'left',
+                            width: 'auto',
+                            maxWidth: '30%',
+                            html,
+                            title: {text: 'Revenue by region', align: 'center'},
+                        },
+                        series: {
+                            data: [
+                                {
+                                    type: 'pie',
+                                    dataLabels: {enabled: false},
+                                    data: Array.from({length: 30}, (_, i) => ({
+                                        name: `Region ${i + 1} with a long label`,
+                                        value: i + 1,
+                                    })),
+                                },
+                            ],
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 600, height: 240}} />,
+                    );
+                    const legend = component.locator('.gcharts-legend');
+                    const plot = component.locator('clipPath rect').first();
+                    await expect(component.getByText('▼')).toBeVisible();
+                    const plotWidth = await plot.getAttribute('width');
+                    const legendWidth = Number(await legend.getAttribute('width'));
+                    expect(legendWidth).toBeLessThanOrEqual(168);
+                    const title = await component.locator('.gcharts-legend__title').boundingBox();
+                    const firstRow = await component
+                        .locator('.gcharts-legend__line')
+                        .first()
+                        .boundingBox();
+                    if (!title || !firstRow || plotWidth === null) {
+                        throw new Error('Expected visible legend title, items, and plot bounds');
+                    }
+                    expect(title.y + title.height).toBeLessThanOrEqual(firstRow.y);
+                    await expect(component).toHaveScreenshot();
+                    await component.getByText('▼').click();
+                    await expect(
+                        component.locator('.gcharts-legend__pagination-counter'),
+                    ).toContainText('2/');
+                    await expect(plot).toHaveAttribute('width', plotWidth);
+                    await expect(legend).toHaveAttribute('width', String(legendWidth));
+                    await component.update(
+                        <ChartTestStory data={data} styles={{width: 350, height: 240}} />,
+                    );
+                    await expect
+                        .poll(async () => Number(await legend.getAttribute('width')))
+                        .toBeLessThanOrEqual(93);
+                    await expect(component).toHaveScreenshot();
+                });
+            }
+
+            test('short content releases plot space and responds to font changes', async ({
+                mount,
+            }) => {
+                const data: ChartData = {
+                    legend: {enabled: true, position: 'right', width: 'auto', maxWidth: '50%'},
+                    series: {
+                        data: [
+                            {
+                                type: 'pie',
+                                dataLabels: {enabled: false},
+                                data: [
+                                    {name: 'A', value: 1},
+                                    {name: 'B', value: 2},
+                                ],
+                            },
+                        ],
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                const legend = component.locator('.gcharts-legend');
+                await expect(component.locator('.gcharts-legend__item')).toHaveCount(2);
+                const width = Number(await legend.getAttribute('width'));
+                expect(width).toBeLessThan(100);
+                const plotWidth = Number(
+                    await component.locator('clipPath rect').first().getAttribute('width'),
+                );
+                expect(plotWidth).toBeGreaterThan(250);
+                await component.update(
+                    <ChartTestStory
+                        data={{...data, legend: {...data.legend, itemStyle: {fontSize: '24px'}}}}
+                    />,
+                );
+                await expect
+                    .poll(async () => Number(await legend.getAttribute('width')))
+                    .toBeGreaterThan(width);
+            });
+        });
+
         test.describe('Width larger than chart', () => {
             test('Bottom SVG legend in a 400px chart', async ({mount}) => {
                 const data: ChartData = {

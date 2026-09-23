@@ -75,9 +75,18 @@ export interface ChartLegend extends ChartLegendItem {
      * Capped at the chart width excluding chart margins. If a side legend leaves no room for the plot,
      * the plot and axes are not drawn.
      * Defaults to the available chart width for top/bottom positions and half of it for left/right.
-     * For continuous legends, controls the gradient width and defaults to 200.
+     * Set to `auto` for discrete side legends to fit the widest prepared row, title, and pagination.
+     * For continuous legends, controls the gradient width and defaults to 200 (`auto` uses this default).
      */
-    width?: number;
+    width?: number | 'auto';
+    /**
+     * Maximum legend width, including markers and text spacing, excluding the external margin.
+     * Numbers and `px` strings are pixels. Percentages use chart width after left/right chart
+     * margins, before legend or axis space is deducted. Invalid values are ignored; negative
+     * values resolve to zero. Applies to automatic, explicit, and continuous legend widths.
+     * When omitted, adds no limit beyond the available space.
+     */
+    maxWidth?: number | string;
     /**
      * Allows to use any html-tags to display the content.
      * @default false

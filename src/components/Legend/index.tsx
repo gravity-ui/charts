@@ -226,6 +226,23 @@ export const Legend = (props: Props) => {
                 ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
                 : null;
 
+            if (legend.constrainContent && legend.type === 'discrete') {
+                const clipId = getUniqId();
+                svgElement
+                    .append('defs')
+                    .append('clipPath')
+                    .attr('id', clipId)
+                    .append('rect')
+                    .attr('width', legend.resolvedWidth)
+                    .attr('height', legend.height);
+                svgElement.attr('clip-path', `url(#${clipId})`);
+                htmlContainer
+                    ?.style('width', `${legend.resolvedWidth}px`)
+                    .style('height', `${legend.height}px`)
+                    .style('overflow', 'hidden')
+                    .style('pointer-events', 'none');
+            }
+
             let legendWidth = 0;
             let legendLeft = 0;
             let legendTop = 0;
@@ -282,6 +299,7 @@ export const Legend = (props: Props) => {
                                 const mods = {selected: d.visible, unselected: !d.visible};
                                 return b('item-text-html', mods);
                             })
+                            .style('pointer-events', 'auto')
                             .style('font-size', legend.itemStyle.fontSize)
                             .style('position', 'absolute')
                             .style('max-width', function (d) {
@@ -355,7 +373,10 @@ export const Legend = (props: Props) => {
                         }
                     }
 
-                    const top = legendLineHeights.reduce((acc, h) => acc + h, 0);
+                    const titleHeight = legend.constrainContent
+                        ? legend.title.height + legend.title.margin
+                        : 0;
+                    const top = titleHeight + legendLineHeights.reduce((acc, h) => acc + h, 0);
                     legendLineHeights.push(legendLineHeight);
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
@@ -376,7 +397,7 @@ export const Legend = (props: Props) => {
                 }
                 const {left, top} = getLegendPosition({
                     width: config.maxWidth,
-                    contentWidth: legendWidth,
+                    contentWidth: legend.constrainContent ? legend.resolvedWidth : legendWidth,
                     offsetLeft: config.offset.left,
                     offsetTop: config.offset.top,
                 });
@@ -458,9 +479,7 @@ export const Legend = (props: Props) => {
             const legendTitleClassname = b('title');
 
             if (legend.title.enable) {
-                const {width: titleWidth} = await getTextSizeFn({style: legend.title.style})(
-                    legend.title.text,
-                );
+                const titleWidth = legend.title.resolvedWidth;
                 let dx = 0;
                 switch (legend.title.align) {
                     case 'center': {
@@ -489,7 +508,7 @@ export const Legend = (props: Props) => {
                     .attr('font-size', legend.title.style.fontSize ?? null)
                     .attr('fill', legend.title.style.fontColor ?? null)
                     .style('dominant-baseline', 'hanging')
-                    .html(legend.title.text);
+                    .html(legend.title.resolvedText);
             } else {
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();
             }
