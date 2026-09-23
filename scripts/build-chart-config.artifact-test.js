@@ -66,8 +66,27 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: []}, legend: {layout: 'columns'}})).toBe(false);
     });
 
-    test('standalone declarations preserve BaseSeries compatibility and safe formatters', () => {
+    test('schema supports pixel and percentage legend widths', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const width of [0, 0.5, 230, '0px', '.5px', '230px', '0%', '12.5%', '150%']) {
+            expect(validateConfig({series: {data: []}, legend: {width}})).toBe(true);
+        }
+        for (const width of [-10, -0.5, NaN, Infinity, -Infinity, true]) {
+            expect(validateConfig({series: {data: []}, legend: {width}})).toBe(false);
+        }
+    });
+
+    test('standalone declarations preserve series compatibility, formatters and legend widths', () => {
         const usage = `
+            const legend: ChartLegend = {width: 230};
+            legend.width = '12.5%';
+            legend.width = '230px';
+            legend.width = '.5px';
+            // String formats are checked at runtime and fall back to automatic sizing.
+            legend.width = '230em';
+            legend.width = '230';
+            // @ts-expect-error Booleans are not supported.
+            legend.width = true;
             const pieFormat: PieValueFormat = {
                 type: 'custom',
                 formatter: ({percentage, name, value}) => percentage?.toFixed(2) ?? name ?? String(value),

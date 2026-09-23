@@ -197,6 +197,8 @@ export function useChartInnerProps(props: Props) {
             const preparedLegend = await getPreparedLegend({
                 legend: data.legend,
                 series: normalizedSeriesData,
+                chartWidth: width,
+                chartMargin: preparedChart.margin,
             });
 
             let allPreparedSeries: PreparedSeries[];

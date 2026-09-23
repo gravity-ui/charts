@@ -12,6 +12,7 @@ import {
     getSymbolSize,
     getTextSizeFn,
     getTextWithElipsis,
+    parseLegendWidth,
 } from '../utils';
 
 import type {LegendItem, PreparedLegend, PreparedLegendSymbol, PreparedSeries} from './types';
@@ -26,8 +27,20 @@ interface LegendSymbolMetrics {
 export async function getPreparedLegend(args: {
     legend: ChartData['legend'];
     series: ChartData['series']['data'];
+    chartWidth: number;
+    // Use resolved chart margins before legend and axis space is deducted.
+    chartMargin: PreparedChart['margin'];
 }): Promise<PreparedLegend> {
-    const {legend, series} = args;
+    const {legend, series, chartWidth, chartMargin} = args;
+    const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
+    const parsedWidth = parseLegendWidth(legend?.width);
+    let width = parsedWidth?.value;
+    if (parsedWidth?.unit === '%') {
+        // Cap before multiplication so even very large finite percentages cannot overflow.
+        width = availableWidth * (Math.min(parsedWidth.value, 100) / 100);
+    }
+    const position = legend?.position ?? 'bottom';
+    const margin = legend?.margin ?? legendDefaults.margin;
     const seriesWithEnabledLegend = series.filter((s) => s.legend?.enabled !== false);
     const enabled = Boolean(
         typeof legend?.enabled === 'boolean' ? legend?.enabled : seriesWithEnabledLegend.length > 1,
@@ -35,11 +48,9 @@ export async function getPreparedLegend(args: {
     const defaultItemStyle = clone(legendDefaults.itemStyle);
     const itemStyle = get(legend, 'itemStyle');
     const computedItemStyle = merge(defaultItemStyle, itemStyle);
-    const {
-        width: lineWidth,
-        height: lineHeight,
-        hangingOffset: itemHangingOffset,
-    } = await getTextSizeFn({style: computedItemStyle})('Tmp');
+    const {height: lineHeight, hangingOffset: itemHangingOffset} = await getTextSizeFn({
+        style: computedItemStyle,
+    })('Tmp');
     const legendType = get(legend, 'type', 'discrete');
     const isTitleEnabled = Boolean(legend?.title?.text);
     const titleMargin = isTitleEnabled ? get(legend, 'title.margin', 4) : 0;
@@ -73,7 +84,7 @@ export async function getPreparedLegend(args: {
     if (enabled) {
         height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
-            legendWidth = get(legend, 'width', CONTINUOUS_LEGEND_SIZE.width);
+            legendWidth = width ?? CONTINUOUS_LEGEND_SIZE.width;
             height += CONTINUOUS_LEGEND_SIZE.height;
             height += ticks.labelsLineHeight + ticks.labelsMargin;
 
@@ -84,7 +95,10 @@ export async function getPreparedLegend(args: {
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
             height += lineHeight;
-            legendWidth = get(legend, 'width', lineWidth);
+            legendWidth =
+                width === undefined
+                    ? getDefaultDiscreteLegendWidth({availableWidth, position, margin})
+                    : Math.max(0, Math.min(width, availableWidth));
         }
     }
     return {
@@ -99,7 +113,7 @@ export async function getPreparedLegend(args: {
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
         itemStyle: computedItemStyle,
         lineHeight,
-        margin: get(legend, 'margin', legendDefaults.margin),
+        margin,
         type: legendType,
         title: {
             enable: isTitleEnabled,
@@ -110,12 +124,12 @@ export async function getPreparedLegend(args: {
             height: titleHeight,
             align: get(legend, 'title.align', 'left'),
         },
-        width: legend?.width,
         resolvedWidth: legendWidth,
+        availableWidth,
         ticks,
         colorScale,
         html: get(legend, 'html', false),
-        position: get(legend, 'position', 'bottom'),
+        position,
     };
 }
 
@@ -390,21 +404,15 @@ function getLegendOffset(args: {
     }
 }
 
-function getMaxLegendWidth(args: {
-    chartWidth: number;
-    chartMargin: PreparedChart['margin'];
-    preparedLegend: PreparedLegend;
-    isVerticalPosition: boolean;
+function getDefaultDiscreteLegendWidth(args: {
+    availableWidth: number;
+    position: PreparedLegend['position'];
+    margin: number;
 }): number {
-    const {chartWidth, chartMargin, preparedLegend, isVerticalPosition} = args;
-    const availableWidth = Math.max(0, chartWidth - chartMargin.right - chartMargin.left);
+    const {availableWidth, position, margin} = args;
 
-    if (preparedLegend.type === 'discrete' && preparedLegend.width !== undefined) {
-        return Math.max(0, Math.min(preparedLegend.width, availableWidth));
-    }
-
-    if (isVerticalPosition) {
-        return Math.max(0, (availableWidth - preparedLegend.margin) / 2);
+    if (position === 'left' || position === 'right') {
+        return Math.max(0, (availableWidth - margin) / 2);
     }
 
     return availableWidth;
@@ -436,12 +444,10 @@ export async function getLegendComponents(args: {
 
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
-    const maxLegendWidth = getMaxLegendWidth({
-        chartWidth,
-        chartMargin,
-        preparedLegend,
-        isVerticalPosition,
-    });
+    const maxLegendWidth =
+        preparedLegend.type === 'discrete' || isVerticalPosition
+            ? preparedLegend.resolvedWidth
+            : preparedLegend.availableWidth;
     const maxLegendHeight = Math.max(
         0,
         getMaxLegendHeight({
@@ -481,7 +487,6 @@ export async function getLegendComponents(args: {
         }
 
         preparedLegend.height = legendHeight;
-        preparedLegend.resolvedWidth = maxLegendWidth;
     }
 
     const offset = getLegendOffset({
@@ -495,7 +500,7 @@ export async function getLegendComponents(args: {
     });
 
     if (preparedLegend.type === 'discrete' && !isVerticalPosition) {
-        const remainingWidth = chartWidth - chartMargin.left - chartMargin.right - maxLegendWidth;
+        const remainingWidth = preparedLegend.availableWidth - maxLegendWidth;
         if (preparedLegend.align === 'right') {
             offset.left += remainingWidth;
         } else if (preparedLegend.align === 'center') {
