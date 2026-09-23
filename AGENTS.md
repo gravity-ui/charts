@@ -12,6 +12,7 @@
 
 # Public API
 
+- When adding or changing config fields, check several analogues and follow established types, formats, units, defaults, and validation. Reuse suitable helpers and justify deviations.
 - Treat every exported type, config field, and root export as semver-stable. Add public API only for a concrete use case; follow existing naming and nesting conventions, and preserve current behavior.
 - After changing public chart config types, run `npm run test:chart-config` and verify that both the standalone declaration and JSON Schema represent the change correctly.
 
