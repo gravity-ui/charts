@@ -1,3 +1,7 @@
+# Development guide
+
+- Before writing or reviewing code, read and follow [Development conventions](.agents/development.md).
+
 # TypeScript conventions
 
 - Use `interface` instead of `type` for object shape declarations where possible. Fall back to `type` only when necessary (unions, intersections, mapped types, primitives, tuples).
