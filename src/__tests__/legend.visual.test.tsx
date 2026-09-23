@@ -130,6 +130,111 @@ test.describe('Legend', () => {
                     ? '.gcharts-legend__item-text-html'
                     : '.gcharts-legend__item text';
 
+                for (const layout of ['vertical', 'horizontal'] as const) {
+                    for (const type of ['pie', 'scatter'] as const) {
+                        test(`large ${type} symbols fit rows and pages (${layout}, ${output})`, async ({
+                            mount,
+                        }) => {
+                            const names = range(15).map((i) => `Marker label ${i}`);
+                            const symbolTypes = [
+                                'circle',
+                                'diamond',
+                                'square',
+                                'triangle',
+                                'triangle-down',
+                            ] as const;
+                            const data: ChartData = {
+                                legend: {
+                                    enabled: true,
+                                    layout,
+                                    html,
+                                    position: 'left',
+                                    width: 150,
+                                    align: 'left',
+                                },
+                                series: {
+                                    data:
+                                        type === 'pie'
+                                            ? [
+                                                  {
+                                                      type,
+                                                      dataLabels: {enabled: false},
+                                                      legend: {symbol: {width: 20}},
+                                                      data: names.map((name) => ({name, value: 1})),
+                                                  },
+                                              ]
+                                            : names.map((name, i) => ({
+                                                  type,
+                                                  name,
+                                                  symbolType: symbolTypes[i % symbolTypes.length],
+                                                  legend: {symbol: {width: 20}},
+                                                  data: [{x: i, y: i}],
+                                              })),
+                                },
+                            };
+                            const component = await mount(
+                                <ChartTestStory data={data} styles={{width: 600, height: 220}} />,
+                            );
+                            const labels = component.locator(labelSelector);
+                            const symbols = component.locator('.gcharts-legend__item-symbol');
+                            const counter = component.locator(
+                                '.gcharts-legend__pagination-counter',
+                            );
+                            await expect(counter).toBeVisible();
+                            const pageCount = Number((await counter.textContent())?.split('/')[1]);
+                            expect(pageCount).toBeGreaterThan(1);
+                            const visited: string[] = [];
+                            for (let page = 1; page <= pageCount; page++) {
+                                await expect(counter).toHaveText(`${page}/${pageCount}`);
+                                const boxes = await symbols.evaluateAll((elements) =>
+                                    elements.map((element) => {
+                                        const {y, height} = element.getBoundingClientRect();
+                                        return {y, height};
+                                    }),
+                                );
+                                expect(boxes.length).toBeGreaterThan(0);
+                                const chartBox = await component.boundingBox();
+                                expect(boxes[0].y).toBeGreaterThanOrEqual(
+                                    (chartBox?.y ?? Infinity) - 0.01,
+                                );
+                                for (let i = 1; i < boxes.length; i++) {
+                                    expect(boxes[i].y).toBeGreaterThanOrEqual(
+                                        boxes[i - 1].y + boxes[i - 1].height - 0.01,
+                                    );
+                                }
+                                const paginator = await counter.boundingBox();
+                                const last = boxes[boxes.length - 1];
+                                expect(last.y + last.height).toBeLessThanOrEqual(
+                                    (paginator?.y ?? -Infinity) + 0.01,
+                                );
+                                if (type === 'pie') {
+                                    const labelBoxes = await labels.evaluateAll((elements) =>
+                                        elements.map((element) => {
+                                            const {y, height} = element.getBoundingClientRect();
+                                            return {y, height};
+                                        }),
+                                    );
+                                    labelBoxes.forEach((label, i) => {
+                                        const marker = boxes[i];
+                                        expect(
+                                            Math.abs(
+                                                label.y +
+                                                    label.height / 2 -
+                                                    (marker.y + marker.height / 2),
+                                            ),
+                                        ).toBeLessThan(2);
+                                    });
+                                }
+                                visited.push(...(await labels.allTextContents()));
+                                if (page < pageCount) {
+                                    await component.getByText('▼').click();
+                                }
+                            }
+                            expect(visited).toEqual(names);
+                        });
+                    }
+                }
+
                 for (const position of ['left', 'right', 'top', 'bottom'] as const) {
                     test(`${position} (${output})`, async ({mount}) => {
                         const data: ChartData = {

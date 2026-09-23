@@ -9,11 +9,12 @@ import {
     getDefaultColorStops,
     getDomainForContinuousColorScale,
     getLabelsSize,
+    getSymbolSize,
     getTextSizeFn,
     getTextWithElipsis,
 } from '../utils';
 
-import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
+import type {LegendItem, PreparedLegend, PreparedLegendSymbol, PreparedSeries} from './types';
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
@@ -269,6 +270,22 @@ function getPagination(args: {
     return {pages};
 }
 
+function getLegendSymbolHeight(symbol: PreparedLegendSymbol): number {
+    switch (symbol.shape) {
+        case 'rect':
+            return symbol.height;
+        case 'path':
+            return symbol.strokeWidth;
+        case 'symbol':
+            return getSymbolSize({
+                symbolSize: Math.pow(symbol.width, 2),
+                symbolType: symbol.symbolType,
+            }).height;
+        default:
+            return 0;
+    }
+}
+
 function getLegendRows(items: LegendItem[][], legend: PreparedLegend, maxWidth: number) {
     const vertical = legend.layout === 'vertical';
     const flatItems = items.flat();
@@ -288,7 +305,10 @@ function getLegendRows(items: LegendItem[][], legend: PreparedLegend, maxWidth: 
             return {symbolLeft, textLeft};
         });
         width -= legend.itemDistance;
-        const height = Math.max(0, ...line.map((item) => item.height));
+        const height = Math.max(
+            0,
+            ...line.map((item) => Math.max(item.height, getLegendSymbolHeight(item.symbol))),
+        );
         const remainingWidth = Math.max(0, maxWidth - (vertical ? listWidth : width));
         let left = 0;
         if (vertical || legend.justifyContent === 'center') {

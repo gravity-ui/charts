@@ -276,7 +276,10 @@ export const Legend = (props: Props) => {
                         legendItemTemplate
                             .append('text')
                             .attr('x', (_d, i) => row.items[i].textLeft)
-                            .attr('y', legend.hangingOffset)
+                            .attr(
+                                'y',
+                                (d) => legend.hangingOffset + (legendLineHeight - d.height) / 2,
+                            )
                             .attr('height', legend.height)
                             .attr('class', function (d) {
                                 const mods = {selected: d.visible, unselected: !d.visible};

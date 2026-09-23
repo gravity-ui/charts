@@ -217,6 +217,84 @@ test.each([undefined, 230])(
 );
 
 describe('vertical legend layout', () => {
+    test.each([false, true])('includes large symbols in row heights (html=%s)', async (html) => {
+        const {preparedLegend, legendItems} = await prepareLegend(
+            {enabled: true, layout: 'vertical', html},
+            1000,
+            400,
+            [
+                {
+                    type: 'pie',
+                    legend: {symbol: {width: 20}},
+                    data: [
+                        {name: 'Large', value: 1},
+                        {name: 'Small', value: 1, legend: {symbol: {width: 8}}},
+                        {name: 'Larger', value: 1, legend: {symbol: {width: 30}}},
+                    ],
+                },
+            ],
+        );
+        const heights = [40 / Math.sqrt(Math.PI), 14, 60 / Math.sqrt(Math.PI)];
+        let top = 0;
+        preparedLegend.rows.forEach((row, i) => {
+            expect(row.height).toBeCloseTo(heights[i]);
+            expect(row.top).toBeCloseTo(top);
+            top += heights[i];
+        });
+        expect(preparedLegend.height).toBeCloseTo(top);
+        // Text measurements remain separate for vertical alignment within taller rows.
+        expect(legendItems.flat().map((item) => item.height)).toEqual([14, 14, 14]);
+    });
+
+    test.each([0, -10, 10, 100, 2000])(
+        'paginates large symbols with legend width %s',
+        async (width) => {
+            const {preparedLegend, legendConfig} = await prepareLegend(
+                {enabled: true, layout: 'vertical', position: 'left', width},
+                1000,
+                100,
+                [
+                    {
+                        type: 'pie',
+                        legend: {symbol: {width: 20}},
+                        data: Array.from({length: 4}, (_, i) => ({name: `Item ${i}`, value: 1})),
+                    },
+                ],
+            );
+            if (width <= 0) {
+                expect(preparedLegend.rows).toEqual([]);
+                expect(preparedLegend.height).toBe(0);
+                expect(legendConfig.pagination).toBeUndefined();
+                return;
+            }
+            expect(legendConfig.pagination?.pages).toEqual([
+                {start: 0, end: 2},
+                {start: 2, end: 4},
+            ]);
+            for (const page of legendConfig.pagination?.pages ?? []) {
+                const height = preparedLegend.rows
+                    .slice(page.start, page.end)
+                    .reduce((sum, row) => sum + row.height, 0);
+                expect(height + preparedLegend.lineHeight).toBeLessThanOrEqual(
+                    preparedLegend.height,
+                );
+            }
+            expect(preparedLegend.resolvedWidth).toBe(Math.min(width, 960));
+            expect(preparedLegend.rows.every((row) => row.left >= 0)).toBe(true);
+        },
+    );
+
+    test('includes line stroke width in row heights', async () => {
+        const {preparedLegend} = await prepareLegend(
+            {enabled: true, layout: 'vertical'},
+            1000,
+            400,
+            [{type: 'line', name: 'Thick line', data: [], lineWidth: 24}],
+        );
+        expect(preparedLegend.rows[0].height).toBe(24);
+        expect(preparedLegend.height).toBe(24);
+    });
+
     test.each(['left', 'right', 'top', 'bottom'] as const)(
         'prepares one aligned item per row independently of width and output (%s)',
         async (position) => {

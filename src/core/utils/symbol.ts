@@ -40,24 +40,35 @@ export const getSymbol = (symbolType: `${SymbolType}`) => {
     }
 };
 
-export function getSymbolBBoxWidth({
-    symbolSize,
-    symbolType,
-}: {
+interface SymbolSizeOptions {
     symbolSize: number;
     symbolType: `${SymbolType}`;
-}) {
+}
+
+export function getSymbolSize({symbolSize, symbolType}: SymbolSizeOptions) {
+    const size = Math.sqrt(symbolSize);
     switch (symbolType) {
-        case SymbolType.Diamond:
-            return Math.sqrt(symbolSize * 2);
-        case SymbolType.Circle:
-            return Math.sqrt(symbolSize / Math.PI) * 2;
+        case SymbolType.Circle: {
+            const diameter = Math.sqrt(symbolSize / Math.PI) * 2;
+            return {width: diameter, height: diameter};
+        }
+        case SymbolType.Diamond: {
+            const diagonal = Math.sqrt(symbolSize * 2);
+            return {width: diagonal, height: diagonal};
+        }
         case SymbolType.Square:
-            return Math.sqrt(symbolSize);
+            return {width: size, height: size};
         case SymbolType.Triangle:
-        case SymbolType.TriangleDown:
-            return Math.sqrt((4 * symbolSize * Math.sqrt(3)) / 3);
+        case SymbolType.TriangleDown: {
+            const side = Math.sqrt((4 * symbolSize * sqrt3) / 3);
+            const circumradius = side / sqrt3;
+            return {width: side, height: 2 * circumradius};
+        }
         default:
-            return 0;
+            return {width: 0, height: 0};
     }
+}
+
+export function getSymbolBBoxWidth(options: SymbolSizeOptions) {
+    return getSymbolSize(options).width;
 }
