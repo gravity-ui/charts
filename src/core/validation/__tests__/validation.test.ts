@@ -1,7 +1,7 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
-import type {ChartData} from '../../types';
+import type {ChartData, ChartLegend} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
 function getValidGradient() {
@@ -15,6 +15,76 @@ function getValidGradient() {
 }
 
 describe('validation/validateData', () => {
+    test.each([
+        -10,
+        -0.5,
+        NaN,
+        Infinity,
+        -Infinity,
+        '',
+        '%',
+        '25',
+        'px',
+        '.px',
+        '25em',
+        '25.px',
+        '25.5.5px',
+        '-25px',
+        '-0px',
+        ' 25px',
+        '25px ',
+        '25px\n',
+        '1e2px',
+        '23e5px',
+        'NaNpx',
+        'Infinitypx',
+        `${'9'.repeat(400)}px`,
+        '25px%',
+        '25.%',
+        '25.5.5%',
+        '-25%',
+        ' 25%',
+        '25%\n',
+        '25%\r',
+        '25%\r\n',
+        '25%\u2028',
+        '25%\u2029',
+        '1e2%',
+        'NaN%',
+        'Infinity%',
+        `${'9'.repeat(400)}%`,
+    ])('does not fail chart validation for invalid legend width %p', (width) => {
+        for (const enabled of [true, false]) {
+            const data: ChartData = {
+                series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+                legend: {width, enabled},
+            };
+            expect(() => validateData(data)).not.toThrow();
+        }
+    });
+
+    test.each<ChartLegend['width']>([
+        undefined,
+        0,
+        0.5,
+        230,
+        '0px',
+        '.5px',
+        '12.5px',
+        '25px',
+        '230px',
+        '0%',
+        '.5%',
+        '12.5%',
+        '150%',
+    ])('accepts legend width %j', (width) => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+            legend: {width},
+        };
+        expect(() => validateData(data)).not.toThrow();
+    });
+
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',
         (data) => {

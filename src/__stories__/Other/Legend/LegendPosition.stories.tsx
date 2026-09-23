@@ -2,6 +2,7 @@ import React from 'react';
 
 import type {Meta} from '@storybook/react';
 
+import type {ChartLegend} from '../../../types';
 import {ChartStory} from '../../ChartStory';
 import {legendPositionData} from '../../__data__';
 
@@ -48,7 +49,7 @@ export const LegendPosition = {
     },
     render: (args: {
         enabled: boolean;
-        width?: number;
+        width?: ChartLegend['width'];
         position: 'top' | 'bottom' | 'left' | 'right';
         align: 'left' | 'center' | 'right';
         verticalAlign: 'top' | 'center' | 'bottom';
@@ -66,5 +67,39 @@ export const LegendPosition = {
             },
         };
         return <ChartStory data={data} />;
+    },
+};
+
+export const PercentageWidth = {
+    ...LegendPosition,
+    name: 'Percentage width',
+    args: {
+        ...LegendPosition.args,
+        position: 'left',
+        width: '25%',
+    },
+    argTypes: {
+        ...LegendPosition.argTypes,
+        width: {
+            control: 'text',
+            description:
+                'Percentage of chart width excluding left/right margins (e.g. 25%). Values above 100% are capped at 100%.',
+        },
+    },
+};
+
+export const PixelStringWidth = {
+    ...PercentageWidth,
+    name: 'Pixel string width',
+    args: {
+        ...PercentageWidth.args,
+        width: '200px',
+    },
+    argTypes: {
+        ...PercentageWidth.argTypes,
+        width: {
+            control: 'text',
+            description: 'Legend width in pixels (e.g. 200px).',
+        },
     },
 };
