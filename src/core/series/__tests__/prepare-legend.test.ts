@@ -1,6 +1,6 @@
 import type {ChartData, ChartLegend} from '../../../types';
 import {getChartDimensions} from '../../layout/chart-dimensions';
-import {getLegendComponents, getPreparedLegend} from '../prepare-legend';
+import {finalizePreparedLegend, getPreparedLegend} from '../prepare-legend';
 import {getPreparedSeries} from '../prepareSeries';
 
 jest.mock('../../utils', () => ({
@@ -47,7 +47,8 @@ async function prepareLegend(
         colors: ['red'],
         preparedLegend,
     });
-    const components = await getLegendComponents({
+    Object.freeze(preparedLegend);
+    const components = await finalizePreparedLegend({
         chartWidth: width,
         chartHeight: height,
         chartMargin,
@@ -56,7 +57,7 @@ async function prepareLegend(
     });
     expect(preparedLegend.resolvedWidth).toBe(resolvedWidthBeforeLayout);
 
-    return {preparedLegend, series, ...components};
+    return {series, ...components};
 }
 
 describe.each(['left', 'right', 'top', 'bottom'] as const)(
@@ -205,6 +206,18 @@ test('does not produce negative HTML label widths when the legend is narrower th
     expect(legendItems.flat().map((item) => item.textWidth)).toEqual([0, 0, 0]);
 });
 
+test('keeps a symbol wider than the legend on a nonempty row with an empty label', async () => {
+    const {legendItems, preparedLegend} = await prepareLegend(
+        {enabled: true, width: 5},
+        1000,
+        400,
+        [{type: 'line', name: '', data: []}],
+    );
+    expect(legendItems.map((row) => row.length)).toEqual([1]);
+    expect(preparedLegend.rows[0].width).toBeGreaterThan(5);
+    expect(preparedLegend.rows[0].left).toBe(0);
+});
+
 test('keeps automatic side legend width nonnegative when its margin exceeds the available width', async () => {
     const {legendConfig, legendItems} = await prepareLegend({enabled: true, position: 'left'}, 50);
     expect(legendConfig.width).toBe(0);
@@ -323,6 +336,23 @@ describe('vertical legend layout', () => {
                 width < 0 ? (960 - 15) / 2 : Math.min(width, 960),
             );
             expect(preparedLegend.rows.every((row) => row.left >= 0)).toBe(true);
+        },
+    );
+
+    test.each([0, 10, 100])(
+        'keeps an oversized row on a nonempty page at chart height %s',
+        async (height) => {
+            const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
+                {enabled: true, layout: 'vertical', position: 'left'},
+                1000,
+                height,
+                [{type: 'line', name: 'Tall', data: [], lineWidth: 120}],
+            );
+            expect(legendItems.map((row) => row.length)).toEqual([1]);
+            expect(preparedLegend.rows[0].height).toBe(120);
+            expect(legendConfig.pagination?.pages).toEqual([{start: 0, end: 1}]);
+            expect(preparedLegend.height).toBeGreaterThanOrEqual(0);
+            expect(preparedLegend.height).toBeLessThanOrEqual(Math.max(0, height - 20));
         },
     );
 

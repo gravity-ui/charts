@@ -21,6 +21,7 @@ import type {
     LegendItem,
     OnLegendItemClick,
     PreparedLegend,
+    PreparedLegendRow,
     PreparedSeries,
     SymbolLegendSymbol,
 } from '../../hooks';
@@ -104,11 +105,12 @@ async function appendPaginator(args: {
             }
         });
     paginationLine.attr('transform', transform);
+    return paginationLine;
 }
 
 function renderLegendSymbol(args: {
     selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
-    row: PreparedLegend['rows'][number];
+    row: PreparedLegendRow;
 }) {
     const {selection, row} = args;
     const legendLineHeight = row.height;
@@ -171,20 +173,21 @@ function renderLegendSymbol(args: {
 export const Legend = (props: Props) => {
     const {chartSeries, legend, items = [], config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
-    const [pageIndex, setPageIndex] = React.useState(0);
+    const pageCount = config.pagination?.pages.length ?? 1;
+    const [paginationState, setPaginationState] = React.useState({
+        pageIndex: 0,
+        maxWidth: config.maxWidth,
+        pageCount,
+    });
+    const currentPageIndex =
+        paginationState.maxWidth === config.maxWidth
+            ? Math.min(paginationState.pageIndex, Math.max(0, pageCount - 1))
+            : 0;
 
-    const currentPageIndex = Math.min(
-        pageIndex,
-        Math.max(0, (config.pagination?.pages.length ?? 1) - 1),
-    );
-
-    React.useEffect(() => {
-        setPageIndex(0);
-    }, [config.maxWidth]);
-
-    React.useEffect(() => {
-        setPageIndex(currentPageIndex);
-    }, [currentPageIndex]);
+    // Adjust before rendering a changed page set so a removed page cannot return on resize.
+    if (paginationState.maxWidth !== config.maxWidth || paginationState.pageCount !== pageCount) {
+        setPaginationState({pageIndex: currentPageIndex, maxWidth: config.maxWidth, pageCount});
+    }
 
     React.useEffect(() => {
         async function prepareLegend() {
@@ -208,16 +211,18 @@ export const Legend = (props: Props) => {
             let legendLeft = 0;
             let legendTop = 0;
             if (legend.type === 'discrete') {
-                const start = config.pagination?.pages[currentPageIndex]?.start;
-                const end = config.pagination?.pages[currentPageIndex]?.end;
-                const pageItems =
-                    typeof start === 'number' && typeof end === 'number'
-                        ? items.slice(start, end)
-                        : items;
-                const pageTop = legend.rows[start ?? 0]?.top ?? 0;
+                const page = config.pagination?.pages[currentPageIndex];
+                const start = page?.start ?? 0;
+                const pageItems = page ? items.slice(start, page.end) : items;
+                const pageRows = page ? legend.rows.slice(start, page.end) : legend.rows;
+                const pageTop = page ? legend.rows[start].top : 0;
+                const pagination =
+                    legend.height >= legend.lineHeight ? config.pagination : undefined;
+                let contentHeight = legend.height;
+                const svgItems = svgElement.append('g');
                 pageItems.forEach((line, lineIndex) => {
-                    const row = legend.rows[(start ?? 0) + lineIndex];
-                    const legendLine = svgElement.append('g').attr('class', b('line'));
+                    const row = legend.rows[start + lineIndex];
+                    const legendLine = svgItems.append('g').attr('class', b('line'));
                     const htmlLegendLine = htmlContainer
                         ?.append('div')
                         .style('position', 'absolute');
@@ -299,18 +304,48 @@ export const Legend = (props: Props) => {
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
                 });
 
-                if (config.pagination) {
+                if (pagination) {
                     const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
                         ',',
                     )})`;
-                    await appendPaginator({
+                    const paginator = await appendPaginator({
                         container: svgElement,
                         pageIndex: currentPageIndex,
                         legend,
                         transform,
-                        pages: config.pagination.pages,
-                        onArrowClick: setPageIndex,
+                        pages: pagination.pages,
+                        onArrowClick: (pageIndex) =>
+                            setPaginationState((state) => ({...state, pageIndex})),
                     });
+                    // SVG's middle baseline is not the bounding-box center. Use the actual
+                    // text bounds so a clipped row cannot touch the counter or arrows.
+                    contentHeight = Math.max(
+                        0,
+                        legend.height -
+                            legend.lineHeight / 2 +
+                            (paginator.node()?.getBBox().y ?? 0),
+                    );
+                }
+                if (pageRows.some((row) => row.height > contentHeight)) {
+                    // An indivisible row may exceed a page. Clip it before the paginator,
+                    // keeping navigation usable without changing the configured symbol size.
+                    const clipId = getUniqId();
+                    const contentWidth = Math.max(
+                        config.maxWidth,
+                        ...pageRows.map((row) => row.width),
+                    );
+                    svgElement
+                        .append('defs')
+                        .append('clipPath')
+                        .attr('id', clipId)
+                        .append('rect')
+                        .attr('width', contentWidth)
+                        .attr('height', contentHeight);
+                    svgItems.attr('clip-path', `url(#${clipId})`);
+                    htmlContainer
+                        ?.style('width', `${contentWidth}px`)
+                        .style('height', `${contentHeight}px`)
+                        .style('overflow', 'hidden');
                 }
                 const {left, top} = getLegendPosition({
                     width: config.maxWidth,

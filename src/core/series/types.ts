@@ -94,6 +94,19 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
     bboxWidth: number;
 };
 
+export interface PreparedLegendRowItem {
+    symbolLeft: number;
+    textLeft: number;
+}
+
+export interface PreparedLegendRow {
+    top: number;
+    left: number;
+    height: number;
+    width: number;
+    items: PreparedLegendRowItem[];
+}
+
 export interface PreparedLegend extends Required<
     Omit<ChartLegend, 'title' | 'colorScale' | 'width'>
 > {
@@ -104,13 +117,7 @@ export interface PreparedLegend extends Required<
     hangingOffset: number;
     height: number;
     lineHeight: number;
-    rows: {
-        top: number;
-        left: number;
-        height: number;
-        width: number;
-        items: {symbolLeft: number; textLeft: number}[];
-    }[];
+    rows: PreparedLegendRow[];
     title: {
         enable: boolean;
         hangingOffset: number;

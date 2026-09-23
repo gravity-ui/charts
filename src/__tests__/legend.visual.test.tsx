@@ -413,6 +413,93 @@ test.describe('Legend', () => {
                     });
                 }
 
+                test(`oversized row keeps pagination accessible (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        chart: {margin: {top: 10, bottom: 10}},
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            html,
+                            position: 'left',
+                            width: 300,
+                            align: 'left',
+                        },
+                        series: {
+                            data: [
+                                {
+                                    type: 'scatter',
+                                    symbolType: 'square',
+                                    name: 'Tall',
+                                    legend: {symbol: {width: 220}},
+                                    data: [{x: 0, y: 1}],
+                                },
+                                {
+                                    type: 'scatter',
+                                    symbolType: 'square',
+                                    name: 'Short',
+                                    legend: {symbol: {width: 8}},
+                                    data: [{x: 0, y: 2}],
+                                },
+                                {
+                                    type: 'scatter',
+                                    symbolType: 'square',
+                                    name: 'Medium',
+                                    legend: {symbol: {width: 40}},
+                                    data: [{x: 0, y: 3}],
+                                },
+                            ],
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 600, height: 180}} />,
+                    );
+                    const counter = component.locator('.gcharts-legend__pagination-counter');
+                    await expect(counter).toHaveText('1/2');
+                    const viewport = component.locator('.gcharts-legend clipPath rect');
+                    const viewportBox = await viewport.evaluate((element: SVGRectElement) => {
+                        const height = element.height.baseVal.value;
+                        const bottom = new DOMPoint(0, height).matrixTransform(
+                            element.getScreenCTM() ?? undefined,
+                        );
+                        return {height, bottom: bottom.y};
+                    });
+                    const paginatorBox = await counter.boundingBox();
+                    expect(paginatorBox).not.toBeNull();
+                    expect(viewportBox.bottom).toBeLessThanOrEqual(paginatorBox?.y ?? -Infinity);
+                    const marker = await component
+                        .locator('.gcharts-legend__item-symbol')
+                        .boundingBox();
+                    expect(marker?.height ?? -Infinity).toBeGreaterThan(viewportBox.height);
+                    if (html) {
+                        await expect(component.locator('[data-legend]')).toHaveCSS(
+                            'overflow',
+                            'hidden',
+                        );
+                    }
+                    const firstLabelBox = await component.locator(labelSelector).boundingBox();
+                    await expect(component).toHaveScreenshot();
+                    await component.getByText('▼').click();
+                    await expect(counter).toHaveText('2/2');
+                    await expect(component.locator(labelSelector)).toHaveText(['Short', 'Medium']);
+                    // Preserve both column positions when the largest symbol is on another page.
+                    for (const label of await component.locator(labelSelector).all()) {
+                        expect((await label.boundingBox())?.x).toBe(firstLabelBox?.x);
+                    }
+                    for (const symbol of await component
+                        .locator('.gcharts-legend__item-symbol')
+                        .all()) {
+                        const box = await symbol.boundingBox();
+                        expect((box?.x ?? Infinity) + (box?.width ?? 0) / 2).toBeCloseTo(
+                            (marker?.x ?? -Infinity) + (marker?.width ?? 0) / 2,
+                        );
+                    }
+                    await checkLegendSymbolBounds(component);
+                    await expect(component).toHaveScreenshot();
+                    await component.getByText('▲').click();
+                    await expect(counter).toHaveText('1/2');
+                    await expect(component.locator(labelSelector)).toHaveText(['Tall']);
+                });
+
                 test(`six triangle markers fit without pagination (${output})`, async ({mount}) => {
                     const data: ChartData = {
                         legend: {

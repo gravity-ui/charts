@@ -10,7 +10,7 @@ The visibility of the legend is controlled by the `enabled` property within its 
 
 Set `legend.layout: 'vertical'` to place one item per row, independently of `position`. The default is `'horizontal'`. This option applies to discrete legends with SVG or HTML labels.
 
-Use `align` to position the list and `verticalAlign` for vertical alignment of side legends; `justifyContent` only affects horizontal layout. Long labels are truncated, and lists that exceed the available height use pagination.
+Use `align` to position the list and `verticalAlign` for vertical alignment of side legends; `justifyContent` only affects horizontal layout. Long labels are truncated, and lists that exceed the available height use pagination. If a single row is taller than the page, its content is clipped to keep the pagination controls accessible.
 
 <div data-chart-example="legend/vertical"></div>
 
