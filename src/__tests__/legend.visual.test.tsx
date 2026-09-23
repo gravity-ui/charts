@@ -247,12 +247,18 @@ test.describe('Legend', () => {
                 await expect(symbols).toHaveCount(2);
                 // Measure the rendered geometry independently of getSymbolBBoxWidth so an
                 // overestimate in that helper cannot also widen the test's fitting threshold.
-                const textWidth = await labels.evaluateAll((elements) =>
-                    elements.reduce(
-                        (sum, element) => sum + element.getBoundingClientRect().width,
-                        0,
-                    ),
-                );
+                // Use the same fractional Canvas text advances as getTextSizeFn in legend layout.
+                const textWidth = await labels.evaluateAll((elements) => {
+                    const context = document.createElement('canvas').getContext('2d');
+                    if (!context) {
+                        throw new Error('Expected a Canvas context for measuring legend text');
+                    }
+                    return elements.reduce((sum, element) => {
+                        const {fontWeight, fontSize, fontFamily} = getComputedStyle(element);
+                        context.font = `${fontWeight} ${fontSize} ${fontFamily}`;
+                        return sum + context.measureText(element.textContent ?? '').width;
+                    }, 0);
+                });
                 const symbolsWidth = await symbols.evaluateAll((elements) =>
                     elements.reduce(
                         (sum, element) => sum + element.getBoundingClientRect().width,
