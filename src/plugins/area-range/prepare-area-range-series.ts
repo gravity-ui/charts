@@ -12,6 +12,7 @@ import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedAreaRangeSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
+import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
 
 import type {AreaRangeSeries, AreaRangeSeriesData} from '../../types';
@@ -45,17 +46,16 @@ export function prepareAreaRangeSeries(
         const fillColor =
             typeof areaFillColor === 'string' ? areaFillColor : getGradientMidColor(areaFillColor);
         const yAxisIndex = get(series, 'yAxis', 0);
-        const marker = {
-            ...DEFAULT_POINT_MARKER_OPTIONS,
-            enabled: false,
-            ...seriesOptions?.['area-range']?.marker,
-            ...series.marker,
-        };
+        const marker: Required<Omit<PointMarkerOptions, 'color'>> = Object.assign(
+            {},
+            {...DEFAULT_POINT_MARKER_OPTIONS, enabled: false},
+            seriesOptions?.['area-range']?.marker,
+            series.marker,
+        );
         const hoverMarker = merge(
             {
-                ...marker,
-                color: undefined,
                 enabled: true,
+                radius: marker.radius,
                 borderWidth: 1,
                 borderColor: '#ffffff',
                 halo: {...DEFAULT_HALO_OPTIONS},

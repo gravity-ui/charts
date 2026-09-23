@@ -17,7 +17,7 @@ export function prepareAreaRangeMarkers(args: {
     isOutsideBounds: (x: number, y: number) => boolean;
 }) {
     const {points, series, yAxis, yScale, yAxisTop, isOutsideBounds} = args;
-    const {normal, hover} = series.marker.states;
+    const {normal} = series.marker.states;
     const bbox = series.gradient ? getRangeBBox(points) : null;
     const getColor =
         series.gradient && bbox ? createGradientColorResolver(series.gradient, bbox) : undefined;
@@ -25,15 +25,8 @@ export function prepareAreaRangeMarkers(args: {
     const maxY = yAxisTop + Math.max(...yScale.range());
     const markers: MarkerItem[] = [];
     const getters: Array<(data: HoveredShapeData[]) => MarkerItem[]> = [];
-
-    const getHoverStyle = (fill: string): NonNullable<MarkerItem['hover']> => ({
-        radius: hover.radius,
-        symbolType: hover.symbol,
-        fill: hover.color ?? fill,
-        stroke: hover.borderColor,
-        strokeWidth: hover.borderWidth,
-        halo: hover.halo.enabled ? {size: hover.halo.size, opacity: hover.halo.opacity} : undefined,
-    });
+    const normalMarkersEnabled =
+        normal.enabled || series.data.some((point) => point.marker?.states?.normal?.enabled);
 
     for (const boundary of ['y0', 'y1'] as const) {
         const boundaryPoints = points.flatMap((point) => {
@@ -54,7 +47,7 @@ export function prepareAreaRangeMarkers(args: {
             ) {
                 return [];
             }
-            const color = point.data.marker?.color ?? point.data.color ?? normal.color;
+            const color = point.data.marker?.color ?? point.data.color;
             return [
                 {
                     x: point.x,
@@ -65,35 +58,27 @@ export function prepareAreaRangeMarkers(args: {
                 },
             ];
         });
-        const hoverOnlyPoints = boundaryPoints.filter((point) => {
-            const normalEnabled = point.data.marker?.states?.normal?.enabled ?? normal.enabled;
-            if (!normalEnabled) return true;
-            const fill = getMarkerFill(point, series.color);
-            markers.push({
-                cx: point.x,
-                cy: point.y,
-                radius: normal.radius,
-                symbolType: normal.symbol,
-                fill,
-                stroke: normal.borderColor,
-                strokeWidth: normal.borderWidth,
-                opacity: 1,
-                active: true,
-                clipped: false,
-                series: {id: series.id},
-                data: point.data,
-                hover: hover.enabled ? getHoverStyle(fill) : undefined,
-            });
-            return false;
-        });
-        getters.push(
-            buildHoverMarkerGetter(hoverOnlyPoints, {
-                ...series,
-                marker: {
-                    states: {normal: {...normal, enabled: false, symbol: hover.symbol}, hover},
-                },
-            }),
-        );
+        if (normalMarkersEnabled) {
+            for (const point of boundaryPoints) {
+                if (!normal.enabled && !point.data.marker?.states?.normal?.enabled) continue;
+                const fill = getMarkerFill(point, series.color);
+                markers.push({
+                    cx: point.x,
+                    cy: point.y,
+                    radius: normal.radius,
+                    symbolType: normal.symbol,
+                    fill,
+                    stroke: normal.borderColor,
+                    strokeWidth: normal.borderWidth,
+                    opacity: 1,
+                    active: true,
+                    clipped: false,
+                    series: {id: series.id},
+                    data: point.data,
+                });
+            }
+        }
+        getters.push(buildHoverMarkerGetter(boundaryPoints, series));
     }
 
     return {
@@ -103,12 +88,7 @@ export function prepareAreaRangeMarkers(args: {
                 data,
                 series: hoveredSeries,
             }));
-            return getters
-                .flatMap((getMarkers) => getMarkers(selected))
-                .map((marker) => ({
-                    ...marker,
-                    ...getHoverStyle(marker.fill),
-                }));
+            return getters.flatMap((getMarkers) => getMarkers(selected));
         },
     };
 }

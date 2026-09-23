@@ -73,7 +73,7 @@ export const SeriesShapes = ({
                 className={b()}
                 clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
             />
-            <MarkerLayer markers={markers} dispatcher={dispatcher} namespace={namespace} />
+            <MarkerLayer markers={markers} />
             <HoverMarkerLayer
                 preparedData={preparedData}
                 dispatcher={dispatcher}

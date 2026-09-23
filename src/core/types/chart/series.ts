@@ -316,7 +316,7 @@ export interface ChartSeriesOptions {
         /** Styling of hovered and inactive bands. */
         states?: {
             hover?: BasicHoverState & {
-                /** Marker appearance on both hovered boundaries, including the halo. */
+                /** Marker appearance on both hovered boundaries. */
                 marker?: PointMarkerOptions & {halo?: Halo};
             };
             inactive?: BasicInactiveState;

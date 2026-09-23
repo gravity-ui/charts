@@ -38,11 +38,11 @@ Area range supports `x`, `y`, and `xy` zoom (`x` by default). Y filtering retain
 
 ## Boundary markers
 
-By default, normal markers are hidden and hovering a point shows markers on both visible boundaries, with a white border and halo. Coincident boundaries share one marker. Incomplete points and boundaries outside the visible plot have no markers.
+By default, normal markers are hidden and hovering a point shows markers on both visible boundaries, with a white border. Coincident boundaries share one marker. Incomplete points and boundaries outside the visible plot have no markers.
 
-Set `series.data[].marker.enabled` to show normal markers. Defaults for all area-range series are configured in `series.options['area-range'].marker`; per-series values take precedence. A point's `marker.states.normal.enabled` overrides the series setting for that point. Point `marker.color` overrides the point color and series marker color. Without an explicit marker color, each boundary uses its position in the series gradient.
+Set `series.marker.enabled` to show normal markers. Defaults for all area-range series are configured in `series.options['area-range'].marker`; per-series values take precedence. A point's `marker.states.normal.enabled` can also enable normal markers when the series setting is disabled. Marker fill uses the point's `marker.color`, then its `color`, then the series gradient sampled at that boundary, then the series color.
 
-Configure hover markers and halos through `series.options['area-range'].states.hover.marker`:
+Configure hover markers through `series.options['area-range'].states.hover.marker`:
 
 ```javascript
 series: {
@@ -51,7 +51,7 @@ series: {
       marker: {enabled: false, radius: 4},
       states: {
         hover: {
-          marker: {enabled: true, radius: 6, halo: {enabled: true, size: 8, opacity: 0.25}},
+          marker: {enabled: true, radius: 6},
         },
       },
     },

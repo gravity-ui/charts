@@ -7,7 +7,7 @@ const data: ChartData = {
     series: {
         options: {
             'area-range': {
-                states: {hover: {marker: {radius: 6, halo: {size: 8}}}},
+                states: {hover: {marker: {radius: 6}}},
             },
         },
         data: [

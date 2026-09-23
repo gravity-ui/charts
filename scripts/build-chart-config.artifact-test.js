@@ -167,7 +167,6 @@ describe('chart config artifacts', () => {
                     marker: {
                         enabled: true,
                         borderWidth: 2,
-                        halo: {enabled: true, size: 8, opacity: 0.5},
                     },
                 },
             },
