@@ -222,6 +222,38 @@ test.describe('Legend', () => {
     });
 
     test.describe('Discrete', () => {
+        for (const symbolType of ['diamond', 'triangle', 'triangle-down'] as const) {
+            test(`does not wrap fitting ${symbolType} symbols onto another row`, async ({
+                mount,
+            }) => {
+                const data: ChartData = {
+                    legend: {enabled: true, width: 103},
+                    series: {
+                        data: ['East', 'West'].map((name, i) => ({
+                            type: 'scatter',
+                            name,
+                            symbolType,
+                            data: [{x: i, y: i + 1}],
+                        })),
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                const labels = component.locator('.gcharts-legend__item-text');
+                await expect(labels).toHaveText(['East', 'West']);
+                await expect(component).toHaveScreenshot();
+                const boxes = await labels.evaluateAll((elements) =>
+                    elements.map((element) => {
+                        const {y, right} = element.getBoundingClientRect();
+                        return {y, right};
+                    }),
+                );
+                expect(boxes[0].y).toBe(boxes[1].y);
+                const symbols = component.locator('.gcharts-legend__item-symbol');
+                const firstSymbol = await symbols.first().boundingBox();
+                expect(boxes[1].right - (firstSymbol?.x ?? -Infinity)).toBeLessThanOrEqual(103);
+            });
+        }
+
         test.describe('Width larger than chart', () => {
             test('Bottom SVG legend in a 400px chart', async ({mount}) => {
                 const data: ChartData = {
