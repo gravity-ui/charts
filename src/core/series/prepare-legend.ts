@@ -471,15 +471,11 @@ export async function getLegendComponents(args: {
         preparedLegend.height = legendHeight + titleHeight;
         preparedLegend.resolvedWidth = maxLegendWidth;
     } else if (preparedLegend.constrainContent) {
-        preparedLegend.resolvedWidth = Math.min(
-            maxLegendWidth,
-            Math.max(
-                0,
-                typeof preparedLegend.width === 'number'
-                    ? preparedLegend.width
-                    : CONTINUOUS_LEGEND_SIZE.width,
-            ),
-        );
+        const width =
+            typeof preparedLegend.width === 'number'
+                ? preparedLegend.width
+                : CONTINUOUS_LEGEND_SIZE.width;
+        preparedLegend.resolvedWidth = Math.max(0, Math.min(maxLegendWidth, width));
         if (isVerticalPosition) {
             maxLegendWidth = preparedLegend.resolvedWidth;
         }

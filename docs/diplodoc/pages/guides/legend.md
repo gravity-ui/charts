@@ -22,24 +22,15 @@ Without an explicit width, a discrete legend uses the available chart width for 
 
 ### Content-based side legends
 
-Set `width: 'auto'` for a discrete legend on the left or right to reserve only the space its content needs. The width includes the widest prepared row, title, and pagination controls across all pages, so turning pages does not move the plot. It is recalculated when the chart size, content, or configured text styles change.
+Set `width: 'auto'` for a discrete legend on the left or right to fit its rows, title, and pagination controls. All pages contribute to the width, so turning pages does not move the plot. Width is recalculated when the chart size, content, or text styles change.
 
-```javascript
-legend: {
-  enabled: true,
-  position: 'left',
-  width: 'auto',
-  maxWidth: '30%',
-}
-```
+`maxWidth` caps the width without forcing short content to fill it. It accepts pixels (`230` or `'230px'`) and percentages (`'30.5%'`) of chart width after left/right chart margins, before legend or axis space is deducted. The limit includes markers and text spacing but excludes `legend.margin`. Long labels and titles are truncated.
 
-`maxWidth` is a ceiling, not a target: short rows can use less space in automatic mode. It accepts numbers or pixel strings (`230`, `'230px'`) and percentages including fractions (`'30.5%'`). Percentages refer to chart width after left/right chart margins, before subtracting legend or axis space. Markers and text spacing count towards the limit; the external `legend.margin` does not.
+Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work together.
 
-Long labels and titles are truncated to fit. HTML labels retain their markup and use CSS overflow. All rows are measured before choosing the automatic width. The existing horizontal item flow still determines how items wrap; `auto` does not change the item layout.
+<div data-chart-example="legend/content-based-width"></div>
 
-You can also supply `maxWidth` alone, with a numeric `width`, or for a continuous legend: the smaller width wins. Omitting it adds no user limit; available chart space still limits automatic width. Invalid limits are ignored and negative limits resolve to zero. Omitting both settings preserves the existing sizing behavior. `width: 'auto'` uses the default width for top/bottom and continuous legends.
-
-Try **Other → Legend → Content-based width** in Storybook and resize the container.
+`maxWidth` also caps numeric widths and continuous legends. Invalid limits are ignored; negative limits resolve to zero. Without it, automatic width is limited only by available space. Omitting both settings preserves existing sizing. For top/bottom and continuous legends, `width: 'auto'` uses the default width.
 
 ## Overriding legend labels
 

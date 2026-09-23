@@ -131,6 +131,11 @@ test.describe('Legend', () => {
                         .poll(async () => Number(await legend.getAttribute('width')))
                         .toBeLessThanOrEqual(93);
                     await expect(component).toHaveScreenshot();
+                    await component.update(
+                        <ChartTestStory data={data} styles={{width: 600, height: 240}} />,
+                    );
+                    await expect(legend).toHaveAttribute('width', String(legendWidth));
+                    await expect(plot).toHaveAttribute('width', plotWidth);
                 });
             }
 

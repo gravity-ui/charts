@@ -1,5 +1,3 @@
-import React from 'react';
-
 import type {Meta, StoryObj} from '@storybook/react';
 
 import {ChartStory} from '../../ChartStory';
@@ -23,21 +21,15 @@ export const SharedLegend = {
 
 export const ContentBasedWidth = {
     name: 'Content-based width',
-    render: (args) => (
-        <div
-            style={{
-                width: 700,
-                height: 350,
-                resize: 'horizontal',
-                overflow: 'auto',
-                minWidth: 200,
-                maxWidth: '100%',
-            }}
-        >
-            <ChartStory {...args} style={{width: '100%', height: '100%'}} />
-        </div>
-    ),
     args: {
+        style: {
+            width: 700,
+            height: 350,
+            resize: 'horizontal',
+            overflow: 'auto',
+            minWidth: 200,
+            maxWidth: '100%',
+        },
         data: {
             legend: {
                 enabled: true,

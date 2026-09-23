@@ -253,6 +253,9 @@ export const Legend = (props: Props) => {
                     typeof start === 'number' && typeof end === 'number'
                         ? items.slice(start, end)
                         : items;
+                const titleHeight = legend.constrainContent
+                    ? legend.title.height + legend.title.margin
+                    : 0;
                 const legendLineHeights: number[] = [];
                 pageItems.forEach((line) => {
                     const legendLine = svgElement.append('g').attr('class', b('line'));
@@ -373,9 +376,6 @@ export const Legend = (props: Props) => {
                         }
                     }
 
-                    const titleHeight = legend.constrainContent
-                        ? legend.title.height + legend.title.margin
-                        : 0;
                     const top = titleHeight + legendLineHeights.reduce((acc, h) => acc + h, 0);
                     legendLineHeights.push(legendLineHeight);
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);

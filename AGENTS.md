@@ -27,3 +27,5 @@
 # User-facing documentation
 
 - For user-facing config or behavior changes, assess whether the TSDoc, relevant guide, and runnable example should be updated.
+
+- Embed live examples in user-facing guides using `docs/examples` and `data-chart-example`. Do not replace an embedded example with instructions to find a story in Storybook.
