@@ -16,6 +16,8 @@ export const LegendPosition = {
     name: 'Position',
     args: {
         enabled: true,
+        layout: 'horizontal',
+        html: false,
         position: 'bottom',
         align: 'center',
         verticalAlign: 'top',
@@ -23,6 +25,8 @@ export const LegendPosition = {
         width: undefined,
     },
     argTypes: {
+        layout: {control: 'inline-radio', options: ['horizontal', 'vertical']},
+        html: {control: 'boolean'},
         enabled: {
             control: 'boolean',
         },
@@ -48,6 +52,8 @@ export const LegendPosition = {
     },
     render: (args: {
         enabled: boolean;
+        layout: 'horizontal' | 'vertical';
+        html: boolean;
         width?: number;
         position: 'top' | 'bottom' | 'left' | 'right';
         align: 'left' | 'center' | 'right';
@@ -58,6 +64,8 @@ export const LegendPosition = {
             ...legendPositionData,
             legend: {
                 enabled: args.enabled,
+                layout: args.layout,
+                html: args.html,
                 width: args.width,
                 position: args.position,
                 align: args.align,

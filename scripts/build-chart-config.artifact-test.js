@@ -39,6 +39,33 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations support both legend layouts', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration +
+                    `
+                    const legend: ChartLegend = {position: 'left', layout: 'vertical'};
+                    legend.layout = 'horizontal';
+                    // @ts-expect-error Only horizontal and vertical layouts are supported.
+                    legend.layout = 'columns';
+                `,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema exposes legend layout values and the compatible default', () => {
+        expect(schema.definitions.ChartLegend.properties.layout).toMatchObject({
+            enum: ['horizontal', 'vertical'],
+            default: 'horizontal',
+        });
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const layout of [undefined, 'horizontal', 'vertical']) {
+            expect(validateConfig({series: {data: []}, legend: {layout}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {layout: 'columns'}})).toBe(false);
+    });
+
     test('standalone declarations preserve BaseSeries compatibility and safe formatters', () => {
         const usage = `
             const pieFormat: PieValueFormat = {

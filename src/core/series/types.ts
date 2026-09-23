@@ -102,6 +102,13 @@ export interface PreparedLegend extends Required<
     hangingOffset: number;
     height: number;
     lineHeight: number;
+    rows: {
+        top: number;
+        left: number;
+        height: number;
+        width: number;
+        items: {symbolLeft: number; textLeft: number}[];
+    }[];
     title: {
         enable: boolean;
         hangingOffset: number;

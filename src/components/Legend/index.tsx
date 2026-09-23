@@ -42,23 +42,6 @@ type Props = {
     onUpdate?: () => void;
 };
 
-const getLegendItemLeftPosition = (args: {
-    align: PreparedLegend['align'];
-    contentWidth: number;
-    width: number;
-}) => {
-    const {align, width, contentWidth} = args;
-
-    if (align === 'right') {
-        return width - contentWidth;
-    }
-    if (align === 'left') {
-        return 0;
-    }
-
-    return width / 2 - contentWidth / 2;
-};
-
 const getLegendPosition = (args: {
     contentWidth: number;
     width: number;
@@ -125,27 +108,13 @@ async function appendPaginator(args: {
 
 function renderLegendSymbol(args: {
     selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
-    legend: PreparedLegend;
-    legendLineHeight: number;
+    row: PreparedLegend['rows'][number];
 }) {
-    const {selection, legend, legendLineHeight} = args;
-    const line = selection.data();
-
-    const getXPosition = (i: number) => {
-        return line.slice(0, i).reduce((acc, legendItem) => {
-            return (
-                acc +
-                legendItem.symbol.bboxWidth +
-                legendItem.symbol.padding +
-                legendItem.textWidth +
-                legend.itemDistance
-            );
-        }, 0);
-    };
-
+    const {selection, row} = args;
+    const legendLineHeight = row.height;
     selection.each(function (d, i) {
         const element = select(this);
-        const x = getXPosition(i);
+        const x = row.items[i].symbolLeft;
         const className = b('item-symbol', {shape: d.symbol.shape, unselected: !d.visible});
         const color = d.visible ? d.color : '';
         const symbolType = (d.symbol as SymbolLegendSymbol).symbolType;
@@ -204,9 +173,18 @@ export const Legend = (props: Props) => {
     const ref = React.useRef<SVGGElement>(null);
     const [pageIndex, setPageIndex] = React.useState(0);
 
+    const currentPageIndex = Math.min(
+        pageIndex,
+        Math.max(0, (config.pagination?.pages.length ?? 1) - 1),
+    );
+
     React.useEffect(() => {
         setPageIndex(0);
     }, [config.maxWidth]);
+
+    React.useEffect(() => {
+        setPageIndex(currentPageIndex);
+    }, [currentPageIndex]);
 
     React.useEffect(() => {
         async function prepareLegend() {
@@ -230,14 +208,15 @@ export const Legend = (props: Props) => {
             let legendLeft = 0;
             let legendTop = 0;
             if (legend.type === 'discrete') {
-                const start = config.pagination?.pages[pageIndex]?.start;
-                const end = config.pagination?.pages[pageIndex]?.end;
+                const start = config.pagination?.pages[currentPageIndex]?.start;
+                const end = config.pagination?.pages[currentPageIndex]?.end;
                 const pageItems =
                     typeof start === 'number' && typeof end === 'number'
                         ? items.slice(start, end)
                         : items;
-                const legendLineHeights: number[] = [];
-                pageItems.forEach((line) => {
+                const pageTop = legend.rows[start ?? 0]?.top ?? 0;
+                pageItems.forEach((line, lineIndex) => {
+                    const row = legend.rows[(start ?? 0) + lineIndex];
                     const legendLine = svgElement.append('g').attr('class', b('line'));
                     const htmlLegendLine = htmlContainer
                         ?.append('div')
@@ -257,20 +236,8 @@ export const Legend = (props: Props) => {
                             onUpdate?.();
                         });
 
-                    const getXPosition = (i: number) => {
-                        return line.slice(0, i).reduce((acc, legendItem) => {
-                            return (
-                                acc +
-                                legendItem.symbol.bboxWidth +
-                                legendItem.symbol.padding +
-                                legendItem.textWidth +
-                                legend.itemDistance
-                            );
-                        }, 0);
-                    };
-
-                    const legendLineHeight = Math.max(...line.map((l) => l.height));
-                    renderLegendSymbol({selection: legendItemTemplate, legend, legendLineHeight});
+                    const legendLineHeight = row.height;
+                    renderLegendSymbol({selection: legendItemTemplate, row});
 
                     if (htmlLegendLine) {
                         htmlLegendLine
@@ -287,8 +254,8 @@ export const Legend = (props: Props) => {
                             .style('max-width', function (d) {
                                 return `${d.textWidth}px`;
                             })
-                            .style('left', function (d, i) {
-                                return `${getXPosition(i) + d.symbol.bboxWidth + d.symbol.padding}px`;
+                            .style('left', function (_d, i) {
+                                return `${row.items[i].textLeft}px`;
                             })
                             .style('top', function (d) {
                                 if (d.height < legendLineHeight) {
@@ -308,13 +275,7 @@ export const Legend = (props: Props) => {
                     } else {
                         legendItemTemplate
                             .append('text')
-                            .attr('x', function (legendItem, i) {
-                                return (
-                                    getXPosition(i) +
-                                    legendItem.symbol.bboxWidth +
-                                    legendItem.symbol.padding
-                                );
-                            })
+                            .attr('x', (_d, i) => row.items[i].textLeft)
                             .attr('y', legend.hangingOffset)
                             .attr('height', legend.height)
                             .attr('class', function (d) {
@@ -325,38 +286,12 @@ export const Legend = (props: Props) => {
                             .style('font-size', legend.itemStyle.fontSize);
                     }
 
-                    let contentWidth = 0;
-                    if (legend.html) {
-                        contentWidth = getXPosition(line.length) - legend.itemDistance;
-                    } else {
-                        contentWidth = line.reduce((sum, l, index) => {
-                            sum += l.textWidth + l.symbol.bboxWidth + l.symbol.padding;
-                            if (index > 0) {
-                                sum += legend.itemDistance;
-                            }
-                            return sum;
-                        }, 0);
-                    }
-
-                    let left = 0;
-                    switch (legend.justifyContent) {
-                        case 'center': {
-                            left = getLegendItemLeftPosition({
-                                align: legend.align,
-                                width: config.maxWidth,
-                                contentWidth,
-                            });
-                            legendWidth = config.maxWidth;
-                            break;
-                        }
-                        case 'start': {
-                            legendWidth = Math.max(legendWidth, contentWidth);
-                            break;
-                        }
-                    }
-
-                    const top = legendLineHeights.reduce((acc, h) => acc + h, 0);
-                    legendLineHeights.push(legendLineHeight);
+                    legendWidth =
+                        legend.layout === 'vertical' || legend.justifyContent === 'center'
+                            ? config.maxWidth
+                            : Math.max(legendWidth, row.width);
+                    const left = row.left;
+                    const top = row.top - pageTop;
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
                 });
@@ -367,7 +302,7 @@ export const Legend = (props: Props) => {
                     )})`;
                     await appendPaginator({
                         container: svgElement,
-                        pageIndex: pageIndex,
+                        pageIndex: currentPageIndex,
                         legend,
                         transform,
                         pages: config.pagination.pages,
@@ -501,7 +436,7 @@ export const Legend = (props: Props) => {
         }
 
         prepareLegend();
-    }, [chartSeries, onItemClick, onUpdate, legend, items, config, pageIndex, htmlLayout]);
+    }, [chartSeries, onItemClick, onUpdate, legend, items, config, currentPageIndex, htmlLayout]);
 
     // due to asynchronous processing, we only need to work with the actual element
     // eslint-disable-next-line react-hooks/exhaustive-deps
