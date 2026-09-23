@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
@@ -10,6 +11,55 @@ import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 
 import {LONG_TEXT} from './constants';
+
+async function visitLegendPages(
+    component: Locator,
+    labels: Locator,
+    checkPage: () => Promise<void>,
+) {
+    const counter = component.locator('.gcharts-legend__pagination-counter');
+    await expect(counter).toBeVisible();
+    const pageCount = Number((await counter.textContent())?.split('/')[1]);
+    expect(pageCount).toBeGreaterThan(1);
+    const visited: string[] = [];
+    for (let page = 1; page <= pageCount; page++) {
+        await expect(counter).toHaveText(`${page}/${pageCount}`);
+        await checkPage();
+        visited.push(...(await labels.allTextContents()));
+        if (page < pageCount) {
+            await component.getByText('▼').click();
+        }
+    }
+    return visited;
+}
+
+async function getVerticalBoxes(locator: Locator) {
+    return locator.evaluateAll((elements) =>
+        elements.map((element) => {
+            const {y, height} = element.getBoundingClientRect();
+            return {y, height};
+        }),
+    );
+}
+
+async function checkLegendSymbolBounds(component: Locator) {
+    const symbols = component.locator('.gcharts-legend__item-symbol');
+    const boxes = await getVerticalBoxes(symbols);
+    expect(boxes.length).toBeGreaterThan(0);
+    const chartBox = await component.boundingBox();
+    expect(boxes[0].y).toBeGreaterThanOrEqual((chartBox?.y ?? Infinity) - 0.01);
+    for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i].y).toBeGreaterThanOrEqual(boxes[i - 1].y + boxes[i - 1].height - 0.01);
+    }
+    const counter = component.locator('.gcharts-legend__pagination-counter');
+    const paginator = await counter.boundingBox();
+    const last = boxes[boxes.length - 1];
+    expect(last.y + last.height).toBeLessThanOrEqual((paginator?.y ?? -Infinity) + 0.01);
+    expect((paginator?.y ?? Infinity) + (paginator?.height ?? 0)).toBeLessThanOrEqual(
+        (chartBox?.y ?? -Infinity) + (chartBox?.height ?? 0) + 0.01,
+    );
+    return boxes;
+}
 
 const pieOverflowedLegendItemsData: ChartData = {
     legend: {
@@ -131,109 +181,127 @@ test.describe('Legend', () => {
                     : '.gcharts-legend__item text';
 
                 for (const layout of ['vertical', 'horizontal'] as const) {
-                    for (const type of ['pie', 'scatter'] as const) {
-                        test(`large ${type} symbols fit rows and pages (${layout}, ${output})`, async ({
-                            mount,
-                        }) => {
-                            const names = range(15).map((i) => `Marker label ${i}`);
-                            const symbolTypes = [
-                                'circle',
-                                'diamond',
-                                'square',
-                                'triangle',
-                                'triangle-down',
-                            ] as const;
-                            const data: ChartData = {
-                                legend: {
-                                    enabled: true,
-                                    layout,
-                                    html,
-                                    position: 'left',
-                                    width: 150,
-                                    align: 'left',
-                                },
-                                series: {
-                                    data:
-                                        type === 'pie'
-                                            ? [
-                                                  {
-                                                      type,
-                                                      dataLabels: {enabled: false},
-                                                      legend: {symbol: {width: 20}},
-                                                      data: names.map((name) => ({name, value: 1})),
-                                                  },
-                                              ]
-                                            : names.map((name, i) => ({
-                                                  type,
-                                                  name,
-                                                  symbolType: symbolTypes[i % symbolTypes.length],
-                                                  legend: {symbol: {width: 20}},
-                                                  data: [{x: i, y: i}],
-                                              })),
-                                },
-                            };
-                            const component = await mount(
-                                <ChartTestStory data={data} styles={{width: 600, height: 220}} />,
-                            );
-                            const labels = component.locator(labelSelector);
-                            const symbols = component.locator('.gcharts-legend__item-symbol');
-                            const counter = component.locator(
-                                '.gcharts-legend__pagination-counter',
-                            );
-                            await expect(counter).toBeVisible();
-                            const pageCount = Number((await counter.textContent())?.split('/')[1]);
-                            expect(pageCount).toBeGreaterThan(1);
-                            const visited: string[] = [];
-                            for (let page = 1; page <= pageCount; page++) {
-                                await expect(counter).toHaveText(`${page}/${pageCount}`);
-                                const boxes = await symbols.evaluateAll((elements) =>
-                                    elements.map((element) => {
-                                        const {y, height} = element.getBoundingClientRect();
-                                        return {y, height};
-                                    }),
-                                );
-                                expect(boxes.length).toBeGreaterThan(0);
-                                const chartBox = await component.boundingBox();
-                                expect(boxes[0].y).toBeGreaterThanOrEqual(
-                                    (chartBox?.y ?? Infinity) - 0.01,
-                                );
-                                for (let i = 1; i < boxes.length; i++) {
-                                    expect(boxes[i].y).toBeGreaterThanOrEqual(
-                                        boxes[i - 1].y + boxes[i - 1].height - 0.01,
-                                    );
-                                }
-                                const paginator = await counter.boundingBox();
-                                const last = boxes[boxes.length - 1];
-                                expect(last.y + last.height).toBeLessThanOrEqual(
-                                    (paginator?.y ?? -Infinity) + 0.01,
-                                );
-                                if (type === 'pie') {
-                                    const labelBoxes = await labels.evaluateAll((elements) =>
-                                        elements.map((element) => {
-                                            const {y, height} = element.getBoundingClientRect();
-                                            return {y, height};
-                                        }),
-                                    );
-                                    labelBoxes.forEach((label, i) => {
-                                        const marker = boxes[i];
-                                        expect(
-                                            Math.abs(
-                                                label.y +
-                                                    label.height / 2 -
-                                                    (marker.y + marker.height / 2),
-                                            ),
-                                        ).toBeLessThan(2);
-                                    });
-                                }
-                                visited.push(...(await labels.allTextContents()));
-                                if (page < pageCount) {
-                                    await component.getByText('▼').click();
-                                }
-                            }
-                            expect(visited).toEqual(names);
+                    test(`large pie symbols fit rows and pages (${layout}, ${output})`, async ({
+                        mount,
+                    }) => {
+                        const names = range(15).map((i) => `Marker label ${i}`);
+                        const data: ChartData = {
+                            legend: {
+                                enabled: true,
+                                layout,
+                                html,
+                                position: 'left',
+                                width: 150,
+                                align: 'left',
+                            },
+                            series: {
+                                data: [
+                                    {
+                                        type: 'pie',
+                                        dataLabels: {enabled: false},
+                                        legend: {symbol: {width: 20}},
+                                        data: names.map((name) => ({name, value: 1})),
+                                    },
+                                ],
+                            },
+                        };
+                        const component = await mount(
+                            <ChartTestStory data={data} styles={{width: 600, height: 220}} />,
+                        );
+                        const labels = component.locator(labelSelector);
+                        const visited = await visitLegendPages(component, labels, async () => {
+                            const boxes = await checkLegendSymbolBounds(component);
+                            const labelBoxes = await getVerticalBoxes(labels);
+                            labelBoxes.forEach((label, i) => {
+                                const marker = boxes[i];
+                                expect(
+                                    Math.abs(
+                                        label.y + label.height / 2 - (marker.y + marker.height / 2),
+                                    ),
+                                ).toBeLessThan(2);
+                            });
                         });
-                    }
+                        expect(visited).toEqual(names);
+                    });
+
+                    test(`large scatter symbols fit rows and pages (${layout}, ${output})`, async ({
+                        mount,
+                    }) => {
+                        const names = range(15).map((i) => `Marker label ${i}`);
+                        const symbolTypes = [
+                            'circle',
+                            'diamond',
+                            'square',
+                            'triangle',
+                            'triangle-down',
+                        ] as const;
+                        const data: ChartData = {
+                            legend: {
+                                enabled: true,
+                                layout,
+                                html,
+                                position: 'left',
+                                width: 150,
+                                align: 'left',
+                            },
+                            series: {
+                                data: names.map((name, i) => ({
+                                    type: 'scatter',
+                                    name,
+                                    symbolType: symbolTypes[i % symbolTypes.length],
+                                    legend: {symbol: {width: 20}},
+                                    data: [{x: i, y: i}],
+                                })),
+                            },
+                        };
+                        const component = await mount(
+                            <ChartTestStory data={data} styles={{width: 600, height: 220}} />,
+                        );
+                        const labels = component.locator(labelSelector);
+                        const visited = await visitLegendPages(component, labels, async () => {
+                            await checkLegendSymbolBounds(component);
+                        });
+                        expect(visited).toEqual(names);
+                    });
                 }
+
+                test(`six triangle markers fit without pagination (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            html,
+                            position: 'left',
+                            width: 150,
+                            align: 'left',
+                        },
+                        series: {
+                            data: range(6).map((i) => ({
+                                type: 'scatter',
+                                name: `Item ${i}`,
+                                symbolType: 'triangle',
+                                legend: {symbol: {width: 20}},
+                                data: [{x: i, y: i}],
+                            })),
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 600, height: 200}} />,
+                    );
+                    await expect(component.locator(labelSelector)).toHaveCount(6);
+                    await expect(
+                        component.locator('.gcharts-legend__pagination-counter'),
+                    ).toHaveCount(0);
+                    const boxes = await getVerticalBoxes(
+                        component.locator('.gcharts-legend__item-symbol'),
+                    );
+                    const chart = await component.boundingBox();
+                    expect(boxes[0].y).toBeGreaterThanOrEqual(chart?.y ?? Infinity);
+                    expect(boxes[5].y + boxes[5].height).toBeLessThanOrEqual(
+                        (chart?.y ?? -Infinity) + (chart?.height ?? 0),
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
 
                 for (const position of ['left', 'right', 'top', 'bottom'] as const) {
                     test(`${position} (${output})`, async ({mount}) => {

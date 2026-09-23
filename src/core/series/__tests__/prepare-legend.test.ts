@@ -217,6 +217,27 @@ test.each([undefined, 230])(
 );
 
 describe('vertical legend layout', () => {
+    test.each(['triangle', 'triangle-down', 'diamond'] as const)(
+        'fits six %s markers without pagination at height 200',
+        async (symbolType) => {
+            const {legendConfig, preparedLegend} = await prepareLegend(
+                {enabled: true, layout: 'vertical', position: 'left'},
+                1000,
+                200,
+                Array.from({length: 6}, (_, i) => ({
+                    type: 'scatter',
+                    name: `Item ${i}`,
+                    symbolType,
+                    legend: {symbol: {width: 20}},
+                    data: [{x: i, y: i}],
+                })),
+            );
+            expect(preparedLegend.rows).toHaveLength(6);
+            expect(preparedLegend.height).toBeLessThanOrEqual(180);
+            expect(legendConfig.pagination).toBeUndefined();
+        },
+    );
+
     test.each([false, true])('includes large symbols in row heights (html=%s)', async (html) => {
         const {preparedLegend, legendItems} = await prepareLegend(
             {enabled: true, layout: 'vertical', html},

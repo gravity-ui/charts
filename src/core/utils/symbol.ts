@@ -8,12 +8,17 @@ export const getSymbolType = (index: number) => {
     return scatterStyles[index % scatterStyles.length];
 };
 
-// This is an inverted triangle
-// Based on https://github.com/d3/d3-shape/blob/main/src/symbol/triangle2.js
+// Radius multipliers used by D3's symbolDiamond2 and symbolTriangle2 draw methods.
+// https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/diamond2.js
+const diamondRadiusFactor = 0.62625;
+// https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
+const triangleRadiusFactor = 0.6824;
 const sqrt3 = Math.sqrt(3);
+
+// Invert D3's triangle2 around its centroid.
 const triangleDown = {
     draw: (context: CanvasPath, size: number) => {
-        const s = Math.sqrt(size) * 0.6824;
+        const s = Math.sqrt(size) * triangleRadiusFactor;
         const t = s / 2;
         const u = (s * sqrt3) / 2;
         context.moveTo(0, s);
@@ -53,16 +58,17 @@ export function getSymbolSize({symbolSize, symbolType}: SymbolSizeOptions) {
             return {width: diameter, height: diameter};
         }
         case SymbolType.Diamond: {
-            const diagonal = Math.sqrt(symbolSize * 2);
-            return {width: diagonal, height: diagonal};
+            return {width: Math.sqrt(symbolSize * 2), height: size * diamondRadiusFactor * 2};
         }
         case SymbolType.Square:
             return {width: size, height: size};
         case SymbolType.Triangle:
         case SymbolType.TriangleDown: {
-            const side = Math.sqrt((4 * symbolSize * sqrt3) / 3);
-            const circumradius = side / sqrt3;
-            return {width: side, height: 2 * circumradius};
+            const radius = size * triangleRadiusFactor;
+            const width = Math.sqrt((4 * symbolSize * sqrt3) / 3);
+            // triangle2 is centered at its centroid, not at its bounding box center.
+            // Reserve equal space above and below the current symbol origin.
+            return {width, height: 2 * radius};
         }
         default:
             return {width: 0, height: 0};

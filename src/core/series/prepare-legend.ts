@@ -18,6 +18,11 @@ import type {LegendItem, PreparedLegend, PreparedLegendSymbol, PreparedSeries} f
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
+interface LegendSymbolMetrics {
+    width: number;
+    padding: number;
+}
+
 export async function getPreparedLegend(args: {
     legend: ChartData['legend'];
     series: ChartData['series']['data'];
@@ -151,8 +156,9 @@ async function getGroupedLegendItems(args: {
     maxLegendWidth: number;
     items: LegendItemWithoutTextWidth[];
     preparedLegend: PreparedLegend;
+    symbolMetrics: LegendSymbolMetrics;
 }) {
-    const {maxLegendWidth, items, preparedLegend} = args;
+    const {maxLegendWidth, items, preparedLegend, symbolMetrics} = args;
     if (maxLegendWidth <= 0) {
         return [];
     }
@@ -163,8 +169,7 @@ async function getGroupedLegendItems(args: {
 
     const getLegendItemTextSize = getTextSizeFn({style: preparedLegend.itemStyle});
     const vertical = preparedLegend.layout === 'vertical';
-    const symbolWidth = Math.max(0, ...items.map(({symbol}) => symbol.bboxWidth));
-    const symbolPadding = Math.max(0, ...items.map(({symbol}) => symbol.padding));
+    const {width: symbolWidth, padding: symbolPadding} = symbolMetrics;
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const resultItem = clone(item) as LegendItem;
@@ -286,11 +291,15 @@ function getLegendSymbolHeight(symbol: PreparedLegendSymbol): number {
     }
 }
 
-function getLegendRows(items: LegendItem[][], legend: PreparedLegend, maxWidth: number) {
+function getLegendRows(
+    items: LegendItem[][],
+    legend: PreparedLegend,
+    maxWidth: number,
+    symbolMetrics: LegendSymbolMetrics,
+) {
     const vertical = legend.layout === 'vertical';
     const flatItems = items.flat();
-    const symbolWidth = Math.max(0, ...flatItems.map(({symbol}) => symbol.bboxWidth));
-    const symbolPadding = Math.max(0, ...flatItems.map(({symbol}) => symbol.padding));
+    const {width: symbolWidth, padding: symbolPadding} = symbolMetrics;
     const listWidth =
         symbolWidth + symbolPadding + Math.max(0, ...flatItems.map((item) => item.textWidth));
     let top = 0;
@@ -443,16 +452,21 @@ export async function getLegendComponents(args: {
         }),
     );
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
+    const symbolMetrics = {
+        width: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.bboxWidth)),
+        padding: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.padding)),
+    };
     const items = await getGroupedLegendItems({
         maxLegendWidth,
         items: flattenLegendItems,
         preparedLegend,
+        symbolMetrics,
     });
 
     let pagination: LegendConfig['pagination'] | undefined;
 
     if (preparedLegend.type === 'discrete') {
-        const rows = getLegendRows(items, preparedLegend, maxLegendWidth);
+        const rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
         preparedLegend.rows = rows;
         let legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
 
