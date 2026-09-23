@@ -8,7 +8,6 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
-import {legendDefaults} from '../core/constants';
 import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 
 import {LONG_TEXT} from './constants';
@@ -99,11 +98,7 @@ test.describe('Legend', () => {
             );
             const gradient = component.locator('.gcharts-legend image');
             const availableWidth = chartWidth - chartMargin.left - chartMargin.right;
-            // Side gradients are centered in half the space left after the legend margin.
-            const alignmentWidth =
-                position === 'left' || position === 'right'
-                    ? (availableWidth - legendDefaults.margin) / 2
-                    : availableWidth;
+            const isVertical = position === 'left' || position === 'right';
             for (const {width, pixels} of [
                 {width: '230.5px', pixels: 230.5},
                 {width: '12.5%', pixels: 120},
@@ -117,13 +112,15 @@ test.describe('Legend', () => {
                     position === 'right'
                         ? chartWidth - chartMargin.right - pixels
                         : chartMargin.left;
+                // Side gradients use their own width; horizontal gradients center in the chart.
+                const expectedLeft = offsetLeft + (isVertical ? 0 : (availableWidth - pixels) / 2);
                 await expect
                     .poll(async () => {
                         const chartBox = await component.locator('svg').first().boundingBox();
                         const gradientBox = await gradient.boundingBox();
                         return chartBox && gradientBox ? gradientBox.x - chartBox.x : undefined;
                     })
-                    .toBeCloseTo(offsetLeft + (alignmentWidth - pixels) / 2, 0);
+                    .toBeCloseTo(expectedLeft, 0);
             }
         });
     }
@@ -161,11 +158,9 @@ test.describe('Legend', () => {
                 );
                 const availableWidth = containerWidth - 40;
                 const gradientWidth = availableWidth * ratio;
-                const alignmentWidth = isVertical
-                    ? Math.max(0, (availableWidth - legendMargin) / 2)
-                    : availableWidth;
                 const offsetLeft = position === 'right' ? containerWidth - 30 - gradientWidth : 10;
-                const expectedLeft = offsetLeft + (alignmentWidth - gradientWidth) / 2;
+                const expectedLeft =
+                    offsetLeft + (isVertical ? 0 : (availableWidth - gradientWidth) / 2);
                 await expectSvgWidth(gradient, gradientWidth);
                 await expectSvgWidth(
                     plotBounds,
