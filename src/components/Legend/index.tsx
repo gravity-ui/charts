@@ -210,7 +210,7 @@ export const Legend = (props: Props) => {
                     event,
                 );
 
-                if (event.defaultPrevented) {
+                if (legend.itemClickAction === 'none') {
                     return;
                 }
 

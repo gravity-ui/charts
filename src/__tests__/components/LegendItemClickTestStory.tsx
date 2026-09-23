@@ -1,20 +1,26 @@
 import React from 'react';
 
 import {ChartTestStory} from '../../../playwright/components/ChartTestStory';
-import type {ChartData} from '../../types';
+import type {ChartData, ChartLegend} from '../../types';
 
 interface Props {
     html?: boolean;
+    itemClickAction?: ChartLegend['itemClickAction'];
     preventDefault?: boolean;
 }
 
-export const LegendItemClickTestStory = ({html = false, preventDefault = false}: Props) => {
+export const LegendItemClickTestStory = ({
+    html = false,
+    itemClickAction,
+    preventDefault = false,
+}: Props) => {
     const [clickedItem, setClickedItem] = React.useState('');
     const data = React.useMemo<ChartData>(
         () => ({
             legend: {
                 enabled: true,
                 html,
+                itemClickAction,
                 events: {
                     itemClick: (item, event) => {
                         setClickedItem(`${item.name}:${item.visible}`);
@@ -46,7 +52,7 @@ export const LegendItemClickTestStory = ({html = false, preventDefault = false}:
                 ],
             },
         }),
-        [html, preventDefault],
+        [html, itemClickAction, preventDefault],
     );
 
     return (

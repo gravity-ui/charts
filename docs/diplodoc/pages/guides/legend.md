@@ -14,6 +14,25 @@ For vertical layout, use `align` to position the list and `verticalAlign` for ve
 
 <div data-chart-example="legend/vertical"></div>
 
+## Legend item clicks
+
+For a discrete legend, `legend.events.itemClick` receives the clicked item's `id`, displayed `name`, current `visible` state, and the native mouse event. By default, clicking applies the built-in visibility behavior: a regular click selects one item or restores all, while ⌘/Ctrl-click adds or removes an item from the visible set.
+
+Set `legend.itemClickAction` to `'none'` to use a legend item for another action without changing series visibility. The callback still runs. Its return value and the mouse event's `defaultPrevented` flag do not control visibility.
+
+```javascript
+legend: {
+  itemClickAction: 'none',
+  events: {
+    itemClick: ({id}) => {
+      window.open(`/issues?series=${encodeURIComponent(id)}`, '_blank');
+    },
+  },
+}
+```
+
+The `id` is the legend group's ID. Set `series.legend.groupId` explicitly if the handler needs a stable ID; for pie and funnel items, set `data[].legend.groupId` instead.
+
 ## Legend width
 
 Set `legend.width` to a finite, nonnegative pixel value (`200` or `'200px'`) or a finite, nonnegative decimal percentage such as `'25%'`. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.

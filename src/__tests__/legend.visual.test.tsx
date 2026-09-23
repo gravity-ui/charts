@@ -965,19 +965,49 @@ test.describe('Legend', () => {
             await expect(component.locator('svg')).toHaveScreenshot();
         });
 
-        test('Item click event runs before the default SVG legend action', async ({mount}) => {
+        test('Item click notifies and applies the default SVG action', async ({mount}) => {
             const component = await mount(<LegendItemClickTestStory />);
             const legendItems = component.locator('.gcharts-legend__item text');
 
             await legendItems.first().click();
 
-            await expect(component.locator('[data-qa="clicked-legend-item"]')).toHaveText(
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
                 'First series:true',
             );
             await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_unselected/);
         });
 
-        test('Item click event can prevent the default HTML legend action', async ({mount}) => {
+        test('Item click with no action leaves SVG legend visibility unchanged', async ({
+            mount,
+        }) => {
+            const component = await mount(<LegendItemClickTestStory itemClickAction="none" />);
+            const legendItems = component.locator('.gcharts-legend__item text');
+
+            await legendItems.first().click();
+
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
+                'First series:true',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_selected/);
+        });
+
+        test('Item click with no action leaves HTML legend visibility unchanged', async ({
+            mount,
+        }) => {
+            const component = await mount(
+                <LegendItemClickTestStory html={true} itemClickAction="none" />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item-text-html');
+
+            await legendItems.first().click();
+
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
+                'First series:true',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text-html_selected/);
+        });
+
+        test('Native preventDefault does not cancel the default HTML action', async ({mount}) => {
             const component = await mount(
                 <LegendItemClickTestStory html={true} preventDefault={true} />,
             );
@@ -985,10 +1015,12 @@ test.describe('Legend', () => {
 
             await legendItems.first().click();
 
-            await expect(component.locator('[data-qa="clicked-legend-item"]')).toHaveText(
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
                 'First series:true',
             );
-            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text-html_selected/);
+            await expect(legendItems.nth(1)).toHaveClass(
+                /gcharts-legend__item-text-html_unselected/,
+            );
         });
 
         const positions = ['top', 'bottom', 'left', 'right'] as const;
