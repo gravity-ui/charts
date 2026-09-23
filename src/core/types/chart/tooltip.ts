@@ -4,6 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {RendererElement} from '../renderer';
 
 import type {AreaSeries, AreaSeriesData} from './area';
+import type {AreaRangeSeries, AreaRangeSeriesData} from './area-range';
 import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
@@ -82,6 +83,17 @@ export interface TooltipDataChunkArea<T = MeaningfulAny> {
     };
 }
 
+export interface TooltipDataChunkAreaRange<T = MeaningfulAny> {
+    data: AreaRangeSeriesData<T>;
+    color?: string;
+    series: {
+        type: AreaRangeSeries['type'];
+        id: string;
+        name: string;
+        tooltip?: BaseSeries['tooltip'];
+    };
+}
+
 export interface TooltipDataChunkTreemap<T = MeaningfulAny> {
     data: TreemapSeriesData<T>;
     series: TreemapSeries<T>;
@@ -133,6 +145,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkScatter<T>
     | TooltipDataChunkLine<T>
     | TooltipDataChunkArea<T>
+    | TooltipDataChunkAreaRange<T>
     | TooltipDataChunkTreemap<T>
     | TooltipDataChunkSankey<T>
     | TooltipDataChunkWaterfall<T>
@@ -180,7 +193,9 @@ export type ChartTooltipRowRendererArgs = {
      */
     color?: string;
     striped?: boolean;
+    /** Scalar point value; area-range uses its width (y1 - y0). */
     value: string | number | null | undefined;
+    /** Display value; the default area-range row formats both boundaries independently. */
     formattedValue?: string;
     hovered?: TooltipDataChunk<unknown>[];
     /**
@@ -299,6 +314,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /**
          * The aggregation method for calculating totals.
          * It can be a built-in function (e.g., 'sum') or a custom function.
+         * Area-range contributes its width (y1 - y0); 'sum' adds widths, not interval unions.
          * @default 'sum'
          */
         aggregation?:
@@ -330,6 +346,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * `'value'` uses the numeric value of each series point: `y` for most series
                * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
                * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
+               * Area-range uses its width (y1 - y0).
                * Leave unset to disable sorting.
                */
               key?: 'value' | undefined;

@@ -8,12 +8,18 @@ export const getSymbolType = (index: number) => {
     return scatterStyles[index % scatterStyles.length];
 };
 
-// This is an inverted triangle
-// Based on https://github.com/d3/d3-shape/blob/main/src/symbol/triangle2.js
+// Radius multipliers from D3's drawing primitives; legend bounds must match their vertices.
+// https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/diamond2.js
+const diamondRadiusFactor = 0.62625;
+// https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
+const triangleRadiusFactor = 0.6824;
 const sqrt3 = Math.sqrt(3);
+
+// This is an inverted triangle
+// Based on https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
 const triangleDown = {
     draw: (context: CanvasPath, size: number) => {
-        const s = Math.sqrt(size) * 0.6824;
+        const s = Math.sqrt(size) * triangleRadiusFactor;
         const t = s / 2;
         const u = (s * sqrt3) / 2;
         context.moveTo(0, s);
@@ -49,14 +55,14 @@ export function getSymbolBBoxWidth({
 }) {
     switch (symbolType) {
         case SymbolType.Diamond:
-            return Math.sqrt(symbolSize * 2);
+            return Math.sqrt(symbolSize) * diamondRadiusFactor * 2;
         case SymbolType.Circle:
             return Math.sqrt(symbolSize / Math.PI) * 2;
         case SymbolType.Square:
             return Math.sqrt(symbolSize);
         case SymbolType.Triangle:
         case SymbolType.TriangleDown:
-            return Math.sqrt((4 * symbolSize * Math.sqrt(3)) / 3);
+            return Math.sqrt(symbolSize) * triangleRadiusFactor * sqrt3;
         default:
             return 0;
     }

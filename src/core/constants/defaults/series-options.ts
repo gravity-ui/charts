@@ -100,6 +100,18 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
             },
         },
     },
+    'area-range': {
+        states: {
+            hover: {
+                enabled: true,
+                brightness: 0.3,
+            },
+            inactive: {
+                enabled: false,
+                opacity: 0.5,
+            },
+        },
+    },
     treemap: {
         states: {
             hover: {

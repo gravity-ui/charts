@@ -210,6 +210,36 @@ describe('chart config artifacts', () => {
         );
     });
 
+    test('area-range marker options are exposed in the standalone declaration and schema', () => {
+        const options = {
+            marker: {enabled: true, radius: 5, symbol: 'square', color: '#ff0000'},
+            states: {
+                hover: {
+                    marker: {
+                        enabled: true,
+                        borderWidth: 2,
+                    },
+                },
+            },
+        };
+        const range = {
+            type: 'area-range',
+            name: 'Range',
+            marker: options.marker,
+            data: [
+                {x: 0, y0: 1, y1: 2, marker: {color: '#00ff00', states: {normal: {enabled: true}}}},
+            ],
+        };
+        const config = {series: {options: {'area-range': options}, data: [range]}};
+        expect(createSchemaValidator().compile(schema)(config)).toBe(true);
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'area-range-marker-usage.ts'),
+                declaration + `\nexport const config: ChartConfig = ${JSON.stringify(config)};`,
+            ),
+        ).not.toThrow();
+    });
+
     test('validates declaration content without accessing the published file', () => {
         // DECLARATION_PATH (scripts/chart-config.d.ts) never exists on disk; validateDeclaration
         // uses it only as a virtual filename for the TypeScript compiler host.

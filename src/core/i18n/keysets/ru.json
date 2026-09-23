@@ -1,6 +1,7 @@
 {
   "error": {
     "label_inconsistent-stack-labels-options": "Настройки style, format, padding и allowOverlap итоговых лейблов должны совпадать у участвующих в расчёте серий «{{firstSeries}}» и «{{secondSeries}}» одного стека.",
+    "label_invalid-area-range-bounds": "Нижняя граница не должна превышать верхнюю в серии area-range «{{seriesName}}»",
     "label_no-data": "Нет данных",
     "label_unknown-plugin": "Неизвестный тип плагина \"{{type}}\"",
     "label_unknown-error": "Неизвестная ошибка",
