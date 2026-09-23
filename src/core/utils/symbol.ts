@@ -13,10 +13,10 @@ export const getSymbolType = (index: number) => {
 const diamondRadiusFactor = 0.62625;
 // https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
 const triangleRadiusFactor = 0.6824;
+const sqrt3 = Math.sqrt(3);
 
 // This is an inverted triangle
-// Based on https://github.com/d3/d3-shape/blob/main/src/symbol/triangle2.js
-const sqrt3 = Math.sqrt(3);
+// Based on https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
 const triangleDown = {
     draw: (context: CanvasPath, size: number) => {
         const s = Math.sqrt(size) * triangleRadiusFactor;

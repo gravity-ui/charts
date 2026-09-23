@@ -226,13 +226,16 @@ test.describe('Legend', () => {
             test(`does not wrap fitting ${symbolType} symbols onto another row`, async ({
                 mount,
             }) => {
+                const symbolPadding = 5;
+                const itemDistance = 20;
                 const data: ChartData = {
-                    legend: {enabled: true, width: 103},
+                    legend: {enabled: true, itemDistance},
                     series: {
                         data: ['East', 'West'].map((name, i) => ({
                             type: 'scatter',
                             name,
                             symbolType,
+                            legend: {symbol: {width: 8, padding: symbolPadding}},
                             data: [{x: i, y: i + 1}],
                         })),
                     },
@@ -240,7 +243,30 @@ test.describe('Legend', () => {
                 const component = await mount(<ChartTestStory data={data} />);
                 const labels = component.locator('.gcharts-legend__item-text');
                 await expect(labels).toHaveText(['East', 'West']);
-                await expect(component).toHaveScreenshot();
+                const symbols = component.locator('.gcharts-legend__item-symbol');
+                await expect(symbols).toHaveCount(2);
+                // Measure the rendered geometry independently of getSymbolBBoxWidth so an
+                // overestimate in that helper cannot also widen the test's fitting threshold.
+                const textWidth = await labels.evaluateAll((elements) =>
+                    elements.reduce(
+                        (sum, element) => sum + element.getBoundingClientRect().width,
+                        0,
+                    ),
+                );
+                const symbolsWidth = await symbols.evaluateAll((elements) =>
+                    elements.reduce(
+                        (sum, element) => sum + element.getBoundingClientRect().width,
+                        0,
+                    ),
+                );
+                // Round up to allow for D3's three-decimal SVG path serialization.
+                const legendWidth = Math.ceil(
+                    textWidth + symbolsWidth + 2 * symbolPadding + itemDistance,
+                );
+                data.legend = {...data.legend, width: legendWidth};
+                await component.update(<ChartTestStory data={data} />);
+                await expectSvgWidth(component.locator('.gcharts-legend'), legendWidth);
+                await expect(labels).toHaveText(['East', 'West']);
                 const boxes = await labels.evaluateAll((elements) =>
                     elements.map((element) => {
                         const {y, right} = element.getBoundingClientRect();
@@ -248,9 +274,12 @@ test.describe('Legend', () => {
                     }),
                 );
                 expect(boxes[0].y).toBe(boxes[1].y);
-                const symbols = component.locator('.gcharts-legend__item-symbol');
                 const firstSymbol = await symbols.first().boundingBox();
-                expect(boxes[1].right - (firstSymbol?.x ?? -Infinity)).toBeLessThanOrEqual(103);
+                if (!firstSymbol) {
+                    throw new Error('Expected a visible legend symbol');
+                }
+                expect(boxes[1].right - firstSymbol.x).toBeLessThanOrEqual(legendWidth);
+                await expect(component).toHaveScreenshot();
             });
         }
 
