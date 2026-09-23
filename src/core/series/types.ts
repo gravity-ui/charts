@@ -1,4 +1,6 @@
 import type {
+    AreaRangeSeries,
+    AreaRangeSeriesData,
     AreaSeries,
     AreaSeriesData,
     AreaValueFormat,
@@ -376,6 +378,28 @@ export type PreparedAreaSeries = {
 } & BasePreparedSeries<AreaSeries['tooltip']> &
     BasePreparedAxisRelatedSeries;
 
+export type PreparedAreaRangeSeries = {
+    type: AreaRangeSeries['type'];
+    data: AreaRangeSeriesData[];
+    lineWidth: number;
+    opacity: number;
+    nullMode: AreaRangeSeries['nullMode'];
+    marker: PreparedAreaSeries['marker'];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        padding: number;
+        allowOverlap: boolean;
+        html: boolean;
+        format?: ValueFormat;
+    };
+    gradient?: LinearGradient;
+    fillColor: string;
+    fillGradient?: LinearGradient;
+    yAxis: number;
+} & BasePreparedSeries &
+    BasePreparedAxisRelatedSeries;
+
 export type PreparedTreemapSeries = {
     type: TreemapSeries['type'];
     data: TreemapSeriesData[];
@@ -498,6 +522,7 @@ export type PreparedSeries =
     | PreparedPieSeries
     | PreparedLineSeries
     | PreparedAreaSeries
+    | PreparedAreaRangeSeries
     | PreparedTreemapSeries
     | PreparedWaterfallSeries
     | PreparedSankeySeries
