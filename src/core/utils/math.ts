@@ -26,16 +26,49 @@ export function sumDecimals(values: readonly number[]): number {
     return shiftDecimal(total, -precision);
 }
 
-const isStringValueInPercent = (value = '') => {
-    return value.endsWith('%') && !Number.isNaN(Number.parseFloat(value));
-};
+interface ParsedNumericProperty {
+    value: number;
+    unit: 'px' | '%';
+}
 
-const isStringValueInPixel = (value = '') => {
-    return value.endsWith('px') && !Number.isNaN(Number.parseFloat(value));
-};
+/**
+ * Parses numeric values and units without scaling percentages.
+ * Preserves numeric prefixes and numeric NaN/Infinity for compatibility.
+ * Callers requiring strict validation must check format and finiteness (see parseLegendWidth).
+ */
+export function parseNumericProperty(
+    value?: string | number | null,
+): ParsedNumericProperty | undefined {
+    if (isNil(value)) {
+        return undefined;
+    }
+
+    if (typeof value === 'number') {
+        return {value, unit: 'px'};
+    }
+
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+
+    let unit: ParsedNumericProperty['unit'];
+    if (value.endsWith('%')) {
+        unit = '%';
+    } else if (value.endsWith('px')) {
+        unit = 'px';
+    } else {
+        return undefined;
+    }
+
+    // TODO: Enforce strict formats and finite values after a compatibility audit.
+    // Preserve signed coordinates and offsets: https://github.com/gravity-ui/charts/issues/702
+    const parsedValue = Number.parseFloat(value);
+    return Number.isNaN(parsedValue) ? undefined : {value: parsedValue, unit};
+}
 
 /**
  * Calculates a numeric property based on the given arguments.
+ * Uses permissive parsing; see parseNumericProperty for validation limits.
  * @param {object} args - The arguments for the calculation.
  * @param {string | number | null} args.value - The value to calculate the property for.
  * @param {number} args.base - The base value to use in the calculation.
@@ -53,26 +86,17 @@ const isStringValueInPixel = (value = '') => {
  * console.log(result5); // Output: undefined
  */
 export const calculateNumericProperty = (args: {value?: string | number | null; base?: number}) => {
-    const {value = '', base} = args;
-
-    if (isNil(value)) {
+    const {base} = args;
+    const parsed = parseNumericProperty(args.value);
+    if (!parsed) {
         return undefined;
     }
 
-    if (typeof value === 'string') {
-        if (isStringValueInPercent(value) && typeof base === 'number') {
-            const fraction = Number.parseFloat(value) / 100;
-            return base * fraction;
-        }
-
-        if (isStringValueInPixel(value)) {
-            return Number.parseFloat(value);
-        }
-
-        return undefined;
+    if (parsed.unit === '%') {
+        return typeof base === 'number' ? base * (parsed.value / 100) : undefined;
     }
 
-    return value;
+    return parsed.value;
 };
 
 export function calculateCos(deg: number, precision = 2) {

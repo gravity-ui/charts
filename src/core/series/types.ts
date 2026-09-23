@@ -97,8 +97,10 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
 export interface PreparedLegend extends Required<
     Omit<ChartLegend, 'title' | 'colorScale' | 'width'>
 > {
-    width?: number;
+    /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;
+    /** Nonnegative chart width after chart margins, before legend and axis space is deducted. */
+    availableWidth: number;
     hangingOffset: number;
     height: number;
     lineHeight: number;
