@@ -58,14 +58,15 @@ export function getSymbolSize({symbolSize, symbolType}: SymbolSizeOptions) {
             return {width: diameter, height: diameter};
         }
         case SymbolType.Diamond: {
-            return {width: Math.sqrt(symbolSize * 2), height: size * diamondRadiusFactor * 2};
+            const diameter = size * diamondRadiusFactor * 2;
+            return {width: diameter, height: diameter};
         }
         case SymbolType.Square:
             return {width: size, height: size};
         case SymbolType.Triangle:
         case SymbolType.TriangleDown: {
             const radius = size * triangleRadiusFactor;
-            const width = Math.sqrt((4 * symbolSize * sqrt3) / 3);
+            const width = radius * sqrt3;
             // triangle2 is centered at its centroid, not at its bounding box center.
             // Reserve equal space above and below the current symbol origin.
             return {width, height: 2 * radius};
