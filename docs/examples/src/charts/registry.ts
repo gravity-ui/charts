@@ -28,6 +28,8 @@ import {AreaSeriesExample} from './series-types/area';
 import {AreaRangeSeriesExample} from './series-types/area-range';
 import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
+import {BarXSeriesExample} from './series-types/bar-x';
+import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
@@ -65,6 +67,10 @@ export const registry: Record<string, ExampleModule> = {
     'axis-types/category': {
         code: extractDisplayCode(categoryRaw),
         Component: CategoryAxisExample,
+    },
+    'series-types/bar-x': {
+        code: extractDisplayCode(barXSeriesRaw),
+        Component: BarXSeriesExample,
     },
     'series-types/line': {
         code: extractDisplayCode(lineSeriesRaw),

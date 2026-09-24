@@ -9,13 +9,12 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     y: number;
     width: number;
     height: number;
+    borderWidth: number;
+    borderColor: string;
     opacity: number | null;
     series: PreparedBarXSeries;
     svgLabels: LabelData[];
     isLastStackItem: boolean;
-    /**
-     * the utility field for storing the original height (for recalculations, etc.)
-     * should not be used for displaying
-     */
-    _height: number;
+    /** Whether the value end is above the segment's baseline in screen coordinates. */
+    extendsUp: boolean;
 } & SeriesShapeData;

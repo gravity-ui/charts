@@ -119,7 +119,8 @@ export const prepareBarXData = async (args: {
         split,
         isRangeSlider,
     } = args;
-    const stackGap: number = seriesOptions['bar-x'].stackGap;
+    const configuredStackGap = seriesOptions['bar-x'].stackGap;
+    const stackGap = Number.isFinite(configuredStackGap) ? Math.max(0, configuredStackGap) : 0;
     const categories = xAxis?.categories ?? [];
     const sortingOptions = get(seriesOptions, 'bar-x.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
@@ -267,36 +268,21 @@ export const prepareBarXData = async (args: {
                         base = seriesYScale(0);
                     }
 
-                    const isLastStackItem = yValueIndex === sortedData.length - 1;
-
-                    let height: number;
-                    let barPositionY: number;
-
-                    if (yDataValue > 0) {
-                        const newSum = positiveStackSum + yDataValue;
-                        const topPixel = seriesYScale(newSum);
-                        const bottomPixel =
-                            positiveStackSum === 0 ? base : seriesYScale(positiveStackSum);
-                        height = Math.abs(bottomPixel - topPixel);
-                        barPositionY = yAxisTop + topPixel;
-                    } else {
-                        const newSum = negativeStackSum + yDataValue;
-                        const bottomPixel =
-                            negativeStackSum === 0 ? base : seriesYScale(negativeStackSum);
-                        const topPixel = seriesYScale(newSum);
-                        height = Math.abs(bottomPixel - topPixel);
-                        barPositionY = yAxisTop + bottomPixel;
-                    }
-
-                    let shapeHeight = height - (stackItems.length ? stackGap : 0);
-
-                    if (shapeHeight < 0) {
-                        shapeHeight = height;
-                    }
-
-                    if (shapeHeight < 0) {
-                        continue;
-                    }
+                    const stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
+                    const startPixel = stackSum === 0 ? base : seriesYScale(stackSum);
+                    const endPixel = seriesYScale(stackSum + yDataValue);
+                    const height = Math.abs(endPixel - startPixel);
+                    const range = seriesYScale.range();
+                    const positiveExtendsUp = range[0] > range[range.length - 1];
+                    const defaultExtendsUp =
+                        yDataValue >= 0 ? positiveExtendsUp : !positiveExtendsUp;
+                    const extendsUp = height > 0 ? endPixel < startPixel : defaultExtendsUp;
+                    // Keep the value end fixed; the gap belongs next to the previous
+                    // segment of the same sign, including on reversed axes.
+                    const itemGap = stackSum !== 0 && height >= stackGap ? stackGap : 0;
+                    const shapeHeight = height - itemGap;
+                    const barPositionY =
+                        yAxisTop + Math.min(startPixel, endPixel) + (extendsUp ? 0 : itemGap);
 
                     const barData: PreparedBarXData = {
                         annotation:
@@ -312,13 +298,20 @@ export const prepareBarXData = async (args: {
                         y: barPositionY,
                         width: rectWidth,
                         height: shapeHeight,
-                        _height: height,
+                        borderWidth:
+                            Number.isFinite(yValue.series.borderWidth) &&
+                            yValue.series.borderWidth > 0 &&
+                            rectWidth > yValue.series.borderWidth * 2
+                                ? yValue.series.borderWidth
+                                : 0,
+                        borderColor: yValue.series.borderColor,
                         opacity: get(yValue.data, 'opacity', null),
                         data: yValue.data,
                         series: yValue.series,
                         htmlLabels: [],
                         svgLabels: [],
-                        isLastStackItem,
+                        isLastStackItem: false,
+                        extendsUp,
                         markers: [],
                         getHoverMarkers: () => [],
                     };
@@ -337,24 +330,49 @@ export const prepareBarXData = async (args: {
                     const currentPlotHeight = currentPlot?.height ?? plotHeight;
                     const currentPlotTop = currentPlot?.top ?? 0;
 
-                    let acc = 0;
-                    const positiveStackHeight = stackItems.reduce(
-                        (sum, item) => sum + item._height,
-                        0,
-                    );
-                    const ratio =
-                        positiveStackHeight > 0 ? currentPlotHeight / positiveStackHeight : 0;
+                    const visibleCount = stackItems.filter(
+                        (item) => Number(item.data.y) > 0,
+                    ).length;
+                    const gapCount = Math.max(0, visibleCount - 1);
+                    const availableHeight = Math.max(0, currentPlotHeight);
+                    const gap = gapCount ? Math.min(stackGap, availableHeight / gapCount) : 0;
+                    const segmentsHeight = Math.max(0, availableHeight - gap * gapCount);
+                    const scaleRange = yScale[stackItems[0]?.series.yAxis ?? 0]?.range() ?? [1, 0];
+                    const extendsUp = scaleRange[0] > scaleRange[scaleRange.length - 1];
+                    let offset = 0;
+                    let visibleIndex = 0;
                     stackItems.forEach((item) => {
-                        item.percentage =
-                            item.series.stacking === 'percent'
-                                ? getPositiveShare(Number(item.data.y ?? 0), positiveStackSum)
-                                : undefined;
-                        item.height = item._height * ratio;
-                        item.y = currentPlotTop + currentPlotHeight - item.height - acc;
-
-                        acc += item.height + 1;
+                        const share = getPositiveShare(Number(item.data.y ?? 0), positiveStackSum);
+                        item.percentage = item.series.stacking === 'percent' ? share : undefined;
+                        if (share > 0 && visibleIndex > 0) offset += gap;
+                        // Snap the final end to the plot edge to avoid floating-point overflow.
+                        item.height =
+                            share > 0 && visibleIndex === visibleCount - 1
+                                ? Math.max(0, availableHeight - offset)
+                                : share * segmentsHeight;
+                        item.extendsUp = extendsUp;
+                        item.y =
+                            currentPlotTop +
+                            (extendsUp
+                                ? Math.max(0, availableHeight - offset - item.height)
+                                : offset);
+                        offset += item.height;
+                        if (share > 0) visibleIndex++;
                     });
                 }
+
+                let lastPositiveItem: PreparedBarXData | undefined;
+                let lastNegativeItem: PreparedBarXData | undefined;
+                for (const item of stackItems) {
+                    if (item.height <= 0 || Number(item.data.y) === 0) continue;
+                    if (Number(item.data.y) > 0) {
+                        lastPositiveItem = item;
+                    } else {
+                        lastNegativeItem = item;
+                    }
+                }
+                if (lastPositiveItem) lastPositiveItem.isLastStackItem = true;
+                if (lastNegativeItem) lastNegativeItem.isLastStackItem = true;
 
                 result.push(...stackItems);
             }
