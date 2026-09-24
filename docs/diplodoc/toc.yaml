@@ -36,6 +36,8 @@ items:
             href: ./pages/guides/series-types/line.md
           - name: Area
             href: ./pages/guides/series-types/area.md
+          - name: Area range
+            href: ./pages/guides/series-types/area-range.md
       - name: Axes
         items:
           - name: Axis types

@@ -4,6 +4,7 @@ import type {SVGTextAttributes} from '../renderer';
 
 import type {ChartAnnotationSeriesOptions} from './annotation';
 import type {AreaSeries, AreaSeriesData} from './area';
+import type {AreaRangeSeries, AreaRangeSeriesData} from './area-range';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {BaseTextStyle, ValueFormat} from './base';
@@ -27,6 +28,7 @@ export type ChartSeries<T = MeaningfulAny> =
     | BarYSeries<T>
     | LineSeries<T>
     | AreaSeries<T>
+    | AreaRangeSeries<T>
     | TreemapSeries<T>
     | WaterfallSeries<T>
     | SankeySeries<T>
@@ -42,6 +44,7 @@ export type ChartSeriesData<T = MeaningfulAny> =
     | BarYSeriesData<T>
     | LineSeriesData<T>
     | AreaSeriesData<T>
+    | AreaRangeSeriesData<T>
     | TreemapSeriesData<T>
     | WaterfallSeriesData<T>
     | SankeySeriesData<T>
@@ -303,6 +306,21 @@ export interface ChartSeriesOptions {
         marker?: PointMarkerOptions;
         /** Default annotation settings for all area data points */
         annotation?: ChartAnnotationSeriesOptions;
+    };
+    /** Default appearance and interaction settings for area-range series. */
+    'area-range'?: {
+        /** Width of both boundary lines in pixels. @default 1 */
+        lineWidth?: number;
+        /** Default marker options for both boundaries of area-range points. */
+        marker?: PointMarkerOptions;
+        /** Styling of hovered and inactive bands. */
+        states?: {
+            hover?: BasicHoverState & {
+                /** Marker appearance on both hovered boundaries. */
+                marker?: PointMarkerOptions & {halo?: Halo};
+            };
+            inactive?: BasicInactiveState;
+        };
     };
     treemap?: {
         /** Options for the series states that provide additional styling information to the series. */

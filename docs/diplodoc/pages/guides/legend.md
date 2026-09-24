@@ -6,6 +6,14 @@ The legend is a key component that identifies the various series or categories p
 
 The visibility of the legend is controlled by the `enabled` property within its configuration section, allowing you to show or hide it as needed for your design. For the full list of properties, see the [API reference](../api/Configuration/interfaces/ChartLegend.md).
 
+## Item layout
+
+Set `legend.layout: 'vertical'` to place one item per row, independently of `position`. The default is `'horizontal'`. This option applies to discrete legends with SVG or HTML labels.
+
+For vertical layout, use `align` to position the list and `verticalAlign` for vertical alignment of side legends; `justifyContent` only affects horizontal layout. Long labels are truncated, and lists that exceed the available height use pagination. If a single row is taller than the page, its content is clipped to keep the pagination controls accessible.
+
+<div data-chart-example="legend/vertical"></div>
+
 ## Legend width
 
 Set `legend.width` to a finite, nonnegative pixel value (`200` or `'200px'`) or a finite, nonnegative decimal percentage such as `'25%'`. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.

@@ -18,6 +18,8 @@ import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
 import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
 import {StackLabelsExample} from './data-labels/stack-labels';
 import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
+import {VerticalLegendExample} from './legend/vertical';
+import verticalLegendRaw from './legend/vertical.tsx?raw';
 import {LegendWrappingExample} from './legend/wrapping';
 import legendWrappingRaw from './legend/wrapping.tsx?raw';
 import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
@@ -25,6 +27,8 @@ import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw'
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
 import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
 import {AreaSeriesExample} from './series-types/area';
+import {AreaRangeSeriesExample} from './series-types/area-range';
+import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
@@ -45,6 +49,10 @@ export const registry: Record<string, ExampleModule> = {
     'legend/wrapping': {
         code: extractDisplayCode(legendWrappingRaw),
         Component: LegendWrappingExample,
+    },
+    'legend/vertical': {
+        code: extractDisplayCode(verticalLegendRaw),
+        Component: VerticalLegendExample,
     },
     'data-labels/stack-labels': {
         code: extractDisplayCode(stackLabelsRaw),
@@ -71,6 +79,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/area': {
         code: extractDisplayCode(areaSeriesRaw),
         Component: AreaSeriesExample,
+    },
+    'series-types/area-range': {
+        code: extractDisplayCode(areaRangeSeriesRaw),
+        Component: AreaRangeSeriesExample,
     },
     'value-formatting/quarterly-x-axis': {
         code: extractDisplayCode(quarterlyXAxisRaw),

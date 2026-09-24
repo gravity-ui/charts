@@ -39,6 +39,33 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations support both legend layouts', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration +
+                    `
+                    const legend: ChartLegend = {position: 'left', layout: 'vertical'};
+                    legend.layout = 'horizontal';
+                    // @ts-expect-error Only horizontal and vertical layouts are supported.
+                    legend.layout = 'columns';
+                `,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema exposes legend layout values and the compatible default', () => {
+        expect(schema.definitions.ChartLegend.properties.layout).toMatchObject({
+            enum: ['horizontal', 'vertical'],
+            default: 'horizontal',
+        });
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const layout of [undefined, 'horizontal', 'vertical']) {
+            expect(validateConfig({series: {data: []}, legend: {layout}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {layout: 'columns'}})).toBe(false);
+    });
+
     test('schema supports pixel and percentage legend widths', () => {
         const validateConfig = createSchemaValidator().compile(schema);
         for (const width of [0, 0.5, 230, '0px', '.5px', '230px', '0%', '12.5%', '150%']) {
@@ -176,6 +203,36 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: [{...series, stackLabels: {enabled: true}}]}})).toBe(
             false,
         );
+    });
+
+    test('area-range marker options are exposed in the standalone declaration and schema', () => {
+        const options = {
+            marker: {enabled: true, radius: 5, symbol: 'square', color: '#ff0000'},
+            states: {
+                hover: {
+                    marker: {
+                        enabled: true,
+                        borderWidth: 2,
+                    },
+                },
+            },
+        };
+        const range = {
+            type: 'area-range',
+            name: 'Range',
+            marker: options.marker,
+            data: [
+                {x: 0, y0: 1, y1: 2, marker: {color: '#00ff00', states: {normal: {enabled: true}}}},
+            ],
+        };
+        const config = {series: {options: {'area-range': options}, data: [range]}};
+        expect(createSchemaValidator().compile(schema)(config)).toBe(true);
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'area-range-marker-usage.ts'),
+                declaration + `\nexport const config: ChartConfig = ${JSON.stringify(config)};`,
+            ),
+        ).not.toThrow();
     });
 
     test('validates declaration content without accessing the published file', () => {

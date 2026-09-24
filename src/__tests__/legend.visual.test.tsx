@@ -12,6 +12,55 @@ import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 
 import {LONG_TEXT} from './constants';
 
+async function visitLegendPages(
+    component: Locator,
+    labels: Locator,
+    checkPage: () => Promise<void>,
+) {
+    const counter = component.locator('.gcharts-legend__pagination-counter');
+    await expect(counter).toBeVisible();
+    const pageCount = Number((await counter.textContent())?.split('/')[1]);
+    expect(pageCount).toBeGreaterThan(1);
+    const visited: string[] = [];
+    for (let page = 1; page <= pageCount; page++) {
+        await expect(counter).toHaveText(`${page}/${pageCount}`);
+        await checkPage();
+        visited.push(...(await labels.allTextContents()));
+        if (page < pageCount) {
+            await component.getByText('▼').click();
+        }
+    }
+    return visited;
+}
+
+async function getVerticalBoxes(locator: Locator) {
+    return locator.evaluateAll((elements) =>
+        elements.map((element) => {
+            const {y, height} = element.getBoundingClientRect();
+            return {y, height};
+        }),
+    );
+}
+
+async function checkLegendSymbolBounds(component: Locator) {
+    const symbols = component.locator('.gcharts-legend__item-symbol');
+    const boxes = await getVerticalBoxes(symbols);
+    expect(boxes.length).toBeGreaterThan(0);
+    const chartBox = await component.boundingBox();
+    expect(boxes[0].y).toBeGreaterThanOrEqual((chartBox?.y ?? Infinity) - 0.01);
+    for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i].y).toBeGreaterThanOrEqual(boxes[i - 1].y + boxes[i - 1].height - 0.01);
+    }
+    const counter = component.locator('.gcharts-legend__pagination-counter');
+    const paginator = await counter.boundingBox();
+    const last = boxes[boxes.length - 1];
+    expect(last.y + last.height).toBeLessThanOrEqual((paginator?.y ?? -Infinity) + 0.01);
+    expect((paginator?.y ?? Infinity) + (paginator?.height ?? 0)).toBeLessThanOrEqual(
+        (chartBox?.y ?? -Infinity) + (chartBox?.height ?? 0) + 0.01,
+    );
+    return boxes;
+}
+
 async function expectSvgWidth(locator: Locator, width: number) {
     await expect(locator).toHaveAttribute('width', /^-?(?:\d|\.\d)/);
     await expect
@@ -222,6 +271,571 @@ test.describe('Legend', () => {
     });
 
     test.describe('Discrete', () => {
+        test.describe('Vertical layout', () => {
+            test('paginates HTML rows using their measured heights', async ({mount}) => {
+                const names = range(12).map((i) => `Item ${i}`);
+                const data: ChartData = {
+                    legend: {enabled: true, layout: 'vertical', html: true, align: 'left'},
+                    series: {
+                        data: [
+                            {
+                                type: 'pie',
+                                dataLabels: {enabled: false},
+                                data: names.map((name, i) => ({
+                                    name: `<span style="line-height: ${i % 2 ? 18 : 32}px">${name}</span>`,
+                                    value: 1,
+                                })),
+                            },
+                        ],
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                const labels = component.locator('.gcharts-legend__item-text-html');
+                const counter = component.locator('.gcharts-legend__pagination-counter');
+                await expect(counter).toBeVisible();
+                const pageCount = Number((await counter.textContent())?.split('/')[1]);
+                expect(pageCount).toBeGreaterThan(1);
+                const visited: string[] = [];
+                for (let page = 1; page <= pageCount; page++) {
+                    await expect(counter).toHaveText(`${page}/${pageCount}`);
+                    const boxes = await labels.evaluateAll((elements) =>
+                        elements.map((element) => {
+                            const {x, y, height} = element.getBoundingClientRect();
+                            return {x, y, height};
+                        }),
+                    );
+                    expect(boxes.length).toBeGreaterThan(0);
+                    for (let i = 1; i < boxes.length; i++) {
+                        expect(boxes[i].y).toBeGreaterThanOrEqual(
+                            boxes[i - 1].y + boxes[i - 1].height,
+                        );
+                        expect(boxes[i].x).toBe(boxes[0].x);
+                    }
+                    const paginator = await counter.boundingBox();
+                    const last = boxes[boxes.length - 1];
+                    expect(last.y + last.height).toBeLessThanOrEqual(paginator?.y ?? -Infinity);
+                    visited.push(...(await labels.allTextContents()));
+                    if (page < pageCount) {
+                        await component.getByText('▼').click();
+                    }
+                }
+                expect(visited).toEqual(names);
+            });
+
+            for (const html of [false, true]) {
+                const output = html ? 'html' : 'svg';
+                const labelSelector = html
+                    ? '.gcharts-legend__item-text-html'
+                    : '.gcharts-legend__item text';
+
+                test(`right-aligned list (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        chart: {margin: {top: 20, right: 20, bottom: 20, left: 20}},
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            position: 'bottom',
+                            width: 240,
+                            align: 'right',
+                            html,
+                        },
+                        series: {
+                            data: [
+                                {...lineLegendWidthSeries[0], name: 'Longest legend label'},
+                                {
+                                    type: 'scatter',
+                                    name: html ? '<b>Short</b>' : 'Short',
+                                    data: [{x: 1, y: 9}],
+                                },
+                            ],
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 640, height: 320}} />,
+                    );
+                    const labels = component.locator(labelSelector);
+                    const symbols = component.locator('.gcharts-legend__item-symbol');
+                    await expect(labels).toHaveCount(2);
+                    await expect(symbols).toHaveCount(2);
+                    await expect
+                        .poll(async () => {
+                            const chart = await component.boundingBox();
+                            const longLabel = await labels.nth(0).boundingBox();
+                            const shortLabel = await labels.nth(1).boundingBox();
+                            const lineSymbol = await symbols.nth(0).boundingBox();
+                            const scatterSymbol = await symbols.nth(1).boundingBox();
+                            if (
+                                !chart ||
+                                !longLabel ||
+                                !shortLabel ||
+                                !lineSymbol ||
+                                !scatterSymbol
+                            ) {
+                                return false;
+                            }
+                            return (
+                                Math.abs(
+                                    longLabel.x + longLabel.width - (chart.x + chart.width - 20),
+                                ) < 2 &&
+                                Math.abs(longLabel.x - shortLabel.x) < 1 &&
+                                shortLabel.y >= longLabel.y + longLabel.height - 1 &&
+                                lineSymbol.x + lineSymbol.width < longLabel.x &&
+                                scatterSymbol.x + scatterSymbol.width < shortLabel.x &&
+                                Math.abs(
+                                    lineSymbol.x +
+                                        lineSymbol.width / 2 -
+                                        (scatterSymbol.x + scatterSymbol.width / 2),
+                                ) < 1
+                            );
+                        })
+                        .toBe(true);
+                    await expect(component).toHaveScreenshot();
+                });
+
+                for (const layout of ['vertical', 'horizontal'] as const) {
+                    test(`large pie symbols fit rows and pages (${layout}, ${output})`, async ({
+                        mount,
+                    }) => {
+                        const names = range(15).map((i) => `Marker label ${i}`);
+                        const data: ChartData = {
+                            legend: {
+                                enabled: true,
+                                layout,
+                                html,
+                                position: 'left',
+                                width: 150,
+                                align: 'left',
+                            },
+                            series: {
+                                data: [
+                                    {
+                                        type: 'pie',
+                                        dataLabels: {enabled: false},
+                                        legend: {symbol: {width: 20}},
+                                        data: names.map((name) => ({name, value: 1})),
+                                    },
+                                ],
+                            },
+                        };
+                        const component = await mount(
+                            <ChartTestStory data={data} styles={{width: 600, height: 220}} />,
+                        );
+                        const labels = component.locator(labelSelector);
+                        const visited = await visitLegendPages(component, labels, async () => {
+                            const boxes = await checkLegendSymbolBounds(component);
+                            const labelBoxes = await getVerticalBoxes(labels);
+                            labelBoxes.forEach((label, i) => {
+                                const marker = boxes[i];
+                                expect(
+                                    Math.abs(
+                                        label.y + label.height / 2 - (marker.y + marker.height / 2),
+                                    ),
+                                ).toBeLessThan(2);
+                            });
+                        });
+                        expect(visited).toEqual(names);
+                    });
+
+                    test(`large scatter symbols fit rows and pages (${layout}, ${output})`, async ({
+                        mount,
+                    }) => {
+                        const names = range(15).map((i) => `Marker label ${i}`);
+                        const symbolTypes = [
+                            'circle',
+                            'diamond',
+                            'square',
+                            'triangle',
+                            'triangle-down',
+                        ] as const;
+                        const data: ChartData = {
+                            legend: {
+                                enabled: true,
+                                layout,
+                                html,
+                                position: 'left',
+                                width: 150,
+                                align: 'left',
+                            },
+                            series: {
+                                data: names.map((name, i) => ({
+                                    type: 'scatter',
+                                    name,
+                                    symbolType: symbolTypes[i % symbolTypes.length],
+                                    legend: {symbol: {width: 20}},
+                                    data: [{x: i, y: i}],
+                                })),
+                            },
+                        };
+                        const component = await mount(
+                            <ChartTestStory data={data} styles={{width: 600, height: 220}} />,
+                        );
+                        const labels = component.locator(labelSelector);
+                        const visited = await visitLegendPages(component, labels, async () => {
+                            await checkLegendSymbolBounds(component);
+                        });
+                        expect(visited).toEqual(names);
+                    });
+                }
+
+                test(`oversized row keeps pagination accessible (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        chart: {margin: {top: 10, bottom: 10}},
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            html,
+                            position: 'left',
+                            width: 300,
+                            align: 'left',
+                        },
+                        series: {
+                            data: [
+                                {
+                                    type: 'scatter',
+                                    symbolType: 'square',
+                                    name: 'Tall',
+                                    legend: {symbol: {width: 220}},
+                                    data: [{x: 0, y: 1}],
+                                },
+                                {
+                                    type: 'scatter',
+                                    symbolType: 'square',
+                                    name: 'Short',
+                                    legend: {symbol: {width: 8}},
+                                    data: [{x: 0, y: 2}],
+                                },
+                                {
+                                    type: 'scatter',
+                                    symbolType: 'square',
+                                    name: 'Medium',
+                                    legend: {symbol: {width: 40}},
+                                    data: [{x: 0, y: 3}],
+                                },
+                            ],
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 600, height: 180}} />,
+                    );
+                    const counter = component.locator('.gcharts-legend__pagination-counter');
+                    await expect(counter).toHaveText('1/2');
+                    const viewport = component.locator('.gcharts-legend clipPath rect');
+                    const viewportBox = await viewport.evaluate((element: SVGRectElement) => {
+                        const height = element.height.baseVal.value;
+                        const bottom = new DOMPoint(0, height).matrixTransform(
+                            element.getScreenCTM() ?? undefined,
+                        );
+                        return {height, bottom: bottom.y};
+                    });
+                    const paginatorBox = await counter.boundingBox();
+                    expect(paginatorBox).not.toBeNull();
+                    expect(viewportBox.bottom).toBeLessThanOrEqual(paginatorBox?.y ?? -Infinity);
+                    const marker = await component
+                        .locator('.gcharts-legend__item-symbol')
+                        .boundingBox();
+                    expect(marker?.height ?? -Infinity).toBeGreaterThan(viewportBox.height);
+                    if (html) {
+                        await expect(component.locator('[data-legend]')).toHaveCSS(
+                            'overflow',
+                            'hidden',
+                        );
+                    }
+                    const firstLabelBox = await component.locator(labelSelector).boundingBox();
+                    await expect(component).toHaveScreenshot();
+                    await component.getByText('▼').click();
+                    await expect(counter).toHaveText('2/2');
+                    await expect(component.locator(labelSelector)).toHaveText(['Short', 'Medium']);
+                    // Preserve both column positions when the largest symbol is on another page.
+                    for (const label of await component.locator(labelSelector).all()) {
+                        expect((await label.boundingBox())?.x).toBe(firstLabelBox?.x);
+                    }
+                    for (const symbol of await component
+                        .locator('.gcharts-legend__item-symbol')
+                        .all()) {
+                        const box = await symbol.boundingBox();
+                        expect((box?.x ?? Infinity) + (box?.width ?? 0) / 2).toBeCloseTo(
+                            (marker?.x ?? -Infinity) + (marker?.width ?? 0) / 2,
+                        );
+                    }
+                    await checkLegendSymbolBounds(component);
+                    await expect(component).toHaveScreenshot();
+                    await component.getByText('▲').click();
+                    await expect(counter).toHaveText('1/2');
+                    await expect(component.locator(labelSelector)).toHaveText(['Tall']);
+                });
+
+                test(`six triangle markers fit without pagination (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            html,
+                            position: 'left',
+                            width: 150,
+                            align: 'left',
+                        },
+                        series: {
+                            data: range(6).map((i) => ({
+                                type: 'scatter',
+                                name: `Item ${i}`,
+                                symbolType: 'triangle',
+                                legend: {symbol: {width: 20}},
+                                data: [{x: i, y: i}],
+                            })),
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 600, height: 200}} />,
+                    );
+                    await expect(component.locator(labelSelector)).toHaveCount(6);
+                    await expect(
+                        component.locator('.gcharts-legend__pagination-counter'),
+                    ).toHaveCount(0);
+                    const boxes = await getVerticalBoxes(
+                        component.locator('.gcharts-legend__item-symbol'),
+                    );
+                    const chart = await component.boundingBox();
+                    expect(boxes[0].y).toBeGreaterThanOrEqual(chart?.y ?? Infinity);
+                    expect(boxes[5].y + boxes[5].height).toBeLessThanOrEqual(
+                        (chart?.y ?? -Infinity) + (chart?.height ?? 0),
+                    );
+                    await expect(component).toHaveScreenshot();
+                });
+
+                for (const position of ['left', 'right', 'top', 'bottom'] as const) {
+                    test(`${position} (${output})`, async ({mount}) => {
+                        const data: ChartData = {
+                            series: {
+                                data: [
+                                    lineLegendWidthSeries[0],
+                                    {
+                                        type: 'scatter',
+                                        name: html ? '<b>Short</b>' : 'Short',
+                                        data: [{x: 1, y: 9}],
+                                    },
+                                    {
+                                        ...lineLegendWidthSeries[1],
+                                        name: 'A very long legend label that must be truncated',
+                                    },
+                                ],
+                            },
+                            legend: {
+                                enabled: true,
+                                layout: 'vertical',
+                                position,
+                                width: 180,
+                                html,
+                                align: 'left',
+                            },
+                        };
+                        const component = await mount(
+                            <ChartTestStory data={data} styles={{width: 640, height: 320}} />,
+                        );
+                        const labels = component.locator(labelSelector);
+                        const rows = component.locator('.gcharts-legend__line');
+                        const checkGeometry = async () => {
+                            await expect(rows).toHaveCount(3);
+                            await expect(labels).toHaveCount(3);
+                            await expect
+                                .poll(async () => {
+                                    const boxes = await labels.evaluateAll((elements) =>
+                                        elements.map((element) => {
+                                            const {x, y, height, width} =
+                                                element.getBoundingClientRect();
+                                            return {x, y, height, width};
+                                        }),
+                                    );
+                                    return (
+                                        boxes.length === 3 &&
+                                        boxes.every(
+                                            (box, i) =>
+                                                Math.abs(box.x - boxes[0].x) < 1 &&
+                                                box.width <= 159 &&
+                                                (i === 0 ||
+                                                    box.y >=
+                                                        boxes[i - 1].y + boxes[i - 1].height - 1),
+                                        )
+                                    );
+                                })
+                                .toBe(true);
+                            for (const row of await rows.all()) {
+                                await expect(row.locator('.gcharts-legend__item')).toHaveCount(1);
+                            }
+                        };
+                        await checkGeometry();
+                        await expect(component).toHaveScreenshot();
+                        await component.update(
+                            <ChartTestStory data={data} styles={{width: 360, height: 320}} />,
+                        );
+                        await checkGeometry();
+                    });
+                }
+
+                test(`pagination and updates (${output})`, async ({mount}) => {
+                    const data = cloneDeep(piePaginatedLegendData);
+                    data.legend = {
+                        enabled: true,
+                        layout: 'vertical',
+                        position: 'left',
+                        html,
+                        align: 'left',
+                        width: 180,
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 600, height: 180}} />,
+                    );
+                    const labels = component.locator(labelSelector);
+                    const counter = component.locator('.gcharts-legend__pagination-counter');
+                    const next = component.getByText('▼');
+                    await expect(counter).toBeVisible();
+                    const firstPage = await labels.allTextContents();
+                    await next.click();
+                    await expect(labels.first()).not.toHaveText(firstPage[0]);
+                    const secondPage = await labels.allTextContents();
+                    expect(secondPage.every((name) => !firstPage.includes(name))).toBe(true);
+                    const points = (data.series.data[0] as PieSeries).data;
+                    expect([...firstPage, ...secondPage]).toEqual(
+                        points
+                            .slice(0, firstPage.length + secondPage.length)
+                            .map((point) => point.name),
+                    );
+                    // Click a marker on a later page; its paired text reflects the same selection.
+                    await component.locator('.gcharts-legend__item-symbol').first().click();
+                    await expect(labels.first()).not.toHaveClass(/unselected/);
+                    await expect(labels.nth(1)).toHaveClass(/unselected/);
+                    await component.locator('.gcharts-legend__item-symbol').first().click();
+                    await expect(labels.nth(1)).not.toHaveClass(/unselected/);
+
+                    // A taller container reduces page count even when width is unchanged.
+                    await component.update(
+                        <ChartTestStory data={data} styles={{width: 600, height: 900}} />,
+                    );
+                    await expect(counter).toHaveCount(0);
+                    await expect(labels).toHaveCount(points.length);
+                    await component.update(
+                        <ChartTestStory data={data} styles={{width: 600, height: 180}} />,
+                    );
+                    await expect(counter).toHaveText(/^1\//);
+                    await next.click();
+                    const updatedData: ChartData = {
+                        ...data,
+                        series: {
+                            data: [
+                                {
+                                    ...(data.series.data[0] as PieSeries),
+                                    data: points.slice(0, 3).reverse(),
+                                },
+                            ],
+                        },
+                    };
+                    await component.update(
+                        <ChartTestStory data={updatedData} styles={{width: 600, height: 180}} />,
+                    );
+                    await expect(counter).toHaveCount(0);
+                    await expect(labels).toHaveText(
+                        points
+                            .slice(0, 3)
+                            .reverse()
+                            .map((point) => point.name),
+                    );
+                });
+
+                test(`group selection survives resize (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        ...groupedLegend,
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            html,
+                            position: 'left',
+                            align: 'left',
+                        },
+                    };
+                    const component = await mount(<ChartTestStory data={data} />);
+                    const labels = component.locator(labelSelector);
+                    await expect(labels).toHaveText(['Series 1', 'Series 2', 'Series 3']);
+                    await labels.first().click();
+                    await expect(labels.first()).not.toHaveClass(/unselected/);
+                    await expect(labels.nth(1)).toHaveClass(/unselected/);
+                    await expect(labels.nth(2)).toHaveClass(/unselected/);
+                    await component.update(<ChartTestStory data={data} styles={{width: 600}} />);
+                    await expect(labels).toHaveText(['Series 1', 'Series 2', 'Series 3']);
+                    await expect(labels.nth(1)).toHaveClass(/unselected/);
+                    await labels.first().click();
+                    await expect(
+                        component.locator('[class*="gcharts-legend__item"][class*="unselected"]'),
+                    ).toHaveCount(0);
+                });
+            }
+        });
+
+        for (const symbolType of ['diamond', 'triangle', 'triangle-down'] as const) {
+            test(`does not wrap fitting ${symbolType} symbols onto another row`, async ({
+                mount,
+            }) => {
+                const symbolPadding = 5;
+                const itemDistance = 20;
+                const data: ChartData = {
+                    legend: {enabled: true, itemDistance},
+                    series: {
+                        data: ['East', 'West'].map((name, i) => ({
+                            type: 'scatter',
+                            name,
+                            symbolType,
+                            legend: {symbol: {width: 8, padding: symbolPadding}},
+                            data: [{x: i, y: i + 1}],
+                        })),
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                const labels = component.locator('.gcharts-legend__item-text');
+                await expect(labels).toHaveText(['East', 'West']);
+                const symbols = component.locator('.gcharts-legend__item-symbol');
+                await expect(symbols).toHaveCount(2);
+                // Measure the rendered geometry independently of getSymbolBBoxWidth so an
+                // overestimate in that helper cannot also widen the test's fitting threshold.
+                // Use the same fractional Canvas text advances as getTextSizeFn in legend layout.
+                const textWidth = await labels.evaluateAll((elements) => {
+                    const context = document.createElement('canvas').getContext('2d');
+                    if (!context) {
+                        throw new Error('Expected a Canvas context for measuring legend text');
+                    }
+                    return elements.reduce((sum, element) => {
+                        const {fontWeight, fontSize, fontFamily} = getComputedStyle(element);
+                        context.font = `${fontWeight} ${fontSize} ${fontFamily}`;
+                        return sum + context.measureText(element.textContent ?? '').width;
+                    }, 0);
+                });
+                const symbolsWidth = await symbols.evaluateAll((elements) =>
+                    elements.reduce(
+                        (sum, element) => sum + element.getBoundingClientRect().width,
+                        0,
+                    ),
+                );
+                // Round up to allow for D3's three-decimal SVG path serialization.
+                const legendWidth = Math.ceil(
+                    textWidth + symbolsWidth + 2 * symbolPadding + itemDistance,
+                );
+                data.legend = {...data.legend, width: legendWidth};
+                await component.update(<ChartTestStory data={data} />);
+                await expectSvgWidth(component.locator('.gcharts-legend'), legendWidth);
+                await expect(labels).toHaveText(['East', 'West']);
+                const boxes = await labels.evaluateAll((elements) =>
+                    elements.map((element) => {
+                        const {y, right} = element.getBoundingClientRect();
+                        return {y, right};
+                    }),
+                );
+                expect(boxes[0].y).toBe(boxes[1].y);
+                const firstSymbol = await symbols.first().boundingBox();
+                if (!firstSymbol) {
+                    throw new Error('Expected a visible legend symbol');
+                }
+                expect(boxes[1].right - firstSymbol.x).toBeLessThanOrEqual(legendWidth);
+                await expect(component).toHaveScreenshot();
+            });
+        }
+
         test.describe('Width larger than chart', () => {
             test('Bottom SVG legend in a 400px chart', async ({mount}) => {
                 const data: ChartData = {

@@ -74,3 +74,19 @@ export const WrappedHtmlLabels = {
         },
     },
 } satisfies Story;
+
+export const VerticalLayout = {
+    name: 'Vertical layout',
+    args: {
+        data: {
+            ...groupedLegend,
+            legend: {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+            },
+        },
+    },
+} satisfies Story;

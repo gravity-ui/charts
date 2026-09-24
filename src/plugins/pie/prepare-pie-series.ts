@@ -3,7 +3,7 @@ import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegend, PreparedPieSeries, PreparedSeries} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedPieSeries, PreparedSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
@@ -12,7 +12,7 @@ import type {ChartSeriesOptions, PieSeries, PieSeriesData} from '../../types';
 type PreparePieSeriesArgs = {
     series: PieSeries[];
     seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     colors: string[];
 };
 

@@ -30,6 +30,7 @@ import {getAreaStackLabelAnchors} from './stack-labels';
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
+    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({

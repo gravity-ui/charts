@@ -8,22 +8,35 @@ import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
 import {
     getDefaultColorStops,
     getDomainForContinuousColorScale,
+    getSymbolSize,
     getTextSizeFn,
     parseLegendWidth,
 } from '../utils';
 
 import {limitLegendItemRows, prepareLegendItems} from './legend-label';
-import type {LegendItem, PreparedLegend, PreparedSeries} from './types';
+import type {
+    LegendItem,
+    PreparedLegendOptions,
+    PreparedLegendRow,
+    PreparedLegendSymbol,
+    PreparedSeries,
+} from './types';
 
 type LegendItemWithoutTextWidth = Omit<LegendItem, 'textWidth'>;
 
+interface LegendSymbolMetrics {
+    width: number;
+    padding: number;
+}
+
+/** Resolve legend options before series preparation; finalizePreparedLegend computes row geometry and height. */
 export async function getPreparedLegend(args: {
     legend: ChartData['legend'];
     series: ChartData['series']['data'];
     chartWidth: number;
     // Use resolved chart margins before legend and axis space is deducted.
     chartMargin: PreparedChart['margin'];
-}): Promise<PreparedLegend> {
+}): Promise<PreparedLegendOptions> {
     const {legend, series, chartWidth, chartMargin} = args;
     const itemMaxRowCount = legend?.itemMaxRowCount ?? legendDefaults.itemMaxRowCount;
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
@@ -67,20 +80,16 @@ export async function getPreparedLegend(args: {
         style: tickStyle,
     };
 
-    const colorScale: PreparedLegend['colorScale'] = {
+    const colorScale: PreparedLegendOptions['colorScale'] = {
         colors: [],
         domain: [],
         stops: [],
     };
 
-    let height = 0;
     let legendWidth = 0;
     if (enabled) {
-        height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
             legendWidth = width ?? CONTINUOUS_LEGEND_SIZE.width;
-            height += CONTINUOUS_LEGEND_SIZE.height;
-            height += ticks.labelsLineHeight + ticks.labelsMargin;
 
             colorScale.colors = legend?.colorScale?.colors ?? [];
             colorScale.stops =
@@ -88,7 +97,6 @@ export async function getPreparedLegend(args: {
             colorScale.domain =
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
-            height += lineHeight;
             legendWidth =
                 width === undefined
                     ? getDefaultDiscreteLegendWidth({availableWidth, position, margin})
@@ -96,12 +104,12 @@ export async function getPreparedLegend(args: {
         }
     }
     return {
+        layout: get(legend, 'layout', legendDefaults.layout),
         align: get(legend, 'align', legendDefaults.align),
         verticalAlign: get(legend, 'verticalAlign', legendDefaults.verticalAlign),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
         hangingOffset: itemHangingOffset,
-        height,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
         itemMaxRowCount,
         itemStyle: computedItemStyle,
@@ -126,7 +134,7 @@ export async function getPreparedLegend(args: {
     };
 }
 
-function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegend) {
+function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegendOptions) {
     const grouped = new Map<string, PreparedSeries[]>();
 
     series.forEach((item) => {
@@ -162,88 +170,137 @@ function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: Prepare
 async function getGroupedLegendItems(args: {
     maxLegendWidth: number;
     items: LegendItemWithoutTextWidth[];
-    preparedLegend: PreparedLegend;
+    preparedLegend: PreparedLegendOptions;
+    symbolMetrics: LegendSymbolMetrics;
 }) {
-    const {maxLegendWidth, items, preparedLegend} = args;
+    const {maxLegendWidth, items, preparedLegend, symbolMetrics} = args;
     if (maxLegendWidth <= 0) {
         return [];
     }
 
-    const result: LegendItem[][] = [[]];
-    let textWidthsInLine: number[] = [0];
-    let lineIndex = 0;
+    const result: LegendItem[][] = [];
+    let currentLine: LegendItem[] = [];
+    let currentWidth = 0;
 
-    const preparedItems = await prepareLegendItems({items, maxLegendWidth, legend: preparedLegend});
+    const vertical = preparedLegend.layout === 'vertical';
+    const preparedItems = await prepareLegendItems({
+        items,
+        maxLegendWidth,
+        legend: preparedLegend,
+        symbolMetrics,
+    });
     for (const resultItem of preparedItems) {
-        textWidthsInLine.push(resultItem.textWidth);
-        const textsWidth = textWidthsInLine.reduce((acc, width) => acc + width, 0);
-
-        if (!result[lineIndex]) {
-            result[lineIndex] = [];
+        if (vertical) {
+            result.push([resultItem]);
+            continue;
         }
 
-        result[lineIndex].push(resultItem);
-        const symbolsWidth = result[lineIndex].reduce((acc, {symbol}) => {
-            return acc + symbol.bboxWidth + symbol.padding;
-        }, 0);
-        const distancesWidth = (result[lineIndex].length - 1) * preparedLegend.itemDistance;
-        const isOverflowedAsOnlyItemInLine =
-            resultItem.overflowed && result[lineIndex].length === 1;
-        const isCurrentLineOverMaxWidth =
-            maxLegendWidth < textsWidth + symbolsWidth + distancesWidth;
-
-        if (isOverflowedAsOnlyItemInLine) {
-            lineIndex += 1;
-            textWidthsInLine = [];
-        } else if (isCurrentLineOverMaxWidth) {
-            result[lineIndex].pop();
-            lineIndex += 1;
-            textWidthsInLine = [resultItem.textWidth];
-            const nextLineIndex = lineIndex;
-            result[nextLineIndex] = [];
-            result[nextLineIndex].push(resultItem);
+        const itemWidth =
+            resultItem.textWidth + resultItem.symbol.bboxWidth + resultItem.symbol.padding;
+        // A symbol alone can exceed the available width, even after truncating its label.
+        // Keep that item on its own row instead of creating an empty row before it.
+        if (
+            currentLine.length > 0 &&
+            ((currentLine.length === 1 && currentLine[0].overflowed) ||
+                currentWidth + preparedLegend.itemDistance + itemWidth > maxLegendWidth)
+        ) {
+            currentLine = [];
+            currentWidth = 0;
         }
+        if (currentLine.length === 0) {
+            result.push(currentLine);
+        } else {
+            currentWidth += preparedLegend.itemDistance;
+        }
+        currentLine.push(resultItem);
+        currentWidth += itemWidth;
     }
 
     return result.filter((line) => line.length);
 }
 
 function getPagination(args: {
-    items: LegendItem[][];
+    rows: PreparedLegendRow[];
     maxLegendHeight: number;
     paginatorHeight: number;
 }) {
-    const {items, maxLegendHeight, paginatorHeight} = args;
+    const {rows, maxLegendHeight, paginatorHeight} = args;
     const pages: NonNullable<LegendConfig['pagination']>['pages'] = [];
-    let currentPageIndex = 0;
     let currentHeight = 0;
-    items.forEach((item, i) => {
-        if (!pages[currentPageIndex]) {
-            pages[currentPageIndex] = {start: i, end: i};
+    rows.forEach((row, i) => {
+        if (!pages.length || currentHeight + row.height > maxLegendHeight - paginatorHeight) {
+            pages.push({start: i, end: i + 1});
+            currentHeight = 0;
         }
-
-        const legendLineHeight = Math.max(...item.map(({height}) => height));
-        currentHeight += legendLineHeight;
-
-        if (
-            currentHeight > maxLegendHeight - paginatorHeight &&
-            pages[currentPageIndex].start < i
-        ) {
-            pages[currentPageIndex].end = i;
-            currentPageIndex += 1;
-            currentHeight = legendLineHeight;
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice#end
-            pages[currentPageIndex] = {start: i, end: i + (i === items.length - 1 ? 1 : 0)};
-        } else if (i === items.length - 1) {
-            pages[currentPageIndex].end = i + 1;
-        }
+        pages[pages.length - 1].end = i + 1;
+        currentHeight += row.height;
     });
     return {pages};
 }
 
+function getLegendSymbolHeight(symbol: PreparedLegendSymbol): number {
+    switch (symbol.shape) {
+        case 'rect':
+            return symbol.height;
+        case 'path':
+            // Legend paths are horizontal, stroke-based lines, not arbitrary SVG paths.
+            return symbol.strokeWidth;
+        case 'symbol':
+            return getSymbolSize({
+                symbolSize: Math.pow(symbol.width, 2),
+                symbolType: symbol.symbolType,
+            }).height;
+        default:
+            return 0;
+    }
+}
+
+function getLegendRows(
+    items: LegendItem[][],
+    legend: PreparedLegendOptions,
+    maxWidth: number,
+    symbolMetrics: LegendSymbolMetrics,
+): PreparedLegendRow[] {
+    const vertical = legend.layout === 'vertical';
+    const {width: symbolWidth, padding: symbolPadding} = symbolMetrics;
+    // Keep vertical alignment stable across pages, including pages with shorter labels.
+    const listWidth = vertical
+        ? symbolWidth + symbolPadding + Math.max(0, ...items.flat().map((item) => item.textWidth))
+        : 0;
+    let top = 0;
+    return items.map((line) => {
+        let width = 0;
+        const positions = line.map((item) => {
+            const symbolLeft = vertical ? (symbolWidth - item.symbol.bboxWidth) / 2 : width;
+            const textLeft = vertical
+                ? symbolWidth + symbolPadding
+                : width + item.symbol.bboxWidth + item.symbol.padding;
+            width = textLeft + item.textWidth + legend.itemDistance;
+            return {symbolLeft, textLeft};
+        });
+        width -= legend.itemDistance;
+        const height = Math.max(
+            0,
+            ...line.map((item) => Math.max(item.height, getLegendSymbolHeight(item.symbol))),
+        );
+        const remainingWidth = Math.max(0, maxWidth - (vertical ? listWidth : width));
+        let left = 0;
+        if (vertical || legend.justifyContent === 'center') {
+            if (legend.align === 'right') {
+                left = remainingWidth;
+            } else if (legend.align === 'center') {
+                left = remainingWidth / 2;
+            }
+        }
+        const row = {top, left, height, width, items: positions};
+        top += height;
+        return row;
+    });
+}
+
 function getLegendOffset(args: {
-    position: PreparedLegend['position'];
-    verticalAlign: PreparedLegend['verticalAlign'];
+    position: PreparedLegendOptions['position'];
+    verticalAlign: PreparedLegendOptions['verticalAlign'];
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
@@ -300,7 +357,7 @@ function getLegendOffset(args: {
 
 function getDefaultDiscreteLegendWidth(args: {
     availableWidth: number;
-    position: PreparedLegend['position'];
+    position: PreparedLegendOptions['position'];
     margin: number;
 }): number {
     const {availableWidth, position, margin} = args;
@@ -315,7 +372,7 @@ function getDefaultDiscreteLegendWidth(args: {
 function getMaxLegendHeight(args: {
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
-    preparedLegend: PreparedLegend;
+    preparedLegend: PreparedLegendOptions;
     isVerticalPosition: boolean;
 }): number {
     const {chartHeight, chartMargin, preparedLegend, isVerticalPosition} = args;
@@ -327,12 +384,13 @@ function getMaxLegendHeight(args: {
     return (chartHeight - chartMargin.top - chartMargin.bottom - preparedLegend.margin) / 2;
 }
 
-export async function getLegendComponents(args: {
+/** Complete legend layout without mutating the options used during series preparation. */
+export async function finalizePreparedLegend(args: {
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
     series: PreparedSeries[];
-    preparedLegend: PreparedLegend;
+    preparedLegend: PreparedLegendOptions;
 }) {
     const {chartWidth, chartHeight, chartMargin, series, preparedLegend} = args;
 
@@ -352,25 +410,26 @@ export async function getLegendComponents(args: {
         }),
     );
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
+    const symbolMetrics = {
+        width: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.bboxWidth)),
+        padding: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.padding)),
+    };
     let items = await getGroupedLegendItems({
         maxLegendWidth,
         items: flattenLegendItems,
         preparedLegend,
+        symbolMetrics,
     });
 
     let pagination: LegendConfig['pagination'] | undefined;
+    let rows: PreparedLegendRow[] = [];
+    let legendHeight = 0;
 
     if (preparedLegend.type === 'discrete') {
         const titleHeight = preparedLegend.title.height + preparedLegend.title.margin;
         const contentHeight = Math.max(0, maxLegendHeight - titleHeight);
-        const lineHeights = items.reduce<number[]>((acc, item) => {
-            if (item.length) {
-                acc.push(Math.max(...item.map(({height}) => height)));
-            }
-
-            return acc;
-        }, []);
-        let legendHeight = lineHeights.reduce((acc, height) => acc + height, 0);
+        rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
+        legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
 
         if (contentHeight < legendHeight) {
             const lines = Math.floor(contentHeight / preparedLegend.lineHeight);
@@ -383,17 +442,24 @@ export async function getLegendComponents(args: {
                 } else {
                     await limitLegendItemRows(items.flat(), maxRows, preparedLegend);
                 }
+                rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
             }
-            pagination = items.length
+            pagination = rows.length
                 ? getPagination({
-                      items,
+                      rows,
                       maxLegendHeight: legendHeight,
                       paginatorHeight: preparedLegend.lineHeight,
                   })
                 : undefined;
         }
-
-        preparedLegend.height = legendHeight + titleHeight;
+        legendHeight += titleHeight;
+    } else if (preparedLegend.enabled) {
+        legendHeight =
+            preparedLegend.title.height +
+            preparedLegend.title.margin +
+            CONTINUOUS_LEGEND_SIZE.height +
+            preparedLegend.ticks.labelsLineHeight +
+            preparedLegend.ticks.labelsMargin;
     }
 
     const offset = getLegendOffset({
@@ -403,7 +469,7 @@ export async function getLegendComponents(args: {
         chartHeight,
         chartMargin,
         legendWidth: preparedLegend.resolvedWidth,
-        legendHeight: preparedLegend.height,
+        legendHeight,
     });
 
     if (preparedLegend.type === 'discrete' && !isVerticalPosition) {
@@ -416,11 +482,12 @@ export async function getLegendComponents(args: {
     }
 
     return {
+        preparedLegend: {...preparedLegend, rows, height: legendHeight},
         legendConfig: {
             offset,
             pagination,
             maxWidth: maxLegendWidth,
-            height: preparedLegend.height,
+            height: legendHeight,
             width: preparedLegend.resolvedWidth,
         },
         legendItems: items,

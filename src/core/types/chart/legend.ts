@@ -32,6 +32,12 @@ export interface ChartLegend extends ChartLegendItem {
      */
     type?: 'discrete' | 'continuous';
     /**
+     * Item layout for discrete legends, independent of the legend position.
+     * Vertical layout aligns one item per row and ignores `justifyContent`.
+     * @default 'horizontal'
+     */
+    layout?: 'horizontal' | 'vertical';
+    /**
      * The horizontal alignment of the legend box within the chart area.
      * @default center
      */

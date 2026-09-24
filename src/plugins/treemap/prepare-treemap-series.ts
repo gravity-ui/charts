@@ -3,7 +3,7 @@ import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE, LayoutAlgorithm} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegend, PreparedTreemapSeries} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedTreemapSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
@@ -11,7 +11,7 @@ import type {ChartSeriesOptions, TreemapSeries} from '../../types';
 
 type PrepareTreemapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     series: TreemapSeries[];
     seriesOptions?: ChartSeriesOptions;
 };

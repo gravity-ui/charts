@@ -1,10 +1,11 @@
 import {ChartError} from '../../libs';
+import type {ChartSeries} from '../../types';
 
 import type {SeriesPlugin} from './plugin';
 
 const registry = new Map<string, SeriesPlugin>();
 
-export function registerSeriesPlugin(plugin: SeriesPlugin) {
+export function registerSeriesPlugin<T extends ChartSeries>(plugin: SeriesPlugin<T>) {
     registry.set(plugin.type, plugin);
 }
 

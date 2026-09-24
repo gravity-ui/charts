@@ -9,19 +9,28 @@ import type {
     CustomFormatContext,
     TooltipDataChunk,
     TooltipRowCellItem,
+    ValueFormat,
 } from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
+import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
-import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from './types';
+import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
+
+export type AxisDomainValue = number | string | null | undefined;
+
+export interface SeriesAxisDomainValues<T extends ChartSeries> {
+    x?(data: T['data'][number]): AxisDomainValue | AxisDomainValue[];
+    y?(data: T['data'][number]): AxisDomainValue | AxisDomainValue[];
+}
 
 export interface PrepareSeriesArgs<T = ChartSeries> {
     series: T[];
     seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     colorScale: ScaleOrdinal<string, string>;
     colors: string[];
     xAxis?: ChartXAxis | null;
@@ -53,6 +62,23 @@ export interface PrepareShapeDataResult {
     tooltipItems: TooltipItemData[];
     /** Labels belonging to the whole plugin layer, independent of any one series. */
     labels?: SvgLabel[];
+}
+
+export interface GetTooltipValueArgs {
+    item: TooltipDataChunk;
+    xAxis?: ChartXAxis | null;
+    yAxis?: ChartYAxis;
+}
+
+export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
+    /** Supported brush directions. */
+    types: ZoomType[];
+    /** Preferred direction when chart.zoom.type is omitted. */
+    defaultType?: ZoomType;
+    /** Keep neighboring shape points during filtering on continuous X axes; ignored for category X axes. */
+    preserveAdjacentPoints?: boolean;
+    /** Overrides the scalar Y check, for example to test interval overlap. */
+    isYInRange?(data: T['data'][number], range: [number, number]): boolean;
 }
 
 export interface RenderShapesArgs {
@@ -89,6 +115,8 @@ export interface SeriesPlugin<
      * Defaults to `true`. Set to `false` for series that render outside the plot area (e.g. pie, radar, treemap).
      */
     useClipPath?: boolean;
+    /** Supported zoom directions and point-filtering behavior. Omit to disable zoom. */
+    zoom?: SeriesPluginZoomOptions<T>;
 
     // --- Validation ---
 
@@ -109,6 +137,8 @@ export interface SeriesPlugin<
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
+    /** Axis-domain contributions for a point; return [] to exclude it. Omitted axes use the default extraction. */
+    getAxisDomainValues?: SeriesAxisDomainValues<T>;
     /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
@@ -124,6 +154,8 @@ export interface SeriesPlugin<
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
+        /** Scalar value used by built-in sorting and totals. Omit to use the default series value. */
+        getValue?: (args: GetTooltipValueArgs) => string | number | null | undefined;
         /**
          * Returns series-specific fields passed to a custom tooltip value formatter.
          * The shared tooltip renderer supplies `value`; plugins own all other context.
@@ -146,8 +178,13 @@ export interface SeriesPlugin<
     };
 }
 
+export interface PluginTooltipRowCell extends TooltipRowCellItem {
+    /** Formats a plugin cell once using the resolved value format; not part of public tooltip.rows. */
+    formatValue?(args: {item: TooltipDataChunk; value: unknown; format?: ValueFormat}): string;
+}
+
 export interface TooltipRowDef {
     /** Unique identifier within one chunk's row list. Used as part of the React key. */
     id: string;
-    cells: ReadonlyArray<TooltipRowCellItem>;
+    cells: ReadonlyArray<PluginTooltipRowCell>;
 }

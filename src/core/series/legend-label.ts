@@ -6,7 +6,7 @@ import {
     getTextWithElipsis,
 } from '../utils';
 
-import type {LegendItem, PreparedLegend} from './types';
+import type {LegendItem, PreparedLegendOptions} from './types';
 
 /** Wrap independently of title wrapping: legend labels also support hard breaks and long tokens. */
 export async function wrapLegendLabel(args: {
@@ -74,7 +74,7 @@ export async function wrapLegendLabel(args: {
 async function prepareSingleLineLegendItem(
     item: LegendItem,
     maxWidth: number,
-    legend: PreparedLegend,
+    legend: PreparedLegendOptions,
     getTextSize: ReturnType<typeof getTextSizeFn>,
 ) {
     const {width, height} = legend.html
@@ -102,16 +102,23 @@ async function prepareSingleLineLegendItem(
 export async function prepareLegendItems(args: {
     items: Omit<LegendItem, 'textWidth'>[];
     maxLegendWidth: number;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
+    symbolMetrics: {width: number; padding: number};
 }): Promise<LegendItem[]> {
-    const {items, maxLegendWidth, legend} = args;
+    const {items, maxLegendWidth, legend, symbolMetrics} = args;
     const preparedItems: LegendItem[] = items.map((item) => ({
         ...item,
         text: item.name,
         textWidth: 0,
     }));
     const widths = preparedItems.map((item) =>
-        Math.max(0, maxLegendWidth - item.symbol.bboxWidth - item.symbol.padding),
+        Math.max(
+            0,
+            maxLegendWidth -
+                (legend.layout === 'vertical'
+                    ? symbolMetrics.width + symbolMetrics.padding
+                    : item.symbol.bboxWidth + item.symbol.padding),
+        ),
     );
     const multiline = legend.itemMaxRowCount > 1;
     if (multiline && legend.html) {
@@ -168,7 +175,7 @@ export async function prepareLegendItems(args: {
 export async function limitLegendItemRows(
     items: LegendItem[],
     maxRows: number,
-    legend: PreparedLegend,
+    legend: PreparedLegendOptions,
 ) {
     const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: false});
     for (const item of items) {
