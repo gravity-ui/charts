@@ -127,6 +127,58 @@ function renderLabels(
     return text;
 }
 
+function createTextMeasureContainer(width?: number) {
+    return select(document.body)
+        .append('div')
+        .style('visibility', 'hidden')
+        .style('position', 'absolute')
+        .style('top', '-200vw')
+        .style('left', '-200vwx')
+        .style('width', width === undefined ? '100vw' : `${Math.max(0, width)}px`)
+        .style('height', '100vh');
+}
+
+export async function getHtmlLabelsSize({
+    labels,
+    style,
+    containerWidth,
+}: {
+    labels: {text: string; style?: CSSProperties}[];
+    style?: CSSProperties;
+    containerWidth?: number;
+}) {
+    if (!labels.length) {
+        return [];
+    }
+    const container = createTextMeasureContainer(containerWidth);
+    try {
+        const elements = labels.map(({text, style: labelStyle}) => {
+            const resolvedStyle = {...style, ...labelStyle};
+            return container
+                .append('div')
+                .style('position', 'absolute')
+                .style('display', 'inline-block')
+                .style('font-size', resolvedStyle.fontSize ?? '')
+                .style('font-weight', resolvedStyle.fontWeight ?? '')
+                .style('max-width', resolvedStyle.maxWidth ?? '')
+                .style('max-height', resolvedStyle.maxHeight ?? '')
+                .style('white-space', resolvedStyle.whiteSpace ?? '')
+                .style('line-height', resolvedStyle.lineHeight ?? '')
+                .style('overflow-wrap', resolvedStyle.overflowWrap ?? '')
+                .html(text)
+                .node();
+        });
+        await document.fonts.ready;
+        // Read individual labels after all writes so they share one layout pass.
+        return elements.map((element) => {
+            const rect = element?.getBoundingClientRect();
+            return {width: rect?.width ?? 0, height: rect?.height ?? 0};
+        });
+    } finally {
+        container.remove();
+    }
+}
+
 // since we don't know in advance the font that will be used for the text,
 // we need to wait for it and only then we can count all the sizes.
 export async function getLabelsSize({
@@ -144,49 +196,16 @@ export async function getLabelsSize({
         return {maxHeight: 0, maxWidth: 0};
     }
 
-    const container = select(document.body)
-        .append('div')
-        .style('visibility', 'hidden')
-        .style('position', 'absolute')
-        .style('top', '-200vw')
-        .style('left', '-200vwx')
-        .style('width', '100vw')
-        .style('height', '100vh');
-    const result = {maxHeight: 0, maxWidth: 0};
-    let labelWrapper: HTMLElement | null;
-
     if (html) {
-        labelWrapper = container
-            .append('div')
-            .style('position', 'absolute')
-            .style('display', 'inline-block')
-            .style('font-size', style?.fontSize ?? '')
-            .style('font-weight', style?.fontWeight ?? '')
-            .style('max-width', style?.maxWidth ?? '')
-            .style('max-height', style?.maxHeight ?? '')
-            .style('white-space', style?.whiteSpace ?? '')
-            .node();
+        const sizes = await getHtmlLabelsSize({labels: labels.map((text) => ({text})), style});
+        return {
+            maxWidth: Math.max(...sizes.map(({width}) => width)),
+            maxHeight: Math.max(...sizes.map(({height}) => height)),
+        };
+    }
 
-        let height = 0;
-        let width = 0;
-
-        for (let i = 0; i < labels.length; i++) {
-            const l = labels[i];
-            if (labelWrapper) {
-                labelWrapper.innerHTML = l;
-            }
-
-            await document.fonts.ready;
-
-            const rect = labelWrapper?.getBoundingClientRect();
-
-            width = Math.max(width, rect?.width ?? 0);
-            height = Math.max(height, rect?.height ?? 0);
-        }
-
-        result.maxWidth = width;
-        result.maxHeight = height;
-    } else {
+    const container = createTextMeasureContainer();
+    try {
         const svg = container.append('svg');
         const textSelection = renderLabels(svg, {labels, style});
         if (rotation) {
@@ -197,13 +216,10 @@ export async function getLabelsSize({
 
         await document.fonts.ready;
         const rect = (svg.select('g').node() as Element)?.getBoundingClientRect();
-        result.maxWidth = rect?.width ?? 0;
-        result.maxHeight = rect?.height ?? 0;
+        return {maxWidth: rect?.width ?? 0, maxHeight: rect?.height ?? 0};
+    } finally {
+        container.remove();
     }
-
-    container.remove();
-
-    return result;
 }
 
 export type TextRow = {text: string; y: number};
@@ -272,6 +288,20 @@ export async function getMultilineTextInfo(args: {
     };
 }
 
+let entityDecoder: HTMLDivElement | undefined;
+
+export function decodeHtmlEntities(text: string) {
+    if (!text.includes('&')) {
+        return text;
+    }
+    entityDecoder ??= document.createElement('div');
+    // Escape tag delimiters so only entities are decoded, never label markup.
+    entityDecoder.innerHTML = text.replace(/</g, '&lt;');
+    const result = entityDecoder.textContent ?? '';
+    entityDecoder.textContent = '';
+    return result;
+}
+
 const entityMap = {
     '&': '&amp;',
     '<': '&lt;',
@@ -290,7 +320,13 @@ function unescapeHtml(str: string) {
 }
 
 let measureCanvas: HTMLCanvasElement | null = null;
-export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
+export function getTextSizeFn({
+    style,
+    decodeEntities = true,
+}: {
+    style?: BaseTextStyle;
+    decodeEntities?: boolean;
+}) {
     const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
     const context = canvas.getContext('2d');
     if (!context) {
@@ -318,7 +354,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
             : defaultFontWeight;
         const fontSize = style?.fontSize ? resolveCSSVar(style.fontSize) : defaultFontSize;
         context.font = `${fontWeight} ${fontSize} ${defaultFontFamily}`;
-        const textMetric = context.measureText(unescapeHtml(str));
+        const textMetric = context.measureText(decodeEntities ? unescapeHtml(str) : str);
 
         // we calculate hanging based on an approximate algorithm from chromium
         // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=32;drc=7cf6ac3dd6dca800fbc0d28e80a7732d4ea90340?q=member_hanging_&ss=chromium%2Fchromium%2Fsrc

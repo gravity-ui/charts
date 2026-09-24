@@ -289,6 +289,49 @@ test.each([
 });
 
 describe('vertical legend layout', () => {
+    test('wraps labels within the shared symbol column and recomputes paginated row heights', async () => {
+        const {preparedLegend, legendItems, legendConfig} = await prepareLegend(
+            {
+                enabled: true,
+                layout: 'vertical',
+                position: 'left',
+                width: 130,
+                itemMaxRowCount: 20,
+                title: {text: 'Legend', margin: 8},
+            },
+            chartWidth,
+            112,
+            [
+                {
+                    type: 'line',
+                    name: 'A'.repeat(20),
+                    data: [],
+                    legend: {symbol: {width: 30, padding: 10}},
+                },
+                {
+                    type: 'line',
+                    name: 'B'.repeat(100),
+                    data: [],
+                    legend: {symbol: {width: 10, padding: 2}},
+                },
+            ],
+        );
+
+        expect(preparedLegend.rows.map((row) => row.items[0].textLeft)).toEqual([40, 40]);
+        expect(legendItems.flat().map((item) => item.textRowCount)).toEqual([3, 4]);
+        expect(preparedLegend.rows.map((row) => row.height)).toEqual([42, 56]);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 42]);
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 1},
+            {start: 1, end: 2},
+        ]);
+        expect(preparedLegend.height).toBe(92);
+        for (const item of legendItems.flat()) {
+            expect(item.textWidth).toBeLessThanOrEqual(90);
+        }
+        expect(legendItems[1][0].textRows?.[3].endsWith('…')).toBe(true);
+    });
+
     test.each(['triangle', 'triangle-down', 'diamond'] as const)(
         'fits six %s markers without pagination at height 200',
         async (symbolType) => {
@@ -651,4 +694,141 @@ describe.each(['left', 'right'] as const)('continuous side legend, position=%s',
             );
         },
     );
+});
+
+describe('multiline legend labels', () => {
+    test('reflows percentage widths on resize like equivalent pixel widths', async () => {
+        const legend = Object.freeze({
+            enabled: true,
+            position: 'left' as const,
+            width: '25%',
+            itemMaxRowCount: 3,
+        });
+        for (const containerWidth of [1000, 560, 40, 20, 0]) {
+            const pixels = Math.max(0, containerWidth - chartMargin.left - chartMargin.right) / 4;
+            const result = await prepareLegend(legend, containerWidth, 112);
+            const numericResult = await prepareLegend(
+                {...legend, width: pixels},
+                containerWidth,
+                112,
+            );
+            expect(result.legendConfig).toEqual(numericResult.legendConfig);
+            const layout = (items: typeof result.legendItems) =>
+                items.map((row) =>
+                    row.map(({textRows, textWidth, height}) => ({textRows, textWidth, height})),
+                );
+            expect(layout(result.legendItems)).toEqual(layout(numericResult.legendItems));
+            expect(legend.width).toBe('25%');
+        }
+    });
+
+    test.each(['left', 'bottom'] as const)(
+        'prepares rows and dimensions for %s',
+        async (position) => {
+            const config = Object.freeze({enabled: true, position, width: 130, itemMaxRowCount: 3});
+            const {legendItems, preparedLegend, series} = await prepareLegend(config);
+            expect(legendItems.flat().map((item) => item.textRowCount)).toEqual([2, 2, 3]);
+            for (const item of legendItems.flat()) {
+                expect(item.height).toBe((item.textRowCount ?? 1) * preparedLegend.lineHeight);
+                expect(item.textWidth).toBeLessThanOrEqual(115);
+                expect(item.text).toBe(item.name);
+            }
+            expect(legendItems.flat()[2].textRows?.[2].endsWith('…')).toBe(true);
+            expect(series[2].name).toBe('C'.repeat(100));
+        },
+    );
+
+    test('default and explicit one row have identical layout', async () => {
+        const config = {enabled: true, width: 130};
+        const implicit = await prepareLegend(config);
+        const explicit = await prepareLegend({...config, itemMaxRowCount: 1});
+        const dimensions = (items: typeof explicit.legendItems) =>
+            items.map((row) =>
+                row.map(({height, text, textWidth, textRows}) => ({
+                    height,
+                    text,
+                    textWidth,
+                    textRows,
+                })),
+            );
+        expect(dimensions(explicit.legendItems)).toEqual(dimensions(implicit.legendItems));
+        expect(explicit.legendConfig).toEqual(implicit.legendConfig);
+    });
+
+    test('keeps items whole on pages and caps an item taller than a page', async () => {
+        const {legendItems, legendConfig, preparedLegend} = await prepareLegend(
+            {
+                enabled: true,
+                position: 'left',
+                width: 130,
+                itemMaxRowCount: 20,
+                title: {text: 'Legend', margin: 8},
+            },
+            chartWidth,
+            112,
+        );
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 2},
+            {start: 2, end: 3},
+        ]);
+        expect(preparedLegend.height).toBe(92);
+        for (const item of legendItems.slice(0, 2).flat()) {
+            expect(item.textRowCount).toBe(2);
+            expect(item.height).toBe(2 * preparedLegend.lineHeight);
+            expect(item.textRows?.join('')).toBe(item.name);
+        }
+        expect(legendItems[2][0].textRowCount).toBe(4);
+        expect(legendItems[2][0].textRows?.[3].endsWith('…')).toBe(true);
+        for (const page of legendConfig.pagination?.pages ?? []) {
+            const height = legendItems
+                .slice(page.start, page.end)
+                .reduce((sum, row) => sum + Math.max(...row.map((item) => item.height)), 0);
+            expect(height).toBeLessThanOrEqual(
+                preparedLegend.height -
+                    preparedLegend.title.height -
+                    preparedLegend.title.margin -
+                    preparedLegend.lineHeight,
+            );
+        }
+    });
+
+    test.each([
+        {width: 0, expected: 0},
+        {width: -10, expected: 960},
+        {width: 10, expected: 10},
+        {width: 20, expected: 20},
+        {width: 2000, expected: 960},
+        {width: '0px', expected: 0},
+        {width: '130px', expected: 130},
+        {width: '12.5%', expected: 120},
+        {width: '150%', expected: 960},
+    ])('keeps multiline widths bounded (%j)', async ({width, expected}) => {
+        const {legendItems, legendConfig} = await prepareLegend({
+            enabled: true,
+            width,
+            itemMaxRowCount: 3,
+        });
+        expect(legendConfig.width).toBe(expected);
+        for (const item of legendItems.flat()) {
+            expect(item.textWidth).toBeGreaterThanOrEqual(0);
+            expect(item.textWidth).toBeLessThanOrEqual(
+                Math.max(0, legendConfig.width - item.symbol.bboxWidth - item.symbol.padding),
+            );
+        }
+    });
+
+    test.each([
+        {height: 0, title: undefined},
+        {height: 35, title: undefined},
+        {height: 35, title: {text: 'Title', margin: 50}},
+    ])('does not produce negative heights or empty pages (%j)', async ({height, title}) => {
+        const {legendItems, legendConfig, preparedLegend} = await prepareLegend(
+            {enabled: true, position: 'left', width: 130, itemMaxRowCount: 3, title},
+            chartWidth,
+            height,
+        );
+        expect(legendItems).toEqual([]);
+        expect(legendConfig.height).toBe(preparedLegend.title.height + preparedLegend.title.margin);
+        expect(legendConfig.pagination).toBeUndefined();
+    });
 });

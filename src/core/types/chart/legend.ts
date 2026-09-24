@@ -12,6 +12,18 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
+    /* eslint-disable jsdoc/check-tag-names -- @asType is used by the JSON Schema generator. */
+    /**
+     * Maximum number of text rows in each discrete legend item (SVG and HTML).
+     * Labels wrap within the resolved legend width, excluding the symbol and its padding.
+     * The final visible row is ellipsized; pagination may reduce the limit to fit an item.
+     * Must be a positive integer.
+     * @default 1
+     * @minimum 1
+     * @asType integer
+     */
+    itemMaxRowCount?: number;
+    /* eslint-enable jsdoc/check-tag-names */
     /**
      * Different types for different color schemes.
      * If the color scheme is continuous, a gradient legend will be drawn.

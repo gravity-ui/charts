@@ -618,6 +618,33 @@ describe('chart config artifacts', () => {
         expect(validateConfig(config)).toBe(false);
     });
 
+    test('legend row count is a positive integer available only on ChartLegend', () => {
+        expect(schema.definitions.ChartLegend.properties.itemMaxRowCount).toMatchObject({
+            type: 'integer',
+            minimum: 1,
+            default: 1,
+        });
+        const validate = createSchemaValidator().compile(schema);
+        for (const value of [1, 3]) {
+            expect(validate({series: {data: []}, legend: {itemMaxRowCount: value}})).toBe(true);
+        }
+        for (const value of [0, -1, 1.5, '3']) {
+            expect(validate({series: {data: []}, legend: {itemMaxRowCount: value}})).toBe(false);
+        }
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'legend-config-usage.ts'),
+                declaration +
+                    `
+            const legend: ChartLegend = {itemMaxRowCount: 3};
+            // @ts-expect-error Row count is not a per-series override.
+            const item: ChartLegendItem = {itemMaxRowCount: 3};
+            void [legend, item];
+        `,
+            ),
+        ).not.toThrow();
+    });
+
     test('schema definitions and properties match the committed snapshot', () => {
         const snapshotPath = path.resolve(
             __dirname,

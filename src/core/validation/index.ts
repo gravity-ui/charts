@@ -65,6 +65,17 @@ export function validateData(data?: ChartData) {
         });
     }
 
+    const itemMaxRowCount = data.legend?.itemMaxRowCount;
+    if (
+        itemMaxRowCount !== undefined &&
+        (!Number.isInteger(itemMaxRowCount) || itemMaxRowCount < 1)
+    ) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: 'legend.itemMaxRowCount must be a positive integer',
+        });
+    }
+
     validateAxes({xAxis: data.xAxis, yAxis: data.yAxis});
     validateTooltip({tooltip: data.tooltip});
 

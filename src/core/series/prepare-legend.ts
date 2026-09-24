@@ -8,13 +8,12 @@ import {CONTINUOUS_LEGEND_SIZE, legendDefaults} from '../constants';
 import {
     getDefaultColorStops,
     getDomainForContinuousColorScale,
-    getLabelsSize,
     getSymbolSize,
     getTextSizeFn,
-    getTextWithElipsis,
     parseLegendWidth,
 } from '../utils';
 
+import {limitLegendItemRows, prepareLegendItems} from './legend-label';
 import type {
     LegendItem,
     PreparedLegendOptions,
@@ -39,6 +38,7 @@ export async function getPreparedLegend(args: {
     chartMargin: PreparedChart['margin'];
 }): Promise<PreparedLegendOptions> {
     const {legend, series, chartWidth, chartMargin} = args;
+    const itemMaxRowCount = legend?.itemMaxRowCount ?? legendDefaults.itemMaxRowCount;
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
     const parsedWidth = parseLegendWidth(legend?.width);
     let width = parsedWidth?.value;
@@ -111,6 +111,7 @@ export async function getPreparedLegend(args: {
         enabled,
         hangingOffset: itemHangingOffset,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
+        itemMaxRowCount,
         itemStyle: computedItemStyle,
         lineHeight,
         margin,
@@ -181,57 +182,14 @@ async function getGroupedLegendItems(args: {
     let currentLine: LegendItem[] = [];
     let currentWidth = 0;
 
-    const getLegendItemTextSize = getTextSizeFn({style: preparedLegend.itemStyle});
     const vertical = preparedLegend.layout === 'vertical';
-    const {width: symbolWidth, padding: symbolPadding} = symbolMetrics;
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const resultItem = clone(item) as LegendItem;
-        resultItem.text = item.name;
-
-        const maxTextWidth = Math.max(
-            0,
-            maxLegendWidth -
-                (vertical
-                    ? symbolWidth + symbolPadding
-                    : resultItem.symbol.bboxWidth + resultItem.symbol.padding),
-        );
-
-        let textHeight = 0;
-        let textWidth = 0;
-        if (preparedLegend.html) {
-            const textSize = await getLabelsSize({
-                labels: [resultItem.text],
-                html: true,
-                style: preparedLegend.itemStyle,
-            });
-            textHeight = textSize.maxHeight;
-            textWidth = textSize.maxWidth;
-        } else {
-            const textSize = await getLegendItemTextSize(resultItem.text);
-            textHeight = textSize.height;
-            textWidth = textSize.width;
-        }
-
-        resultItem.height = textHeight;
-
-        if (textWidth > maxTextWidth) {
-            resultItem.overflowed = true;
-
-            if (preparedLegend.html) {
-                resultItem.textWidth = maxTextWidth;
-            } else {
-                resultItem.text = await getTextWithElipsis({
-                    text: resultItem.text,
-                    getTextWidth: async (s: string) => (await getLegendItemTextSize(s)).width,
-                    maxWidth: maxTextWidth,
-                });
-                resultItem.textWidth = (await getLegendItemTextSize(resultItem.text)).width;
-            }
-        } else {
-            resultItem.textWidth = textWidth;
-        }
-
+    const preparedItems = await prepareLegendItems({
+        items,
+        maxLegendWidth,
+        legend: preparedLegend,
+        symbolMetrics,
+    });
+    for (const resultItem of preparedItems) {
         if (vertical) {
             result.push([resultItem]);
             continue;
@@ -258,7 +216,7 @@ async function getGroupedLegendItems(args: {
         currentWidth += itemWidth;
     }
 
-    return result;
+    return result.filter((line) => line.length);
 }
 
 function getPagination(args: {
@@ -456,7 +414,7 @@ export async function finalizePreparedLegend(args: {
         width: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.bboxWidth)),
         padding: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.padding)),
     };
-    const items = await getGroupedLegendItems({
+    let items = await getGroupedLegendItems({
         maxLegendWidth,
         items: flattenLegendItems,
         preparedLegend,
@@ -468,18 +426,33 @@ export async function finalizePreparedLegend(args: {
     let legendHeight = 0;
 
     if (preparedLegend.type === 'discrete') {
+        const titleHeight = preparedLegend.title.height + preparedLegend.title.margin;
+        const contentHeight = Math.max(0, maxLegendHeight - titleHeight);
         rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
         legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
 
-        if (maxLegendHeight < legendHeight) {
-            const lines = Math.floor(maxLegendHeight / preparedLegend.lineHeight);
+        if (contentHeight < legendHeight) {
+            const lines = Math.floor(contentHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
-            pagination = getPagination({
-                rows,
-                maxLegendHeight: legendHeight,
-                paginatorHeight: preparedLegend.lineHeight,
-            });
+            if (preparedLegend.itemMaxRowCount > 1) {
+                const maxRows = Math.max(0, lines - 1);
+                if (maxRows === 0) {
+                    items = [];
+                    legendHeight = 0;
+                } else {
+                    await limitLegendItemRows(items.flat(), maxRows, preparedLegend);
+                }
+                rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
+            }
+            pagination = rows.length
+                ? getPagination({
+                      rows,
+                      maxLegendHeight: legendHeight,
+                      paginatorHeight: preparedLegend.lineHeight,
+                  })
+                : undefined;
         }
+        legendHeight += titleHeight;
     } else if (preparedLegend.enabled) {
         legendHeight =
             preparedLegend.title.height +

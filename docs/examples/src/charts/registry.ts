@@ -20,6 +20,8 @@ import {StackLabelsExample} from './data-labels/stack-labels';
 import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
 import {VerticalLegendExample} from './legend/vertical';
 import verticalLegendRaw from './legend/vertical.tsx?raw';
+import {LegendWrappingExample} from './legend/wrapping';
+import legendWrappingRaw from './legend/wrapping.tsx?raw';
 import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
 import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
@@ -44,6 +46,10 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'legend/wrapping': {
+        code: extractDisplayCode(legendWrappingRaw),
+        Component: LegendWrappingExample,
+    },
     'legend/vertical': {
         code: extractDisplayCode(verticalLegendRaw),
         Component: VerticalLegendExample,
