@@ -12,18 +12,15 @@ const data: ChartData = {
         title: {text: 'Regions'},
     },
     series: {
-        data: [
-            {
-                type: 'pie',
-                dataLabels: {enabled: false},
-                data: [
-                    {name: 'North', value: 45},
-                    {name: 'South', value: 30},
-                    {name: 'West', value: 15},
-                    {name: 'Central region with a long label', value: 10},
-                ],
-            },
-        ],
+        data: ['North', 'South', 'West', 'Central region with a long label'].map((name, i) => ({
+            type: 'line' as const,
+            name,
+            data: [
+                {x: 0, y: i + 1},
+                {x: 1, y: i + 3},
+                {x: 2, y: i + 2},
+            ],
+        })),
     },
 };
 

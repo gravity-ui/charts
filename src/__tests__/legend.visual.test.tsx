@@ -379,16 +379,15 @@ test.describe('Legend', () => {
                             title: {text: 'Revenue by region', align: 'center'},
                         },
                         series: {
-                            data: [
-                                {
-                                    type: 'pie',
-                                    dataLabels: {enabled: false},
-                                    data: Array.from({length: 30}, (_, i) => ({
-                                        name: `Region ${i + 1} with a long label`,
-                                        value: i + 1,
-                                    })),
-                                },
-                            ],
+                            data: Array.from({length: 30}, (_, i) => ({
+                                type: 'line',
+                                name: `Region ${i + 1} with a long label`,
+                                data: [
+                                    {x: 0, y: i + 1},
+                                    {x: 1, y: i + 6},
+                                    {x: 2, y: i + 3},
+                                ],
+                            })),
                         },
                     };
                     const component = await mount(

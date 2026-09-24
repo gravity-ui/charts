@@ -16,11 +16,15 @@ For vertical layout, use `align` to position the list and `verticalAlign` for ve
 
 ## Legend width
 
+Without an explicit width, a discrete legend uses the available chart width for `top` and `bottom` positions, or half the available width after subtracting the legend margin for `left` and `right` positions. A continuous legend uses `width` for its gradient and defaults to 200 pixels.
+
+### Explicit width
+
 Set `legend.width` to a finite, nonnegative pixel value (`200` or `'200px'`) or a finite, nonnegative decimal percentage such as `'25%'`. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.
 
 Percentages use the chart width after left/right chart margins, before legend or axis space is deducted, and are recalculated on resize. Values above `'100%'` use the full available width for both discrete and continuous legends. The external `legend.margin` is added separately.
 
-Negative widths, `NaN`, infinite values, and invalid strings fall back to automatic sizing without failing the chart. Size strings must contain a decimal number followed by `px` or `%`, without whitespace or exponent notation; a leading dot is allowed (`'.5px'`, `'.5%'`). Continuous pixel widths are not capped at the available chart width unless `maxWidth` is set.
+Negative widths, `NaN`, infinite values, and invalid strings use the same default sizing as an omitted `width`, without failing the chart. Size strings must contain a decimal number followed by `px` or `%`, without whitespace or exponent notation; a leading dot is allowed (`'.5px'`, `'.5%'`). Continuous pixel widths are not capped at the available chart width unless `maxWidth` is set.
 
 ```javascript
 legend: {
@@ -30,13 +34,15 @@ legend: {
 }
 ```
 
-Without an explicit width, a discrete legend uses the available chart width for `top` and `bottom` positions, or half the available width after subtracting the legend margin for `left` and `right` positions. A continuous legend uses `width` for its gradient and defaults to 200 pixels.
-
-### Content-based side legends
+### Content-based width
 
 Set `width: 'auto'` for a discrete legend on the left or right to fit its rows, title, and pagination controls instead of reserving half the available width. All pages contribute, so turning pages does not move the plot. Width is recalculated when the chart size, content, or text styles change. For top/bottom and continuous legends, `'auto'` uses the default width.
 
-Use `maxWidth` to cap automatic, explicit, or continuous legend widths without changing alignment. It uses the units and percentage base described above, includes markers and text spacing, and excludes `legend.margin`. Invalid limits are ignored; negative numbers and size strings with a leading minus resolve to zero. Without a limit, content-based width uses up to the available space; omitting both options preserves existing sizing.
+Without `maxWidth`, content-based width uses up to the available chart width.
+
+### Maximum width
+
+Use `maxWidth` to cap legend width without changing alignment. It applies to all positions and both discrete and continuous legends, with omitted, explicit, or `'auto'` width. It uses the units and percentage base described above, includes markers and text spacing, and excludes `legend.margin`. Invalid limits are ignored; negative numbers and size strings with a leading minus resolve to zero.
 
 Long labels and titles are truncated. For content-based side legends and discrete legends with `maxWidth`, the title is hidden if there is no available width or insufficient height for the title, an item row, and any necessary pagination. It returns when space becomes available.
 
@@ -46,27 +52,8 @@ Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work t
 
 ## Overriding legend labels
 
-By default, the legend uses the name property of the series or individual data point (depending on the visualization type) for its entries. You can override this behavior by defining a custom label that will be displayed exclusively in the legend. This is useful when you want to provide a simplified, abbreviated, or more descriptive name in the legend compared to the main data point identification.
+By default, legend labels use the `name` of the series or individual data point, depending on the visualization type. Set `legend.itemText` on that series or point to override its legend label without changing its name elsewhere.
 
-To implement this, use the `legend.itemText` property on the series or data point, which takes precedence over the standard name property specifically for legend entries.
+The example uses abbreviated legend labels. Hover over the lines to see the full series names in the tooltip.
 
-**Example:** customizing legend labels for pie series
-
-```javascript
-series: {
-  data: [
-    {
-      type: 'pie',
-      data: [
-        {
-          name: 'Series 1',
-          value: 10,
-          legend: {
-            itemText: 'Custom legend name',
-          },
-        },
-      ],
-    },
-  ];
-}
-```
+<div data-chart-example="legend/labels"></div>
