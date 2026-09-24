@@ -18,7 +18,7 @@ import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
-import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from './types';
+import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
 
 export type AxisDomainValue = number | string | null | undefined;
 
@@ -30,7 +30,7 @@ export interface SeriesAxisDomainValues<T extends ChartSeries> {
 export interface PrepareSeriesArgs<T = ChartSeries> {
     series: T[];
     seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     colorScale: ScaleOrdinal<string, string>;
     colors: string[];
     xAxis?: ChartXAxis | null;

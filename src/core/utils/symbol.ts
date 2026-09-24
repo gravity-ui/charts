@@ -8,15 +8,14 @@ export const getSymbolType = (index: number) => {
     return scatterStyles[index % scatterStyles.length];
 };
 
-// Radius multipliers from D3's drawing primitives; legend bounds must match their vertices.
+// Radius multipliers used by D3's symbolDiamond2 and symbolTriangle2 draw methods.
 // https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/diamond2.js
 const diamondRadiusFactor = 0.62625;
 // https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
 const triangleRadiusFactor = 0.6824;
 const sqrt3 = Math.sqrt(3);
 
-// This is an inverted triangle
-// Based on https://github.com/d3/d3-shape/blob/v3.2.0/src/symbol/triangle2.js
+// Invert D3's triangle2 around its centroid.
 const triangleDown = {
     draw: (context: CanvasPath, size: number) => {
         const s = Math.sqrt(size) * triangleRadiusFactor;
@@ -46,24 +45,37 @@ export const getSymbol = (symbolType: `${SymbolType}`) => {
     }
 };
 
-export function getSymbolBBoxWidth({
-    symbolSize,
-    symbolType,
-}: {
+interface SymbolSizeOptions {
     symbolSize: number;
     symbolType: `${SymbolType}`;
-}) {
+}
+
+export function getSymbolSize({symbolSize, symbolType}: SymbolSizeOptions) {
+    const size = Math.sqrt(symbolSize);
     switch (symbolType) {
-        case SymbolType.Diamond:
-            return Math.sqrt(symbolSize) * diamondRadiusFactor * 2;
-        case SymbolType.Circle:
-            return Math.sqrt(symbolSize / Math.PI) * 2;
+        case SymbolType.Circle: {
+            const diameter = Math.sqrt(symbolSize / Math.PI) * 2;
+            return {width: diameter, height: diameter};
+        }
+        case SymbolType.Diamond: {
+            const diameter = size * diamondRadiusFactor * 2;
+            return {width: diameter, height: diameter};
+        }
         case SymbolType.Square:
-            return Math.sqrt(symbolSize);
+            return {width: size, height: size};
         case SymbolType.Triangle:
-        case SymbolType.TriangleDown:
-            return Math.sqrt(symbolSize) * triangleRadiusFactor * sqrt3;
+        case SymbolType.TriangleDown: {
+            const radius = size * triangleRadiusFactor;
+            const width = radius * sqrt3;
+            // triangle2 is centered at its centroid, not at its bounding box center.
+            // Reserve equal space above and below the current symbol origin.
+            return {width, height: 2 * radius};
+        }
         default:
-            return 0;
+            return {width: 0, height: 0};
     }
+}
+
+export function getSymbolBBoxWidth(options: SymbolSizeOptions) {
+    return getSymbolSize(options).width;
 }

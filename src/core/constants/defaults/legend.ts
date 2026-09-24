@@ -1,6 +1,7 @@
 import type {ChartLegend} from '../../types';
 
 export const legendDefaults = {
+    layout: 'horizontal' as Required<ChartLegend>['layout'],
     align: 'center' as Required<ChartLegend>['align'],
     verticalAlign: 'top' as Required<ChartLegend>['verticalAlign'],
     justifyContent: 'center' as Required<ChartLegend>['justifyContent'],

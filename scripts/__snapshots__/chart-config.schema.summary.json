@@ -309,6 +309,7 @@
       "itemDistance",
       "itemStyle",
       "justifyContent",
+      "layout",
       "margin",
       "position",
       "title",
