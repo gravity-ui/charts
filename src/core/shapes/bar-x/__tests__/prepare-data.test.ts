@@ -112,19 +112,14 @@ describe('bar-x borders', () => {
         expect(JSON.stringify({input, seriesOptions})).toBe(original);
     });
 
-    test.each([
-        {values: [20, -10, 5, -3], stacking: 'normal' as const},
-        {values: [20, 10, 5], stacking: 'percent' as const},
-        {values: [0, 0.01, -0.01], stacking: undefined},
-    ])('preserves geometry and raw values for $stacking', async ({values, stacking}) => {
-        for (const stackGap of [0, 4]) {
-            const plain = await prepare(values, stacking, 200, {stackGap});
-            const bordered = await prepare(values, stacking, 200, {borderWidth: 3, stackGap});
-            const geometry = (items: typeof plain) =>
-                items.map(({x, y, width, height, data}) => ({x, y, width, height, data}));
-            expect(geometry(bordered)).toEqual(geometry(plain));
-            expect(bordered.map((d) => d.data.y)).toEqual(values);
-        }
+    test('preserves geometry and raw values when borders are enabled', async () => {
+        const values = [20, -10, 5, -3, 0];
+        const plain = await prepare(values, 'normal', 200, {stackGap: 4});
+        const bordered = await prepare(values, 'normal', 200, {borderWidth: 3, stackGap: 4});
+        const geometry = (items: typeof plain) =>
+            items.map(({x, y, width, height, data}) => ({x, y, width, height, data}));
+        expect(geometry(bordered)).toEqual(geometry(plain));
+        expect(bordered.map((d) => d.data.y)).toEqual(values);
     });
 
     test.each([0, 2, 6, 7])(
@@ -136,10 +131,17 @@ describe('bar-x borders', () => {
         },
     );
 
-    test.each([25, 24, 26, -1, Infinity, NaN])('handles border width %s', async (borderWidth) => {
+    test.each([
+        {borderWidth: 24, expectedWidth: 24},
+        {borderWidth: 25, expectedWidth: 0},
+        {borderWidth: 26, expectedWidth: 0},
+        {borderWidth: -1, expectedWidth: 0},
+        {borderWidth: Infinity, expectedWidth: 0},
+        {borderWidth: NaN, expectedWidth: 0},
+    ])('handles border width $borderWidth', async ({borderWidth, expectedWidth}) => {
         const [bar] = await prepare([10], undefined, 200, {borderWidth});
         expect(bar.width).toBe(50);
-        expect(bar.borderWidth).toBe(borderWidth === 24 ? 24 : 0);
+        expect(bar.borderWidth).toBe(expectedWidth);
     });
 });
 

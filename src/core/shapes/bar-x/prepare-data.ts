@@ -197,6 +197,18 @@ export const prepareBarXData = async (args: {
     const barSlotSize = groupSize / maxGroupSize;
     const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
     const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - rectGap, barMaxWidth));
+    const borderWidthBySeries = new Map(
+        series.map((s) => [
+            s,
+            Number.isFinite(s.borderWidth) && s.borderWidth > 0 && rectWidth > s.borderWidth * 2
+                ? s.borderWidth
+                : 0,
+        ]),
+    );
+    const positiveExtendsUpByAxis = yScale.map((scale) => {
+        const range = scale?.range() ?? [1, 0];
+        return range[0] > range[range.length - 1];
+    });
 
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
@@ -210,6 +222,7 @@ export const prepareBarXData = async (args: {
 
             for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
                 const yValues = stacks[groupItemIndex];
+                const percentStack = yValues.some((item) => item.series.stacking === 'percent');
                 let positiveStackSum = 0;
                 let negativeStackSum = 0;
                 const stackItems: PreparedBarXData[] = [];
@@ -259,30 +272,29 @@ export const prepareBarXData = async (args: {
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
 
-                    let base = 0;
-                    if (seriesYAxis.type === 'logarithmic') {
-                        const domainData = seriesYScale.domain();
-                        const yMinValue = min(domainData) ?? 0;
-                        base = seriesYScale(yMinValue);
-                    } else {
-                        base = seriesYScale(0);
+                    const positiveExtendsUp = positiveExtendsUpByAxis[yAxisIndex];
+                    let extendsUp = positiveExtendsUp;
+                    let shapeHeight = 0;
+                    let barPositionY = yAxisTop;
+                    if (!percentStack) {
+                        const baseValue =
+                            seriesYAxis.type === 'logarithmic'
+                                ? (min(seriesYScale.domain()) ?? 0)
+                                : 0;
+                        const stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
+                        const startPixel = seriesYScale(stackSum === 0 ? baseValue : stackSum);
+                        const endPixel = seriesYScale(stackSum + yDataValue);
+                        const height = Math.abs(endPixel - startPixel);
+                        const defaultExtendsUp =
+                            yDataValue >= 0 ? positiveExtendsUp : !positiveExtendsUp;
+                        extendsUp = height > 0 ? endPixel < startPixel : defaultExtendsUp;
+                        // Keep the value end fixed; the gap belongs next to the previous
+                        // segment of the same sign, including on reversed axes.
+                        const itemGap = stackSum !== 0 && height >= stackGap ? stackGap : 0;
+                        shapeHeight = height - itemGap;
+                        barPositionY =
+                            yAxisTop + Math.min(startPixel, endPixel) + (extendsUp ? 0 : itemGap);
                     }
-
-                    const stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
-                    const startPixel = stackSum === 0 ? base : seriesYScale(stackSum);
-                    const endPixel = seriesYScale(stackSum + yDataValue);
-                    const height = Math.abs(endPixel - startPixel);
-                    const range = seriesYScale.range();
-                    const positiveExtendsUp = range[0] > range[range.length - 1];
-                    const defaultExtendsUp =
-                        yDataValue >= 0 ? positiveExtendsUp : !positiveExtendsUp;
-                    const extendsUp = height > 0 ? endPixel < startPixel : defaultExtendsUp;
-                    // Keep the value end fixed; the gap belongs next to the previous
-                    // segment of the same sign, including on reversed axes.
-                    const itemGap = stackSum !== 0 && height >= stackGap ? stackGap : 0;
-                    const shapeHeight = height - itemGap;
-                    const barPositionY =
-                        yAxisTop + Math.min(startPixel, endPixel) + (extendsUp ? 0 : itemGap);
 
                     const barData: PreparedBarXData = {
                         annotation:
@@ -298,13 +310,7 @@ export const prepareBarXData = async (args: {
                         y: barPositionY,
                         width: rectWidth,
                         height: shapeHeight,
-                        borderWidth:
-                            Number.isFinite(yValue.series.borderWidth) &&
-                            yValue.series.borderWidth > 0 &&
-                            rectWidth > yValue.series.borderWidth * 2
-                                ? yValue.series.borderWidth
-                                : 0,
-                        borderColor: yValue.series.borderColor,
+                        borderWidth: borderWidthBySeries.get(yValue.series) ?? 0,
                         opacity: get(yValue.data, 'opacity', null),
                         data: yValue.data,
                         series: yValue.series,
@@ -325,7 +331,7 @@ export const prepareBarXData = async (args: {
                     }
                 }
 
-                if (yValues.some((item) => item.series.stacking === 'percent')) {
+                if (percentStack) {
                     const currentPlot = split.plots[plotIndexes[plotDataIndex]];
                     const currentPlotHeight = currentPlot?.height ?? plotHeight;
                     const currentPlotTop = currentPlot?.top ?? 0;
@@ -337,8 +343,8 @@ export const prepareBarXData = async (args: {
                     const availableHeight = Math.max(0, currentPlotHeight);
                     const gap = gapCount ? Math.min(stackGap, availableHeight / gapCount) : 0;
                     const segmentsHeight = Math.max(0, availableHeight - gap * gapCount);
-                    const scaleRange = yScale[stackItems[0]?.series.yAxis ?? 0]?.range() ?? [1, 0];
-                    const extendsUp = scaleRange[0] > scaleRange[scaleRange.length - 1];
+                    const extendsUp =
+                        positiveExtendsUpByAxis[stackItems[0]?.series.yAxis ?? 0] ?? true;
                     let offset = 0;
                     let visibleIndex = 0;
                     stackItems.forEach((item) => {

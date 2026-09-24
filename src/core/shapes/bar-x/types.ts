@@ -10,7 +10,6 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     width: number;
     height: number;
     borderWidth: number;
-    borderColor: string;
     opacity: number | null;
     series: PreparedBarXSeries;
     svgLabels: LabelData[];

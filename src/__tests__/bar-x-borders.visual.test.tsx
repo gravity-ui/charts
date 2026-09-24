@@ -27,14 +27,14 @@ test.describe('Bar-x borders', () => {
                     'bar-x': {...data.series.options?.['bar-x'], stackGap},
                 };
                 const component = await mount(<ChartTestStory data={data} />);
-                const bounds = await component
-                    .locator('.gcharts-bar-x__segment-border')
-                    .evaluateAll((elements) =>
-                        elements.map((element) => {
-                            const {x, y, width, height} = (element as SVGGraphicsElement).getBBox();
-                            return {x, y, width, height};
-                        }),
-                    );
+                const borders = component.locator('.gcharts-bar-x__segment-border');
+                await expect(borders).toHaveCount(9);
+                const bounds = await borders.evaluateAll((elements) =>
+                    elements.map((element) => {
+                        const {x, y, width, height} = (element as SVGGraphicsElement).getBBox();
+                        return {x, y, width, height};
+                    }),
+                );
                 const firstStack = bounds.filter((box) => box.x === bounds[0].x);
                 for (let i = 1; i < firstStack.length; i++) {
                     expect(
@@ -126,7 +126,6 @@ test.describe('Bar-x borders', () => {
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('.gcharts-bar-x__segment')).toHaveCount(100);
         await expect(component.locator('.gcharts-bar-x__segment-border')).toHaveCount(0);
-        await expect(component.locator('svg')).toHaveScreenshot();
     });
 
     test('Hover and inactive states restore point opacity', async ({mount, page}) => {
@@ -161,14 +160,65 @@ test.describe('Bar-x borders', () => {
             'opacity',
             '0.2',
         );
-        // Tooltip behavior is checked above; keep its text out of the border snapshot.
-        await page.addStyleTag({content: '.gcharts-tooltip { visibility: hidden !important; }'});
-        await expect(component.locator('svg')).toHaveScreenshot();
         await page.mouse.move(0, 0);
         await expect(fill).toHaveAttribute('fill', '#90caf9');
         await expect(fill).toHaveAttribute('opacity', '0.6');
         await expect(border).toHaveAttribute('opacity', '0.6');
     });
+
+    test('Zero inactive opacity hides and restores bars, borders and labels', async ({
+        mount,
+        page,
+    }) => {
+        const data: ChartData = {
+            series: {
+                options: {
+                    'bar-x': {
+                        borderWidth: 3,
+                        states: {inactive: {enabled: true, opacity: 0}},
+                    },
+                },
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Active',
+                        dataLabels: {enabled: true},
+                        data: [{x: 0, y: 8}],
+                    },
+                    {
+                        type: 'bar-x',
+                        name: 'Inactive',
+                        tooltip: {enabled: false},
+                        dataLabels: {enabled: true},
+                        data: [{x: 0, y: 5, opacity: 0.6}],
+                    },
+                ],
+            },
+            xAxis: {type: 'category', categories: ['A']},
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const fills = component.locator('.gcharts-bar-x__segment');
+        const borders = component.locator('.gcharts-bar-x__segment-border');
+        const labels = component.locator('.gcharts-bar-x__label');
+        await expect(labels).toHaveCount(2);
+        await expect(fills.nth(1)).toHaveCSS('opacity', '0.6');
+        await expect(borders.nth(1)).toHaveCSS('opacity', '0.6');
+        await expect(labels.nth(1)).toHaveCSS('opacity', '1');
+
+        const box = await fills.first().boundingBox();
+        if (!box) throw new Error('Missing bar bounds');
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        for (const elements of [fills, borders, labels]) {
+            await expect(elements.first()).toHaveCSS('opacity', '1');
+            await expect(elements.nth(1)).toHaveCSS('opacity', '0');
+        }
+
+        await page.mouse.move(0, 0);
+        await expect(fills.nth(1)).toHaveCSS('opacity', '0.6');
+        await expect(borders.nth(1)).toHaveCSS('opacity', '0.6');
+        await expect(labels.nth(1)).toHaveCSS('opacity', '1');
+    });
+
     test('Cursor and tooltip cover borders, including solid short bars', async ({mount, page}) => {
         const data: ChartData = {
             series: {

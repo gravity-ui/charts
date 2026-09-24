@@ -28,12 +28,13 @@ export function renderBarX(
     const hoverOptions = get(seriesOptions, 'bar-x.states.hover');
     const inactiveOptions = get(seriesOptions, 'bar-x.states.inactive');
     svgElement.selectAll('*').remove();
-    const paths = new Map(preparedData.map((d) => [d, getBarXPaths(d)]));
+    const shapes = preparedData.map((datum) => ({datum, paths: getBarXPaths(datum)}));
     const rectSelection = svgElement
-        .selectAll('allRects')
-        .data(preparedData)
+        .selectAll(`path.${b('segment')}`)
+        .data(shapes)
         .join('path')
-        .attr('d', (d) => paths.get(d)?.fill ?? '')
+        .attr('d', ({paths}) => paths.fill)
+        .datum(({datum}) => datum)
         .attr('class', b('segment'))
         .attr('fill', (d) => d.data.color || d.series.color)
         .attr('opacity', (d) => d.opacity)
@@ -41,11 +42,12 @@ export function renderBarX(
 
     const borderSelection = svgElement
         .selectAll(`path.${b('segment-border')}`)
-        .data(preparedData.filter((d) => paths.get(d)?.border ?? ''))
+        .data(shapes.filter(({paths}) => paths.border))
         .join('path')
-        .attr('d', (d) => paths.get(d)?.border ?? '')
+        .attr('d', ({paths}) => paths.border)
+        .datum(({datum}) => datum)
         .attr('class', b('segment-border'))
-        .attr('fill', (d) => d.borderColor)
+        .attr('fill', (d) => d.series.borderColor)
         .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
@@ -103,7 +105,7 @@ export function renderBarX(
             labelSelection.attr('opacity', (d) => {
                 return hoveredSeries.includes(d.series.id)
                     ? null
-                    : inactiveOptions?.opacity || null;
+                    : (inactiveOptions.opacity ?? null);
             });
         }
     }
