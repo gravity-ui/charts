@@ -71,6 +71,33 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
     });
 
+    test('standalone declarations support both legend layouts', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration +
+                    `
+                    const legend: ChartLegend = {position: 'left', layout: 'vertical'};
+                    legend.layout = 'horizontal';
+                    // @ts-expect-error Only horizontal and vertical layouts are supported.
+                    legend.layout = 'columns';
+                `,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema exposes legend layout values and the compatible default', () => {
+        expect(schema.definitions.ChartLegend.properties.layout).toMatchObject({
+            enum: ['horizontal', 'vertical'],
+            default: 'horizontal',
+        });
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const layout of [undefined, 'horizontal', 'vertical']) {
+            expect(validateConfig({series: {data: []}, legend: {layout}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {layout: 'columns'}})).toBe(false);
+    });
+
     test('schema supports pixel and percentage legend widths', () => {
         const validateConfig = createSchemaValidator().compile(schema);
         for (const width of [0, 0.5, 230, '0px', '.5px', '230px', '0%', '12.5%', '150%']) {

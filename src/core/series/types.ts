@@ -96,7 +96,20 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
     bboxWidth: number;
 };
 
-export interface PreparedLegend extends Required<
+export interface PreparedLegendRowItem {
+    symbolLeft: number;
+    textLeft: number;
+}
+
+export interface PreparedLegendRow {
+    top: number;
+    left: number;
+    height: number;
+    width: number;
+    items: PreparedLegendRowItem[];
+}
+
+export interface PreparedLegendOptions extends Required<
     Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth'>
 > {
     width?: ChartLegend['width'];
@@ -107,7 +120,6 @@ export interface PreparedLegend extends Required<
     /** Nonnegative chart width after chart margins, before legend and axis space is deducted. */
     availableWidth: number;
     hangingOffset: number;
-    height: number;
     lineHeight: number;
     title: {
         enable: boolean;
@@ -131,6 +143,11 @@ export interface PreparedLegend extends Required<
         domain: number[];
         stops: number[];
     };
+}
+
+export interface PreparedLegend extends PreparedLegendOptions {
+    height: number;
+    rows: PreparedLegendRow[];
 }
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;

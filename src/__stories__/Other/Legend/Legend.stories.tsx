@@ -19,6 +19,22 @@ export const SharedLegend = {
     },
 } satisfies Story;
 
+export const VerticalLayout = {
+    name: 'Vertical layout',
+    args: {
+        data: {
+            ...groupedLegend,
+            legend: {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+            },
+        },
+    },
+} satisfies Story;
+
 export const ContentBasedWidth = {
     name: 'Content-based width',
     args: {

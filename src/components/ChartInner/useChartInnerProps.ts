@@ -5,7 +5,7 @@ import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
 import {getPreparedSeries} from '~core/series';
-import {getLegendComponents, getPreparedLegend} from '~core/series/prepare-legend';
+import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
 import type {TooltipItemData} from '~core/shapes/types';
@@ -194,7 +194,7 @@ export function useChartInnerProps(props: Props) {
             const normalizedXAxis = getNormalizedXAxis({xAxis: data.xAxis});
             const normalizedYAxis = getNormalizedYAxis({yAxis: data.yAxis});
             const preparedSeriesOptions = getPreparedOptions(data.series.options);
-            const preparedLegend = await getPreparedLegend({
+            const legendOptions = await getPreparedLegend({
                 legend: data.legend,
                 series: normalizedSeriesData,
                 chartWidth: width,
@@ -206,7 +206,7 @@ export function useChartInnerProps(props: Props) {
                 allPreparedSeries = await getPreparedSeries({
                     seriesData: normalizedSeriesData,
                     seriesOptions: data.series.options,
-                    preparedLegend,
+                    preparedLegend: legendOptions,
                     colors,
                     xAxis: normalizedXAxis,
                     yAxis: normalizedYAxis,
@@ -240,12 +240,12 @@ export function useChartInnerProps(props: Props) {
                 zoomState: effectiveZoomState,
             });
 
-            const {legendConfig, legendItems} = await getLegendComponents({
+            const {preparedLegend, legendConfig, legendItems} = await finalizePreparedLegend({
                 chartWidth: width,
                 chartHeight: height,
                 chartMargin: preparedChart.margin,
                 series: preparedSeries,
-                preparedLegend,
+                preparedLegend: legendOptions,
             });
 
             const axes = await getAxes({

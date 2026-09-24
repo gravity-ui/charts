@@ -21,6 +21,7 @@ import type {
     LegendItem,
     OnLegendItemClick,
     PreparedLegend,
+    PreparedLegendRow,
     PreparedSeries,
     SymbolLegendSymbol,
 } from '../../hooks';
@@ -40,23 +41,6 @@ type Props = {
     htmlLayout: HTMLElement | null;
     onItemClick: OnLegendItemClick;
     onUpdate?: () => void;
-};
-
-const getLegendItemLeftPosition = (args: {
-    align: PreparedLegend['align'];
-    contentWidth: number;
-    width: number;
-}) => {
-    const {align, width, contentWidth} = args;
-
-    if (align === 'right') {
-        return width - contentWidth;
-    }
-    if (align === 'left') {
-        return 0;
-    }
-
-    return width / 2 - contentWidth / 2;
 };
 
 const getLegendPosition = (args: {
@@ -121,31 +105,18 @@ async function appendPaginator(args: {
             }
         });
     paginationLine.attr('transform', transform);
+    return paginationLine;
 }
 
 function renderLegendSymbol(args: {
     selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
-    legend: PreparedLegend;
-    legendLineHeight: number;
+    row: PreparedLegendRow;
 }) {
-    const {selection, legend, legendLineHeight} = args;
-    const line = selection.data();
-
-    const getXPosition = (i: number) => {
-        return line.slice(0, i).reduce((acc, legendItem) => {
-            return (
-                acc +
-                legendItem.symbol.bboxWidth +
-                legendItem.symbol.padding +
-                legendItem.textWidth +
-                legend.itemDistance
-            );
-        }, 0);
-    };
-
+    const {selection, row} = args;
+    const legendLineHeight = row.height;
     selection.each(function (d, i) {
         const element = select(this);
-        const x = getXPosition(i);
+        const x = row.items[i].symbolLeft;
         const className = b('item-symbol', {shape: d.symbol.shape, unselected: !d.visible});
         const color = d.visible ? d.color : '';
         const symbolType = (d.symbol as SymbolLegendSymbol).symbolType;
@@ -202,11 +173,21 @@ function renderLegendSymbol(args: {
 export const Legend = (props: Props) => {
     const {chartSeries, legend, items = [], config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
-    const [pageIndex, setPageIndex] = React.useState(0);
+    const pageCount = config.pagination?.pages.length ?? 1;
+    const [paginationState, setPaginationState] = React.useState({
+        pageIndex: 0,
+        maxWidth: config.maxWidth,
+        pageCount,
+    });
+    const currentPageIndex =
+        paginationState.maxWidth === config.maxWidth
+            ? Math.min(paginationState.pageIndex, Math.max(0, pageCount - 1))
+            : 0;
 
-    React.useEffect(() => {
-        setPageIndex(0);
-    }, [config.maxWidth]);
+    // Adjust before rendering a changed page set so a removed page cannot return on resize.
+    if (paginationState.maxWidth !== config.maxWidth || paginationState.pageCount !== pageCount) {
+        setPaginationState({pageIndex: currentPageIndex, maxWidth: config.maxWidth, pageCount});
+    }
 
     React.useEffect(() => {
         async function prepareLegend() {
@@ -247,18 +228,23 @@ export const Legend = (props: Props) => {
             let legendLeft = 0;
             let legendTop = 0;
             if (legend.type === 'discrete') {
-                const start = config.pagination?.pages[pageIndex]?.start;
-                const end = config.pagination?.pages[pageIndex]?.end;
-                const pageItems =
-                    typeof start === 'number' && typeof end === 'number'
-                        ? items.slice(start, end)
-                        : items;
+                const page = config.pagination?.pages[currentPageIndex];
+                const start = page?.start ?? 0;
+                const pageItems = page ? items.slice(start, page.end) : items;
+                const pageRows = page ? legend.rows.slice(start, page.end) : legend.rows;
+                const pageTop = page ? legend.rows[start].top : 0;
                 const titleHeight = legend.constrainContent
                     ? legend.title.height + legend.title.margin
                     : 0;
-                const legendLineHeights: number[] = [];
-                pageItems.forEach((line) => {
-                    const legendLine = svgElement.append('g').attr('class', b('line'));
+                const pagination =
+                    legend.height - titleHeight >= legend.lineHeight
+                        ? config.pagination
+                        : undefined;
+                let contentHeight = legend.height;
+                const svgItems = svgElement.append('g');
+                pageItems.forEach((line, lineIndex) => {
+                    const row = legend.rows[start + lineIndex];
+                    const legendLine = svgItems.append('g').attr('class', b('line'));
                     const htmlLegendLine = htmlContainer
                         ?.append('div')
                         .style('position', 'absolute');
@@ -277,20 +263,8 @@ export const Legend = (props: Props) => {
                             onUpdate?.();
                         });
 
-                    const getXPosition = (i: number) => {
-                        return line.slice(0, i).reduce((acc, legendItem) => {
-                            return (
-                                acc +
-                                legendItem.symbol.bboxWidth +
-                                legendItem.symbol.padding +
-                                legendItem.textWidth +
-                                legend.itemDistance
-                            );
-                        }, 0);
-                    };
-
-                    const legendLineHeight = Math.max(...line.map((l) => l.height));
-                    renderLegendSymbol({selection: legendItemTemplate, legend, legendLineHeight});
+                    const legendLineHeight = row.height;
+                    renderLegendSymbol({selection: legendItemTemplate, row});
 
                     if (htmlLegendLine) {
                         htmlLegendLine
@@ -308,8 +282,8 @@ export const Legend = (props: Props) => {
                             .style('max-width', function (d) {
                                 return `${d.textWidth}px`;
                             })
-                            .style('left', function (d, i) {
-                                return `${getXPosition(i) + d.symbol.bboxWidth + d.symbol.padding}px`;
+                            .style('left', function (_d, i) {
+                                return `${row.items[i].textLeft}px`;
                             })
                             .style('top', function (d) {
                                 if (d.height < legendLineHeight) {
@@ -329,14 +303,11 @@ export const Legend = (props: Props) => {
                     } else {
                         legendItemTemplate
                             .append('text')
-                            .attr('x', function (legendItem, i) {
-                                return (
-                                    getXPosition(i) +
-                                    legendItem.symbol.bboxWidth +
-                                    legendItem.symbol.padding
-                                );
-                            })
-                            .attr('y', legend.hangingOffset)
+                            .attr('x', (_d, i) => row.items[i].textLeft)
+                            .attr(
+                                'y',
+                                (d) => legend.hangingOffset + (legendLineHeight - d.height) / 2,
+                            )
                             .attr('height', legend.height)
                             .attr('class', function (d) {
                                 const mods = {selected: d.visible, unselected: !d.visible};
@@ -346,54 +317,58 @@ export const Legend = (props: Props) => {
                             .style('font-size', legend.itemStyle.fontSize);
                     }
 
-                    let contentWidth = 0;
-                    if (legend.html) {
-                        contentWidth = getXPosition(line.length) - legend.itemDistance;
-                    } else {
-                        contentWidth = line.reduce((sum, l, index) => {
-                            sum += l.textWidth + l.symbol.bboxWidth + l.symbol.padding;
-                            if (index > 0) {
-                                sum += legend.itemDistance;
-                            }
-                            return sum;
-                        }, 0);
-                    }
-
-                    let left = 0;
-                    switch (legend.justifyContent) {
-                        case 'center': {
-                            left = getLegendItemLeftPosition({
-                                align: legend.align,
-                                width: config.maxWidth,
-                                contentWidth,
-                            });
-                            legendWidth = config.maxWidth;
-                            break;
-                        }
-                        case 'start': {
-                            legendWidth = Math.max(legendWidth, contentWidth);
-                            break;
-                        }
-                    }
-
-                    const top = titleHeight + legendLineHeights.reduce((acc, h) => acc + h, 0);
-                    legendLineHeights.push(legendLineHeight);
+                    legendWidth =
+                        legend.layout === 'vertical' || legend.justifyContent === 'center'
+                            ? config.maxWidth
+                            : Math.max(legendWidth, row.width);
+                    const left = row.left;
+                    const top = titleHeight + row.top - pageTop;
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
                 });
 
-                if (config.pagination) {
+                if (pagination) {
                     const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
                         ',',
                     )})`;
-                    await appendPaginator({
+                    const paginator = await appendPaginator({
                         container: svgElement,
-                        pageIndex: pageIndex,
+                        pageIndex: currentPageIndex,
                         legend,
                         transform,
-                        pages: config.pagination.pages,
-                        onArrowClick: setPageIndex,
+                        pages: pagination.pages,
+                        onArrowClick: (pageIndex) =>
+                            setPaginationState((state) => ({...state, pageIndex})),
                     });
+                    // SVG's middle baseline is not the bounding-box center. Use the actual
+                    // text bounds so a clipped row cannot touch the counter or arrows.
+                    contentHeight = Math.max(
+                        0,
+                        legend.height -
+                            legend.lineHeight / 2 +
+                            (paginator.node()?.getBBox().y ?? 0),
+                    );
+                }
+                if (pageRows.some((row) => row.height > contentHeight - titleHeight)) {
+                    // An indivisible row may exceed a page. Clip it before the paginator,
+                    // keeping navigation usable without changing the configured symbol size.
+                    const clipId = getUniqId();
+                    const contentWidth = Math.max(
+                        config.maxWidth,
+                        ...pageRows.map((row) => row.width),
+                    );
+                    svgElement
+                        .append('defs')
+                        .append('clipPath')
+                        .attr('id', clipId)
+                        .append('rect')
+                        .attr('width', contentWidth)
+                        .attr('height', contentHeight);
+                    svgItems.attr('clip-path', `url(#${clipId})`);
+                    htmlContainer
+                        ?.style('width', `${contentWidth}px`)
+                        .style('height', `${contentHeight}px`)
+                        .style('overflow', 'hidden');
                 }
                 const {left, top} = getLegendPosition({
                     width: config.maxWidth,
@@ -520,7 +495,7 @@ export const Legend = (props: Props) => {
         }
 
         prepareLegend();
-    }, [chartSeries, onItemClick, onUpdate, legend, items, config, pageIndex, htmlLayout]);
+    }, [chartSeries, onItemClick, onUpdate, legend, items, config, currentPageIndex, htmlLayout]);
 
     // due to asynchronous processing, we only need to work with the actual element
     // eslint-disable-next-line react-hooks/exhaustive-deps
