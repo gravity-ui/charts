@@ -17,7 +17,7 @@ import {
 
 import type {
     LegendItem,
-    PreparedLegend,
+    PreparedLegendOptions,
     PreparedLegendRow,
     PreparedLegendSymbol,
     PreparedSeries,
@@ -37,7 +37,7 @@ export async function getPreparedLegend(args: {
     chartWidth: number;
     // Use resolved chart margins before legend and axis space is deducted.
     chartMargin: PreparedChart['margin'];
-}): Promise<PreparedLegend> {
+}): Promise<PreparedLegendOptions> {
     const {legend, series, chartWidth, chartMargin} = args;
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
     const parsedWidth = parseLegendWidth(legend?.width);
@@ -80,20 +80,16 @@ export async function getPreparedLegend(args: {
         style: tickStyle,
     };
 
-    const colorScale: PreparedLegend['colorScale'] = {
+    const colorScale: PreparedLegendOptions['colorScale'] = {
         colors: [],
         domain: [],
         stops: [],
     };
 
-    let height = 0;
     let legendWidth = 0;
     if (enabled) {
-        height += titleHeight + titleMargin;
         if (legendType === 'continuous') {
             legendWidth = width ?? CONTINUOUS_LEGEND_SIZE.width;
-            height += CONTINUOUS_LEGEND_SIZE.height;
-            height += ticks.labelsLineHeight + ticks.labelsMargin;
 
             colorScale.colors = legend?.colorScale?.colors ?? [];
             colorScale.stops =
@@ -101,7 +97,6 @@ export async function getPreparedLegend(args: {
             colorScale.domain =
                 legend?.colorScale?.domain ?? getDomainForContinuousColorScale({series});
         } else {
-            height += lineHeight;
             legendWidth =
                 width === undefined
                     ? getDefaultDiscreteLegendWidth({availableWidth, position, margin})
@@ -110,13 +105,11 @@ export async function getPreparedLegend(args: {
     }
     return {
         layout: get(legend, 'layout', legendDefaults.layout),
-        rows: [],
         align: get(legend, 'align', legendDefaults.align),
         verticalAlign: get(legend, 'verticalAlign', legendDefaults.verticalAlign),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
         hangingOffset: itemHangingOffset,
-        height,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
         itemStyle: computedItemStyle,
         lineHeight,
@@ -140,7 +133,7 @@ export async function getPreparedLegend(args: {
     };
 }
 
-function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegend) {
+function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: PreparedLegendOptions) {
     const grouped = new Map<string, PreparedSeries[]>();
 
     series.forEach((item) => {
@@ -176,7 +169,7 @@ function getFlattenLegendItems(series: PreparedSeries[], preparedLegend: Prepare
 async function getGroupedLegendItems(args: {
     maxLegendWidth: number;
     items: LegendItemWithoutTextWidth[];
-    preparedLegend: PreparedLegend;
+    preparedLegend: PreparedLegendOptions;
     symbolMetrics: LegendSymbolMetrics;
 }) {
     const {maxLegendWidth, items, preparedLegend, symbolMetrics} = args;
@@ -306,7 +299,7 @@ function getLegendSymbolHeight(symbol: PreparedLegendSymbol): number {
 
 function getLegendRows(
     items: LegendItem[][],
-    legend: PreparedLegend,
+    legend: PreparedLegendOptions,
     maxWidth: number,
     symbolMetrics: LegendSymbolMetrics,
 ): PreparedLegendRow[] {
@@ -348,8 +341,8 @@ function getLegendRows(
 }
 
 function getLegendOffset(args: {
-    position: PreparedLegend['position'];
-    verticalAlign: PreparedLegend['verticalAlign'];
+    position: PreparedLegendOptions['position'];
+    verticalAlign: PreparedLegendOptions['verticalAlign'];
     chartWidth: number;
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
@@ -406,7 +399,7 @@ function getLegendOffset(args: {
 
 function getDefaultDiscreteLegendWidth(args: {
     availableWidth: number;
-    position: PreparedLegend['position'];
+    position: PreparedLegendOptions['position'];
     margin: number;
 }): number {
     const {availableWidth, position, margin} = args;
@@ -421,7 +414,7 @@ function getDefaultDiscreteLegendWidth(args: {
 function getMaxLegendHeight(args: {
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
-    preparedLegend: PreparedLegend;
+    preparedLegend: PreparedLegendOptions;
     isVerticalPosition: boolean;
 }): number {
     const {chartHeight, chartMargin, preparedLegend, isVerticalPosition} = args;
@@ -439,7 +432,7 @@ export async function finalizePreparedLegend(args: {
     chartHeight: number;
     chartMargin: PreparedChart['margin'];
     series: PreparedSeries[];
-    preparedLegend: PreparedLegend;
+    preparedLegend: PreparedLegendOptions;
 }) {
     const {chartWidth, chartHeight, chartMargin, series, preparedLegend} = args;
 
@@ -472,7 +465,7 @@ export async function finalizePreparedLegend(args: {
 
     let pagination: LegendConfig['pagination'] | undefined;
     let rows: PreparedLegendRow[] = [];
-    let legendHeight = preparedLegend.height;
+    let legendHeight = 0;
 
     if (preparedLegend.type === 'discrete') {
         rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
@@ -487,6 +480,13 @@ export async function finalizePreparedLegend(args: {
                 paginatorHeight: preparedLegend.lineHeight,
             });
         }
+    } else if (preparedLegend.enabled) {
+        legendHeight =
+            preparedLegend.title.height +
+            preparedLegend.title.margin +
+            CONTINUOUS_LEGEND_SIZE.height +
+            preparedLegend.ticks.labelsLineHeight +
+            preparedLegend.ticks.labelsMargin;
     }
 
     const offset = getLegendOffset({

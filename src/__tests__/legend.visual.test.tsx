@@ -328,6 +328,70 @@ test.describe('Legend', () => {
                     ? '.gcharts-legend__item-text-html'
                     : '.gcharts-legend__item text';
 
+                test(`right-aligned list (${output})`, async ({mount}) => {
+                    const data: ChartData = {
+                        chart: {margin: {top: 20, right: 20, bottom: 20, left: 20}},
+                        legend: {
+                            enabled: true,
+                            layout: 'vertical',
+                            position: 'bottom',
+                            width: 240,
+                            align: 'right',
+                            html,
+                        },
+                        series: {
+                            data: [
+                                {...lineLegendWidthSeries[0], name: 'Longest legend label'},
+                                {
+                                    type: 'scatter',
+                                    name: html ? '<b>Short</b>' : 'Short',
+                                    data: [{x: 1, y: 9}],
+                                },
+                            ],
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 640, height: 320}} />,
+                    );
+                    const labels = component.locator(labelSelector);
+                    const symbols = component.locator('.gcharts-legend__item-symbol');
+                    await expect(labels).toHaveCount(2);
+                    await expect(symbols).toHaveCount(2);
+                    await expect
+                        .poll(async () => {
+                            const chart = await component.boundingBox();
+                            const longLabel = await labels.nth(0).boundingBox();
+                            const shortLabel = await labels.nth(1).boundingBox();
+                            const lineSymbol = await symbols.nth(0).boundingBox();
+                            const scatterSymbol = await symbols.nth(1).boundingBox();
+                            if (
+                                !chart ||
+                                !longLabel ||
+                                !shortLabel ||
+                                !lineSymbol ||
+                                !scatterSymbol
+                            ) {
+                                return false;
+                            }
+                            return (
+                                Math.abs(
+                                    longLabel.x + longLabel.width - (chart.x + chart.width - 20),
+                                ) < 2 &&
+                                Math.abs(longLabel.x - shortLabel.x) < 1 &&
+                                shortLabel.y >= longLabel.y + longLabel.height - 1 &&
+                                lineSymbol.x + lineSymbol.width < longLabel.x &&
+                                scatterSymbol.x + scatterSymbol.width < shortLabel.x &&
+                                Math.abs(
+                                    lineSymbol.x +
+                                        lineSymbol.width / 2 -
+                                        (scatterSymbol.x + scatterSymbol.width / 2),
+                                ) < 1
+                            );
+                        })
+                        .toBe(true);
+                    await expect(component).toHaveScreenshot();
+                });
+
                 for (const layout of ['vertical', 'horizontal'] as const) {
                     test(`large pie symbols fit rows and pages (${layout}, ${output})`, async ({
                         mount,

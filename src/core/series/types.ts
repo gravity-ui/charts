@@ -109,7 +109,7 @@ export interface PreparedLegendRow {
     items: PreparedLegendRowItem[];
 }
 
-export interface PreparedLegend extends Required<
+export interface PreparedLegendOptions extends Required<
     Omit<ChartLegend, 'title' | 'colorScale' | 'width'>
 > {
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
@@ -117,9 +117,7 @@ export interface PreparedLegend extends Required<
     /** Nonnegative chart width after chart margins, before legend and axis space is deducted. */
     availableWidth: number;
     hangingOffset: number;
-    height: number;
     lineHeight: number;
-    rows: PreparedLegendRow[];
     title: {
         enable: boolean;
         hangingOffset: number;
@@ -139,6 +137,11 @@ export interface PreparedLegend extends Required<
         domain: number[];
         stops: number[];
     };
+}
+
+export interface PreparedLegend extends PreparedLegendOptions {
+    height: number;
+    rows: PreparedLegendRow[];
 }
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;

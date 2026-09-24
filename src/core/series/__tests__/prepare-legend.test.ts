@@ -206,6 +206,31 @@ test('does not produce negative HTML label widths when the legend is narrower th
     expect(legendItems.flat().map((item) => item.textWidth)).toEqual([0, 0, 0]);
 });
 
+test.each([
+    {align: 'left', justifyContent: 'start', expectedLeft: [0, 0]},
+    {align: 'center', justifyContent: 'start', expectedLeft: [0, 0]},
+    {align: 'right', justifyContent: 'start', expectedLeft: [0, 0]},
+    {align: 'left', justifyContent: 'center', expectedLeft: [0, 0]},
+    {align: 'center', justifyContent: 'center', expectedLeft: [14.5, 39.5]},
+    {align: 'right', justifyContent: 'center', expectedLeft: [29, 79]},
+] as const)(
+    'aligns horizontal rows with align=$align and justifyContent=$justifyContent',
+    async ({align, justifyContent, expectedLeft}) => {
+        const {preparedLegend} = await prepareLegend(
+            {enabled: true, layout: 'horizontal', width: 150, align, justifyContent},
+            1000,
+            400,
+            [
+                {type: 'line', name: 'Long label', data: []},
+                {type: 'line', name: 'Short', data: []},
+            ],
+        );
+
+        expect(preparedLegend.rows.map((row) => row.width)).toEqual([121, 71]);
+        expect(preparedLegend.rows.map((row) => row.left)).toEqual(expectedLeft);
+    },
+);
+
 test('keeps a symbol wider than the legend on a nonempty row with an empty label', async () => {
     const {legendItems, preparedLegend} = await prepareLegend(
         {enabled: true, width: 5},
@@ -247,6 +272,21 @@ test.each([undefined, 0, 230, 2000])(
         }
     },
 );
+
+test.each([
+    {enabled: true, title: undefined, expectedHeight: 30},
+    {enabled: true, title: {text: 'Scale', margin: 6}, expectedHeight: 50},
+    {enabled: false, title: {text: 'Scale', margin: 6}, expectedHeight: 0},
+])('preserves continuous legend height (%j)', async ({enabled, title, expectedHeight}) => {
+    const {preparedLegend, legendConfig} = await prepareLegend({
+        enabled,
+        type: 'continuous',
+        title,
+    });
+
+    expect(preparedLegend.height).toBe(expectedHeight);
+    expect(legendConfig.height).toBe(expectedHeight);
+});
 
 describe('vertical legend layout', () => {
     test.each(['triangle', 'triangle-down', 'diamond'] as const)(
