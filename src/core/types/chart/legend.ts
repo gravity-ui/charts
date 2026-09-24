@@ -89,6 +89,7 @@ export interface ChartLegend extends ChartLegendItem {
      * the plot and axes are not drawn.
      * Defaults to the available chart width for top/bottom positions and half of it for left/right.
      * Set to `auto` for discrete side legends to fit the widest prepared row, title, and pagination.
+     * In this mode, the title is hidden if it leaves insufficient height for items and pagination.
      * For continuous legends, controls the gradient width and defaults to 200 (`auto` uses this default).
      * Continuous pixel widths are not capped at the available chart width unless maxWidth is set.
      * @minimum 0
@@ -101,6 +102,7 @@ export interface ChartLegend extends ChartLegendItem {
      * values resolve to zero. Applies to automatic, explicit, and continuous legend widths.
      * Size strings use decimal notation, with an optional minus sign and no whitespace or exponent.
      * Does not change the configured alignment.
+     * Discrete legends hide the title if it leaves insufficient height for items and pagination.
      * When omitted, adds no limit beyond the available space.
      */
     maxWidth?: number | string;

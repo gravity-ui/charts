@@ -74,13 +74,13 @@ async function appendPaginator(args: {
         getTextSize(paginationCounterText),
     ]);
     const showCounter =
-        !legend.constrainContent ||
+        !legend.clipContent ||
         arrowIcon.width + counter.width + downArrowIcon.width <= legend.resolvedWidth;
     let upArrowX = 0;
     let downArrowX = arrowIcon.width + (showCounter ? counter.width : 0);
     const upInk = arrowIcon.inkBounds;
     const downInk = downArrowIcon.inkBounds;
-    if (legend.constrainContent && !showCounter && upInk && downInk) {
+    if (legend.clipContent && !showCounter && upInk && downInk) {
         // Only reclaim side bearings when the visible arrows do not fit. Keep a
         // two-pixel gap between triangles and one pixel clear at each outer edge.
         const minGap = 2;
@@ -230,7 +230,7 @@ export const Legend = (props: Props) => {
                 ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
                 : null;
 
-            if (legend.constrainContent && legend.type === 'discrete') {
+            if (legend.clipContent) {
                 const clipId = getUniqId();
                 svgElement
                     .append('defs')
@@ -256,10 +256,17 @@ export const Legend = (props: Props) => {
                 const pageItems = page ? items.slice(start, page.end) : items;
                 const pageRows = page ? legend.rows.slice(start, page.end) : legend.rows;
                 const pageTop = page ? legend.rows[start].top : 0;
-                const titleHeight =
-                    legend.constrainContent && legend.title.enable
-                        ? Math.max(0, legend.title.height + legend.title.margin)
-                        : 0;
+                const {titleHeight} = legend;
+                legendWidth =
+                    pageRows.length > 0 &&
+                    (legend.layout === 'vertical' || legend.justifyContent === 'center')
+                        ? config.maxWidth
+                        : Math.max(0, ...pageRows.map((row) => row.width));
+                // Keep the clipping viewport fixed while centering start-justified
+                // rows inside it, as the unclipped legend centers its content group.
+                const contentLeft = legend.clipContent
+                    ? Math.max(0, (config.maxWidth - legendWidth) / 2)
+                    : 0;
                 const pagination =
                     legend.height - titleHeight >= legend.lineHeight
                         ? config.pagination
@@ -341,11 +348,7 @@ export const Legend = (props: Props) => {
                             .style('font-size', legend.itemStyle.fontSize);
                     }
 
-                    legendWidth =
-                        legend.layout === 'vertical' || legend.justifyContent === 'center'
-                            ? config.maxWidth
-                            : Math.max(legendWidth, row.width);
-                    const left = row.left;
+                    const left = contentLeft + row.left;
                     const top = titleHeight + row.top - pageTop;
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
@@ -396,7 +399,7 @@ export const Legend = (props: Props) => {
                 }
                 const {left, top} = getLegendPosition({
                     width: config.maxWidth,
-                    contentWidth: legend.constrainContent ? legend.resolvedWidth : legendWidth,
+                    contentWidth: legend.clipContent ? config.maxWidth : legendWidth,
                     offsetLeft: config.offset.left,
                     offsetTop: config.offset.top,
                 });

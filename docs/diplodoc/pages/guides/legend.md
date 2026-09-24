@@ -34,17 +34,15 @@ Without an explicit width, a discrete legend uses the available chart width for 
 
 ### Content-based side legends
 
-Set `width: 'auto'` for a discrete legend on the left or right to fit its rows, title, and pagination controls. All pages contribute to the width, so turning pages does not move the plot. Width is recalculated when the chart size, content, or text styles change.
+Set `width: 'auto'` for a discrete legend on the left or right to fit its rows, title, and pagination controls instead of reserving half the available width. All pages contribute, so turning pages does not move the plot. Width is recalculated when the chart size, content, or text styles change. For top/bottom and continuous legends, `'auto'` uses the default width.
 
-`maxWidth` caps the width without forcing short content to fill it. It accepts pixels (`230` or `'230px'`) and percentages (`'30.5%'`) of chart width after left/right chart margins, before legend or axis space is deducted. The limit includes markers and text spacing but excludes `legend.margin`. Long labels and titles are truncated.
+Use `maxWidth` to cap automatic, explicit, or continuous legend widths without changing alignment. It uses the units and percentage base described above, includes markers and text spacing, and excludes `legend.margin`. Invalid limits are ignored; negative numbers and size strings with a leading minus resolve to zero. Without a limit, content-based width uses up to the available space; omitting both options preserves existing sizing.
+
+Long labels and titles are truncated. For content-based side legends and discrete legends with `maxWidth`, the title is hidden if there is no available width or insufficient height for the title, an item row, and any necessary pagination. It returns when space becomes available.
 
 Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work together.
 
 <div data-chart-example="legend/content-based-width"></div>
-
-`maxWidth` also caps explicit pixel and percentage widths and continuous legends. Invalid limits are ignored; negative limits resolve to zero. Without it, automatic width is limited only by available space. Omitting both settings preserves existing sizing. For top/bottom and continuous legends, `width: 'auto'` uses the default width.
-
-`maxWidth` uses the same decimal size syntax as `width`, with an optional minus sign for negative limits. It changes the width without changing the configured alignment. For content-based side legends and discrete legends with `maxWidth`, a title that has no available width or cannot fit within the available legend height is hidden and restored when space becomes available.
 
 ## Overriding legend labels
 

@@ -6,6 +6,130 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
 test.describe('Content-based legend width', () => {
+    for (const html of [false, true]) {
+        test(`maxWidth preserves centered start-justified rows (${html ? 'html' : 'svg'})`, async ({
+            mount,
+        }) => {
+            const data: ChartData = {
+                legend: {enabled: true, align: 'center', justifyContent: 'start', html},
+                series: {
+                    data: [
+                        {
+                            type: 'pie',
+                            dataLabels: {enabled: false},
+                            data: [
+                                {name: 'North', value: 1},
+                                {name: 'South', value: 2},
+                            ],
+                        },
+                    ],
+                },
+            };
+            let readyCount = 0;
+            const getReadyCount = () => readyCount;
+            const onRender = () => {
+                readyCount++;
+            };
+            const component = await mount(<ChartTestStory data={data} onRender={onRender} />);
+            await expect.poll(getReadyCount).toBeGreaterThan(0);
+            const labels = component.locator(
+                html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
+            );
+            await expect(labels).toHaveCount(2);
+            const initialBox = await labels.first().boundingBox();
+            if (!initialBox) {
+                throw new Error('Expected a visible legend label');
+            }
+            for (const maxWidth of [1000, 200, undefined]) {
+                const previousCount = getReadyCount();
+                await component.update(
+                    <ChartTestStory
+                        data={{...data, legend: {...data.legend, maxWidth}}}
+                        onRender={onRender}
+                    />,
+                );
+                await expect.poll(getReadyCount).toBeGreaterThan(previousCount);
+                await expect(component.locator('.gcharts-legend')).toHaveAttribute(
+                    'width',
+                    String(maxWidth === 200 ? 200 : 400),
+                );
+                await expect
+                    .poll(async () => (await labels.first().boundingBox())?.x)
+                    .toBeCloseTo(initialBox.x, 1);
+            }
+        });
+    }
+
+    test('title leaves room for items and pagination when the chart grows', async ({mount}) => {
+        const data: ChartData = {
+            chart: {margin: {top: 0, bottom: 0, left: 0, right: 0}},
+            legend: {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                width: 'auto',
+                maxWidth: 150,
+                title: {text: 'Regions', style: {fontSize: '32px'}},
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: false},
+                        data: Array.from({length: 20}, (_, i) => ({
+                            name: `Region ${i}`,
+                            value: i + 1,
+                        })),
+                    },
+                ],
+            },
+        };
+        let readyCount = 0;
+        const getReadyCount = () => readyCount;
+        const onRender = () => {
+            readyCount++;
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 40}} onRender={onRender} />,
+        );
+        await expect.poll(getReadyCount).toBeGreaterThan(0);
+        const title = component.locator('.gcharts-legend__title');
+        const counter = component.locator('.gcharts-legend__pagination-counter');
+        const label = component.locator('.gcharts-legend__item-text').first();
+        await expect(title).toHaveCount(0);
+        await component.getByText('▼').click();
+        await expect(counter).toContainText('2/');
+        for (const height of [45, 100, 45]) {
+            const previousCount = getReadyCount();
+            await component.update(
+                <ChartTestStory data={data} styles={{height}} onRender={onRender} />,
+            );
+            await expect.poll(getReadyCount).toBeGreaterThan(previousCount);
+            await expect(title).toHaveCount(height === 100 ? 1 : 0);
+            await expect(counter).toBeVisible();
+            const itemBox = await label.boundingBox();
+            const symbolBox = await component
+                .locator('.gcharts-legend__item-symbol')
+                .first()
+                .boundingBox();
+            const controlsBox = await component
+                .locator('.gcharts-legend__pagination')
+                .boundingBox();
+            const chartBox = await component.boundingBox();
+            if (!itemBox || !symbolBox || !controlsBox || !chartBox) {
+                throw new Error('Expected item, navigation and chart bounds');
+            }
+            expect(itemBox.y).toBeGreaterThanOrEqual(chartBox.y - 1);
+            expect(itemBox.y + itemBox.height / 2).toBeLessThan(controlsBox.y);
+            expect(symbolBox.y + symbolBox.height).toBeLessThanOrEqual(controlsBox.y);
+            expect(controlsBox.y + controlsBox.height).toBeLessThanOrEqual(chartBox.y + height + 1);
+            const text = await label.textContent();
+            await component.getByText('▼').click();
+            await expect(label).not.toHaveText(text ?? '');
+        }
+        await expect(component).toHaveScreenshot();
+    });
+
     test('narrow pagination hides the counter and keeps both arrows usable', async ({mount}) => {
         const data: ChartData = {
             legend: {

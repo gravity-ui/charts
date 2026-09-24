@@ -130,7 +130,6 @@ export async function getPreparedLegend(args: {
         },
         width: legend?.width,
         maxWidth: legend?.maxWidth,
-        constrainContent: false,
         resolvedWidth: legendWidth,
         availableWidth,
         ticks,
@@ -307,15 +306,10 @@ function getLegendSymbolHeight(symbol: PreparedLegendSymbol): number {
 function getLegendRows(
     items: LegendItem[][],
     legend: PreparedLegendOptions,
-    maxWidth: number,
     symbolMetrics: LegendSymbolMetrics,
 ): PreparedLegendRow[] {
     const vertical = legend.layout === 'vertical';
     const {width: symbolWidth, padding: symbolPadding} = symbolMetrics;
-    // Keep vertical alignment stable across pages, including pages with shorter labels.
-    const listWidth = vertical
-        ? symbolWidth + symbolPadding + Math.max(0, ...items.flat().map((item) => item.textWidth))
-        : 0;
     let top = 0;
     return items.map((line) => {
         let width = 0;
@@ -332,7 +326,21 @@ function getLegendRows(
             0,
             ...line.map((item) => Math.max(item.height, getLegendSymbolHeight(item.symbol))),
         );
-        const remainingWidth = Math.max(0, maxWidth - (vertical ? listWidth : width));
+        const row = {top, left: 0, height, width, items: positions};
+        top += height;
+        return row;
+    });
+}
+
+function alignLegendRows(rows: PreparedLegendRow[], legend: PreparedLegendOptions) {
+    const vertical = legend.layout === 'vertical';
+    // Keep vertical alignment stable across pages, including pages with shorter labels.
+    const listWidth = Math.max(0, ...rows.map((row) => row.width));
+    for (const row of rows) {
+        const remainingWidth = Math.max(
+            0,
+            legend.resolvedWidth - (vertical ? listWidth : row.width),
+        );
         let left = 0;
         if (vertical || legend.justifyContent === 'center') {
             if (legend.align === 'right') {
@@ -341,10 +349,8 @@ function getLegendRows(
                 left = remainingWidth / 2;
             }
         }
-        const row = {top, left, height, width, items: positions};
-        top += height;
-        return row;
-    });
+        row.left = left;
+    }
 }
 
 function getLegendOffset(args: {
@@ -418,13 +424,10 @@ function getDefaultDiscreteLegendWidth(args: {
     return availableWidth;
 }
 
-function resolveLegendWidth(args: {
-    preparedLegend: PreparedLegendOptions;
-    isVerticalPosition: boolean;
-}) {
-    const {preparedLegend, isVerticalPosition} = args;
-    const {availableWidth} = preparedLegend;
-    const maxWidthOption = preparedLegend.maxWidth;
+function resolveLegendMaxWidth(
+    maxWidthOption: PreparedLegendOptions['maxWidth'],
+    availableWidth: number,
+) {
     // Use the same strict size syntax as width, also accepting negative limits as zero.
     let maxWidthMagnitude = maxWidthOption;
     if (typeof maxWidthOption === 'number') {
@@ -435,36 +438,9 @@ function resolveLegendWidth(args: {
     const resolvedMaxWidth = parseLegendWidth(maxWidthMagnitude)
         ? calculateNumericProperty({value: maxWidthOption, base: availableWidth})
         : undefined;
-    const maxWidth =
-        resolvedMaxWidth !== undefined && Number.isFinite(resolvedMaxWidth)
-            ? Math.max(0, resolvedMaxWidth)
-            : Infinity;
-    const autoWidth =
-        preparedLegend.type === 'discrete' && preparedLegend.width === 'auto' && isVerticalPosition;
-    const constrainContent = autoWidth || Number.isFinite(maxWidth);
-    const availableLegendWidth =
-        constrainContent && isVerticalPosition
-            ? Math.max(0, availableWidth - preparedLegend.margin)
-            : availableWidth;
-
-    if (constrainContent) {
-        const width =
-            autoWidth || preparedLegend.type === 'continuous'
-                ? availableLegendWidth
-                : preparedLegend.resolvedWidth;
-        return {
-            maxWidth: Math.max(0, Math.min(width, maxWidth, availableLegendWidth)),
-            constrainContent,
-        };
-    }
-
-    return {
-        maxWidth:
-            preparedLegend.type === 'discrete' || isVerticalPosition
-                ? preparedLegend.resolvedWidth
-                : availableWidth,
-        constrainContent,
-    };
+    return resolvedMaxWidth !== undefined && Number.isFinite(resolvedMaxWidth)
+        ? Math.max(0, resolvedMaxWidth)
+        : undefined;
 }
 
 function getMaxLegendHeight(args: {
@@ -495,12 +471,22 @@ export async function finalizePreparedLegend(args: {
 
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
-    const widthOptions = resolveLegendWidth({
-        preparedLegend,
-        isVerticalPosition,
-    });
-    let maxLegendWidth = widthOptions.maxWidth;
-    preparedLegend.constrainContent = widthOptions.constrainContent;
+    const discrete = preparedLegend.type === 'discrete';
+    const autoWidth = discrete && preparedLegend.width === 'auto' && isVerticalPosition;
+    const maxWidth = resolveLegendMaxWidth(preparedLegend.maxWidth, preparedLegend.availableWidth);
+    const fitContent = autoWidth || maxWidth !== undefined;
+    const availableWidth = Math.max(
+        0,
+        preparedLegend.availableWidth -
+            (fitContent && isVerticalPosition ? preparedLegend.margin : 0),
+    );
+    const widthLimit = Math.min(maxWidth ?? Infinity, availableWidth);
+    let legendWidth = autoWidth ? widthLimit : preparedLegend.resolvedWidth;
+    if (discrete || fitContent) {
+        legendWidth = Math.min(legendWidth, widthLimit);
+    }
+    // Continuous top/bottom legends align the gradient within the whole chart.
+    const itemWidthLimit = discrete || isVerticalPosition ? legendWidth : availableWidth;
     const maxLegendHeight = Math.max(
         0,
         getMaxLegendHeight({
@@ -516,7 +502,7 @@ export async function finalizePreparedLegend(args: {
         padding: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.padding)),
     };
     const items = await getGroupedLegendItems({
-        maxLegendWidth,
+        maxLegendWidth: itemWidthLimit,
         items: flattenLegendItems,
         preparedLegend,
         symbolMetrics,
@@ -525,24 +511,31 @@ export async function finalizePreparedLegend(args: {
     let pagination: LegendConfig['pagination'] | undefined;
     let rows: PreparedLegendRow[] = [];
     let legendHeight = 0;
+    let titleHeight = 0;
 
-    if (preparedLegend.type === 'discrete') {
-        if (preparedLegend.constrainContent) {
-            // Hide a title that cannot fit in the legend instead of allocating space
-            // outside the chart. Keep its measurements and user options for subsequent layouts.
-            preparedLegend.title.enable =
-                preparedLegend.title.enable &&
-                maxLegendWidth > 0 &&
-                preparedLegend.title.height <= maxLegendHeight &&
-                preparedLegend.title.height + preparedLegend.title.margin <= maxLegendHeight;
-        }
-        rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
+    if (discrete) {
+        rows = getLegendRows(items, preparedLegend, symbolMetrics);
         legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
-
-        const titleHeight =
-            preparedLegend.constrainContent && preparedLegend.title.enable
-                ? Math.max(0, preparedLegend.title.height + preparedLegend.title.margin)
-                : 0;
+        if (fitContent && preparedLegend.title.enable) {
+            const titleSpace = Math.max(
+                0,
+                preparedLegend.title.height + preparedLegend.title.margin,
+            );
+            const remainingHeight = Math.max(0, maxLegendHeight - titleSpace);
+            const tallestRow = Math.max(0, ...rows.map((row) => row.height));
+            // Pagination allocates whole text lines. Keep room for a row on every
+            // page and its controls before reserving space for the title.
+            const minimumContentHeight =
+                legendHeight > remainingHeight && preparedLegend.lineHeight > 0
+                    ? (Math.ceil(tallestRow / preparedLegend.lineHeight) + 1) *
+                      preparedLegend.lineHeight
+                    : legendHeight;
+            preparedLegend.title.enable =
+                legendWidth > 0 &&
+                preparedLegend.title.height <= maxLegendHeight &&
+                titleSpace + minimumContentHeight <= maxLegendHeight;
+            titleHeight = preparedLegend.title.enable ? titleSpace : 0;
+        }
         const availableHeight = Math.max(0, maxLegendHeight - titleHeight);
         if (availableHeight < legendHeight) {
             const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
@@ -554,7 +547,7 @@ export async function finalizePreparedLegend(args: {
             });
         }
 
-        if (preparedLegend.width === 'auto' && isVerticalPosition) {
+        if (autoWidth) {
             const rowWidths = rows.map((row) => row.width);
             let paginationWidth = 0;
             if (pagination) {
@@ -568,8 +561,8 @@ export async function finalizePreparedLegend(args: {
                 paginationWidth =
                     up.width + down.width + Math.max(0, ...counters.map(({width}) => width));
             }
-            maxLegendWidth = Math.min(
-                maxLegendWidth,
+            legendWidth = Math.min(
+                widthLimit,
                 Math.max(
                     0,
                     ...rowWidths,
@@ -577,22 +570,13 @@ export async function finalizePreparedLegend(args: {
                     paginationWidth,
                 ),
             );
-            rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
         }
         legendHeight += titleHeight;
-        preparedLegend.resolvedWidth = maxLegendWidth;
-    } else if (preparedLegend.constrainContent) {
-        preparedLegend.resolvedWidth = Math.max(
-            0,
-            Math.min(maxLegendWidth, preparedLegend.resolvedWidth),
-        );
-        if (isVerticalPosition) {
-            maxLegendWidth = preparedLegend.resolvedWidth;
-        } else {
-            // Continuous legends align their gradient within the full chart width.
-            maxLegendWidth = preparedLegend.availableWidth;
-        }
     }
+    preparedLegend.resolvedWidth = legendWidth;
+    alignLegendRows(rows, preparedLegend);
+    const alignmentWidth =
+        discrete || isVerticalPosition ? legendWidth : preparedLegend.availableWidth;
 
     if (preparedLegend.type === 'continuous' && preparedLegend.enabled) {
         legendHeight =
@@ -606,7 +590,8 @@ export async function finalizePreparedLegend(args: {
     preparedLegend.title.resolvedText = preparedLegend.title.text;
     preparedLegend.title.resolvedWidth = preparedLegend.title.width;
     if (
-        preparedLegend.constrainContent &&
+        fitContent &&
+        preparedLegend.title.enable &&
         preparedLegend.title.width > preparedLegend.resolvedWidth
     ) {
         const measure = getTextSizeFn({style: preparedLegend.title.style});
@@ -631,7 +616,7 @@ export async function finalizePreparedLegend(args: {
     });
 
     if (preparedLegend.type === 'discrete' && !isVerticalPosition) {
-        const remainingWidth = preparedLegend.availableWidth - maxLegendWidth;
+        const remainingWidth = preparedLegend.availableWidth - alignmentWidth;
         if (preparedLegend.align === 'right') {
             offset.left += remainingWidth;
         } else if (preparedLegend.align === 'center') {
@@ -640,11 +625,17 @@ export async function finalizePreparedLegend(args: {
     }
 
     return {
-        preparedLegend: {...preparedLegend, rows, height: legendHeight},
+        preparedLegend: {
+            ...preparedLegend,
+            rows,
+            height: legendHeight,
+            titleHeight,
+            clipContent: discrete && fitContent,
+        },
         legendConfig: {
             offset,
             pagination,
-            maxWidth: maxLegendWidth,
+            maxWidth: alignmentWidth,
             height: legendHeight,
             width: preparedLegend.resolvedWidth,
         },

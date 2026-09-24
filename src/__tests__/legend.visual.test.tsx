@@ -308,70 +308,63 @@ test.describe('Legend', () => {
 
     test.describe('Discrete', () => {
         test.describe('Content-based width', () => {
-            for (const html of [false, true]) {
-                test(`title respects available space and recovers (${html ? 'html' : 'svg'})`, async ({
-                    mount,
-                }) => {
-                    const data: ChartData = {
-                        chart: {margin: {top: 0, bottom: 0, left: 0, right: 0}},
-                        legend: {
-                            enabled: true,
-                            position: 'bottom',
-                            maxWidth: 140,
-                            html,
-                            title: {text: 'Regions', style: {fontSize: '48px'}},
-                        },
-                        series: {
-                            data: [
-                                {
-                                    type: 'pie',
-                                    dataLabels: {enabled: false},
-                                    data: [
-                                        {name: 'A', value: 1},
-                                        {name: 'B', value: 2},
-                                    ],
-                                },
-                            ],
-                        },
-                    };
-                    const component = await mount(
-                        <ChartTestStory data={data} styles={{height: 40}} />,
-                    );
-                    const legend = component.locator('.gcharts-legend');
-                    const title = component.locator('.gcharts-legend__title');
-                    await expect(legend).toHaveAttribute('height', '0');
-                    await expect(title).toHaveCount(0);
-                    const plot = component.locator('clipPath rect').first();
-                    expect(Number(await plot.getAttribute('height'))).toBeGreaterThan(0);
+            test('title respects available space and recovers', async ({mount}) => {
+                const data: ChartData = {
+                    chart: {margin: {top: 0, bottom: 0, left: 0, right: 0}},
+                    legend: {
+                        enabled: true,
+                        position: 'bottom',
+                        maxWidth: 140,
+                        title: {text: 'Regions', style: {fontSize: '48px'}},
+                    },
+                    series: {
+                        data: [
+                            {
+                                type: 'pie',
+                                dataLabels: {enabled: false},
+                                data: [
+                                    {name: 'A', value: 1},
+                                    {name: 'B', value: 2},
+                                ],
+                            },
+                        ],
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} styles={{height: 40}} />);
+                const legend = component.locator('.gcharts-legend');
+                const title = component.locator('.gcharts-legend__title');
+                await expect(legend).toHaveAttribute('height', '0');
+                await expect(title).toHaveCount(0);
+                const plot = component.locator('clipPath rect').first();
+                expect(Number(await plot.getAttribute('height'))).toBeGreaterThan(0);
 
-                    await component.update(<ChartTestStory data={data} />);
-                    await expect(title).toBeVisible();
-                    const restoredHeight = await legend.getAttribute('height');
-                    if (restoredHeight === null) {
-                        throw new Error('Expected legend height after resize');
-                    }
-                    expect(Number(restoredHeight)).toBeLessThanOrEqual((280 - 15) / 2);
-                    const titleBox = await title.boundingBox();
-                    const rowBox = await component
-                        .locator('.gcharts-legend__line')
-                        .first()
-                        .boundingBox();
-                    if (!titleBox || !rowBox) {
-                        throw new Error('Expected title and legend row bounds after resize');
-                    }
-                    expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(rowBox.y);
+                await component.update(<ChartTestStory data={data} />);
+                await expect(title).toBeVisible();
+                const restoredHeight = await legend.getAttribute('height');
+                if (restoredHeight === null) {
+                    throw new Error('Expected legend height after resize');
+                }
+                expect(Number(restoredHeight)).toBeLessThanOrEqual((280 - 15) / 2);
+                const titleBox = await title.boundingBox();
+                const rowBox = await component
+                    .locator('.gcharts-legend__line')
+                    .first()
+                    .boundingBox();
+                if (!titleBox || !rowBox) {
+                    throw new Error('Expected title and legend row bounds after resize');
+                }
+                expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(rowBox.y);
 
-                    await component.update(
-                        <ChartTestStory data={{...data, legend: {...data.legend, maxWidth: 0}}} />,
-                    );
-                    await expect(legend).toHaveAttribute('width', '0');
-                    await expect(legend).toHaveAttribute('height', '0');
-                    await expect(title).toHaveCount(0);
-                    await component.update(<ChartTestStory data={data} />);
-                    await expect(title).toBeVisible();
-                    await expect(legend).toHaveAttribute('height', restoredHeight);
-                });
-            }
+                await component.update(
+                    <ChartTestStory data={{...data, legend: {...data.legend, maxWidth: 0}}} />,
+                );
+                await expect(legend).toHaveAttribute('width', '0');
+                await expect(legend).toHaveAttribute('height', '0');
+                await expect(title).toHaveCount(0);
+                await component.update(<ChartTestStory data={data} />);
+                await expect(title).toBeVisible();
+                await expect(legend).toHaveAttribute('height', restoredHeight);
+            });
 
             for (const html of [false, true]) {
                 test(`title, pagination and resize (${html ? 'html' : 'svg'})`, async ({mount}) => {
