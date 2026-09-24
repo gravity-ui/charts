@@ -418,39 +418,53 @@ function getDefaultDiscreteLegendWidth(args: {
     return availableWidth;
 }
 
-function getMaxLegendWidth(args: {
+function resolveLegendWidth(args: {
     preparedLegend: PreparedLegendOptions;
     isVerticalPosition: boolean;
-}): number {
+}) {
     const {preparedLegend, isVerticalPosition} = args;
     const {availableWidth} = preparedLegend;
-    const resolvedMaxWidth = calculateNumericProperty({
-        value: preparedLegend.maxWidth,
-        base: availableWidth,
-    });
+    const maxWidthOption = preparedLegend.maxWidth;
+    // Use the same strict size syntax as width, also accepting negative limits as zero.
+    let maxWidthMagnitude = maxWidthOption;
+    if (typeof maxWidthOption === 'number') {
+        maxWidthMagnitude = Math.abs(maxWidthOption);
+    } else if (typeof maxWidthOption === 'string') {
+        maxWidthMagnitude = maxWidthOption.replace(/^-/, '');
+    }
+    const resolvedMaxWidth = parseLegendWidth(maxWidthMagnitude)
+        ? calculateNumericProperty({value: maxWidthOption, base: availableWidth})
+        : undefined;
     const maxWidth =
         resolvedMaxWidth !== undefined && Number.isFinite(resolvedMaxWidth)
             ? Math.max(0, resolvedMaxWidth)
             : Infinity;
     const autoWidth =
         preparedLegend.type === 'discrete' && preparedLegend.width === 'auto' && isVerticalPosition;
-    preparedLegend.constrainContent = autoWidth || Number.isFinite(maxWidth);
+    const constrainContent = autoWidth || Number.isFinite(maxWidth);
     const availableLegendWidth =
-        preparedLegend.constrainContent && isVerticalPosition
+        constrainContent && isVerticalPosition
             ? Math.max(0, availableWidth - preparedLegend.margin)
             : availableWidth;
 
-    if (preparedLegend.constrainContent) {
+    if (constrainContent) {
         const width =
             autoWidth || preparedLegend.type === 'continuous'
                 ? availableLegendWidth
                 : preparedLegend.resolvedWidth;
-        return Math.max(0, Math.min(width, maxWidth, availableLegendWidth));
+        return {
+            maxWidth: Math.max(0, Math.min(width, maxWidth, availableLegendWidth)),
+            constrainContent,
+        };
     }
 
-    return preparedLegend.type === 'discrete' || isVerticalPosition
-        ? preparedLegend.resolvedWidth
-        : availableWidth;
+    return {
+        maxWidth:
+            preparedLegend.type === 'discrete' || isVerticalPosition
+                ? preparedLegend.resolvedWidth
+                : availableWidth,
+        constrainContent,
+    };
 }
 
 function getMaxLegendHeight(args: {
@@ -481,10 +495,12 @@ export async function finalizePreparedLegend(args: {
 
     const isVerticalPosition =
         preparedLegend.position === 'right' || preparedLegend.position === 'left';
-    let maxLegendWidth = getMaxLegendWidth({
+    const widthOptions = resolveLegendWidth({
         preparedLegend,
         isVerticalPosition,
     });
+    let maxLegendWidth = widthOptions.maxWidth;
+    preparedLegend.constrainContent = widthOptions.constrainContent;
     const maxLegendHeight = Math.max(
         0,
         getMaxLegendHeight({
@@ -511,12 +527,22 @@ export async function finalizePreparedLegend(args: {
     let legendHeight = 0;
 
     if (preparedLegend.type === 'discrete') {
+        if (preparedLegend.constrainContent) {
+            // Hide a title that cannot fit in the legend instead of allocating space
+            // outside the chart. Keep its measurements and user options for subsequent layouts.
+            preparedLegend.title.enable =
+                preparedLegend.title.enable &&
+                maxLegendWidth > 0 &&
+                preparedLegend.title.height <= maxLegendHeight &&
+                preparedLegend.title.height + preparedLegend.title.margin <= maxLegendHeight;
+        }
         rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
         legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
 
-        const titleHeight = preparedLegend.constrainContent
-            ? preparedLegend.title.height + preparedLegend.title.margin
-            : 0;
+        const titleHeight =
+            preparedLegend.constrainContent && preparedLegend.title.enable
+                ? Math.max(0, preparedLegend.title.height + preparedLegend.title.margin)
+                : 0;
         const availableHeight = Math.max(0, maxLegendHeight - titleHeight);
         if (availableHeight < legendHeight) {
             const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
@@ -544,7 +570,12 @@ export async function finalizePreparedLegend(args: {
             }
             maxLegendWidth = Math.min(
                 maxLegendWidth,
-                Math.max(0, ...rowWidths, preparedLegend.title.width, paginationWidth),
+                Math.max(
+                    0,
+                    ...rowWidths,
+                    preparedLegend.title.enable ? preparedLegend.title.width : 0,
+                    paginationWidth,
+                ),
             );
             rows = getLegendRows(items, preparedLegend, maxLegendWidth, symbolMetrics);
         }
@@ -557,6 +588,9 @@ export async function finalizePreparedLegend(args: {
         );
         if (isVerticalPosition) {
             maxLegendWidth = preparedLegend.resolvedWidth;
+        } else {
+            // Continuous legends align their gradient within the full chart width.
+            maxLegendWidth = preparedLegend.availableWidth;
         }
     }
 

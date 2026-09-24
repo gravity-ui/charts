@@ -68,14 +68,35 @@ async function appendPaginator(args: {
     const paginationCounterText = `${pageIndex + 1}/${maxPage}`;
 
     const getTextSize = getTextSizeFn({style: legend.itemStyle});
-    const [arrowIcon, counter] = await Promise.all([
+    const [arrowIcon, downArrowIcon, counter] = await Promise.all([
         getTextSize('▲'),
+        getTextSize('▼'),
         getTextSize(paginationCounterText),
     ]);
+    const showCounter =
+        !legend.constrainContent ||
+        arrowIcon.width + counter.width + downArrowIcon.width <= legend.resolvedWidth;
+    let upArrowX = 0;
+    let downArrowX = arrowIcon.width + (showCounter ? counter.width : 0);
+    const upInk = arrowIcon.inkBounds;
+    const downInk = downArrowIcon.inkBounds;
+    if (legend.constrainContent && !showCounter && upInk && downInk) {
+        // Only reclaim side bearings when the visible arrows do not fit. Keep a
+        // two-pixel gap between triangles and one pixel clear at each outer edge.
+        const minGap = 2;
+        const edgePadding = 1;
+        const right = downArrowX + downInk.x + downInk.width;
+        const minWidth = upInk.width + minGap + downInk.width + 2 * edgePadding;
+        if (right + edgePadding > legend.resolvedWidth && minWidth <= legend.resolvedWidth) {
+            upArrowX = edgePadding - upInk.x;
+            downArrowX = legend.resolvedWidth - edgePadding - downInk.width - downInk.x;
+        }
+    }
 
     paginationLine
         .append('text')
         .text('▲')
+        .attr('x', upArrowX)
         .attr('class', function () {
             return b('pagination-arrow', {inactive: pageIndex === 0});
         })
@@ -85,19 +106,21 @@ async function appendPaginator(args: {
                 onArrowClick(pageIndex - 1);
             }
         });
-    paginationLine
-        .append('text')
-        .text(paginationCounterText)
-        .attr('class', b('pagination-counter'))
-        .attr('x', arrowIcon.width)
-        .style('font-size', legend.itemStyle.fontSize);
+    if (showCounter) {
+        paginationLine
+            .append('text')
+            .text(paginationCounterText)
+            .attr('class', b('pagination-counter'))
+            .attr('x', arrowIcon.width)
+            .style('font-size', legend.itemStyle.fontSize);
+    }
     paginationLine
         .append('text')
         .text('▼')
         .attr('class', function () {
             return b('pagination-arrow', {inactive: pageIndex === maxPage - 1});
         })
-        .attr('x', arrowIcon.width + counter.width)
+        .attr('x', downArrowX)
         .style('font-size', legend.itemStyle.fontSize)
         .on('click', function () {
             if (pageIndex + 1 < maxPage) {
@@ -233,9 +256,10 @@ export const Legend = (props: Props) => {
                 const pageItems = page ? items.slice(start, page.end) : items;
                 const pageRows = page ? legend.rows.slice(start, page.end) : legend.rows;
                 const pageTop = page ? legend.rows[start].top : 0;
-                const titleHeight = legend.constrainContent
-                    ? legend.title.height + legend.title.margin
-                    : 0;
+                const titleHeight =
+                    legend.constrainContent && legend.title.enable
+                        ? Math.max(0, legend.title.height + legend.title.margin)
+                        : 0;
                 const pagination =
                     legend.height - titleHeight >= legend.lineHeight
                         ? config.pagination

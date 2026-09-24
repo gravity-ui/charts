@@ -99,6 +99,8 @@ export interface ChartLegend extends ChartLegendItem {
      * Numbers and `px` strings are pixels. Percentages use chart width after left/right chart
      * margins, before legend or axis space is deducted. Invalid values are ignored; negative
      * values resolve to zero. Applies to automatic, explicit, and continuous legend widths.
+     * Size strings use decimal notation, with an optional minus sign and no whitespace or exponent.
+     * Does not change the configured alignment.
      * When omitted, adds no limit beyond the available space.
      */
     maxWidth?: number | string;

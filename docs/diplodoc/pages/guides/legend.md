@@ -44,6 +44,8 @@ Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work t
 
 `maxWidth` also caps explicit pixel and percentage widths and continuous legends. Invalid limits are ignored; negative limits resolve to zero. Without it, automatic width is limited only by available space. Omitting both settings preserves existing sizing. For top/bottom and continuous legends, `width: 'auto'` uses the default width.
 
+`maxWidth` uses the same decimal size syntax as `width`, with an optional minus sign for negative limits. It changes the width without changing the configured alignment. For content-based side legends and discrete legends with `maxWidth`, a title that has no available width or cannot fit within the available legend height is hidden and restored when space becomes available.
+
 ## Overriding legend labels
 
 By default, the legend uses the name property of the series or individual data point (depending on the visualization type) for its entries. You can override this behavior by defining a custom label that will be displayed exclusively in the legend. This is useful when you want to provide a simplified, abbreviated, or more descriptive name in the legend compared to the main data point identification.
