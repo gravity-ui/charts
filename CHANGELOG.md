@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.61.0](https://github.com/gravity-ui/charts/compare/v1.60.0...v1.61.0) (2026-09-24)
+
+
+### Features
+
+* add area range series ([#673](https://github.com/gravity-ui/charts/issues/673)) ([d5f44cb](https://github.com/gravity-ui/charts/commit/d5f44cbd400951326b47ae639c71e4283e1b0a15))
+* **legend:** add vertical layout support ([#704](https://github.com/gravity-ui/charts/issues/704)) ([ae70eb6](https://github.com/gravity-ui/charts/commit/ae70eb683281214d704c60191c0dc8675c08db2c))
+* **legend:** support pixel strings and percentage widths ([#701](https://github.com/gravity-ui/charts/issues/701)) ([f2137bc](https://github.com/gravity-ui/charts/commit/f2137bc7d59298cf244cebc176cde8ce84cbf361))
+
+
+### Bug Fixes
+
+* **legend:** match symbol widths to rendered geometry ([#706](https://github.com/gravity-ui/charts/issues/706)) ([8813a0a](https://github.com/gravity-ui/charts/commit/8813a0a531bae14288121819bd3d9c6ed631a30d))
+* **legend:** respect width for discrete legends ([#699](https://github.com/gravity-ui/charts/issues/699)) ([ef7352f](https://github.com/gravity-ui/charts/commit/ef7352f23d975b716abdb3bfbf9557441d5f330b))
+
 ## [1.60.0](https://github.com/gravity-ui/charts/compare/v1.59.1...v1.60.0) (2026-09-18)
 
 
