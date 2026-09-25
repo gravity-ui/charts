@@ -142,12 +142,15 @@ export interface ChartSeriesOptions {
         groupPadding?: number;
         /**
          * The width of the border in pixels, drawn inside each bar.
-         * Ignored when the bar width is at most twice the border width.
+         * Ignored in the range slider and when the bar width or height is at most twice the border width.
          * Individual series options take precedence.
          * @default 0
          */
         borderWidth?: number;
-        /** The border color. Defaults to `var(--gcharts-shape-border-color)`. */
+        /**
+         * The border color. Defaults to `var(--gcharts-shape-border-color)`.
+         * Individual series options take precedence.
+         */
         borderColor?: string;
         /**
          * The corner radius at the value end of each bar, in pixels.

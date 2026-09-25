@@ -9,6 +9,7 @@ import {seriesOptionsDefaults} from '../../../constants';
 import type {PreparedSplit} from '../../../layout/split-types';
 import type {PreparedBarXSeries, PreparedLegend} from '../../../series/types';
 import {prepareBarXData} from '../prepare-data';
+import {getBarXPaths} from '../utils';
 
 async function prepare(
     values: (number | null)[],
@@ -82,6 +83,12 @@ describe('bar-x percentage', () => {
 });
 
 describe('bar-x borders', () => {
+    test.each([0, 2, 3])('preserves the fill for a short segment with value %s', async (value) => {
+        const [bar] = await prepare([value], undefined, 200, {borderWidth: 3});
+        const plain = getBarXPaths({...bar, borderWidth: 0});
+        expect(getBarXPaths(bar)).toEqual(plain);
+    });
+
     test.each([
         {series: {}, options: {}, width: 0, color: 'var(--gcharts-shape-border-color)'},
         {series: {}, options: {borderWidth: 3, borderColor: 'red'}, width: 3, color: 'red'},
@@ -147,6 +154,17 @@ describe('bar-x borders', () => {
 
 describe('bar-x stack geometry', () => {
     test.each([false, true])(
+        'keeps the baseline gap after leading zero values, reversed=%s',
+        async (reversed) => {
+            const [zero, bar] = await prepare([0, 10], 'normal', 200, {reversed});
+            const baselineEnd = reversed ? bar.y : bar.y + bar.height;
+            const valueEnd = reversed ? bar.y + bar.height : bar.y;
+            expect(Math.abs(baselineEnd - zero.y)).toBe(1);
+            expect(valueEnd).toBe(reversed ? 20 : 180);
+        },
+    );
+
+    test.each([false, true])(
         'fits percent stacks and skips zero/null gaps, reversed=%s',
         async (reversed) => {
             const items = await prepare([1, 0, null, 3, 0], 'percent', 100, {
@@ -156,7 +174,7 @@ describe('bar-x stack geometry', () => {
             });
             expect(items.map((item) => item.height)).toEqual([24, 0, 72, 0]);
             expect(items.map((item) => item.percentage)).toEqual([0.25, 0, 0.75, 0]);
-            expect(items.map((item) => item.isLastStackItem)).toEqual([false, false, true, false]);
+            expect(items.map((item) => item.isStackEnd)).toEqual([false, false, true, false]);
             expect(items.every((item) => item.extendsUp === !reversed)).toBe(true);
             const visible = items.filter((item) => item.height > 0).sort((a, b) => a.y - b.y);
             expect(visible[0].y).toBe(30);
@@ -199,13 +217,7 @@ describe('bar-x stack geometry', () => {
                 stackGap: 4,
                 reversed,
             });
-            expect(items.map((item) => item.isLastStackItem)).toEqual([
-                false,
-                false,
-                true,
-                true,
-                false,
-            ]);
+            expect(items.map((item) => item.isStackEnd)).toEqual([false, false, true, true, false]);
             expect(items.slice(0, 4).map((item) => item.extendsUp)).toEqual([
                 !reversed,
                 reversed,

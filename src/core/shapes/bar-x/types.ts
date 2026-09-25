@@ -13,7 +13,8 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     opacity: number | null;
     series: PreparedBarXSeries;
     svgLabels: LabelData[];
-    isLastStackItem: boolean;
+    /** The outer segment of the positive or negative part of a stack. */
+    isStackEnd: boolean;
     /** Whether the value end is above the segment's baseline in screen coordinates. */
     extendsUp: boolean;
 } & SeriesShapeData;

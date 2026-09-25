@@ -64,7 +64,7 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     color?: string;
     /**
      * The width of the border in pixels, drawn inside each bar.
-     * Ignored when the bar width is at most twice the border width.
+     * Ignored in the range slider and when the bar width or height is at most twice the border width.
      * @default 0
      */
     borderWidth?: number;

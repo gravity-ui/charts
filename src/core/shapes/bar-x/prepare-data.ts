@@ -200,7 +200,10 @@ export const prepareBarXData = async (args: {
     const borderWidthBySeries = new Map(
         series.map((s) => [
             s,
-            Number.isFinite(s.borderWidth) && s.borderWidth > 0 && rectWidth > s.borderWidth * 2
+            !isRangeSlider &&
+            Number.isFinite(s.borderWidth) &&
+            s.borderWidth > 0 &&
+            rectWidth > s.borderWidth * 2
                 ? s.borderWidth
                 : 0,
         ]),
@@ -225,6 +228,7 @@ export const prepareBarXData = async (args: {
                 const percentStack = yValues.some((item) => item.series.stacking === 'percent');
                 let positiveStackSum = 0;
                 let negativeStackSum = 0;
+                let hasZeroStackItem = false;
                 const stackItems: PreparedBarXData[] = [];
 
                 let sortedData = yValues;
@@ -290,7 +294,10 @@ export const prepareBarXData = async (args: {
                         extendsUp = height > 0 ? endPixel < startPixel : defaultExtendsUp;
                         // Keep the value end fixed; the gap belongs next to the previous
                         // segment of the same sign, including on reversed axes.
-                        const itemGap = stackSum !== 0 && height >= stackGap ? stackGap : 0;
+                        // Preserve the baseline gap after zero segments so the first
+                        // visible bar does not merge with the axis.
+                        const hasPreviousItem = stackSum !== 0 || hasZeroStackItem;
+                        const itemGap = hasPreviousItem && height >= stackGap ? stackGap : 0;
                         shapeHeight = height - itemGap;
                         barPositionY =
                             yAxisTop + Math.min(startPixel, endPixel) + (extendsUp ? 0 : itemGap);
@@ -316,13 +323,14 @@ export const prepareBarXData = async (args: {
                         series: yValue.series,
                         htmlLabels: [],
                         svgLabels: [],
-                        isLastStackItem: false,
+                        isStackEnd: false,
                         extendsUp,
                         markers: [],
                         getHoverMarkers: () => [],
                     };
 
                     stackItems.push(barData);
+                    if (yDataValue === 0) hasZeroStackItem = true;
 
                     if (yDataValue > 0) {
                         positiveStackSum += yDataValue;
@@ -377,8 +385,8 @@ export const prepareBarXData = async (args: {
                         lastNegativeItem = item;
                     }
                 }
-                if (lastPositiveItem) lastPositiveItem.isLastStackItem = true;
-                if (lastNegativeItem) lastNegativeItem.isLastStackItem = true;
+                if (lastPositiveItem) lastPositiveItem.isStackEnd = true;
+                if (lastNegativeItem) lastNegativeItem.isStackEnd = true;
 
                 result.push(...stackItems);
             }
