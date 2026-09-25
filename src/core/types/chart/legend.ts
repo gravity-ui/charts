@@ -1,5 +1,22 @@
 import type {BaseTextStyle} from './base';
 
+export interface ChartLegendItemClickData {
+    /** Legend group ID of the clicked item. Set `legend.groupId` on a series or pie/funnel data point for a stable ID. */
+    id: string;
+    /** Text displayed for the clicked legend item. */
+    name: string;
+    /** Whether the item was visible before the click. */
+    visible: boolean;
+}
+
+export interface ChartLegendEvents {
+    /**
+     * Called when a discrete legend item is clicked, before the configured click action runs.
+     * This callback is informational: its return value and `event.defaultPrevented` do not change series visibility.
+     */
+    itemClick?: (data: ChartLegendItemClickData, event: MouseEvent) => void;
+}
+
 export interface ChartLegendItem {
     enabled?: boolean;
     /**
@@ -12,6 +29,15 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
+    /** Event callbacks for discrete legend items. */
+    events?: ChartLegendEvents;
+    /**
+     * Action taken when a discrete legend item is clicked.
+     * `'default'` preserves the built-in selection behavior, including modifier keys.
+     * `'none'` leaves visibility unchanged while still calling `events.itemClick`.
+     * @default 'default'
+     */
+    itemClickAction?: 'default' | 'none';
     /**
      * Different types for different color schemes.
      * If the color scheme is continuous, a gradient legend will be drawn.

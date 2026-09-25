@@ -10,6 +10,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
 
+import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
 
 async function visitLegendPages(
@@ -963,6 +964,100 @@ test.describe('Legend', () => {
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Item click notifies and applies the default SVG action', async ({mount}) => {
+            const component = await mount(<LegendItemClickTestStory />);
+            const legendItems = component.locator('.gcharts-legend__item text');
+
+            await legendItems.first().click();
+
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
+                'First series:true',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_unselected/);
+        });
+
+        test('Item click with no action leaves SVG legend visibility unchanged', async ({
+            mount,
+        }) => {
+            const component = await mount(<LegendItemClickTestStory itemClickAction="none" />);
+            const legendItems = component.locator('.gcharts-legend__item text');
+
+            await legendItems.first().click();
+
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
+                'First series:true',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_selected/);
+        });
+
+        test('Item click with no action leaves HTML legend visibility unchanged', async ({
+            mount,
+        }) => {
+            const component = await mount(
+                <LegendItemClickTestStory html={true} itemClickAction="none" />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item-text-html');
+
+            await legendItems.first().click();
+
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
+                'First series:true',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text-html_selected/);
+        });
+
+        test('Native preventDefault does not cancel the default HTML action', async ({mount}) => {
+            const component = await mount(
+                <LegendItemClickTestStory html={true} preventDefault={true} />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item-text-html');
+
+            await legendItems.first().click();
+
+            await expect(component.getByTestId('clicked-legend-item')).toHaveText(
+                'First series:true',
+            );
+            await expect(legendItems.nth(1)).toHaveClass(
+                /gcharts-legend__item-text-html_unselected/,
+            );
+        });
+
+        for (const html of [false, true]) {
+            test(`Item click with no action clears a pinned tooltip (${html ? 'HTML' : 'SVG'})`, async ({
+                mount,
+                page,
+            }) => {
+                const data: ChartData = {
+                    legend: {enabled: true, html, itemClickAction: 'none'},
+                    tooltip: {pin: {enabled: true}},
+                    yAxis: [{type: 'category', categories: ['Category']}],
+                    series: {
+                        data: [
+                            {type: 'bar-y', name: 'First', data: [{x: 2, y: 0}]},
+                            {type: 'bar-y', name: 'Second', data: [{x: 3, y: 0}]},
+                        ],
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                await component.locator('.gcharts-bar-y__segment').first().click();
+
+                const pinnedTooltip = page.locator('.gcharts-tooltip_pinned');
+                await expect(pinnedTooltip).toBeVisible();
+
+                const legendItems = component.locator(
+                    html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item text',
+                );
+                await legendItems.first().click();
+
+                await expect(pinnedTooltip).toHaveCount(0);
+                await expect(legendItems.nth(1)).toHaveClass(
+                    html
+                        ? /gcharts-legend__item-text-html_selected/
+                        : /gcharts-legend__item-text_selected/,
+                );
+            });
+        }
 
         const positions = ['top', 'bottom', 'left', 'right'] as const;
 

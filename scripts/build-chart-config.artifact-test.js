@@ -76,12 +76,23 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('schema accepts the supported legend item click actions', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const itemClickAction of ['default', 'none']) {
+            expect(validateConfig({series: {data: []}, legend: {itemClickAction}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {itemClickAction: 'toggle'}})).toBe(
+            false,
+        );
+    });
+
     test('standalone declarations preserve series compatibility, formatters and legend widths', () => {
         const usage = `
             const legend: ChartLegend = {width: 230};
             legend.width = '12.5%';
             legend.width = '230px';
             legend.width = '.5px';
+            legend.itemClickAction = 'none';
             // String formats are checked at runtime and fall back to automatic sizing.
             legend.width = '230em';
             legend.width = '230';
