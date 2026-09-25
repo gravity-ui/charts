@@ -9,6 +9,8 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     y: number;
     width: number;
     height: number;
+    /** Extra pixels at the value end to cover the grid stroke, without shifting label anchors. */
+    valueEndPadding: number;
     borderWidth: number;
     opacity: number | null;
     series: PreparedBarXSeries;

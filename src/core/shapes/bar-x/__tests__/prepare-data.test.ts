@@ -21,6 +21,9 @@ async function prepare(
         stackGap?: number;
         reversed?: boolean;
         top?: number;
+        grid?: boolean;
+        isRangeSlider?: boolean;
+        yAxis?: PreparedYAxis[];
     } = {},
 ) {
     const series = prepareBarXSeries({
@@ -45,7 +48,16 @@ async function prepare(
         xScale: scaleLinear()
             .domain([0, 2])
             .range([0, options.width ?? 400]),
-        yAxis: [{type: 'linear', plotIndex: 0}] as PreparedYAxis[],
+        yAxis:
+            options.yAxis ??
+            ([
+                {
+                    type: 'linear',
+                    plotIndex: 0,
+                    visible: true,
+                    grid: {enabled: options.grid ?? true},
+                },
+            ] as PreparedYAxis[]),
         yScale: [
             scaleLinear()
                 .domain([0, 100])
@@ -53,6 +65,7 @@ async function prepare(
         ],
         boundsHeight: height,
         split: {plots: [{top: options.top ?? 0, height}]} as PreparedSplit,
+        isRangeSlider: options.isRangeSlider,
     });
 }
 
@@ -153,6 +166,24 @@ describe('bar-x borders', () => {
 });
 
 describe('bar-x stack geometry', () => {
+    test('aligns with a grid drawn by another axis in the same plot', async () => {
+        const items = await prepare([1, 3], 'percent', 100, {
+            yAxis: [
+                {type: 'linear', plotIndex: 0, visible: false, grid: {enabled: false}},
+                {type: 'linear', plotIndex: 0, visible: true, grid: {enabled: true}},
+            ] as PreparedYAxis[],
+        });
+        expect(items.map((item) => item.valueEndPadding)).toEqual([0, 0.5]);
+    });
+
+    test.each([{grid: false}, {isRangeSlider: true}])(
+        'keeps percent rendering inside the plot with %s',
+        async (options) => {
+            const items = await prepare([1, 3], 'percent', 100, options);
+            expect(items.map((item) => item.valueEndPadding)).toEqual([0, 0]);
+        },
+    );
+
     test.each([false, true])(
         'keeps the baseline gap after leading zero values, reversed=%s',
         async (reversed) => {
@@ -206,6 +237,7 @@ describe('bar-x stack geometry', () => {
                 expect(item.y).toBeGreaterThanOrEqual(0);
                 expect(item.y + item.height).toBeLessThanOrEqual(height);
                 expect(item.height).toBe(0);
+                expect(item.valueEndPadding).toBe(0);
             }
         },
     );

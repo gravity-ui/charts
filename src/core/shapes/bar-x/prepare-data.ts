@@ -212,6 +212,9 @@ export const prepareBarXData = async (args: {
         const range = scale?.range() ?? [1, 0];
         return range[0] > range[range.length - 1];
     });
+    const plotsWithGrid = new Set(
+        yAxis.filter((axis) => axis.visible && axis.grid.enabled).map((axis) => axis.plotIndex),
+    );
 
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
@@ -317,6 +320,7 @@ export const prepareBarXData = async (args: {
                         y: barPositionY,
                         width: rectWidth,
                         height: shapeHeight,
+                        valueEndPadding: 0,
                         borderWidth: borderWidthBySeries.get(yValue.series) ?? 0,
                         opacity: get(yValue.data, 'opacity', null),
                         data: yValue.data,
@@ -385,7 +389,18 @@ export const prepareBarXData = async (args: {
                         lastNegativeItem = item;
                     }
                 }
-                if (lastPositiveItem) lastPositiveItem.isStackEnd = true;
+                if (lastPositiveItem) {
+                    lastPositiveItem.isStackEnd = true;
+                    if (
+                        percentStack &&
+                        !isRangeSlider &&
+                        plotsWithGrid.has(plotIndexes[plotDataIndex])
+                    ) {
+                        // AxisY uses SVG's default 1px centered grid stroke. Cover its
+                        // outer half without changing stack gaps or logical label anchors.
+                        lastPositiveItem.valueEndPadding = 0.5;
+                    }
+                }
                 if (lastNegativeItem) lastNegativeItem.isStackEnd = true;
 
                 result.push(...stackItems);

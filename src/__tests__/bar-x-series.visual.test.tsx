@@ -556,8 +556,60 @@ test.describe('Bar-x series', () => {
     });
 
     test('Stacking percent split', async ({mount}) => {
-        const component = await mount(<ChartTestStory data={barXStackingPercentSplitData} />);
-        await expect(component.locator('svg')).toHaveScreenshot();
+        const data = cloneDeep(barXStackingPercentSplitData);
+        const component = await mount(<ChartTestStory data={data} />);
+        for (const reversed of [false, true]) {
+            if (reversed) {
+                data.yAxis?.forEach((axis) => {
+                    axis.order = 'reverse';
+                });
+                await component.update(<ChartTestStory data={data} />);
+            }
+            // The stack must meet the outer edge of the visible 100% grid stroke.
+            // Logical stack bounds and total-label anchors still end at 100%.
+            await expect(async () => {
+                const edges = await component.evaluate((element, reverse) => {
+                    const bars =
+                        element.querySelectorAll<SVGPathElement>('.gcharts-bar-x__segment');
+                    return Array.from(element.querySelectorAll('.gcharts-y-axis')).map(
+                        (axis, index) => {
+                            const lines = Array.from(
+                                axis.querySelectorAll<SVGPathElement>(
+                                    '.gcharts-y-axis__tick > path',
+                                ),
+                            );
+                            const line = lines.reduce((a, b) =>
+                                (
+                                    reverse
+                                        ? a.getBBox().y > b.getBBox().y
+                                        : a.getBBox().y < b.getBBox().y
+                                )
+                                    ? a
+                                    : b,
+                            );
+                            const halfStroke = parseFloat(getComputedStyle(line).strokeWidth) / 2;
+                            const gridEdge =
+                                line.getBBox().y + (reverse ? halfStroke : -halfStroke);
+                            // Each plot has three two-segment stacks in this fixture.
+                            const barEdges = [1, 3, 5].map((offset) => {
+                                const box = bars[index * 6 + offset].getBBox();
+                                return reverse ? box.y + box.height : box.y;
+                            });
+                            return {gridEdge, barEdges};
+                        },
+                    );
+                }, reversed);
+                expect(edges).toHaveLength(2);
+                for (const {gridEdge, barEdges} of edges) {
+                    for (const barEdge of barEdges) expect(barEdge).toBeCloseTo(gridEdge);
+                }
+            }).toPass({timeout: 5000});
+            await expect(component.locator('svg')).toHaveScreenshot(
+                reversed
+                    ? 'stacking-percent-split-reversed.png'
+                    : 'Bar-x-series-Stacking-percent-split-1.png',
+            );
+        }
     });
 
     test('Split with unevenly distributed data - the bar width should be the same for all plots', async ({
@@ -883,7 +935,8 @@ test.describe('Bar-x series', () => {
                             firstStack[i - 1].y - firstStack[i].y - firstStack[i].height,
                         ).toBeCloseTo(stackGap);
                     }
-                    if (stacking === 'percent') expect(firstStack[2].y).toBeCloseTo(0);
+                    // The outer edge covers the half-pixel of the centered 100% grid stroke.
+                    if (stacking === 'percent') expect(firstStack[2].y).toBeCloseTo(-0.5);
                     await expect(component.locator('svg')).toHaveScreenshot();
                 });
             }
