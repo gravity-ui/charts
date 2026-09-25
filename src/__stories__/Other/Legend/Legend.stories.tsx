@@ -34,3 +34,39 @@ export const VerticalLayout = {
         },
     },
 } satisfies Story;
+
+export const ContentBasedWidth = {
+    name: 'Content-based width',
+    args: {
+        style: {
+            width: 700,
+            height: 350,
+            resize: 'horizontal',
+            overflow: 'auto',
+            minWidth: 200,
+            maxWidth: '100%',
+        },
+        data: {
+            legend: {
+                enabled: true,
+                position: 'left',
+                width: 'auto',
+                maxWidth: '30%',
+                title: {text: 'Regions'},
+            },
+            series: {
+                data: ['North', 'South', 'West', 'East', 'Central region with a long label'].map(
+                    (name, i) => ({
+                        type: 'line' as const,
+                        name,
+                        data: [
+                            {x: 0, y: i + 1},
+                            {x: 1, y: i + 3},
+                            {x: 2, y: i + 2},
+                        ],
+                    }),
+                ),
+            },
+        },
+    },
+} satisfies Story;

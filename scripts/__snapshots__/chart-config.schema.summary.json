@@ -311,6 +311,7 @@
       "justifyContent",
       "layout",
       "margin",
+      "maxWidth",
       "position",
       "title",
       "type",

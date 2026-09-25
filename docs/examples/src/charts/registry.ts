@@ -18,6 +18,10 @@ import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
 import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
 import {StackLabelsExample} from './data-labels/stack-labels';
 import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
+import {ContentBasedLegendExample} from './legend/content-based-width';
+import contentBasedLegendRaw from './legend/content-based-width.tsx?raw';
+import {LegendLabelsExample} from './legend/labels';
+import legendLabelsRaw from './legend/labels.tsx?raw';
 import {VerticalLegendExample} from './legend/vertical';
 import verticalLegendRaw from './legend/vertical.tsx?raw';
 import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
@@ -44,9 +48,17 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'legend/content-based-width': {
+        code: extractDisplayCode(contentBasedLegendRaw),
+        Component: ContentBasedLegendExample,
+    },
     'legend/vertical': {
         code: extractDisplayCode(verticalLegendRaw),
         Component: VerticalLegendExample,
+    },
+    'legend/labels': {
+        code: extractDisplayCode(legendLabelsRaw),
+        Component: LegendLabelsExample,
     },
     'data-labels/stack-labels': {
         code: extractDisplayCode(stackLabelsRaw),
