@@ -1,0 +1,37 @@
+import {getRectPath} from '../utils';
+
+import type {PreparedBarXData} from './types';
+
+export function getBarXPaths(d: PreparedBarXData) {
+    const y = d.y - (d.extendsUp ? d.valueEndPadding : 0);
+    const height = d.height + d.valueEndPadding;
+    const radius = d.isStackEnd ? Math.min(height, d.width / 2, d.series.borderRadius) : 0;
+    const outer = getRectPath({
+        x: d.x,
+        y,
+        width: d.width,
+        height,
+        borderRadius: d.extendsUp ? [radius, radius, 0, 0] : [0, 0, radius, radius],
+    }).toString();
+
+    if (!d.borderWidth || d.height <= 2 * d.borderWidth) {
+        return {fill: outer, border: ''};
+    }
+
+    const width = d.width - 2 * d.borderWidth;
+    const innerHeight = height - 2 * d.borderWidth;
+    const innerRadius = Math.min(Math.max(radius - d.borderWidth, 0), innerHeight);
+    const inner = getRectPath({
+        x: d.x + d.borderWidth,
+        y: y + d.borderWidth,
+        width,
+        height: innerHeight,
+        borderRadius: d.extendsUp
+            ? [innerRadius, innerRadius, 0, 0]
+            : [0, 0, innerRadius, innerRadius],
+    }).toString();
+
+    // The border stays inside the outer contour. A centered border path would
+    // expand its bounds and reduce the visible gaps between stacked segments.
+    return {fill: inner, border: `${outer} ${inner}`};
+}

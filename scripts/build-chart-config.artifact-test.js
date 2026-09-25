@@ -205,6 +205,43 @@ describe('chart config artifacts', () => {
         );
     });
 
+    test('bar-x borders are exposed only on series and plugin options', () => {
+        const usage = `
+            const options: ChartSeriesOptions = {'bar-x': {borderWidth: 3, borderColor: 'black'}};
+            const series: BarXSeries = {type: 'bar-x', name: 'A', data: [], borderWidth: 0, borderColor: 'red'};
+            // @ts-expect-error Border width is a number in pixels.
+            series.borderWidth = '3px';
+            // @ts-expect-error Borders are not available on all series.
+            const base: BaseSeries = {borderWidth: 3};
+            // @ts-expect-error Per-point borders are not supported.
+            const point: BarXSeriesData = {x: 1, y: 2, borderColor: 'red'};
+            void [options, series, base, point];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        const series = {type: 'bar-x', name: 'A', data: [{x: 1, y: 2}]};
+        const borders = {borderWidth: 3, borderColor: 'black'};
+        expect(validateConfig({series: {data: [{...series, ...borders}]}})).toBe(true);
+        expect(validateConfig({series: {data: [series], options: {'bar-x': borders}}})).toBe(true);
+        expect(validateConfig({series: {data: [{...series, borderWidth: '3px'}]}})).toBe(false);
+        expect(
+            validateConfig({series: {data: [series], options: {'bar-x': {borderColor: 123}}}}),
+        ).toBe(false);
+        expect(
+            validateConfig({series: {data: [{...series, data: [{x: 1, y: 2, ...borders}]}]}}),
+        ).toBe(false);
+        expect(schema.definitions['BarXSeries<JsonValue>'].properties.borderWidth.default).toBe(0);
+        expect(
+            schema.definitions.ChartSeriesOptions.properties['bar-x'].properties.borderWidth
+                .default,
+        ).toBe(0);
+    });
+
     test('area-range marker options are exposed in the standalone declaration and schema', () => {
         const options = {
             marker: {enabled: true, radius: 5, symbol: 'square', color: '#ff0000'},

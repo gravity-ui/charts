@@ -119,7 +119,8 @@ export const prepareBarXData = async (args: {
         split,
         isRangeSlider,
     } = args;
-    const stackGap: number = seriesOptions['bar-x'].stackGap;
+    const configuredStackGap = seriesOptions['bar-x'].stackGap;
+    const stackGap = Number.isFinite(configuredStackGap) ? Math.max(0, configuredStackGap) : 0;
     const categories = xAxis?.categories ?? [];
     const sortingOptions = get(seriesOptions, 'bar-x.dataSorting');
     const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
@@ -196,6 +197,24 @@ export const prepareBarXData = async (args: {
     const barSlotSize = groupSize / maxGroupSize;
     const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
     const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - rectGap, barMaxWidth));
+    const borderWidthBySeries = new Map(
+        series.map((s) => [
+            s,
+            !isRangeSlider &&
+            Number.isFinite(s.borderWidth) &&
+            s.borderWidth > 0 &&
+            rectWidth > s.borderWidth * 2
+                ? s.borderWidth
+                : 0,
+        ]),
+    );
+    const positiveExtendsUpByAxis = yScale.map((scale) => {
+        const range = scale?.range() ?? [1, 0];
+        return range[0] > range[range.length - 1];
+    });
+    const plotsWithGrid = new Set(
+        yAxis.filter((axis) => axis.visible && axis.grid.enabled).map((axis) => axis.plotIndex),
+    );
 
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
@@ -209,8 +228,10 @@ export const prepareBarXData = async (args: {
 
             for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
                 const yValues = stacks[groupItemIndex];
+                const percentStack = yValues.some((item) => item.series.stacking === 'percent');
                 let positiveStackSum = 0;
                 let negativeStackSum = 0;
+                let hasZeroStackItem = false;
                 const stackItems: PreparedBarXData[] = [];
 
                 let sortedData = yValues;
@@ -258,44 +279,31 @@ export const prepareBarXData = async (args: {
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
 
-                    let base = 0;
-                    if (seriesYAxis.type === 'logarithmic') {
-                        const domainData = seriesYScale.domain();
-                        const yMinValue = min(domainData) ?? 0;
-                        base = seriesYScale(yMinValue);
-                    } else {
-                        base = seriesYScale(0);
-                    }
-
-                    const isLastStackItem = yValueIndex === sortedData.length - 1;
-
-                    let height: number;
-                    let barPositionY: number;
-
-                    if (yDataValue > 0) {
-                        const newSum = positiveStackSum + yDataValue;
-                        const topPixel = seriesYScale(newSum);
-                        const bottomPixel =
-                            positiveStackSum === 0 ? base : seriesYScale(positiveStackSum);
-                        height = Math.abs(bottomPixel - topPixel);
-                        barPositionY = yAxisTop + topPixel;
-                    } else {
-                        const newSum = negativeStackSum + yDataValue;
-                        const bottomPixel =
-                            negativeStackSum === 0 ? base : seriesYScale(negativeStackSum);
-                        const topPixel = seriesYScale(newSum);
-                        height = Math.abs(bottomPixel - topPixel);
-                        barPositionY = yAxisTop + bottomPixel;
-                    }
-
-                    let shapeHeight = height - (stackItems.length ? stackGap : 0);
-
-                    if (shapeHeight < 0) {
-                        shapeHeight = height;
-                    }
-
-                    if (shapeHeight < 0) {
-                        continue;
+                    const positiveExtendsUp = positiveExtendsUpByAxis[yAxisIndex];
+                    let extendsUp = positiveExtendsUp;
+                    let shapeHeight = 0;
+                    let barPositionY = yAxisTop;
+                    if (!percentStack) {
+                        const baseValue =
+                            seriesYAxis.type === 'logarithmic'
+                                ? (min(seriesYScale.domain()) ?? 0)
+                                : 0;
+                        const stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
+                        const startPixel = seriesYScale(stackSum === 0 ? baseValue : stackSum);
+                        const endPixel = seriesYScale(stackSum + yDataValue);
+                        const height = Math.abs(endPixel - startPixel);
+                        const defaultExtendsUp =
+                            yDataValue >= 0 ? positiveExtendsUp : !positiveExtendsUp;
+                        extendsUp = height > 0 ? endPixel < startPixel : defaultExtendsUp;
+                        // Keep the value end fixed; the gap belongs next to the previous
+                        // segment of the same sign, including on reversed axes.
+                        // Preserve the baseline gap after zero segments so the first
+                        // visible bar does not merge with the axis.
+                        const hasPreviousItem = stackSum !== 0 || hasZeroStackItem;
+                        const itemGap = hasPreviousItem && height >= stackGap ? stackGap : 0;
+                        shapeHeight = height - itemGap;
+                        barPositionY =
+                            yAxisTop + Math.min(startPixel, endPixel) + (extendsUp ? 0 : itemGap);
                     }
 
                     const barData: PreparedBarXData = {
@@ -312,18 +320,21 @@ export const prepareBarXData = async (args: {
                         y: barPositionY,
                         width: rectWidth,
                         height: shapeHeight,
-                        _height: height,
+                        valueEndPadding: 0,
+                        borderWidth: borderWidthBySeries.get(yValue.series) ?? 0,
                         opacity: get(yValue.data, 'opacity', null),
                         data: yValue.data,
                         series: yValue.series,
                         htmlLabels: [],
                         svgLabels: [],
-                        isLastStackItem,
+                        isStackEnd: false,
+                        extendsUp,
                         markers: [],
                         getHoverMarkers: () => [],
                     };
 
                     stackItems.push(barData);
+                    if (yDataValue === 0) hasZeroStackItem = true;
 
                     if (yDataValue > 0) {
                         positiveStackSum += yDataValue;
@@ -332,29 +343,65 @@ export const prepareBarXData = async (args: {
                     }
                 }
 
-                if (yValues.some((item) => item.series.stacking === 'percent')) {
+                if (percentStack) {
                     const currentPlot = split.plots[plotIndexes[plotDataIndex]];
                     const currentPlotHeight = currentPlot?.height ?? plotHeight;
                     const currentPlotTop = currentPlot?.top ?? 0;
 
-                    let acc = 0;
-                    const positiveStackHeight = stackItems.reduce(
-                        (sum, item) => sum + item._height,
-                        0,
-                    );
-                    const ratio =
-                        positiveStackHeight > 0 ? currentPlotHeight / positiveStackHeight : 0;
+                    const visibleCount = stackItems.filter(
+                        (item) => Number(item.data.y) > 0,
+                    ).length;
+                    const gapCount = Math.max(0, visibleCount - 1);
+                    const availableHeight = Math.max(0, currentPlotHeight);
+                    const gap = gapCount ? Math.min(stackGap, availableHeight / gapCount) : 0;
+                    const segmentsHeight = Math.max(0, availableHeight - gap * gapCount);
+                    const extendsUp =
+                        positiveExtendsUpByAxis[stackItems[0]?.series.yAxis ?? 0] ?? true;
+                    let offset = 0;
+                    let visibleIndex = 0;
                     stackItems.forEach((item) => {
-                        item.percentage =
-                            item.series.stacking === 'percent'
-                                ? getPositiveShare(Number(item.data.y ?? 0), positiveStackSum)
-                                : undefined;
-                        item.height = item._height * ratio;
-                        item.y = currentPlotTop + currentPlotHeight - item.height - acc;
-
-                        acc += item.height + 1;
+                        const share = getPositiveShare(Number(item.data.y ?? 0), positiveStackSum);
+                        item.percentage = item.series.stacking === 'percent' ? share : undefined;
+                        if (share > 0 && visibleIndex > 0) offset += gap;
+                        // Snap the final end to the plot edge to avoid floating-point overflow.
+                        item.height =
+                            share > 0 && visibleIndex === visibleCount - 1
+                                ? Math.max(0, availableHeight - offset)
+                                : share * segmentsHeight;
+                        item.extendsUp = extendsUp;
+                        item.y =
+                            currentPlotTop +
+                            (extendsUp
+                                ? Math.max(0, availableHeight - offset - item.height)
+                                : offset);
+                        offset += item.height;
+                        if (share > 0) visibleIndex++;
                     });
                 }
+
+                let lastPositiveItem: PreparedBarXData | undefined;
+                let lastNegativeItem: PreparedBarXData | undefined;
+                for (const item of stackItems) {
+                    if (item.height <= 0 || Number(item.data.y) === 0) continue;
+                    if (Number(item.data.y) > 0) {
+                        lastPositiveItem = item;
+                    } else {
+                        lastNegativeItem = item;
+                    }
+                }
+                if (lastPositiveItem) {
+                    lastPositiveItem.isStackEnd = true;
+                    if (
+                        percentStack &&
+                        !isRangeSlider &&
+                        plotsWithGrid.has(plotIndexes[plotDataIndex])
+                    ) {
+                        // AxisY uses SVG's default 1px centered grid stroke. Cover its
+                        // outer half without changing stack gaps or logical label anchors.
+                        lastPositiveItem.valueEndPadding = 0.5;
+                    }
+                }
+                if (lastNegativeItem) lastNegativeItem.isStackEnd = true;
 
                 result.push(...stackItems);
             }
