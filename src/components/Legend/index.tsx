@@ -210,15 +210,14 @@ export const Legend = (props: Props) => {
                     event,
                 );
 
-                if (legend.itemClickAction === 'none') {
-                    return;
+                if (legend.itemClickAction !== 'none') {
+                    onItemClick({
+                        id: item.id,
+                        name: item.name,
+                        metaKey: isMac ? event.metaKey : event.ctrlKey,
+                    });
                 }
 
-                onItemClick({
-                    id: item.id,
-                    name: item.name,
-                    metaKey: isMac ? event.metaKey : event.ctrlKey,
-                });
                 onUpdate?.();
             };
 

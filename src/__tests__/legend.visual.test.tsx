@@ -1023,6 +1023,42 @@ test.describe('Legend', () => {
             );
         });
 
+        for (const html of [false, true]) {
+            test(`Item click with no action clears a pinned tooltip (${html ? 'HTML' : 'SVG'})`, async ({
+                mount,
+                page,
+            }) => {
+                const data: ChartData = {
+                    legend: {enabled: true, html, itemClickAction: 'none'},
+                    tooltip: {pin: {enabled: true}},
+                    yAxis: [{type: 'category', categories: ['Category']}],
+                    series: {
+                        data: [
+                            {type: 'bar-y', name: 'First', data: [{x: 2, y: 0}]},
+                            {type: 'bar-y', name: 'Second', data: [{x: 3, y: 0}]},
+                        ],
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                await component.locator('.gcharts-bar-y__segment').first().click();
+
+                const pinnedTooltip = page.locator('.gcharts-tooltip_pinned');
+                await expect(pinnedTooltip).toBeVisible();
+
+                const legendItems = component.locator(
+                    html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item text',
+                );
+                await legendItems.first().click();
+
+                await expect(pinnedTooltip).toHaveCount(0);
+                await expect(legendItems.nth(1)).toHaveClass(
+                    html
+                        ? /gcharts-legend__item-text-html_selected/
+                        : /gcharts-legend__item-text_selected/,
+                );
+            });
+        }
+
         const positions = ['top', 'bottom', 'left', 'right'] as const;
 
         positions.forEach((position) => {
