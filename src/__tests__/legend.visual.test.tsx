@@ -269,7 +269,7 @@ test.describe('Legend', () => {
             series: {data: lineLegendWidthSeries},
         };
         const component = await mount(<ChartTestStory data={data} styles={{width: 1000}} />);
-        await expectSvgWidth(component.locator('.gcharts-legend'), 960);
+        await expectSvgWidth(component.locator('.gcharts-legend'), 945);
         await expectSvgWidth(component.locator('clipPath rect').first(), 0);
         await expect(component.locator('.gcharts-chart__content')).toHaveCount(0);
         await expect(component.locator('.gcharts-line')).toHaveCount(0);

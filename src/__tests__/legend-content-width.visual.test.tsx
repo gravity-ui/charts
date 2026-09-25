@@ -6,6 +6,111 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
 test.describe('Content-based legend width', () => {
+    test('horizontal auto width preserves plot space unless maxWidth is explicit', async ({
+        mount,
+    }) => {
+        const data: ChartData = {
+            legend: {enabled: true, position: 'left'},
+            series: {
+                data: Array.from({length: 12}, (_, index) => ({
+                    type: 'line',
+                    name: `Series ${index + 1}`,
+                    data: [
+                        {x: 0, y: index + 1},
+                        {x: 1, y: index + 2},
+                    ],
+                })),
+            },
+        };
+        let readyCount = 0;
+        const getReadyCount = () => readyCount;
+        const onRender = () => {
+            readyCount++;
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 1000}} onRender={onRender} />,
+        );
+        const legend = component.locator('.gcharts-legend');
+        const plot = component.locator('clipPath rect').first();
+        await expect.poll(getReadyCount).toBeGreaterThan(0);
+        const defaultLegendWidth = Number(await legend.getAttribute('width'));
+        const defaultPlotWidth = Number(await plot.getAttribute('width'));
+
+        let previousCount = readyCount;
+        await component.update(
+            <ChartTestStory
+                data={{...data, legend: {...data.legend, width: 'auto'}}}
+                styles={{width: 1000}}
+                onRender={onRender}
+            />,
+        );
+        await expect.poll(getReadyCount).toBeGreaterThan(previousCount);
+        expect(Number(await legend.getAttribute('width'))).toBeLessThanOrEqual(defaultLegendWidth);
+        expect(Number(await plot.getAttribute('width'))).toBeGreaterThanOrEqual(defaultPlotWidth);
+
+        previousCount = readyCount;
+        await component.update(
+            <ChartTestStory
+                data={{...data, legend: {...data.legend, width: 'auto', maxWidth: '80%'}}}
+                styles={{width: 1000}}
+                onRender={onRender}
+            />,
+        );
+        await expect.poll(getReadyCount).toBeGreaterThan(previousCount);
+        expect(Number(await legend.getAttribute('width'))).toBeGreaterThan(defaultLegendWidth);
+        expect(Number(await plot.getAttribute('width'))).toBeLessThan(defaultPlotWidth);
+    });
+
+    test('discrete title stays above rows with or without maxWidth', async ({mount}) => {
+        const data: ChartData = {
+            legend: {enabled: true, position: 'left', layout: 'vertical', title: {text: 'Regions'}},
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: false},
+                        data: Array.from({length: 20}, (_, index) => ({
+                            name: `Region ${index + 1}`,
+                            value: index + 1,
+                        })),
+                    },
+                ],
+            },
+        };
+        let readyCount = 0;
+        const getReadyCount = () => readyCount;
+        const onRender = () => {
+            readyCount++;
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 160}} onRender={onRender} />,
+        );
+        const legend = component.locator('.gcharts-legend');
+        const title = component.locator('.gcharts-legend__title');
+        const firstRow = component.locator('.gcharts-legend__line').first();
+        await expect.poll(getReadyCount).toBeGreaterThan(0);
+        await expect(component.locator('.gcharts-legend__pagination')).toBeVisible();
+        const initialHeight = await legend.getAttribute('height');
+        for (const maxWidth of [undefined, 1000]) {
+            const previousCount = readyCount;
+            await component.update(
+                <ChartTestStory
+                    data={{...data, legend: {...data.legend, maxWidth}}}
+                    styles={{height: 160}}
+                    onRender={onRender}
+                />,
+            );
+            await expect.poll(getReadyCount).toBeGreaterThan(previousCount);
+            await expect(legend).toHaveAttribute('height', initialHeight ?? '');
+            const titleBox = await title.boundingBox();
+            const rowBox = await firstRow.boundingBox();
+            if (!titleBox || !rowBox) {
+                throw new Error('Expected title and first row bounds');
+            }
+            expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(rowBox.y + 1);
+        }
+    });
+
     for (const html of [false, true]) {
         test(`maxWidth preserves centered start-justified rows (${html ? 'html' : 'svg'})`, async ({
             mount,

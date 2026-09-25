@@ -20,9 +20,9 @@ Without an explicit width, a discrete legend uses the available chart width for 
 
 ### Explicit width
 
-Set `legend.width` to a finite, nonnegative pixel value (`200` or `'200px'`) or a finite, nonnegative decimal percentage such as `'25%'`. For a discrete legend, this width is capped at the chart width excluding chart margins. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.
+Set `legend.width` to a finite, nonnegative pixel value (`200` or `'200px'`) or a finite, nonnegative decimal percentage such as `'25%'`. For a discrete legend, this width is capped at the chart width excluding chart margins and, for left/right positions, `legend.margin`. The resulting width is used to wrap items onto new rows and truncate long labels, including HTML labels. If a legend on the left or right leaves no room for the plot, only the legend and chart title are drawn; the plot and axes are omitted.
 
-Percentages use the chart width after left/right chart margins, before legend or axis space is deducted, and are recalculated on resize. Values above `'100%'` use the full available width for both discrete and continuous legends. The external `legend.margin` is added separately.
+Percentages use the chart width after left/right chart margins, before legend or axis space is deducted, and are recalculated on resize. Values above `'100%'` use the full percentage base before the side-legend margin limit is applied. The external `legend.margin` is added separately.
 
 Negative widths, `NaN`, infinite values, and invalid strings use the same default sizing as an omitted `width`, without failing the chart. Size strings must contain a decimal number followed by `px` or `%`, without whitespace or exponent notation; a leading dot is allowed (`'.5px'`, `'.5%'`). Continuous pixel widths are not capped at the available chart width unless `maxWidth` is set.
 
@@ -36,15 +36,15 @@ legend: {
 
 ### Content-based width
 
-Set `width: 'auto'` for a discrete legend on the left or right to fit its rows, title, and pagination controls instead of reserving half the available width. All pages contribute, so turning pages does not move the plot. Width is recalculated when the chart size, content, or text styles change. For top/bottom and continuous legends, `'auto'` uses the default width.
+Set `width: 'auto'` for a discrete legend on the left or right to fit its rows, title, and pagination controls instead of reserving a fixed width. All pages contribute, so turning pages does not move the plot. Width is recalculated when the chart size, content, or text styles change. For top/bottom and continuous legends, `'auto'` uses the default width.
 
-Without `maxWidth`, content-based width uses up to the available chart width.
+With the default horizontal layout, `auto` wraps items within half the chart width after chart margins and `legend.margin`; this keeps rows from taking nearly all the space for the plot. An explicit `maxWidth` replaces that limit and can allow a wider legend. With vertical layout, `auto` uses up to the available chart width unless `maxWidth` is set.
 
 ### Maximum width
 
-Use `maxWidth` to cap legend width without changing alignment. It applies to all positions and both discrete and continuous legends, with omitted, explicit, or `'auto'` width. It uses the units and percentage base described above, includes markers and text spacing, and excludes `legend.margin`. Invalid limits are ignored; negative numbers and size strings with a leading minus resolve to zero.
+Use `maxWidth` to cap legend width without changing alignment. It applies to all positions and both discrete and continuous legends, with omitted, explicit, or `'auto'` width. It uses the units and percentage base described above. For discrete legends, the limit includes markers and text spacing and excludes `legend.margin`. For continuous legends, it limits the gradient; tick labels are laid out separately. Invalid and negative limits are ignored.
 
-Long labels and titles are truncated. For content-based side legends and discrete legends with `maxWidth`, the title is hidden if there is no available width or insufficient height for the title, an item row, and any necessary pagination. It returns when space becomes available.
+Long labels and discrete legend titles are truncated to the resolved width. Discrete titles reserve space above the rows. Continuous legend titles are truncated only when the limit reduces the gradient width. A discrete legend title is hidden if there is no available width or insufficient height for the title, an item row, and any necessary pagination. It returns when space becomes available.
 
 Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work together.
 

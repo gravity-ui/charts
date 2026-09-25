@@ -428,18 +428,22 @@ function resolveLegendMaxWidth(
     maxWidthOption: PreparedLegendOptions['maxWidth'],
     availableWidth: number,
 ) {
-    // Use the same strict size syntax as width, also accepting negative limits as zero.
-    let maxWidthMagnitude = maxWidthOption;
-    if (typeof maxWidthOption === 'number') {
-        maxWidthMagnitude = Math.abs(maxWidthOption);
-    } else if (typeof maxWidthOption === 'string') {
-        maxWidthMagnitude = maxWidthOption.replace(/^-/, '');
+    const parsedMaxWidth = parseLegendWidth(maxWidthOption);
+    if (!parsedMaxWidth) {
+        return undefined;
     }
-    const resolvedMaxWidth = parseLegendWidth(maxWidthMagnitude)
-        ? calculateNumericProperty({value: maxWidthOption, base: availableWidth})
-        : undefined;
+
+    // Cap before multiplication so a large finite percentage cannot overflow.
+    if (parsedMaxWidth.unit === '%' && parsedMaxWidth.value >= 100) {
+        return availableWidth;
+    }
+
+    const resolvedMaxWidth = calculateNumericProperty({
+        value: maxWidthOption,
+        base: availableWidth,
+    });
     return resolvedMaxWidth !== undefined && Number.isFinite(resolvedMaxWidth)
-        ? Math.max(0, resolvedMaxWidth)
+        ? resolvedMaxWidth
         : undefined;
 }
 
@@ -475,12 +479,21 @@ export async function finalizePreparedLegend(args: {
     const autoWidth = discrete && preparedLegend.width === 'auto' && isVerticalPosition;
     const maxWidth = resolveLegendMaxWidth(preparedLegend.maxWidth, preparedLegend.availableWidth);
     const fitContent = autoWidth || maxWidth !== undefined;
+    const implicitAutoWidthLimit =
+        autoWidth && preparedLegend.layout === 'horizontal' && maxWidth === undefined
+            ? getDefaultDiscreteLegendWidth({
+                  availableWidth: preparedLegend.availableWidth,
+                  position: preparedLegend.position,
+                  margin: preparedLegend.margin,
+              })
+            : undefined;
     const availableWidth = Math.max(
         0,
         preparedLegend.availableWidth -
-            (fitContent && isVerticalPosition ? preparedLegend.margin : 0),
+            ((discrete || fitContent) && isVerticalPosition ? preparedLegend.margin : 0),
     );
-    const widthLimit = Math.min(maxWidth ?? Infinity, availableWidth);
+    const widthLimit = Math.min(maxWidth ?? implicitAutoWidthLimit ?? Infinity, availableWidth);
+    const initialLegendWidth = preparedLegend.resolvedWidth;
     let legendWidth = autoWidth ? widthLimit : preparedLegend.resolvedWidth;
     if (discrete || fitContent) {
         legendWidth = Math.min(legendWidth, widthLimit);
@@ -516,7 +529,7 @@ export async function finalizePreparedLegend(args: {
     if (discrete) {
         rows = getLegendRows(items, preparedLegend, symbolMetrics);
         legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
-        if (fitContent && preparedLegend.title.enable) {
+        if (preparedLegend.title.enable) {
             const titleSpace = Math.max(
                 0,
                 preparedLegend.title.height + preparedLegend.title.margin,
@@ -590,9 +603,9 @@ export async function finalizePreparedLegend(args: {
     preparedLegend.title.resolvedText = preparedLegend.title.text;
     preparedLegend.title.resolvedWidth = preparedLegend.title.width;
     if (
-        fitContent &&
         preparedLegend.title.enable &&
-        preparedLegend.title.width > preparedLegend.resolvedWidth
+        preparedLegend.title.width > preparedLegend.resolvedWidth &&
+        (discrete || (fitContent && preparedLegend.resolvedWidth < initialLegendWidth))
     ) {
         const measure = getTextSizeFn({style: preparedLegend.title.style});
         preparedLegend.title.resolvedText = await getTextWithElipsis({

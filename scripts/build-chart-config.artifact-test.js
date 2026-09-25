@@ -67,6 +67,8 @@ describe('chart config artifacts', () => {
             ).toBe(true);
         }
         expect(validateConfig({series: {data: []}, legend: {maxWidth: true}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: -10}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: 0}})).toBe(true);
         // String formats are resolved at runtime, as with other dimension options.
         expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
     });
