@@ -6,6 +6,7 @@ import {
     lineAnnotationsData,
     lineBasicData,
     lineDataLabelsPlacementData,
+    lineExplicitTickValuesData,
     lineGradientData,
     lineHtmlLabelsData,
     linePlaygroundData,
@@ -56,6 +57,13 @@ export const LineDataLabelsPlacement = {
     name: 'Auto placement of data labels',
     args: {
         data: lineDataLabelsPlacementData,
+    },
+} satisfies Story;
+
+export const LineExplicitTickValues = {
+    name: 'Explicit axis tick values',
+    args: {
+        data: lineExplicitTickValuesData,
     },
 } satisfies Story;
 

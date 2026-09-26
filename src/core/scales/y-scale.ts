@@ -3,7 +3,7 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
-import {getTickValues} from '../../components/AxisY/utils';
+import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {ChartSeries} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
@@ -153,7 +153,7 @@ function getDomainMinAlignedToStartTick(args: {
 }) {
     const {axis, range, scale, series} = args;
     const [dMin, dMax] = scale.domain();
-    const tickValues = getTickValues({
+    const tickValues = getAutomaticTickValues({
         axis,
         scale,
         labelLineHeight: axis.labels.lineHeight,
@@ -202,7 +202,7 @@ function getDomainMaxAlignedToEndTick(args: {
 }) {
     const {axis, range, scale, series} = args;
     const [dMin, dMax] = scale.domain();
-    const tickValues = getTickValues({
+    const tickValues = getAutomaticTickValues({
         axis,
         scale,
         labelLineHeight: axis.labels.lineHeight,
