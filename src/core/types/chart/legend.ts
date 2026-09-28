@@ -3,7 +3,7 @@ import type {BaseTextStyle} from './base';
 export interface ChartLegendItemClickData {
     /** Legend group ID of the clicked item. Set `legend.groupId` on a series or pie/funnel data point for a stable ID. */
     id: string;
-    /** Text displayed for the clicked legend item. */
+    /** Full configured legend label before truncation. May contain HTML, such as `<b>Created</b>`. */
     name: string;
     /** Whether the item was visible before the click. */
     visible: boolean;

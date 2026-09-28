@@ -252,9 +252,7 @@ export const Legend = (props: Props) => {
                         .enter()
                         .append('g')
                         .attr('class', b('item'))
-                        .on('click', function (event: MouseEvent, item) {
-                            handleItemClick(event, item);
-                        });
+                        .on('click', handleItemClick);
 
                     const legendLineHeight = row.height;
                     renderLegendSymbol({selection: legendItemTemplate, row});
@@ -283,9 +281,7 @@ export const Legend = (props: Props) => {
                                 }
                                 return '0px';
                             })
-                            .on('click', function (event: MouseEvent, item) {
-                                handleItemClick(event, item);
-                            })
+                            .on('click', handleItemClick)
                             .html((d) => d.text);
                     } else {
                         legendItemTemplate

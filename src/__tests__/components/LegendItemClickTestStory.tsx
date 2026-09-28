@@ -1,20 +1,23 @@
 import React from 'react';
 
 import {ChartTestStory} from '../../../playwright/components/ChartTestStory';
-import type {ChartData, ChartLegend} from '../../types';
+import type {ChartData, ChartLegend, ChartLegendItemClickData} from '../../types';
 
 interface Props {
     html?: boolean;
     itemClickAction?: ChartLegend['itemClickAction'];
+    onItemClick?: (item: ChartLegendItemClickData) => void;
     preventDefault?: boolean;
+    seriesData?: ChartData['series']['data'];
 }
 
 export const LegendItemClickTestStory = ({
     html = false,
     itemClickAction,
+    onItemClick,
     preventDefault = false,
+    seriesData,
 }: Props) => {
-    const [clickedItem, setClickedItem] = React.useState('');
     const data = React.useMemo<ChartData>(
         () => ({
             legend: {
@@ -23,7 +26,7 @@ export const LegendItemClickTestStory = ({
                 itemClickAction,
                 events: {
                     itemClick: (item, event) => {
-                        setClickedItem(`${item.name}:${item.visible}`);
+                        onItemClick?.(item);
 
                         if (preventDefault) {
                             event.preventDefault();
@@ -32,10 +35,11 @@ export const LegendItemClickTestStory = ({
                 },
             },
             series: {
-                data: [
+                data: seriesData ?? [
                     {
                         type: 'line',
                         name: 'First series',
+                        legend: {groupId: 'first-series'},
                         data: [
                             {x: 0, y: 1},
                             {x: 1, y: 2},
@@ -44,6 +48,7 @@ export const LegendItemClickTestStory = ({
                     {
                         type: 'line',
                         name: 'Second series',
+                        legend: {groupId: 'second-series'},
                         data: [
                             {x: 0, y: 2},
                             {x: 1, y: 1},
@@ -52,13 +57,8 @@ export const LegendItemClickTestStory = ({
                 ],
             },
         }),
-        [html, itemClickAction, preventDefault],
+        [html, itemClickAction, onItemClick, preventDefault, seriesData],
     );
 
-    return (
-        <React.Fragment>
-            <ChartTestStory data={data} />
-            <output data-qa="clicked-legend-item">{clickedItem}</output>
-        </React.Fragment>
-    );
+    return <ChartTestStory data={data} />;
 };
