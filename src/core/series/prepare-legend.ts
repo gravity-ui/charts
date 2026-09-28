@@ -109,6 +109,8 @@ export async function getPreparedLegend(args: {
         verticalAlign: get(legend, 'verticalAlign', legendDefaults.verticalAlign),
         justifyContent: get(legend, 'justifyContent', legendDefaults.justifyContent),
         enabled,
+        events: legend?.events,
+        itemClickAction: legend?.itemClickAction ?? 'default',
         hangingOffset: itemHangingOffset,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
         itemStyle: computedItemStyle,

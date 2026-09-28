@@ -8,8 +8,15 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
-import type {ChartData, ChartLegend, LineSeries, PieSeries} from '../types';
+import type {
+    ChartData,
+    ChartLegend,
+    ChartLegendItemClickData,
+    LineSeries,
+    PieSeries,
+} from '../types';
 
+import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
 
 async function visitLegendPages(
@@ -963,6 +970,233 @@ test.describe('Legend', () => {
             await legendItem.click();
             await expect(component.locator('svg')).toHaveScreenshot();
         });
+
+        test('Item click notifies and applies the default SVG action', async ({mount}) => {
+            let clickedItem: ChartLegendItemClickData | undefined;
+            const component = await mount(
+                <LegendItemClickTestStory
+                    onItemClick={(item) => {
+                        clickedItem = item;
+                    }}
+                />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item text');
+
+            await legendItems.first().click();
+
+            await expect
+                .poll(() => clickedItem)
+                .toEqual({
+                    id: 'first-series',
+                    name: 'First series',
+                    visible: true,
+                });
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_unselected/);
+        });
+
+        test('Item click with no action leaves SVG legend visibility unchanged', async ({
+            mount,
+        }) => {
+            let clickedItem: ChartLegendItemClickData | undefined;
+            const component = await mount(
+                <LegendItemClickTestStory
+                    itemClickAction="none"
+                    onItemClick={(item) => {
+                        clickedItem = item;
+                    }}
+                />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item text');
+
+            await legendItems.first().click();
+
+            await expect
+                .poll(() => clickedItem)
+                .toEqual({
+                    id: 'first-series',
+                    name: 'First series',
+                    visible: true,
+                });
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text_selected/);
+        });
+
+        test('Item click with no action leaves HTML legend visibility unchanged', async ({
+            mount,
+        }) => {
+            let clickedItem: ChartLegendItemClickData | undefined;
+            const seriesData: ChartData['series']['data'] = [
+                {
+                    type: 'line',
+                    name: 'Created',
+                    legend: {groupId: 'created', itemText: '<b>Created</b>'},
+                    data: [{x: 0, y: 1}],
+                },
+                {
+                    type: 'line',
+                    name: 'Resolved',
+                    legend: {groupId: 'resolved'},
+                    data: [{x: 0, y: 2}],
+                },
+            ];
+            const component = await mount(
+                <LegendItemClickTestStory
+                    html={true}
+                    itemClickAction="none"
+                    onItemClick={(item) => {
+                        clickedItem = item;
+                    }}
+                    seriesData={seriesData}
+                />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item-text-html');
+
+            await legendItems.first().click();
+
+            await expect
+                .poll(() => clickedItem)
+                .toEqual({
+                    id: 'created',
+                    name: '<b>Created</b>',
+                    visible: true,
+                });
+            await expect(legendItems.nth(1)).toHaveClass(/gcharts-legend__item-text-html_selected/);
+        });
+
+        test('Native preventDefault does not cancel the default HTML action', async ({mount}) => {
+            let clickedItem: ChartLegendItemClickData | undefined;
+            const component = await mount(
+                <LegendItemClickTestStory
+                    html={true}
+                    preventDefault={true}
+                    onItemClick={(item) => {
+                        clickedItem = item;
+                    }}
+                />,
+            );
+            const legendItems = component.locator('.gcharts-legend__item-text-html');
+
+            await legendItems.first().click();
+
+            await expect
+                .poll(() => clickedItem)
+                .toEqual({
+                    id: 'first-series',
+                    name: 'First series',
+                    visible: true,
+                });
+            await expect(legendItems.nth(1)).toHaveClass(
+                /gcharts-legend__item-text-html_unselected/,
+            );
+        });
+
+        for (const type of ['pie', 'funnel'] as const) {
+            test(`Item click reports the ${type} point ID`, async ({mount}) => {
+                let clickedItem: ChartLegendItemClickData | undefined;
+                const points = [
+                    {name: 'North', value: 4, legend: {groupId: 'north-point'}},
+                    {name: 'South', value: 2, legend: {groupId: 'south-point'}},
+                ];
+                const seriesData: ChartData['series']['data'] =
+                    type === 'pie'
+                        ? [{type: 'pie', data: points}]
+                        : [{type: 'funnel', data: points}];
+                const component = await mount(
+                    <LegendItemClickTestStory
+                        itemClickAction="none"
+                        onItemClick={(item) => {
+                            clickedItem = item;
+                        }}
+                        seriesData={seriesData}
+                    />,
+                );
+
+                await component.locator('.gcharts-legend__item text').first().click();
+
+                await expect
+                    .poll(() => clickedItem)
+                    .toEqual({
+                        id: 'north-point',
+                        name: 'North',
+                        visible: true,
+                    });
+            });
+        }
+
+        test('Item click reports the hidden item as invisible', async ({mount}) => {
+            let clickedItem: ChartLegendItemClickData | undefined;
+            const seriesData: ChartData['series']['data'] = [
+                {
+                    type: 'line',
+                    name: 'Visible',
+                    legend: {groupId: 'visible'},
+                    data: [{x: 0, y: 1}],
+                },
+                {
+                    type: 'line',
+                    name: 'Hidden',
+                    visible: false,
+                    legend: {groupId: 'hidden'},
+                    data: [{x: 0, y: 2}],
+                },
+            ];
+            const component = await mount(
+                <LegendItemClickTestStory
+                    itemClickAction="none"
+                    onItemClick={(item) => {
+                        clickedItem = item;
+                    }}
+                    seriesData={seriesData}
+                />,
+            );
+            const hiddenItem = component.locator('.gcharts-legend__item text').nth(1);
+
+            await hiddenItem.click();
+
+            await expect
+                .poll(() => clickedItem)
+                .toEqual({
+                    id: 'hidden',
+                    name: 'Hidden',
+                    visible: false,
+                });
+            await expect(hiddenItem).toHaveClass(/gcharts-legend__item-text_unselected/);
+        });
+
+        for (const html of [false, true]) {
+            test(`Item click with no action clears a pinned tooltip (${html ? 'HTML' : 'SVG'})`, async ({
+                mount,
+                page,
+            }) => {
+                const data: ChartData = {
+                    legend: {enabled: true, html, itemClickAction: 'none'},
+                    tooltip: {pin: {enabled: true}},
+                    yAxis: [{type: 'category', categories: ['Category']}],
+                    series: {
+                        data: [
+                            {type: 'bar-y', name: 'First', data: [{x: 2, y: 0}]},
+                            {type: 'bar-y', name: 'Second', data: [{x: 3, y: 0}]},
+                        ],
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                await component.locator('.gcharts-bar-y__segment').first().click();
+
+                const pinnedTooltip = page.locator('.gcharts-tooltip_pinned');
+                await expect(pinnedTooltip).toBeVisible();
+
+                const legendItems = component.locator(
+                    html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item text',
+                );
+                await legendItems.first().click();
+
+                await expect(pinnedTooltip).toHaveCount(0);
+                await expect(legendItems.nth(1)).toHaveClass(
+                    html
+                        ? /gcharts-legend__item-text-html_selected/
+                        : /gcharts-legend__item-text_selected/,
+                );
+            });
+        }
 
         const positions = ['top', 'bottom', 'left', 'right'] as const;
 
