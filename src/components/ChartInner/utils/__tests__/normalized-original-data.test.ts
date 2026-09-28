@@ -33,14 +33,29 @@ describe('normalized original axis data', () => {
         expect(yAxis?.[0].ticks?.values).toEqual(['A', 'C']);
     });
 
-    test('leaves numeric tick values unchanged', () => {
+    test('leaves numeric tick values unchanged when linear axes have categories', () => {
         const xAxis = getNormalizedXAxis({
             xAxis: {
-                ticks: {values: [0, 40, 100]},
+                categories: ['A', 'B'],
+                min: 0,
+                max: 1,
+                ticks: {values: [0, 1]},
                 type: 'linear',
             },
         });
+        const yAxis = getNormalizedYAxis({
+            yAxis: [
+                {
+                    categories: ['A', 'B'],
+                    min: 0,
+                    max: 1,
+                    ticks: {values: [0, 1]},
+                    type: 'linear',
+                },
+            ],
+        });
 
-        expect(xAxis?.ticks?.values).toEqual([0, 40, 100]);
+        expect(xAxis?.ticks?.values).toEqual([0, 1]);
+        expect(yAxis?.[0].ticks?.values).toEqual([0, 1]);
     });
 });

@@ -8,7 +8,7 @@ function getNormalizedCategoryAxis<T extends ChartAxis>(axis: T): T {
         categories: axis.categories,
         order: axis.order,
     });
-    const tickValues = axis.ticks?.values;
+    const tickValues = axis.type === 'category' ? axis.ticks?.values : undefined;
     const values =
         tickValues && orderedCategories
             ? tickValues.flatMap((index) => {

@@ -231,14 +231,6 @@ export async function prepareXAxisData({
             }
         }
 
-        const labelMaxWidth =
-            values.length > 1
-                ? Math.max(
-                      0,
-                      getMinSpaceBetween(values, (value) => value.x) - axis.labels.padding * 2,
-                  )
-                : axisWidth;
-
         for (let i = 0; i < values.length; i++) {
             const tickValue = values[i];
 
@@ -268,6 +260,13 @@ export async function prepareXAxisData({
                         axis,
                         step: tickStep,
                     });
+                    const previousGap = i > 0 ? Math.abs(tickValue.x - values[i - 1].x) : axisWidth;
+                    const nextGap =
+                        i < values.length - 1 ? Math.abs(values[i + 1].x - tickValue.x) : axisWidth;
+                    const labelMaxWidth =
+                        values.length > 1
+                            ? Math.max(0, Math.min(previousGap, nextGap) - axis.labels.padding * 2)
+                            : axisWidth;
                     svgLabel = await getSvgAxisLabel({
                         getTextSize,
                         text,

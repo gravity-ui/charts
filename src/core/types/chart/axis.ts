@@ -178,6 +178,8 @@ export interface ChartAxisTicks {
      *
      * Duplicate values and values outside the current domain are ignored. An empty array hides all ticks.
      * This option takes precedence over `interval` and `pixelInterval` when rendering ticks.
+     * `startOnTick` and `endOnTick` retain their usual domain alignment behavior, so axis endpoints
+     * and ticks on a synchronized secondary Y axis need not coincide with explicit values.
      */
     values?: number[];
 }

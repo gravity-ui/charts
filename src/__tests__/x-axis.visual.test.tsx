@@ -104,6 +104,42 @@ test.describe('X-axis', () => {
         ]);
     });
 
+    test('nearby explicit ticks keep distant X labels visible', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 100, y: 100},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                min: 0,
+                max: 100,
+                ticks: {values: [0, 50, 51, 100]},
+                labels: {autoRotation: false},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 600, height: 350}} />,
+        );
+        const ticks = component.locator('.gcharts-x-axis__tick');
+        const firstLabel = ticks.nth(0).locator('text tspan');
+        const lastLabel = ticks.nth(3).locator('text tspan');
+
+        await expect(ticks).toHaveCount(4);
+        await expect(firstLabel).toHaveText('0');
+        await expect(lastLabel).toHaveText('100');
+        expect((await firstLabel.boundingBox())?.width).toBeGreaterThan(0);
+        expect((await lastLabel.boundingBox())?.width).toBeGreaterThan(0);
+    });
+
     test('explicit values select category indices', async ({mount}) => {
         const chartData: ChartData = {
             legend: {enabled: false},

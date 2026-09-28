@@ -1,5 +1,7 @@
+import {createScales} from '../../hooks/useAxisScales';
 import type {ChartSeries} from '../../types';
-import type {PreparedAxis} from '../axes/types';
+import type {PreparedAxis, PreparedYAxis} from '../axes/types';
+import type {PreparedSeries} from '../series/types';
 
 import {createYScale} from './y-scale';
 
@@ -70,4 +72,53 @@ describe('createYScale with explicit tick values', () => {
 
         expect(getDomain({...options, values: [20, 40]})).toEqual(getDomain(options));
     });
+});
+
+describe('createScales with a synchronized secondary Y axis', () => {
+    const series = [
+        {...SERIES[0], visible: true, yAxis: 0},
+        {
+            data: [
+                {x: 0, y: 0},
+                {x: 1, y: 73},
+            ],
+            name: 'Second series',
+            type: 'line',
+            visible: true,
+            yAxis: 1,
+        },
+    ] as PreparedSeries[];
+
+    function getDomains(values?: number[]) {
+        const primaryAxis = {
+            ...getAxis({min: 0, max: 100, maxPadding: 0, values}),
+            plotIndex: 0,
+            position: 'left',
+        } as PreparedYAxis;
+        const secondaryAxis = {
+            ...getAxis({min: -10, max: 90, maxPadding: 0}),
+            plotIndex: 0,
+            position: 'right',
+        } as PreparedYAxis;
+        const {yScale} = createScales({
+            boundsWidth: 600,
+            boundsHeight: 350,
+            series,
+            xAxis: null,
+            yAxis: [primaryAxis, secondaryAxis],
+            split: {plots: [], gap: 0},
+        });
+
+        return yScale.map((scale) => scale?.domain());
+    }
+
+    test.each([{values: []}, {values: [0, 40, 100]}])(
+        'explicit primary ticks $values preserve both axis domains',
+        ({values}) => {
+            const automaticDomains = getDomains();
+            expect(automaticDomains).toHaveLength(2);
+            expect(automaticDomains.every(Boolean)).toBe(true);
+            expect(getDomains(values)).toEqual(automaticDomains);
+        },
+    );
 });
