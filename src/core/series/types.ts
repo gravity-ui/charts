@@ -57,6 +57,7 @@ import type {
     SeriesOptionsDefaults,
     SymbolType,
 } from '../constants';
+import type {PointMarkerOptions} from '../types/chart/marker';
 import type {SeriesGradientState} from '../utils/gradient-reference';
 
 export type PreparedAnnotation = {
@@ -208,14 +209,13 @@ export type PreparedScatterSeries = {
     data: ScatterSeriesData[];
     cluster: {
         enabled: boolean;
-        distance: number;
+        layoutAlgorithm: {type: 'grid'; gridSize: number | string};
+        overlapMode: 'allow' | 'shift';
         minimumClusterSize: number;
-        marker: {
-            color?: string;
-            radius: number;
-        };
+        marker: Required<Omit<PointMarkerOptions, 'color'>> & Pick<PointMarkerOptions, 'color'>;
         dataLabels: {
             enabled: boolean;
+            allowOverlap: boolean;
             format?: ValueFormat;
             style: BaseTextStyle;
         };

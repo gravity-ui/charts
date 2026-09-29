@@ -1,40 +1,34 @@
 import type {SERIES_TYPE, SymbolType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {
-    BaseSeries,
-    BaseSeriesData,
-    BaseSeriesLegend,
-    BaseTextStyle,
-    ValueFormat,
-} from './base';
+import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {RectLegendSymbolOptions} from './legend';
+import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions} from './series';
 
-export interface ScatterClusterData<T = MeaningfulAny> extends BaseSeriesData<T> {
-    x?: string | number | null;
-    y?: string | number | null;
-    clusterSize: number;
-    clusteredData: ScatterSeriesData<T>[];
-    radius?: number;
+export interface ScatterClusterData<T = MeaningfulAny> extends ScatterSeriesData<T> {
+    cluster?: {
+        size: number;
+        points: ScatterSeriesData<T>[];
+    };
 }
 
-export interface ScatterClusterMarkerOptions {
-    color?: string;
-    radius?: number;
+export interface ScatterClusterLayoutAlgorithmOptions {
+    type?: 'grid';
+    gridSize?: number | string;
 }
 
-export interface ScatterClusterDataLabelsOptions {
-    enabled?: boolean;
-    format?: ValueFormat;
-    style?: Partial<BaseTextStyle>;
-}
+export interface ScatterClusterDataLabelsOptions extends Pick<
+    BaseDataLabels,
+    'enabled' | 'style' | 'format' | 'allowOverlap'
+> {}
 
 export interface ScatterClusterOptions {
     enabled?: boolean;
-    distance?: number;
+    layoutAlgorithm?: ScatterClusterLayoutAlgorithmOptions;
+    overlapMode?: 'allow' | 'shift';
     minimumClusterSize?: number;
-    marker?: ScatterClusterMarkerOptions;
+    marker?: PointMarkerOptions;
     dataLabels?: ScatterClusterDataLabelsOptions;
 }
 

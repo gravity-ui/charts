@@ -44,12 +44,13 @@ export function renderScatter(
 
     renderDataLabels({
         container: svgElement,
-        data: [...(preparedData.svgLabels ?? []), ...preparedData.clusterLabels],
+        data: preparedData.svgLabels,
         className: b('label'),
     })
-        .attr('class', (data) => ('cluster' in data ? b('cluster-label') : b('label')))
-        .attr('dominant-baseline', (data) => ('cluster' in data ? 'central' : null))
-        .attr('pointer-events', (data) => ('cluster' in data ? 'none' : null));
+        .attr('class', (data) => (data.cluster ? b('cluster-label') : b('label')))
+        .attr('y', (data) => (data.cluster ? data.y - data.size.height / 2 : data.y))
+        .attr('dominant-baseline', (data) => (data.cluster ? 'central' : null))
+        .attr('pointer-events', (data) => (data.cluster ? 'none' : null));
 
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;
@@ -87,6 +88,7 @@ export function renderScatter(
             }
             return d;
         });
+        svgElement.selectAll(`.${b('cluster-label')}`).raise();
     }
 
     dispatcher?.on('hover-shape.scatter', handleShapeHover);
