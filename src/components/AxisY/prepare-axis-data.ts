@@ -134,7 +134,7 @@ async function getSvgAxisLabel({
             // for vertical labels, we need to take into account the available height, otherwise there may be intersections
             axis.labels.rotation === 90 ? labelMaxHeight : Infinity,
             // if there is no rotation, then the height of the label does not affect the width of the text
-            axis.labels.rotation === 0
+            axis.labels.rotation === 0 || axis.labels.rotation === 90
                 ? Infinity
                 : (top + topOffset - textSize.height / 2) / calculateSin(axis.labels.rotation),
         );
@@ -151,7 +151,10 @@ async function getSvgAxisLabel({
         const actualTextHeight = axis.labels.rotation
             ? textSize.height / calculateSin(axis.labels.rotation)
             : textSize.height;
-        const x = axis.position === 'left' ? -textSize.width : 0;
+        let x = axis.position === 'left' ? -textSize.width : 0;
+        if (axis.position === 'left' && axis.labels.rotation === 90) {
+            x = Math.max(x, -topOffset - top);
+        }
         const y =
             Math.max(-topOffset - top, -actualTextHeight / 2) +
             (originalTextSize.hangingOffset ?? 0);
@@ -215,15 +218,6 @@ export async function prepareYAxisData({
     const values = getTickValues({scale, axis, labelLineHeight, series});
     const tickStep = getMinSpaceBetween(values as {value: unknown}[], (d) => Number(d.value));
 
-    const labelMaxHeight =
-        values.length > 1
-            ? Math.max(
-                  0,
-                  getMinSpaceBetween<{y: number}>(values, (value) => value.y) -
-                      axis.labels.padding * 2,
-              )
-            : axisHeight;
-
     for (let i = 0; i < values.length; i++) {
         const tickValue = values[i];
         const y = axisPlotTopPosition + tickValue.y;
@@ -257,6 +251,13 @@ export async function prepareYAxisData({
                 };
             } else {
                 const text = formatAxisTickLabel({value: tickValue.value, axis, step: tickStep});
+                const previousGap = i > 0 ? Math.abs(tickValue.y - values[i - 1].y) : axisHeight;
+                const nextGap =
+                    i < values.length - 1 ? Math.abs(values[i + 1].y - tickValue.y) : axisHeight;
+                const labelMaxHeight =
+                    values.length > 1
+                        ? Math.max(0, Math.min(previousGap, nextGap) - axis.labels.padding * 2)
+                        : axisHeight;
                 svgLabel = await getSvgAxisLabel({
                     getTextSize,
                     text,

@@ -62,6 +62,54 @@ test.describe('Y-axis', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('nearby explicit ticks keep distant rotated Y labels visible', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 100, y: 100},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    min: 0,
+                    max: 100,
+                    ticks: {values: [0, 50, 51, 100]},
+                    labels: {rotation: 90},
+                },
+            ],
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 600, height: 350}} />,
+        );
+        const ticks = component.locator('.gcharts-y-axis__tick');
+        const firstLabel = ticks.nth(0).locator('text tspan');
+        const lastLabel = ticks.nth(3).locator('text tspan');
+
+        await expect(ticks).toHaveCount(4);
+        await expect(firstLabel).toHaveText('0');
+        await expect(lastLabel).toHaveText('100');
+        const chartBounds = await component.locator('svg').boundingBox();
+        const firstBounds = await firstLabel.boundingBox();
+        const lastBounds = await lastLabel.boundingBox();
+        if (!chartBounds || !firstBounds || !lastBounds) {
+            throw new Error('Axis label geometry is unavailable');
+        }
+        expect(firstBounds.height).toBeGreaterThan(0);
+        expect(lastBounds.height).toBeGreaterThan(0);
+        expect(lastBounds.y).toBeGreaterThanOrEqual(chartBounds.y - 1);
+        expect(firstBounds.y + firstBounds.height).toBeLessThanOrEqual(
+            chartBounds.y + chartBounds.height + 1,
+        );
+    });
+
     test.describe('Html in categories', () => {
         const baseData: ChartData = {
             legend: {
