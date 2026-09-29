@@ -1,5 +1,6 @@
 export const SERIES_TYPE = {
     Area: 'area',
+    AreaRange: 'area-range',
     BarX: 'bar-x',
     BarY: 'bar-y',
     Line: 'line',

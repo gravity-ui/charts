@@ -1,10 +1,12 @@
 import {curveLinear, curveMonotoneX} from 'd3-shape';
 
+import type {SvgLabel} from '../../types';
 import type {PlacementBounds, PlacementSegment} from '../auto-placement';
 import {
     DEFAULT_PLACEMENT_ORDER,
     clampPlacementRect,
     getLineSegments,
+    getObstacleRectsFromLayers,
     getPlacementPositions,
     pickLabelPlacement,
     segmentIntersectsRect,
@@ -126,6 +128,26 @@ describe('pickLabelPlacement', () => {
             segments,
         });
         expect(rect).toEqual({height: 10, width: 20, x: 90, y: 105});
+    });
+
+    it('avoids stack labels without a series reference using their visible SVG bounds', () => {
+        const stackLabel: SvgLabel = {
+            text: '30',
+            x: 110,
+            y: 96,
+            textAnchor: 'end',
+            style: {fontSize: '12px'},
+            size: {height: 10, width: 20, hangingOffset: 2},
+        };
+        const obstacles = getObstacleRectsFromLayers([{svgLabels: [stackLabel]}, {}]);
+
+        expect(obstacles).toEqual([{height: 10, width: 20, x: 90, y: 94}]);
+        expect(pickLabelPlacement({...baseArgs, obstacles})).toEqual({
+            height: 10,
+            width: 20,
+            x: 90,
+            y: 105,
+        });
     });
 
     it('respects a custom order', () => {

@@ -46,6 +46,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     return {
         chunks: selectedPoints.map((p) => ({
             data: p.data,
+            percentage: p.percentage,
             series: p.series,
             closest: p.x === closestPointXValue && p.y === closestYPoint.y,
         })) as TooltipDataChunk[],

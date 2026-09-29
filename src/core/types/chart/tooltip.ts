@@ -4,6 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {RendererElement} from '../renderer';
 
 import type {AreaSeries, AreaSeriesData} from './area';
+import type {AreaRangeSeries, AreaRangeSeriesData} from './area-range';
 import type {AxisPlotBand, AxisPlotLine, AxisPlotShape, ChartXAxis, ChartYAxis} from './axis';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
@@ -22,20 +23,26 @@ import type {XRangeSeries, XRangeSeriesData} from './x-range';
 export interface TooltipDataChunkBarX<T = MeaningfulAny> {
     data: BarXSeriesData<T>;
     series: BarXSeries<T>;
+    /** Value share in the stack. Present only for percent stacking. */
+    percentage?: number;
 }
 
 export interface TooltipDataChunkBarY<T = MeaningfulAny> {
     data: BarYSeriesData<T>;
     series: BarYSeries<T>;
+    /** Value share in the stack. Present only for percent stacking. */
+    percentage?: number;
 }
 
 export interface TooltipDataChunkPie<T = MeaningfulAny> {
     data: PieSeriesData<T>;
+    /** Slice share among currently visible segments, in the range 0..1. May be absent in manually supplied chunks. */
+    percentage?: number;
     series: {
         type: PieSeries['type'];
         id: string;
         name: string;
-        tooltip?: BaseSeries['tooltip'];
+        tooltip?: PieSeries<T>['tooltip'];
     };
 }
 
@@ -67,8 +74,21 @@ export interface TooltipDataChunkArea<T = MeaningfulAny> {
     data: AreaSeriesData<T>;
     /** Resolved fill color of the marker for the hovered point, when available. */
     color?: string;
+    /** Value share in the stack. Present only for percent stacking. */
+    percentage?: number;
     series: {
         type: AreaSeries['type'];
+        id: string;
+        name: string;
+        tooltip?: AreaSeries<T>['tooltip'];
+    };
+}
+
+export interface TooltipDataChunkAreaRange<T = MeaningfulAny> {
+    data: AreaRangeSeriesData<T>;
+    color?: string;
+    series: {
+        type: AreaRangeSeries['type'];
         id: string;
         name: string;
         tooltip?: BaseSeries['tooltip'];
@@ -126,6 +146,7 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkScatter<T>
     | TooltipDataChunkLine<T>
     | TooltipDataChunkArea<T>
+    | TooltipDataChunkAreaRange<T>
     | TooltipDataChunkTreemap<T>
     | TooltipDataChunkSankey<T>
     | TooltipDataChunkWaterfall<T>
@@ -162,9 +183,20 @@ export type ChartTooltipRowRendererArgs = {
     id: string;
     name: string;
     active?: boolean;
+    /**
+     * Color of the hovered point as a plain CSS color value — never the built-in swatch
+     * markup, since a custom row paints its own. Resolved from the point's own color when
+     * it has one, and from the series color otherwise; for a gradient series it is the
+     * gradient sampled at that point.
+     *
+     * `undefined` for series types whose tooltip has no color cell (e.g. `waterfall`).
+     * When `rows[].cells` overrides the color cell, its `source` decides the value instead.
+     */
     color?: string;
     striped?: boolean;
+    /** Scalar point value; area-range uses its width (y1 - y0). */
     value: string | number | null | undefined;
+    /** Display value; the default area-range row formats both boundaries independently. */
     formattedValue?: string;
     hovered?: TooltipDataChunk<unknown>[];
     /**
@@ -283,6 +315,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /**
          * The aggregation method for calculating totals.
          * It can be a built-in function (e.g., 'sum') or a custom function.
+         * Area-range contributes its width (y1 - y0); 'sum' adds widths, not interval unions.
          * @default 'sum'
          */
         aggregation?:
@@ -314,6 +347,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * `'value'` uses the numeric value of each series point: `y` for most series
                * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
                * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
+               * Area-range uses its width (y1 - y0).
                * Leave unset to disable sorting.
                */
               key?: 'value' | undefined;

@@ -7,6 +7,7 @@ export interface PointData {
     color?: string;
     data: AreaSeriesData;
     fill?: string;
+    percentage?: number;
     hiddenInLine?: boolean;
     series: PreparedAreaSeries;
     x: number;

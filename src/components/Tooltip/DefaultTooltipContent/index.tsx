@@ -6,6 +6,7 @@ import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 
 import {i18n} from '~core/i18n';
+import type {PluginTooltipRowCell} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import {getFormattedValue} from '~core/utils/format';
 
@@ -141,6 +142,8 @@ export const DefaultTooltipContent = ({
                     valueFormat;
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
+                const valueFormatContext =
+                    plugin?.tooltip.getValueFormatContext?.(seriesItem) ?? {};
 
                 let tooltipRows = rows ?? plugin?.tooltip.rows ?? [];
                 if (typeof tooltipRows === 'function') {
@@ -148,7 +151,7 @@ export const DefaultTooltipContent = ({
                 }
 
                 return tooltipRows.map((row, rowIndex) => {
-                    const rowCells: ReadonlyArray<TooltipRowCellItem> = row.cells ?? [];
+                    const rowCells: ReadonlyArray<PluginTooltipRowCell> = row.cells ?? [];
                     const rowId = 'id' in row ? row.id : String(rowIndex);
                     const key = `${seriesId}_${chunkIndex}_${rowId}`;
 
@@ -156,27 +159,38 @@ export const DefaultTooltipContent = ({
                         (rows ? rows[rowIndex]?.renderer : undefined) ?? tooltipRowRenderer;
 
                     if (typeof rowRenderer === 'function') {
+                        const valueCell = rowCells.find((c) => c.id === 'value');
                         const name = getTooltipRowCellValue({
                             cell: rowCells.find((c) => c.id === 'name'),
                             tooltipDataChunk: seriesItem,
                         });
                         const value = getTooltipRowCellValue({
-                            cell: rowCells.find((c) => c.id === 'value'),
+                            cell: valueCell,
                             tooltipDataChunk: seriesItem,
                         });
-                        const color = getTooltipRowCellValue({
-                            cell: rowCells.find((c) => c.id === 'color'),
-                            tooltipDataChunk: seriesItem,
-                        });
+                        // The resolver yields `null` when the row has no color cell at all
+                        // (e.g. waterfall); the renderer contract spells absence as `undefined`.
+                        const color =
+                            getTooltipRowCellValue({
+                                cell: rowCells.find((c) => c.id === 'color'),
+                                tooltipDataChunk: seriesItem,
+                            }) ?? undefined;
                         const result = rowRenderer({
                             id: key,
                             name,
                             color,
                             value,
-                            formattedValue: getFormattedValue({
-                                value,
-                                format: rowValueFormat,
-                            }),
+                            formattedValue: valueCell?.formatValue
+                                ? valueCell.formatValue({
+                                      item: seriesItem,
+                                      value,
+                                      format: rowValueFormat,
+                                  })
+                                : getFormattedValue({
+                                      value,
+                                      format: rowValueFormat,
+                                      context: valueFormatContext,
+                                  }),
                             striped,
                             active,
                             className: b('content-row', {active, striped}),
@@ -199,11 +213,19 @@ export const DefaultTooltipContent = ({
                             return null;
                         }
 
-                        const cellFormattedValue = getFormattedValue({
-                            value: cellValue,
-                            format:
-                                cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format,
-                        });
+                        const cellFormat =
+                            cell.id === 'value' ? (cell.format ?? rowValueFormat) : cell.format;
+                        const cellFormattedValue = cell.formatValue
+                            ? cell.formatValue({
+                                  item: seriesItem,
+                                  value: cellValue,
+                                  format: cellFormat,
+                              })
+                            : getFormattedValue({
+                                  value: cellValue,
+                                  format: cellFormat,
+                                  context: valueFormatContext,
+                              });
                         return {
                             formattedValue: cellFormattedValue,
                             align: cell.align,

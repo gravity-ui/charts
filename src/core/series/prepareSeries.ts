@@ -5,7 +5,7 @@ import type {ChartData, ChartXAxis, ChartYAxis} from '../../types';
 import {getSeriesNames} from '../utils';
 
 import {getSeriesPlugin} from './seriesRegistry';
-import type {PreparedLegend, PreparedSeries} from './types';
+import type {PreparedLegendOptions, PreparedSeries} from './types';
 
 export const getPreparedSeries = async ({
     seriesData,
@@ -18,7 +18,7 @@ export const getPreparedSeries = async ({
     seriesData: ChartData['series']['data'];
     seriesOptions: ChartData['series']['options'];
     colors: string[];
-    preparedLegend?: PreparedLegend | null;
+    preparedLegend?: PreparedLegendOptions | null;
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis[];
 }) => {

@@ -70,6 +70,55 @@ test.describe('Multiple types of series on same chart', () => {
         {s1: 'line' as const, s2: 'area' as const},
     ];
 
+    test('SVG and HTML point labels respect overlap in either layer order', async ({mount}) => {
+        for (const allowOverlap of [false, true]) {
+            for (const reverse of [false, true]) {
+                const data: ChartData = {
+                    legend: {enabled: false},
+                    xAxis: {min: 0, max: 2},
+                    yAxis: [{min: 0, max: 100}],
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Line',
+                                data: [{x: 1, y: 30, label: 'line label'}],
+                                dataLabels: {enabled: true, html: true, allowOverlap, padding: 5},
+                            },
+                            {
+                                type: 'bar-x',
+                                name: 'Bar',
+                                data: [{x: 1, y: 30, label: 'bar label'}],
+                                dataLabels: {enabled: true, allowOverlap, padding: 5},
+                            },
+                        ],
+                    },
+                };
+                if (reverse) data.series.data.reverse();
+                const component = await mount(<ChartTestStory data={data} />);
+                const labels = component
+                    .getByText('line label', {exact: true})
+                    .or(component.getByText('bar label', {exact: true}));
+                await expect(labels).toHaveCount(allowOverlap ? 2 : 1);
+                if (allowOverlap) {
+                    const boxes = await labels.evaluateAll((elements) =>
+                        elements.map((element) => {
+                            const {left, right, top, bottom} = element.getBoundingClientRect();
+                            return {left, right, top, bottom};
+                        }),
+                    );
+                    expect(Math.min(boxes[0].right, boxes[1].right)).toBeGreaterThan(
+                        Math.max(boxes[0].left, boxes[1].left),
+                    );
+                    expect(Math.min(boxes[0].bottom, boxes[1].bottom)).toBeGreaterThan(
+                        Math.max(boxes[0].top, boxes[1].top),
+                    );
+                }
+                await component.unmount();
+            }
+        }
+    });
+
     for (const {s1, s2} of crossSeriesLabelCases) {
         for (const allowOverlap of [true, false]) {
             test(`${s1} + ${s2} cross-series labels, allowOverlap: ${allowOverlap}`, async ({

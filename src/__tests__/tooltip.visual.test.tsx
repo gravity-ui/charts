@@ -6,6 +6,7 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
+    areaStakingPercentData,
     barXGroupedColumnsData,
     barXStakingPercentData,
     tooltipOverflowedRowsData,
@@ -528,6 +529,7 @@ test.describe('Tooltip', () => {
     test.describe('rowRenderer', () => {
         const FLEX_SNAPSHOT_NAME = 'Tooltip-row-renderer-flex-layout.png';
         const TABLE_SNAPSHOT_NAME = 'Tooltip-row-renderer-table-layout.png';
+        const AREA_SNAPSHOT_NAME = 'Tooltip-row-renderer-area-table-layout.png';
 
         test('flex layout, JSX renderer', async ({mount, page}) => {
             await page.setViewportSize({width: 800, height: 400});
@@ -604,6 +606,43 @@ test.describe('Tooltip', () => {
             );
             const tooltip = page.locator('.gcharts-tooltip');
             await expect(tooltip).toHaveScreenshot(TABLE_SNAPSHOT_NAME);
+        });
+
+        test('area series, table layout, JSX renderer', async ({mount, page}) => {
+            await page.setViewportSize({width: 800, height: 400});
+            const component = await mount(
+                <StackingPercentRowRendererTestStory
+                    data={areaStakingPercentData}
+                    rendererType="table-jsx"
+                />,
+            );
+            const area = component.locator('.gcharts-area__series').first();
+            const areaBox = await getLocatorBoundingBox(area);
+            await page.mouse.move(
+                Math.round(areaBox.x + areaBox.width / 2),
+                Math.round(areaBox.y + areaBox.height / 2),
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip).toHaveScreenshot(AREA_SNAPSHOT_NAME);
+        });
+
+        test('area series, table layout, HTML string renderer', async ({mount, page}) => {
+            await page.setViewportSize({width: 800, height: 400});
+            const component = await mount(
+                <StackingPercentRowRendererTestStory
+                    data={areaStakingPercentData}
+                    rendererType="table-html"
+                />,
+            );
+            const area = component.locator('.gcharts-area__series').first();
+            const areaBox = await getLocatorBoundingBox(area);
+            await page.mouse.move(
+                Math.round(areaBox.x + areaBox.width / 2),
+                Math.round(areaBox.y + areaBox.height / 2),
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toHaveScreenshot(AREA_SNAPSHOT_NAME);
         });
     });
 

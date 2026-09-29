@@ -2,6 +2,7 @@ export * from './axis';
 export * from './chart-types';
 export * from './datetime';
 export * from './defaults';
+export * from './dimensions';
 export * from './layout-algorithms';
 export * from './line-styles';
 export * from './palette';

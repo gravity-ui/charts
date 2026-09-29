@@ -1,4 +1,5 @@
 export * from './area';
+export * from './area-range';
 export * from './bar-x';
 export * from './bar-y';
 export * from './other';

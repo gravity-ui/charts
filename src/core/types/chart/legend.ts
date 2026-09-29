@@ -1,5 +1,22 @@
 import type {BaseTextStyle} from './base';
 
+export interface ChartLegendItemClickData {
+    /** Legend group ID of the clicked item. Set `legend.groupId` on a series or pie/funnel data point for a stable ID. */
+    id: string;
+    /** Full configured legend label before truncation. May contain HTML, such as `<b>Created</b>`. */
+    name: string;
+    /** Whether the item was visible before the click. */
+    visible: boolean;
+}
+
+export interface ChartLegendEvents {
+    /**
+     * Called when a discrete legend item is clicked, before the configured click action runs.
+     * This callback is informational: its return value and `event.defaultPrevented` do not change series visibility.
+     */
+    itemClick?: (data: ChartLegendItemClickData, event: MouseEvent) => void;
+}
+
 export interface ChartLegendItem {
     enabled?: boolean;
     /**
@@ -12,6 +29,15 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
+    /** Event callbacks for discrete legend items. */
+    events?: ChartLegendEvents;
+    /**
+     * Action taken when a discrete legend item is clicked.
+     * `'default'` preserves the built-in selection behavior, including modifier keys.
+     * `'none'` leaves visibility unchanged while still calling `events.itemClick`.
+     * @default 'default'
+     */
+    itemClickAction?: 'default' | 'none';
     /**
      * Different types for different color schemes.
      * If the color scheme is continuous, a gradient legend will be drawn.
@@ -19,6 +45,12 @@ export interface ChartLegend extends ChartLegendItem {
      * @default 'discrete'
      */
     type?: 'discrete' | 'continuous';
+    /**
+     * Item layout for discrete legends, independent of the legend position.
+     * Vertical layout aligns one item per row and ignores `justifyContent`.
+     * @default 'horizontal'
+     */
+    layout?: 'horizontal' | 'vertical';
     /**
      * The horizontal alignment of the legend box within the chart area.
      * @default center
@@ -69,8 +101,24 @@ export interface ChartLegend extends ChartLegendItem {
          **/
         domain?: number[];
     };
-    /* Width of the legend */
-    width?: number;
+    /**
+     * Width of the legend as a finite, nonnegative pixel value (e.g. 200 or '200px')
+     * or decimal percentage (e.g. '25%').
+     * Strings must use decimal notation without a sign, whitespace, or exponent.
+     * Invalid values fall back to automatic sizing at runtime.
+     * Percentages are relative to the chart width after left/right chart margins,
+     * before legend or axis space is deducted, and are recalculated on resize.
+     * Percentages above 100% use 100% for both legend types.
+     * For discrete legends, controls the allocated width, item wrapping, and label truncation.
+     * Discrete widths are clamped between zero and the chart width excluding chart margins.
+     * If a side legend leaves no room for the plot,
+     * the plot and axes are not drawn.
+     * Defaults to the available chart width for top/bottom positions and half of it for left/right.
+     * For continuous legends, controls the gradient width and defaults to 200.
+     * Continuous pixel widths are not capped at the available chart width.
+     * @minimum 0
+     */
+    width?: number | string;
     /**
      * Allows to use any html-tags to display the content.
      * @default false

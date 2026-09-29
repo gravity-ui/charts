@@ -94,6 +94,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             },
             data: prepareSeriesData(series),
             stacking: series.stacking,
+            stackLabels: series.stackLabels,
             stackId: getSeriesStackId(series),
             valueAxis: 'y',
             dataLabels: {

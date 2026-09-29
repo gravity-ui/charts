@@ -3,7 +3,11 @@ import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedHeatmapSeries, PreparedLegend, PreparedSeries} from '~core/series/types';
+import type {
+    PreparedHeatmapSeries,
+    PreparedLegendOptions,
+    PreparedSeries,
+} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
@@ -12,7 +16,7 @@ import type {ChartSeriesOptions, HeatmapSeries, HeatmapSeriesData} from '../../t
 type PrepareHeatmapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
     series: HeatmapSeries[];
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     seriesOptions?: ChartSeriesOptions;
 };
 

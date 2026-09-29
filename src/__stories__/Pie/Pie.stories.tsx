@@ -13,6 +13,7 @@ import {
     pieDonutTotalsData,
     pieHtmlLabelsData,
     pieHtmlLegendData,
+    piePercentageFormatData,
     piePlaygroundData,
     pieUserStylesData,
 } from '../__data__';
@@ -61,6 +62,20 @@ export const PieHtmlLabels = {
     name: 'Html in labels',
     args: {
         data: pieHtmlLabelsData,
+    },
+} satisfies Story;
+
+export const PiePercentageFormatting = {
+    name: 'Percentage labels and tooltip',
+    args: {
+        data: piePercentageFormatData,
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'The same custom formatter combines the raw value with the visible slice percentage in data labels and tooltip. Percentages are recalculated when legend visibility changes.',
+            },
+        },
     },
 } satisfies Story;
 

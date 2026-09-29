@@ -20,6 +20,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
         for (const d of group) {
             xLookupPoints.push({
                 data: d.data,
+                percentage: d.percentage,
                 series: d.series as BarXSeries,
                 x: groupCenterX,
                 y0: d.y,

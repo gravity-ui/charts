@@ -11,11 +11,19 @@ import {renderBarX} from '~core/shapes/bar-x/renderer';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
-import {validateAxisPlotValues, validateStacking, validateXYSeries} from '~core/validation/helpers';
+import {
+    validateAxisPlotValues,
+    validatePercentStackingValues,
+    validateStacking,
+    validateXYSeries,
+} from '~core/validation/helpers';
 
-import type {BarXSeries} from '../../types';
+import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
+import {prepareStackLabels, renderStackLabels} from '../stack-labels';
+import {validateStackLabelsOptions} from '../stack-labels-options';
 
 import {prepareBarXSeries} from './prepare-bar-x-series';
+import {getBarXStackLabelAnchors} from './stack-labels';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -48,12 +56,18 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     });
 
     const filteredData = filterLayerLabels(data, otherLayers);
-    return {renderData: filteredData, tooltipItems: filteredData};
+    const labels = await prepareStackLabels({
+        ...args,
+        anchors: isRangeSlider ? [] : getBarXStackLabelAnchors(data, args),
+        otherLayers: [...otherLayers, ...filteredData],
+    });
+    return {renderData: filteredData, tooltipItems: filteredData, labels};
 }
 
 function renderShapes({
     plot,
     preparedData,
+    labels,
     seriesOptions,
     boundsWidth,
     boundsHeight,
@@ -61,28 +75,44 @@ function renderShapes({
 }: RenderShapesArgs) {
     const data = preparedData as PreparedBarXData[];
     const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-    return renderBarX(
+    const cleanup = renderBarX(
         {plot, boundsWidth, boundsHeight},
         data,
         seriesOptions,
         allowOverlap,
         dispatcher,
     );
+    renderStackLabels(plot, labels);
+    return cleanup;
 }
 
-export const barXPlugin: SeriesPlugin<BarXSeries> = {
+export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
+    zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
-    validate: ({series, xAxis, yAxis}) => {
+    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateStackLabelsOptions({
+            series,
+            allSeries,
+            options: seriesOptions?.['bar-x']?.stackLabels,
+        });
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validatePercentStackingValues({
+            series,
+            valueKey: 'y',
+            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+        });
     },
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            return {percentage: item.percentage, data: item.data};
+        },
         rows: [
             {
                 id: 'default',

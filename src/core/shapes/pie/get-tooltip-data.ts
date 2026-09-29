@@ -27,6 +27,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTo
         chunks: [
             {
                 data: closestPoint.data.series.data,
+                percentage: closestPoint.data.percentage,
                 series: closestPoint.data.series,
                 closest: true,
             },

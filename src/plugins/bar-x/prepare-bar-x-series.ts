@@ -46,6 +46,7 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             },
             data: prepareSeriesData(series),
             stacking: series.stacking,
+            stackLabels: series.stackLabels,
             stackId: getSeriesStackId(series),
             valueAxis: 'y',
             dataLabels: {

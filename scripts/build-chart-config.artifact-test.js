@@ -39,6 +39,213 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations support both legend layouts', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration +
+                    `
+                    const legend: ChartLegend = {position: 'left', layout: 'vertical'};
+                    legend.layout = 'horizontal';
+                    // @ts-expect-error Only horizontal and vertical layouts are supported.
+                    legend.layout = 'columns';
+                `,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema exposes legend layout values and the compatible default', () => {
+        expect(schema.definitions.ChartLegend.properties.layout).toMatchObject({
+            enum: ['horizontal', 'vertical'],
+            default: 'horizontal',
+        });
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const layout of [undefined, 'horizontal', 'vertical']) {
+            expect(validateConfig({series: {data: []}, legend: {layout}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {layout: 'columns'}})).toBe(false);
+    });
+
+    test('schema supports pixel and percentage legend widths', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const width of [0, 0.5, 230, '0px', '.5px', '230px', '0%', '12.5%', '150%']) {
+            expect(validateConfig({series: {data: []}, legend: {width}})).toBe(true);
+        }
+        for (const width of [-10, -0.5, NaN, Infinity, -Infinity, true]) {
+            expect(validateConfig({series: {data: []}, legend: {width}})).toBe(false);
+        }
+    });
+
+    test('schema accepts the supported legend item click actions', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const itemClickAction of ['default', 'none']) {
+            expect(validateConfig({series: {data: []}, legend: {itemClickAction}})).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {itemClickAction: 'toggle'}})).toBe(
+            false,
+        );
+    });
+
+    test('standalone declarations preserve series compatibility, formatters and legend widths', () => {
+        const usage = `
+            const legend: ChartLegend = {width: 230};
+            legend.width = '12.5%';
+            legend.width = '230px';
+            legend.width = '.5px';
+            legend.itemClickAction = 'none';
+            // String formats are checked at runtime and fall back to automatic sizing.
+            legend.width = '230em';
+            legend.width = '230';
+            // @ts-expect-error Booleans are not supported.
+            legend.width = true;
+            const pieFormat: PieValueFormat = {
+                type: 'custom',
+                formatter: ({percentage, name, value}) => percentage?.toFixed(2) ?? name ?? String(value),
+            };
+            const pie: PieSeries = {type: 'pie', data: [], dataLabels: {format: pieFormat}};
+            const shared: ValueFormat = pieFormat;
+            const line: LineSeries = {type: 'line', name: 'L', data: [], dataLabels: {format: shared}};
+            function applyDefaults<T extends BaseSeries>(series: T): T { return series; }
+            applyDefaults(pie);
+            applyDefaults(line);
+            const plainPie: PieSeries = {type: 'pie', data: []};
+            const area: AreaSeries = {type: 'area', name: 'A', data: []};
+            const barX: BarXSeries = {type: 'bar-x', name: 'A', data: []};
+            const barY: BarYSeries = {type: 'bar-y', name: 'A', data: []};
+            [plainPie, area, barX, barY].forEach(series => applyDefaults(series));
+            const strictFormat: ValueFormat<{value: unknown; percentage: number}> = {
+                type: 'custom', formatter: ({percentage}) => percentage.toFixed(2),
+            };
+            // @ts-expect-error A value-only formatter cannot require percentage.
+            const unsafe: ValueFormat = strictFormat;
+            line.dataLabels = {format: unsafe};
+            // @ts-expect-error Series contexts allow percentage to be absent.
+            pie.dataLabels = {format: strictFormat};
+            const legacy: ValueFormat = {type: 'custom', formatter: ({value}) => String(value)};
+            pie.dataLabels = {format: legacy};
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test('standalone declarations expose stack labels only on supported series and plugin options', () => {
+        const usage = `
+            const labels: StackLabelsOptions = {
+                enabled: true, padding: 8, allowOverlap: false, style: {fontSize: '12px'},
+                format: {type: 'custom', formatter: ({value}) => String(value)},
+            };
+            const options: ChartSeriesOptions = {
+                'bar-x': {stackLabels: labels}, 'bar-y': {stackLabels: labels},
+                area: {stackLabels: labels},
+            };
+            const area: AreaSeries = {type: 'area', name: 'A', data: [], stackLabels: labels};
+            const barX: BarXSeries = {type: 'bar-x', name: 'X', data: [], stackLabels: labels};
+            const barY: BarYSeries = {type: 'bar-y', name: 'Y', data: [], stackLabels: labels};
+            // @ts-expect-error Line series do not support stack labels.
+            const line: LineSeries = {type: 'line', name: 'L', data: [], stackLabels: labels};
+            // @ts-expect-error Stack labels are not supported by all series.
+            const series: BaseSeries = {stackLabels: labels};
+            // @ts-expect-error Point data labels do not contain stack settings.
+            const pointLabels: BaseDataLabels = {stackLabels: labels};
+            // @ts-expect-error Line does not support stack labels.
+            options.line = {stackLabels: labels};
+            void [area, barX, barY, line, series, pointLabels];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test.each(['bar-x', 'bar-y', 'area'])('schema supports stack labels for %s', (type) => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const config = {
+            series: {
+                data: [
+                    {
+                        type,
+                        name: 'A',
+                        stacking: 'normal',
+                        data: [{x: 0, y: 1}],
+                        stackLabels: {
+                            enabled: true,
+                            style: {fontSize: '14px'},
+                            padding: 6,
+                            allowOverlap: true,
+                            format: {type: 'number', precision: 1},
+                        },
+                    },
+                ],
+                options: {
+                    [type]: {
+                        stackLabels: {
+                            enabled: true,
+                            padding: 8,
+                            allowOverlap: false,
+                            style: {fontSize: '12px'},
+                            format: {type: 'number', precision: 2},
+                        },
+                    },
+                },
+            },
+        };
+        expect(validateConfig(config)).toBe(true);
+        config.series.data[0].stackLabels.enabled = 'yes';
+        expect(validateConfig(config)).toBe(false);
+        config.series.data[0].stackLabels.enabled = true;
+        config.series.options[type].stackLabels.enabled = 'yes';
+        expect(validateConfig(config)).toBe(false);
+    });
+
+    test('schema rejects stack labels on unsupported plugins and series', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const series = {type: 'line', name: 'A', data: [{x: 0, y: 1}]};
+        expect(
+            validateConfig({
+                series: {data: [series], options: {line: {stackLabels: {enabled: true}}}},
+            }),
+        ).toBe(false);
+        expect(validateConfig({series: {data: [{...series, stackLabels: {enabled: true}}]}})).toBe(
+            false,
+        );
+    });
+
+    test('area-range marker options are exposed in the standalone declaration and schema', () => {
+        const options = {
+            marker: {enabled: true, radius: 5, symbol: 'square', color: '#ff0000'},
+            states: {
+                hover: {
+                    marker: {
+                        enabled: true,
+                        borderWidth: 2,
+                    },
+                },
+            },
+        };
+        const range = {
+            type: 'area-range',
+            name: 'Range',
+            marker: options.marker,
+            data: [
+                {x: 0, y0: 1, y1: 2, marker: {color: '#00ff00', states: {normal: {enabled: true}}}},
+            ],
+        };
+        const config = {series: {options: {'area-range': options}, data: [range]}};
+        expect(createSchemaValidator().compile(schema)(config)).toBe(true);
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'area-range-marker-usage.ts'),
+                declaration + `\nexport const config: ChartConfig = ${JSON.stringify(config)};`,
+            ),
+        ).not.toThrow();
+    });
+
     test('validates declaration content without accessing the published file', () => {
         // DECLARATION_PATH (scripts/chart-config.d.ts) never exists on disk; validateDeclaration
         // uses it only as a virtual filename for the TypeScript compiler host.

@@ -1,5 +1,5 @@
 import type {PreparedSeries} from '../../series';
-import type {ChartXAxis, ChartYAxis} from '../../types';
+import type {AreaRangeSeriesData, ChartXAxis, ChartYAxis} from '../../types';
 import {getZoomedSeriesData} from '../zoom';
 
 // Minimal series factories. Real `PreparedSeries` carries many extra fields,
@@ -33,6 +33,10 @@ function area(opts: {data: {x: number; y: number}[]; stacking?: 'normal' | 'perc
     };
 }
 
+function areaRange(data: AreaRangeSeriesData[]) {
+    return {type: 'area-range', data};
+}
+
 function categoryXAxis(categories: string[]): ChartXAxis {
     return {type: 'category', categories} as ChartXAxis;
 }
@@ -57,6 +61,107 @@ describe('zoom/getZoomedSeriesData', () => {
             zoomState: {},
         });
         expect(result.preparedSeries).toBe(series);
+    });
+
+    test('preserves adjacent area-range points for x filtering', () => {
+        const series = [
+            areaRange([
+                {x: 0, y0: 1, y1: 5},
+                {x: 1, y0: 2, y1: 6},
+                {x: 2, y0: 3, y1: 7},
+                {x: 3, y0: 4, y1: 8},
+            ]),
+        ];
+        const result = getZoomedSeriesData({
+            seriesData: series as unknown as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [1, 2]},
+        });
+
+        expect(result.preparedSeries[0].data).toEqual([
+            {x: 1, y0: 2, y1: 6},
+            {x: 2, y0: 3, y1: 7},
+        ]);
+        expect(result.preparedShapesSeries[0].data).toEqual(series[0].data);
+    });
+
+    test.each(['line', 'area', 'area-range'] as const)(
+        '%s keeps adjacent shape points on a continuous X axis',
+        (type) => {
+            const data = [0, 1, 2, 3].map((x) => ({x, y: 5, y0: 1, y1: 5}));
+            const result = getZoomedSeriesData({
+                seriesData: [{type, data}] as unknown as PreparedSeries[],
+                xAxis: linearXAxis(),
+                zoomState: {x: [0.5, 2.5]},
+            });
+            expect(result.preparedSeries[0].data).toEqual(data.slice(1, 3));
+            expect(result.preparedShapesSeries[0].data).toEqual(data);
+        },
+    );
+
+    test.each(['line', 'area', 'area-range'] as const)(
+        '%s does not preserve neighbors on a category X axis',
+        (type) => {
+            const data = ['A', 'B', 'C', 'D'].map((x) => ({x, y: 5, y0: 1, y1: 5}));
+            const result = getZoomedSeriesData({
+                seriesData: [{type, data}] as unknown as PreparedSeries[],
+                xAxis: categoryXAxis(['D', 'C', 'B', 'A']),
+                zoomState: {x: [1, 2]},
+            });
+            expect(result.preparedSeries[0].data).toEqual(data.slice(1, 3));
+            expect(result.preparedShapesSeries[0].data).toEqual(data.slice(1, 3));
+        },
+    );
+
+    test.each([undefined, 'line', 'scatter'] as const)(
+        'Y/XY zoom keeps overlapping intervals next to %s',
+        (companion) => {
+            const data: AreaRangeSeriesData[] = [
+                {x: 0, y0: -20, y1: -10},
+                {x: 1, y0: 0, y1: 100},
+                {x: 2, y0: 10, y1: 25},
+                {x: 3, y0: 25, y1: 35},
+                {x: 4, y0: 40, y1: 50},
+                {x: 5, y0: null, y1: 30},
+            ];
+            const series = [
+                areaRange(data),
+                ...(companion ? [{type: companion, data: [{x: 2, y: 25}]}] : []),
+            ];
+            for (const x of [undefined, [0.5, 2.5] as [number, number]]) {
+                const result = getZoomedSeriesData({
+                    seriesData: series as PreparedSeries[],
+                    xAxis: linearXAxis(),
+                    yAxis: [linearYAxis()],
+                    zoomState: {...(x ? {x} : {}), y: [[20, 30]]},
+                });
+                expect(result.preparedSeries[0].data).toEqual(data.slice(1, x ? 3 : 4));
+                expect(result.preparedShapesSeries[0].data).toEqual(data.slice(0, x ? 4 : 5));
+                if (companion) {
+                    expect(result.preparedSeries[1].data).toEqual([{x: 2, y: 25}]);
+                }
+            }
+        },
+    );
+
+    test('area-range uses its own Y axis and includes intervals touching the edges', () => {
+        const data = [
+            {x: 0, y0: 0, y1: 20},
+            {x: 1, y0: 30, y1: 40},
+            {x: 2, y0: 40, y1: 50},
+            {x: 3, y0: 10, y1: null},
+        ];
+        const result = getZoomedSeriesData({
+            seriesData: [{...areaRange(data), yAxis: 1}] as PreparedSeries[],
+            yAxis: [linearYAxis(), linearYAxis()],
+            zoomState: {
+                y: [
+                    [500, 600],
+                    [20, 30],
+                ],
+            },
+        });
+        expect(result.preparedSeries[0].data).toEqual(data.slice(0, 2));
     });
 
     describe('stacked bar-x + xy zoom', () => {

@@ -69,3 +69,15 @@ series: {
 ## Placement
 
 Line series can choose where a label goes and what to do when it does not fit — see [Data label placement](./series-types/line.md#data-label-placement) in the Line series guide.
+
+## Stack total labels
+
+For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.
+
+Totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals. Zero totals appear only for all-zero stacks.
+
+Participants with the same type, `stackId` and value axis must have matching effective `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom formats must share the same formatter function.
+
+**Segment labels take priority over totals in the same plugin layer**, even for a small top segment: the overlapping total is hidden. Set `stackLabels.allowOverlap: true` to keep both labels. See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
+
+<div data-chart-example="data-labels/stack-labels"></div>

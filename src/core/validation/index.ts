@@ -88,6 +88,7 @@ export function validateData(data?: ChartData) {
         getSeriesPlugin(series.type).validate?.({
             series,
             allSeries: data.series.data,
+            seriesOptions: data.series.options,
             xAxis: data.xAxis,
             yAxis: data.yAxis,
         });

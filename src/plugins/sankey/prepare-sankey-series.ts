@@ -2,7 +2,7 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'lodash/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
-import type {PreparedLegend, PreparedSankeySeries} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedSankeySeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
@@ -10,7 +10,7 @@ import type {ChartSeriesOptions, SankeySeries} from '../../types';
 
 type PrepareSankeySeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     series: SankeySeries[];
     seriesOptions?: ChartSeriesOptions;
 };

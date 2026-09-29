@@ -19,7 +19,7 @@ export interface ChartZoom {
      * If no type is specified, a default will be chosen based on the series.
      *
      * Supported zoom types by series type:
-     * - `Area`, `Line`, `Scatter`: `x`, `y`, `xy`
+     * - `Area`, `AreaRange`, `Line`, `Scatter`: `x`, `y`, `xy`
      * - `BarX`: `x`, `xy`
      * - `BarY`: `y`, `xy`
      * - `XRange`: `x`
@@ -27,7 +27,7 @@ export interface ChartZoom {
      * Default zoom type by series type:
      * - `BarY`: `y`
      * - `Scatter`: `xy`
-     * - All others: `x`
+     * - All others (including `AreaRange`): `x`
      */
     type?: ZoomType;
     /**

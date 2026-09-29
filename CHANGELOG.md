@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.61.0](https://github.com/gravity-ui/charts/compare/v1.60.0...v1.61.0) (2026-09-24)
+
+
+### Features
+
+* add area range series ([#673](https://github.com/gravity-ui/charts/issues/673)) ([d5f44cb](https://github.com/gravity-ui/charts/commit/d5f44cbd400951326b47ae639c71e4283e1b0a15))
+* **legend:** add vertical layout support ([#704](https://github.com/gravity-ui/charts/issues/704)) ([ae70eb6](https://github.com/gravity-ui/charts/commit/ae70eb683281214d704c60191c0dc8675c08db2c))
+* **legend:** support pixel strings and percentage widths ([#701](https://github.com/gravity-ui/charts/issues/701)) ([f2137bc](https://github.com/gravity-ui/charts/commit/f2137bc7d59298cf244cebc176cde8ce84cbf361))
+
+
+### Bug Fixes
+
+* **legend:** match symbol widths to rendered geometry ([#706](https://github.com/gravity-ui/charts/issues/706)) ([8813a0a](https://github.com/gravity-ui/charts/commit/8813a0a531bae14288121819bd3d9c6ed631a30d))
+* **legend:** respect width for discrete legends ([#699](https://github.com/gravity-ui/charts/issues/699)) ([ef7352f](https://github.com/gravity-ui/charts/commit/ef7352f23d975b716abdb3bfbf9557441d5f330b))
+
+## [1.60.0](https://github.com/gravity-ui/charts/compare/v1.59.1...v1.60.0) (2026-09-18)
+
+
+### Features
+
+* add stack total labels for bar and area charts ([#690](https://github.com/gravity-ui/charts/issues/690)) ([8773fa0](https://github.com/gravity-ui/charts/commit/8773fa0aa0d3d351af7ce4c4306e3305da348a1d))
+* expose percentage in data label and tooltip formatters ([#672](https://github.com/gravity-ui/charts/issues/672)) ([79edceb](https://github.com/gravity-ui/charts/commit/79edceb283d1965c42a1f3031c21f76f4b6af17f))
+
+
+### Bug Fixes
+
+* isolate stacks and correct data label overlap ([#693](https://github.com/gravity-ui/charts/issues/693)) ([df8db62](https://github.com/gravity-ui/charts/commit/df8db6264bc04c9f06e21568ddfda2d0c0d89bcc))
+
+## [1.59.1](https://github.com/gravity-ui/charts/compare/v1.59.0...v1.59.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **tooltip:** give a custom rowRenderer the series color for area and line ([#687](https://github.com/gravity-ui/charts/issues/687)) ([acc00a8](https://github.com/gravity-ui/charts/commit/acc00a81f63a0af4ed2170f7667da3b71948c638))
+
 ## [1.59.0](https://github.com/gravity-ui/charts/compare/v1.58.0...v1.59.0) (2026-09-01)
 
 

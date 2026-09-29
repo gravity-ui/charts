@@ -14,25 +14,40 @@ import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {
     validateAxisPlotValues,
+    validatePercentStackingValues,
     validateSeriesColor,
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaSeries, TooltipDataChunkArea} from '../../types';
+import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
+import {prepareStackLabels, renderStackLabels} from '../stack-labels';
+import {validateStackLabelsOptions} from '../stack-labels-options';
 
 import {prepareAreaSeries} from './prepare-area-series';
+import {getAreaStackLabelAnchors} from './stack-labels';
 
-export const areaPlugin: SeriesPlugin<AreaSeries> = {
+export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
+    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
     prepareSeries: prepareAreaSeries,
-    validate: ({series, xAxis, yAxis}) => {
+    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateStackLabelsOptions({
+            series,
+            allSeries,
+            options: seriesOptions?.area?.stackLabels,
+        });
         validateAxisPlotValues({series, xAxis, yAxis});
         validateSeriesColor({color: series.color, seriesName: series.name});
         validateSeriesColor({color: series.fillColor, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validatePercentStackingValues({
+            series,
+            valueKey: 'y',
+            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+        });
 
         const isStacking = ['normal', 'percent'].includes(series.stacking as string);
         if (isStacking && series.nullMode === 'connect') {
@@ -74,25 +89,41 @@ export const areaPlugin: SeriesPlugin<AreaSeries> = {
         });
 
         const filteredData = filterLayerLabels(data, otherLayers);
-        return {renderData: filteredData, tooltipItems: filteredData};
+        const labels = await prepareStackLabels({
+            ...args,
+            anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
+            otherLayers: [...otherLayers, ...filteredData],
+        });
+        return {renderData: filteredData, tooltipItems: filteredData, labels};
     },
-    renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+    renderShapes: function ({
+        plot,
+        preparedData,
+        seriesOptions,
+        dispatcher,
+        labels,
+    }: RenderShapesArgs) {
         const data = preparedData as PreparedAreaData[];
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        return renderArea({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        const cleanup = renderArea({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        renderStackLabels(plot, labels);
+        return cleanup;
     },
     tooltip: {
         prepareData: getTooltipData,
+        getValueFormatContext: (item) => {
+            return {percentage: item.percentage, data: item.data};
+        },
         rows: [
             {
                 id: 'default',
                 cells: [
                     {
                         id: 'color',
-                        source: ({item}) => {
-                            const areaItem = item as TooltipDataChunkArea;
-                            const s = areaItem.series as PreparedAreaSeries;
-                            return getTooltipColorSymbol({color: areaItem.color ?? s.color});
+                        source: 'color',
+                        format: {
+                            type: 'custom',
+                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
                         },
                         width: '16px',
                     },

@@ -1,7 +1,7 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
-import type {ChartData} from '../../types';
+import type {ChartData, ChartLegend} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
 function getValidGradient() {
@@ -15,6 +15,76 @@ function getValidGradient() {
 }
 
 describe('validation/validateData', () => {
+    test.each([
+        -10,
+        -0.5,
+        NaN,
+        Infinity,
+        -Infinity,
+        '',
+        '%',
+        '25',
+        'px',
+        '.px',
+        '25em',
+        '25.px',
+        '25.5.5px',
+        '-25px',
+        '-0px',
+        ' 25px',
+        '25px ',
+        '25px\n',
+        '1e2px',
+        '23e5px',
+        'NaNpx',
+        'Infinitypx',
+        `${'9'.repeat(400)}px`,
+        '25px%',
+        '25.%',
+        '25.5.5%',
+        '-25%',
+        ' 25%',
+        '25%\n',
+        '25%\r',
+        '25%\r\n',
+        '25%\u2028',
+        '25%\u2029',
+        '1e2%',
+        'NaN%',
+        'Infinity%',
+        `${'9'.repeat(400)}%`,
+    ])('does not fail chart validation for invalid legend width %p', (width) => {
+        for (const enabled of [true, false]) {
+            const data: ChartData = {
+                series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+                legend: {width, enabled},
+            };
+            expect(() => validateData(data)).not.toThrow();
+        }
+    });
+
+    test.each<ChartLegend['width']>([
+        undefined,
+        0,
+        0.5,
+        230,
+        '0px',
+        '.5px',
+        '12.5px',
+        '25px',
+        '230px',
+        '0%',
+        '.5%',
+        '12.5%',
+        '150%',
+    ])('accepts legend width %j', (width) => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+            legend: {width},
+        };
+        expect(() => validateData(data)).not.toThrow();
+    });
+
     test.each<any>([undefined, null, {}, {series: {}}, {series: {data: []}}])(
         'validateData should throw an error in case of empty data (data: %j)',
         (data) => {
@@ -159,6 +229,43 @@ describe('validation/validateData', () => {
         );
     });
 
+    test('validateData should accept an area range series', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'area-range',
+                        name: 'Series 1',
+                        data: [
+                            {x: 1, y0: 2, y1: 5},
+                            {x: 2, y0: null, y1: null},
+                        ],
+                    },
+                ],
+            },
+        };
+
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('validateData should reject an area range with y0 greater than y1', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'area-range',
+                        name: 'Series 1',
+                        data: [{x: 1, y0: 5, y1: 2}],
+                    },
+                ],
+            },
+        };
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
     test.each([
         {
             series: {
@@ -217,6 +324,84 @@ describe('validation/validateData', () => {
             expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
         },
     );
+
+    test.each([
+        {
+            series: {
+                data: [{type: 'area', name: 'Area', stacking: 'percent', data: [{x: 1, y: -1}]}],
+            },
+        },
+        {
+            series: {
+                data: [{type: 'bar-x', name: 'Bar X', stacking: 'percent', data: [{x: 1, y: -1}]}],
+            },
+        },
+        {
+            series: {
+                data: [{type: 'bar-y', name: 'Bar Y', stacking: 'percent', data: [{x: -1, y: 1}]}],
+            },
+        },
+    ])('validateData should reject negative percent-stacking values (data: %j)', (data) => {
+        expect(() => validateData(data as ChartData)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    describe.each(['area', 'bar-x', 'bar-y'] as const)('%s percent stacking', (type) => {
+        test.each(['linear', 'datetime', 'logarithmic'] as const)(
+            'rejects negative numeric strings on a %s value axis',
+            (axisType) => {
+                const data: ChartData = {
+                    ...(type === 'bar-y' ? {xAxis: {type: axisType}} : {yAxis: [{type: axisType}]}),
+                    series: {
+                        data: [
+                            {
+                                type,
+                                name: 'Negative',
+                                stacking: 'percent',
+                                data: [type === 'bar-y' ? {x: '-5', y: 1} : {x: 1, y: '-5'}],
+                            },
+                        ],
+                    },
+                };
+                expect(() => validateData(data)).toThrow(
+                    expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+                );
+            },
+        );
+
+        test('preserves category names that look like negative numbers', () => {
+            const axis = {type: 'category' as const, categories: ['-5']};
+            const data: ChartData = {
+                ...(type === 'bar-y' ? {xAxis: axis} : {yAxis: [axis]}),
+                series: {
+                    data: [
+                        {
+                            type,
+                            name: 'Category',
+                            stacking: 'percent',
+                            data: [type === 'bar-y' ? {x: '-5', y: 1} : {x: 1, y: '-5'}],
+                        },
+                    ],
+                },
+            };
+            expect(() => validateData(data)).not.toThrow();
+        });
+    });
+
+    test('validateData should allow negative values for normal stacking', () => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {type: 'area', name: 'Area', stacking: 'normal', data: [{x: 1, y: -1}]},
+                    {type: 'bar-x', name: 'Bar X', stacking: 'normal', data: [{x: 1, y: -1}]},
+                    {type: 'bar-y', name: 'Bar Y', stacking: 'normal', data: [{x: -1, y: 1}]},
+                ],
+            },
+        };
+
+        expect(() => validateData(data)).not.toThrow();
+    });
 
     test.each([
         null,

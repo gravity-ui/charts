@@ -1,8 +1,17 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {
+    BaseDataLabels,
+    BaseSeries,
+    BaseSeriesData,
+    BaseSeriesLegend,
+    CustomFormatContext,
+    PercentageFormatContext,
+    ValueFormat,
+} from './base';
 import type {RectLegendSymbolOptions} from './legend';
+import type {StackLabelsOptions} from './series';
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
@@ -23,6 +32,16 @@ export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /** Individual opacity for the bar. */
     opacity?: number;
 }
+
+/**
+ * Formatter context. `percentage` is provided only for percent stacking.
+ */
+export interface BarYFormatContext<T = MeaningfulAny>
+    extends CustomFormatContext, PercentageFormatContext {
+    data?: BarYSeriesData<T>;
+}
+
+export type BarYValueFormat<T = MeaningfulAny> = ValueFormat<BarYFormatContext<T>>;
 
 export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     type: typeof SERIES_TYPE.BarY;
@@ -48,23 +67,32 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Whether to stack the values of each series on top of each other.
      * Possible values are undefined to disable, "normal" to stack by value or "percent"
+     * Percent stacking supports only non-negative values.
      */
     stacking?: 'normal' | 'percent';
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
+    /** Override plugin stack label options. Only enabled series contribute to totals. */
+    stackLabels?: StackLabelsOptions;
     /**
      * Whether to group non-stacked columns or to let them render independent of each other.
      * When false columns will be laid out individually and overlap each other.
      * @default true
      */
     grouping?: boolean;
-    dataLabels?: BaseSeries['dataLabels'] & {
+    dataLabels?: Omit<BaseDataLabels, 'format'> & {
+        /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
+        format?: BarYValueFormat<T>;
         /**
          * Whether to align the data label inside or outside the box.
          * For charts with a percentage stack, it is always true.
          * @default false
          */
         inside?: boolean;
+    };
+    tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
+        /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */
+        valueFormat?: BarYValueFormat<T>;
     };
     /** Individual series legend options. Has higher priority than legend options in widget data */
     legend?: BaseSeriesLegend & {

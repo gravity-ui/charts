@@ -1,13 +1,18 @@
 import type {
+    AreaRangeSeries,
+    AreaRangeSeriesData,
     AreaSeries,
     AreaSeriesData,
+    AreaValueFormat,
     BarXSeries,
     BarXSeriesData,
+    BarXValueFormat,
     BarYSeries,
     BarYSeriesData,
+    BarYValueFormat,
+    BaseSeries,
     BaseTextStyle,
     ChartLegend,
-    ChartSeries,
     ChartSeriesRangeSliderOptions,
     ConnectorCurve,
     ConnectorShape,
@@ -26,6 +31,7 @@ import type {
     PathLegendSymbolOptions,
     PieSeries,
     PieSeriesData,
+    PieValueFormat,
     RadarSeries,
     RadarSeriesCategory,
     RadarSeriesData,
@@ -91,9 +97,28 @@ export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | Symbol
     bboxWidth: number;
 };
 
-export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>> & {
-    hangingOffset: number;
+export interface PreparedLegendRowItem {
+    symbolLeft: number;
+    textLeft: number;
+}
+
+export interface PreparedLegendRow {
+    top: number;
+    left: number;
     height: number;
+    width: number;
+    items: PreparedLegendRowItem[];
+}
+
+export interface PreparedLegendOptions extends Required<
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'events'>
+> {
+    events: ChartLegend['events'];
+    /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
+    resolvedWidth: number;
+    /** Nonnegative chart width after chart margins, before legend and axis space is deducted. */
+    availableWidth: number;
+    hangingOffset: number;
     lineHeight: number;
     title: {
         enable: boolean;
@@ -114,7 +139,12 @@ export type PreparedLegend = Required<Omit<ChartLegend, 'title' | 'colorScale'>>
         domain: number[];
         stops: number[];
     };
-};
+}
+
+export interface PreparedLegend extends PreparedLegendOptions {
+    height: number;
+    rows: PreparedLegendRow[];
+}
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
 
@@ -137,7 +167,7 @@ export type PreparedHaloOptions = {
     size: number;
 };
 
-type BasePreparedSeries = {
+type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
     color: string;
     name: string;
     id: string;
@@ -150,7 +180,7 @@ type BasePreparedSeries = {
         symbol: PreparedLegendSymbol;
     };
     cursor: string | null;
-    tooltip: ChartSeries['tooltip'];
+    tooltip: TTooltip;
     custom: MeaningfulAny;
 };
 
@@ -209,6 +239,7 @@ export type PreparedBarXSeries = {
     data: BarXSeriesData[];
     stackId: string;
     stacking: BarXSeries['stacking'];
+    stackLabels?: BarXSeries['stackLabels'];
     valueAxis: 'y';
     dataLabels: {
         enabled: boolean;
@@ -217,11 +248,11 @@ export type PreparedBarXSeries = {
         allowOverlap: boolean;
         padding: number;
         html: boolean;
-        format?: ValueFormat;
+        format?: BarXValueFormat;
     };
     borderRadius: number;
     yAxis: number;
-} & BasePreparedSeries &
+} & BasePreparedSeries<BarXSeries['tooltip']> &
     BasePreparedAxisRelatedSeries;
 
 export type PreparedBarYSeries = {
@@ -229,6 +260,7 @@ export type PreparedBarYSeries = {
     data: BarYSeriesData[];
     stackId: string;
     stacking: BarYSeries['stacking'];
+    stackLabels?: BarYSeries['stackLabels'];
     valueAxis: 'x';
     dataLabels: {
         padding: number;
@@ -238,13 +270,13 @@ export type PreparedBarYSeries = {
         maxHeight: number;
         maxWidth: number;
         html: boolean;
-        format?: ValueFormat;
+        format?: BarYValueFormat;
         allowOverlap: boolean;
     };
     borderRadius: number;
     borderWidth: number;
     borderColor: string;
-} & BasePreparedSeries;
+} & BasePreparedSeries<BarYSeries['tooltip']>;
 
 export type PreparedHeatmapSeries = {
     type: HeatmapSeries['type'];
@@ -282,7 +314,7 @@ export type PreparedPieSeries = {
         distance: number;
         connectorCurve: ConnectorCurve;
         html: boolean;
-        format?: ValueFormat;
+        format?: PieValueFormat;
     };
     states: {
         hover: {
@@ -291,7 +323,7 @@ export type PreparedPieSeries = {
     };
     renderCustomShape?: PieSeries['renderCustomShape'];
     opacity: number | null;
-} & BasePreparedSeries;
+} & BasePreparedSeries<PieSeries['tooltip']>;
 
 export type PreparedLineSeries = {
     type: LineSeries['type'];
@@ -339,6 +371,7 @@ export type PreparedAreaSeries = {
     type: AreaSeries['type'];
     data: AreaSeriesData[];
     stacking: AreaSeries['stacking'];
+    stackLabels?: AreaSeries['stackLabels'];
     stackId: string;
     valueAxis: 'y';
     lineWidth: number;
@@ -350,7 +383,7 @@ export type PreparedAreaSeries = {
         padding: number;
         allowOverlap: boolean;
         html: boolean;
-        format?: ValueFormat;
+        format?: AreaValueFormat;
     };
     marker: {
         states: {
@@ -369,6 +402,28 @@ export type PreparedAreaSeries = {
                 halo: PreparedHaloOptions;
             };
         };
+    };
+    gradient?: LinearGradient;
+    fillColor: string;
+    fillGradient?: LinearGradient;
+    yAxis: number;
+} & BasePreparedSeries<AreaSeries['tooltip']> &
+    BasePreparedAxisRelatedSeries;
+
+export type PreparedAreaRangeSeries = {
+    type: AreaRangeSeries['type'];
+    data: AreaRangeSeriesData[];
+    lineWidth: number;
+    opacity: number;
+    nullMode: AreaRangeSeries['nullMode'];
+    marker: PreparedAreaSeries['marker'];
+    dataLabels: {
+        enabled: boolean;
+        style: BaseTextStyle;
+        padding: number;
+        allowOverlap: boolean;
+        html: boolean;
+        format?: ValueFormat;
     };
     gradient?: LinearGradient;
     fillColor: string;
@@ -499,6 +554,7 @@ export type PreparedSeries =
     | PreparedPieSeries
     | PreparedLineSeries
     | PreparedAreaSeries
+    | PreparedAreaRangeSeries
     | PreparedTreemapSeries
     | PreparedWaterfallSeries
     | PreparedSankeySeries

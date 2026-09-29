@@ -8,7 +8,7 @@ import {
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
-import type {PreparedLegend, PreparedRadarSeries} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedRadarSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getUniqId} from '~core/utils';
@@ -18,7 +18,7 @@ import type {ChartSeriesOptions, RadarSeries} from '../../types';
 type PrepareRadarSeriesArgs = {
     series: RadarSeries[];
     seriesOptions?: ChartSeriesOptions;
-    legend: PreparedLegend;
+    legend: PreparedLegendOptions;
     colors: string[];
 };
 
