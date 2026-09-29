@@ -14,7 +14,7 @@ import type {LineSeries, LineSeriesData} from './line';
 import type {PieSeries, PieSeriesData} from './pie';
 import type {RadarSeries, RadarSeriesCategory, RadarSeriesData} from './radar';
 import type {SankeySeries, SankeySeriesData} from './sankey';
-import type {ScatterClusterData, ScatterSeries, ScatterSeriesData} from './scatter';
+import type {ScatterClusterData, ScatterSeries} from './scatter';
 import type {TreemapSeries, TreemapSeriesData} from './treemap';
 import type {WaterfallSeries, WaterfallSeriesData} from './waterfall';
 import type {XRangeSeries, XRangeSeriesData} from './x-range';
@@ -40,7 +40,8 @@ export interface TooltipDataChunkPie<T = MeaningfulAny> {
 }
 
 export interface TooltipDataChunkScatter<T = MeaningfulAny> {
-    data: ScatterSeriesData<T> | ScatterClusterData<T>;
+    data: ScatterClusterData<T>;
+    color?: string;
     series: {
         type: ScatterSeries['type'];
         id: string;

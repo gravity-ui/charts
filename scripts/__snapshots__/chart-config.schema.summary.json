@@ -82,7 +82,7 @@
     "SankeySeries<JsonValue>",
     "SankeySeriesData<JsonValue>",
     "ScatterClusterDataLabelsOptions",
-    "ScatterClusterMarkerOptions",
+    "ScatterClusterLayoutAlgorithmOptions",
     "ScatterClusterOptions",
     "ScatterSeries<JsonValue>",
     "ScatterSeriesData<JsonValue>",
@@ -585,9 +585,16 @@
       "visible"
     ],
     "SankeySeriesData<JsonValue>": ["color", "custom", "dataLabels", "links", "name", "tooltip"],
-    "ScatterClusterDataLabelsOptions": ["enabled", "format", "style"],
-    "ScatterClusterMarkerOptions": ["color", "radius"],
-    "ScatterClusterOptions": ["dataLabels", "distance", "enabled", "marker", "minimumClusterSize"],
+    "ScatterClusterDataLabelsOptions": ["allowOverlap", "enabled", "format", "style"],
+    "ScatterClusterLayoutAlgorithmOptions": ["gridSize", "type"],
+    "ScatterClusterOptions": [
+      "dataLabels",
+      "enabled",
+      "layoutAlgorithm",
+      "marker",
+      "minimumClusterSize",
+      "overlapMode"
+    ],
     "ScatterSeries<JsonValue>": [
       "cluster",
       "color",

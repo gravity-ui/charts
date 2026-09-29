@@ -17,9 +17,12 @@ export const ScatterClusterEventsTestStory = ({data}: Props) => {
                 events: {
                     ...data.chart?.events,
                     click: ({point}) => {
-                        const cluster = point as ScatterClusterData<{id: string}>;
-                        const ids = cluster.clusteredData.map((item) => item.custom?.id).join(',');
-                        setClickedCluster(`${cluster.clusterSize}:${ids}`);
+                        const cluster = (point as ScatterClusterData<{id: string}>).cluster;
+                        if (!cluster) {
+                            return;
+                        }
+                        const ids = cluster.points.map((item) => item.custom?.id).join(',');
+                        setClickedCluster(`${cluster.size}:${ids}`);
                     },
                 },
             },

@@ -16,9 +16,9 @@ import {getSymbolType, getUniqId} from '~core/utils';
 
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 
-const DEFAULT_CLUSTER_DISTANCE = 40;
 const DEFAULT_CLUSTER_MINIMUM_SIZE = 2;
 const DEFAULT_CLUSTER_RADIUS = 8;
+const DEFAULT_CLUSTER_GRID_SIZE = 50;
 const DEFAULT_CLUSTER_DATALABELS_STYLE = {
     ...DEFAULT_DATALABELS_STYLE,
     fontSize: '10px',
@@ -80,6 +80,7 @@ export function prepareScatterSeries(
         const name = 'name' in s && s.name ? s.name : '';
         const symbolType = (s as ScatterSeries).symbolType || getSymbolType(index);
         const yAxisIndex = get(s, 'yAxis', 0);
+        const marker = prepareMarker(s, seriesOptions, index);
 
         const prepared: PreparedScatterSeries = {
             id,
@@ -96,17 +97,23 @@ export function prepareScatterSeries(
             data: prepareSeriesData(s),
             cluster: {
                 enabled: s.cluster?.enabled ?? false,
-                distance: Math.max(1, s.cluster?.distance ?? DEFAULT_CLUSTER_DISTANCE),
+                layoutAlgorithm: {
+                    type: s.cluster?.layoutAlgorithm?.type ?? 'grid',
+                    gridSize: s.cluster?.layoutAlgorithm?.gridSize ?? DEFAULT_CLUSTER_GRID_SIZE,
+                },
+                overlapMode: s.cluster?.overlapMode ?? 'allow',
                 minimumClusterSize: Math.max(
                     2,
                     Math.floor(s.cluster?.minimumClusterSize ?? DEFAULT_CLUSTER_MINIMUM_SIZE),
                 ),
                 marker: {
-                    color: s.cluster?.marker?.color,
+                    ...marker.states.normal,
                     radius: Math.max(1, s.cluster?.marker?.radius ?? DEFAULT_CLUSTER_RADIUS),
+                    ...s.cluster?.marker,
                 },
                 dataLabels: {
                     enabled: s.cluster?.dataLabels?.enabled ?? true,
+                    allowOverlap: s.cluster?.dataLabels?.allowOverlap ?? true,
                     format: s.cluster?.dataLabels?.format,
                     style: Object.assign(
                         {},
@@ -123,7 +130,7 @@ export function prepareScatterSeries(
                 html: get(s, 'dataLabels.html', false),
                 format: s.dataLabels?.format,
             },
-            marker: prepareMarker(s, seriesOptions, index),
+            marker,
             cursor: get(s, 'cursor', null),
             yAxis: yAxisIndex,
             tooltip: {
