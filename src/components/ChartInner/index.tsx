@@ -102,6 +102,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         yScale,
         preparedTitle,
         preparedChart,
+        gradientReference,
     } = useChartInnerProps({
         ...props,
         clipPathId,
@@ -405,6 +406,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 debouncedAllPreparedSeries &&
                 preparedSeriesOptions && (
                     <RangeSlider
+                        gradientReference={gradientReference}
                         activeLegendItems={activeLegendItems ?? []}
                         boundsOffsetLeft={debouncedOffsetLeft}
                         boundsWidth={debouncedBoundsWidth}

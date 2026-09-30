@@ -17,6 +17,7 @@ import {
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {setGradientPointFills} from '../../utils/gradient';
+import {prepareGradientCoords} from '../../utils/gradient-reference';
 import {getPositiveShare} from '../../utils/percentage';
 
 import type {PointData, PreparedAreaData} from './types';
@@ -385,7 +386,31 @@ export const prepareAreaData = async (args: {
                     (d) => d.marker?.states?.normal?.enabled,
                 );
 
-                setGradientPointFills(points, s.gradient);
+                const gradientCoords = prepareGradientCoords({
+                    gradient: s.gradient,
+                    state: s.gradientState,
+                    paint: 'stroke',
+                    points,
+                    xScale,
+                    yScale: seriesYScale,
+                    yAxisTop,
+                });
+                const fillGradientCoords = prepareGradientCoords({
+                    gradient: s.fillGradient,
+                    state: s.gradientState,
+                    paint: 'fill',
+                    points: s.fillGradient
+                        ? points.flatMap((point) =>
+                              point.y === null || point.hiddenInLine
+                                  ? []
+                                  : [point, {...point, y: point.y0}],
+                          )
+                        : [],
+                    xScale,
+                    yScale: seriesYScale,
+                    yAxisTop,
+                });
+                setGradientPointFills(points, s.gradient, gradientCoords);
 
                 const markers =
                     s.marker.states.normal.enabled || hasPerPointNormalMarkers
@@ -425,6 +450,8 @@ export const prepareAreaData = async (args: {
                 seriesStackData.push({
                     annotations,
                     points,
+                    gradientCoords,
+                    fillGradientCoords,
                     markers,
                     getHoverMarkers: buildHoverMarkerGetter(points, s),
                     svgLabels: [],

@@ -46,6 +46,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         width,
         xAxis,
         yAxis,
+        gradientReference,
     } = props;
     const filteredPreparedSeries = React.useMemo(() => {
         return preparedSeries.filter((s) => {
@@ -82,6 +83,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         yAxis: preparedYAxis,
     });
     const {shapes} = useShapes({
+        gradientReference,
         boundsHeight: preparedRangeSlider.height,
         boundsWidth,
         clipPathId,

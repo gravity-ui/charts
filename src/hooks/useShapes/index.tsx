@@ -11,6 +11,7 @@ import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
 import {getSeriesClipPathId} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
+import type {SeriesGradientState, ShapeDataReference} from '~core/utils/gradient-reference';
 import type {ZoomState} from '~core/zoom/types';
 
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
@@ -39,7 +40,53 @@ type Args = {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
     zoomState?: Partial<ZoomState>;
+    getUnzoomedData?: () => ShapeDataReference;
+    gradientReference?: ShapeDataReference;
 };
+
+const gradientStates = new WeakMap<ShapeDataReference, Promise<Map<string, SeriesGradientState>>>();
+
+function hasGradient(series: PreparedSeries) {
+    return (
+        ('gradient' in series && Boolean(series.gradient)) ||
+        ('fillGradient' in series && Boolean(series.fillGradient))
+    );
+}
+
+function getGradientStates(reference: ShapeDataReference, seriesOptions: PreparedSeriesOptions) {
+    let result = gradientStates.get(reference);
+    if (!result) {
+        result = (async () => {
+            const states = new Map<string, SeriesGradientState>();
+            const series = reference.series.map((item) => {
+                const state: SeriesGradientState = {paints: new Map()};
+                states.set(item.id, state);
+                const prepared: PreparedSeries = {...item, gradientState: state};
+                if ('dataLabels' in prepared) {
+                    prepared.dataLabels = {...prepared.dataLabels, enabled: false};
+                }
+                return prepared;
+            });
+            // Plugins provide the full geometry, including stacks and fill baselines.
+            // The common gradient resolver captures it once before visible-range filtering.
+            for (const [type, items] of group(series, (item) => item.type)) {
+                if (!items.some(hasGradient)) {
+                    continue;
+                }
+                await getSeriesPlugin(type).prepareShapeData({
+                    ...reference,
+                    series: items,
+                    allSeries: series,
+                    seriesOptions,
+                    isRangeSlider: true,
+                });
+            }
+            return states;
+        })();
+        gradientStates.set(reference, result);
+    }
+    return result;
+}
 
 function IS_OUTSIDE_BOUNDS() {
     return false;
@@ -80,13 +127,24 @@ export async function getShapes(args: Args) {
         yAxis,
         yScale,
         zoomState,
+        getUnzoomedData,
+        gradientReference,
     } = args;
 
     if (boundsWidth <= 0 || boundsHeight <= 0) {
         return {shapes: [], shapesData: []};
     }
 
-    const visibleSeries = getOnlyVisibleSeries(series);
+    let visibleSeries = getOnlyVisibleSeries(series);
+    const reference =
+        gradientReference ?? (visibleSeries.some(hasGradient) ? getUnzoomedData?.() : undefined);
+    if (reference && visibleSeries.some(hasGradient)) {
+        const states = await getGradientStates(reference, seriesOptions);
+        visibleSeries = visibleSeries.map((item) => ({
+            ...item,
+            gradientState: states.get(item.id),
+        }));
+    }
     const groupedSeries = group(visibleSeries, (item) => {
         if (item.type === 'line') {
             return item.id;
@@ -175,6 +233,8 @@ export const useShapes = (args: Args) => {
         yAxis,
         yScale,
         zoomState,
+        getUnzoomedData,
+        gradientReference,
     } = args;
 
     const [shapesElements, setShapesElements] = React.useState<React.ReactElement[]>([]);
@@ -210,6 +270,8 @@ export const useShapes = (args: Args) => {
                 yAxis,
                 yScale,
                 zoomState,
+                getUnzoomedData,
+                gradientReference,
             });
 
             if (countedRef.current === currentRun) {
@@ -235,6 +297,8 @@ export const useShapes = (args: Args) => {
         yAxis,
         yScale,
         zoomState,
+        getUnzoomedData,
+        gradientReference,
     ]);
 
     return {

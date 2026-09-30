@@ -5,6 +5,7 @@ import type {PreparedAreaRangeSeries} from '../../series/types';
 import {getXValue, getYValue} from '../../shapes/utils';
 import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '../../utils';
 import {createGradientColorResolver} from '../../utils/gradient';
+import {prepareGradientCoords} from '../../utils/gradient-reference';
 
 import {formatAreaRangeDataLabel} from './format';
 import {prepareAreaRangeMarkers} from './markers';
@@ -75,10 +76,40 @@ export async function prepareAreaRangeData(args: {
         points.sort((a, b) => a.x - b.x);
         markHiddenRangePoints({points, yScale: seriesYScale, yAxis: seriesYAxis, yAxisTop});
 
+        const gradientPoints =
+            item.gradient || item.fillGradient
+                ? points.flatMap((point) =>
+                      point.y0 === null || point.y1 === null || point.hiddenInLine
+                          ? []
+                          : [
+                                {...point, y: point.y0},
+                                {...point, y: point.y1},
+                            ],
+                  )
+                : [];
+        const gradientCoords = prepareGradientCoords({
+            gradient: item.gradient,
+            state: item.gradientState,
+            paint: 'stroke',
+            points: gradientPoints,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        const fillGradientCoords = prepareGradientCoords({
+            gradient: item.fillGradient,
+            state: item.gradientState,
+            paint: 'fill',
+            points: gradientPoints,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+
         if (item.gradient) {
             const bbox = getRangeBBox(points);
             if (bbox) {
-                const getColor = createGradientColorResolver(item.gradient, bbox);
+                const getColor = createGradientColorResolver(item.gradient, bbox, gradientCoords);
                 points.forEach((point) => {
                     if (point.color === undefined && point.y !== null) {
                         point.fill = getColor(point.x, point.y);
@@ -91,6 +122,8 @@ export async function prepareAreaRangeData(args: {
             active: true,
             annotations: [],
             color: item.color,
+            gradientCoords,
+            fillGradientCoords,
             ...prepareAreaRangeMarkers({
                 points,
                 series: item,
@@ -98,6 +131,7 @@ export async function prepareAreaRangeData(args: {
                 yScale: seriesYScale,
                 yAxisTop,
                 isOutsideBounds,
+                gradientCoords,
             }),
             hovered: false,
             htmlLabels: [],

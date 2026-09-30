@@ -2,6 +2,7 @@ import type {PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedAreaRangeSeries} from '../../series/types';
 import {createGradientColorResolver} from '../../utils/gradient';
+import type {GradientCoords} from '../../utils/gradient';
 import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
 import type {HoveredShapeData, MarkerItem} from '../types';
 
@@ -15,12 +16,15 @@ export function prepareAreaRangeMarkers(args: {
     yScale: ChartScale;
     yAxisTop: number;
     isOutsideBounds: (x: number, y: number) => boolean;
+    gradientCoords?: GradientCoords;
 }) {
-    const {points, series, yAxis, yScale, yAxisTop, isOutsideBounds} = args;
+    const {points, series, yAxis, yScale, yAxisTop, isOutsideBounds, gradientCoords} = args;
     const {normal} = series.marker.states;
     const bbox = series.gradient ? getRangeBBox(points) : null;
     const getColor =
-        series.gradient && bbox ? createGradientColorResolver(series.gradient, bbox) : undefined;
+        series.gradient && bbox
+            ? createGradientColorResolver(series.gradient, bbox, gradientCoords)
+            : undefined;
     const minY = yAxisTop + Math.min(...yScale.range());
     const maxY = yAxisTop + Math.max(...yScale.range());
     const markers: MarkerItem[] = [];

@@ -51,6 +51,7 @@ export function renderLine(
 
         return resolveGradientPaint({
             bbox: gradient ? getGradientBBox(data.points) : null,
+            coords: data.gradientCoords,
             fallbackColor: data.color,
             gradient: paintGradient,
             id: `${data.id}-gradient-line-${state}`,

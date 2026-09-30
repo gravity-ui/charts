@@ -18,6 +18,7 @@ import {
     getZoomedSeriesData,
     isAxisRelatedSeries,
 } from '~core/utils';
+import type {ShapeDataReference} from '~core/utils/gradient-reference';
 
 import {createScales, getAxes, getShapes, getSplit, getVisibleSeries, useZoom} from '../../hooks';
 import type {
@@ -114,6 +115,7 @@ function getBoundsOffsetLeft(args: {
 }
 
 type ChartState = {
+    gradientReference?: ShapeDataReference;
     allPreparedSeries: PreparedSeries[];
     boundsHeight: number;
     boundsOffsetLeft: number;
@@ -156,6 +158,11 @@ export function useChartInnerProps(props: Props) {
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
     const currentRunRef = React.useRef(0);
+    const unzoomedDataRef = React.useRef<{
+        data: ShapeDataReference;
+        allPreparedSeries: PreparedSeries[];
+        activeLegendItems: string[];
+    }>();
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
@@ -314,6 +321,40 @@ export function useChartInnerProps(props: Props) {
                 await calculateAxisBasedProps();
             }
 
+            let unzoomedData = unzoomedDataRef.current;
+            const getUnzoomedData = (): ShapeDataReference => {
+                if (
+                    !unzoomedData ||
+                    unzoomedData.allPreparedSeries !== allPreparedSeries ||
+                    !isEqual(unzoomedData.activeLegendItems, activeLegendItems)
+                ) {
+                    const scales = Object.keys(effectiveZoomState).length
+                        ? createScales({
+                              boundsWidth,
+                              boundsHeight,
+                              series: visiblePreparedSeries,
+                              split: preparedSplit,
+                              xAxis,
+                              yAxis,
+                          })
+                        : {xScale, yScale};
+                    unzoomedData = {
+                        allPreparedSeries,
+                        activeLegendItems,
+                        data: {
+                            boundsWidth,
+                            boundsHeight,
+                            series: visiblePreparedSeries,
+                            xAxis,
+                            yAxis,
+                            split: preparedSplit,
+                            ...scales,
+                        },
+                    };
+                }
+                return unzoomedData.data;
+            };
+
             const {shapes, shapesData} = await getShapes({
                 boundsWidth,
                 boundsHeight,
@@ -330,6 +371,7 @@ export function useChartInnerProps(props: Props) {
                 clipPathId,
                 isOutsideBounds: createIsOutsideBounds({boundsWidth, boundsHeight}),
                 zoomState: effectiveZoomState,
+                getUnzoomedData,
             });
 
             const boundsOffsetTop = getBoundsOffsetTop({
@@ -348,6 +390,7 @@ export function useChartInnerProps(props: Props) {
             });
 
             const newStateValue = {
+                gradientReference: unzoomedData?.data,
                 allPreparedSeries,
                 boundsHeight,
                 boundsOffsetLeft,
@@ -371,6 +414,7 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
+                unzoomedDataRef.current = unzoomedData;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);
                     prevStateValue.current = newStateValue;

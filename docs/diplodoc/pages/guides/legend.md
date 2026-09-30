@@ -6,6 +6,10 @@ The legend is a key component that identifies the various series or categories p
 
 The visibility of the legend is controlled by the `enabled` property within its configuration section, allowing you to show or hide it as needed for your design. For the full list of properties, see the [API reference](../api/Configuration/interfaces/ChartLegend.md).
 
+## Continuous legend
+
+Set `legend.type: 'continuous'` to display a color scale configured through `legend.colorScale`. This scale is independent of series gradients and point colors; it does not assign colors to the plotted data. Configure the series and legend colors together when they should represent the same values.
+
 ## Item layout
 
 Set `legend.layout: 'vertical'` to place one item per row, independently of `position`. The default is `'horizontal'`. This option applies to discrete legends with SVG or HTML labels.

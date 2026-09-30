@@ -37,6 +37,7 @@ export function renderAreaRange(
                 : data.series.gradient;
         return resolveGradientPaint({
             bbox: gradient ? getRangeBBox(data.points) : null,
+            coords: data.gradientCoords,
             fallbackColor: data.color,
             gradient,
             id: `${data.id}-gradient-area-range-line-${hovered ? 'hover' : 'normal'}`,
@@ -49,6 +50,7 @@ export function renderAreaRange(
                 : data.series.fillGradient;
         return resolveGradientPaint({
             bbox: gradient ? getRangeBBox(data.points) : null,
+            coords: data.fillGradientCoords,
             fallbackColor: data.series.fillColor,
             gradient,
             id: `${data.id}-gradient-area-range-fill-${hovered ? 'hover' : 'normal'}`,

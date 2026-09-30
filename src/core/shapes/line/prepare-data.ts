@@ -11,6 +11,7 @@ import type {
     PreparedSeriesOptions,
 } from '../../series/types';
 import {setGradientPointFills} from '../../utils/gradient';
+import {prepareGradientCoords} from '../../utils/gradient-reference';
 import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
 import type {MarkerItem, ShapeLabels} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
@@ -109,7 +110,16 @@ export const prepareLineData = async (args: {
         const normalState = s.marker.states.normal;
         const hasPerPointNormalMarkers = s.data.some((d) => d.marker?.states?.normal?.enabled);
 
-        setGradientPointFills(points, s.gradient);
+        const gradientCoords = prepareGradientCoords({
+            gradient: s.gradient,
+            state: s.gradientState,
+            paint: 'stroke',
+            points,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        setGradientPointFills(points, s.gradient, gradientCoords);
 
         const markers =
             s.marker.states.normal.enabled || hasPerPointNormalMarkers
@@ -148,6 +158,7 @@ export const prepareLineData = async (args: {
         const result: PreparedLineData = {
             annotations,
             points,
+            gradientCoords,
             markers,
             getHoverMarkers: buildHoverMarkerGetter(points, s),
             svgLabels: [],

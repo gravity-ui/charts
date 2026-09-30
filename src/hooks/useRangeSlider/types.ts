@@ -4,12 +4,14 @@ import type {PreparedChart} from '~core/chart/types';
 import type {RangeSliderState} from '~core/range-slider/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {ShapeDataReference} from '~core/utils/gradient-reference';
 
 import type {ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 
 export type {RangeSliderState};
 
 export interface RangeSliderProps {
+    gradientReference?: ShapeDataReference;
     activeLegendItems: string[];
     boundsOffsetLeft: number;
     boundsWidth: number;

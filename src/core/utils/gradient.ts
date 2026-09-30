@@ -36,6 +36,7 @@ interface GradientFillPoint extends GradientPoint {
 
 export interface GradientPaintOptions {
     bbox: GradientBBox | null;
+    coords?: GradientCoords;
     fallbackColor: string;
     gradient?: LinearGradient;
     id: string;
@@ -166,8 +167,8 @@ export function getGradientColorAtPoint(
 export function createGradientColorResolver(
     gradient: LinearGradient,
     bbox: GradientBBox,
+    coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox),
 ): (px: number, py: number) => string {
-    const coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox);
     const sortedStops = sortGradientStops(gradient.stops);
 
     return (px, py) => {
@@ -180,6 +181,7 @@ export function createGradientColorResolver(
 export function setGradientPointFills(
     points: GradientFillPoint[],
     gradient?: LinearGradient,
+    coords?: GradientCoords,
 ): void {
     if (!gradient) {
         return;
@@ -190,7 +192,7 @@ export function setGradientPointFills(
         return;
     }
 
-    const getGradientColor = createGradientColorResolver(gradient, bbox);
+    const getGradientColor = createGradientColorResolver(gradient, bbox, coords);
     for (const point of points) {
         if (point.color === undefined && point.x !== null && point.y !== null) {
             point.fill = getGradientColor(point.x, point.y);
@@ -218,6 +220,7 @@ function createGradientDef(
     gradient: LinearGradient,
     bbox: GradientBBox,
     preferredId: string,
+    coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox),
 ): string {
     if (!container.ownerSVGElement) {
         return '';
@@ -228,7 +231,6 @@ function createGradientDef(
         defs = containerSelection.append('defs').attr('class', 'gradients');
     }
     const id = getUniqueGradientId(container, preferredId);
-    const coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox);
     const grad = defs
         .append('linearGradient')
         .attr('id', id)
@@ -247,14 +249,20 @@ function createGradientDef(
 export function createGradientPaintResolver(container: SVGGElement) {
     const ids = new Map<string, string>();
 
-    return ({bbox, fallbackColor, gradient, id: preferredId}: GradientPaintOptions): string => {
+    return ({
+        bbox,
+        coords,
+        fallbackColor,
+        gradient,
+        id: preferredId,
+    }: GradientPaintOptions): string => {
         if (!gradient || !bbox) {
             return fallbackColor;
         }
 
         let id = ids.get(preferredId);
         if (!id) {
-            id = createGradientDef(container, gradient, bbox, preferredId);
+            id = createGradientDef(container, gradient, bbox, preferredId, coords);
             if (id) {
                 ids.set(preferredId, id);
             }

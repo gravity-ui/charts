@@ -57,6 +57,7 @@ import type {
     SeriesOptionsDefaults,
     SymbolType,
 } from '../constants';
+import type {SeriesGradientState} from '../utils/gradient-reference';
 
 export type PreparedAnnotation = {
     label: {
@@ -167,6 +168,8 @@ export type PreparedHaloOptions = {
 };
 
 type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
+    /** Prepared paint references, shared across filtered copies of this series. */
+    gradientState?: SeriesGradientState;
     color: string;
     name: string;
     id: string;

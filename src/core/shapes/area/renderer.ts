@@ -64,6 +64,7 @@ export function renderArea(
 
         return resolveGradientPaint({
             bbox: gradient ? getGradientBBox(data.points) : null,
+            coords: data.gradientCoords,
             fallbackColor: data.color,
             gradient: paintGradient,
             id: `${data.id}-gradient-line-${state}`,
@@ -77,6 +78,7 @@ export function renderArea(
 
         return resolveGradientPaint({
             bbox: fillGradient ? computeAreaBBox(data) : null,
+            coords: data.fillGradientCoords,
             fallbackColor: fillColor,
             gradient: paintGradient,
             id: `${data.id}-gradient-area-${state}`,

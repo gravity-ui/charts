@@ -139,7 +139,7 @@ export interface SeriesPlugin<
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
     /** Axis-domain contributions for a point; return [] to exclude it. Omitted axes use the default extraction. */
     getAxisDomainValues?: SeriesAxisDomainValues<T>;
-    /** Computes shape data (geometry, labels, markers) from prepared series. Called once per render cycle. */
+    /** Computes shape data (geometry, labels, markers), including full-series gradient references. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
     ): PrepareShapeDataResult | Promise<PrepareShapeDataResult>;
