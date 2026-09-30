@@ -7,8 +7,11 @@ const data: ChartData = {
     legend: {
         enabled: true,
         position: 'left',
-        width: 230,
+        layout: 'vertical',
+        width: 'auto',
+        maxWidth: '40%',
         itemMaxRowCount: 3,
+        title: {text: 'Customer segments'},
     },
     series: {
         data: [
@@ -34,7 +37,16 @@ const data: ChartData = {
 
 export function LegendWrappingExample() {
     return (
-        <div style={{height: '100%'}}>
+        <div
+            style={{
+                height: '100%',
+                width: '100%',
+                minWidth: 200,
+                maxWidth: '100%',
+                resize: 'horizontal',
+                overflow: 'auto',
+            }}
+        >
             <Chart data={data} />
         </div>
     );
