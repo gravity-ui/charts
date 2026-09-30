@@ -246,6 +246,8 @@ export type PreparedBarXSeries = {
         format?: BarXValueFormat;
     };
     borderRadius: number;
+    borderWidth: number;
+    borderColor: string;
     yAxis: number;
 } & BasePreparedSeries<BarXSeries['tooltip']> &
     BasePreparedAxisRelatedSeries;
