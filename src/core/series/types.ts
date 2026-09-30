@@ -110,8 +110,10 @@ export interface PreparedLegendRow {
 }
 
 export interface PreparedLegendOptions extends Required<
-    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'events'>
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth' | 'events'>
 > {
+    width?: ChartLegend['width'];
+    maxWidth?: ChartLegend['maxWidth'];
     events: ChartLegend['events'];
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;
@@ -123,6 +125,9 @@ export interface PreparedLegendOptions extends Required<
         enable: boolean;
         hangingOffset: number;
         text: string;
+        resolvedText: string;
+        width: number;
+        resolvedWidth: number;
         margin: number;
         style: BaseTextStyle;
         height: number;
@@ -143,6 +148,10 @@ export interface PreparedLegendOptions extends Required<
 export interface PreparedLegend extends PreparedLegendOptions {
     height: number;
     rows: PreparedLegendRow[];
+    /** Clip discrete content and fit pagination controls to the legend viewport. */
+    clipContent: boolean;
+    /** Space reserved above discrete rows; zero for the legacy title layout. */
+    titleHeight: number;
 }
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
