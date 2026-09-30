@@ -368,7 +368,6 @@ export const Legend = (props: Props) => {
                             .style('font-size', legend.itemStyle.fontSize);
                         textSelection
                             .filter((d) => Boolean(d.textRows))
-                            // Match the measured font weight while preserving legacy single-line styling.
                             .style('font-weight', () => legend.itemStyle.fontWeight ?? null)
                             .each(function (d) {
                                 const label = select(this);

@@ -248,6 +248,69 @@ export async function wrapText(args: {
     return acc;
 }
 
+/** Wrap hard breaks and long tokens, truncating the final row when the row limit is exceeded. */
+export async function wrapTextWithEllipsis(args: {
+    text: string;
+    width: number;
+    maxRowCount: number;
+    getTextWidth: (text: string) => Promise<number>;
+}) {
+    const {text, width, maxRowCount, getTextWidth} = args;
+    if (width <= 0 || maxRowCount <= 0) {
+        return [];
+    }
+
+    const rows: string[] = [];
+    for (const paragraph of text.split(/\r\n|\r|\n/)) {
+        let row = '';
+        for (const token of paragraph.match(/\S+\s*/gu) ?? []) {
+            if (row && (await getTextWidth(row + token.trimEnd())) > width) {
+                rows.push(row.trimEnd());
+                row = '';
+            }
+            const trailingWhitespace = token.slice(token.trimEnd().length);
+            let remaining = token.trimEnd();
+            while ((await getTextWidth(remaining)) > width) {
+                const characters = Array.from(remaining);
+                let low = 0;
+                let high = characters.length;
+                while (low < high) {
+                    const mid = Math.ceil((low + high) / 2);
+                    if ((await getTextWidth(characters.slice(0, mid).join(''))) <= width) {
+                        low = mid;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+                // A glyph wider than the entire label cannot be displayed.
+                rows.push(characters.slice(0, low).join(''));
+                remaining = characters.slice(Math.max(1, low)).join('');
+                if (rows.length > maxRowCount) {
+                    break;
+                }
+            }
+            row += remaining + trailingWhitespace;
+            if (rows.length > maxRowCount) {
+                break;
+            }
+        }
+        rows.push(row.trimEnd());
+        if (rows.length > maxRowCount) {
+            break;
+        }
+    }
+
+    if (rows.length > maxRowCount) {
+        rows.length = maxRowCount;
+        rows[maxRowCount - 1] = await getTextWithElipsis({
+            text: rows[maxRowCount - 1] + '…',
+            maxWidth: width,
+            getTextWidth,
+        });
+    }
+    return rows;
+}
+
 export async function getMultilineTextInfo(args: {
     text: string;
     getTextSize: ReturnType<typeof getTextSizeFn>;

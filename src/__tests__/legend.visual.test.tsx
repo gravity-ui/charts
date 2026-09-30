@@ -1661,7 +1661,7 @@ async function getLegendBox(locator: Locator) {
     return box;
 }
 
-test('HTML legend ignores itemMaxRowCount for text, blocks and images @webkit', async ({mount}) => {
+test('HTML legend ignores itemMaxRowCount for text, blocks and images', async ({mount}) => {
     const image =
         'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="20" height="48"%3E%3Crect width="20" height="48" fill="red"/%3E%3C/svg%3E';
     const data: ChartData = {
@@ -1746,12 +1746,11 @@ test('HTML legend ignores itemMaxRowCount for text, blocks and images @webkit', 
 });
 
 test.describe('Multiline legend labels', () => {
-    for (const position of ['left', 'bottom'] as const) {
-        const webkit = position === 'left' ? ' @webkit' : '';
-        test(`wraps, ellipsizes and selects (${position}, html=false)${webkit}`, async ({
-            mount,
-            browserName,
-        }) => {
+    for (const {position, tag} of [
+        {position: 'left' as const, tag: '@webkit'},
+        {position: 'bottom' as const, tag: []},
+    ]) {
+        test(`wraps, ellipsizes and selects (${position}, html=false)`, {tag}, async ({mount}) => {
             const names = [
                 'Revenue from the international enterprise customer segment including recurring subscriptions and support',
                 'Short',
@@ -1783,9 +1782,7 @@ test.describe('Multiline legend labels', () => {
             await expect(labels.first().locator('tspan').last()).toContainText('…');
             await expect(labels.last().locator('tspan')).toHaveCount(2);
             // WebKit clipped the first SVG row unless each tspan had an explicit hanging baseline.
-            if (browserName === 'chromium' || position === 'left') {
-                await expect(component).toHaveScreenshot();
-            }
+            await expect(component).toHaveScreenshot();
             // The last visible text row belongs to the same click target as the first.
             await labels.first().locator('tspan').last().click();
             await expect(labels.nth(1)).toHaveClass(/unselected/);
@@ -1857,10 +1854,7 @@ test.describe('Multiline legend labels', () => {
         );
     });
 
-    test(`paginates whole items and caps oversized labels (html=false) @webkit`, async ({
-        mount,
-        browserName,
-    }) => {
+    test('paginates whole items and caps oversized labels (html=false)', async ({mount}) => {
         const data: ChartData = {
             legend: {
                 enabled: true,
@@ -1895,9 +1889,7 @@ test.describe('Multiline legend labels', () => {
         );
         expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(paginationBox.y);
         await expect(labels.first().locator('tspan').last()).toContainText('…');
-        if (browserName === 'chromium') {
-            await expect(component).toHaveScreenshot();
-        }
+        await expect(component).toHaveScreenshot();
         await component.locator('.gcharts-legend__pagination-arrow').last().click();
         await expect(counter).toHaveText('2/2');
         await expect(labels).toHaveCount(1);
