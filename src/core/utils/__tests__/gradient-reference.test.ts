@@ -5,7 +5,7 @@ import type {ChartScale} from '../../scales/types';
 import type {LinearGradient} from '../../types';
 import {createGradientColorResolver, getGradientBBox} from '../gradient';
 import type {SeriesGradientState} from '../gradient-reference';
-import {prepareGradientCoords} from '../gradient-reference';
+import {captureGradient, prepareGradientCoords} from '../gradient-reference';
 
 interface Point {
     data: object;
@@ -31,6 +31,14 @@ function resolveColors(args: {
     yAxisTop?: number;
 }) {
     const color = args.color ?? gradient;
+    if (args.state.stroke === undefined) {
+        args.state.stroke = captureGradient({
+            ...args,
+            gradient: color,
+            bbox: getGradientBBox(args.points),
+            yAxisTop: args.yAxisTop ?? 0,
+        });
+    }
     const coords = prepareGradientCoords({...args, gradient: color, paint: 'stroke'});
     const bbox = getGradientBBox(args.points);
     if (!coords || !bbox) {
@@ -69,7 +77,7 @@ describe('data-anchored gradients', () => {
             const xScale = create([x[0], x[4]], [0, 400]);
             const yScale = scaleLinear().domain([0, 6]).range([200, 0]);
             const points = original.map((data) => ({data, x: xScale(data.x), y: yScale(data.y)}));
-            const state: SeriesGradientState = {paints: new Map()};
+            const state: SeriesGradientState = {};
             const before = resolveColors({points, xScale, yScale, state});
             const zoomScale = create([x[2], x[3]], [8, 392]);
             const retained = original.slice(1);
@@ -97,7 +105,7 @@ describe('data-anchored gradients', () => {
         const range = reversed ? [400, 0] : [0, 400];
         const xScale = scaleBand().domain(domain).range(range);
         const yScale = scaleLinear().domain([0, 6]).range([200, 0]);
-        const state: SeriesGradientState = {paints: new Map()};
+        const state: SeriesGradientState = {};
         const before = resolveColors({
             state,
             xScale,
@@ -132,7 +140,7 @@ describe('data-anchored gradients', () => {
         ];
         const xScale = scaleLinear().domain([0, 4]).range([400, 0]);
         const yScale = scaleLinear().domain([0, 6]).range([200, 0]);
-        const state: SeriesGradientState = {paints: new Map()};
+        const state: SeriesGradientState = {};
         const color = {...gradient, angle: 45};
         const before = resolveColors({
             state,
@@ -168,7 +176,7 @@ describe('data-anchored gradients', () => {
         ];
         const xScale = scaleLinear().domain([0, 4]).range([0, 400]);
         const yScale = scaleLinear().domain([0, 6]).range([200, 0]);
-        const state: SeriesGradientState = {paints: new Map()};
+        const state: SeriesGradientState = {};
         const points = original.map((data) => ({
             data,
             x: xScale(data.x),
@@ -189,7 +197,7 @@ describe('data-anchored gradients', () => {
         const data = {x: 1, y: 1};
         const xScale = scaleLinear().domain([0, 2]).range([0, 400]);
         const yScale = scaleLinear().domain([0, 2]).range([200, 0]);
-        const state: SeriesGradientState = {paints: new Map()};
+        const state: SeriesGradientState = {};
         const before = resolveColors({
             state,
             xScale,
@@ -205,4 +213,49 @@ describe('data-anchored gradients', () => {
         expect(before).toEqual(['rgb(240, 240, 240)']);
         expect(after).toEqual(before);
     });
+});
+
+test.each([0, 90, 45])('does not project a zero-height reference into NaN (angle %s)', (angle) => {
+    const data = [
+        {x: 0, y: 1},
+        {x: 1, y: 2},
+    ];
+    const xScale = scaleLinear().domain([0, 1]).range([0, 400]);
+    const yScale = scaleLinear().domain([0, 3]).range([0, 0]);
+    const points = data.map((item) => ({data: item, x: xScale(item.x), y: yScale(item.y)}));
+    const color = {...gradient, angle};
+    const stroke = captureGradient({
+        points,
+        bbox: getGradientBBox(points),
+        gradient: color,
+        xScale,
+        yScale,
+        yAxisTop: 0,
+    });
+    expect(stroke).toBeNull();
+    const resized = yScale.copy().range([200, 0]);
+    expect(
+        prepareGradientCoords({
+            gradient: color,
+            state: {stroke},
+            paint: 'stroke',
+            points,
+            xScale,
+            yScale: resized,
+        }),
+    ).toBeNull();
+    const resizedPoints = data.map((item) => ({data: item, x: xScale(item.x), y: resized(item.y)}));
+    const next = captureGradient({
+        points: resizedPoints,
+        bbox: getGradientBBox(resizedPoints),
+        gradient: color,
+        xScale,
+        yScale: resized,
+        yAxisTop: 0,
+    });
+    expect(next).not.toBeNull();
+    if (!next) {
+        throw new Error('Expected a drawable gradient after resize');
+    }
+    expect(Object.values(next.coords).every(Number.isFinite)).toBe(true);
 });

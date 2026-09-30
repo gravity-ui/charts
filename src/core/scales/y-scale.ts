@@ -20,6 +20,7 @@ import type {ChartScaleLinear} from './types';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
+    getCategoriesInRange,
     getMinMaxPropsOrState,
     hasOnlyMarkerSeries,
     validateArrayData,
@@ -245,6 +246,7 @@ export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
     series: PreparedSeries[] | ChartSeries[];
+    categorySeries?: PreparedSeries[];
     primaryAxis?: PreparedAxis;
     primaryTicksCount?: number;
     zoomStateY?: [number, number];
@@ -404,11 +406,19 @@ export function createYScale(args: {
         }
         case 'category': {
             if (yCategories) {
-                const filteredCategories = filterCategoriesByVisibleSeries({
+                let filteredCategories = filterCategoriesByVisibleSeries({
                     axisDirection: 'y',
                     categories: yCategories,
-                    series: series,
+                    series: args.categorySeries ?? series,
                 });
+                if (args.categorySeries) {
+                    filteredCategories = getCategoriesInRange(
+                        yCategories,
+                        filteredCategories,
+                        zoomStateY?.[0],
+                        zoomStateY?.[1],
+                    );
+                }
                 return scaleBand().domain(filteredCategories).range(range);
             }
 

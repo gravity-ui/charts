@@ -127,3 +127,19 @@ export function filterCategoriesByVisibleSeries(args: {
 
     return filteredCategories.length > 0 ? filteredCategories : categories;
 }
+
+/** Keep category distances when points are filtered by the other axis. */
+export function getCategoriesInRange(
+    categories: string[],
+    selected: string[],
+    min: unknown,
+    max: unknown,
+) {
+    const used = new Set(selected);
+    return categories.filter(
+        (category, index) =>
+            used.has(category) &&
+            (typeof min !== 'number' || index >= min) &&
+            (typeof max !== 'number' || index <= max),
+    );
+}

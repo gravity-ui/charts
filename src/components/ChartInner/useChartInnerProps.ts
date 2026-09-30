@@ -18,7 +18,7 @@ import {
     getZoomedSeriesData,
     isAxisRelatedSeries,
 } from '~core/utils';
-import type {ShapeDataReference} from '~core/utils/gradient-reference';
+import {hasGradient} from '~core/utils/gradient';
 
 import {createScales, getAxes, getShapes, getSplit, getVisibleSeries, useZoom} from '../../hooks';
 import type {
@@ -36,8 +36,10 @@ import type {
     ZoomState,
 } from '../../hooks';
 import type {PreparedChart, PreparedTitle} from '../../hooks/types';
+import type {GradientReference} from '../../hooks/useShapes/types';
 import type {ChartData, LegendConfig} from '../../types';
 
+import {prepareGradientReference} from './prepareGradientReference';
 import type {ChartInnerProps} from './types';
 import {
     getNormalizedXAxis,
@@ -115,7 +117,7 @@ function getBoundsOffsetLeft(args: {
 }
 
 type ChartState = {
-    gradientReference?: ShapeDataReference;
+    gradientReference?: GradientReference;
     allPreparedSeries: PreparedSeries[];
     boundsHeight: number;
     boundsOffsetLeft: number;
@@ -158,9 +160,11 @@ export function useChartInnerProps(props: Props) {
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
     const currentRunRef = React.useRef(0);
-    const unzoomedDataRef = React.useRef<{
-        data: ShapeDataReference;
+    const gradientReferenceRef = React.useRef<{
+        data: GradientReference;
         allPreparedSeries: PreparedSeries[];
+        width: number;
+        height: number;
         activeLegendItems: string[];
     }>();
     React.useEffect(() => {
@@ -302,6 +306,9 @@ export function useChartInnerProps(props: Props) {
                         isRangeSlider: false,
                         rangeSliderState,
                         series: preparedSeries,
+                        categorySeries: visiblePreparedSeries.some(hasGradient)
+                            ? visiblePreparedSeries
+                            : undefined,
                         split: preparedSplit,
                         xAxis,
                         yAxis,
@@ -321,38 +328,47 @@ export function useChartInnerProps(props: Props) {
                 await calculateAxisBasedProps();
             }
 
-            let unzoomedData = unzoomedDataRef.current;
-            const getUnzoomedData = (): ShapeDataReference => {
+            let gradientReference = gradientReferenceRef.current;
+            const getGradientReference = async (): Promise<GradientReference> => {
                 if (
-                    !unzoomedData ||
-                    unzoomedData.allPreparedSeries !== allPreparedSeries ||
-                    !isEqual(unzoomedData.activeLegendItems, activeLegendItems)
+                    !gradientReference ||
+                    gradientReference.width !== width ||
+                    gradientReference.height !== height ||
+                    gradientReference.allPreparedSeries !== allPreparedSeries ||
+                    !isEqual(gradientReference.activeLegendItems, activeLegendItems)
                 ) {
-                    const scales = Object.keys(effectiveZoomState).length
-                        ? createScales({
+                    const reference = Object.keys(effectiveZoomState).length
+                        ? await prepareGradientReference({
+                              height,
+                              width,
+                              preparedChart,
+                              legendConfig,
+                              preparedLegend,
+                              preparedSeries: visiblePreparedSeries,
+                              preparedSeriesOptions,
+                              xAxis: normalizedXAxis,
+                              yAxis: normalizedYAxis,
+                              split: data.split,
+                          })
+                        : {
                               boundsWidth,
                               boundsHeight,
                               series: visiblePreparedSeries,
-                              split: preparedSplit,
                               xAxis,
                               yAxis,
-                          })
-                        : {xScale, yScale};
-                    unzoomedData = {
+                              split: preparedSplit,
+                              xScale,
+                              yScale,
+                          };
+                    gradientReference = {
+                        width,
+                        height,
                         allPreparedSeries,
                         activeLegendItems,
-                        data: {
-                            boundsWidth,
-                            boundsHeight,
-                            series: visiblePreparedSeries,
-                            xAxis,
-                            yAxis,
-                            split: preparedSplit,
-                            ...scales,
-                        },
+                        data: reference,
                     };
                 }
-                return unzoomedData.data;
+                return gradientReference.data;
             };
 
             const {shapes, shapesData} = await getShapes({
@@ -371,7 +387,7 @@ export function useChartInnerProps(props: Props) {
                 clipPathId,
                 isOutsideBounds: createIsOutsideBounds({boundsWidth, boundsHeight}),
                 zoomState: effectiveZoomState,
-                getUnzoomedData,
+                getGradientReference,
             });
 
             const boundsOffsetTop = getBoundsOffsetTop({
@@ -390,7 +406,7 @@ export function useChartInnerProps(props: Props) {
             });
 
             const newStateValue = {
-                gradientReference: unzoomedData?.data,
+                gradientReference: gradientReference?.data,
                 allPreparedSeries,
                 boundsHeight,
                 boundsOffsetLeft,
@@ -414,7 +430,7 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
-                unzoomedDataRef.current = unzoomedData;
+                gradientReferenceRef.current = gradientReference;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);
                     prevStateValue.current = newStateValue;

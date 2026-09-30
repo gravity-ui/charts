@@ -12,6 +12,7 @@ import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
     validateAxisPlotValues,
     validatePercentStackingValues,
@@ -31,6 +32,24 @@ import {getAreaStackLabelAnchors} from './stack-labels';
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
+    prepareGradientGeometry: async (args) => {
+        const {xAxis, xScale, yAxis, yScale, split} = args;
+        if (!xAxis || !xScale || !yScale || !split) {
+            return [];
+        }
+        const data = await prepareAreaData({
+            ...args,
+            series: args.series as PreparedAreaSeries[],
+            xAxis,
+            xScale,
+            yAxis: yAxis ?? [],
+            yScale,
+            split,
+            isOutsideBounds: () => false,
+            geometryOnly: true,
+        });
+        return getGradientGeometry(data);
+    },
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({

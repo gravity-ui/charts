@@ -11,6 +11,7 @@ import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
     validateAxisPlotValues,
     validateSeriesColor,
@@ -73,6 +74,24 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
+    prepareGradientGeometry: async (args) => {
+        const {xAxis, xScale, yAxis, yScale, split} = args;
+        if (!xAxis || !xScale || !yScale || !split) {
+            return [];
+        }
+        const data = await prepareLineData({
+            ...args,
+            series: args.series as PreparedLineSeries[],
+            xAxis,
+            xScale,
+            yAxis: yAxis ?? [],
+            yScale,
+            split,
+            isOutsideBounds: () => false,
+            geometryOnly: true,
+        });
+        return getGradientGeometry(data);
+    },
     prepareSeries: prepareLineSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});

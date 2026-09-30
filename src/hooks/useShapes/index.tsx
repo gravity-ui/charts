@@ -11,19 +11,22 @@ import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
 import {getSeriesClipPathId} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
-import type {SeriesGradientState, ShapeDataReference} from '~core/utils/gradient-reference';
+import {hasGradient} from '~core/utils/gradient';
+import type {SeriesGradientState} from '~core/utils/gradient-reference';
+import {captureGradient} from '~core/utils/gradient-reference';
 import type {ZoomState} from '~core/zoom/types';
 
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 
 import {SeriesShapes} from './SeriesShapes';
+import type {GradientReference} from './types';
 
 import './styles.scss';
 
 export type {TooltipItemData};
 export type ClipPathBySeriesType = Partial<Record<string, boolean>>;
 
-type Args = {
+interface Args {
     boundsWidth: number;
     boundsHeight: number;
     clipPathId: string;
@@ -40,46 +43,59 @@ type Args = {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
     zoomState?: Partial<ZoomState>;
-    getUnzoomedData?: () => ShapeDataReference;
-    gradientReference?: ShapeDataReference;
-};
-
-const gradientStates = new WeakMap<ShapeDataReference, Promise<Map<string, SeriesGradientState>>>();
-
-function hasGradient(series: PreparedSeries) {
-    return (
-        ('gradient' in series && Boolean(series.gradient)) ||
-        ('fillGradient' in series && Boolean(series.fillGradient))
-    );
+    getGradientReference?: () => GradientReference | Promise<GradientReference>;
+    gradientReference?: GradientReference;
 }
 
-function getGradientStates(reference: ShapeDataReference, seriesOptions: PreparedSeriesOptions) {
+const gradientStates = new WeakMap<GradientReference, Promise<Map<string, SeriesGradientState>>>();
+
+function getGradientStates(reference: GradientReference, seriesOptions: PreparedSeriesOptions) {
     let result = gradientStates.get(reference);
     if (!result) {
         result = (async () => {
             const states = new Map<string, SeriesGradientState>();
-            const series = reference.series.map((item) => {
-                const state: SeriesGradientState = {paints: new Map()};
-                states.set(item.id, state);
-                const prepared: PreparedSeries = {...item, gradientState: state};
-                if ('dataLabels' in prepared) {
-                    prepared.dataLabels = {...prepared.dataLabels, enabled: false};
-                }
-                return prepared;
-            });
-            // Plugins provide the full geometry, including stacks and fill baselines.
-            // The common gradient resolver captures it once before visible-range filtering.
+            const series = getOnlyVisibleSeries(reference.series);
             for (const [type, items] of group(series, (item) => item.type)) {
-                if (!items.some(hasGradient)) {
+                const plugin = getSeriesPlugin(type);
+                if (!items.some(hasGradient) || !plugin.prepareGradientGeometry) {
                     continue;
                 }
-                await getSeriesPlugin(type).prepareShapeData({
+                const geometry = await plugin.prepareGradientGeometry({
                     ...reference,
                     series: items,
                     allSeries: series,
                     seriesOptions,
-                    isRangeSlider: true,
                 });
+                const geometryById = new Map(geometry.map((shape) => [shape.id, shape]));
+                for (const item of items) {
+                    if (!hasGradient(item) || !('yAxis' in item) || !reference.xScale) {
+                        continue;
+                    }
+                    const shape = geometryById.get(item.id);
+                    const yScale = reference.yScale?.[item.yAxis];
+                    if (!yScale) {
+                        continue;
+                    }
+                    const context = {
+                        points: shape?.points ?? [],
+                        xScale: reference.xScale,
+                        yScale,
+                        yAxisTop:
+                            reference.split.plots[reference.yAxis[item.yAxis].plotIndex]?.top ?? 0,
+                    };
+                    const stroke = captureGradient({
+                        ...context,
+                        gradient: 'gradient' in item ? item.gradient : undefined,
+                        bbox: shape?.bbox ?? null,
+                    });
+                    const fill = captureGradient({
+                        ...context,
+                        gradient: 'fillGradient' in item ? item.fillGradient : undefined,
+                        bbox: shape?.fillBBox ?? null,
+                        locations: stroke?.points,
+                    });
+                    states.set(item.id, {stroke, fill});
+                }
             }
             return states;
         })();
@@ -127,7 +143,7 @@ export async function getShapes(args: Args) {
         yAxis,
         yScale,
         zoomState,
-        getUnzoomedData,
+        getGradientReference,
         gradientReference,
     } = args;
 
@@ -137,13 +153,14 @@ export async function getShapes(args: Args) {
 
     let visibleSeries = getOnlyVisibleSeries(series);
     const reference =
-        gradientReference ?? (visibleSeries.some(hasGradient) ? getUnzoomedData?.() : undefined);
+        gradientReference ??
+        (visibleSeries.some(hasGradient) ? await getGradientReference?.() : undefined);
     if (reference && visibleSeries.some(hasGradient)) {
         const states = await getGradientStates(reference, seriesOptions);
-        visibleSeries = visibleSeries.map((item) => ({
-            ...item,
-            gradientState: states.get(item.id),
-        }));
+        visibleSeries = visibleSeries.map((item) => {
+            const gradientState = states.get(item.id);
+            return gradientState ? {...item, gradientState} : item;
+        });
     }
     const groupedSeries = group(visibleSeries, (item) => {
         if (item.type === 'line') {
@@ -233,7 +250,7 @@ export const useShapes = (args: Args) => {
         yAxis,
         yScale,
         zoomState,
-        getUnzoomedData,
+        getGradientReference,
         gradientReference,
     } = args;
 
@@ -270,7 +287,7 @@ export const useShapes = (args: Args) => {
                 yAxis,
                 yScale,
                 zoomState,
-                getUnzoomedData,
+                getGradientReference,
                 gradientReference,
             });
 
@@ -297,7 +314,7 @@ export const useShapes = (args: Args) => {
         yAxis,
         yScale,
         zoomState,
-        getUnzoomedData,
+        getGradientReference,
         gradientReference,
     ]);
 

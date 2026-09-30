@@ -1,7 +1,7 @@
 import type {HtmlItem, LabelData} from '../../types';
 import type {SymbolType} from '../constants';
 import type {AnnotationAnchor} from '../series/types';
-import type {GradientCoords} from '../utils/gradient';
+import type {GradientBBox, GradientCoords} from '../utils/gradient';
 
 /** SVG label data without a required series reference. */
 export type SvgLabel = Omit<LabelData, 'series'>;
@@ -44,8 +44,10 @@ export interface HoveredShapeData {
 }
 
 export interface SeriesShapeData {
-    gradientCoords?: GradientCoords;
-    fillGradientCoords?: GradientCoords;
+    gradientBBox?: GradientBBox | null;
+    fillGradientBBox?: GradientBBox | null;
+    gradientCoords?: GradientCoords | null;
+    fillGradientCoords?: GradientCoords | null;
     htmlLabels: HtmlItem[];
     markers: MarkerItem[];
     annotations: AnnotationAnchor[];

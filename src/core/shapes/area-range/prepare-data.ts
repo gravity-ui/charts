@@ -21,8 +21,19 @@ export async function prepareAreaRangeData(args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
+    geometryOnly?: boolean;
 }): Promise<PreparedAreaRangeData[]> {
-    const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const {
+        series,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        split,
+        isOutsideBounds,
+        isRangeSlider,
+        geometryOnly,
+    } = args;
     const xMax = Math.max(...xScale.range());
     const result: PreparedAreaRangeData[] = [];
 
@@ -34,7 +45,11 @@ export async function prepareAreaRangeData(args: {
             continue;
         }
 
-        const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+        const plot = split.plots[seriesYAxis.plotIndex];
+        if (plot && plot.height <= 0) {
+            continue;
+        }
+        const yAxisTop = plot?.top || 0;
         const points: AreaRangePointData[] = [];
 
         for (const data of item.data) {
@@ -76,45 +91,43 @@ export async function prepareAreaRangeData(args: {
         points.sort((a, b) => a.x - b.x);
         markHiddenRangePoints({points, yScale: seriesYScale, yAxis: seriesYAxis, yAxisTop});
 
-        const gradientPoints =
-            item.gradient || item.fillGradient
-                ? points.flatMap((point) =>
-                      point.y0 === null || point.y1 === null || point.hiddenInLine
-                          ? []
-                          : [
-                                {...point, y: point.y0},
-                                {...point, y: point.y1},
-                            ],
-                  )
-                : [];
-        const gradientCoords = prepareGradientCoords({
-            gradient: item.gradient,
-            state: item.gradientState,
-            paint: 'stroke',
-            points: gradientPoints,
-            xScale,
-            yScale: seriesYScale,
-            yAxisTop,
-        });
-        const fillGradientCoords = prepareGradientCoords({
-            gradient: item.fillGradient,
-            state: item.gradientState,
-            paint: 'fill',
-            points: gradientPoints,
-            xScale,
-            yScale: seriesYScale,
-            yAxisTop,
-        });
+        const bbox = item.gradient || item.fillGradient ? getRangeBBox(points) : null;
+        const gradientBBox = item.gradient ? bbox : null;
+        const fillGradientBBox = item.fillGradient ? bbox : null;
+        const gradientCoords = geometryOnly
+            ? undefined
+            : prepareGradientCoords({
+                  bbox: gradientBBox,
+                  gradient: item.gradient,
+                  state: item.gradientState,
+                  paint: 'stroke',
+                  points,
+                  xScale,
+                  yScale: seriesYScale,
+                  yAxisTop,
+              });
+        const fillGradientCoords = geometryOnly
+            ? undefined
+            : prepareGradientCoords({
+                  bbox: fillGradientBBox,
+                  gradient: item.fillGradient,
+                  state: item.gradientState,
+                  paint: 'fill',
+                  points,
+                  xScale,
+                  yScale: seriesYScale,
+                  yAxisTop,
+              });
 
-        if (item.gradient) {
-            const bbox = getRangeBBox(points);
-            if (bbox) {
-                const getColor = createGradientColorResolver(item.gradient, bbox, gradientCoords);
-                points.forEach((point) => {
-                    if (point.color === undefined && point.y !== null) {
-                        point.fill = getColor(point.x, point.y);
-                    }
-                });
+        const getGradientColor =
+            !geometryOnly && item.gradient && bbox && gradientCoords !== null
+                ? createGradientColorResolver(item.gradient, bbox, gradientCoords)
+                : undefined;
+        if (getGradientColor) {
+            for (const point of points) {
+                if (point.color === undefined && point.y !== null) {
+                    point.fill = getGradientColor(point.x, point.y);
+                }
             }
         }
 
@@ -124,15 +137,21 @@ export async function prepareAreaRangeData(args: {
             color: item.color,
             gradientCoords,
             fillGradientCoords,
-            ...prepareAreaRangeMarkers({
-                points,
-                series: item,
-                yAxis: seriesYAxis,
-                yScale: seriesYScale,
-                yAxisTop,
-                isOutsideBounds,
-                gradientCoords,
-            }),
+            gradientBBox,
+            fillGradientBBox,
+            ...(geometryOnly
+                ? {markers: [], getHoverMarkers: () => []}
+                : prepareAreaRangeMarkers({
+                      points,
+                      series: item,
+                      yAxis: seriesYAxis,
+                      yScale: seriesYScale,
+                      yAxisTop,
+                      isOutsideBounds,
+                      gradientCoords,
+                      bbox: gradientBBox,
+                      getGradientColor,
+                  })),
             hovered: false,
             htmlLabels: [],
             id: item.id,
@@ -143,7 +162,7 @@ export async function prepareAreaRangeData(args: {
             width: item.lineWidth,
         };
 
-        if (!isRangeSlider && shouldPrepareSeriesDataLabels(item)) {
+        if (!isRangeSlider && !geometryOnly && shouldPrepareSeriesDataLabels(item)) {
             const labels = await preparePointDataLabels({
                 series: item,
                 points: points.filter((point) => !point.hiddenInTooltip),

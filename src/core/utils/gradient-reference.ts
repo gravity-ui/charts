@@ -1,25 +1,11 @@
-import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
-import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale, ChartScaleLinear} from '../scales/types';
-import type {PreparedSeries} from '../series/types';
 import type {LinearGradient} from '../types';
 
 import {isBandScale} from './axis/common';
-import type {GradientCoords} from './gradient';
-import {getGradientBBox, gradientAngleToCoords} from './gradient';
+import type {GradientBBox, GradientCoords} from './gradient';
+import {DEFAULT_GRADIENT_ANGLE, getGradientBBox, gradientAngleToCoords} from './gradient';
 
-export interface ShapeDataReference {
-    boundsWidth: number;
-    boundsHeight: number;
-    series: PreparedSeries[];
-    xAxis: PreparedXAxis | null;
-    yAxis: PreparedYAxis[];
-    xScale?: ChartScale;
-    yScale?: (ChartScale | undefined)[];
-    split: PreparedSplit;
-}
-
-interface GradientPoint {
+export interface GradientPoint {
     data: object;
     x: number | null;
     y: number | null;
@@ -40,7 +26,62 @@ interface ReferenceGradient {
 }
 
 export interface SeriesGradientState {
-    paints: Map<'stroke' | 'fill', ReferenceGradient>;
+    stroke?: ReferenceGradient | null;
+    fill?: ReferenceGradient | null;
+}
+
+export interface GradientGeometry {
+    id: string;
+    points: GradientPoint[];
+    bbox: GradientBBox | null;
+    fillBBox?: GradientBBox | null;
+}
+
+/** Capture only drawable full-series geometry. A missing reference never falls back to zoomed bounds. */
+export function captureGradient(args: {
+    gradient?: LinearGradient;
+    bbox: GradientBBox | null;
+    points: GradientPoint[];
+    xScale: ChartScale;
+    yScale: ChartScale;
+    yAxisTop: number;
+    locations?: Map<object, ReferencePoint[]>;
+}): ReferenceGradient | null {
+    const {gradient, bbox, points, xScale, yScale, yAxisTop} = args;
+    if (!gradient || !bbox || ![xScale, yScale].every(hasDrawableRange)) {
+        return null;
+    }
+    const coords = gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox);
+    if (!Object.values(coords).every(Number.isFinite)) {
+        return null;
+    }
+    const locations = args.locations ?? getPointLocations(points);
+    return {coords, points: locations, xScale, yScale, yAxisTop};
+}
+
+function getPointLocations(points: GradientPoint[]) {
+    const locations = new Map<object, ReferencePoint[]>();
+    for (const point of points) {
+        if (
+            point.x === null ||
+            point.y === null ||
+            !Number.isFinite(point.x) ||
+            !Number.isFinite(point.y)
+        ) {
+            continue;
+        }
+        const positions = locations.get(point.data) ?? [];
+        positions.push({x: point.x, y: point.y});
+        locations.set(point.data, positions);
+    }
+    return locations;
+}
+
+function hasDrawableRange(scale: ChartScale) {
+    const [start, end] = scale.range();
+    return (
+        Number.isFinite(start) && Number.isFinite(end) && start >= 0 && end >= 0 && start !== end
+    );
 }
 
 interface ScaleTransform {
@@ -67,42 +108,28 @@ function getScaleTransform(source: ChartScale, target: ChartScale): ScaleTransfo
     return {ratio, offset: start - ratio * sourceRange[0]};
 }
 
-/** Resolve a paint against the complete series, then transport its color field through axis scaling. */
+/** Project a captured full-series color field through the current axis scales. */
 export function prepareGradientCoords(args: {
     gradient?: LinearGradient;
     state?: SeriesGradientState;
     paint: 'stroke' | 'fill';
     points: GradientPoint[];
+    bbox?: GradientBBox | null;
     xScale: ChartScale;
     yScale: ChartScale;
     yAxisTop?: number;
-}): GradientCoords | undefined {
+}): GradientCoords | null | undefined {
     const {gradient, state, paint, points, xScale, yScale, yAxisTop = 0} = args;
     if (!gradient) {
         return undefined;
     }
-    const bbox = getGradientBBox(points);
-    if (!bbox) {
-        return undefined;
+    const source = state?.[paint];
+    if (source === null) {
+        return null;
     }
-
-    const source = state?.paints.get(paint);
     if (!source) {
-        const coords = gradientAngleToCoords(gradient.angle ?? 180, bbox);
-        if (!state) {
-            return coords;
-        }
-        const referencePoints = new Map<object, ReferencePoint[]>();
-        for (const point of points) {
-            if (point.x === null || point.y === null) {
-                continue;
-            }
-            const locations = referencePoints.get(point.data) ?? [];
-            locations.push({x: point.x, y: point.y});
-            referencePoints.set(point.data, locations);
-        }
-        state.paints.set(paint, {coords, points: referencePoints, xScale, yScale, yAxisTop});
-        return coords;
+        const bbox = args.bbox === undefined ? getGradientBBox(points) : args.bbox;
+        return bbox ? gradientAngleToCoords(gradient.angle ?? DEFAULT_GRADIENT_ANGLE, bbox) : null;
     }
 
     if (source.xScale === xScale && source.yScale === yScale && source.yAxisTop === yAxisTop) {
@@ -116,11 +143,10 @@ export function prepareGradientCoords(args: {
     const {x1, y1, x2, y2} = source.coords;
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const lengthSquared = dx * dx + dy * dy;
-    if (lengthSquared === 0) {
+    if (dx === 0 && dy === 0) {
         const point = points.find((p) => p.x !== null && p.y !== null);
         if (!point || point.x === null || point.y === null) {
-            return undefined;
+            return null;
         }
         return {x1: point.x, y1: point.y, x2: point.x, y2: point.y};
     }
@@ -136,47 +162,71 @@ export function prepareGradientCoords(args: {
     // A single-value axis can use a special scale for clipping neighbors.
     // Recover its actual transform from the prepared point coordinates.
     if (!transformX.ratio || !transformY.ratio) {
-        const occurrences = new Map<object, number>();
-        const pairs = points.flatMap((point) => {
-            const occurrence = occurrences.get(point.data) ?? 0;
-            occurrences.set(point.data, occurrence + 1);
-            const original = source.points.get(point.data)?.[occurrence];
-            return original && point.x !== null && point.y !== null && !point.hiddenInLine
-                ? [{original, current: {x: point.x, y: point.y}}]
-                : [];
-        });
+        const pairs = matchPoints(points, source.points);
         const matchedAnchor = pairs[0];
         if (!matchedAnchor) {
-            return undefined;
+            return null;
         }
         anchor = matchedAnchor;
 
-        const getRatio = (axis: 'x' | 'y', fallback: number) => {
-            let min = anchor;
-            let max = anchor;
-            for (const pair of pairs) {
-                if (pair.original[axis] < min.original[axis]) {
-                    min = pair;
-                }
-                if (pair.original[axis] > max.original[axis]) {
-                    max = pair;
-                }
-            }
-            if (max.original[axis] === min.original[axis]) {
-                return fallback;
-            }
-            return (
-                (max.current[axis] - min.current[axis]) / (max.original[axis] - min.original[axis])
-            );
-        };
         if (!transformX.ratio) {
-            transformX.ratio = getRatio('x', 0);
+            transformX.ratio = getPointRatio(pairs, 'x');
         }
         if (!transformY.ratio) {
-            transformY.ratio = getRatio('y', 0);
+            transformY.ratio = getPointRatio(pairs, 'y');
         }
     }
 
+    return transformGradient(source.coords, transformX, transformY, anchor);
+}
+
+interface PointPair {
+    original: ReferencePoint;
+    current: ReferencePoint;
+}
+
+function matchPoints(
+    points: GradientPoint[],
+    locations: Map<object, ReferencePoint[]>,
+): PointPair[] {
+    const occurrences = new Map<object, number>();
+    const pairs: PointPair[] = [];
+    for (const point of points) {
+        const occurrence = occurrences.get(point.data) ?? 0;
+        occurrences.set(point.data, occurrence + 1);
+        const original = locations.get(point.data)?.[occurrence];
+        if (original && point.x !== null && point.y !== null && !point.hiddenInLine) {
+            pairs.push({original, current: {x: point.x, y: point.y}});
+        }
+    }
+    return pairs;
+}
+
+function getPointRatio(pairs: PointPair[], axis: 'x' | 'y') {
+    let min = pairs[0];
+    let max = pairs[0];
+    for (const pair of pairs) {
+        if (pair.original[axis] < min.original[axis]) {
+            min = pair;
+        }
+        if (pair.original[axis] > max.original[axis]) {
+            max = pair;
+        }
+    }
+    const extent = max.original[axis] - min.original[axis];
+    return extent ? (max.current[axis] - min.current[axis]) / extent : 0;
+}
+
+function transformGradient(
+    coords: GradientCoords,
+    transformX: ScaleTransform,
+    transformY: ScaleTransform,
+    anchor: PointPair,
+): GradientCoords | null {
+    const {x1, y1, x2, y2} = coords;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lengthSquared = dx * dx + dy * dy;
     const ratioX = transformX.ratio;
     const ratioY = transformY.ratio;
     // t = dot(p - start, direction) / |direction|². Under axis scaling,
@@ -198,5 +248,6 @@ export function prepareGradientCoords(args: {
     const nextDy = ny / normalSquared;
     const startX = anchor.current.x - t * nextDx;
     const startY = anchor.current.y - t * nextDy;
-    return {x1: startX, y1: startY, x2: startX + nextDx, y2: startY + nextDy};
+    const result = {x1: startX, y1: startY, x2: startX + nextDx, y2: startY + nextDy};
+    return Object.values(result).every(Number.isFinite) ? result : null;
 }

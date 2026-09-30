@@ -16,6 +16,7 @@ import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
+import type {GradientGeometry} from '../utils/gradient-reference';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 
 import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
@@ -139,10 +140,15 @@ export interface SeriesPlugin<
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
     /** Axis-domain contributions for a point; return [] to exclude it. Omitted axes use the default extraction. */
     getAxisDomainValues?: SeriesAxisDomainValues<T>;
-    /** Computes shape data (geometry, labels, markers), including full-series gradient references. */
+    /** Computes shape data (geometry, labels, markers) once per render. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
     ): PrepareShapeDataResult | Promise<PrepareShapeDataResult>;
+
+    /** Full-series geometry for paints anchored before visible-range filtering. Omit for solid paints. */
+    prepareGradientGeometry?(
+        args: PrepareShapeDataArgs,
+    ): GradientGeometry[] | Promise<GradientGeometry[]>;
 
     // --- Rendering ---
 

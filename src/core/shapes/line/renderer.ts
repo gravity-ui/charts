@@ -43,6 +43,12 @@ export function renderLine(
 
     plotSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
+    const bounds = new Map(
+        preparedData.map((data) => [
+            data,
+            data.gradientBBox === undefined ? getGradientBBox(data.points) : data.gradientBBox,
+        ]),
+    );
     const getStroke = (data: PreparedLineData, hovered = false, brightness?: number) => {
         const {gradient} = data.series;
         const state = hovered ? 'hover' : 'normal';
@@ -50,7 +56,7 @@ export function renderLine(
             gradient && hovered ? getBrighterGradient(gradient, brightness) : gradient;
 
         return resolveGradientPaint({
-            bbox: gradient ? getGradientBBox(data.points) : null,
+            bbox: gradient ? (bounds.get(data) ?? null) : null,
             coords: data.gradientCoords,
             fallbackColor: data.color,
             gradient: paintGradient,

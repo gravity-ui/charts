@@ -168,8 +168,6 @@ export type PreparedHaloOptions = {
 };
 
 type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
-    /** Prepared paint references, shared across filtered copies of this series. */
-    gradientState?: SeriesGradientState;
     color: string;
     name: string;
     id: string;
@@ -316,6 +314,8 @@ export type PreparedPieSeries = {
 
 export type PreparedLineSeries = {
     type: LineSeries['type'];
+    /** Full-series paint references, shared across filtered copies. */
+    gradientState?: SeriesGradientState;
     data: LineSeriesData[];
     lineWidth: number;
     dataLabels: {
@@ -358,6 +358,10 @@ export type PreparedLineSeries = {
 
 export type PreparedAreaSeries = {
     type: AreaSeries['type'];
+    /** Full-series paint references, shared across filtered copies. */
+    gradientState?: SeriesGradientState;
+    /** Complete data for stack sections neighboring the visible range. */
+    fullData?: AreaSeriesData[];
     data: AreaSeriesData[];
     stacking: AreaSeries['stacking'];
     stackLabels?: AreaSeries['stackLabels'];
@@ -401,6 +405,8 @@ export type PreparedAreaSeries = {
 
 export type PreparedAreaRangeSeries = {
     type: AreaRangeSeries['type'];
+    /** Full-series paint references, shared across filtered copies. */
+    gradientState?: SeriesGradientState;
     data: AreaRangeSeriesData[];
     lineWidth: number;
     opacity: number;

@@ -10,7 +10,7 @@ import type {
     PreparedSeries,
     PreparedSeriesOptions,
 } from '../../series/types';
-import {setGradientPointFills} from '../../utils/gradient';
+import {getGradientBBox, setGradientPointFills} from '../../utils/gradient';
 import {prepareGradientCoords} from '../../utils/gradient-reference';
 import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
 import type {MarkerItem, ShapeLabels} from '../types';
@@ -40,6 +40,7 @@ export const prepareLineData = async (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
+    geometryOnly?: boolean;
     otherLayers?: ShapeLabels[];
     allSeries?: PreparedSeries[];
     getCurveFactory?: (interpolation?: PreparedLineSeries['interpolation']) => CurveFactory;
@@ -54,6 +55,7 @@ export const prepareLineData = async (args: {
         split,
         isOutsideBounds,
         isRangeSlider,
+        geometryOnly,
         otherLayers,
         allSeries,
         getCurveFactory,
@@ -65,7 +67,11 @@ export const prepareLineData = async (args: {
         const s = series[i];
         const yAxisIndex = s.yAxis;
         const seriesYAxis = yAxis[yAxisIndex];
-        const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+        const plot = split.plots[seriesYAxis.plotIndex];
+        if (plot && plot.height <= 0) {
+            continue;
+        }
+        const yAxisTop = plot?.top || 0;
         const seriesYScale = yScale[s.yAxis];
 
         if (!seriesYScale) {
@@ -88,7 +94,7 @@ export const prepareLineData = async (args: {
                 data: d,
                 series: s,
                 annotation:
-                    d.annotation && !isRangeSlider
+                    d.annotation && !isRangeSlider && !geometryOnly
                         ? await prepareAnnotation({
                               annotation: d.annotation,
                               optionsLabel: annotationOpts?.label,
@@ -108,21 +114,28 @@ export const prepareLineData = async (args: {
         });
 
         const normalState = s.marker.states.normal;
-        const hasPerPointNormalMarkers = s.data.some((d) => d.marker?.states?.normal?.enabled);
+        const hasPerPointNormalMarkers =
+            !geometryOnly && s.data.some((d) => d.marker?.states?.normal?.enabled);
 
-        const gradientCoords = prepareGradientCoords({
-            gradient: s.gradient,
-            state: s.gradientState,
-            paint: 'stroke',
-            points,
-            xScale,
-            yScale: seriesYScale,
-            yAxisTop,
-        });
-        setGradientPointFills(points, s.gradient, gradientCoords);
+        const gradientBBox = s.gradient ? getGradientBBox(points) : null;
+        const gradientCoords = geometryOnly
+            ? undefined
+            : prepareGradientCoords({
+                  bbox: gradientBBox,
+                  gradient: s.gradient,
+                  state: s.gradientState,
+                  paint: 'stroke',
+                  points,
+                  xScale,
+                  yScale: seriesYScale,
+                  yAxisTop,
+              });
+        if (!geometryOnly) {
+            setGradientPointFills(points, s.gradient, gradientCoords, gradientBBox);
+        }
 
         const markers =
-            s.marker.states.normal.enabled || hasPerPointNormalMarkers
+            !geometryOnly && (s.marker.states.normal.enabled || hasPerPointNormalMarkers)
                 ? points.reduce<MarkerItem[]>((result, p) => {
                       if (p.y === null || p.x === null || p.hiddenInLine) {
                           return result;
@@ -159,8 +172,9 @@ export const prepareLineData = async (args: {
             annotations,
             points,
             gradientCoords,
+            gradientBBox,
             markers,
-            getHoverMarkers: buildHoverMarkerGetter(points, s),
+            getHoverMarkers: geometryOnly ? () => [] : buildHoverMarkerGetter(points, s),
             svgLabels: [],
             series: s,
             hovered: false,
@@ -179,7 +193,8 @@ export const prepareLineData = async (args: {
         acc.push(result);
     }
 
-    const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);
+    const labeled =
+        isRangeSlider || geometryOnly ? [] : acc.filter((d) => d.series.dataLabels.enabled);
 
     if (labeled.length > 0) {
         const needSegments = labeled.some((d) => needsPlacementChecks(d.series));

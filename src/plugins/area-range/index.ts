@@ -13,6 +13,7 @@ import {renderAreaRange} from '~core/shapes/area-range/renderer';
 import type {PreparedAreaRangeData} from '~core/shapes/area-range/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
     validateAxisPlotValues,
     validateSeriesColor,
@@ -31,6 +32,24 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
         defaultType: 'x',
         preserveAdjacentPoints: true,
         isYInRange: ({y0, y1}, [min, max]) => y0 !== null && y1 !== null && y0 <= max && y1 >= min,
+    },
+    prepareGradientGeometry: async (args) => {
+        const {xAxis, xScale, yAxis, yScale, split} = args;
+        if (!xAxis || !xScale || !yScale || !split) {
+            return [];
+        }
+        const data = await prepareAreaRangeData({
+            ...args,
+            series: args.series as PreparedAreaRangeSeries[],
+            xAxis,
+            xScale,
+            yAxis: yAxis ?? [],
+            yScale,
+            split,
+            isOutsideBounds: () => false,
+            geometryOnly: true,
+        });
+        return getGradientGeometry(data);
     },
     prepareSeries: prepareAreaRangeSeries,
     getAxisDomainValues: {

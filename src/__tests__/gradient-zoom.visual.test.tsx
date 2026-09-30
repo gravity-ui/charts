@@ -77,6 +77,246 @@ test.describe('Gradient colors across zoom', () => {
             component.locator('.gcharts-chart__content .gcharts-marker__symbol'),
         ).toHaveCount(4);
         await expect(chart).toHaveScreenshot('slider-selected-range.png');
+        const updatedData: ChartData = {
+            ...data,
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Updated',
+                        marker: {enabled: true},
+                        color: {
+                            type: 'linear-gradient',
+                            angle: 90,
+                            stops: [
+                                {offset: 0, color: '#ff0000'},
+                                {offset: 1, color: '#0000ff'},
+                            ],
+                        },
+                        data: [1, 2, 3, 4, 5].map((y, x) => ({x, y})),
+                    },
+                ],
+            },
+        };
+        await component.update(
+            <ChartTestStory data={updatedData} styles={{height: 400, width: 800}} />,
+        );
+        const mainMarkers = component.locator('.gcharts-chart__content .gcharts-marker__symbol');
+        const previewMarkers = component.locator('.gcharts-range-slider .gcharts-marker__symbol');
+        await expect(mainMarkers).toHaveCount(4);
+        await expect(previewMarkers).toHaveCount(5);
+        const fullColors = [
+            'rgb(255, 0, 0)',
+            'rgb(191, 0, 64)',
+            'rgb(128, 0, 128)',
+            'rgb(64, 0, 191)',
+            'rgb(0, 0, 255)',
+        ];
+        const colorsMatch = (actual: string[], expected: string[]) =>
+            actual.length === expected.length &&
+            actual.every((fill, index) => {
+                const channels = fill.match(/\d+/g)?.map(Number) ?? [];
+                const expectedChannels = expected[index].match(/\d+/g)?.map(Number) ?? [];
+                // Affine projection can differ by one RGB level at a rounding boundary.
+                return (
+                    channels.length === 3 &&
+                    channels.every(
+                        (value, channel) => Math.abs(value - expectedChannels[channel]) <= 1,
+                    )
+                );
+            });
+        await expect
+            .poll(async () =>
+                colorsMatch(
+                    await mainMarkers.evaluateAll((items) =>
+                        items.map((item) => getComputedStyle(item).fill),
+                    ),
+                    fullColors.slice(1),
+                ),
+            )
+            .toBe(true);
+        await expect
+            .poll(async () =>
+                colorsMatch(
+                    await previewMarkers.evaluateAll((items) =>
+                        items.map((item) => getComputedStyle(item).fill),
+                    ),
+                    fullColors,
+                ),
+            )
+            .toBe(true);
+    });
+
+    test('computed markers, tooltip and independent fill keep their colors after zoom', async ({
+        mount,
+        page,
+    }) => {
+        const data = getData('area');
+        data.legend = {enabled: false};
+        data.series.data = [
+            {
+                type: 'area',
+                name: 'Value',
+                marker: {enabled: true},
+                color: {
+                    type: 'linear-gradient',
+                    angle: 0,
+                    stops: [
+                        {offset: 0, color: '#000000'},
+                        {offset: 1, color: '#ffffff'},
+                    ],
+                },
+                fillColor: {
+                    type: 'linear-gradient',
+                    angle: 45,
+                    stops: [
+                        {offset: 0, color: '#ff0000'},
+                        {offset: 1, color: '#0000ff'},
+                    ],
+                },
+                data: [1, 4, 2, 5, 3].map((y, x) => ({x, y})),
+            },
+        ];
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 400, width: 800}} />,
+        );
+        const chart = component.locator('svg').first();
+        const markers = chart.locator('.gcharts-marker__symbol');
+        await expect(markers).toHaveCount(5);
+        const colorsBefore = await markers.evaluateAll((items) =>
+            items.map((item) => item.getAttribute('fill')),
+        );
+        await expect(chart).toHaveScreenshot('computed-colors-before.png');
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-chart__content .gcharts-brush .overlay',
+            getDragOptions: ({boundingBox: box}) => ({
+                from: [box.x + box.width * 0.45, box.y + box.height / 2],
+                to: [box.x + box.width * 0.99, box.y + box.height / 2],
+            }),
+        });
+        await expect(markers).toHaveCount(3);
+        await expect
+            .poll(() =>
+                markers.evaluateAll((items) => items.map((item) => item.getAttribute('fill'))),
+            )
+            .toEqual(colorsBefore.slice(2));
+        await page.mouse.move(0, 0);
+        await expect(chart).toHaveScreenshot('computed-colors-zoom.png');
+        const markerBox = await getLocatorBoundingBox(markers.nth(1));
+        const plotBox = await getLocatorBoundingBox(
+            component.locator('.gcharts-chart__content .gcharts-brush .overlay'),
+        );
+        await page.mouse.move(markerBox.x + markerBox.width / 2, plotBox.y + plotBox.height / 2);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toBeVisible();
+        await expect(tooltip).toHaveScreenshot('computed-color-tooltip.png');
+    });
+
+    test('resized oblique gradient matches a fresh chart at the same size', async ({
+        mount,
+        page,
+    }) => {
+        const data: ChartData = {
+            xAxis: {type: 'linear', min: 0, max: 2},
+            yAxis: [{min: 0, max: 5}],
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Value',
+                        marker: {enabled: true},
+                        color: {
+                            type: 'linear-gradient',
+                            angle: 45,
+                            stops: [
+                                {offset: 0, color: '#000000'},
+                                {offset: 1, color: '#ffffff'},
+                            ],
+                        },
+                        data: [1, 4, 2].map((y, x) => ({x, y})),
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 250, width: 600}} />,
+        );
+        await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(3);
+        await component.update(<ChartTestStory data={data} styles={{height: 500, width: 300}} />);
+        const chart = component.locator('svg').first();
+        await expect(chart).toHaveAttribute('width', '300');
+        await page.mouse.move(0, 0);
+        await expect(chart).toHaveScreenshot('oblique-resized.png');
+        await component.unmount();
+        const fresh = await mount(
+            <ChartTestStory data={data} styles={{height: 500, width: 300}} />,
+        );
+        await expect(fresh.locator('svg').first()).toHaveScreenshot('oblique-resized.png');
+    });
+
+    test('resize with a selected range matches a fresh range-slider chart', async ({
+        mount,
+        page,
+    }) => {
+        const data: ChartData = {
+            xAxis: {
+                type: 'linear',
+                min: 0,
+                max: 4,
+                rangeSlider: {enabled: true, defaultRange: {size: 2}},
+            },
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Value',
+                        marker: {enabled: true},
+                        color: {
+                            type: 'linear-gradient',
+                            angle: 45,
+                            stops: [
+                                {offset: 0, color: '#000000'},
+                                {offset: 1, color: '#ffffff'},
+                            ],
+                        },
+                        data: [1, 10000, 2, 3, 4].map((y, x) => ({x, y})),
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 300, width: 800}} />,
+        );
+        const markers = component.locator('.gcharts-chart__content .gcharts-marker__symbol');
+        await expect(markers).toHaveCount(4);
+        await component.update(<ChartTestStory data={data} styles={{height: 500, width: 400}} />);
+        await expect(component.locator('svg').first()).toHaveAttribute('width', '400');
+        // Take a stable screenshot to wait for asynchronous geometry preparation after resize.
+        await page.mouse.move(0, 0);
+        await expect(component.locator('svg').first()).toHaveScreenshot(
+            'selected-range-resized.png',
+        );
+        const colorsAfterResize = await markers.evaluateAll((items) =>
+            items.map((item) => getComputedStyle(item).fill),
+        );
+        await component.unmount();
+        const fresh = await mount(
+            <ChartTestStory data={data} styles={{height: 500, width: 400}} />,
+        );
+        const freshMarkers = fresh.locator('.gcharts-chart__content .gcharts-marker__symbol');
+        await expect(freshMarkers).toHaveCount(4);
+        await expect
+            .poll(() =>
+                freshMarkers.evaluateAll((items) =>
+                    items.map((item) => getComputedStyle(item).fill),
+                ),
+            )
+            .toEqual(colorsAfterResize);
+        await expect(fresh.locator('svg').first()).toHaveScreenshot('selected-range-resized.png');
     });
 
     for (const type of ['line', 'area', 'area-range'] as const) {

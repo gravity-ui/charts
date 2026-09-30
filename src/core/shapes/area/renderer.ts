@@ -18,23 +18,9 @@ import {renderDataLabels} from '../data-labels';
 import {setActiveState} from '../utils';
 
 import type {PointData, PreparedAreaData} from './types';
+import {getAreaBBox} from './utils';
 
 const b = block('area');
-
-function computeAreaBBox(data: PreparedAreaData) {
-    const bbox = getGradientBBox(data.points);
-    if (!bbox) {
-        return null;
-    }
-    for (const point of data.points) {
-        if (point.y === null || point.hiddenInLine) {
-            continue;
-        }
-        bbox.yMin = Math.min(bbox.yMin, point.y0);
-        bbox.yMax = Math.max(bbox.yMax, point.y0);
-    }
-    return bbox;
-}
 
 export function renderArea(
     elements: {
@@ -56,6 +42,18 @@ export function renderArea(
 
     plotSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
+    const lineBounds = new Map(
+        preparedData.map((data) => [
+            data,
+            data.gradientBBox === undefined ? getGradientBBox(data.points) : data.gradientBBox,
+        ]),
+    );
+    const fillBounds = new Map(
+        preparedData.map((data) => [
+            data,
+            data.fillGradientBBox === undefined ? getAreaBBox(data.points) : data.fillGradientBBox,
+        ]),
+    );
     const getLineStroke = (data: PreparedAreaData, hovered = false, brightness?: number) => {
         const {gradient} = data.series;
         const state = hovered ? 'hover' : 'normal';
@@ -63,7 +61,7 @@ export function renderArea(
             gradient && hovered ? getBrighterGradient(gradient, brightness) : gradient;
 
         return resolveGradientPaint({
-            bbox: gradient ? getGradientBBox(data.points) : null,
+            bbox: gradient ? (lineBounds.get(data) ?? null) : null,
             coords: data.gradientCoords,
             fallbackColor: data.color,
             gradient: paintGradient,
@@ -77,7 +75,7 @@ export function renderArea(
             fillGradient && hovered ? getBrighterGradient(fillGradient, brightness) : fillGradient;
 
         return resolveGradientPaint({
-            bbox: fillGradient ? computeAreaBBox(data) : null,
+            bbox: fillGradient ? (fillBounds.get(data) ?? null) : null,
             coords: data.fillGradientCoords,
             fallbackColor: fillColor,
             gradient: paintGradient,
