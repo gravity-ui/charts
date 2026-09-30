@@ -16,7 +16,7 @@ test.each([
     } as CanvasRenderingContext2D);
     try {
         const measure = getTextSizeFn({decodeEntities});
-        expect(await measure('&amp;')).toEqual({width, height: 12, hangingOffset: 2});
+        expect(await measure('&amp;')).toMatchObject({width, height: 12, hangingOffset: 2});
     } finally {
         getContext.mockRestore();
     }

@@ -68,12 +68,32 @@ async function appendPaginator(args: {
     const paginationCounterText = `${pageIndex + 1}/${maxPage}`;
 
     const getTextSize = getTextSizeFn({style: legend.itemStyle});
-    const [arrowIcon, counter] = await Promise.all([
+    const [arrowIcon, downArrowIcon, counter] = await Promise.all([
         getTextSize('▲'),
+        getTextSize('▼'),
         getTextSize(paginationCounterText),
     ]);
+    const showCounter =
+        !legend.clipContent ||
+        arrowIcon.width + counter.width + downArrowIcon.width <= legend.resolvedWidth;
+    let upArrowX = 0;
+    let downArrowX = arrowIcon.width + (showCounter ? counter.width : 0);
+    const upInk = arrowIcon.inkBounds;
+    const downInk = downArrowIcon.inkBounds;
+    if (legend.clipContent && !showCounter && upInk && downInk) {
+        // Only reclaim side bearings when the visible arrows do not fit. Keep a
+        // two-pixel gap between triangles and one pixel clear at each outer edge.
+        const minGap = 2;
+        const edgePadding = 1;
+        const right = downArrowX + downInk.x + downInk.width;
+        const minWidth = upInk.width + minGap + downInk.width + 2 * edgePadding;
+        if (right + edgePadding > legend.resolvedWidth && minWidth <= legend.resolvedWidth) {
+            upArrowX = edgePadding - upInk.x;
+            downArrowX = legend.resolvedWidth - edgePadding - downInk.width - downInk.x;
+        }
+    }
 
-    const appendArrow = (text: string, x: number, nextPageIndex: number) => {
+    const appendArrow = (text: string, x: number, width: number, nextPageIndex: number) => {
         const inactive = nextPageIndex < 0 || nextPageIndex >= maxPage;
         const arrow = paginationLine
             .append('g')
@@ -87,7 +107,7 @@ async function appendPaginator(args: {
         arrow
             .append('rect')
             .attr('y', -legend.lineHeight / 2)
-            .attr('width', arrowIcon.width)
+            .attr('width', width)
             .attr('height', legend.lineHeight)
             .attr('fill', 'transparent');
         arrow
@@ -96,14 +116,16 @@ async function appendPaginator(args: {
             .style('font-size', legend.itemStyle.fontSize)
             .style('dominant-baseline', 'middle');
     };
-    appendArrow('▲', 0, pageIndex - 1);
-    paginationLine
-        .append('text')
-        .text(paginationCounterText)
-        .attr('class', b('pagination-counter'))
-        .attr('x', arrowIcon.width)
-        .style('font-size', legend.itemStyle.fontSize);
-    appendArrow('▼', arrowIcon.width + counter.width, pageIndex + 1);
+    appendArrow('▲', upArrowX, arrowIcon.width, pageIndex - 1);
+    if (showCounter) {
+        paginationLine
+            .append('text')
+            .text(paginationCounterText)
+            .attr('class', b('pagination-counter'))
+            .attr('x', arrowIcon.width)
+            .style('font-size', legend.itemStyle.fontSize);
+    }
+    appendArrow('▼', downArrowX, downArrowIcon.width, pageIndex + 1);
     paginationLine.attr('transform', transform);
     return paginationLine;
 }
@@ -200,12 +222,49 @@ export const Legend = (props: Props) => {
             svgElement.style('opacity', 0);
 
             const isMac = navigator.platform.toUpperCase().includes('MAC');
+            const handleItemClick = (event: MouseEvent, item: LegendItem) => {
+                legend.events?.itemClick?.(
+                    {
+                        id: item.id,
+                        name: item.name,
+                        visible: Boolean(item.visible),
+                    },
+                    event,
+                );
+
+                if (legend.itemClickAction !== 'none') {
+                    onItemClick({
+                        id: item.id,
+                        name: item.name,
+                        metaKey: isMac ? event.metaKey : event.ctrlKey,
+                    });
+                }
+
+                onUpdate?.();
+            };
 
             const htmlElement = select(htmlLayout);
             htmlElement.selectAll('[data-legend]').remove();
             const htmlContainer = legend.html
                 ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
                 : null;
+
+            if (legend.clipContent) {
+                const clipId = getUniqId();
+                svgElement
+                    .append('defs')
+                    .append('clipPath')
+                    .attr('id', clipId)
+                    .append('rect')
+                    .attr('width', legend.resolvedWidth)
+                    .attr('height', legend.height);
+                svgElement.attr('clip-path', `url(#${clipId})`);
+                htmlContainer
+                    ?.style('width', `${legend.resolvedWidth}px`)
+                    .style('height', `${legend.height}px`)
+                    .style('overflow', 'hidden')
+                    .style('pointer-events', 'none');
+            }
 
             let legendWidth = 0;
             let legendLeft = 0;
@@ -216,7 +275,17 @@ export const Legend = (props: Props) => {
                 const pageItems = page ? items.slice(start, page.end) : items;
                 const pageRows = page ? legend.rows.slice(start, page.end) : legend.rows;
                 const pageTop = page ? legend.rows[start].top : 0;
-                const titleHeight = legend.title.height + legend.title.margin;
+                const {titleHeight} = legend;
+                legendWidth =
+                    pageRows.length > 0 &&
+                    (legend.layout === 'vertical' || legend.justifyContent === 'center')
+                        ? config.maxWidth
+                        : Math.max(0, ...pageRows.map((row) => row.width));
+                // Keep the clipping viewport fixed while centering start-justified
+                // rows inside it, as the unclipped legend centers its content group.
+                const contentLeft = legend.clipContent
+                    ? Math.max(0, (config.maxWidth - legendWidth) / 2)
+                    : 0;
                 const pagination =
                     legend.height - titleHeight >= legend.lineHeight
                         ? config.pagination
@@ -235,14 +304,7 @@ export const Legend = (props: Props) => {
                         .enter()
                         .append('g')
                         .attr('class', b('item'))
-                        .on('click', function (e, d) {
-                            onItemClick({
-                                id: d.id,
-                                name: d.name,
-                                metaKey: isMac ? e.metaKey : e.ctrlKey,
-                            });
-                            onUpdate?.();
-                        });
+                        .on('click', handleItemClick);
 
                     const legendLineHeight = row.height;
                     renderLegendSymbol({selection: legendItemTemplate, row});
@@ -273,6 +335,7 @@ export const Legend = (props: Props) => {
                                 };
                                 return b('item-text-html', mods);
                             })
+                            .style('pointer-events', 'auto')
                             .style('font-size', legend.itemStyle.fontSize)
                             .style('position', 'absolute')
                             .style('font-weight', () =>
@@ -300,14 +363,7 @@ export const Legend = (props: Props) => {
                                 }
                                 return '0px';
                             })
-                            .on('click', function (e, d) {
-                                onItemClick({
-                                    id: d.id,
-                                    name: d.name,
-                                    metaKey: isMac ? e.metaKey : e.ctrlKey,
-                                });
-                                onUpdate?.();
-                            })
+                            .on('click', handleItemClick)
                             .html((d) => d.text);
                     } else {
                         const textSelection = legendItemTemplate
@@ -349,11 +405,7 @@ export const Legend = (props: Props) => {
                             });
                     }
 
-                    legendWidth =
-                        legend.layout === 'vertical' || legend.justifyContent === 'center'
-                            ? config.maxWidth
-                            : Math.max(legendWidth, row.width);
-                    const left = row.left;
+                    const left = contentLeft + row.left;
                     const top = titleHeight + row.top - pageTop;
                     legendLine.attr('transform', `translate(${[left, top].join(',')})`);
                     htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
@@ -404,7 +456,7 @@ export const Legend = (props: Props) => {
                 }
                 const {left, top} = getLegendPosition({
                     width: config.maxWidth,
-                    contentWidth: legendWidth,
+                    contentWidth: legend.clipContent ? config.maxWidth : legendWidth,
                     offsetLeft: config.offset.left,
                     offsetTop: config.offset.top,
                 });
@@ -486,9 +538,7 @@ export const Legend = (props: Props) => {
             const legendTitleClassname = b('title');
 
             if (legend.title.enable) {
-                const {width: titleWidth} = await getTextSizeFn({style: legend.title.style})(
-                    legend.title.text,
-                );
+                const titleWidth = legend.title.resolvedWidth;
                 let dx = 0;
                 switch (legend.title.align) {
                     case 'center': {
@@ -517,7 +567,7 @@ export const Legend = (props: Props) => {
                     .attr('font-size', legend.title.style.fontSize ?? null)
                     .attr('fill', legend.title.style.fontColor ?? null)
                     .style('dominant-baseline', 'hanging')
-                    .html(legend.title.text);
+                    .html(legend.title.resolvedText);
             } else {
                 svgElement.selectAll(`.${legendTitleClassname}`).remove();
             }

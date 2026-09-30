@@ -319,6 +319,14 @@ function unescapeHtml(str: string) {
     }, str);
 }
 
+interface TextMeasurement {
+    width: number;
+    height: number;
+    hangingOffset: number;
+    /** Single-line ink bounds; custom or multiline measurements may omit them. */
+    inkBounds?: {x: number; width: number};
+}
+
 let measureCanvas: HTMLCanvasElement | null = null;
 export function getTextSizeFn({
     style,
@@ -347,7 +355,7 @@ export function getTextSizeFn({
         return value;
     };
 
-    return async (str: string) => {
+    return async (str: string): Promise<TextMeasurement> => {
         await document.fonts.ready;
         const fontWeight = style?.fontWeight
             ? resolveCSSVar(String(style.fontWeight))
@@ -361,6 +369,11 @@ export function getTextSizeFn({
         // it would be possible to use native, but the browsers are not working in harmony right now
         return {
             width: textMetric.width,
+            // Ink bounds exclude the glyph's side bearings, unlike the advance width.
+            inkBounds: {
+                x: -textMetric.actualBoundingBoxLeft,
+                width: textMetric.actualBoundingBoxLeft + textMetric.actualBoundingBoxRight,
+            },
             height: textMetric.fontBoundingBoxDescent + textMetric.fontBoundingBoxAscent,
             hangingOffset: textMetric.fontBoundingBoxAscent * DESCENDER_RATIO,
         };

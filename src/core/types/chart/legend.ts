@@ -1,5 +1,22 @@
 import type {BaseTextStyle} from './base';
 
+export interface ChartLegendItemClickData {
+    /** Legend group ID of the clicked item. Set `legend.groupId` on a series or pie/funnel data point for a stable ID. */
+    id: string;
+    /** Full configured legend label before truncation. May contain HTML, such as `<b>Created</b>`. */
+    name: string;
+    /** Whether the item was visible before the click. */
+    visible: boolean;
+}
+
+export interface ChartLegendEvents {
+    /**
+     * Called when a discrete legend item is clicked, before the configured click action runs.
+     * This callback is informational: its return value and `event.defaultPrevented` do not change series visibility.
+     */
+    itemClick?: (data: ChartLegendItemClickData, event: MouseEvent) => void;
+}
+
 export interface ChartLegendItem {
     enabled?: boolean;
     /**
@@ -24,6 +41,15 @@ export interface ChartLegend extends ChartLegendItem {
      */
     itemMaxRowCount?: number;
     /* eslint-enable jsdoc/check-tag-names */
+    /** Event callbacks for discrete legend items. */
+    events?: ChartLegendEvents;
+    /**
+     * Action taken when a discrete legend item is clicked.
+     * `'default'` preserves the built-in selection behavior, including modifier keys.
+     * `'none'` leaves visibility unchanged while still calling `events.itemClick`.
+     * @default 'default'
+     */
+    itemClickAction?: 'default' | 'none';
     /**
      * Different types for different color schemes.
      * If the color scheme is continuous, a gradient legend will be drawn.
@@ -88,23 +114,44 @@ export interface ChartLegend extends ChartLegendItem {
         domain?: number[];
     };
     /**
-     * Width of the legend as a finite, nonnegative pixel value (e.g. 200 or '200px')
-     * or decimal percentage (e.g. '25%').
-     * Strings must use decimal notation without a sign, whitespace, or exponent.
-     * Invalid values fall back to automatic sizing at runtime.
+     * Width of the legend as a finite, nonnegative pixel value (e.g. 200 or '200px'),
+     * decimal percentage (e.g. '25%'), or 'auto'. Numeric strings must use decimal
+     * notation without a sign, whitespace, or exponent. Invalid values use the same
+     * default width as an omitted width.
      * Percentages are relative to the chart width after left/right chart margins,
      * before legend or axis space is deducted, and are recalculated on resize.
      * Percentages above 100% use 100% for both legend types.
      * For discrete legends, controls the allocated width, item wrapping, and label truncation.
-     * Discrete widths are clamped between zero and the chart width excluding chart margins.
+     * Discrete widths are clamped between zero and the chart width excluding chart margins;
+     * side legends also reserve legend.margin.
      * If a side legend leaves no room for the plot,
      * the plot and axes are not drawn.
      * Defaults to the available chart width for top/bottom positions and half of it for left/right.
-     * For continuous legends, controls the gradient width and defaults to 200.
-     * Continuous pixel widths are not capped at the available chart width.
+     * Set to `auto` for discrete side legends to fit the widest prepared row, title, and pagination.
+     * Horizontal layout uses half of the space after legend.margin as its default width limit;
+     * an explicit maxWidth replaces this limit. Titles are truncated to the resulting width
+     * and hidden when there is insufficient height for items and pagination.
+     * For continuous legends, controls the gradient width and defaults to 200 (`auto` uses this default).
+     * Continuous pixel widths are not capped at the available chart width unless maxWidth is set.
      * @minimum 0
      */
     width?: number | string;
+    /**
+     * Maximum discrete legend width, including markers and text spacing, excluding the
+     * external margin. For continuous legends, limits the gradient width; tick labels
+     * are laid out separately.
+     * Numbers and `px` strings are pixels. Percentages use chart width after left/right chart
+     * margins, before legend or axis space is deducted. Invalid or negative values are ignored.
+     * Applies to automatic, explicit, and continuous legend widths. Size strings use decimal
+     * notation without a sign, whitespace, or exponent.
+     * Does not change the configured alignment.
+     * Discrete legends truncate the title to the resolved width and hide it if there is
+     * insufficient height for items and pagination. Continuous titles are truncated only
+     * when the gradient width is reduced by the limit.
+     * When omitted, adds no limit beyond the available space.
+     * @minimum 0
+     */
+    maxWidth?: number | string;
     /**
      * Allows to use any html-tags to display the content.
      * @default false

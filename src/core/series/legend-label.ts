@@ -192,6 +192,12 @@ export async function limitLegendItemRows(
                 maxWidth: item.textWidth,
                 getTextWidth: async (text) => (await getTextSize(text)).width,
             });
+            item.textWidth = Math.max(
+                0,
+                ...(await Promise.all(
+                    item.textRows.map(async (text) => (await getTextSize(text)).width),
+                )),
+            );
         }
     }
 }
