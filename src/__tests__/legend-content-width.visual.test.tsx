@@ -189,45 +189,49 @@ test.describe('Content-based legend width', () => {
                 ],
             },
         };
-        let readyCount = 0;
-        const getReadyCount = () => readyCount;
-        const onRender = () => {
-            readyCount++;
-        };
-        const component = await mount(
-            <ChartTestStory data={data} styles={{height: 40}} onRender={onRender} />,
-        );
-        await expect.poll(getReadyCount).toBeGreaterThan(0);
+        const component = await mount(<ChartTestStory data={data} styles={{height: 40}} />);
+        const chart = component.locator('.gcharts-chart > svg');
         const title = component.locator('.gcharts-legend__title');
         const counter = component.locator('.gcharts-legend__pagination-counter');
         const label = component.locator('.gcharts-legend__item-text').first();
+        await expect(chart).toHaveAttribute('height', '40');
         await expect(title).toHaveCount(0);
         await component.getByText('▼').click();
         await expect(counter).toContainText('2/');
         for (const height of [45, 100, 45]) {
-            const previousCount = getReadyCount();
-            await component.update(
-                <ChartTestStory data={data} styles={{height}} onRender={onRender} />,
-            );
-            await expect.poll(getReadyCount).toBeGreaterThan(previousCount);
+            await component.update(<ChartTestStory data={data} styles={{height}} />);
+            await expect(chart).toHaveAttribute('height', String(height));
             await expect(title).toHaveCount(height === 100 ? 1 : 0);
             await expect(counter).toBeVisible();
-            const itemBox = await label.boundingBox();
-            const symbolBox = await component
-                .locator('.gcharts-legend__item-symbol')
-                .first()
-                .boundingBox();
-            const controlsBox = await component
-                .locator('.gcharts-legend__pagination')
-                .boundingBox();
-            const chartBox = await component.boundingBox();
-            if (!itemBox || !symbolBox || !controlsBox || !chartBox) {
-                throw new Error('Expected item, navigation and chart bounds');
-            }
-            expect(itemBox.y).toBeGreaterThanOrEqual(chartBox.y - 1);
-            expect(itemBox.y + itemBox.height / 2).toBeLessThan(controlsBox.y);
-            expect(symbolBox.y + symbolBox.height).toBeLessThanOrEqual(controlsBox.y);
-            expect(controlsBox.y + controlsBox.height).toBeLessThanOrEqual(chartBox.y + height + 1);
+            await expect(async () => {
+                // Read all bounds in one browser task while resize may replace the legend nodes.
+                const {itemBox, symbolBox, controlsBox, chartBox} = await component.evaluate(
+                    (element) => ({
+                        itemBox: element
+                            .querySelector('.gcharts-legend__item-text')
+                            ?.getBoundingClientRect()
+                            .toJSON(),
+                        symbolBox: element
+                            .querySelector('.gcharts-legend__item-symbol')
+                            ?.getBoundingClientRect()
+                            .toJSON(),
+                        controlsBox: element
+                            .querySelector('.gcharts-legend__pagination')
+                            ?.getBoundingClientRect()
+                            .toJSON(),
+                        chartBox: element.getBoundingClientRect().toJSON(),
+                    }),
+                );
+                if (!itemBox || !symbolBox || !controlsBox) {
+                    throw new Error('Expected item and navigation bounds after resize');
+                }
+                expect(itemBox.y).toBeGreaterThanOrEqual(chartBox.y - 1);
+                expect(itemBox.y + itemBox.height / 2).toBeLessThan(controlsBox.y);
+                expect(symbolBox.y + symbolBox.height).toBeLessThanOrEqual(controlsBox.y);
+                expect(controlsBox.y + controlsBox.height).toBeLessThanOrEqual(
+                    chartBox.y + height + 1,
+                );
+            }).toPass({timeout: 5000});
             const text = await label.textContent();
             await component.getByText('▼').click();
             await expect(label).not.toHaveText(text ?? '');
