@@ -502,7 +502,7 @@ export async function finalizePreparedLegend(args: {
                     .flat()
                     .map((item) =>
                         Math.max(
-                            preparedLegend.itemMaxRowCount > 1
+                            !preparedLegend.html && preparedLegend.itemMaxRowCount > 1
                                 ? Math.min(item.height, preparedLegend.lineHeight)
                                 : item.height,
                             getLegendSymbolHeight(item.symbol),
@@ -526,7 +526,7 @@ export async function finalizePreparedLegend(args: {
         if (availableHeight < legendHeight) {
             const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
-            if (preparedLegend.itemMaxRowCount > 1) {
+            if (!preparedLegend.html && preparedLegend.itemMaxRowCount > 1) {
                 const maxRows = Math.max(0, lines - 1);
                 if (maxRows === 0) {
                     items = [];

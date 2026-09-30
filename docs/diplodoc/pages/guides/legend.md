@@ -71,11 +71,13 @@ Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work t
 
 ## Wrapping long labels
 
-Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap text inside each discrete legend item. The default is `1` (single-line truncation). This works with SVG and HTML labels in all legend positions.
+Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap text inside each discrete legend item. The default is `1` (single-line truncation). This works with SVG labels in all legend positions. When `legend.html: true`, `itemMaxRowCount` is ignored: HTML content can contain blocks or images and manages its own layout.
 
-Labels wrap within the legend width after subtracting the marker and its padding. Explicit line breaks are preserved, long unbroken words are split, and the final visible row is ellipsized when needed. HTML labels also support `<br>`.
+Labels wrap within the legend width after subtracting the marker and its padding. Explicit line breaks are preserved, long unbroken words are split, and the final visible row is ellipsized when needed.
 
 Labels reflow on resize. Pagination keeps items together, reducing the row count only when an item is taller than a page. The title is kept if at least one text line, the marker, and pagination fit below it.
+
+With SVG labels, `width: 'auto'` fits the visible text rows, title, and pagination across all pages.
 
 <div data-chart-example="legend/wrapping"></div>
 

@@ -34,7 +34,7 @@ async function visitLegendPages(
         await checkPage();
         visited.push(...(await labels.allTextContents()));
         if (page < pageCount) {
-            await component.getByText('▼').click();
+            await component.locator('.gcharts-legend__pagination-arrow').last().click();
         }
     }
     return visited;
@@ -1661,196 +1661,250 @@ async function getLegendBox(locator: Locator) {
     return box;
 }
 
-test.describe('Multiline legend labels', () => {
-    for (const html of [false, true]) {
-        for (const position of ['left', 'bottom'] as const) {
-            const webkit = !html && position === 'left' ? ' @webkit' : '';
-            test(`wraps, ellipsizes and selects (${position}, html=${html})${webkit}`, async ({
-                mount,
-                browserName,
-            }) => {
-                const names = [
-                    'Revenue from the international enterprise customer segment including recurring subscriptions and support',
-                    'Short',
-                    'ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                    'First line\nSecond line',
-                ];
-                const data: ChartData = {
-                    legend: {enabled: true, position, width: 180, itemMaxRowCount: 3, html},
-                    series: {
-                        data: [
-                            {
-                                type: 'pie',
-                                dataLabels: {enabled: false},
-                                data: names.map((name, index) => {
-                                    let label = name;
-                                    if (html) {
-                                        label =
-                                            index === 0
-                                                ? `<b>${name}</b>`
-                                                : name.replace('\n', '<br>');
-                                    }
-                                    return {name: label, value: 1};
-                                }),
-                            },
-                        ],
-                    },
-                };
-                const component = await mount(
-                    <ChartTestStory data={data} styles={{width: 500, height: 500}} />,
-                );
-                const labels = component.locator(
-                    html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
-                );
-                await expect(labels).toHaveCount(4);
-                const longBox = await getLegendBox(labels.first());
-                const shortBox = await getLegendBox(labels.nth(1));
-                expect(longBox.height).toBeGreaterThan(shortBox.height * 2);
-                expect(longBox.width).toBeLessThanOrEqual(166);
-                if (!html) {
-                    await expect(labels.first().locator('tspan')).toHaveCount(3);
-                    await expect(labels.first().locator('tspan').last()).toContainText('…');
-                    await expect(labels.last().locator('tspan')).toHaveCount(2);
-                }
-                // WebKit clipped the first SVG row unless each tspan had an explicit hanging baseline.
-                if (browserName === 'chromium' || (!html && position === 'left')) {
-                    await expect(component).toHaveScreenshot();
-                }
-                // The last visible text row belongs to the same click target as the first.
-                if (html) {
-                    await labels.first().click({position: {x: 5, y: longBox.height - 3}});
-                } else {
-                    await labels.first().locator('tspan').last().click();
-                }
-                await expect(labels.nth(1)).toHaveClass(/unselected/);
-                await expect(labels.first()).not.toHaveClass(/unselected/);
-            });
+test('HTML legend ignores itemMaxRowCount for text, blocks and images @webkit', async ({mount}) => {
+    const image =
+        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="20" height="48"%3E%3Crect width="20" height="48" fill="red"/%3E%3C/svg%3E';
+    const data: ChartData = {
+        legend: {
+            enabled: true,
+            html: true,
+            position: 'left',
+            layout: 'vertical',
+            width: 'auto',
+            maxWidth: 180,
+            title: {text: 'Legend'},
+        },
+        series: {
+            data: [
+                {
+                    type: 'pie',
+                    dataLabels: {enabled: false},
+                    data: [
+                        {
+                            name: `<div style="height:48px;width:100px"><img src='${image}' width="20" height="48"></div>`,
+                            value: 1,
+                        },
+                        {
+                            name: 'A long text label that exceeds the available legend width',
+                            value: 1,
+                        },
+                        {name: '<div style="height:48px;width:100px">Block</div>', value: 1},
+                        {name: 'Last item', value: 1},
+                    ],
+                },
+            ],
+        },
+    };
+    let rendered = 0;
+    const onRender = () => {
+        rendered++;
+    };
+    const styles = {width: 400, height: 150};
+    const component = await mount(
+        <ChartTestStory data={data} styles={styles} onRender={onRender} />,
+    );
+    await expect.poll(() => rendered).toBeGreaterThan(0);
+    const labels = component.locator('.gcharts-legend__item-text-html');
+    const capture = async () => {
+        const counter = component.locator('.gcharts-legend__pagination-counter');
+        while (!(await counter.textContent())?.startsWith('1/')) {
+            await component.locator('.gcharts-legend__pagination-arrow').first().click();
         }
-
-        test(`groups truncated text by width (html=${html})`, async ({mount}) => {
-            const data: ChartData = {
-                legend: {enabled: true, width: 220, itemMaxRowCount: 2, html},
-                series: {
-                    data: [
-                        {
-                            type: 'pie',
-                            dataLabels: {enabled: false},
-                            data: [
-                                {name: 'A\nB\nC', value: 1},
-                                {name: 'Short', value: 1},
-                            ],
-                        },
-                    ],
-                },
-            };
-            const component = await mount(<ChartTestStory data={data} />);
-            const line = component.locator('.gcharts-legend__line');
-            await expect(line).toHaveCount(1);
-            await expect(line.locator('.gcharts-legend__item')).toHaveCount(2);
-            const targets = component.locator('.gcharts-legend__item > rect[fill="transparent"]');
-            const first = await getLegendBox(targets.first());
-            const second = await getLegendBox(targets.last());
-            expect(second.x).toBeGreaterThan(first.x + first.width);
-            expect(second.y).toBe(first.y);
+        const pages: {width: number; height: number}[][] = [];
+        await visitLegendPages(component, labels, async () => {
+            pages.push(
+                await labels.evaluateAll((elements) =>
+                    elements.map((element) => {
+                        const {width, height} = element.getBoundingClientRect();
+                        return {width, height};
+                    }),
+                ),
+            );
         });
+        const legend = component.locator('.gcharts-legend');
+        return {
+            pages,
+            width: await legend.getAttribute('width'),
+            height: await legend.getAttribute('height'),
+        };
+    };
+    const getCompletedCount = () => rendered;
+    const baseline = await capture();
+    expect(baseline.pages.flat().some(({height}) => height === 48)).toBe(true);
+    for (const itemMaxRowCount of [1, 3, 30]) {
+        const previousCount = getCompletedCount();
+        await component.update(
+            <ChartTestStory
+                data={{...data, legend: {...data.legend, itemMaxRowCount}}}
+                styles={styles}
+                onRender={onRender}
+            />,
+        );
+        await expect.poll(getCompletedCount).toBeGreaterThan(previousCount);
+        expect(await capture()).toEqual(baseline);
+    }
+});
 
-        test(`reflows on resize and preserves selection (html=${html})`, async ({mount}) => {
-            const data: ChartData = {
-                legend: {enabled: true, position: 'left', itemMaxRowCount: 4, html},
-                series: {
-                    data: [
-                        {
-                            type: 'pie',
-                            dataLabels: {enabled: false},
-                            data: [
-                                {name: 'Revenue from international enterprise customers', value: 1},
-                                {name: 'Short', value: 1},
-                            ],
-                        },
-                    ],
-                },
-            };
-            const component = await mount(
-                <ChartTestStory data={data} styles={{width: 400, height: 400}} />,
-            );
-            const labels = component.locator(
-                html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
-            );
-            await expect(labels).toHaveCount(2);
-            await labels.first().click();
-            await expect(labels.last()).toHaveClass(/unselected/);
-            const before = (await getLegendBox(labels.first())).height;
-            await component.update(
-                <ChartTestStory data={data} styles={{width: 800, height: 400}} />,
-            );
-            await expect
-                .poll(async () => (await labels.first().boundingBox())?.height ?? before)
-                .toBeLessThan(before);
-            await expect(labels.last()).toHaveClass(/unselected/);
-            const targets = html
-                ? labels
-                : component.locator('.gcharts-legend__item > rect[fill="transparent"]');
-            const first = await getLegendBox(targets.first());
-            const second = await getLegendBox(targets.last());
-            expect(
-                second.y >= first.y + first.height - 1 || second.x >= first.x + first.width,
-            ).toBe(true);
-        });
-
-        test(`paginates whole items and caps oversized labels (html=${html})${html ? '' : ' @webkit'}`, async ({
+test.describe('Multiline legend labels', () => {
+    for (const position of ['left', 'bottom'] as const) {
+        const webkit = position === 'left' ? ' @webkit' : '';
+        test(`wraps, ellipsizes and selects (${position}, html=false)${webkit}`, async ({
             mount,
             browserName,
         }) => {
+            const names = [
+                'Revenue from the international enterprise customer segment including recurring subscriptions and support',
+                'Short',
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                'First line\nSecond line',
+            ];
             const data: ChartData = {
-                legend: {
-                    enabled: true,
-                    position: 'left',
-                    width: 160,
-                    itemMaxRowCount: 30,
-                    html,
-                    title: {text: 'Legend'},
-                },
+                legend: {enabled: true, position, width: 180, itemMaxRowCount: 3},
                 series: {
                     data: [
                         {
                             type: 'pie',
                             dataLabels: {enabled: false},
-                            data: [
-                                {name: 'A very long label '.repeat(30), value: 1},
-                                {name: 'A second item with several words', value: 1},
-                            ],
+                            data: names.map((name) => ({name, value: 1})),
                         },
                     ],
                 },
             };
             const component = await mount(
-                <ChartTestStory data={data} styles={{width: 400, height: 150}} />,
+                <ChartTestStory data={data} styles={{width: 500, height: 500}} />,
             );
-            const labels = component.locator(
-                html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
-            );
-            await expect(labels).toHaveCount(1);
-            const counter = component.locator('.gcharts-legend__pagination-counter');
-            await expect(counter).toHaveText('1/2');
-            const labelBox = await getLegendBox(labels.first());
-            const paginationBox = await getLegendBox(
-                component.locator('.gcharts-legend__pagination-arrow rect').first(),
-            );
-            expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(paginationBox.y);
-            if (!html) {
-                await expect(labels.first().locator('tspan').last()).toContainText('…');
-            }
-            if (browserName === 'chromium') {
+            const labels = component.locator('.gcharts-legend__item-text');
+            await expect(labels).toHaveCount(4);
+            const longBox = await getLegendBox(labels.first());
+            const shortBox = await getLegendBox(labels.nth(1));
+            expect(longBox.height).toBeGreaterThan(shortBox.height * 2);
+            expect(longBox.width).toBeLessThanOrEqual(166);
+            await expect(labels.first().locator('tspan')).toHaveCount(3);
+            await expect(labels.first().locator('tspan').last()).toContainText('…');
+            await expect(labels.last().locator('tspan')).toHaveCount(2);
+            // WebKit clipped the first SVG row unless each tspan had an explicit hanging baseline.
+            if (browserName === 'chromium' || position === 'left') {
                 await expect(component).toHaveScreenshot();
             }
-            await component.locator('.gcharts-legend__pagination-arrow').last().click();
-            await expect(counter).toHaveText('2/2');
-            await expect(labels).toHaveCount(1);
-            await labels.first().click();
-            await component.locator('.gcharts-legend__pagination-arrow').first().click();
-            await expect(labels.first()).toHaveClass(/unselected/);
+            // The last visible text row belongs to the same click target as the first.
+            await labels.first().locator('tspan').last().click();
+            await expect(labels.nth(1)).toHaveClass(/unselected/);
+            await expect(labels.first()).not.toHaveClass(/unselected/);
         });
     }
+
+    test(`groups truncated text by width (html=false)`, async ({mount}) => {
+        const data: ChartData = {
+            legend: {enabled: true, width: 220, itemMaxRowCount: 2},
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: false},
+                        data: [
+                            {name: 'A\nB\nC', value: 1},
+                            {name: 'Short', value: 1},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const line = component.locator('.gcharts-legend__line');
+        await expect(line).toHaveCount(1);
+        await expect(line.locator('.gcharts-legend__item')).toHaveCount(2);
+        const targets = component.locator('.gcharts-legend__item > rect[fill="transparent"]');
+        const first = await getLegendBox(targets.first());
+        const second = await getLegendBox(targets.last());
+        expect(second.x).toBeGreaterThan(first.x + first.width);
+        expect(second.y).toBe(first.y);
+    });
+
+    test(`reflows on resize and preserves selection (html=false)`, async ({mount}) => {
+        const data: ChartData = {
+            legend: {enabled: true, position: 'left', itemMaxRowCount: 4},
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: false},
+                        data: [
+                            {name: 'Revenue from international enterprise customers', value: 1},
+                            {name: 'Short', value: 1},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 400, height: 400}} />,
+        );
+        const labels = component.locator('.gcharts-legend__item-text');
+        await expect(labels).toHaveCount(2);
+        await labels.first().click();
+        await expect(labels.last()).toHaveClass(/unselected/);
+        const before = (await getLegendBox(labels.first())).height;
+        await component.update(<ChartTestStory data={data} styles={{width: 800, height: 400}} />);
+        await expect
+            .poll(async () => (await labels.first().boundingBox())?.height ?? before)
+            .toBeLessThan(before);
+        await expect(labels.last()).toHaveClass(/unselected/);
+        const targets = component.locator('.gcharts-legend__item > rect[fill="transparent"]');
+        const first = await getLegendBox(targets.first());
+        const second = await getLegendBox(targets.last());
+        expect(second.y >= first.y + first.height - 1 || second.x >= first.x + first.width).toBe(
+            true,
+        );
+    });
+
+    test(`paginates whole items and caps oversized labels (html=false) @webkit`, async ({
+        mount,
+        browserName,
+    }) => {
+        const data: ChartData = {
+            legend: {
+                enabled: true,
+                position: 'left',
+                width: 160,
+                itemMaxRowCount: 30,
+                title: {text: 'Legend'},
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: false},
+                        data: [
+                            {name: 'A very long label '.repeat(30), value: 1},
+                            {name: 'A second item with several words', value: 1},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 400, height: 150}} />,
+        );
+        const labels = component.locator('.gcharts-legend__item-text');
+        await expect(labels).toHaveCount(1);
+        const counter = component.locator('.gcharts-legend__pagination-counter');
+        await expect(counter).toHaveText('1/2');
+        const labelBox = await getLegendBox(labels.first());
+        const paginationBox = await getLegendBox(
+            component.locator('.gcharts-legend__pagination-arrow rect').first(),
+        );
+        expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(paginationBox.y);
+        await expect(labels.first().locator('tspan').last()).toContainText('…');
+        if (browserName === 'chromium') {
+            await expect(component).toHaveScreenshot();
+        }
+        await component.locator('.gcharts-legend__pagination-arrow').last().click();
+        await expect(counter).toHaveText('2/2');
+        await expect(labels).toHaveCount(1);
+        await labels.first().click();
+        await component.locator('.gcharts-legend__pagination-arrow').first().click();
+        await expect(labels.first()).toHaveClass(/unselected/);
+    });
 });
 
 test('Multiline legend keeps SVG tags literal and measures decoded entities once', async ({

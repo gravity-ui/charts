@@ -53,28 +53,6 @@ export const WrappedLabels = {
     },
 } satisfies Story;
 
-export const WrappedHtmlLabels = {
-    ...WrappedLabels,
-    name: 'Wrapped HTML labels',
-    args: {
-        data: {
-            ...WrappedLabels.args.data,
-            legend: {...WrappedLabels.args.data.legend, html: true},
-            series: {
-                data: [
-                    {
-                        ...WrappedLabels.args.data.series.data[0],
-                        data: WrappedLabels.args.data.series.data[0].data.map((point) => ({
-                            ...point,
-                            name: `<b>${point.name}</b>`,
-                        })),
-                    },
-                ],
-            },
-        },
-    },
-} satisfies Story;
-
 export const VerticalLayout = {
     name: 'Vertical layout',
     args: {

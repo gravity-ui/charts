@@ -1,10 +1,4 @@
-import {
-    decodeHtmlEntities,
-    getHtmlLabelsSize,
-    getLabelsSize,
-    getTextSizeFn,
-    getTextWithElipsis,
-} from '../utils';
+import {decodeHtmlEntities, getLabelsSize, getTextSizeFn, getTextWithElipsis} from '../utils';
 
 import type {LegendItem, PreparedLegendOptions} from './types';
 
@@ -120,31 +114,7 @@ export async function prepareLegendItems(args: {
                     : item.symbol.bboxWidth + item.symbol.padding),
         ),
     );
-    const multiline = legend.itemMaxRowCount > 1;
-    if (multiline && legend.html) {
-        const sizes = await getHtmlLabelsSize({
-            containerWidth: Math.max(0, ...widths),
-            labels: preparedItems.map((item, i) => ({
-                text: item.text,
-                style: {maxWidth: `${widths[i]}px`},
-            })),
-            style: {
-                ...legend.itemStyle,
-                lineHeight: `${legend.lineHeight}px`,
-                whiteSpace: 'pre-wrap',
-                overflowWrap: 'anywhere',
-            },
-        });
-        for (const [i, item] of preparedItems.entries()) {
-            item.textWidth = Math.min(widths[i], sizes[i].width);
-            item.textRowCount = Math.max(
-                1,
-                Math.min(Math.ceil(sizes[i].height / legend.lineHeight), legend.itemMaxRowCount),
-            );
-            item.height = item.textRowCount * legend.lineHeight;
-        }
-        return preparedItems;
-    }
+    const multiline = !legend.html && legend.itemMaxRowCount > 1;
 
     const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});
     const cache = new Map<string, number>();

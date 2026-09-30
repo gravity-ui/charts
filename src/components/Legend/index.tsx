@@ -308,7 +308,7 @@ export const Legend = (props: Props) => {
 
                     const legendLineHeight = row.height;
                     renderLegendSymbol({selection: legendItemTemplate, row});
-                    if (legend.itemMaxRowCount > 1) {
+                    if (!legend.html && legend.itemMaxRowCount > 1) {
                         legendItemTemplate
                             .append('rect')
                             .attr('x', (_, i) => row.items[i].symbolLeft)
@@ -331,29 +331,15 @@ export const Legend = (props: Props) => {
                                 const mods = {
                                     selected: d.visible,
                                     unselected: !d.visible,
-                                    multiline: legend.itemMaxRowCount > 1,
                                 };
                                 return b('item-text-html', mods);
                             })
                             .style('pointer-events', 'auto')
                             .style('font-size', legend.itemStyle.fontSize)
                             .style('position', 'absolute')
-                            .style('font-weight', () =>
-                                legend.itemMaxRowCount > 1
-                                    ? (legend.itemStyle.fontWeight ?? null)
-                                    : null,
-                            )
-                            .style('line-height', () =>
-                                legend.itemMaxRowCount > 1 ? `${legend.lineHeight}px` : null,
-                            )
-                            .style('-webkit-line-clamp', (d) =>
-                                d.textRowCount ? String(d.textRowCount) : null,
-                            )
-                            .style('max-height', (d) => (d.textRowCount ? `${d.height}px` : null))
                             .style('max-width', function (d) {
                                 return `${d.textWidth}px`;
                             })
-                            .style('width', (d) => (d.textRowCount ? `${d.textWidth}px` : null))
                             .style('left', function (_d, i) {
                                 return `${row.items[i].textLeft}px`;
                             })
