@@ -2,6 +2,24 @@ import {decodeHtmlEntities, getLabelsSize, getTextSizeFn, getTextWithElipsis} fr
 
 import type {LegendItem, PreparedLegendOptions} from './types';
 
+export function getLegendTextSizeFn(legend: PreparedLegendOptions) {
+    const multiline = !legend.html && legend.itemMaxRowCount > 1;
+    const measure = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});
+    if (!multiline) {
+        return measure;
+    }
+
+    const cache = new Map<string, ReturnType<typeof measure>>();
+    return (text: string) => {
+        let size = cache.get(text);
+        if (!size) {
+            size = measure(text);
+            cache.set(text, size);
+        }
+        return size;
+    };
+}
+
 /** Wrap independently of title wrapping: legend labels also support hard breaks and long tokens. */
 export async function wrapLegendLabel(args: {
     text: string;
@@ -98,8 +116,9 @@ export async function prepareLegendItems(args: {
     maxLegendWidth: number;
     legend: PreparedLegendOptions;
     symbolMetrics: {width: number; padding: number};
+    getTextSize: ReturnType<typeof getTextSizeFn>;
 }): Promise<LegendItem[]> {
-    const {items, maxLegendWidth, legend, symbolMetrics} = args;
+    const {items, maxLegendWidth, legend, symbolMetrics, getTextSize} = args;
     const preparedItems: LegendItem[] = items.map((item) => ({
         ...item,
         text: item.name,
@@ -116,14 +135,7 @@ export async function prepareLegendItems(args: {
     );
     const multiline = !legend.html && legend.itemMaxRowCount > 1;
 
-    const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});
-    const cache = new Map<string, number>();
-    const getTextWidth = async (text: string) => {
-        if (!cache.has(text)) {
-            cache.set(text, (await getTextSize(text)).width);
-        }
-        return cache.get(text) ?? 0;
-    };
+    const getTextWidth = async (text: string) => (await getTextSize(text)).width;
     for (const [i, item] of preparedItems.entries()) {
         if (!multiline) {
             await prepareSingleLineLegendItem(item, widths[i], legend, getTextSize);
@@ -136,8 +148,7 @@ export async function prepareLegendItems(args: {
             getTextWidth,
         });
         item.textWidth = Math.max(0, ...(await Promise.all(item.textRows.map(getTextWidth))));
-        item.textRowCount = item.textRows.length;
-        item.height = Math.max(1, item.textRowCount) * legend.lineHeight;
+        item.height = Math.max(1, item.textRows.length) * legend.lineHeight;
     }
     return preparedItems;
 }
@@ -146,28 +157,21 @@ export async function limitLegendItemRows(
     items: LegendItem[],
     maxRows: number,
     legend: PreparedLegendOptions,
+    getTextSize: ReturnType<typeof getTextSizeFn>,
 ) {
-    const getTextSize = getTextSizeFn({style: legend.itemStyle, decodeEntities: false});
+    const getTextWidth = async (text: string) => (await getTextSize(text)).width;
     for (const item of items) {
-        if ((item.textRowCount ?? 1) <= maxRows) {
+        if (!item.textRows || item.textRows.length <= maxRows) {
             continue;
         }
-        item.textRowCount = maxRows;
         item.height = maxRows * legend.lineHeight;
         item.overflowed = true;
-        if (item.textRows) {
-            item.textRows = item.textRows.slice(0, maxRows);
-            item.textRows[maxRows - 1] = await getTextWithElipsis({
-                text: item.textRows[maxRows - 1] + '…',
-                maxWidth: item.textWidth,
-                getTextWidth: async (text) => (await getTextSize(text)).width,
-            });
-            item.textWidth = Math.max(
-                0,
-                ...(await Promise.all(
-                    item.textRows.map(async (text) => (await getTextSize(text)).width),
-                )),
-            );
-        }
+        item.textRows = item.textRows.slice(0, maxRows);
+        item.textRows[maxRows - 1] = await getTextWithElipsis({
+            text: item.textRows[maxRows - 1] + '…',
+            maxWidth: item.textWidth,
+            getTextWidth,
+        });
+        item.textWidth = Math.max(0, ...(await Promise.all(item.textRows.map(getTextWidth))));
     }
 }

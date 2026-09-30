@@ -71,7 +71,7 @@ Resize the example below to see how `width: 'auto'` and `maxWidth: '30%'` work t
 
 ## Wrapping long labels
 
-Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap text inside each discrete legend item. The default is `1` (single-line truncation). This works with SVG labels in all legend positions. When `legend.html: true`, `itemMaxRowCount` is ignored: HTML content can contain blocks or images and manages its own layout.
+Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap SVG labels in a discrete legend, regardless of its position. The default is `1` (single-line truncation). The option is ignored when `legend.html: true`, because HTML content can contain blocks or images and manages its own layout.
 
 Labels wrap within the legend width after subtracting the marker and its padding. Explicit line breaks are preserved, long unbroken words are split, and the final visible row is ellipsized when needed.
 

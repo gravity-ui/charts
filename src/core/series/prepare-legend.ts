@@ -15,7 +15,7 @@ import {
     parseLegendWidth,
 } from '../utils';
 
-import {limitLegendItemRows, prepareLegendItems} from './legend-label';
+import {getLegendTextSizeFn, limitLegendItemRows, prepareLegendItems} from './legend-label';
 import type {
     LegendItem,
     PreparedLegendOptions,
@@ -181,8 +181,9 @@ async function getGroupedLegendItems(args: {
     items: LegendItemWithoutTextWidth[];
     preparedLegend: PreparedLegendOptions;
     symbolMetrics: LegendSymbolMetrics;
+    getTextSize: ReturnType<typeof getTextSizeFn>;
 }) {
-    const {maxLegendWidth, items, preparedLegend, symbolMetrics} = args;
+    const {maxLegendWidth, items, preparedLegend, symbolMetrics, getTextSize} = args;
     if (maxLegendWidth <= 0 || items.length === 0) {
         return [];
     }
@@ -197,6 +198,7 @@ async function getGroupedLegendItems(args: {
         maxLegendWidth,
         legend: preparedLegend,
         symbolMetrics,
+        getTextSize,
     });
     for (const resultItem of preparedItems) {
         if (vertical) {
@@ -225,7 +227,7 @@ async function getGroupedLegendItems(args: {
         currentWidth += itemWidth;
     }
 
-    return result.filter((line) => line.length);
+    return result;
 }
 
 function getPagination(args: {
@@ -471,6 +473,7 @@ export async function finalizePreparedLegend(args: {
         }),
     );
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
+    const getLegendTextSize = getLegendTextSizeFn(preparedLegend);
     const symbolMetrics = {
         width: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.bboxWidth)),
         padding: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.padding)),
@@ -480,6 +483,7 @@ export async function finalizePreparedLegend(args: {
         items: flattenLegendItems,
         preparedLegend,
         symbolMetrics,
+        getTextSize: getLegendTextSize,
     });
 
     let pagination: LegendConfig['pagination'] | undefined;
@@ -532,7 +536,12 @@ export async function finalizePreparedLegend(args: {
                     items = [];
                     legendHeight = 0;
                 } else {
-                    await limitLegendItemRows(items.flat(), maxRows, preparedLegend);
+                    await limitLegendItemRows(
+                        items.flat(),
+                        maxRows,
+                        preparedLegend,
+                        getLegendTextSize,
+                    );
                 }
                 rows = getLegendRows(items, preparedLegend, symbolMetrics);
             }

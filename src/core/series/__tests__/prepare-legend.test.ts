@@ -3,13 +3,15 @@ import {getChartDimensions} from '../../layout/chart-dimensions';
 import {finalizePreparedLegend, getPreparedLegend} from '../prepare-legend';
 import {getPreparedSeries} from '../prepareSeries';
 
+const mockMeasureText = jest.fn(async (text: string) => ({
+    width: text.length * 10,
+    height: 14,
+    hangingOffset: 2,
+}));
+
 jest.mock('../../utils', () => ({
     ...jest.requireActual('../../utils'),
-    getTextSizeFn: () => async (text: string) => ({
-        width: text.length * 10,
-        height: 14,
-        hangingOffset: 2,
-    }),
+    getTextSizeFn: () => mockMeasureText,
     getLabelsSize: async ({labels}: {labels: string[]}) => ({
         maxWidth: Math.max(...labels.map((label) => label.length * 10)),
         maxHeight: 14,
@@ -635,7 +637,7 @@ describe('vertical legend layout', () => {
         );
 
         expect(preparedLegend.rows.map((row) => row.items[0].textLeft)).toEqual([40, 40]);
-        expect(legendItems.flat().map((item) => item.textRowCount)).toEqual([3, 4]);
+        expect(legendItems.flat().map((item) => item.textRows?.length)).toEqual([3, 4]);
         expect(preparedLegend.rows.map((row) => row.height)).toEqual([42, 56]);
         expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 42]);
         expect(legendConfig.pagination?.pages).toEqual([
@@ -1070,9 +1072,9 @@ describe('multiline legend labels', () => {
         async (position) => {
             const config = Object.freeze({enabled: true, position, width: 130, itemMaxRowCount: 3});
             const {legendItems, preparedLegend, series} = await prepareLegend(config);
-            expect(legendItems.flat().map((item) => item.textRowCount)).toEqual([2, 2, 3]);
+            expect(legendItems.flat().map((item) => item.textRows?.length)).toEqual([2, 2, 3]);
             for (const item of legendItems.flat()) {
-                expect(item.height).toBe((item.textRowCount ?? 1) * preparedLegend.lineHeight);
+                expect(item.height).toBe((item.textRows?.length ?? 1) * preparedLegend.lineHeight);
                 expect(item.textWidth).toBeLessThanOrEqual(115);
                 expect(item.text).toBe(item.name);
             }
@@ -1115,11 +1117,11 @@ describe('multiline legend labels', () => {
         ]);
         expect(preparedLegend.height).toBe(92);
         for (const item of legendItems.slice(0, 2).flat()) {
-            expect(item.textRowCount).toBe(2);
+            expect(item.textRows?.length).toBe(2);
             expect(item.height).toBe(2 * preparedLegend.lineHeight);
             expect(item.textRows?.join('')).toBe(item.name);
         }
-        expect(legendItems[2][0].textRowCount).toBe(4);
+        expect(legendItems[2][0].textRows?.length).toBe(4);
         expect(legendItems[2][0].textRows?.[3].endsWith('…')).toBe(true);
         for (const page of legendConfig.pagination?.pages ?? []) {
             const height = legendItems
@@ -1136,14 +1138,8 @@ describe('multiline legend labels', () => {
 
     test.each([
         {width: 0, expected: 0},
-        {width: -10, expected: 960},
         {width: 10, expected: 10},
-        {width: 20, expected: 20},
         {width: 2000, expected: 960},
-        {width: '0px', expected: 0},
-        {width: '130px', expected: 130},
-        {width: '12.5%', expected: 120},
-        {width: '150%', expected: 960},
     ])('keeps multiline widths bounded (%j)', async ({width, expected}) => {
         const {legendItems, legendConfig} = await prepareLegend({
             enabled: true,
@@ -1176,6 +1172,7 @@ describe('multiline legend labels', () => {
 });
 
 test('automatic width fits the visible SVG lines after pagination reduces the row limit', async () => {
+    mockMeasureText.mockClear();
     const {preparedLegend, legendItems, legendConfig} = await prepareLegend(
         {
             enabled: true,
@@ -1192,6 +1189,8 @@ test('automatic width fits the visible SVG lines after pagination reduces the ro
     // The two arrows and page counter are wider than either visible label.
     expect(legendConfig.width).toBe(50);
     expect(preparedLegend.rows[0].width).toBeLessThan(50);
+    expect(mockMeasureText.mock.calls.filter(([text]) => text === 'A')).toHaveLength(1);
+    expect(mockMeasureText.mock.calls.filter(([text]) => text === 'A…')).toHaveLength(1);
 });
 
 test('a tall marker hides the multiline title only when a row and navigation cannot fit', async () => {

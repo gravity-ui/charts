@@ -165,7 +165,6 @@ export interface LegendItem {
     symbol: PreparedLegendSymbol;
     textWidth: number;
     textRows?: string[];
-    textRowCount?: number;
     dashStyle?: DashStyle;
     overflowed?: boolean;
     visible?: boolean;
