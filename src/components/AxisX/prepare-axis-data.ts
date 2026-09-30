@@ -13,6 +13,7 @@ import {
     getTextSizeFn,
     getTextWithElipsis,
 } from '~core/utils';
+import {hideOverlappingTickLabels} from '~core/utils/axis/label-collision';
 import {getXAxisTickValues} from '~core/utils/axis/x-axis';
 
 import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
@@ -263,10 +264,14 @@ export async function prepareXAxisData({
                     const previousGap = i > 0 ? Math.abs(tickValue.x - values[i - 1].x) : axisWidth;
                     const nextGap =
                         i < values.length - 1 ? Math.abs(values[i + 1].x - tickValue.x) : axisWidth;
-                    const labelMaxWidth =
+                    const availableWidth =
                         values.length > 1
                             ? Math.max(0, Math.min(previousGap, nextGap) - axis.labels.padding * 2)
                             : axisWidth;
+                    let labelMaxWidth = availableWidth;
+                    if (axis.ticks.values !== undefined) {
+                        labelMaxWidth = Math.min(axisWidth, axis.labels.maxWidth);
+                    }
                     svgLabel = await getSvgAxisLabel({
                         getTextSize,
                         text,
@@ -314,6 +319,14 @@ export async function prepareXAxisData({
                 svgLabel,
                 htmlLabel,
             });
+        }
+
+        if (isBottomPlot && axis.ticks.values !== undefined) {
+            hideOverlappingTickLabels(
+                ticks,
+                values.map((value) => value.x),
+                axis.labels.padding * 2,
+            );
         }
 
         let title: AxisTitleData | null = null;

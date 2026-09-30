@@ -26,6 +26,7 @@ import {
     isAxisRelatedSeries,
     wrapText,
 } from '../utils';
+import {getVisibleLabelIndexes} from '../utils/axis/label-collision';
 import {getXAxisTickValues} from '../utils/axis/x-axis';
 
 import {getPreparedRangeSlider} from './range-slider';
@@ -81,8 +82,36 @@ async function setLabelSettings({
     };
 
     const autoRotation = axisLabels?.autoRotation ?? axis.type !== 'datetime';
-    const overlapping = axis.labels.html ? false : await hasOverlappingLabels();
-    const defaultRotation = overlapping && autoRotation ? -45 : 0;
+    const overlapping =
+        axis.labels.html || axis.ticks.values !== undefined ? false : await hasOverlappingLabels();
+    let defaultRotation = overlapping && autoRotation ? -45 : 0;
+    if (
+        autoRotation &&
+        !axis.labels.html &&
+        axisLabels?.rotation === undefined &&
+        axis.ticks.values !== undefined
+    ) {
+        const sizes = await Promise.all(labels.map(getTextSize));
+        const visibleCount = (angle: number) => {
+            const cos = Math.abs(calculateCos(angle));
+            const sin = Math.abs(calculateSin(angle));
+            const candidates = tickValues.map((tick, index) => {
+                const projectedWidth = sizes[index].width * cos + sizes[index].height * sin;
+                return {
+                    index,
+                    position: tick.x,
+                    bounds: {
+                        left: tick.x - projectedWidth / 2,
+                        right: tick.x + projectedWidth / 2,
+                        top: 0,
+                        bottom: 1,
+                    },
+                };
+            });
+            return getVisibleLabelIndexes(candidates, axis.labels.padding * 2).size;
+        };
+        defaultRotation = visibleCount(-45) > visibleCount(0) ? -45 : 0;
+    }
     const rotation = axis.labels.html ? 0 : (axisLabels?.rotation ?? defaultRotation);
     const labelsHeight =
         rotation || axis.labels.html

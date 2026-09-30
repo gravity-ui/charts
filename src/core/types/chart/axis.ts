@@ -170,6 +170,7 @@ export interface ChartAxisTicks {
     pixelInterval?: number;
     /**
      * Explicit values of the rendered ticks. These values do not change the axis domain and are not thinned automatically.
+     * Tick marks and grid lines remain; labels may be hidden when they would overlap.
      *
      * The value type depends on the axis scale:
      * - For `linear` and `logarithmic` axes: numeric value
