@@ -29,7 +29,6 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
-    /* eslint-disable jsdoc/check-tag-names -- @asType is used by the JSON Schema generator. */
     /**
      * Maximum number of text rows in each discrete SVG legend item.
      * Labels wrap within the resolved legend width, excluding the symbol and its padding.
@@ -38,10 +37,8 @@ export interface ChartLegend extends ChartLegendItem {
      * Must be a positive integer.
      * @default 1
      * @minimum 1
-     * @asType integer
      */
     itemMaxRowCount?: number;
-    /* eslint-enable jsdoc/check-tag-names */
     /** Event callbacks for discrete legend items. */
     events?: ChartLegendEvents;
     /**

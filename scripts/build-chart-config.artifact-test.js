@@ -700,17 +700,17 @@ describe('chart config artifacts', () => {
         expect(validateConfig(config)).toBe(false);
     });
 
-    test('legend row count is a positive integer available only on ChartLegend', () => {
+    test('legend row count has a minimum of one and is available only on ChartLegend', () => {
         expect(schema.definitions.ChartLegend.properties.itemMaxRowCount).toMatchObject({
-            type: 'integer',
+            type: 'number',
             minimum: 1,
             default: 1,
         });
         const validate = createSchemaValidator().compile(schema);
-        for (const value of [1, 3]) {
+        for (const value of [1, 1.5, 3]) {
             expect(validate({series: {data: []}, legend: {itemMaxRowCount: value}})).toBe(true);
         }
-        for (const value of [0, -1, 1.5, '3']) {
+        for (const value of [0, -1, '3']) {
             expect(validate({series: {data: []}, legend: {itemMaxRowCount: value}})).toBe(false);
         }
         expect(() =>
