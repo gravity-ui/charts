@@ -2,7 +2,9 @@ import {decodeHtmlEntities, getLabelsSize, getTextSizeFn, getTextWithElipsis} fr
 
 import type {LegendItem, PreparedLegendOptions} from './types';
 
-export function getLegendTextSizeFn(legend: PreparedLegendOptions) {
+export function getLegendTextSizeFn(
+    legend: PreparedLegendOptions,
+): ReturnType<typeof getTextSizeFn> {
     const multiline = !legend.html && legend.itemMaxRowCount > 1;
     const measure = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});
     if (!multiline) {
