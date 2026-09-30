@@ -23,7 +23,11 @@ items:
   - name: Get started
     href: ./pages/get-started.md
   - name: Development
-    href: ./pages/development.md
+    items:
+      - name: Local development
+        href: ./pages/development.md
+      - name: Adding a series plugin
+        href: ./pages/development/adding-series-plugin.md
   - name: Integrations
     items:
       - name: Chart config tooling

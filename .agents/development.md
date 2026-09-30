@@ -9,4 +9,5 @@ Apply these conventions when writing or reviewing code.
 
 ## Series plugins
 
-- When adding a series type, follow [Adding a series plugin](../src/how-to.md).
+- When adding a series type, follow [Adding a series plugin](../docs/diplodoc/pages/development/adding-series-plugin.md).
+- For upcoming integration changes, see the [series plugin migration plan](plans/SERIES_PLUGIN_MIGRATION_PLAN.md).

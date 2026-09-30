@@ -1,6 +1,6 @@
 # Adding a series plugin
 
-Built-in series checklist. See the [migration plan](../.agents/plans/SERIES_PLUGIN_MIGRATION_PLAN.md) for upcoming integration changes.
+This checklist is for contributors adding a built-in series plugin to Charts.
 
 ## 1. Decide capabilities
 
@@ -29,12 +29,12 @@ Compare existing plugins and their actual behavior. For each capability, documen
 ## 2. Define the API
 
 - Match established names, units, defaults, and option precedence.
-- Define documented series, point, prepared-data, and tooltip types. Extend `SERIES_TYPE`, `ChartSeries`, `ChartSeriesData`, `ChartSeriesOptions`, `PreparedSeries`, `TooltipDataChunk`, and [public exports](core/types/index.ts) as needed.
+- Define documented series, point, prepared-data, and tooltip types. Extend `SERIES_TYPE`, `ChartSeries`, `ChartSeriesData`, `ChartSeriesOptions`, `PreparedSeries`, `TooltipDataChunk`, and [public exports](https://github.com/gravity-ui/charts/blob/main/src/core/types/index.ts) as needed.
 - Keep plugin-only fields out of `Base*`. Do not widen the registry to `any`.
 
 ## 3. Implement the pipeline
 
-- Implement [SeriesPlugin](core/series/plugin.ts) in `plugins/<type>/`: validation, series/shape preparation, rendering, and tooltip lookup/rows. Geometry currently lives in `core/shapes/<type>/`.
+- Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) in `src/plugins/<type>/`: validation, series/shape preparation, rendering, and tooltip lookup/rows. Geometry currently lives in `src/core/shapes/<type>/`.
 - Reuse shared helpers; preserve raw data and callback payloads, cache measurements, and clean up subscriptions.
 - Implement domain/baseline rules, clipping, plot offsets, and layer/category order; define fill/stroke behavior where applicable.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
@@ -46,7 +46,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ## 5. Integrate
 
-- Register in [plugins/index.ts](plugins/index.ts); add applicable [defaults](core/constants/defaults/series-options.ts).
+- Register in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts); add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).
 - Check shared axis, scale, header, grouping, and zoom assumptions. Extend the plugin contract where needed; never add shared series-name branches or lists.
 
 ## 6. Test

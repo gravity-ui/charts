@@ -16,7 +16,7 @@ Deliver the migration incrementally, preserving behavior. The axis-domain and sc
 
 Verify mixed-series tooltips, totals, sorting, category/date formatting, and the raw values supplied to custom formatters and renderers.
 
-Update the [plugin guide](../../src/how-to.md): tooltip value/header hooks and mixed-chart precedence.
+Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): tooltip value/header hooks and mixed-chart precedence.
 
 ### 2. Delegate layer grouping and clipping
 
@@ -26,7 +26,7 @@ Update the [plugin guide](../../src/how-to.md): tooltip value/header hooks and m
 
 Preserve layer order, cross-layer label priority, stable React keys, and clipping at plot boundaries.
 
-Update the [plugin guide](../../src/how-to.md): grouping and context-aware clipping.
+Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): grouping and context-aware clipping.
 
 ### 3. Delegate axis-domain contributions
 
@@ -40,7 +40,7 @@ The existing `getAxisDomainValues` callback processes one point. Stacks and wate
 
 Verify mixed signs, zeros, sparse/null data, multiple stacks and axes, hidden series, waterfall totals, zoom, and logarithmic axes.
 
-Update the [plugin guide](../../src/how-to.md): point/group domain contributions and baseline rules.
+Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): point/group domain contributions and baseline rules.
 
 ### 4. Delegate remaining axis and scale policies
 
@@ -56,7 +56,7 @@ Move these decisions into plugin metadata or narrowly scoped callbacks:
 
 Keep D3 scale construction, label measurement, and layout shared. Specify how plugin requirements combine and how they interact with explicit user settings. Axis participation must not imply that every point has scalar numeric `x` and `y` fields.
 
-Update the [plugin guide](../../src/how-to.md): axis participation and scale policies.
+Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): axis participation and scale policies.
 
 ### 5. Finish preprocessing, defaults, and zoom delegation
 
@@ -66,7 +66,7 @@ Update the [plugin guide](../../src/how-to.md): axis participation and scale pol
 
 Preserve raw user fields and store resolved values separately. Any intended change to interval-filtering semantics should be a separate behavioral fix.
 
-Update the [plugin guide](../../src/how-to.md): plugin-owned defaults, preprocessing, and interval filtering.
+Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): plugin-owned defaults, preprocessing, and interval filtering.
 
 ### 6. Consolidate plugin implementation and types
 
@@ -78,11 +78,11 @@ Plugins currently import much of their implementation from `core/shapes/<series>
 
 Use small, behavior-preserving moves. Avoid introducing a broad public abstraction solely to reorganize internal code.
 
-Update the [plugin guide](../../src/how-to.md): file locations and pipeline typing.
+Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): file locations and pipeline typing.
 
 ## Optional: external plugins and selective imports
 
-Public registration, extensible types, and selective imports are a separate task, outside this internal migration. If implemented, update the [plugin guide](../../src/how-to.md) with external registration, imports, and type-extension instructions.
+Public registration, extensible types, and selective imports are a separate task, outside this internal migration. If implemented, update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md) with external registration, imports, and type-extension instructions.
 
 ## Validation and completion criteria
 

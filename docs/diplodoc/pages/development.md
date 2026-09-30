@@ -1,4 +1,4 @@
-# Development
+# Local development
 
 ## Prerequisites
 
