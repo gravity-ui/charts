@@ -110,10 +110,11 @@ export interface PreparedLegendRow {
 }
 
 export interface PreparedLegendOptions extends Required<
-    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth'>
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth' | 'events'>
 > {
     width?: ChartLegend['width'];
     maxWidth?: ChartLegend['maxWidth'];
+    events: ChartLegend['events'];
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;
     /** Nonnegative chart width after chart margins, before legend and axis space is deducted. */

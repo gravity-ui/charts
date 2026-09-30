@@ -223,6 +223,26 @@ export const Legend = (props: Props) => {
             svgElement.style('opacity', 0);
 
             const isMac = navigator.platform.toUpperCase().includes('MAC');
+            const handleItemClick = (event: MouseEvent, item: LegendItem) => {
+                legend.events?.itemClick?.(
+                    {
+                        id: item.id,
+                        name: item.name,
+                        visible: Boolean(item.visible),
+                    },
+                    event,
+                );
+
+                if (legend.itemClickAction !== 'none') {
+                    onItemClick({
+                        id: item.id,
+                        name: item.name,
+                        metaKey: isMac ? event.metaKey : event.ctrlKey,
+                    });
+                }
+
+                onUpdate?.();
+            };
 
             const htmlElement = select(htmlLayout);
             htmlElement.selectAll('[data-legend]').remove();
@@ -285,14 +305,7 @@ export const Legend = (props: Props) => {
                         .enter()
                         .append('g')
                         .attr('class', b('item'))
-                        .on('click', function (e, d) {
-                            onItemClick({
-                                id: d.id,
-                                name: d.name,
-                                metaKey: isMac ? e.metaKey : e.ctrlKey,
-                            });
-                            onUpdate?.();
-                        });
+                        .on('click', handleItemClick);
 
                     const legendLineHeight = row.height;
                     renderLegendSymbol({selection: legendItemTemplate, row});
@@ -322,14 +335,7 @@ export const Legend = (props: Props) => {
                                 }
                                 return '0px';
                             })
-                            .on('click', function (e, d) {
-                                onItemClick({
-                                    id: d.id,
-                                    name: d.name,
-                                    metaKey: isMac ? e.metaKey : e.ctrlKey,
-                                });
-                                onUpdate?.();
-                            })
+                            .on('click', handleItemClick)
                             .html((d) => d.text);
                     } else {
                         legendItemTemplate
