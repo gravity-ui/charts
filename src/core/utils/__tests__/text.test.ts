@@ -1,6 +1,11 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
-import {decodeHtmlEntities, getTextSizeFn, wrapTextWithEllipsis} from '../text';
+import {
+    decodeHtmlEntities,
+    getMultilineTextInfo,
+    getTextSizeFn,
+    wrapTextWithEllipsis,
+} from '../text';
 
 test.each([
     {decodeEntities: undefined, width: 1},
@@ -55,4 +60,34 @@ test.each([
     for (const row of result) {
         expect(await getTextWidth(row)).toBeLessThanOrEqual(Math.max(0, args.width));
     }
+});
+
+const measureMultiline = async (text: string) => ({
+    width: Array.from(text).length * 10,
+    height: 12,
+    hangingOffset: 2,
+});
+
+test.each([
+    {text: 'Alpha', lines: ['Alpha'], width: 50},
+    {text: 'Alpha\nBeta', lines: ['Alpha', 'Beta'], width: 50},
+    {text: 'Alpha\nBeta\n', lines: ['Alpha', 'Beta'], width: 50},
+    {text: 'Alpha\n\n\n', lines: ['Alpha'], width: 50},
+    {text: 'A\n\n      \n\t', lines: ['A'], width: 10},
+    {text: 'Alpha\n\nBeta', lines: ['Alpha', '', 'Beta'], width: 50},
+    {text: '\nAlpha', lines: ['', 'Alpha'], width: 50},
+    {text: '\n\n', lines: [''], width: 0},
+    {text: '', lines: [''], width: 0},
+])('measures visible rows only and reports the rows it renders (%j)', async ({text, ...rest}) => {
+    const {lines, width} = rest;
+
+    // `lines` is both the measurement input and the rendered row list, so `height` must agree
+    // with it. Blank rows between visible rows stay; trailing ones are dropped.
+    expect(await getMultilineTextInfo({text, getTextSize: measureMultiline})).toEqual({
+        lines,
+        width,
+        height: lines.length * 12,
+        lineHeight: 12,
+        hangingOffset: 2,
+    });
 });
