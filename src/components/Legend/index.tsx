@@ -308,7 +308,7 @@ export const Legend = (props: Props) => {
 
                     const legendLineHeight = row.height;
                     renderLegendSymbol({selection: legendItemTemplate, row});
-                    if (!legend.html && legend.itemMaxRowCount > 1) {
+                    if (legend.multilineItems) {
                         legendItemTemplate
                             .append('rect')
                             .attr('x', (_, i) => row.items[i].symbolLeft)

@@ -44,6 +44,8 @@ test.each([
     {text: 'ABCDEFGHIJK a', width: 50, maxRowCount: 3, rows: ['ABCDE', 'FGHIJ', 'K a']},
     {text: 'one\n\ntwo\r\nthree', width: 70, maxRowCount: 4, rows: ['one', '', 'two', 'three']},
     {text: 'one\ntwo', width: 70, maxRowCount: 1, rows: ['one…']},
+    {text: 'one\n', width: 70, maxRowCount: 1, rows: ['one']},
+    {text: 'one\n  ', width: 70, maxRowCount: 1, rows: ['one']},
     {text: '😀😀😀', width: 20, maxRowCount: 2, rows: ['😀😀', '😀']},
     {text: 'one two', width: 0, maxRowCount: 3, rows: []},
     {text: 'one', width: 5, maxRowCount: 2, rows: ['', '']},

@@ -121,6 +121,7 @@ export interface PreparedLegendOptions extends Required<
     availableWidth: number;
     hangingOffset: number;
     lineHeight: number;
+    multilineItems: boolean;
     title: {
         enable: boolean;
         hangingOffset: number;
@@ -164,6 +165,8 @@ export interface LegendItem {
     text: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
+    /** Width available for the label before its visible rows are measured. */
+    textMaxWidth?: number;
     textRows?: string[];
     dashStyle?: DashStyle;
     overflowed?: boolean;

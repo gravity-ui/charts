@@ -13,7 +13,7 @@ import type {LegendItem, PreparedLegendOptions} from './types';
 export function getLegendTextSizeFn(
     legend: PreparedLegendOptions,
 ): ReturnType<typeof getTextSizeFn> {
-    const multiline = !legend.html && legend.itemMaxRowCount > 1;
+    const multiline = legend.multilineItems;
     const measure = getTextSizeFn({style: legend.itemStyle, decodeEntities: !multiline});
     return multiline ? memoize(measure) : measure;
 }
@@ -68,7 +68,7 @@ export async function prepareLegendItems(args: {
                     : item.symbol.bboxWidth + item.symbol.padding),
         ),
     );
-    const multiline = !legend.html && legend.itemMaxRowCount > 1;
+    const multiline = legend.multilineItems;
 
     const getTextWidth = async (text: string) => (await getTextSize(text)).width;
     for (const [i, item] of preparedItems.entries()) {
@@ -82,6 +82,7 @@ export async function prepareLegendItems(args: {
             maxRowCount: legend.itemMaxRowCount,
             getTextWidth,
         });
+        item.textMaxWidth = widths[i];
         item.textWidth = Math.max(0, ...(await Promise.all(item.textRows.map(getTextWidth))));
         item.height = Math.max(1, item.textRows.length) * legend.lineHeight;
     }
@@ -104,7 +105,7 @@ export async function limitLegendItemRows(
         item.textRows = item.textRows.slice(0, maxRows);
         item.textRows[maxRows - 1] = await getTextWithElipsis({
             text: item.textRows[maxRows - 1] + '…',
-            maxWidth: item.textWidth,
+            maxWidth: item.textMaxWidth ?? item.textWidth,
             getTextWidth,
         });
         item.textWidth = Math.max(0, ...(await Promise.all(item.textRows.map(getTextWidth))));

@@ -1136,6 +1136,44 @@ describe('multiline legend labels', () => {
         }
     });
 
+    test('uses the available label width when pagination removes text rows', async () => {
+        const {legendItems, legendConfig} = await prepareLegend(
+            {enabled: true, position: 'left', layout: 'vertical', width: 130, itemMaxRowCount: 5},
+            {height: 62, names: ['W\nI\nJ', 'B']},
+        );
+
+        expect(legendConfig.pagination?.pages).toHaveLength(2);
+        expect(legendItems[0][0].textRows).toEqual(['W', 'I…']);
+    });
+
+    test('does not reserve pagination space when truncated text fits on one page', async () => {
+        const {legendItems, legendConfig, preparedLegend} = await prepareLegend(
+            {enabled: true, position: 'left', width: 130, itemMaxRowCount: 20},
+            {height: 76, names: ['A\nB\nC\nD\nE']},
+        );
+
+        expect(legendConfig.pagination).toBeUndefined();
+        expect(legendItems[0][0].textRows).toEqual(['A', 'B', 'C', 'D…']);
+        expect(preparedLegend.height).toBe(56);
+    });
+
+    test('keeps the title when a single truncated item fits below it', async () => {
+        const {legendItems, legendConfig, preparedLegend} = await prepareLegend(
+            {
+                enabled: true,
+                position: 'left',
+                width: 130,
+                itemMaxRowCount: 20,
+                title: {text: 'Legend'},
+            },
+            {height: 52, names: ['A\nB\nC\nD\nE']},
+        );
+
+        expect(preparedLegend.title.enable).toBe(true);
+        expect(legendConfig.pagination).toBeUndefined();
+        expect(legendItems[0][0].textRows).toEqual(['A…']);
+    });
+
     test.each([
         {width: 0, expected: 0},
         {width: 10, expected: 10},

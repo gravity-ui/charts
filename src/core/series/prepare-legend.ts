@@ -116,6 +116,7 @@ export async function getPreparedLegend(args: {
         hangingOffset: itemHangingOffset,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
         itemMaxRowCount,
+        multilineItems: !legend?.html && itemMaxRowCount > 1,
         itemStyle: computedItemStyle,
         lineHeight,
         margin,
@@ -494,6 +495,23 @@ export async function finalizePreparedLegend(args: {
     if (discrete) {
         rows = getLegendRows(items, preparedLegend, symbolMetrics);
         legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
+        const heightWithRowLimit = (maxRows: number) => {
+            if (maxRows < 1) {
+                return Infinity;
+            }
+            const limitedItems = items.map((line) =>
+                line.map((item) => ({
+                    ...item,
+                    height: item.textRows
+                        ? Math.min(item.height, maxRows * preparedLegend.lineHeight)
+                        : item.height,
+                })),
+            );
+            return getLegendRows(limitedItems, preparedLegend, symbolMetrics).reduce(
+                (height, row) => height + row.height,
+                0,
+            );
+        };
         if (preparedLegend.title.enable) {
             const titleSpace = Math.max(
                 0,
@@ -506,20 +524,25 @@ export async function finalizePreparedLegend(args: {
                     .flat()
                     .map((item) =>
                         Math.max(
-                            !preparedLegend.html && preparedLegend.itemMaxRowCount > 1
+                            preparedLegend.multilineItems
                                 ? Math.min(item.height, preparedLegend.lineHeight)
                                 : item.height,
                             getLegendSymbolHeight(item.symbol),
                         ),
                     ),
             );
-            // Multiline labels can shrink to one text line. Reserve the title when
-            // that line, the unchanged marker, and pagination still fit together.
-            const minimumContentHeight =
-                legendHeight > remainingHeight && preparedLegend.lineHeight > 0
-                    ? (Math.ceil(minimumRowHeight / preparedLegend.lineHeight) + 1) *
-                      preparedLegend.lineHeight
-                    : legendHeight;
+            const onePageHeight = preparedLegend.multilineItems
+                ? heightWithRowLimit(Math.floor(remainingHeight / preparedLegend.lineHeight))
+                : Infinity;
+            // A truncated multiline label may fit below the title without pagination.
+            let minimumContentHeight = legendHeight;
+            if (onePageHeight <= remainingHeight) {
+                minimumContentHeight = onePageHeight;
+            } else if (legendHeight > remainingHeight && preparedLegend.lineHeight > 0) {
+                minimumContentHeight =
+                    (Math.ceil(minimumRowHeight / preparedLegend.lineHeight) + 1) *
+                    preparedLegend.lineHeight;
+            }
             preparedLegend.title.enable =
                 legendWidth > 0 &&
                 preparedLegend.title.height <= maxLegendHeight &&
@@ -530,8 +553,10 @@ export async function finalizePreparedLegend(args: {
         if (availableHeight < legendHeight) {
             const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
-            if (!preparedLegend.html && preparedLegend.itemMaxRowCount > 1) {
-                const maxRows = Math.max(0, lines - 1);
+            let fitsWithoutPagination = false;
+            if (preparedLegend.multilineItems) {
+                fitsWithoutPagination = heightWithRowLimit(lines) <= availableHeight;
+                const maxRows = Math.max(0, lines - (fitsWithoutPagination ? 0 : 1));
                 if (maxRows === 0) {
                     items = [];
                     legendHeight = 0;
@@ -544,14 +569,18 @@ export async function finalizePreparedLegend(args: {
                     );
                 }
                 rows = getLegendRows(items, preparedLegend, symbolMetrics);
+                if (fitsWithoutPagination) {
+                    legendHeight = rows.reduce((height, row) => height + row.height, 0);
+                }
             }
-            pagination = rows.length
-                ? getPagination({
-                      rows,
-                      maxLegendHeight: legendHeight,
-                      paginatorHeight: preparedLegend.lineHeight,
-                  })
-                : undefined;
+            pagination =
+                rows.length && !fitsWithoutPagination
+                    ? getPagination({
+                          rows,
+                          maxLegendHeight: legendHeight,
+                          paginatorHeight: preparedLegend.lineHeight,
+                      })
+                    : undefined;
         }
 
         if (autoWidth) {

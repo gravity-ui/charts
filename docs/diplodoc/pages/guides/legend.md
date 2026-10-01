@@ -58,7 +58,7 @@ Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap SVG 
 
 Item layout determines which items share a row; label wrapping adds lines within an individual item. Labels wrap within the resolved legend width after subtracting the marker and its padding. Explicit line breaks are preserved, long unbroken words are split, and the final visible row is ellipsized when needed.
 
-Labels reflow on resize. Pagination keeps items together, reducing the row count only when an item is taller than a page. The title is kept if at least one text line, the marker, and pagination fit below it.
+Labels reflow on resize. Pagination keeps items together, reducing the row count only when an item is taller than a page. When truncation leaves all items on one page, no pagination controls are shown. The title is kept if the visible items fit below it, or if at least one text line, the marker, and pagination fit.
 
 With `width: 'auto'`, the legend fits the visible text rows, title, and pagination across all pages, including after labels are shortened to fit the page height. Use `maxWidth` to limit the available wrapping width.
 

@@ -261,7 +261,11 @@ export async function wrapTextWithEllipsis(args: {
     }
 
     const rows: string[] = [];
-    for (const paragraph of text.split(/\r\n|\r|\n/)) {
+    const paragraphs = text.split(/\r\n|\r|\n/);
+    while (paragraphs.length > 1 && paragraphs[paragraphs.length - 1].trim() === '') {
+        paragraphs.pop();
+    }
+    for (const paragraph of paragraphs) {
         let row = '';
         for (const token of paragraph.match(/\S+\s*/gu) ?? []) {
             if (row && (await getTextWidth(row + token.trimEnd())) > width) {
