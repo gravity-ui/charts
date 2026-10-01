@@ -502,6 +502,43 @@ function removeInvalidDefaults(schema) {
     }
 }
 
+function addEnumValueDescriptions(schema) {
+    visitSchema(schema, (schemaNode) => {
+        if (
+            !Array.isArray(schemaNode.enum) ||
+            schemaNode.oneOf ||
+            typeof schemaNode.description !== 'string'
+        ) {
+            return;
+        }
+
+        const descriptions = new Map();
+        const optionLine =
+            /^- `(?:'([^']+)'|(null))`(?: \(\*\*recommended\*\*\))?\s*(?::|—)\s*(.+)$/gm;
+
+        for (const match of schemaNode.description.matchAll(optionLine)) {
+            descriptions.set(match[2] ? null : match[1], match[3].trim());
+        }
+
+        if (schemaNode.enum.some((value) => descriptions.has(value))) {
+            const undocumented = schemaNode.enum.filter((value) => !descriptions.has(value));
+
+            if (undocumented.length > 0) {
+                throw new Error(
+                    `Missing JSDoc descriptions for enum values: ${undocumented.join(', ')}`,
+                );
+            }
+
+            // Keep enum for existing consumers. oneOf adds standard JSON Schema descriptions
+            // for each choice without changing which values validate.
+            schemaNode.oneOf = schemaNode.enum.map((value) => ({
+                const: value,
+                description: descriptions.get(value),
+            }));
+        }
+    });
+}
+
 function normalizeSchema(schema) {
     // Run normalizeSchemaNodes to a fixpoint: a definition that only becomes callback-only after
     // its own normalization wouldn't be detected by a single pass over its referencing nodes.
@@ -513,6 +550,7 @@ function normalizeSchema(schema) {
         removeUnusedDefinitions(schema);
     } while (state.changed);
     removeInvalidDefaults(schema);
+    addEnumValueDescriptions(schema);
 
     schema.$id = `${PACKAGE_JSON.name}/chart-config.schema.json@${PACKAGE_JSON.version}`;
     schema.title = 'ChartConfig';

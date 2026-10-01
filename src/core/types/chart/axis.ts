@@ -8,6 +8,14 @@ import type {MeaningfulAny} from '../misc';
 import type {BaseTextStyle} from './base';
 import type {ChartBrush} from './brush';
 
+/**
+ * Scale used to position values along an axis.
+ *
+ * - `'category'`: Place discrete categories at evenly spaced positions.
+ * - `'datetime'`: Position timestamps on a time scale.
+ * - `'linear'`: Position numeric values on a linear scale.
+ * - `'logarithmic'`: Position positive numeric values on a logarithmic scale.
+ */
 export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;

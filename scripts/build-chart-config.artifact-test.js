@@ -73,6 +73,54 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
     });
 
+    test('documents every series type and documented string choice', () => {
+        const series = schema.definitions['ChartSeries<JsonValue>'].anyOf;
+        const descriptions = new Map(
+            series.map((entry) => {
+                const definition =
+                    schema.definitions[decodeURIComponent(entry.$ref.split('/').pop())];
+                const {type} = definition.properties;
+
+                expect(type.const).toEqual(expect.any(String));
+                expect(type.description).toEqual(expect.any(String));
+                expect(type.description.length).toBeGreaterThan(0);
+
+                return [type.const, type.description];
+            }),
+        );
+
+        expect(descriptions.size).toBe(series.length);
+        expect(descriptions.get('bar-x')).toMatch(/vertical columns/);
+        expect(descriptions.get('bar-y')).toMatch(/horizontal bars/);
+        expect(descriptions.get('line')).toMatch(/points joined/);
+        expect(declaration).toContain('Line series: points joined by line segments');
+
+        for (const choice of [
+            schema.definitions.ChartAxisType,
+            schema.definitions['LineSeries<JsonValue>'].properties.nullMode,
+            schema.definitions['FunnelSeries<JsonValue>'].properties.shape,
+            schema.definitions.FormatNumberOptions.properties.format,
+            schema.definitions.FormatNumberOptions.properties.unit,
+        ]) {
+            expect(choice.oneOf.map(({const: value}) => value)).toEqual(choice.enum);
+            for (const option of choice.oneOf) {
+                expect(option.description).toEqual(expect.any(String));
+                expect(option.description.length).toBeGreaterThan(0);
+            }
+        }
+
+        expect(schema.definitions.ChartAxisType.oneOf).toContainEqual({
+            const: 'datetime',
+            description: 'Position timestamps on a time scale.',
+        });
+        expect(
+            schema.definitions['LineSeries<JsonValue>'].properties.nullMode.oneOf,
+        ).toContainEqual({
+            const: 'connect',
+            description: 'Connect points across null values (skip nulls in rendering)',
+        });
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(

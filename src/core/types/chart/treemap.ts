@@ -19,6 +19,7 @@ export interface TreemapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
 }
 
 export interface TreemapSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Treemap series: nested rectangles sized by their values. */
     type: typeof SERIES_TYPE.Treemap;
     data: TreemapSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */

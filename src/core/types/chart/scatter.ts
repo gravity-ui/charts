@@ -34,6 +34,7 @@ export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
 }
 
 export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Scatter series: individual points positioned by X and Y values. */
     type: typeof SERIES_TYPE.Scatter;
     data: ScatterSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

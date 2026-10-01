@@ -31,6 +31,7 @@ export interface FunnelSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataLabels'> {
+    /** Funnel series: stages shown as segments sized by their values. */
     type: typeof SERIES_TYPE.Funnel;
     data: FunnelSeriesData<T>[];
     /** The name of the funnel series. */

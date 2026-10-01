@@ -65,6 +65,19 @@ monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
 
 Models whose URI matches `chart-config.json` will then be validated and autocompleted against the published schema.
 
+### Descriptions for individual values
+
+The schema keeps `const` on each series definition's `type` property. Read its `description` alongside the `const` to label a series type. For example, `definitions["BarXSeries<JsonValue>"].properties.type` describes the vertical-column `bar-x` series.
+
+Finite choices with documented meanings, including `ChartAxisType` and line-series `nullMode`, keep their `enum` and also provide `oneOf` entries with `const` and `description`. Editors can use the existing `enum` for completion and look up the matching `oneOf` entry for help text:
+
+```js
+const axisType = schema.definitions.ChartAxisType;
+const description = axisType.oneOf.find((option) => option.const === 'datetime')?.description;
+```
+
+These descriptions come from JSDoc on the chart config types. Both `enum` and `oneOf` constrain the same values, so validation behavior is unchanged.
+
 JSON Schema validates each gradient stop offset independently, but cannot enforce their order. At runtime, gradient offsets must be in non-decreasing order from `0` to `1`; otherwise chart data validation fails.
 
 ### Optional: Node.js build tooling

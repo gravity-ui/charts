@@ -14,6 +14,7 @@ export interface SankeySeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface SankeySeries<T = MeaningfulAny> extends BaseSeries {
+    /** Sankey series: flows between nodes, with link widths representing values. */
     type: typeof SERIES_TYPE.Sankey;
     /** The name of the series (used in legend, tooltip etc). */
     name: string;
