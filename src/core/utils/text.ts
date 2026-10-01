@@ -327,6 +327,14 @@ export async function getMultilineTextInfo(args: {
 }> {
     const {text, getTextSize} = args;
     const lines = text.split('\n');
+    // A trailing line break leaves a row that is rendered as an empty <tspan>, so it must not
+    // contribute to the measured bounds: it shifts centered labels up and can make a fitting
+    // label look oversized to collision checks. Drop the row so that the measured bounds and
+    // the rendered rows stay the same list, as wrapTextWithEllipsis does. Blank lines between
+    // visible lines are kept, because they are intentional spacing.
+    while (lines.length > 1 && lines[lines.length - 1].trim() === '') {
+        lines.pop();
+    }
     const measurements = await Promise.all(lines.map((l) => getTextSize(l)));
     const lineHeight = measurements[0]?.height ?? 0;
 
