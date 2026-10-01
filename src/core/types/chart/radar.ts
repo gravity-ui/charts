@@ -24,6 +24,7 @@ export interface RadarMarkerOptions extends PointMarkerOptions {
 }
 
 export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Radar series: values plotted on axes radiating from a common center. */
     type: typeof SERIES_TYPE.Radar;
     /** The categories for the radar chart. */
     categories?: RadarSeriesCategory[];

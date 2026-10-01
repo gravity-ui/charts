@@ -67,6 +67,19 @@ Models whose URI matches `chart-config.json` will then be validated and autocomp
 
 JSON Schema validates each gradient stop offset independently, but cannot enforce their order. At runtime, gradient offsets must be in non-decreasing order from `0` to `1`; otherwise chart data validation fails.
 
+### Descriptions for individual values
+
+The schema keeps `const` on each series definition's `type` property. Read its `description` alongside the `const` to label a series type. For example, `definitions["BarXSeries<JsonValue>"].properties.type` describes the vertical-column `bar-x` series.
+
+Finite choices with documented meanings, including `ChartAxisType` and line-series `nullMode`, provide `enumDescriptions` in the same order as `enum`. Monaco uses them in completion and hover. Other consumers can look up a description by value:
+
+```js
+const axisType = schema.definitions.ChartAxisType;
+const description = axisType.enumDescriptions[axisType.enum.indexOf('datetime')];
+```
+
+These descriptions come from JSDoc on the chart config types. `enumDescriptions` does not change which values the schema accepts.
+
 ### Optional: Node.js build tooling
 
 Charts and Monaco run in the browser, but Node.js-based build tooling can resolve and read the declaration before including its contents in a browser application. In CommonJS:

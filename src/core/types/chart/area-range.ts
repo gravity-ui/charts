@@ -22,6 +22,7 @@ export interface AreaRangeSeriesData<T = MeaningfulAny> extends BaseSeriesData<T
 
 /** A band between two Y values at each X position. Incomplete points do not contribute to the Y domain. */
 export interface AreaRangeSeries<T = MeaningfulAny> extends BaseSeries<T> {
+    /** Area range series: a filled band between lower and upper Y values. */
     type: typeof SERIES_TYPE.AreaRange;
     data: AreaRangeSeriesData<T>[];
     /** Series name used in the legend and tooltip. */

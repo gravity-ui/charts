@@ -11,3 +11,8 @@ Apply these conventions when writing or reviewing code.
 
 - When adding a series type, follow [Adding a series plugin](../docs/diplodoc/pages/development/adding-series-plugin.md).
 - For upcoming integration changes, see the [series plugin migration plan](plans/SERIES_PLUGIN_MIGRATION_PLAN.md).
+
+## Chart config value descriptions
+
+- For documented string literal choices, put a JSDoc bullet on the schema enum node (on the type alias when a property refers to one): ``- `'value'`: Description``. Document every string choice. Use ``- `null`: Description`` for null. A marker such as `(**recommended**)` may appear between the value and colon.
+- Keep other explanatory bullets outside the enum node's JSDoc, or use prose. The chart config generator checks value bullets and emits `enumDescriptions` alongside `enum`.

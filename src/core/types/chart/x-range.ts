@@ -28,6 +28,7 @@ export interface XRangeSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
 }
 
 export interface XRangeSeries<T = MeaningfulAny> extends BaseSeries {
+    /** X-range series: horizontal intervals between start and end X values. */
     type: typeof SERIES_TYPE.XRange;
     data: XRangeSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

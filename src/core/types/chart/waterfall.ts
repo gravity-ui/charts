@@ -26,6 +26,7 @@ export interface WaterfallSeriesData<T = MeaningfulAny> extends BaseSeriesData<T
 }
 
 export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Waterfall series: bars showing successive changes in a running total. */
     type: typeof SERIES_TYPE.Waterfall;
     data: WaterfallSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
