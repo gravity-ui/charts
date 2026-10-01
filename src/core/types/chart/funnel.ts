@@ -100,8 +100,8 @@ export interface FunnelSeries<T = MeaningfulAny> extends Omit<BaseSeries, 'dataL
         /**
          * The reference area for label alignment. Only relevant when `inside` is false.
          *
-         * - `'shape'` - aligns relative to the data shape (e.g., funnel section).
-         * - `'plot'` - aligns relative to the chart plot area boundaries.
+         * - `'shape'`: Align relative to the data shape (e.g., funnel section).
+         * - `'plot'`: Align relative to the chart plot area boundaries.
          * @default 'plot'
          */
         anchor?: 'plot' | 'shape';

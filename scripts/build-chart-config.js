@@ -503,40 +503,77 @@ function removeInvalidDefaults(schema) {
 }
 
 function addEnumValueDescriptions(schema) {
-    visitSchema(schema, (schemaNode) => {
-        if (
-            !Array.isArray(schemaNode.enum) ||
-            schemaNode.oneOf ||
-            typeof schemaNode.description !== 'string'
-        ) {
+    const visited = new WeakSet();
+
+    const walk = (node, schemaPath) => {
+        if (!node || typeof node !== 'object' || Array.isArray(node) || visited.has(node)) {
             return;
         }
 
-        const descriptions = new Map();
-        const optionLine =
-            /^- `(?:'([^']+)'|(null))`(?: \(\*\*recommended\*\*\))?\s*(?::|—)\s*(.+)$/gm;
+        visited.add(node);
 
-        for (const match of schemaNode.description.matchAll(optionLine)) {
-            descriptions.set(match[2] ? null : match[1], match[3].trim());
-        }
+        if (Array.isArray(node.enum) && typeof node.description === 'string') {
+            const descriptions = new Map();
+            const location = schemaPath.length === 0 ? '#' : `#/${schemaPath.join('/')}`;
 
-        if (schemaNode.enum.some((value) => descriptions.has(value))) {
-            const undocumented = schemaNode.enum.filter((value) => !descriptions.has(value));
+            for (const line of node.description.split('\n')) {
+                if (!line.startsWith('- ')) {
+                    continue;
+                }
 
-            if (undocumented.length > 0) {
-                throw new Error(
-                    `Missing JSDoc descriptions for enum values: ${undocumented.join(', ')}`,
+                const match = line.match(
+                    /^- `(?:'([^']+)'|(null))`(?:[ \t]+(\([^)]*\)))?[ \t]*(?::|—)[ \t]*(.*)$/,
                 );
+
+                if (!match || !match[4].trim()) {
+                    throw new Error(`Invalid JSDoc enum description at ${location}: ${line}`);
+                }
+
+                const value = match[2] ? null : match[1];
+
+                if (!node.enum.includes(value)) {
+                    throw new Error(
+                        `JSDoc enum value ${JSON.stringify(value)} is not allowed at ${location}`,
+                    );
+                }
+
+                if (descriptions.has(value)) {
+                    throw new Error(
+                        `Duplicate JSDoc enum value ${JSON.stringify(value)} at ${location}`,
+                    );
+                }
+
+                const description = [match[3], match[4]]
+                    .filter(Boolean)
+                    .join(' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                descriptions.set(value, description);
             }
 
-            // Keep enum for existing consumers. oneOf adds standard JSON Schema descriptions
-            // for each choice without changing which values validate.
-            schemaNode.oneOf = schemaNode.enum.map((value) => ({
-                const: value,
-                description: descriptions.get(value),
-            }));
+            if (descriptions.size > 0) {
+                const undocumented = node.enum.filter(
+                    (value) =>
+                        (typeof value === 'string' || value === null) && !descriptions.has(value),
+                );
+
+                if (undocumented.length > 0) {
+                    throw new Error(
+                        `Missing JSDoc descriptions at ${location} for enum values: ${undocumented.map((value) => JSON.stringify(value)).join(', ')}`,
+                    );
+                }
+
+                // Monaco reads descriptions parallel to enum. This adds no validation constraints.
+                node.enumDescriptions = node.enum.map((value) => descriptions.get(value) ?? '');
+            }
         }
-    });
+
+        for (const [segment, child] of getSchemaChildEntries(node)) {
+            walk(child, [...schemaPath, segment]);
+        }
+    };
+
+    walk(schema, []);
 }
 
 function normalizeSchema(schema) {

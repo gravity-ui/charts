@@ -378,6 +378,11 @@ export interface AxisPlotShape extends AxisPlot {
     }) => string;
 }
 
+/**
+ * Anchor side for a plot band with a specified size.
+ * - `'start'`: The main axis line.
+ * - `'end'`: The opposite side of the plot area.
+ */
 export type PlotBandAlign = 'start' | 'end';
 
 export interface AxisPlotBand extends AxisPlot {
@@ -402,9 +407,7 @@ export interface AxisPlotBand extends AxisPlot {
     /**
      * Anchor side on the perpendicular axis when `size` is set.
      *
-     * - `'start'` — the band sticks to the main axis line (bottom for an X axis,
-     *   left for a left Y axis, right for a right Y axis).
-     * - `'end'` — the band sticks to the opposite side of the plot area.
+     * The start side is the bottom for an X axis, left for a left Y axis, and right for a right Y axis.
      *
      * Has no effect without `size`.
      * @default 'start'

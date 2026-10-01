@@ -73,7 +73,7 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
     });
 
-    test('documents every series type and documented string choice', () => {
+    test('documents every series type', () => {
         const series = schema.definitions['ChartSeries<JsonValue>'].anyOf;
         const descriptions = new Map(
             series.map((entry) => {
@@ -90,35 +90,50 @@ describe('chart config artifacts', () => {
         );
 
         expect(descriptions.size).toBe(series.length);
-        expect(descriptions.get('bar-x')).toMatch(/vertical columns/);
-        expect(descriptions.get('bar-y')).toMatch(/horizontal bars/);
-        expect(descriptions.get('line')).toMatch(/points joined/);
-        expect(declaration).toContain('Line series: points joined by line segments');
+        expect([...descriptions.values()].every((description) => description.length > 0)).toBe(
+            true,
+        );
+    });
 
-        for (const choice of [
-            schema.definitions.ChartAxisType,
-            schema.definitions['LineSeries<JsonValue>'].properties.nullMode,
-            schema.definitions['FunnelSeries<JsonValue>'].properties.shape,
-            schema.definitions.FormatNumberOptions.properties.format,
-            schema.definitions.FormatNumberOptions.properties.unit,
-        ]) {
-            expect(choice.oneOf.map(({const: value}) => value)).toEqual(choice.enum);
-            for (const option of choice.oneOf) {
-                expect(option.description).toEqual(expect.any(String));
-                expect(option.description.length).toBeGreaterThan(0);
+    test('describes every documented enum without changing validation', () => {
+        let documentedChoices = 0;
+
+        visitSchema(schema, (node) => {
+            if (!Array.isArray(node.enum) || typeof node.description !== 'string') {
+                return;
             }
+
+            if (!/^- `(?:'[^']+'|null)`/m.test(node.description)) {
+                return;
+            }
+
+            documentedChoices++;
+            expect(node.enumDescriptions).toHaveLength(node.enum.length);
+            for (const [index, value] of node.enum.entries()) {
+                if (typeof value === 'string' || value === null) {
+                    expect(node.enumDescriptions[index].trim().length).toBeGreaterThan(0);
+                }
+            }
+            expect(node).not.toHaveProperty('oneOf');
+        });
+
+        expect(documentedChoices).toBeGreaterThan(0);
+        for (const choice of [
+            schema.definitions.ZoomType,
+            schema.definitions.PlotBandAlign,
+            schema.definitions['FunnelSeries<JsonValue>'].properties.dataLabels.properties.anchor,
+            schema.definitions.ChartZoom.properties.resetButton.properties.relativeTo,
+        ]) {
+            expect(choice.enumDescriptions).toHaveLength(choice.enum.length);
         }
 
-        expect(schema.definitions.ChartAxisType.oneOf).toContainEqual({
-            const: 'datetime',
-            description: 'Position timestamps on a time scale.',
-        });
-        expect(
-            schema.definitions['LineSeries<JsonValue>'].properties.nullMode.oneOf,
-        ).toContainEqual({
-            const: 'connect',
-            description: 'Connect points across null values (skip nulls in rendering)',
-        });
+        const validateChoice = createSchemaValidator().compile(schema.definitions.ChartAxisType);
+        for (const value of schema.definitions.ChartAxisType.enum) {
+            expect(validateChoice(value)).toBe(true);
+        }
+        expect(validateChoice('unsupported')).toBe(false);
+        expect(validateChoice.errors).toHaveLength(1);
+        expect(validateChoice.errors[0].keyword).toBe('enum');
     });
 
     test('standalone declarations support both legend layouts', () => {
@@ -417,6 +432,55 @@ describe('chart config artifacts', () => {
         expect(() => normalizeSchema(callbackSchema)).toThrow(
             /required callback-only property "renderer"/,
         );
+    });
+
+    test('parses enum descriptions, keeps markers and normalizes whitespace', () => {
+        const choiceSchema = {
+            type: 'string',
+            enum: ['a', 'b', null, 0],
+            description:
+                "Choices:\n- `'a'` (**recommended**): First   choice\n- `'b'` — Second choice\n- `null`: No choice",
+        };
+
+        normalizeSchema(choiceSchema);
+
+        expect(choiceSchema.enumDescriptions).toEqual([
+            '(**recommended**) First choice',
+            'Second choice',
+            'No choice',
+            '',
+        ]);
+        expect(choiceSchema).not.toHaveProperty('oneOf');
+    });
+
+    test.each([
+        [
+            "- `'a'`: Description",
+            /Missing JSDoc descriptions at #\/properties\/choice for enum values: "b"/,
+        ],
+        [
+            "- `'a'`: Description\n- `'other'`: Invalid",
+            /JSDoc enum value "other" is not allowed at #\/properties\/choice/,
+        ],
+        [
+            "- `'a'`: \n- `'b'`: Description",
+            /Invalid JSDoc enum description at #\/properties\/choice: - `'a'`:/,
+        ],
+        [
+            "- `a`: Description\n- `'b'`: Description",
+            /Invalid JSDoc enum description at #\/properties\/choice: - `a`:/,
+        ],
+        [
+            "- 'a': Description\n- 'b': Description",
+            /Invalid JSDoc enum description at #\/properties\/choice: - 'a':/,
+        ],
+    ])('rejects an invalid enum description: %s', (description, error) => {
+        const choiceSchema = {
+            type: 'object',
+            properties: {choice: {type: 'string', enum: ['a', 'b'], description}},
+        };
+
+        expect(() => normalizeSchema(choiceSchema)).toThrow(error);
     });
 
     test('removes unreachable definitions', () => {

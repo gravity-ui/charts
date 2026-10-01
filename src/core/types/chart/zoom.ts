@@ -10,10 +10,6 @@ export interface ChartZoom {
     enabled?: boolean;
     /**
      * Type of zoom to apply.
-     * - `x`: zoom only on X axis
-     * - `y`: zoom only on Y axis
-     * - `xy`: zoom on both X and Y axes
-     *
      * The availability of zoom types depends on the series types used in the chart.
      * If the specified zoom type is not supported by all series, it will be ignored.
      * If no type is specified, a default will be chosen based on the series.
@@ -54,8 +50,8 @@ export interface ChartZoom {
         };
         /**
          * The box to which the button is positioned relative to.
-         * - `chart-box` refers to the entire chart area, including titles and legends.
-         * - `plot-box` refers to the area where the series are drawn.
+         * - `'chart-box'`: The entire chart area, including titles and legends.
+         * - `'plot-box'`: The area where the series are drawn.
          * @default 'chart-box'
          */
         relativeTo?: 'chart-box' | 'plot-box';
