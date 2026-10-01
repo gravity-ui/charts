@@ -121,6 +121,7 @@ export interface PreparedLegendOptions extends Required<
     availableWidth: number;
     hangingOffset: number;
     lineHeight: number;
+    multilineItems: boolean;
     title: {
         enable: boolean;
         hangingOffset: number;
@@ -156,7 +157,7 @@ export interface PreparedLegend extends PreparedLegendOptions {
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
 
-export type LegendItem = {
+export interface LegendItem {
     id: string;
     color: string;
     height: number;
@@ -164,10 +165,13 @@ export type LegendItem = {
     text: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
+    /** Width available for the label before its visible rows are measured. */
+    textMaxWidth?: number;
+    textRows?: string[];
     dashStyle?: DashStyle;
     overflowed?: boolean;
     visible?: boolean;
-};
+}
 
 export type PreparedHaloOptions = {
     enabled: boolean;

@@ -9,13 +9,13 @@ import {
     calculateNumericProperty,
     getDefaultColorStops,
     getDomainForContinuousColorScale,
-    getLabelsSize,
     getSymbolSize,
     getTextSizeFn,
     getTextWithElipsis,
     parseLegendWidth,
 } from '../utils';
 
+import {getLegendTextSizeFn, limitLegendItemRows, prepareLegendItems} from './legend-label';
 import type {
     LegendItem,
     PreparedLegendOptions,
@@ -40,6 +40,7 @@ export async function getPreparedLegend(args: {
     chartMargin: PreparedChart['margin'];
 }): Promise<PreparedLegendOptions> {
     const {legend, series, chartWidth, chartMargin} = args;
+    const itemMaxRowCount = legend?.itemMaxRowCount ?? legendDefaults.itemMaxRowCount;
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
     const parsedWidth = parseLegendWidth(legend?.width);
     let width = parsedWidth?.value;
@@ -114,6 +115,8 @@ export async function getPreparedLegend(args: {
         itemClickAction: legend?.itemClickAction ?? 'default',
         hangingOffset: itemHangingOffset,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
+        itemMaxRowCount,
+        multilineItems: !legend?.html && itemMaxRowCount > 1,
         itemStyle: computedItemStyle,
         lineHeight,
         margin,
@@ -179,8 +182,9 @@ async function getGroupedLegendItems(args: {
     items: LegendItemWithoutTextWidth[];
     preparedLegend: PreparedLegendOptions;
     symbolMetrics: LegendSymbolMetrics;
+    getTextSize: ReturnType<typeof getTextSizeFn>;
 }) {
-    const {maxLegendWidth, items, preparedLegend, symbolMetrics} = args;
+    const {maxLegendWidth, items, preparedLegend, symbolMetrics, getTextSize} = args;
     if (maxLegendWidth <= 0 || items.length === 0) {
         return [];
     }
@@ -189,57 +193,15 @@ async function getGroupedLegendItems(args: {
     let currentLine: LegendItem[] = [];
     let currentWidth = 0;
 
-    const getLegendItemTextSize = getTextSizeFn({style: preparedLegend.itemStyle});
     const vertical = preparedLegend.layout === 'vertical';
-    const {width: symbolWidth, padding: symbolPadding} = symbolMetrics;
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const resultItem = clone(item) as LegendItem;
-        resultItem.text = item.name;
-
-        const maxTextWidth = Math.max(
-            0,
-            maxLegendWidth -
-                (vertical
-                    ? symbolWidth + symbolPadding
-                    : resultItem.symbol.bboxWidth + resultItem.symbol.padding),
-        );
-
-        let textHeight = 0;
-        let textWidth = 0;
-        if (preparedLegend.html) {
-            const textSize = await getLabelsSize({
-                labels: [resultItem.text],
-                html: true,
-                style: preparedLegend.itemStyle,
-            });
-            textHeight = textSize.maxHeight;
-            textWidth = textSize.maxWidth;
-        } else {
-            const textSize = await getLegendItemTextSize(resultItem.text);
-            textHeight = textSize.height;
-            textWidth = textSize.width;
-        }
-
-        resultItem.height = textHeight;
-
-        if (textWidth > maxTextWidth) {
-            resultItem.overflowed = true;
-
-            if (preparedLegend.html) {
-                resultItem.textWidth = maxTextWidth;
-            } else {
-                resultItem.text = await getTextWithElipsis({
-                    text: resultItem.text,
-                    getTextWidth: async (s: string) => (await getLegendItemTextSize(s)).width,
-                    maxWidth: maxTextWidth,
-                });
-                resultItem.textWidth = (await getLegendItemTextSize(resultItem.text)).width;
-            }
-        } else {
-            resultItem.textWidth = textWidth;
-        }
-
+    const preparedItems = await prepareLegendItems({
+        items,
+        maxLegendWidth,
+        legend: preparedLegend,
+        symbolMetrics,
+        getTextSize,
+    });
+    for (const resultItem of preparedItems) {
         if (vertical) {
             result.push([resultItem]);
             continue;
@@ -512,15 +474,17 @@ export async function finalizePreparedLegend(args: {
         }),
     );
     const flattenLegendItems = getFlattenLegendItems(series, preparedLegend);
+    const getLegendTextSize = getLegendTextSizeFn(preparedLegend);
     const symbolMetrics = {
         width: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.bboxWidth)),
         padding: Math.max(0, ...flattenLegendItems.map(({symbol}) => symbol.padding)),
     };
-    const items = await getGroupedLegendItems({
+    let items = await getGroupedLegendItems({
         maxLegendWidth: itemWidthLimit,
         items: flattenLegendItems,
         preparedLegend,
         symbolMetrics,
+        getTextSize: getLegendTextSize,
     });
 
     let pagination: LegendConfig['pagination'] | undefined;
@@ -531,20 +495,54 @@ export async function finalizePreparedLegend(args: {
     if (discrete) {
         rows = getLegendRows(items, preparedLegend, symbolMetrics);
         legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
+        const heightWithRowLimit = (maxRows: number) => {
+            if (maxRows < 1) {
+                return Infinity;
+            }
+            const limitedItems = items.map((line) =>
+                line.map((item) => ({
+                    ...item,
+                    height: item.textRows
+                        ? Math.min(item.height, maxRows * preparedLegend.lineHeight)
+                        : item.height,
+                })),
+            );
+            return getLegendRows(limitedItems, preparedLegend, symbolMetrics).reduce(
+                (height, row) => height + row.height,
+                0,
+            );
+        };
         if (preparedLegend.title.enable) {
             const titleSpace = Math.max(
                 0,
                 preparedLegend.title.height + preparedLegend.title.margin,
             );
             const remainingHeight = Math.max(0, maxLegendHeight - titleSpace);
-            const tallestRow = Math.max(0, ...rows.map((row) => row.height));
-            // Pagination allocates whole text lines. Keep room for a row on every
-            // page and its controls before reserving space for the title.
-            const minimumContentHeight =
-                legendHeight > remainingHeight && preparedLegend.lineHeight > 0
-                    ? (Math.ceil(tallestRow / preparedLegend.lineHeight) + 1) *
-                      preparedLegend.lineHeight
-                    : legendHeight;
+            const minimumRowHeight = Math.max(
+                0,
+                ...items
+                    .flat()
+                    .map((item) =>
+                        Math.max(
+                            preparedLegend.multilineItems
+                                ? Math.min(item.height, preparedLegend.lineHeight)
+                                : item.height,
+                            getLegendSymbolHeight(item.symbol),
+                        ),
+                    ),
+            );
+            const onePageHeight = preparedLegend.multilineItems
+                ? heightWithRowLimit(Math.floor(remainingHeight / preparedLegend.lineHeight))
+                : Infinity;
+            // A truncated multiline label may fit below the title without pagination.
+            let minimumContentHeight = legendHeight;
+            if (onePageHeight <= remainingHeight) {
+                minimumContentHeight = onePageHeight;
+            } else if (legendHeight > remainingHeight && preparedLegend.lineHeight > 0) {
+                minimumContentHeight =
+                    (Math.ceil(minimumRowHeight / preparedLegend.lineHeight) + 1) *
+                    preparedLegend.lineHeight;
+            }
             preparedLegend.title.enable =
                 legendWidth > 0 &&
                 preparedLegend.title.height <= maxLegendHeight &&
@@ -555,11 +553,34 @@ export async function finalizePreparedLegend(args: {
         if (availableHeight < legendHeight) {
             const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
-            pagination = getPagination({
-                rows,
-                maxLegendHeight: legendHeight,
-                paginatorHeight: preparedLegend.lineHeight,
-            });
+            let fitsWithoutPagination = false;
+            if (preparedLegend.multilineItems) {
+                fitsWithoutPagination = heightWithRowLimit(lines) <= availableHeight;
+                const maxRows = Math.max(0, lines - (fitsWithoutPagination ? 0 : 1));
+                if (maxRows === 0) {
+                    items = [];
+                    legendHeight = 0;
+                } else {
+                    await limitLegendItemRows(
+                        items.flat(),
+                        maxRows,
+                        preparedLegend,
+                        getLegendTextSize,
+                    );
+                }
+                rows = getLegendRows(items, preparedLegend, symbolMetrics);
+                if (fitsWithoutPagination) {
+                    legendHeight = rows.reduce((height, row) => height + row.height, 0);
+                }
+            }
+            pagination =
+                rows.length && !fitsWithoutPagination
+                    ? getPagination({
+                          rows,
+                          maxLegendHeight: legendHeight,
+                          paginatorHeight: preparedLegend.lineHeight,
+                      })
+                    : undefined;
         }
 
         if (autoWidth) {

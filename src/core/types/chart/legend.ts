@@ -29,6 +29,16 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
+    /**
+     * Maximum number of text rows in each discrete SVG legend item.
+     * Labels wrap within the resolved legend width, excluding the symbol and its padding.
+     * The final visible row is ellipsized; pagination may reduce the limit to fit an item.
+     * Ignored when `html: true`; HTML content manages its own layout.
+     * Must be a positive integer.
+     * @default 1
+     * @minimum 1
+     */
+    itemMaxRowCount?: number;
     /** Event callbacks for discrete legend items. */
     events?: ChartLegendEvents;
     /**

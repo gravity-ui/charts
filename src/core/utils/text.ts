@@ -248,6 +248,73 @@ export async function wrapText(args: {
     return acc;
 }
 
+/** Wrap hard breaks and long tokens, truncating the final row when the row limit is exceeded. */
+export async function wrapTextWithEllipsis(args: {
+    text: string;
+    width: number;
+    maxRowCount: number;
+    getTextWidth: (text: string) => Promise<number>;
+}) {
+    const {text, width, maxRowCount, getTextWidth} = args;
+    if (width <= 0 || maxRowCount <= 0) {
+        return [];
+    }
+
+    const rows: string[] = [];
+    const paragraphs = text.split(/\r\n|\r|\n/);
+    while (paragraphs.length > 1 && paragraphs[paragraphs.length - 1].trim() === '') {
+        paragraphs.pop();
+    }
+    for (const paragraph of paragraphs) {
+        let row = '';
+        for (const token of paragraph.match(/\S+\s*/gu) ?? []) {
+            if (row && (await getTextWidth(row + token.trimEnd())) > width) {
+                rows.push(row.trimEnd());
+                row = '';
+            }
+            const trailingWhitespace = token.slice(token.trimEnd().length);
+            let remaining = token.trimEnd();
+            while ((await getTextWidth(remaining)) > width) {
+                const characters = Array.from(remaining);
+                let low = 0;
+                let high = characters.length;
+                while (low < high) {
+                    const mid = Math.ceil((low + high) / 2);
+                    if ((await getTextWidth(characters.slice(0, mid).join(''))) <= width) {
+                        low = mid;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+                // A glyph wider than the entire label cannot be displayed.
+                rows.push(characters.slice(0, low).join(''));
+                remaining = characters.slice(Math.max(1, low)).join('');
+                if (rows.length > maxRowCount) {
+                    break;
+                }
+            }
+            row += remaining + trailingWhitespace;
+            if (rows.length > maxRowCount) {
+                break;
+            }
+        }
+        rows.push(row.trimEnd());
+        if (rows.length > maxRowCount) {
+            break;
+        }
+    }
+
+    if (rows.length > maxRowCount) {
+        rows.length = maxRowCount;
+        rows[maxRowCount - 1] = await getTextWithElipsis({
+            text: rows[maxRowCount - 1] + '…',
+            maxWidth: width,
+            getTextWidth,
+        });
+    }
+    return rows;
+}
+
 export async function getMultilineTextInfo(args: {
     text: string;
     getTextSize: ReturnType<typeof getTextSizeFn>;
@@ -270,6 +337,20 @@ export async function getMultilineTextInfo(args: {
         lineHeight,
         hangingOffset: measurements[0]?.hangingOffset ?? 0,
     };
+}
+
+let entityDecoder: HTMLDivElement | undefined;
+
+export function decodeHtmlEntities(text: string) {
+    if (!text.includes('&')) {
+        return text;
+    }
+    entityDecoder ??= document.createElement('div');
+    // Escape tag delimiters so only entities are decoded, never label markup.
+    entityDecoder.innerHTML = text.replace(/</g, '&lt;');
+    const result = entityDecoder.textContent ?? '';
+    entityDecoder.textContent = '';
+    return result;
 }
 
 const entityMap = {
@@ -298,7 +379,13 @@ interface TextMeasurement {
 }
 
 let measureCanvas: HTMLCanvasElement | null = null;
-export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
+export function getTextSizeFn({
+    style,
+    decodeEntities = true,
+}: {
+    style?: BaseTextStyle;
+    decodeEntities?: boolean;
+}) {
     const canvas = measureCanvas || (measureCanvas = document.createElement('canvas'));
     const context = canvas.getContext('2d');
     if (!context) {
@@ -326,7 +413,7 @@ export function getTextSizeFn({style}: {style?: BaseTextStyle}) {
             : defaultFontWeight;
         const fontSize = style?.fontSize ? resolveCSSVar(style.fontSize) : defaultFontSize;
         context.font = `${fontWeight} ${fontSize} ${defaultFontFamily}`;
-        const textMetric = context.measureText(unescapeHtml(str));
+        const textMetric = context.measureText(decodeEntities ? unescapeHtml(str) : str);
 
         // we calculate hanging based on an approximate algorithm from chromium
         // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=32;drc=7cf6ac3dd6dca800fbc0d28e80a7732d4ea90340?q=member_hanging_&ss=chromium%2Fchromium%2Fsrc

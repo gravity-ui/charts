@@ -310,6 +310,7 @@
       "html",
       "itemClickAction",
       "itemDistance",
+      "itemMaxRowCount",
       "itemStyle",
       "justifyContent",
       "layout",
