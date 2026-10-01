@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.63.0](https://github.com/gravity-ui/charts/compare/v1.62.0...v1.63.0) (2026-10-01)
+
+
+### Features
+
+* **chart-config:** add descriptions for string literal values ([#724](https://github.com/gravity-ui/charts/issues/724)) ([a82615e](https://github.com/gravity-ui/charts/commit/a82615e1d349782e175116bb903ed4251c903459))
+* **legend:** support multiline labels with itemMaxRowCount ([#703](https://github.com/gravity-ui/charts/issues/703)) ([0ef0341](https://github.com/gravity-ui/charts/commit/0ef0341a1003e4b0d350776281734681d38b9b89))
+
 ## [1.62.0](https://github.com/gravity-ui/charts/compare/v1.61.0...v1.62.0) (2026-09-30)
 
 
