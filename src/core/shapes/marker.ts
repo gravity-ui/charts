@@ -180,15 +180,29 @@ export function renderHoverMarkers(
 
     if (hoverMarkers.length === 0) return;
 
-    container
+    const selection = container
         .selectAll<SVGGElement, MarkerItem>('g')
         .data(hoverMarkers)
         .join('g')
         .attr('class', b('wrapper'))
-        .attr('transform', (d) => `translate(${d.cx},${d.cy})`)
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
+
+    selection
+        .filter((d) => Boolean(d.halo?.enabled))
         .append('path')
-        .attr('class', b('symbol'))
-        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth))
+        .attr('class', haloClassName)
+        .attr('d', (d) =>
+            d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + (d.halo?.size ?? 0)),
+        )
+        .attr('fill', (d) => d.fill)
+        .attr('opacity', (d) => d.halo?.opacity ?? 0);
+
+    selection
+        .append('path')
+        .attr('class', symbolClassName)
+        .attr('d', (d) =>
+            d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth),
+        )
         .attr('fill', (d) => d.fill)
         .attr('stroke', (d) => d.stroke)
         .attr('stroke-width', (d) => d.strokeWidth);
