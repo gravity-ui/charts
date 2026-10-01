@@ -23,7 +23,6 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
         const options = optionsBySeries.get(items[0].series);
         if (!options?.enabled) continue;
         const plotIndex = args.yAxis?.[items[0].series.yAxis]?.plotIndex ?? 0;
-        const plot = args.split?.plots[plotIndex];
         const pointsBySign = group(
             items.filter((item) => typeof item.data.y === 'number' && Number.isFinite(item.data.y)),
             (item) => Number(item.data.y) < 0,
@@ -34,19 +33,16 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
             const total = sumDecimals(points.map((item) => Number(item.data.y)));
             // Zero segments do not add a separate total beside a negative stack.
             if (total === 0 && pointsBySign.has(true)) continue;
-            let y = negative
-                ? Math.max(...points.map((item) => item.y + item.height))
-                : Math.min(...points.map((item) => item.y));
-            // Percent geometry can extend past the edge by the gaps between bars.
-            if (items[0].series.stacking === 'percent') {
-                y = Math.max(plot?.top ?? 0, y);
-            }
+            const extendsUp = points[0].extendsUp;
+            const y = extendsUp
+                ? Math.min(...points.map((item) => item.y))
+                : Math.max(...points.map((item) => item.y + item.height));
             anchors.push({
                 options,
                 x: points[0].x + points[0].width / 2,
                 y,
                 total,
-                direction: negative ? 'bottom' : 'top',
+                direction: extendsUp ? 'top' : 'bottom',
                 plotIndex,
             });
         }

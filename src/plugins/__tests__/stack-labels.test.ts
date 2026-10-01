@@ -7,12 +7,14 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
+import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
 import type {ChartSeries, StackLabelsOptions} from '../../types';
 import {areaPlugin} from '../area';
 import {barXPlugin} from '../bar-x';
+import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
 import {barYPlugin} from '../bar-y';
 import {prepareStackLabels} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
@@ -86,6 +88,37 @@ async function prepare(
 function texts(labels: SvgLabel[] = []) {
     return labels.map((label) => label.text).sort();
 }
+
+describe('bar-x stack label anchors', () => {
+    test('follows both value ends on a reversed axis', async () => {
+        const {args} = await prepare(barXPlugin, [[20], [-10], [5], [-3]]);
+        args.yScale = [scaleLinear().domain([-100, 100]).range([0, 200])];
+        const {renderData} = await barXPlugin.prepareShapeData(args);
+        const anchors = getBarXStackLabelAnchors(renderData as PreparedBarXData[], args);
+        expect(anchors).toMatchObject([
+            {direction: 'bottom', y: 125, total: 25},
+            {direction: 'top', y: 87, total: -13},
+        ]);
+    });
+
+    test.each([false, true])(
+        'anchors percent totals at the plot edge, reversed=%s',
+        async (reversed) => {
+            const {args} = await prepare(barXPlugin, [[1], [0], [3]], 'percent');
+            args.split = {plots: [{top: 30, height: 100}]} as PreparedSplit;
+            args.yScale = [
+                scaleLinear()
+                    .domain([0, 100])
+                    .range(reversed ? [0, 100] : [100, 0]),
+            ];
+            const {renderData} = await barXPlugin.prepareShapeData(args);
+            const anchors = getBarXStackLabelAnchors(renderData as PreparedBarXData[], args);
+            expect(anchors).toMatchObject([
+                {direction: reversed ? 'bottom' : 'top', y: reversed ? 130 : 30, total: 4},
+            ]);
+        },
+    );
+});
 
 describe.each(plugins)('$type stack labels', (plugin) => {
     test.each(['normal', 'percent'] as const)(

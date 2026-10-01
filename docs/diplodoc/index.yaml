@@ -16,3 +16,6 @@ links:
   - title: API
     href: ./pages/api/overview.md
     description: Complete reference for configuration options and component props
+  - title: Development
+    href: ./pages/development.md
+    description: Local development setup and guides for contributing to Charts

@@ -15,6 +15,7 @@ import {
     barXStakingNormalData,
     barXStakingPercentData,
 } from '../__data__';
+import {barXBordersData} from '../__data__/bar-x/borders';
 import {barXSplitData} from '../__data__/bar-x/split';
 
 const meta: Meta<typeof Chart> = {
@@ -170,4 +171,9 @@ export const BarXPlayground = {
             control: 'object',
         },
     },
+} satisfies Story;
+
+export const BarXBorders = {
+    name: 'Borders',
+    args: {data: barXBordersData},
 } satisfies Story;

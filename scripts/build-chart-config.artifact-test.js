@@ -39,6 +39,40 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations support automatic legend width and size limits', () => {
+        const usage = `
+            const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};
+            const fixedLegend: ChartLegend = {width: 230, maxWidth: 100};
+            const continuousLegend: ChartLegend = {type: 'continuous', maxWidth: '120px'};
+            // @ts-expect-error A maximum width must be a number or string.
+            const invalidLegend: ChartLegend = {maxWidth: true};
+            void [autoLegend, fixedLegend, continuousLegend, invalidLegend];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema supports automatic legend width and numeric or string limits', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const maxWidth of [230, '230px', '30.5%']) {
+            expect(
+                validateConfig({
+                    series: {data: []},
+                    legend: {position: 'left', width: 'auto', maxWidth},
+                }),
+            ).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: true}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: -10}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: 0}})).toBe(true);
+        // String formats are resolved at runtime, as with other dimension options.
+        expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(
@@ -214,6 +248,43 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: [{...series, stackLabels: {enabled: true}}]}})).toBe(
             false,
         );
+    });
+
+    test('bar-x borders are exposed only on series and plugin options', () => {
+        const usage = `
+            const options: ChartSeriesOptions = {'bar-x': {borderWidth: 3, borderColor: 'black'}};
+            const series: BarXSeries = {type: 'bar-x', name: 'A', data: [], borderWidth: 0, borderColor: 'red'};
+            // @ts-expect-error Border width is a number in pixels.
+            series.borderWidth = '3px';
+            // @ts-expect-error Borders are not available on all series.
+            const base: BaseSeries = {borderWidth: 3};
+            // @ts-expect-error Per-point borders are not supported.
+            const point: BarXSeriesData = {x: 1, y: 2, borderColor: 'red'};
+            void [options, series, base, point];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        const series = {type: 'bar-x', name: 'A', data: [{x: 1, y: 2}]};
+        const borders = {borderWidth: 3, borderColor: 'black'};
+        expect(validateConfig({series: {data: [{...series, ...borders}]}})).toBe(true);
+        expect(validateConfig({series: {data: [series], options: {'bar-x': borders}}})).toBe(true);
+        expect(validateConfig({series: {data: [{...series, borderWidth: '3px'}]}})).toBe(false);
+        expect(
+            validateConfig({series: {data: [series], options: {'bar-x': {borderColor: 123}}}}),
+        ).toBe(false);
+        expect(
+            validateConfig({series: {data: [{...series, data: [{x: 1, y: 2, ...borders}]}]}}),
+        ).toBe(false);
+        expect(schema.definitions['BarXSeries<JsonValue>'].properties.borderWidth.default).toBe(0);
+        expect(
+            schema.definitions.ChartSeriesOptions.properties['bar-x'].properties.borderWidth
+                .default,
+        ).toBe(0);
     });
 
     test('area-range marker options are exposed in the standalone declaration and schema', () => {

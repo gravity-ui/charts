@@ -7,9 +7,9 @@ import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {filterOverlappingLabels} from '../../utils';
 import {renderDataLabels} from '../data-labels';
-import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
+import {getBarXPaths} from './utils';
 
 const b = block('bar-x');
 
@@ -28,27 +28,27 @@ export function renderBarX(
     const hoverOptions = get(seriesOptions, 'bar-x.states.hover');
     const inactiveOptions = get(seriesOptions, 'bar-x.states.inactive');
     svgElement.selectAll('*').remove();
+    const shapes = preparedData.map((datum) => ({datum, paths: getBarXPaths(datum)}));
     const rectSelection = svgElement
-        .selectAll('allRects')
-        .data(preparedData)
+        .selectAll(`path.${b('segment')}`)
+        .data(shapes)
         .join('path')
-        .attr('d', (d) => {
-            const borderRadius = d.isLastStackItem
-                ? Math.min(d.height, d.width / 2, d.series.borderRadius)
-                : 0;
-
-            const p = getRectPath({
-                x: d.x,
-                y: d.y,
-                width: d.width,
-                height: d.height,
-                borderRadius: [borderRadius, borderRadius, 0, 0],
-            });
-
-            return p.toString();
-        })
+        .attr('d', ({paths}) => paths.fill)
+        .datum(({datum}) => datum)
         .attr('class', b('segment'))
         .attr('fill', (d) => d.data.color || d.series.color)
+        .attr('opacity', (d) => d.opacity)
+        .attr('cursor', (d) => d.series.cursor);
+
+    const borderSelection = svgElement
+        .selectAll(`path.${b('segment-border')}`)
+        .data(shapes.filter(({paths}) => paths.border))
+        .join('path')
+        .attr('d', ({paths}) => paths.border)
+        .datum(({datum}) => datum)
+        .attr('class', b('segment-border'))
+        .attr('fill', (d) => d.series.borderColor)
+        .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
@@ -73,7 +73,8 @@ export function renderBarX(
             }
 
             if (inactiveEnabled) {
-                rectSelection.attr('opacity', null);
+                rectSelection.attr('opacity', (d) => d.opacity);
+                borderSelection.attr('opacity', (d) => d.opacity);
                 labelSelection.attr('opacity', null);
             }
 
@@ -97,15 +98,12 @@ export function renderBarX(
 
         if (inactiveEnabled) {
             const hoveredSeries = data.map((d) => d.series.id);
-            rectSelection.attr('opacity', (d) => {
-                return hoveredSeries.includes(d.series.id)
-                    ? null
-                    : inactiveOptions?.opacity || null;
-            });
+            const getOpacity = (d: PreparedBarXData) =>
+                hoveredSeries.includes(d.series.id) ? d.opacity : inactiveOptions.opacity || null;
+            rectSelection.attr('opacity', getOpacity);
+            borderSelection.attr('opacity', getOpacity);
             labelSelection.attr('opacity', (d) => {
-                return hoveredSeries.includes(d.series.id)
-                    ? null
-                    : inactiveOptions?.opacity || null;
+                return hoveredSeries.includes(d.series.id) ? null : inactiveOptions.opacity || null;
             });
         }
     }

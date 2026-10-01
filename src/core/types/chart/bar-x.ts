@@ -63,7 +63,18 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     /** The main color of the series (hex, rgba) */
     color?: string;
     /**
-     * The corner radius of the border surrounding each bar.
+     * The width of the border in pixels, drawn inside each bar.
+     * Ignored in the range slider and when the bar width or height is at most twice the border width.
+     * @default 0
+     */
+    borderWidth?: number;
+    /**
+     * The border color. Defaults to `var(--gcharts-shape-border-color)`.
+     */
+    borderColor?: string;
+    /**
+     * The corner radius at the value end of each bar, in pixels.
+     * For stacks, only the outer ends of the positive and negative stacks are rounded.
      * @default 0
      */
     borderRadius?: number;

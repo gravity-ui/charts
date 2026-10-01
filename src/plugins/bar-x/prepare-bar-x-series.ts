@@ -61,6 +61,11 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             cursor: get(series, 'cursor', null),
             yAxis: yAxisIndex,
             borderRadius: get(series, 'borderRadius', get(seriesOptions, 'bar-x.borderRadius', 0)),
+            borderWidth: series.borderWidth ?? seriesOptions?.['bar-x']?.borderWidth ?? 0,
+            borderColor:
+                series.borderColor ??
+                seriesOptions?.['bar-x']?.borderColor ??
+                'var(--gcharts-shape-border-color)',
             tooltip: {
                 ...series.tooltip,
                 valueFormat:

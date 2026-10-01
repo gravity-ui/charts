@@ -18,6 +18,10 @@ import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
 import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
 import {StackLabelsExample} from './data-labels/stack-labels';
 import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
+import {ContentBasedLegendExample} from './legend/content-based-width';
+import contentBasedLegendRaw from './legend/content-based-width.tsx?raw';
+import {LegendLabelsExample} from './legend/labels';
+import legendLabelsRaw from './legend/labels.tsx?raw';
 import {VerticalLegendExample} from './legend/vertical';
 import verticalLegendRaw from './legend/vertical.tsx?raw';
 import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
@@ -28,6 +32,8 @@ import {AreaSeriesExample} from './series-types/area';
 import {AreaRangeSeriesExample} from './series-types/area-range';
 import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
+import {BarXSeriesExample} from './series-types/bar-x';
+import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
@@ -44,9 +50,17 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'legend/content-based-width': {
+        code: extractDisplayCode(contentBasedLegendRaw),
+        Component: ContentBasedLegendExample,
+    },
     'legend/vertical': {
         code: extractDisplayCode(verticalLegendRaw),
         Component: VerticalLegendExample,
+    },
+    'legend/labels': {
+        code: extractDisplayCode(legendLabelsRaw),
+        Component: LegendLabelsExample,
     },
     'data-labels/stack-labels': {
         code: extractDisplayCode(stackLabelsRaw),
@@ -65,6 +79,10 @@ export const registry: Record<string, ExampleModule> = {
     'axis-types/category': {
         code: extractDisplayCode(categoryRaw),
         Component: CategoryAxisExample,
+    },
+    'series-types/bar-x': {
+        code: extractDisplayCode(barXSeriesRaw),
+        Component: BarXSeriesExample,
     },
     'series-types/line': {
         code: extractDisplayCode(lineSeriesRaw),
