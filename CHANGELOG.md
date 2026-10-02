@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.63.1](https://github.com/gravity-ui/charts/compare/v1.63.0...v1.63.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **deps:** update vulnerable dependencies ([#734](https://github.com/gravity-ui/charts/issues/734)) ([b7d2636](https://github.com/gravity-ui/charts/commit/b7d263686f0623409034b5d7b518aa595fc4ddd7))
+* **text:** ignore trailing line breaks in multiline label bounds ([#722](https://github.com/gravity-ui/charts/issues/722)) ([7e790c5](https://github.com/gravity-ui/charts/commit/7e790c54c641bccd18fc4dbd723a0f4840b762d8))
+
 ## [1.63.0](https://github.com/gravity-ui/charts/compare/v1.62.0...v1.63.0) (2026-10-01)
 
 
