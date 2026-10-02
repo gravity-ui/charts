@@ -1,6 +1,7 @@
 import type {ScatterClusterData, ScatterSeriesData} from '../../../types';
+import type {SymbolType} from '../../constants';
 import type {PreparedScatterSeries} from '../../series/types';
-import {calculateNumericProperty} from '../../utils';
+import {calculateNumericProperty, getSymbolSize} from '../../utils';
 
 import type {PreparedScatterData} from './types';
 
@@ -12,19 +13,67 @@ interface GridCell {
 
 interface OccupiedMarker {
     marker: PreparedScatterData;
+    halfWidth: number;
+    halfHeight: number;
     radius: number;
+    isCircle: boolean;
 }
 
 function getCellKey(x: number, y: number) {
     return `${x}:${y}`;
 }
 
-function getMarkerRadius(marker: PreparedScatterData) {
+function getStrokeOutset(symbolType: `${SymbolType}`, borderWidth: number) {
+    switch (symbolType) {
+        case 'diamond':
+            return borderWidth / Math.SQRT2;
+        case 'triangle':
+        case 'triangle-down':
+            return borderWidth;
+        default:
+            return borderWidth / 2;
+    }
+}
+
+function getMarkerBounds(marker: PreparedScatterData) {
     const {data, series} = marker.point;
     const radius = data.radius ?? series.marker.states.normal.radius;
     const borderWidth = series.marker.states.normal.borderWidth;
-    const symbol = series.marker.states.normal.symbol;
-    return (symbol === 'circle' ? radius : radius * 1.5) + borderWidth;
+    const symbolType = series.marker.states.normal.symbol;
+    const {width, height} = getSymbolSize({
+        symbolType,
+        symbolSize: Math.PI * (radius + borderWidth) ** 2,
+    });
+    const strokeOutset = getStrokeOutset(symbolType, borderWidth);
+    const halfWidth = width / 2 + strokeOutset;
+    const halfHeight = height / 2 + strokeOutset;
+    const isCircle = symbolType === 'circle';
+
+    return {
+        halfWidth,
+        halfHeight,
+        radius: isCircle ? halfWidth : Math.hypot(halfWidth, halfHeight),
+        isCircle,
+    };
+}
+
+function markersOverlap(own: OccupiedMarker, other: OccupiedMarker, x: number, y: number) {
+    const dx = Math.abs(x - other.marker.point.x);
+    const dy = Math.abs(y - other.marker.point.y);
+
+    if (own.isCircle && other.isCircle) {
+        return dx ** 2 + dy ** 2 < (own.radius + other.radius) ** 2;
+    }
+
+    if (!own.isCircle && !other.isCircle) {
+        return dx < own.halfWidth + other.halfWidth && dy < own.halfHeight + other.halfHeight;
+    }
+
+    const circle = own.isCircle ? own : other;
+    const rectangle = own.isCircle ? other : own;
+    const distanceX = Math.max(0, dx - rectangle.halfWidth);
+    const distanceY = Math.max(0, dy - rectangle.halfHeight);
+    return distanceX ** 2 + distanceY ** 2 < circle.radius ** 2;
 }
 
 function shiftClusters(
@@ -36,7 +85,7 @@ function shiftClusters(
 ) {
     const occupied: OccupiedMarker[] = rendered
         .filter((marker) => !marker.clipped && marker.point.series.marker.states.normal.enabled)
-        .map((marker) => ({marker, radius: getMarkerRadius(marker)}));
+        .map((marker) => ({marker, ...getMarkerBounds(marker)}));
     const occupiedByMarker = new Map(occupied.map((item) => [item.marker, item]));
     const maxRadius = occupied.reduce((max, item) => Math.max(max, item.radius), 0);
     const indexSize = Math.max(gridSize, maxRadius * 2);
@@ -75,10 +124,13 @@ function shiftClusters(
 
         const originalX = marker.point.x;
         const originalY = marker.point.y;
-        const minX = Math.max(cell.x * gridSize + own.radius, own.radius);
-        const maxX = Math.min((cell.x + 1) * gridSize - own.radius, boundsWidth - own.radius);
-        const minY = Math.max(cell.y * gridSize + own.radius, own.radius);
-        const maxY = Math.min((cell.y + 1) * gridSize - own.radius, boundsHeight - own.radius);
+        const minX = Math.max(cell.x * gridSize + own.halfWidth, own.halfWidth);
+        const maxX = Math.min((cell.x + 1) * gridSize - own.halfWidth, boundsWidth - own.halfWidth);
+        const minY = Math.max(cell.y * gridSize + own.halfHeight, own.halfHeight);
+        const maxY = Math.min(
+            (cell.y + 1) * gridSize - own.halfHeight,
+            boundsHeight - own.halfHeight,
+        );
         if (minX > maxX || minY > maxY) {
             continue;
         }
@@ -89,10 +141,7 @@ function shiftClusters(
                 if (item === own) {
                     return false;
                 }
-                const radius = own.radius + item.radius;
-                return (
-                    (x - item.marker.point.x) ** 2 + (y - item.marker.point.y) ** 2 < radius ** 2
-                );
+                return markersOverlap(own, item, x, y);
             });
 
         if (!hasCollision(originalX, originalY)) {
