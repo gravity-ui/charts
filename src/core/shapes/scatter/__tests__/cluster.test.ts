@@ -168,6 +168,73 @@ describe('scatter grid clustering', () => {
         expect(points.map((point) => point.point.x)).toEqual([47, 48, 52, 53]);
     });
 
+    test('separates bordered circle markers using their rendered outer radius', () => {
+        const series = makeSeries({
+            overlapMode: 'shift',
+            marker: {
+                enabled: true,
+                symbol: 'circle',
+                radius: 8,
+                borderWidth: 4,
+                borderColor: '#fff',
+            },
+        });
+        const points = [38.5, 39.5, 64.5, 65.5].map((x) => makePoint(x, 20, series));
+        const result = group(points, series);
+
+        expect(result.map((point) => point.point.data.cluster?.size)).toEqual([2, 2]);
+        expect(result[1].point.x - result[0].point.x).toBeGreaterThanOrEqual(28);
+        expect(points.map((point) => point.point.x)).toEqual([38.5, 39.5, 64.5, 65.5]);
+    });
+
+    test('separates bordered square markers that overlap at diagonal centers', () => {
+        const series = makeSeries({
+            overlapMode: 'shift',
+            marker: {
+                enabled: true,
+                symbol: 'square',
+                radius: 8,
+                borderWidth: 4,
+                borderColor: '#fff',
+            },
+        });
+        const points = [
+            [37.5, 37.5],
+            [38.5, 38.5],
+            [60.5, 60.5],
+            [61.5, 61.5],
+        ].map(([x, y]) => makePoint(x, y, series));
+        const result = group(points, series);
+        const sideLength = Math.sqrt(Math.PI) * (8 + 4) + 4;
+        const dx = Math.abs(result[1].point.x - result[0].point.x);
+        const dy = Math.abs(result[1].point.y - result[0].point.y);
+
+        expect(result.map((point) => point.point.data.cluster?.size)).toEqual([2, 2]);
+        expect(dx >= sideLength || dy >= sideLength).toBe(true);
+        expect(result.map((point) => point.point.data.x)).toEqual([38, 61]);
+    });
+
+    test('separates a bordered square cluster from a single circle point', () => {
+        const series = makeSeries({
+            overlapMode: 'shift',
+            marker: {
+                enabled: true,
+                symbol: 'square',
+                radius: 8,
+                borderWidth: 4,
+                borderColor: '#fff',
+            },
+        });
+        const points = [37.5, 38.5, 51].map((x) => makePoint(x, 20, series));
+        const result = group(points, series);
+        const squareHalfWidth = (Math.sqrt(Math.PI) * (8 + 4) + 4) / 2;
+
+        expect(result.map((point) => point.point.data.cluster?.size ?? 1)).toEqual([2, 1]);
+        expect(points[2].point.x - result[0].point.x).toBeGreaterThanOrEqual(squareHalfWidth + 4);
+        expect(result[1]).toBe(points[2]);
+        expect(result[0].point.data.x).toBe(38);
+    });
+
     test('leaves a marker at its centroid when its cell cannot contain it', () => {
         const series = makeSeries({
             overlapMode: 'shift',
