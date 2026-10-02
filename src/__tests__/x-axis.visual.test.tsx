@@ -12,6 +12,7 @@ import {barYBasicData} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
 import {generateHourlyDatetimeSeries} from './__data__/utils';
+import {getOverlappingLabelPairs} from './utils';
 
 const CHART_MARGIN: ChartMargin = {
     top: 20,
@@ -63,6 +64,186 @@ test.describe('X-axis', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('explicit values define the X and Y ticks', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 4, y: 40},
+                            {x: 10, y: 100},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                min: 0,
+                max: 10,
+                ticks: {values: [-5, 0, 4, 10, 15]},
+            },
+            yAxis: [
+                {
+                    min: 0,
+                    max: 100,
+                    ticks: {values: [-10, 0, 40, 100, 120]},
+                },
+            ],
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+
+        await expect(component.locator('.gcharts-x-axis__tick text')).toHaveText(['0', '4', '10']);
+        await expect(component.locator('.gcharts-y-axis__tick text')).toHaveText([
+            '0',
+            '40',
+            '100',
+        ]);
+    });
+
+    test('nearby explicit ticks keep distant X labels visible', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 100, y: 100},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                min: 0,
+                max: 100,
+                ticks: {values: [0, 50, 51, 100]},
+                labels: {autoRotation: false},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 600, height: 350}} />,
+        );
+        const ticks = component.locator('.gcharts-x-axis__tick');
+        const firstLabel = ticks.nth(0).locator('text tspan');
+        const lastLabel = ticks.nth(3).locator('text tspan');
+
+        await expect(ticks).toHaveCount(4);
+        await expect(firstLabel).toHaveText('0');
+        await expect(lastLabel).toHaveText('100');
+        expect((await firstLabel.boundingBox())?.width).toBeGreaterThan(0);
+        expect((await lastLabel.boundingBox())?.width).toBeGreaterThan(0);
+    });
+
+    test('nearby explicit ticks do not overlap with automatic X rotation', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 100, y: 100},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                min: 0,
+                max: 100,
+                ticks: {values: [0, 50, 51, 100]},
+                tickMarks: {enabled: true},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 600, height: 350}} />,
+        );
+        const ticks = component.locator('.gcharts-x-axis__tick');
+
+        await expect(ticks).toHaveCount(4);
+        await expect(ticks.first().locator('text tspan')).toHaveText('0');
+        await expect(ticks.last().locator('text tspan')).toHaveText('100');
+        await expect(ticks.locator('text tspan')).toHaveCount(3);
+        await expect(ticks.locator('.gcharts-x-axis__mark')).toHaveCount(4);
+        await expect(ticks.nth(1).locator('path')).toHaveCount(2);
+        await expect(ticks.nth(2).locator('path')).toHaveCount(2);
+        expect(await ticks.locator('text tspan').allTextContents()).not.toContain('');
+        expect(await getOverlappingLabelPairs(ticks.locator('text tspan'))).toEqual([]);
+    });
+
+    test('explicit values select category indices', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 10},
+                            {x: 1, y: 20},
+                            {x: 2, y: 30},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['January', 'February', 'March'],
+                ticks: {values: [0, 2]},
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+
+        await expect(component.locator('.gcharts-x-axis__tick text')).toHaveText([
+            'January',
+            'March',
+        ]);
+    });
+
+    test('nearby explicit category ticks do not overlap HTML X labels', async ({mount}) => {
+        const chartData: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: Array.from({length: 101}, (_, index) => ({
+                            x: index,
+                            y: index,
+                        })),
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: Array.from({length: 101}, (_, index) => String(index)),
+                min: 0,
+                max: 100,
+                ticks: {values: [0, 50, 51, 100]},
+                labels: {html: true},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 600, height: 350}} />,
+        );
+        const ticks = component.locator('.gcharts-x-axis__tick');
+        const labels = component.locator('.gcharts-chart__html-layer-item');
+
+        await expect(ticks).toHaveCount(4);
+        await expect(labels).toHaveCount(3);
+        await expect(labels.first()).toHaveText('0');
+        await expect(labels.last()).toHaveText('100');
+        expect(await getOverlappingLabelPairs(labels)).toEqual([]);
     });
 
     test.describe('Html in categories', () => {

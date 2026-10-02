@@ -241,6 +241,7 @@ export const getPreparedYAxis = ({
                               value: axisItem.ticks?.interval,
                           })
                         : axisItem.ticks?.pixelInterval,
+                    values: axisItem.ticks?.values,
                 },
                 tickMarks: {
                     enabled:
