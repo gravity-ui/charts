@@ -11,8 +11,8 @@ import type {
     PreparedSeriesOptions,
 } from '../../series/types';
 import {setGradientPointFills} from '../../utils/gradient';
-import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
-import type {MarkerItem, ShapeLabels} from '../types';
+import {getMarkerFill} from '../marker';
+import type {HoveredShapeData, MarkerItem, ShapeLabels} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {PlacementRect, PlacementSegment} from './auto-placement';
@@ -23,6 +23,68 @@ import {
     placeLineDataLabels,
 } from './auto-placement';
 import type {PointData, PreparedLineData} from './types';
+
+export function buildLineHoverMarkerGetter(
+    points: PointData[],
+    series: PreparedLineSeries,
+): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
+    const {normal: normalState, hover: hoverState} = series.marker.states;
+
+    if (!hoverState.enabled) return () => [];
+
+    const haloEnabled = Boolean(hoverState.halo?.enabled);
+
+    if (!haloEnabled && normalState.enabled) {
+        return () => [];
+    }
+
+    const pointsByData = new Map<unknown, PointData[]>();
+    for (const p of points) {
+        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
+            const dataPoints = pointsByData.get(p.data) ?? [];
+            dataPoints.push(p);
+            pointsByData.set(p.data, dataPoints);
+        }
+    }
+
+    return (hoveredData: HoveredShapeData[]) => {
+        const items: MarkerItem[] = [];
+        for (const hovered of hoveredData) {
+            if (hovered.series?.id !== undefined && hovered.series.id !== series.id) {
+                continue;
+            }
+
+            const dataPoints = pointsByData.get(hovered.data);
+            const hasGeometry = hovered.x !== undefined && hovered.y1 !== undefined;
+            const point = hasGeometry
+                ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
+                : dataPoints?.[dataPoints.length - 1];
+            if (!point || point.x === null || point.y === null) continue;
+
+            const isNormalMarkerDrawn =
+                normalState.enabled || Boolean(point.data.marker?.states?.normal?.enabled);
+
+            const markerState = haloEnabled && isNormalMarkerDrawn ? normalState : hoverState;
+
+            items.push({
+                cx: point.x,
+                cy: point.y,
+                radius: markerState.radius,
+                symbolType: normalState.symbol,
+                fill: getMarkerFill(point, series.color),
+                stroke: markerState.borderColor,
+                strokeWidth: markerState.borderWidth,
+                opacity: 1,
+                active: true,
+                clipped: false,
+                series: {id: series.id},
+                data: hovered.data,
+                halo: haloEnabled ? hoverState.halo : undefined,
+            });
+        }
+        return items;
+    };
+}
 
 function isLabeledLineLayer(layer: ShapeLabels): boolean {
     const layerSeries = (layer as Partial<PreparedLineData>).series;
@@ -149,7 +211,7 @@ export const prepareLineData = async (args: {
             annotations,
             points,
             markers,
-            getHoverMarkers: buildHoverMarkerGetter(points, s),
+            getHoverMarkers: buildLineHoverMarkerGetter(points, s),
             svgLabels: [],
             series: s,
             hovered: false,

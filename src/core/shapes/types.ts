@@ -33,6 +33,11 @@ export interface MarkerItem {
     clipped: boolean;
     series: {id: string};
     data: unknown;
+    halo?: {
+        enabled: boolean;
+        size: number;
+        opacity: number;
+    };
 }
 
 export interface HoveredShapeData {

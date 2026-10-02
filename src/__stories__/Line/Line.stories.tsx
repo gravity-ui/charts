@@ -8,6 +8,7 @@ import {
     lineDataLabelsPlacementData,
     lineGradientData,
     lineHtmlLabelsData,
+    lineMarkerHaloData,
     linePlaygroundData,
     lineSplitData,
     lineTwoYAxisData,
@@ -28,6 +29,13 @@ export const LineBasic = {
     name: 'Basic',
     args: {
         data: lineBasicData,
+    },
+} satisfies Story;
+
+export const LineMarkerHalo = {
+    name: 'Marker halo on hover',
+    args: {
+        data: lineMarkerHaloData,
     },
 } satisfies Story;
 

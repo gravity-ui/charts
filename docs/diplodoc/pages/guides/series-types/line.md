@@ -131,3 +131,48 @@ Notes:
 - With [line interpolation](#line-interpolation) the collision check follows the rendered curve.
 
 See [LineSeriesDataLabels](../../api/Series/Line/interfaces/LineSeriesDataLabels.md) for the complete data label configuration.
+
+## Marker halo on hover
+
+Unlike some other series types, the marker halo on hover is disabled by default for line series (`halo.enabled: false`).
+
+To enable the halo around hovered line markers, configure `options.line.states.hover.marker.halo.enabled`:
+
+```javascript
+series: {
+  data: [
+    {
+      type: 'line',
+      name: 'Revenue',
+      data: [
+        {x: 0, y: 42},
+        {x: 1, y: 58},
+        {x: 2, y: 51},
+      ],
+    },
+  ],
+  options: {
+    line: {
+      states: {
+        hover: {
+          marker: {
+            halo: {
+              enabled: true,
+            },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+You can also customize the halo `size` (in pixels) and `opacity`:
+
+```javascript
+halo: {
+  enabled: true,
+  size: 10,
+  opacity: 0.5,
+}
+```
