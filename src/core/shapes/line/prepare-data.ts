@@ -34,6 +34,10 @@ export function buildLineHoverMarkerGetter(
 
     const haloEnabled = Boolean(hoverState.halo?.enabled);
 
+    if (!haloEnabled && normalState.enabled) {
+        return () => [];
+    }
+
     const pointsByData = new Map<unknown, PointData[]>();
     for (const p of points) {
         if (p.x !== null && p.y !== null && !p.hiddenInLine) {
@@ -57,14 +61,10 @@ export function buildLineHoverMarkerGetter(
                 : dataPoints?.[dataPoints.length - 1];
             if (!point || point.x === null || point.y === null) continue;
 
-            const isNormalMarkerVisible =
-                point.data.marker?.states?.normal?.enabled ?? normalState.enabled;
+            const isNormalMarkerDrawn =
+                normalState.enabled || Boolean(point.data.marker?.states?.normal?.enabled);
 
-            if (isNormalMarkerVisible && !haloEnabled) {
-                continue;
-            }
-
-            const markerState = isNormalMarkerVisible ? normalState : hoverState;
+            const markerState = haloEnabled && isNormalMarkerDrawn ? normalState : hoverState;
 
             items.push({
                 cx: point.x,

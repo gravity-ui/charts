@@ -230,26 +230,120 @@ describe('buildLineHoverMarkerGetter', () => {
             expect(result[0].symbolType).toBe(SymbolType.Diamond);
         });
 
-        test('respects per-point normal marker enabled override', () => {
-            const {points, series} = createSeries({
-                normalEnabled: false,
-                halo: {enabled: true},
-                pointsData: [
-                    {x: 1, y: 10, marker: {states: {normal: {enabled: true}}}}, // always visible point
-                    {x: 2, y: 20}, // hover-only point
-                ],
+        describe('per-point normal marker override combinations', () => {
+            describe('when halo is disabled (halo.enabled: false)', () => {
+                test('when series marker is disabled and point enables normal marker, preserves hover radius and border', () => {
+                    const {points, series} = createSeries({
+                        normalEnabled: false,
+                        halo: {enabled: false},
+                        pointsData: [
+                            {x: 1, y: 10, marker: {states: {normal: {enabled: true}}}},
+                            {x: 2, y: 20},
+                        ],
+                    });
+                    const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                    const res0 = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                    expect(res0).toHaveLength(1);
+                    expect(res0[0]).toEqual(
+                        expect.objectContaining({
+                            radius: 6, // hover radius
+                            stroke: '#ffffff', // hover border
+                            strokeWidth: 1,
+                            halo: undefined,
+                        }),
+                    );
+                });
+
+                test('when series marker is enabled and point disables normal marker, returns no hover markers', () => {
+                    const {points, series} = createSeries({
+                        normalEnabled: true,
+                        halo: {enabled: false},
+                        pointsData: [
+                            {x: 1, y: 10, marker: {states: {normal: {enabled: false}}}},
+                            {x: 2, y: 20},
+                        ],
+                    });
+                    const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                    const res0 = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                    expect(res0).toEqual([]);
+                });
             });
-            const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
 
-            // Point 0 has normal enabled → normal appearance preserved
-            const res0 = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
-            expect(res0[0].radius).toBe(4);
-            expect(res0[0].stroke).toBe('#111111');
+            describe('when halo is enabled (halo.enabled: true)', () => {
+                test('when series marker is disabled and point enables normal marker, matches actually drawn normal marker with halo', () => {
+                    const {points, series} = createSeries({
+                        normalEnabled: false,
+                        halo: {enabled: true, size: 8, opacity: 0.3},
+                        pointsData: [
+                            {x: 1, y: 10, marker: {states: {normal: {enabled: true}}}}, // drawn normal marker
+                            {x: 2, y: 20}, // hover-only point
+                        ],
+                    });
+                    const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
 
-            // Point 1 is hover-only → hover appearance
-            const res1 = getHoverMarkers([{data: points[1].data, series: {id: series.id}}]);
-            expect(res1[0].radius).toBe(6);
-            expect(res1[0].stroke).toBe('#ffffff');
+                    // Point 0 has normal enabled -> matches drawn normal appearance with halo
+                    const res0 = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                    expect(res0).toHaveLength(1);
+                    expect(res0[0]).toEqual(
+                        expect.objectContaining({
+                            radius: 4, // normal radius preserved
+                            stroke: '#111111', // normal border preserved
+                            strokeWidth: 2,
+                            halo: {enabled: true, size: 8, opacity: 0.3},
+                        }),
+                    );
+
+                    // Point 1 is hover-only -> hover appearance with halo
+                    const res1 = getHoverMarkers([{data: points[1].data, series: {id: series.id}}]);
+                    expect(res1).toHaveLength(1);
+                    expect(res1[0]).toEqual(
+                        expect.objectContaining({
+                            radius: 6, // hover radius
+                            stroke: '#ffffff', // hover border
+                            strokeWidth: 1,
+                            halo: {enabled: true, size: 8, opacity: 0.3},
+                        }),
+                    );
+                });
+
+                test('when series marker is enabled and point disables normal marker, matches actually drawn normal marker with halo', () => {
+                    const {points, series} = createSeries({
+                        normalEnabled: true,
+                        halo: {enabled: true, size: 8, opacity: 0.3},
+                        pointsData: [
+                            {x: 1, y: 10, marker: {states: {normal: {enabled: false}}}}, // drawn normal marker (per line preparation)
+                            {x: 2, y: 20},
+                        ],
+                    });
+                    const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                    // Point 0 still draws normal marker -> matches normal appearance with halo
+                    const res0 = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                    expect(res0).toHaveLength(1);
+                    expect(res0[0]).toEqual(
+                        expect.objectContaining({
+                            radius: 4,
+                            stroke: '#111111',
+                            strokeWidth: 2,
+                            halo: {enabled: true, size: 8, opacity: 0.3},
+                        }),
+                    );
+
+                    // Point 1 normal marker -> matches normal appearance with halo
+                    const res1 = getHoverMarkers([{data: points[1].data, series: {id: series.id}}]);
+                    expect(res1).toHaveLength(1);
+                    expect(res1[0]).toEqual(
+                        expect.objectContaining({
+                            radius: 4,
+                            stroke: '#111111',
+                            strokeWidth: 2,
+                            halo: {enabled: true, size: 8, opacity: 0.3},
+                        }),
+                    );
+                });
+            });
         });
     });
 });
