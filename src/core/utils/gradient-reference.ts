@@ -3,9 +3,14 @@ import type {LinearGradient} from '../types';
 
 import {isBandScale} from './axis/common';
 import type {GradientBBox, GradientCoords} from './gradient';
-import {DEFAULT_GRADIENT_ANGLE, getGradientBBox, gradientAngleToCoords} from './gradient';
+import {
+    DEFAULT_GRADIENT_ANGLE,
+    createGradientColorResolver,
+    getGradientBBox,
+    gradientAngleToCoords,
+} from './gradient';
 
-export interface GradientPoint {
+export interface ProjectedGradientPoint {
     data: object;
     x: number | null;
     y: number | null;
@@ -17,23 +22,24 @@ interface ReferencePoint {
     y: number;
 }
 
-interface ReferenceGradient {
+interface CapturedGradient {
+    bbox: GradientBBox;
     coords: GradientCoords;
-    points: Map<object, ReferencePoint[]>;
+    points: ProjectedGradientPoint[];
     xScale: ChartScale;
     yScale: ChartScale;
     yAxisTop: number;
 }
 
 export interface SeriesGradientState {
-    stroke?: ReferenceGradient | null;
-    fill?: ReferenceGradient | null;
+    stroke?: CapturedGradient | null;
+    fill?: CapturedGradient | null;
 }
 
 export interface GradientGeometry {
     id: string;
-    points: GradientPoint[];
-    bbox: GradientBBox | null;
+    points: ProjectedGradientPoint[];
+    strokeBBox: GradientBBox | null;
     fillBBox?: GradientBBox | null;
 }
 
@@ -41,12 +47,11 @@ export interface GradientGeometry {
 export function captureGradient(args: {
     gradient?: LinearGradient;
     bbox: GradientBBox | null;
-    points: GradientPoint[];
+    points: ProjectedGradientPoint[];
     xScale: ChartScale;
     yScale: ChartScale;
     yAxisTop: number;
-    locations?: Map<object, ReferencePoint[]>;
-}): ReferenceGradient | null {
+}): CapturedGradient | null {
     const {gradient, bbox, points, xScale, yScale, yAxisTop} = args;
     if (!gradient || !bbox || ![xScale, yScale].every(hasDrawableRange)) {
         return null;
@@ -55,25 +60,33 @@ export function captureGradient(args: {
     if (!Object.values(coords).every(Number.isFinite)) {
         return null;
     }
-    const locations = args.locations ?? getPointLocations(points);
-    return {coords, points: locations, xScale, yScale, yAxisTop};
+    return {bbox, coords, points, xScale, yScale, yAxisTop};
 }
 
-function getPointLocations(points: GradientPoint[]) {
-    const locations = new Map<object, ReferencePoint[]>();
+type PointLocations = Map<object, Array<ReferencePoint | undefined>>;
+
+const pointLocations = new WeakMap<ProjectedGradientPoint[], PointLocations>();
+
+function getPointLocations(points: ProjectedGradientPoint[]) {
+    const cached = pointLocations.get(points);
+    if (cached) return cached;
+    const locations: PointLocations = new Map();
     for (const point of points) {
+        const positions = locations.get(point.data) ?? [];
         if (
             point.x === null ||
             point.y === null ||
             !Number.isFinite(point.x) ||
             !Number.isFinite(point.y)
         ) {
+            positions.push(undefined);
+            locations.set(point.data, positions);
             continue;
         }
-        const positions = locations.get(point.data) ?? [];
         positions.push({x: point.x, y: point.y});
         locations.set(point.data, positions);
     }
+    pointLocations.set(points, locations);
     return locations;
 }
 
@@ -87,6 +100,7 @@ function hasDrawableRange(scale: ChartScale) {
 interface ScaleTransform {
     ratio: number;
     offset: number;
+    affine: boolean;
 }
 
 function getScaleTransform(source: ChartScale, target: ChartScale): ScaleTransform {
@@ -95,17 +109,44 @@ function getScaleTransform(source: ChartScale, target: ChartScale): ScaleTransfo
     if (isBandScale(source) && isBandScale(target)) {
         const sourceDirection = Math.sign(sourceRange[1] - sourceRange[0]);
         const targetDirection = Math.sign(targetRange[1] - targetRange[0]);
-        const ratio = (target.step() * targetDirection) / (source.step() * sourceDirection);
-        const category = target.domain()[0];
-        const sourcePosition = (source(category) ?? 0) + source.step() / 2;
-        const targetPosition = (target(category) ?? 0) + target.step() / 2;
-        return {ratio, offset: targetPosition - ratio * sourcePosition};
+        const common = target.domain().filter((category) => source(category) !== undefined);
+        const first = common[0];
+        const last = common[common.length - 1];
+        const sourceFirst = first === undefined ? undefined : source(first);
+        const targetFirst = first === undefined ? undefined : target(first);
+        const sourceLast = last === undefined ? undefined : source(last);
+        const targetLast = last === undefined ? undefined : target(last);
+        if (sourceFirst === undefined || targetFirst === undefined) {
+            return {ratio: 0, offset: 0, affine: false};
+        }
+        const stepRatio = (target.step() * targetDirection) / (source.step() * sourceDirection);
+        const ratio =
+            sourceLast !== undefined && targetLast !== undefined && sourceLast !== sourceFirst
+                ? (targetLast - targetFirst) / (sourceLast - sourceFirst)
+                : stepRatio;
+        const offset =
+            targetFirst - ratio * sourceFirst + (target.step() - ratio * source.step()) / 2;
+        const sourceSpan =
+            sourceLast === undefined ? 0 : Math.round((sourceLast - sourceFirst) / source.step());
+        const targetSpan =
+            targetLast === undefined ? 0 : Math.round((targetLast - targetFirst) / target.step());
+        const affine = common.every((category) => {
+            const sourcePosition = source(category);
+            const targetPosition = target(category);
+            return (
+                sourcePosition !== undefined &&
+                targetPosition !== undefined &&
+                Math.round((sourcePosition - sourceFirst) / source.step()) * targetSpan ===
+                    Math.round((targetPosition - targetFirst) / target.step()) * sourceSpan
+            );
+        });
+        return {ratio, offset, affine};
     }
     const [min, max] = source.domain();
     const scale = target as ChartScaleLinear;
     const start = scale(Number(min));
     const ratio = (scale(Number(max)) - start) / (sourceRange[1] - sourceRange[0]);
-    return {ratio, offset: start - ratio * sourceRange[0]};
+    return {ratio, offset: start - ratio * sourceRange[0], affine: true};
 }
 
 /** Project a captured full-series color field through the current axis scales. */
@@ -113,7 +154,7 @@ export function prepareGradientCoords(args: {
     gradient?: LinearGradient;
     state?: SeriesGradientState;
     paint: 'stroke' | 'fill';
-    points: GradientPoint[];
+    points: ProjectedGradientPoint[];
     bbox?: GradientBBox | null;
     xScale: ChartScale;
     yScale: ChartScale;
@@ -161,18 +202,18 @@ export function prepareGradientCoords(args: {
 
     // A single-value axis can use a special scale for clipping neighbors.
     // Recover its actual transform from the prepared point coordinates.
-    if (!transformX.ratio || !transformY.ratio) {
-        const pairs = matchPoints(points, source.points);
+    if (!transformX.ratio || !transformY.ratio || !transformX.affine || !transformY.affine) {
+        const pairs = matchPoints(points, getPointLocations(source.points));
         const matchedAnchor = pairs[0];
         if (!matchedAnchor) {
             return null;
         }
         anchor = matchedAnchor;
 
-        if (!transformX.ratio) {
+        if (!transformX.ratio || !transformX.affine) {
             transformX.ratio = getPointRatio(pairs, 'x');
         }
-        if (!transformY.ratio) {
+        if (!transformY.ratio || !transformY.affine) {
             transformY.ratio = getPointRatio(pairs, 'y');
         }
     }
@@ -180,15 +221,59 @@ export function prepareGradientCoords(args: {
     return transformGradient(source.coords, transformX, transformY, anchor);
 }
 
+const pointColors = new WeakMap<ProjectedGradientPoint[], Map<object, Array<string | undefined>>>();
+
+/** Preserve sampled marker colors when compressed category domains are not affine. */
+export function applyCapturedPointColors(
+    points: Array<ProjectedGradientPoint & {color?: string; fill?: string}>,
+    state: SeriesGradientState | undefined,
+    gradient: LinearGradient | undefined,
+    targetXScale: ChartScale,
+    targetYScale: ChartScale,
+    getSourcePoints?: (points: ProjectedGradientPoint[]) => ProjectedGradientPoint[],
+) {
+    const source = state?.stroke;
+    if (
+        !source ||
+        !gradient ||
+        (getScaleTransform(source.xScale, targetXScale).affine &&
+            getScaleTransform(source.yScale, targetYScale).affine)
+    ) {
+        return;
+    }
+    const sourcePoints = getSourcePoints?.(source.points) ?? source.points;
+    let colors = pointColors.get(sourcePoints);
+    if (!colors) {
+        colors = new Map();
+        const getColor = createGradientColorResolver(gradient, source.bbox, source.coords);
+        for (const point of sourcePoints) {
+            const entries = colors.get(point.data) ?? [];
+            if (point.x === null || point.y === null) {
+                entries.push(undefined);
+                colors.set(point.data, entries);
+                continue;
+            }
+            entries.push(getColor(point.x, point.y));
+            colors.set(point.data, entries);
+        }
+        pointColors.set(sourcePoints, colors);
+    }
+    const occurrences = new Map<object, number>();
+    for (const point of points) {
+        const occurrence = occurrences.get(point.data) ?? 0;
+        occurrences.set(point.data, occurrence + 1);
+        if (point.color === undefined) {
+            point.fill = colors.get(point.data)?.[occurrence] ?? point.fill;
+        }
+    }
+}
+
 interface PointPair {
     original: ReferencePoint;
     current: ReferencePoint;
 }
 
-function matchPoints(
-    points: GradientPoint[],
-    locations: Map<object, ReferencePoint[]>,
-): PointPair[] {
+function matchPoints(points: ProjectedGradientPoint[], locations: PointLocations): PointPair[] {
     const occurrences = new Map<object, number>();
     const pairs: PointPair[] = [];
     for (const point of points) {

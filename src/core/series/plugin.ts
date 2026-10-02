@@ -61,6 +61,8 @@ export interface PrepareShapeDataArgs {
 export interface PrepareShapeDataResult {
     renderData: SeriesShapeData[];
     tooltipItems: TooltipItemData[];
+    /** Reuse projected paint geometry as the full-series reference when the view is unfiltered. */
+    gradientGeometry?: GradientGeometry[];
     /** Labels belonging to the whole plugin layer, independent of any one series. */
     labels?: SvgLabel[];
 }

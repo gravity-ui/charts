@@ -6,12 +6,12 @@ import type {ChartScale} from '~core/scales/types';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 
 import type {ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
-import type {GradientReference} from '../useShapes/types';
+import type {GradientLayoutReference} from '../useShapes/types';
 
 export type {RangeSliderState};
 
 export interface RangeSliderProps {
-    gradientReference?: GradientReference;
+    gradientReference?: GradientLayoutReference;
     activeLegendItems: string[];
     boundsOffsetLeft: number;
     boundsWidth: number;

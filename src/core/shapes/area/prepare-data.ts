@@ -1,5 +1,6 @@
 import {group, min, sort} from 'd3-array';
 import type {ScaleLogarithmic} from 'd3-scale';
+import isEqual from 'lodash/isEqual';
 import round from 'lodash/round';
 
 import type {AreaSeriesData} from '../../../types';
@@ -7,9 +8,8 @@ import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
-import type {AnnotationAnchor, PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
+import type {PreparedAreaSeries, PreparedSeriesOptions} from '../../series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '../../shapes/marker';
-import type {MarkerItem} from '../../shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../../shapes/utils';
 import {
     getDataCategoryValue,
@@ -17,7 +17,7 @@ import {
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
 import {getGradientBBox, setGradientPointFills} from '../../utils/gradient';
-import {prepareGradientCoords} from '../../utils/gradient-reference';
+import {applyCapturedPointColors, prepareGradientCoords} from '../../utils/gradient-reference';
 import {getPositiveShare} from '../../utils/percentage';
 
 import type {PointData, PreparedAreaData} from './types';
@@ -92,7 +92,83 @@ function getNeighborPoint(data: Map<string, AreaSeriesData> | undefined, key: st
     return key === undefined ? undefined : data?.get(key);
 }
 
-export const prepareAreaData = async (args: {
+interface StackContext {
+    dataArrays: AreaSeriesData[][];
+    reversed: boolean;
+    axisType: PreparedXAxis['type'];
+    categories: PreparedXAxis['categories'];
+    dataMaps: Map<string, AreaSeriesData>[];
+    neighbors: Map<string, {prev?: string; next?: string}>;
+}
+
+const stackContexts = new WeakMap<AreaSeriesData[], StackContext>();
+
+function getStackContext(
+    series: PreparedAreaSeries[],
+    xAxis: PreparedXAxis,
+    xScale: ChartScale,
+): StackContext {
+    const dataArrays = series.map((item) => item.fullData ?? item.data);
+    const range = xScale.range();
+    const reversed = xAxis.type !== 'category' && range[1] < range[0];
+    const cached = stackContexts.get(dataArrays[0]);
+    if (
+        cached &&
+        cached.reversed === reversed &&
+        cached.axisType === xAxis.type &&
+        isEqual(cached.categories, xAxis.categories) &&
+        cached.dataArrays.length === dataArrays.length &&
+        cached.dataArrays.every((data, index) => data === dataArrays[index])
+    ) {
+        return cached;
+    }
+
+    const categories = xAxis.categories ?? [];
+    const keys = new Set<string>();
+    const dataMaps = dataArrays.map((data) => {
+        const map = new Map<string, AreaSeriesData>();
+        for (const point of data) {
+            if (
+                xAxis.type !== 'category' &&
+                (point.x === null || !Number.isFinite(Number(point.x)))
+            ) {
+                continue;
+            }
+            const key = String(
+                xAxis.type === 'category'
+                    ? getDataCategoryValue({axisDirection: 'x', categories, data: point})
+                    : point.x,
+            );
+            keys.add(key);
+            map.set(key, point);
+        }
+        return map;
+    });
+    const orderedKeys =
+        xAxis.type === 'category'
+            ? categories.filter((category) => keys.has(category))
+            : Array.from(keys).sort((a, b) =>
+                  reversed ? Number(b) - Number(a) : Number(a) - Number(b),
+              );
+    const neighbors = new Map(
+        orderedKeys.map((key, index) => [
+            key,
+            {prev: orderedKeys[index - 1], next: orderedKeys[index + 1]},
+        ]),
+    );
+    const context = {
+        dataArrays,
+        dataMaps,
+        neighbors,
+        reversed,
+        axisType: xAxis.type,
+        categories: xAxis.categories,
+    };
+    stackContexts.set(dataArrays[0], context);
+    return context;
+}
+
+export const projectAreaData = (args: {
     series: PreparedAreaSeries[];
     seriesOptions?: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
@@ -102,21 +178,8 @@ export const prepareAreaData = async (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    geometryOnly?: boolean;
-}): Promise<PreparedAreaData[]> => {
-    const {
-        series,
-        seriesOptions,
-        xAxis,
-        xScale,
-        yAxis,
-        yScale,
-        split,
-        isOutsideBounds,
-        isRangeSlider,
-        geometryOnly,
-    } = args;
-    const xMax = Math.max(...xScale.range());
+}): PreparedAreaData[] => {
+    const {series, xAxis, xScale, yAxis, yScale, split} = args;
 
     const result: PreparedAreaData[] = [];
     const dataByPlots = Array.from(
@@ -161,41 +224,19 @@ export const prepareAreaData = async (args: {
                 ]),
             );
             const hasFilteredData = seriesStack.some((s) => s.fullData && s.fullData !== s.data);
-            const contextSeries = hasFilteredData
-                ? seriesStack.map((s) => ({...s, data: s.fullData ?? s.data}))
-                : seriesStack;
-            const contextXValues = (
-                hasFilteredData ? getXValues(contextSeries, xAxis, xScale) : xValues
-            ).map(([key]) => key);
-            const neighbors = new Map(
-                contextXValues.map((key, index) => [
-                    key,
-                    {
-                        prev: contextXValues[index - 1],
-                        next: contextXValues[index + 1],
-                    },
-                ]),
-            );
-            const contextMaps = hasFilteredData
-                ? new Map(
-                      seriesStack.map((s) => [
-                          s,
-                          new Map(
-                              (s.fullData ?? s.data).map((d) => [
-                                  String(
-                                      xAxis.type === 'category'
-                                          ? getDataCategoryValue({
-                                                axisDirection: 'x',
-                                                categories: xAxis.categories || [],
-                                                data: d,
-                                            })
-                                          : d.x,
-                                  ),
-                                  d,
-                              ]),
-                          ),
-                      ]),
-                  )
+            const stackContext = hasFilteredData
+                ? getStackContext(seriesStack, xAxis, xScale)
+                : undefined;
+            const neighbors =
+                stackContext?.neighbors ??
+                new Map(
+                    xValues.map(([key], index) => [
+                        key,
+                        {prev: xValues[index - 1]?.[0], next: xValues[index + 1]?.[0]},
+                    ]),
+                );
+            const contextMaps = stackContext
+                ? new Map(seriesStack.map((s, index) => [s, stackContext.dataMaps[index]]))
                 : seriesDataMaps;
             const isPercentStacking = seriesStack.some((s) => s.stacking === 'percent');
             const stackValues: Record<string, number> = {};
@@ -287,7 +328,6 @@ export const prepareAreaData = async (args: {
                         }) ?? yMin)
                     );
                 };
-                const annotationOpts = seriesOptions?.area?.annotation;
                 const points: PointData[] = [];
 
                 for (let xIdx = 0; xIdx < xValues.length; xIdx++) {
@@ -298,14 +338,6 @@ export const prepareAreaData = async (args: {
                     const percentage =
                         s.stacking === 'percent'
                             ? getPositiveShare(Number(yDataValue), stackValues[x])
-                            : undefined;
-                    const pointAnnotation =
-                        d.annotation && !isRangeSlider && !geometryOnly
-                            ? await prepareAnnotation({
-                                  annotation: d.annotation,
-                                  optionsLabel: annotationOpts?.label,
-                                  optionsPopup: annotationOpts?.popup,
-                              })
                             : undefined;
 
                     if (s.nullMode === 'connect' && (yDataValue === null || !rawData)) {
@@ -343,7 +375,6 @@ export const prepareAreaData = async (args: {
                                 data: d,
                                 percentage,
                                 series: s,
-                                annotation: pointAnnotation,
                             };
 
                             points.push(point);
@@ -464,85 +495,14 @@ export const prepareAreaData = async (args: {
                     yAxisTop,
                 });
 
-                const normalState = s.marker.states.normal;
-                const hasPerPointNormalMarkers =
-                    !geometryOnly && s.data.some((d) => d.marker?.states?.normal?.enabled);
-
                 const lineBBox = s.gradient || s.fillGradient ? getGradientBBox(points) : null;
-                const gradientBBox = s.gradient ? lineBBox : null;
-                const fillGradientBBox = s.fillGradient ? getAreaBBox(points, lineBBox) : null;
-                const gradientCoords = geometryOnly
-                    ? undefined
-                    : prepareGradientCoords({
-                          bbox: gradientBBox,
-                          gradient: s.gradient,
-                          state: s.gradientState,
-                          paint: 'stroke',
-                          points,
-                          xScale,
-                          yScale: seriesYScale,
-                          yAxisTop,
-                      });
-                const fillGradientCoords = geometryOnly
-                    ? undefined
-                    : prepareGradientCoords({
-                          bbox: fillGradientBBox,
-                          gradient: s.fillGradient,
-                          state: s.gradientState,
-                          paint: 'fill',
-                          points,
-                          xScale,
-                          yScale: seriesYScale,
-                          yAxisTop,
-                      });
-                if (!geometryOnly) {
-                    setGradientPointFills(points, s.gradient, gradientCoords, gradientBBox);
-                }
-
-                const markers =
-                    !geometryOnly && (s.marker.states.normal.enabled || hasPerPointNormalMarkers)
-                        ? points.reduce<MarkerItem[]>((acc, p) => {
-                              if (p.y === null || p.hiddenInLine) {
-                                  return acc;
-                              }
-                              const pointNormalEnabled =
-                                  p.data.marker?.states?.normal?.enabled ?? false;
-                              if (s.marker.states.normal.enabled || pointNormalEnabled) {
-                                  acc.push({
-                                      cx: p.x,
-                                      cy: p.y,
-                                      radius: normalState.radius,
-                                      symbolType: normalState.symbol,
-                                      fill: getMarkerFill(p, s.color),
-                                      stroke: normalState.borderColor,
-                                      strokeWidth: normalState.borderWidth,
-                                      opacity: 1,
-                                      active: true,
-                                      clipped: isOutsideBounds(p.x, p.y),
-                                      series: {id: s.id},
-                                      data: p.data,
-                                  });
-                              }
-                              return acc;
-                          }, [])
-                        : [];
-
-                const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
-                    if (p.annotation && p.y !== null) {
-                        result.push({annotation: p.annotation, x: p.x, y: p.y});
-                    }
-                    return result;
-                }, []);
-
                 seriesStackData.push({
-                    annotations,
+                    annotations: [],
                     points,
-                    gradientCoords,
-                    fillGradientCoords,
-                    gradientBBox,
-                    fillGradientBBox,
-                    markers,
-                    getHoverMarkers: geometryOnly ? () => [] : buildHoverMarkerGetter(points, s),
+                    gradientBBox: s.gradient ? lineBBox : null,
+                    fillGradientBBox: s.fillGradient ? getAreaBBox(points, lineBBox) : null,
+                    markers: [],
+                    getHoverMarkers: () => [],
                     svgLabels: [],
                     color: s.color,
                     opacity: s.opacity,
@@ -555,31 +515,98 @@ export const prepareAreaData = async (args: {
                 });
             }
 
-            for (let itemIndex = 0; itemIndex < seriesStackData.length; itemIndex++) {
-                const item = seriesStackData[itemIndex];
-                const currentYAxis = yAxis[item.series.yAxis];
-                const itemYAxisTop = split.plots[currentYAxis.plotIndex]?.top || 0;
-
-                if (!isRangeSlider && !geometryOnly && shouldPrepareSeriesDataLabels(item.series)) {
-                    const labelsData = await preparePointDataLabels({
-                        series: item.series,
-                        points: item.points,
-                        xMax,
-                        yAxisTop: itemYAxisTop,
-                        isOutsideBounds,
-                        getFormatContext: (point) => ({
-                            data: point.data,
-                            percentage: point.percentage,
-                        }),
-                    });
-                    item.svgLabels.push(...labelsData.svgLabels);
-                    item.htmlLabels.push(...labelsData.htmlLabels);
-                }
-            }
-
             result.push(...seriesStackData);
         }
     }
 
     return result;
 };
+
+export async function prepareAreaData(
+    args: Parameters<typeof projectAreaData>[0],
+): Promise<PreparedAreaData[]> {
+    const {seriesOptions, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const xMax = Math.max(...xScale.range());
+    const result = projectAreaData(args);
+    for (const item of result) {
+        const s = item.series;
+        const seriesYAxis = yAxis[s.yAxis];
+        const seriesYScale = yScale[s.yAxis];
+        if (!seriesYScale) continue;
+        const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+        const {points, gradientBBox, fillGradientBBox} = item;
+        item.gradientCoords = prepareGradientCoords({
+            bbox: gradientBBox,
+            gradient: s.gradient,
+            state: s.gradientState,
+            paint: 'stroke',
+            points,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        item.fillGradientCoords = prepareGradientCoords({
+            bbox: fillGradientBBox,
+            gradient: s.fillGradient,
+            state: s.gradientState,
+            paint: 'fill',
+            points,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        setGradientPointFills(points, s.gradient, item.gradientCoords, gradientBBox);
+        applyCapturedPointColors(points, s.gradientState, s.gradient, xScale, seriesYScale);
+        const annotationOpts = seriesOptions?.area?.annotation;
+        const normal = s.marker.states.normal;
+        const annotated = new Set<AreaSeriesData>();
+        for (const point of points) {
+            if (point.data.annotation && !isRangeSlider && !annotated.has(point.data)) {
+                annotated.add(point.data);
+                point.annotation = await prepareAnnotation({
+                    annotation: point.data.annotation,
+                    optionsLabel: annotationOpts?.label,
+                    optionsPopup: annotationOpts?.popup,
+                });
+                if (point.y !== null) {
+                    item.annotations.push({annotation: point.annotation, x: point.x, y: point.y});
+                }
+            }
+            if (
+                point.y === null ||
+                point.hiddenInLine ||
+                !(normal.enabled || point.data.marker?.states?.normal?.enabled)
+            ) {
+                continue;
+            }
+            item.markers.push({
+                cx: point.x,
+                cy: point.y,
+                radius: normal.radius,
+                symbolType: normal.symbol,
+                fill: getMarkerFill(point, s.color),
+                stroke: normal.borderColor,
+                strokeWidth: normal.borderWidth,
+                opacity: 1,
+                active: true,
+                clipped: isOutsideBounds(point.x, point.y),
+                series: {id: s.id},
+                data: point.data,
+            });
+        }
+        item.getHoverMarkers = buildHoverMarkerGetter(points, s);
+        if (!isRangeSlider && shouldPrepareSeriesDataLabels(s)) {
+            const labels = await preparePointDataLabels({
+                series: s,
+                points,
+                xMax,
+                yAxisTop,
+                isOutsideBounds,
+                getFormatContext: (point) => ({data: point.data, percentage: point.percentage}),
+            });
+            item.svgLabels.push(...labels.svgLabels);
+            item.htmlLabels.push(...labels.htmlLabels);
+        }
+    }
+    return result;
+}

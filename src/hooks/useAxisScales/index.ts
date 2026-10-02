@@ -25,7 +25,6 @@ type Args = {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
-    categorySeries?: PreparedSeries[];
     xAxis: PreparedAxis | null;
     yAxis: PreparedYAxis[];
     split: PreparedSplit;
@@ -70,9 +69,6 @@ export const createScales = (args: Args) => {
             const primaryAxisScale = createYScale({
                 axis: primaryAxis,
                 boundsHeight: axisHeight,
-                categorySeries: args.categorySeries?.filter(
-                    (s) => 'yAxis' in s && s.yAxis === index && s.visible,
-                ),
                 series: visiblePrimaryAxisSeries.length
                     ? visiblePrimaryAxisSeries
                     : primaryAxisSeries,
@@ -101,9 +97,6 @@ export const createScales = (args: Args) => {
             const visibleSecondAxisSeries = getOnlyVisibleSeries(secondAxisSeries);
             const secondaryAxisScale = secondaryAxis
                 ? createYScale({
-                      categorySeries: args.categorySeries?.filter(
-                          (s) => 'yAxis' in s && s.yAxis === index && s.visible,
-                      ),
                       axis: secondaryAxis,
                       boundsHeight: axisHeight,
                       primaryAxis,
@@ -126,7 +119,6 @@ export const createScales = (args: Args) => {
     return {
         xScale: xAxis
             ? createXScale({
-                  categorySeries: args.categorySeries && getOnlyVisibleSeries(args.categorySeries),
                   axis: xAxis,
                   boundsWidth,
                   rangeSliderState,

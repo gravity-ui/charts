@@ -5,14 +5,36 @@ import type {PreparedAreaRangeSeries} from '../../series/types';
 import {getXValue, getYValue} from '../../shapes/utils';
 import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '../../utils';
 import {createGradientColorResolver} from '../../utils/gradient';
-import {prepareGradientCoords} from '../../utils/gradient-reference';
+import type {ProjectedGradientPoint} from '../../utils/gradient-reference';
+import {applyCapturedPointColors, prepareGradientCoords} from '../../utils/gradient-reference';
 
 import {formatAreaRangeDataLabel} from './format';
 import {prepareAreaRangeMarkers} from './markers';
 import type {AreaRangePointData, PreparedAreaRangeData} from './types';
 import {getRangeBBox, markHiddenRangePoints} from './utils';
 
-export async function prepareAreaRangeData(args: {
+const boundaryPoints = new WeakMap<
+    ProjectedGradientPoint[],
+    Partial<Record<'y0' | 'y1', ProjectedGradientPoint[]>>
+>();
+
+function getBoundaryPoints(points: ProjectedGradientPoint[], boundary: 'y0' | 'y1') {
+    let cached = boundaryPoints.get(points);
+    if (!cached) {
+        cached = {};
+        boundaryPoints.set(points, cached);
+    }
+    if (!cached[boundary]) {
+        cached[boundary] = (points as AreaRangePointData[]).map((point) => ({
+            data: point.data,
+            x: point.x,
+            y: point[boundary],
+        }));
+    }
+    return cached[boundary];
+}
+
+export function projectAreaRangeData(args: {
     series: PreparedAreaRangeSeries[];
     xAxis: PreparedXAxis;
     xScale: ChartScale;
@@ -21,20 +43,8 @@ export async function prepareAreaRangeData(args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    geometryOnly?: boolean;
-}): Promise<PreparedAreaRangeData[]> {
-    const {
-        series,
-        xAxis,
-        xScale,
-        yAxis,
-        yScale,
-        split,
-        isOutsideBounds,
-        isRangeSlider,
-        geometryOnly,
-    } = args;
-    const xMax = Math.max(...xScale.range());
+}): PreparedAreaRangeData[] {
+    const {series, xAxis, xScale, yAxis, yScale, split} = args;
     const result: PreparedAreaRangeData[] = [];
 
     for (const item of series) {
@@ -92,66 +102,14 @@ export async function prepareAreaRangeData(args: {
         markHiddenRangePoints({points, yScale: seriesYScale, yAxis: seriesYAxis, yAxisTop});
 
         const bbox = item.gradient || item.fillGradient ? getRangeBBox(points) : null;
-        const gradientBBox = item.gradient ? bbox : null;
-        const fillGradientBBox = item.fillGradient ? bbox : null;
-        const gradientCoords = geometryOnly
-            ? undefined
-            : prepareGradientCoords({
-                  bbox: gradientBBox,
-                  gradient: item.gradient,
-                  state: item.gradientState,
-                  paint: 'stroke',
-                  points,
-                  xScale,
-                  yScale: seriesYScale,
-                  yAxisTop,
-              });
-        const fillGradientCoords = geometryOnly
-            ? undefined
-            : prepareGradientCoords({
-                  bbox: fillGradientBBox,
-                  gradient: item.fillGradient,
-                  state: item.gradientState,
-                  paint: 'fill',
-                  points,
-                  xScale,
-                  yScale: seriesYScale,
-                  yAxisTop,
-              });
-
-        const getGradientColor =
-            !geometryOnly && item.gradient && bbox && gradientCoords !== null
-                ? createGradientColorResolver(item.gradient, bbox, gradientCoords)
-                : undefined;
-        if (getGradientColor) {
-            for (const point of points) {
-                if (point.color === undefined && point.y !== null) {
-                    point.fill = getGradientColor(point.x, point.y);
-                }
-            }
-        }
-
-        const prepared: PreparedAreaRangeData = {
+        result.push({
             active: true,
             annotations: [],
             color: item.color,
-            gradientCoords,
-            fillGradientCoords,
-            gradientBBox,
-            fillGradientBBox,
-            ...(geometryOnly
-                ? {markers: [], getHoverMarkers: () => []}
-                : prepareAreaRangeMarkers({
-                      points,
-                      series: item,
-                      yAxis: seriesYAxis,
-                      yScale: seriesYScale,
-                      yAxisTop,
-                      isOutsideBounds,
-                      gradientCoords,
-                      bbox: gradientBBox,
-                      getGradientColor,
-                  })),
+            gradientBBox: item.gradient ? bbox : null,
+            fillGradientBBox: item.fillGradient ? bbox : null,
+            markers: [],
+            getHoverMarkers: () => [],
             hovered: false,
             htmlLabels: [],
             id: item.id,
@@ -160,9 +118,79 @@ export async function prepareAreaRangeData(args: {
             series: item,
             svgLabels: [],
             width: item.lineWidth,
-        };
+        });
+    }
 
-        if (!isRangeSlider && !geometryOnly && shouldPrepareSeriesDataLabels(item)) {
+    return result;
+}
+
+export async function prepareAreaRangeData(
+    args: Parameters<typeof projectAreaRangeData>[0],
+): Promise<PreparedAreaRangeData[]> {
+    const {xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const xMax = Math.max(...xScale.range());
+    const result = projectAreaRangeData(args);
+    for (const prepared of result) {
+        const item = prepared.series;
+        const seriesYAxis = yAxis[item.yAxis];
+        const seriesYScale = yScale[item.yAxis];
+        if (!seriesYScale) continue;
+        const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+        const {points, gradientBBox, fillGradientBBox} = prepared;
+        prepared.gradientCoords = prepareGradientCoords({
+            bbox: gradientBBox,
+            gradient: item.gradient,
+            state: item.gradientState,
+            paint: 'stroke',
+            points,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        prepared.fillGradientCoords = prepareGradientCoords({
+            bbox: fillGradientBBox,
+            gradient: item.fillGradient,
+            state: item.gradientState,
+            paint: 'fill',
+            points,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        const getGradientColor =
+            item.gradient && gradientBBox && prepared.gradientCoords !== null
+                ? createGradientColorResolver(item.gradient, gradientBBox, prepared.gradientCoords)
+                : undefined;
+        if (getGradientColor) {
+            for (const point of points) {
+                if (point.color === undefined && point.y !== null) {
+                    point.fill = getGradientColor(point.x, point.y);
+                }
+            }
+        }
+        applyCapturedPointColors(points, item.gradientState, item.gradient, xScale, seriesYScale);
+        Object.assign(
+            prepared,
+            prepareAreaRangeMarkers({
+                points,
+                series: item,
+                yAxis: seriesYAxis,
+                yScale: seriesYScale,
+                yAxisTop,
+                isOutsideBounds,
+                getGradientColor,
+                preparePointFills: (markerPoints, boundary) =>
+                    applyCapturedPointColors(
+                        markerPoints,
+                        item.gradientState,
+                        item.gradient,
+                        xScale,
+                        seriesYScale,
+                        (sourcePoints) => getBoundaryPoints(sourcePoints, boundary),
+                    ),
+            }),
+        );
+        if (!isRangeSlider && shouldPrepareSeriesDataLabels(item)) {
             const labels = await preparePointDataLabels({
                 series: item,
                 points: points.filter((point) => !point.hiddenInTooltip),
@@ -179,9 +207,6 @@ export async function prepareAreaRangeData(args: {
             prepared.svgLabels.push(...labels.svgLabels);
             prepared.htmlLabels.push(...labels.htmlLabels);
         }
-
-        result.push(prepared);
     }
-
     return result;
 }

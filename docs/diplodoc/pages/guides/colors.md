@@ -44,7 +44,9 @@ See [LinearGradient](../api/Series/Visual/interfaces/LinearGradient.md) and [Gra
 
 The gradient uses the full series bounds before zoom or range-slider filtering. Colors at retained points stay the same after zoom, reset, and range-slider changes. The range-slider preview uses the same colors. Resizing recalculates the full-series gradient for the new dimensions; oblique gradients can change color when the aspect ratio changes.
 
-This applies to category, linear, datetime, and logarithmic axes, including reversed axes. Category axes keep the distances between categories when the other axis filters points. Neighboring points retained for clipping use the same gradient. Null gaps do not restart it.
+This applies to category, linear, datetime, and logarithmic axes, including reversed axes. Neighboring points retained for clipping use the same gradient. Null gaps do not restart it.
+
+Category axes can remove categories after filtering or hiding series. If this changes the relative distances between retained categories, a single linear gradient cannot preserve the entire line or fill color field. Markers and tooltip symbols retain their sampled full-series colors in this case.
 
 ## Legend colors
 

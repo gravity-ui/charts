@@ -44,14 +44,22 @@ export interface HoveredShapeData {
 }
 
 export interface SeriesShapeData {
-    gradientBBox?: GradientBBox | null;
-    fillGradientBBox?: GradientBBox | null;
-    gradientCoords?: GradientCoords | null;
-    fillGradientCoords?: GradientCoords | null;
     htmlLabels: HtmlItem[];
     markers: MarkerItem[];
     annotations: AnnotationAnchor[];
     getHoverMarkers(hoveredData: HoveredShapeData[]): MarkerItem[];
+}
+
+/** Paint geometry used by line, area and area-range shapes. */
+export interface GradientShapeData {
+    /** `undefined` recomputes from points; `null` means no drawable gradient. */
+    gradientBBox?: GradientBBox | null;
+    /** `undefined` recomputes from points; `null` means no drawable gradient. */
+    fillGradientBBox?: GradientBBox | null;
+    /** `undefined` uses the local bounding box; `null` suppresses the paint. */
+    gradientCoords?: GradientCoords | null;
+    /** `undefined` uses the local bounding box; `null` suppresses the paint. */
+    fillGradientCoords?: GradientCoords | null;
 }
 
 export interface TooltipItemData {

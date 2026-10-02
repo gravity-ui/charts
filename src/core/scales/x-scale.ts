@@ -19,7 +19,6 @@ import {getBandSize} from '../utils/band-size';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
-    getCategoriesInRange,
     getMinMaxPropsOrState,
     hasOnlyMarkerSeries,
     validateArrayData,
@@ -67,7 +66,6 @@ export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
     series: (PreparedSeries | ChartSeries)[];
-    categorySeries?: (PreparedSeries | ChartSeries)[];
     rangeSliderState?: RangeSliderState;
     zoomStateX?: [number, number];
 }) {
@@ -199,19 +197,11 @@ export function createXScale(args: {
         }
         case 'category': {
             if (xCategories) {
-                let filteredCategories = filterCategoriesByVisibleSeries({
+                const filteredCategories = filterCategoriesByVisibleSeries({
                     axisDirection: 'x',
                     categories: xCategories,
-                    series: args.categorySeries ?? series,
+                    series,
                 });
-                if (args.categorySeries) {
-                    filteredCategories = getCategoriesInRange(
-                        xCategories,
-                        filteredCategories,
-                        effectiveX?.[0],
-                        effectiveX?.[1],
-                    );
-                }
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 
                 if (xScale.step() / 2 < xAxisMaxPadding) {

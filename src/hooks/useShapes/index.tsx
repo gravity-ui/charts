@@ -12,14 +12,14 @@ import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
 import {getSeriesClipPathId} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
-import type {SeriesGradientState} from '~core/utils/gradient-reference';
+import type {GradientGeometry, SeriesGradientState} from '~core/utils/gradient-reference';
 import {captureGradient} from '~core/utils/gradient-reference';
 import type {ZoomState} from '~core/zoom/types';
 
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 
 import {SeriesShapes} from './SeriesShapes';
-import type {GradientReference} from './types';
+import type {GradientLayoutReference} from './types';
 
 import './styles.scss';
 
@@ -43,61 +43,72 @@ interface Args {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
     zoomState?: Partial<ZoomState>;
-    getGradientReference?: () => GradientReference | Promise<GradientReference>;
-    gradientReference?: GradientReference;
+    getGradientReference?: () => GradientLayoutReference | Promise<GradientLayoutReference>;
+    gradientReference?: GradientLayoutReference;
 }
 
-const gradientStates = new WeakMap<GradientReference, Promise<Map<string, SeriesGradientState>>>();
+const gradientStates = new WeakMap<
+    GradientLayoutReference,
+    Promise<Map<string, SeriesGradientState>>
+>();
 
-function getGradientStates(reference: GradientReference, seriesOptions: PreparedSeriesOptions) {
+function captureGradientStates(reference: GradientLayoutReference, geometry: GradientGeometry[]) {
+    const states = new Map<string, SeriesGradientState>();
+    const geometryById = new Map(geometry.map((shape) => [shape.id, shape]));
+    for (const item of getOnlyVisibleSeries(reference.series)) {
+        if (
+            !hasGradient(item) ||
+            !getSeriesPlugin(item.type).prepareGradientGeometry ||
+            !('yAxis' in item) ||
+            !reference.xScale
+        )
+            continue;
+        const yScale = reference.yScale?.[item.yAxis];
+        if (!yScale) continue;
+        const shape = geometryById.get(item.id);
+        const context = {
+            points: shape?.points ?? [],
+            xScale: reference.xScale,
+            yScale,
+            yAxisTop: reference.split.plots[reference.yAxis[item.yAxis].plotIndex]?.top ?? 0,
+        };
+        const stroke = captureGradient({
+            ...context,
+            gradient: 'gradient' in item ? item.gradient : undefined,
+            bbox: shape?.strokeBBox ?? null,
+        });
+        const fill = captureGradient({
+            ...context,
+            gradient: 'fillGradient' in item ? item.fillGradient : undefined,
+            bbox: shape?.fillBBox ?? null,
+        });
+        states.set(item.id, {stroke, fill});
+    }
+    return states;
+}
+
+function getGradientStates(
+    reference: GradientLayoutReference,
+    seriesOptions: PreparedSeriesOptions,
+) {
     let result = gradientStates.get(reference);
     if (!result) {
         result = (async () => {
-            const states = new Map<string, SeriesGradientState>();
+            const geometry: GradientGeometry[] = [];
             const series = getOnlyVisibleSeries(reference.series);
             for (const [type, items] of group(series, (item) => item.type)) {
                 const plugin = getSeriesPlugin(type);
-                if (!items.some(hasGradient) || !plugin.prepareGradientGeometry) {
-                    continue;
-                }
-                const geometry = await plugin.prepareGradientGeometry({
-                    ...reference,
-                    series: items,
-                    allSeries: series,
-                    seriesOptions,
-                });
-                const geometryById = new Map(geometry.map((shape) => [shape.id, shape]));
-                for (const item of items) {
-                    if (!hasGradient(item) || !('yAxis' in item) || !reference.xScale) {
-                        continue;
-                    }
-                    const shape = geometryById.get(item.id);
-                    const yScale = reference.yScale?.[item.yAxis];
-                    if (!yScale) {
-                        continue;
-                    }
-                    const context = {
-                        points: shape?.points ?? [],
-                        xScale: reference.xScale,
-                        yScale,
-                        yAxisTop:
-                            reference.split.plots[reference.yAxis[item.yAxis].plotIndex]?.top ?? 0,
-                    };
-                    const stroke = captureGradient({
-                        ...context,
-                        gradient: 'gradient' in item ? item.gradient : undefined,
-                        bbox: shape?.bbox ?? null,
-                    });
-                    const fill = captureGradient({
-                        ...context,
-                        gradient: 'fillGradient' in item ? item.fillGradient : undefined,
-                        bbox: shape?.fillBBox ?? null,
-                        locations: stroke?.points,
-                    });
-                    states.set(item.id, {stroke, fill});
-                }
+                if (!items.some(hasGradient) || !plugin.prepareGradientGeometry) continue;
+                geometry.push(
+                    ...(await plugin.prepareGradientGeometry({
+                        ...reference,
+                        series: items,
+                        allSeries: series,
+                        seriesOptions,
+                    })),
+                );
             }
-            return states;
+            return captureGradientStates(reference, geometry);
         })();
         gradientStates.set(reference, result);
     }
@@ -154,7 +165,9 @@ export async function getShapes(args: Args) {
     let visibleSeries = getOnlyVisibleSeries(series);
     const reference =
         gradientReference ??
-        (visibleSeries.some(hasGradient) ? await getGradientReference?.() : undefined);
+        (visibleSeries.some(hasGradient) && (zoomState?.x || zoomState?.y)
+            ? await getGradientReference?.()
+            : undefined);
     if (reference && visibleSeries.some(hasGradient)) {
         const states = await getGradientStates(reference, seriesOptions);
         visibleSeries = visibleSeries.map((item) => {
@@ -172,6 +185,7 @@ export async function getShapes(args: Args) {
     const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
     const layers: ShapeLabels[] = [];
+    const preparedGradientGeometry: GradientGeometry[] = [];
 
     const groupedSeriesItems = Array.from(groupedSeries);
     for (let index = groupedSeriesItems.length - 1; index >= 0; index--) {
@@ -179,7 +193,7 @@ export async function getShapes(args: Args) {
         const seriesType = chartSeries[0].type;
         const plugin = getSeriesPlugin(seriesType);
 
-        const {renderData, tooltipItems, labels} = await plugin.prepareShapeData({
+        const {renderData, tooltipItems, labels, gradientGeometry} = await plugin.prepareShapeData({
             series: chartSeries,
             boundsWidth,
             boundsHeight,
@@ -195,6 +209,7 @@ export async function getShapes(args: Args) {
             allSeries: visibleSeries,
         });
 
+        if (gradientGeometry) preparedGradientGeometry.push(...gradientGeometry);
         if (renderData.length === 0) {
             continue;
         }
@@ -229,6 +244,19 @@ export async function getShapes(args: Args) {
         }
     }
 
+    if (!reference && !isRangeSlider && getGradientReference && visibleSeries.some(hasGradient)) {
+        const fullReference = await getGradientReference();
+        const preparedIds = new Set(preparedGradientGeometry.map((item) => item.id));
+        if (
+            !gradientStates.has(fullReference) &&
+            visibleSeries.filter(hasGradient).every((item) => preparedIds.has(item.id))
+        ) {
+            gradientStates.set(
+                fullReference,
+                Promise.resolve(captureGradientStates(fullReference, preparedGradientGeometry)),
+            );
+        }
+    }
     return {shapes, shapesData};
 }
 

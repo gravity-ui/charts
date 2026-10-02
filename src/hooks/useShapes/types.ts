@@ -3,7 +3,7 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeries} from '~core/series/types';
 
-export interface GradientReference {
+export interface GradientLayoutReference {
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];

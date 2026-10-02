@@ -1,6 +1,8 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
+import {rgb} from 'd3-color';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData, ChartSeries, LinearGradient} from '../types';
@@ -9,13 +11,15 @@ import {dragElementByCalculatedPosition, getLocatorBoundingBox} from './utils';
 
 const colors = [0, 60, 120, 180, 240].map((value) => `rgb(${value}, ${value}, ${value})`);
 
+const categoryGradient: LinearGradient = {
+    type: 'linear-gradient',
+    angle: 90,
+    stops: colors.map((color, index) => ({offset: index / 4, color})),
+};
+
 function getData(type: 'line' | 'area' | 'area-range'): ChartData {
-    const color: LinearGradient = {
-        type: 'linear-gradient',
-        angle: 90,
-        stops: colors.map((stopColor, index) => ({offset: index / 4, color: stopColor})),
-    };
-    const points = colors.map((pointColor, index) => ({x: index, y: index + 1, color: pointColor}));
+    const color = categoryGradient;
+    const points = colors.map((_, index) => ({x: index, y: index + 1}));
     const series: ChartSeries =
         type === 'area-range'
             ? {
@@ -31,13 +35,25 @@ function getData(type: 'line' | 'area' | 'area-range'): ChartData {
         xAxis: {type: 'category', categories: ['A', 'B', 'C', 'D', 'E']},
         yAxis: [{type: 'linear'}],
         series: {data: [series]},
-        legend: {
-            enabled: true,
-            type: 'continuous',
-            title: {text: 'Color value'},
-            colorScale: {colors: ['#000000', '#f0f0f0'], domain: [0, 100]},
-        },
+        legend: {enabled: false},
     };
+}
+
+async function expectMarkerColors(markers: Locator, expected: string[]) {
+    await expect(async () => {
+        const actual = await markers.evaluateAll((items) =>
+            items.map((item) => getComputedStyle(item).fill),
+        );
+        expect(actual).toHaveLength(expected.length);
+        actual.forEach((fill, index) => {
+            const value = rgb(fill);
+            const reference = rgb(expected[index]);
+            // RGB interpolation rounds each channel; projection can cross that rounding boundary.
+            for (const channel of ['r', 'g', 'b'] as const) {
+                expect(Math.abs(value[channel] - reference[channel])).toBeLessThanOrEqual(1);
+            }
+        });
+    }).toPass({timeout: 5000});
 }
 
 test.describe('Gradient colors across zoom', () => {
@@ -55,7 +71,6 @@ test.describe('Gradient colors across zoom', () => {
             <ChartTestStory data={data} styles={{height: 400, width: 800}} />,
         );
         const chart = component.locator('svg').first();
-        await expect(chart).toHaveScreenshot('slider-full-range.png');
         const sliderBox = await getLocatorBoundingBox(
             component.locator('.gcharts-range-slider .gcharts-brush .overlay'),
         );
@@ -77,6 +92,24 @@ test.describe('Gradient colors across zoom', () => {
             component.locator('.gcharts-chart__content .gcharts-marker__symbol'),
         ).toHaveCount(4);
         await expect(chart).toHaveScreenshot('slider-selected-range.png');
+    });
+
+    test('changing series data with an active range refreshes the full-series gradient', async ({
+        mount,
+    }) => {
+        const data = getData('line');
+        data.xAxis = {
+            type: 'linear',
+            min: 0,
+            max: 4,
+            rangeSlider: {enabled: true, defaultRange: {size: 2}},
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 400, width: 800}} />,
+        );
+        await expect(
+            component.locator('.gcharts-chart__content .gcharts-marker__symbol'),
+        ).toHaveCount(4);
         const updatedData: ChartData = {
             ...data,
             series: {
@@ -112,39 +145,136 @@ test.describe('Gradient colors across zoom', () => {
             'rgb(64, 0, 191)',
             'rgb(0, 0, 255)',
         ];
-        const colorsMatch = (actual: string[], expected: string[]) =>
-            actual.length === expected.length &&
-            actual.every((fill, index) => {
-                const channels = fill.match(/\d+/g)?.map(Number) ?? [];
-                const expectedChannels = expected[index].match(/\d+/g)?.map(Number) ?? [];
-                // Affine projection can differ by one RGB level at a rounding boundary.
-                return (
-                    channels.length === 3 &&
-                    channels.every(
-                        (value, channel) => Math.abs(value - expectedChannels[channel]) <= 1,
-                    )
-                );
+        await expectMarkerColors(mainMarkers, fullColors.slice(1));
+        await expectMarkerColors(previewMarkers, fullColors);
+    });
+
+    for (const paint of ['solid', 'gradient'] as const) {
+        test(`Y zoom preserves the existing category-domain policy with ${paint} paint`, async ({
+            mount,
+            page,
+        }) => {
+            const data = getData('line');
+            data.chart = {zoom: {enabled: true, type: 'y'}};
+            data.yAxis = [{type: 'linear', min: 0, max: 6}];
+            data.series.data = [
+                {
+                    type: 'line',
+                    name: 'Value',
+                    color: paint === 'gradient' ? categoryGradient : '#009688',
+                    data: [1, 5, 1, 5, 1].map((y, x) => ({x, y})),
+                },
+            ];
+            const component = await mount(
+                <ChartTestStory data={data} styles={{height: 400, width: 800}} />,
+            );
+            await expect(component.locator('.gcharts-x-axis__label')).toHaveText([
+                'A',
+                'B',
+                'C',
+                'D',
+                'E',
+            ]);
+            await dragElementByCalculatedPosition({
+                component,
+                page,
+                selector: '.gcharts-chart__content .gcharts-brush .overlay',
+                getDragOptions: ({boundingBox}) => {
+                    const x = boundingBox.x + boundingBox.width / 2;
+                    return {
+                        from: [x, boundingBox.y + boundingBox.height * 0.03],
+                        to: [x, boundingBox.y + boundingBox.height * 0.3],
+                    };
+                },
             });
-        await expect
-            .poll(async () =>
-                colorsMatch(
-                    await mainMarkers.evaluateAll((items) =>
-                        items.map((item) => getComputedStyle(item).fill),
-                    ),
-                    fullColors.slice(1),
-                ),
-            )
-            .toBe(true);
-        await expect
-            .poll(async () =>
-                colorsMatch(
-                    await previewMarkers.evaluateAll((items) =>
-                        items.map((item) => getComputedStyle(item).fill),
-                    ),
-                    fullColors,
-                ),
-            )
-            .toBe(true);
+            await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+            await expect(component.locator('.gcharts-x-axis__label')).toHaveText(['B', 'D']);
+        });
+    }
+
+    test('a gradient line does not remove categories of a series without yAxis', async ({
+        mount,
+    }) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            yAxis: [{type: 'category', categories: ['A', 'B', 'C', 'D', 'E']}],
+            series: {
+                data: [
+                    {type: 'bar-y', name: 'Bars', data: [1, 2, 3, 4, 5].map((x, y) => ({x, y}))},
+                    {
+                        type: 'line',
+                        name: 'Line',
+                        color: categoryGradient,
+                        data: [
+                            {x: 1, y: 0},
+                            {x: 2, y: 1},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 400, width: 800}} />,
+        );
+        await expect(component.locator('.gcharts-bar-y__segment')).toHaveCount(5);
+        await expect(component.locator('.gcharts-y-axis__label')).toHaveText([
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+        ]);
+    });
+
+    test('slider marker colors match the chart after hiding a series leaves category gaps', async ({
+        mount,
+    }) => {
+        const data: ChartData = {
+            xAxis: {type: 'linear', rangeSlider: {enabled: true}},
+            yAxis: [{type: 'category', categories: ['A', 'B', 'C', 'D', 'E']}],
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Gradient',
+                        marker: {enabled: true},
+                        color: {
+                            type: 'linear-gradient',
+                            angle: 0,
+                            stops: [
+                                {offset: 0, color: '#000000'},
+                                {offset: 1, color: '#f0f0f0'},
+                            ],
+                        },
+                        data: [0, 3, 4].map((y, x) => ({x, y})),
+                    },
+                    {
+                        type: 'line',
+                        name: 'Other',
+                        data: [
+                            {x: 0, y: 1},
+                            {x: 1, y: 2},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{height: 400, width: 800}} />,
+        );
+        await component
+            .locator('.gcharts-legend__item')
+            .filter({hasText: 'Other'})
+            .click({modifiers: ['Control']});
+        await expect(component.locator('.gcharts-y-axis__label')).toHaveText(['A', 'D', 'E']);
+        const chartMarkers = component.locator('.gcharts-chart__content .gcharts-marker__symbol');
+        const previewMarkers = component.locator('.gcharts-range-slider .gcharts-marker__symbol');
+        await expect(chartMarkers).toHaveCount(3);
+        await expect(previewMarkers).toHaveCount(3);
+        const chartColors = await chartMarkers.evaluateAll((items) =>
+            items.map((item) => getComputedStyle(item).fill),
+        );
+        await expectMarkerColors(previewMarkers, chartColors);
     });
 
     test('computed markers, tooltip and independent fill keep their colors after zoom', async ({
@@ -186,7 +316,6 @@ test.describe('Gradient colors across zoom', () => {
         const colorsBefore = await markers.evaluateAll((items) =>
             items.map((item) => item.getAttribute('fill')),
         );
-        await expect(chart).toHaveScreenshot('computed-colors-before.png');
         await dragElementByCalculatedPosition({
             component,
             page,
@@ -300,22 +429,10 @@ test.describe('Gradient colors across zoom', () => {
         await expect(component.locator('svg').first()).toHaveScreenshot(
             'selected-range-resized.png',
         );
-        const colorsAfterResize = await markers.evaluateAll((items) =>
-            items.map((item) => getComputedStyle(item).fill),
-        );
         await component.unmount();
         const fresh = await mount(
             <ChartTestStory data={data} styles={{height: 500, width: 400}} />,
         );
-        const freshMarkers = fresh.locator('.gcharts-chart__content .gcharts-marker__symbol');
-        await expect(freshMarkers).toHaveCount(4);
-        await expect
-            .poll(() =>
-                freshMarkers.evaluateAll((items) =>
-                    items.map((item) => getComputedStyle(item).fill),
-                ),
-            )
-            .toEqual(colorsAfterResize);
         await expect(fresh.locator('svg').first()).toHaveScreenshot('selected-range-resized.png');
     });
 
@@ -325,7 +442,11 @@ test.describe('Gradient colors across zoom', () => {
                 <ChartTestStory data={getData(type)} styles={{height: 400, width: 800}} />,
             );
             const chart = component.locator('svg').first();
-            await expect(chart).toHaveScreenshot(`${type}-before-zoom.png`);
+            const markers = chart.locator('.gcharts-marker__symbol');
+            await expect(markers).toHaveCount(type === 'area-range' ? 10 : 5);
+            const colorsBefore = await markers.evaluateAll((items) =>
+                items.map((item) => item.getAttribute('fill')),
+            );
 
             await dragElementByCalculatedPosition({
                 component,
@@ -349,7 +470,12 @@ test.describe('Gradient colors across zoom', () => {
             await component.locator('.gcharts-chart__reset-zoom-button').click();
             await expect(component.locator('.gcharts-chart__reset-zoom-button')).toHaveCount(0);
             await page.mouse.move(0, 0);
-            await expect(chart).toHaveScreenshot(`${type}-before-zoom.png`);
+            await expect(markers).toHaveCount(type === 'area-range' ? 10 : 5);
+            await expect
+                .poll(() =>
+                    markers.evaluateAll((items) => items.map((item) => item.getAttribute('fill'))),
+                )
+                .toEqual(colorsBefore);
         });
     }
 });

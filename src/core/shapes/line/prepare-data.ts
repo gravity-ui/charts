@@ -4,16 +4,11 @@ import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
-import type {
-    AnnotationAnchor,
-    PreparedLineSeries,
-    PreparedSeries,
-    PreparedSeriesOptions,
-} from '../../series/types';
+import type {PreparedLineSeries, PreparedSeries, PreparedSeriesOptions} from '../../series/types';
 import {getGradientBBox, setGradientPointFills} from '../../utils/gradient';
-import {prepareGradientCoords} from '../../utils/gradient-reference';
+import {applyCapturedPointColors, prepareGradientCoords} from '../../utils/gradient-reference';
 import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
-import type {MarkerItem, ShapeLabels} from '../types';
+import type {ShapeLabels} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {PlacementRect, PlacementSegment} from './auto-placement';
@@ -30,7 +25,7 @@ function isLabeledLineLayer(layer: ShapeLabels): boolean {
     return layerSeries?.type === 'line' && layerSeries.dataLabels.enabled;
 }
 
-export const prepareLineData = async (args: {
+interface Args {
     series: PreparedLineSeries[];
     seriesOptions?: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
@@ -40,141 +35,51 @@ export const prepareLineData = async (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    geometryOnly?: boolean;
     otherLayers?: ShapeLabels[];
     allSeries?: PreparedSeries[];
     getCurveFactory?: (interpolation?: PreparedLineSeries['interpolation']) => CurveFactory;
-}): Promise<PreparedLineData[]> => {
-    const {
-        series,
-        seriesOptions,
-        xAxis,
-        yAxis,
-        xScale,
-        yScale,
-        split,
-        isOutsideBounds,
-        isRangeSlider,
-        geometryOnly,
-        otherLayers,
-        allSeries,
-        getCurveFactory,
-    } = args;
-    const xMax = Math.max(...xScale.range());
+}
 
-    const acc: PreparedLineData[] = [];
-    for (let i = 0; i < series.length; i++) {
-        const s = series[i];
-        const yAxisIndex = s.yAxis;
-        const seriesYAxis = yAxis[yAxisIndex];
+export function projectLineData(args: Args): PreparedLineData[] {
+    const {series, xAxis, yAxis, xScale, yScale, split, isRangeSlider} = args;
+    const result: PreparedLineData[] = [];
+    for (const s of series) {
+        const seriesYAxis = yAxis[s.yAxis];
         const plot = split.plots[seriesYAxis.plotIndex];
-        if (plot && plot.height <= 0) {
+        const seriesYScale = yScale[s.yAxis];
+        if (!seriesYScale || (plot && plot.height <= 0)) {
             continue;
         }
         const yAxisTop = plot?.top || 0;
-        const seriesYScale = yScale[s.yAxis];
-
-        if (!seriesYScale) {
-            continue;
-        }
-        const annotationOpts = seriesOptions?.line?.annotation;
-        const points: PointData[] = [];
-        for (let j = 0; j < s.data.length; j++) {
-            const d = s.data[j];
-            const yValue = getYValue({
-                point: d,
+        const points = s.data.map<PointData>((data) => {
+            const y = getYValue({
+                point: data,
                 points: s.data,
                 yAxis: seriesYAxis,
                 yScale: seriesYScale,
             });
-            points.push({
-                x: getXValue({point: d, points: s.data, xAxis, xScale}),
-                y: yValue === null ? null : yAxisTop + yValue,
-                color: d.marker?.color ?? d.color,
-                data: d,
+            return {
+                x: getXValue({point: data, points: s.data, xAxis, xScale}),
+                y: y === null ? null : yAxisTop + y,
+                color: data.marker?.color ?? data.color,
+                data,
                 series: s,
-                annotation:
-                    d.annotation && !isRangeSlider && !geometryOnly
-                        ? await prepareAnnotation({
-                              annotation: d.annotation,
-                              optionsLabel: annotationOpts?.label,
-                              optionsPopup: annotationOpts?.popup,
-                          })
-                        : undefined,
-            });
-        }
-
+            };
+        });
         markHiddenPointsOutOfYRange({
             points,
             yScale: seriesYScale,
             yAxisTop,
             axisMin: seriesYAxis.min,
             axisMax: seriesYAxis.max,
-            getDataY: (p) => p.data.y,
+            getDataY: (point) => point.data.y,
         });
-
-        const normalState = s.marker.states.normal;
-        const hasPerPointNormalMarkers =
-            !geometryOnly && s.data.some((d) => d.marker?.states?.normal?.enabled);
-
-        const gradientBBox = s.gradient ? getGradientBBox(points) : null;
-        const gradientCoords = geometryOnly
-            ? undefined
-            : prepareGradientCoords({
-                  bbox: gradientBBox,
-                  gradient: s.gradient,
-                  state: s.gradientState,
-                  paint: 'stroke',
-                  points,
-                  xScale,
-                  yScale: seriesYScale,
-                  yAxisTop,
-              });
-        if (!geometryOnly) {
-            setGradientPointFills(points, s.gradient, gradientCoords, gradientBBox);
-        }
-
-        const markers =
-            !geometryOnly && (s.marker.states.normal.enabled || hasPerPointNormalMarkers)
-                ? points.reduce<MarkerItem[]>((result, p) => {
-                      if (p.y === null || p.x === null || p.hiddenInLine) {
-                          return result;
-                      }
-                      const pointNormalEnabled = p.data.marker?.states?.normal?.enabled ?? false;
-                      if (s.marker.states.normal.enabled || pointNormalEnabled) {
-                          result.push({
-                              cx: p.x,
-                              cy: p.y,
-                              radius: normalState.radius,
-                              symbolType: normalState.symbol,
-                              fill: getMarkerFill(p, s.color),
-                              stroke: normalState.borderColor,
-                              strokeWidth: normalState.borderWidth,
-                              opacity: 1,
-                              active: true,
-                              clipped: isOutsideBounds(p.x, p.y),
-                              series: {id: s.id},
-                              data: p.data,
-                          });
-                      }
-                      return result;
-                  }, [])
-                : [];
-
-        const annotations = points.reduce<AnnotationAnchor[]>((result, p) => {
-            if (p.annotation && p.x !== null && p.y !== null) {
-                result.push({annotation: p.annotation, x: p.x, y: p.y});
-            }
-            return result;
-        }, []);
-
-        const result: PreparedLineData = {
-            annotations,
+        result.push({
             points,
-            gradientCoords,
-            gradientBBox,
-            markers,
-            getHoverMarkers: geometryOnly ? () => [] : buildHoverMarkerGetter(points, s),
+            gradientBBox: s.gradient ? getGradientBBox(points) : null,
+            markers: [],
+            annotations: [],
+            getHoverMarkers: () => [],
             svgLabels: [],
             series: s,
             hovered: false,
@@ -188,13 +93,87 @@ export const prepareLineData = async (args: {
             linejoin: s.linejoin,
             interpolation: s.interpolation,
             opacity: (isRangeSlider ? s.rangeSlider.opacity : undefined) ?? s.opacity,
-        };
+        });
+    }
+    return result;
+}
 
-        acc.push(result);
+export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> => {
+    const {
+        series,
+        seriesOptions,
+        xAxis,
+        yAxis,
+        xScale,
+        yScale,
+        split,
+        isOutsideBounds,
+        isRangeSlider,
+        otherLayers,
+        allSeries,
+        getCurveFactory,
+    } = args;
+    const xMax = Math.max(...xScale.range());
+    const acc = projectLineData(args);
+    for (const item of acc) {
+        const s = item.series;
+        const seriesYAxis = yAxis[s.yAxis];
+        const seriesYScale = yScale[s.yAxis];
+        if (!seriesYScale) continue;
+        const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+        const {points, gradientBBox} = item;
+        item.gradientCoords = prepareGradientCoords({
+            bbox: gradientBBox,
+            gradient: s.gradient,
+            state: s.gradientState,
+            paint: 'stroke',
+            points,
+            xScale,
+            yScale: seriesYScale,
+            yAxisTop,
+        });
+        setGradientPointFills(points, s.gradient, item.gradientCoords, gradientBBox);
+        applyCapturedPointColors(points, s.gradientState, s.gradient, xScale, seriesYScale);
+        const annotationOpts = seriesOptions?.line?.annotation;
+        const normal = s.marker.states.normal;
+        for (const point of points) {
+            if (point.data.annotation && !isRangeSlider) {
+                point.annotation = await prepareAnnotation({
+                    annotation: point.data.annotation,
+                    optionsLabel: annotationOpts?.label,
+                    optionsPopup: annotationOpts?.popup,
+                });
+                if (point.x !== null && point.y !== null) {
+                    item.annotations.push({annotation: point.annotation, x: point.x, y: point.y});
+                }
+            }
+            if (
+                point.x === null ||
+                point.y === null ||
+                point.hiddenInLine ||
+                !(normal.enabled || point.data.marker?.states?.normal?.enabled)
+            ) {
+                continue;
+            }
+            item.markers.push({
+                cx: point.x,
+                cy: point.y,
+                radius: normal.radius,
+                symbolType: normal.symbol,
+                fill: getMarkerFill(point, s.color),
+                stroke: normal.borderColor,
+                strokeWidth: normal.borderWidth,
+                opacity: 1,
+                active: true,
+                clipped: isOutsideBounds(point.x, point.y),
+                series: {id: s.id},
+                data: point.data,
+            });
+        }
+        item.getHoverMarkers = buildHoverMarkerGetter(points, s);
     }
 
-    const labeled =
-        isRangeSlider || geometryOnly ? [] : acc.filter((d) => d.series.dataLabels.enabled);
+    const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);
 
     if (labeled.length > 0) {
         const needSegments = labeled.some((d) => needsPlacementChecks(d.series));

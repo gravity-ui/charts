@@ -6,7 +6,7 @@ import type {
 } from '../../../types';
 import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '../../series/types';
-import type {MarkerItem, SeriesShapeData} from '../types';
+import type {GradientShapeData, MarkerItem, SeriesShapeData} from '../types';
 
 export interface PointData {
     annotation?: PreparedAnnotation;
@@ -20,7 +20,8 @@ export interface PointData {
 }
 export type MarkerPointData = PointData & {y: number; x: number};
 
-export type PreparedLineData = {
+export interface PreparedLineData
+    extends Required<LineSeriesLineBaseStyle>, SeriesShapeData, GradientShapeData {
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
@@ -34,5 +35,4 @@ export type PreparedLineData = {
     linecap: LineCap;
     linejoin: LineJoin;
     interpolation?: LineSeriesInterpolation;
-} & Required<LineSeriesLineBaseStyle> &
-    SeriesShapeData;
+}
