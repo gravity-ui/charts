@@ -44,6 +44,8 @@ items:
             href: ./pages/guides/series-types/area-range.md
           - name: Bar-X
             href: ./pages/guides/series-types/bar-x.md
+          - name: Scatter
+            href: ./pages/guides/series-types/scatter.md
       - name: Axes
         items:
           - name: Axis types

@@ -1,14 +1,21 @@
 import get from 'lodash/get';
 
-import type {HtmlItem, LabelData, ScatterSeriesData} from '../../../types';
+import type {HtmlItem, ScatterSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedScatterSeries} from '../../series/types';
 import {getXValue, getYValue} from '../../shapes/utils';
-import {filterOverlappingLabels, getDataCategoryValue, preparePointDataLabels} from '../../utils';
+import {
+    filterOverlappingLabels,
+    getDataCategoryValue,
+    getFormattedValue,
+    getTextSizeFn,
+    preparePointDataLabels,
+} from '../../utils';
 
-import type {PreparedScatterData, PreparedScatterShapeData} from './types';
+import {clusterSeriesData} from './cluster';
+import type {PreparedScatterData, PreparedScatterShapeData, ScatterSvgLabelData} from './types';
 
 function getFilteredLinearScatterData(data: ScatterSeriesData[]) {
     return data.filter((d) => typeof d.x === 'number' && typeof d.y === 'number');
@@ -61,9 +68,22 @@ export async function prepareScatterData(args: {
     yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
+    boundsWidth: number;
+    boundsHeight: number;
     isRangeSlider?: boolean;
 }): Promise<PreparedScatterShapeData> {
-    const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const {
+        series,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        split,
+        isOutsideBounds,
+        boundsWidth,
+        boundsHeight,
+        isRangeSlider,
+    } = args;
 
     const xMax = Math.max(...xScale.range());
 
@@ -114,8 +134,48 @@ export async function prepareScatterData(args: {
         return acc;
     }, []);
 
-    const allSvgLabels: LabelData[] = [];
+    const scatterData = isRangeSlider
+        ? markers
+        : series.flatMap((item) =>
+              clusterSeriesData({
+                  data: markers.filter((marker) => marker.point.series.id === item.id),
+                  series: item,
+                  boundsWidth,
+                  boundsHeight,
+                  isOutsideBounds,
+              }),
+          );
+
+    const allSvgLabels: ScatterSvgLabelData[] = [];
     const allHtmlLabels: HtmlItem[] = [];
+    const textSizes = new Map<string, ReturnType<typeof getTextSizeFn>>();
+    for (const item of scatterData) {
+        const {data, series: itemSeries} = item.point;
+        if (!data.cluster || !itemSeries.cluster.dataLabels.enabled) {
+            continue;
+        }
+        const {style, format, allowOverlap} = itemSeries.cluster.dataLabels;
+        const text = getFormattedValue({value: data.cluster.size, format});
+        let getTextSize = textSizes.get(itemSeries.id);
+        if (!getTextSize) {
+            getTextSize = getTextSizeFn({style});
+            textSizes.set(itemSeries.id, getTextSize);
+        }
+        const size = await getTextSize(text);
+        const label: ScatterSvgLabelData = {
+            cluster: true,
+            text,
+            x: item.point.x,
+            y: item.point.y + size.height / 2,
+            textAnchor: 'middle',
+            style,
+            size,
+            series: {id: itemSeries.id},
+        };
+        allSvgLabels.push(
+            ...(allowOverlap ? [label] : filterOverlappingLabels([label], allSvgLabels)),
+        );
+    }
 
     if (!isRangeSlider) {
         for (const s of series) {
@@ -133,8 +193,9 @@ export async function prepareScatterData(args: {
 
             const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
 
-            const seriesPoints = markers
+            const seriesPoints = scatterData
                 .filter((m) => m.point.series.id === s.id && !m.clipped)
+                .filter((m) => !m.point.data.cluster)
                 .map((m) => m.point);
 
             const {svgLabels, htmlLabels} = await preparePointDataLabels({
@@ -158,7 +219,7 @@ export async function prepareScatterData(args: {
     }
 
     return {
-        scatterData: markers,
+        scatterData,
         svgLabels: allSvgLabels,
         htmlLabels: allHtmlLabels,
         markers: [],

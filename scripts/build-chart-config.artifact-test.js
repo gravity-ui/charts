@@ -768,6 +768,27 @@ describe('chart config artifacts', () => {
                 },
             },
         ],
+        [
+            'scatter with grid clustering',
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'S',
+                            data: [{x: 0, y: 1, custom: {id: 'A'}}],
+                            cluster: {
+                                enabled: true,
+                                layoutAlgorithm: {type: 'grid', gridSize: '25%'},
+                                overlapMode: 'shift',
+                                marker: {symbol: 'circle', radius: 8, borderWidth: 1},
+                                dataLabels: {enabled: true, allowOverlap: false},
+                            },
+                        },
+                    ],
+                },
+            },
+        ],
     ])('accepts a valid config: %s', (_label, config) => {
         const validateConfig = createSchemaValidator().compile(schema);
         expect(validateConfig(config)).toBe(true);
@@ -858,6 +879,23 @@ describe('chart config artifacts', () => {
         };
 
         expect(actual).toEqual(snapshot);
+    });
+
+    test('excludes derived cluster metadata from raw scatter points', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        expect(
+            validateConfig({
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'S',
+                            data: [{x: 1, y: 2, cluster: {size: 2, points: []}}],
+                        },
+                    ],
+                },
+            }),
+        ).toBe(false);
     });
 
     test('omits callback-only properties', () => {

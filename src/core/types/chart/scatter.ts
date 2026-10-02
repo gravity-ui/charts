@@ -1,9 +1,36 @@
 import type {SERIES_TYPE, SymbolType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {RectLegendSymbolOptions} from './legend';
+import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions} from './series';
+
+export interface ScatterClusterData<T = MeaningfulAny> extends ScatterSeriesData<T> {
+    cluster?: {
+        size: number;
+        points: ScatterSeriesData<T>[];
+    };
+}
+
+export interface ScatterClusterLayoutAlgorithmOptions {
+    type?: 'grid';
+    gridSize?: number | string;
+}
+
+export interface ScatterClusterDataLabelsOptions extends Pick<
+    BaseDataLabels,
+    'enabled' | 'style' | 'format' | 'allowOverlap'
+> {}
+
+export interface ScatterClusterOptions {
+    enabled?: boolean;
+    layoutAlgorithm?: ScatterClusterLayoutAlgorithmOptions;
+    overlapMode?: 'allow' | 'shift';
+    minimumClusterSize?: number;
+    marker?: PointMarkerOptions;
+    dataLabels?: ScatterClusterDataLabelsOptions;
+}
 
 export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -57,6 +84,7 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';
+    cluster?: ScatterClusterOptions;
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */

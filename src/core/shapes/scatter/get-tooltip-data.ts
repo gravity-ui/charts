@@ -25,6 +25,7 @@ export function getTooltipData(
         chunks: [
             {
                 data: closestPoint.point.data,
+                color: closestPoint.point.color,
                 series: closestPoint.point.series,
                 closest: true,
             },

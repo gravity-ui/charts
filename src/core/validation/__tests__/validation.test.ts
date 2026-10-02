@@ -444,6 +444,83 @@ describe('validation/validateData', () => {
     );
 
     test.each([
+        {xAxis: {type: 'category', categories: ['A']}},
+        {yAxis: [{type: 'category', categories: ['A']}]},
+        {yAxis: [{type: 'datetime'}]},
+        {yAxis: [{type: 'logarithmic'}]},
+        {cluster: {layoutAlgorithm: {type: 'kmeans'}}},
+        {cluster: {layoutAlgorithm: {gridSize: 0}}},
+        {cluster: {layoutAlgorithm: {gridSize: '0%'}}},
+        {cluster: {layoutAlgorithm: {gridSize: 'bad'}}},
+        {cluster: {overlapMode: 'hide'}},
+        {cluster: {minimumClusterSize: 1}},
+        {cluster: {marker: {radius: 0}}},
+        {cluster: {marker: {borderWidth: -1}}},
+    ])('rejects unsupported scatter clustering options (%j)', (options) => {
+        const data = {
+            xAxis: {type: 'linear'},
+            yAxis: [{type: 'linear'}],
+            ...options,
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series',
+                        data: [{x: 1, y: 2}],
+                        cluster: {enabled: true, ...options.cluster},
+                    },
+                ],
+            },
+        } as ChartData;
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test.each([
+        {xAxis: {type: 'linear' as const}, yAxis: [{type: 'linear' as const}]},
+        {xAxis: {type: 'datetime' as const}, yAxis: [{type: 'linear' as const}]},
+    ])('accepts scatter clustering on supported axes (%j)', ({xAxis, yAxis}) => {
+        const data: ChartData = {
+            xAxis,
+            yAxis,
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series',
+                        data: [{x: 1, y: 2}],
+                        cluster: {
+                            enabled: true,
+                            layoutAlgorithm: {type: 'grid', gridSize: '25%'},
+                            overlapMode: 'shift',
+                        },
+                    },
+                ],
+            },
+        };
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('does not restrict existing scatter axes when clustering is disabled', () => {
+        const data: ChartData = {
+            xAxis: {type: 'category', categories: ['A']},
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Series',
+                        data: [{x: 0, y: 2}],
+                        cluster: {enabled: false},
+                    },
+                ],
+            },
+        };
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test.each([
         [[{name: '1'} /* error */]],
         [[{name: '1'}, {name: '2', parentId: '1'} /* error */]],
         [
