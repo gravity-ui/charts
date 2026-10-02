@@ -1,12 +1,9 @@
-import type {ChartData, LineSeriesData} from '../../../types';
+import type {ChartData} from '../../../types';
 
 function prepareData(): ChartData {
     const categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-    const values = [45, 52, 38, 65, 59, 80, 74, 92];
-    const data: LineSeriesData[] = categories.map((month, idx) => ({
-        x: month,
-        y: values[idx],
-    }));
+    const hoverOnlyValues = [45, 52, 38, 65, 59, 80, 74, 92];
+    const alwaysVisibleValues = [60, 68, 55, 78, 70, 88, 82, 95];
 
     return {
         title: {text: 'Line marker halo on hover'},
@@ -14,8 +11,22 @@ function prepareData(): ChartData {
             data: [
                 {
                     type: 'line',
-                    name: 'Performance',
-                    data,
+                    name: 'Always-visible markers',
+                    data: categories.map((month, idx) => ({
+                        x: month,
+                        y: alwaysVisibleValues[idx],
+                    })),
+                    marker: {
+                        enabled: true,
+                    },
+                },
+                {
+                    type: 'line',
+                    name: 'Hover-only markers',
+                    data: categories.map((month, idx) => ({
+                        x: month,
+                        y: hoverOnlyValues[idx],
+                    })),
                     marker: {
                         enabled: false,
                     },

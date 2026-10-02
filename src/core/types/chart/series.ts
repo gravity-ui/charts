@@ -271,7 +271,10 @@ export interface ChartSeriesOptions {
         states?: {
             hover?: BasicHoverState & {
                 marker?: PointMarkerOptions & {
-                    /** Options for the halo appearing around the hovered point */
+                    /**
+                     * Options for the halo appearing around the hovered point.
+                     * Disabled by default for line series (`halo.enabled: false`).
+                     */
                     halo?: Halo;
                 };
             };

@@ -1,3 +1,8 @@
+import {scaleOrdinal} from 'd3-scale';
+
+import type {PreparedLegend} from '~core/series/types';
+
+import type {ChartSeriesOptions} from '../../../types';
 import {prepareLineSeries, resolveLabelPlacement} from '../prepare-line-series';
 
 describe('resolveLabelPlacement', () => {
@@ -18,13 +23,19 @@ describe('resolveLabelPlacement', () => {
     });
 });
 
+function createPreparedLineSeries(seriesOptions?: ChartSeriesOptions) {
+    return prepareLineSeries({
+        series: [{type: 'line', name: 'Series 1', data: [{x: 1, y: 10}]}],
+        legend: {} as PreparedLegend,
+        colorScale: scaleOrdinal([] as string[], ['blue']),
+        colors: ['blue'],
+        seriesOptions,
+    });
+}
+
 describe('prepareLineSeries marker halo', () => {
     it('defaults halo.enabled to false for line series', () => {
-        const prepared = prepareLineSeries({
-            series: [{type: 'line', data: [{x: 1, y: 10}]}],
-            legend: {enabled: true},
-            colorScale: (() => 'blue') as any,
-        } as any);
+        const prepared = createPreparedLineSeries();
 
         expect(prepared[0].marker.states.hover.halo).toEqual({
             enabled: false,
@@ -34,24 +45,19 @@ describe('prepareLineSeries marker halo', () => {
     });
 
     it('preserves halo options when explicitly enabled', () => {
-        const prepared = prepareLineSeries({
-            series: [{type: 'line', data: [{x: 1, y: 10}]}],
-            legend: {enabled: true},
-            seriesOptions: {
-                line: {
-                    states: {
-                        hover: {
-                            marker: {
-                                halo: {
-                                    enabled: true,
-                                },
+        const prepared = createPreparedLineSeries({
+            line: {
+                states: {
+                    hover: {
+                        marker: {
+                            halo: {
+                                enabled: true,
                             },
                         },
                     },
                 },
             },
-            colorScale: (() => 'blue') as any,
-        } as any);
+        });
 
         expect(prepared[0].marker.states.hover.halo).toEqual({
             enabled: true,
@@ -61,25 +67,20 @@ describe('prepareLineSeries marker halo', () => {
     });
 
     it('respects explicit enabled: false', () => {
-        const prepared = prepareLineSeries({
-            series: [{type: 'line', data: [{x: 1, y: 10}]}],
-            legend: {enabled: true},
-            seriesOptions: {
-                line: {
-                    states: {
-                        hover: {
-                            marker: {
-                                halo: {
-                                    enabled: false,
-                                    size: 10,
-                                },
+        const prepared = createPreparedLineSeries({
+            line: {
+                states: {
+                    hover: {
+                        marker: {
+                            halo: {
+                                enabled: false,
+                                size: 10,
                             },
                         },
                     },
                 },
             },
-            colorScale: (() => 'blue') as any,
-        } as any);
+        });
 
         expect(prepared[0].marker.states.hover.halo).toEqual({
             enabled: false,
@@ -89,26 +90,21 @@ describe('prepareLineSeries marker halo', () => {
     });
 
     it('preserves custom size and opacity, including zero opacity', () => {
-        const prepared = prepareLineSeries({
-            series: [{type: 'line', data: [{x: 1, y: 10}]}],
-            legend: {enabled: true},
-            seriesOptions: {
-                line: {
-                    states: {
-                        hover: {
-                            marker: {
-                                halo: {
-                                    enabled: true,
-                                    size: 12,
-                                    opacity: 0,
-                                },
+        const prepared = createPreparedLineSeries({
+            line: {
+                states: {
+                    hover: {
+                        marker: {
+                            halo: {
+                                enabled: true,
+                                size: 12,
+                                opacity: 0,
                             },
                         },
                     },
                 },
             },
-            colorScale: (() => 'blue') as any,
-        } as any);
+        });
 
         expect(prepared[0].marker.states.hover.halo).toEqual({
             enabled: true,
