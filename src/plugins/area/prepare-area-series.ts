@@ -122,6 +122,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             custom: series.custom,
         };
 
+        prepared.fullData = prepared.data;
         return prepared;
     }, []);
 }

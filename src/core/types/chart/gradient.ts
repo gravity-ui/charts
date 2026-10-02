@@ -12,6 +12,10 @@ export interface GradientStop {
     offset: number;
 }
 
+/**
+ * A gradient anchored to the complete series before visible-range filtering.
+ * Zoom and range-slider changes preserve the gradient color at retained points.
+ */
 export interface LinearGradient {
     /** Gradient kind. */
     type: 'linear-gradient';

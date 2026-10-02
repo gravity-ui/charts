@@ -4,6 +4,7 @@ import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
 const data: ChartData = {
+    chart: {zoom: {enabled: true, type: 'x'}},
     series: {
         data: [
             {

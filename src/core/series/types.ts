@@ -57,6 +57,7 @@ import type {
     SeriesOptionsDefaults,
     SymbolType,
 } from '../constants';
+import type {SeriesGradientState} from '../utils/gradient-reference';
 
 export type PreparedAnnotation = {
     label: {
@@ -328,6 +329,8 @@ export type PreparedPieSeries = {
 
 export type PreparedLineSeries = {
     type: LineSeries['type'];
+    /** Full-series paint references, shared across filtered copies. */
+    gradientState?: SeriesGradientState;
     data: LineSeriesData[];
     lineWidth: number;
     dataLabels: {
@@ -370,6 +373,10 @@ export type PreparedLineSeries = {
 
 export type PreparedAreaSeries = {
     type: AreaSeries['type'];
+    /** Full-series paint references, shared across filtered copies. */
+    gradientState?: SeriesGradientState;
+    /** Complete data for stack sections neighboring the visible range. */
+    fullData?: AreaSeriesData[];
     data: AreaSeriesData[];
     stacking: AreaSeries['stacking'];
     stackLabels?: AreaSeries['stackLabels'];
@@ -413,6 +420,8 @@ export type PreparedAreaSeries = {
 
 export type PreparedAreaRangeSeries = {
     type: AreaRangeSeries['type'];
+    /** Full-series paint references, shared across filtered copies. */
+    gradientState?: SeriesGradientState;
     data: AreaRangeSeriesData[];
     lineWidth: number;
     opacity: number;

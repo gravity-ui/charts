@@ -1,6 +1,6 @@
 import type {AreaSeriesData, LabelData} from '../../../types';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedAreaSeries} from '../../series/types';
-import type {MarkerItem, SeriesShapeData} from '../types';
+import type {GradientShapeData, MarkerItem, SeriesShapeData} from '../types';
 
 export interface PointData {
     annotation?: PreparedAnnotation;
@@ -19,7 +19,7 @@ export type MarkerPointData = PointData & {
     y: number;
 };
 
-export type PreparedAreaData = {
+export interface PreparedAreaData extends SeriesShapeData, GradientShapeData {
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
@@ -31,4 +31,4 @@ export type PreparedAreaData = {
     hovered: boolean;
     active: boolean;
     svgLabels: LabelData[];
-} & SeriesShapeData;
+}

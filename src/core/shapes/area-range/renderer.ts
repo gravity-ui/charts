@@ -28,6 +28,14 @@ export function renderAreaRange(
     const plotSvgElement = select(elements.plot);
     const hoverOptions = get(seriesOptions, 'area-range.states.hover');
     const inactiveOptions = get(seriesOptions, 'area-range.states.inactive');
+    const bounds = new Map(
+        preparedData.map((data) => [
+            data,
+            (data.series.gradient || data.series.fillGradient) && data.gradientBBox === undefined
+                ? getRangeBBox(data.points)
+                : (data.gradientBBox ?? data.fillGradientBBox),
+        ]),
+    );
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
 
     const getLineStroke = (data: PreparedAreaRangeData, hovered = false) => {
@@ -36,7 +44,8 @@ export function renderAreaRange(
                 ? getBrighterGradient(data.series.gradient, hoverOptions?.brightness)
                 : data.series.gradient;
         return resolveGradientPaint({
-            bbox: gradient ? getRangeBBox(data.points) : null,
+            bbox: gradient ? (bounds.get(data) ?? null) : null,
+            coords: data.gradientCoords,
             fallbackColor: data.color,
             gradient,
             id: `${data.id}-gradient-area-range-line-${hovered ? 'hover' : 'normal'}`,
@@ -48,7 +57,8 @@ export function renderAreaRange(
                 ? getBrighterGradient(data.series.fillGradient, hoverOptions?.brightness)
                 : data.series.fillGradient;
         return resolveGradientPaint({
-            bbox: gradient ? getRangeBBox(data.points) : null,
+            bbox: gradient ? (bounds.get(data) ?? null) : null,
+            coords: data.fillGradientCoords,
             fallbackColor: data.series.fillColor,
             gradient,
             id: `${data.id}-gradient-area-range-fill-${hovered ? 'hover' : 'normal'}`,

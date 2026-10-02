@@ -1,6 +1,7 @@
 import type {HtmlItem, LabelData} from '../../types';
 import type {SymbolType} from '../constants';
 import type {AnnotationAnchor} from '../series/types';
+import type {GradientBBox, GradientCoords} from '../utils/gradient';
 
 /** SVG label data without a required series reference. */
 export type SvgLabel = Omit<LabelData, 'series'>;
@@ -47,6 +48,18 @@ export interface SeriesShapeData {
     markers: MarkerItem[];
     annotations: AnnotationAnchor[];
     getHoverMarkers(hoveredData: HoveredShapeData[]): MarkerItem[];
+}
+
+/** Paint geometry used by line, area and area-range shapes. */
+export interface GradientShapeData {
+    /** `undefined` recomputes from points; `null` means no drawable gradient. */
+    gradientBBox?: GradientBBox | null;
+    /** `undefined` recomputes from points; `null` means no drawable gradient. */
+    fillGradientBBox?: GradientBBox | null;
+    /** `undefined` uses the local bounding box; `null` suppresses the paint. */
+    gradientCoords?: GradientCoords | null;
+    /** `undefined` uses the local bounding box; `null` suppresses the paint. */
+    fillGradientCoords?: GradientCoords | null;
 }
 
 export interface TooltipItemData {

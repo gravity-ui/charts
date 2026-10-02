@@ -200,7 +200,7 @@ export function createXScale(args: {
                 const filteredCategories = filterCategoriesByVisibleSeries({
                     axisDirection: 'x',
                     categories: xCategories,
-                    series: series,
+                    series,
                 });
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 

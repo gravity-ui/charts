@@ -6,6 +6,10 @@ The legend identifies chart series or categories by their names and colors.
 
 Use `legend.enabled` to show or hide the legend. For the full list of properties, see the [API reference](../api/Configuration/interfaces/ChartLegend.md).
 
+## Continuous legend
+
+Set `legend.type: 'continuous'` to display a color scale configured through `legend.colorScale`. This scale is independent of series gradients and point colors; it does not assign colors to the plotted data. Configure the series and legend colors together when they should represent the same values.
+
 ## Item layout
 
 Set `legend.layout: 'vertical'` to place one item per row, independently of `position`. The default is `'horizontal'`. This option applies to discrete legends with SVG or HTML labels.

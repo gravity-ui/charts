@@ -1,20 +1,27 @@
 import type {PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
-import {getGradientBBox} from '../../utils/gradient';
+import type {GradientBBox} from '../../utils/gradient';
 
 import type {AreaRangePointData} from './types';
 
 export function getRangeBBox(points: AreaRangePointData[]) {
-    return getGradientBBox(
-        points.flatMap((point) =>
-            point.y0 === null || point.y1 === null || point.hiddenInLine
-                ? []
-                : [
-                      {x: point.x, y: point.y0},
-                      {x: point.x, y: point.y1},
-                  ],
-        ),
-    );
+    let bbox: GradientBBox | null = null;
+    for (const point of points) {
+        if (point.y0 === null || point.y1 === null || point.hiddenInLine) {
+            continue;
+        }
+        const yMin = Math.min(point.y0, point.y1);
+        const yMax = Math.max(point.y0, point.y1);
+        if (bbox) {
+            bbox.xMin = Math.min(bbox.xMin, point.x);
+            bbox.xMax = Math.max(bbox.xMax, point.x);
+            bbox.yMin = Math.min(bbox.yMin, yMin);
+            bbox.yMax = Math.max(bbox.yMax, yMax);
+        } else {
+            bbox = {xMin: point.x, xMax: point.x, yMin, yMax};
+        }
+    }
+    return bbox;
 }
 
 export function markHiddenRangePoints(args: {
