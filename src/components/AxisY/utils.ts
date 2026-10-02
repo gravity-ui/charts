@@ -28,9 +28,8 @@ export function getTickValues({
         }
 
         const getScaleTicks = () => {
-            const domainData = getDomainDataYBySeries(series) as number[];
-
             if (series.some((s) => s.type === 'bar-y')) {
+                const domainData = getDomainDataYBySeries(series) as number[];
                 if (domainData.length < 3) {
                     return domainData;
                 }
