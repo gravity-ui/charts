@@ -39,6 +39,103 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations support automatic legend width and size limits', () => {
+        const usage = `
+            const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};
+            const fixedLegend: ChartLegend = {width: 230, maxWidth: 100};
+            const continuousLegend: ChartLegend = {type: 'continuous', maxWidth: '120px'};
+            // @ts-expect-error A maximum width must be a number or string.
+            const invalidLegend: ChartLegend = {maxWidth: true};
+            void [autoLegend, fixedLegend, continuousLegend, invalidLegend];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema supports automatic legend width and numeric or string limits', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const maxWidth of [230, '230px', '30.5%']) {
+            expect(
+                validateConfig({
+                    series: {data: []},
+                    legend: {position: 'left', width: 'auto', maxWidth},
+                }),
+            ).toBe(true);
+        }
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: true}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: -10}})).toBe(false);
+        expect(validateConfig({series: {data: []}, legend: {maxWidth: 0}})).toBe(true);
+        // String formats are resolved at runtime, as with other dimension options.
+        expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
+    });
+
+    test('documents every series type', () => {
+        const series = schema.definitions['ChartSeries<JsonValue>'].anyOf;
+        const descriptions = new Map(
+            series.map((entry) => {
+                const definition =
+                    schema.definitions[decodeURIComponent(entry.$ref.split('/').pop())];
+                const {type} = definition.properties;
+
+                expect(type.const).toEqual(expect.any(String));
+                expect(type.description).toEqual(expect.any(String));
+                expect(type.description.length).toBeGreaterThan(0);
+
+                return [type.const, type.description];
+            }),
+        );
+
+        expect(descriptions.size).toBe(series.length);
+        expect([...descriptions.values()].every((description) => description.length > 0)).toBe(
+            true,
+        );
+    });
+
+    test('describes every documented enum without changing validation', () => {
+        let documentedChoices = 0;
+
+        visitSchema(schema, (node) => {
+            if (!Array.isArray(node.enum) || typeof node.description !== 'string') {
+                return;
+            }
+
+            if (!/^- `(?:'[^']+'|null)`/m.test(node.description)) {
+                return;
+            }
+
+            documentedChoices++;
+            expect(node.enumDescriptions).toHaveLength(node.enum.length);
+            for (const [index, value] of node.enum.entries()) {
+                if (typeof value === 'string' || value === null) {
+                    expect(node.enumDescriptions[index].trim().length).toBeGreaterThan(0);
+                }
+            }
+            expect(node).not.toHaveProperty('oneOf');
+        });
+
+        expect(documentedChoices).toBeGreaterThan(0);
+        for (const choice of [
+            schema.definitions.ZoomType,
+            schema.definitions.PlotBandAlign,
+            schema.definitions['FunnelSeries<JsonValue>'].properties.dataLabels.properties.anchor,
+            schema.definitions.ChartZoom.properties.resetButton.properties.relativeTo,
+        ]) {
+            expect(choice.enumDescriptions).toHaveLength(choice.enum.length);
+        }
+
+        const validateChoice = createSchemaValidator().compile(schema.definitions.ChartAxisType);
+        for (const value of schema.definitions.ChartAxisType.enum) {
+            expect(validateChoice(value)).toBe(true);
+        }
+        expect(validateChoice('unsupported')).toBe(false);
+        expect(validateChoice.errors).toHaveLength(1);
+        expect(validateChoice.errors[0].keyword).toBe('enum');
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(
@@ -216,6 +313,43 @@ describe('chart config artifacts', () => {
         );
     });
 
+    test('bar-x borders are exposed only on series and plugin options', () => {
+        const usage = `
+            const options: ChartSeriesOptions = {'bar-x': {borderWidth: 3, borderColor: 'black'}};
+            const series: BarXSeries = {type: 'bar-x', name: 'A', data: [], borderWidth: 0, borderColor: 'red'};
+            // @ts-expect-error Border width is a number in pixels.
+            series.borderWidth = '3px';
+            // @ts-expect-error Borders are not available on all series.
+            const base: BaseSeries = {borderWidth: 3};
+            // @ts-expect-error Per-point borders are not supported.
+            const point: BarXSeriesData = {x: 1, y: 2, borderColor: 'red'};
+            void [options, series, base, point];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        const series = {type: 'bar-x', name: 'A', data: [{x: 1, y: 2}]};
+        const borders = {borderWidth: 3, borderColor: 'black'};
+        expect(validateConfig({series: {data: [{...series, ...borders}]}})).toBe(true);
+        expect(validateConfig({series: {data: [series], options: {'bar-x': borders}}})).toBe(true);
+        expect(validateConfig({series: {data: [{...series, borderWidth: '3px'}]}})).toBe(false);
+        expect(
+            validateConfig({series: {data: [series], options: {'bar-x': {borderColor: 123}}}}),
+        ).toBe(false);
+        expect(
+            validateConfig({series: {data: [{...series, data: [{x: 1, y: 2, ...borders}]}]}}),
+        ).toBe(false);
+        expect(schema.definitions['BarXSeries<JsonValue>'].properties.borderWidth.default).toBe(0);
+        expect(
+            schema.definitions.ChartSeriesOptions.properties['bar-x'].properties.borderWidth
+                .default,
+        ).toBe(0);
+    });
+
     test('area-range marker options are exposed in the standalone declaration and schema', () => {
         const options = {
             marker: {enabled: true, radius: 5, symbol: 'square', color: '#ff0000'},
@@ -298,6 +432,55 @@ describe('chart config artifacts', () => {
         expect(() => normalizeSchema(callbackSchema)).toThrow(
             /required callback-only property "renderer"/,
         );
+    });
+
+    test('parses enum descriptions, keeps markers and normalizes whitespace', () => {
+        const choiceSchema = {
+            type: 'string',
+            enum: ['a', 'b', null, 0],
+            description:
+                "Choices:\n- `'a'` (**recommended**): First   choice\n- `'b'` — Second choice\n- `null`: No choice",
+        };
+
+        normalizeSchema(choiceSchema);
+
+        expect(choiceSchema.enumDescriptions).toEqual([
+            '(**recommended**) First choice',
+            'Second choice',
+            'No choice',
+            '',
+        ]);
+        expect(choiceSchema).not.toHaveProperty('oneOf');
+    });
+
+    test.each([
+        [
+            "- `'a'`: Description",
+            /Missing JSDoc descriptions at #\/properties\/choice for enum values: "b"/,
+        ],
+        [
+            "- `'a'`: Description\n- `'other'`: Invalid",
+            /JSDoc enum value "other" is not allowed at #\/properties\/choice/,
+        ],
+        [
+            "- `'a'`: \n- `'b'`: Description",
+            /Invalid JSDoc enum description at #\/properties\/choice: - `'a'`:/,
+        ],
+        [
+            "- `a`: Description\n- `'b'`: Description",
+            /Invalid JSDoc enum description at #\/properties\/choice: - `a`:/,
+        ],
+        [
+            "- 'a': Description\n- 'b': Description",
+            /Invalid JSDoc enum description at #\/properties\/choice: - 'a':/,
+        ],
+    ])('rejects an invalid enum description: %s', (description, error) => {
+        const choiceSchema = {
+            type: 'object',
+            properties: {choice: {type: 'string', enum: ['a', 'b'], description}},
+        };
+
+        expect(() => normalizeSchema(choiceSchema)).toThrow(error);
     });
 
     test('removes unreachable definitions', () => {
@@ -627,6 +810,33 @@ describe('chart config artifacts', () => {
         };
 
         expect(validateConfig(config)).toBe(false);
+    });
+
+    test('legend row count has a minimum of one and is available only on ChartLegend', () => {
+        expect(schema.definitions.ChartLegend.properties.itemMaxRowCount).toMatchObject({
+            type: 'number',
+            minimum: 1,
+            default: 1,
+        });
+        const validate = createSchemaValidator().compile(schema);
+        for (const value of [1, 1.5, 3]) {
+            expect(validate({series: {data: []}, legend: {itemMaxRowCount: value}})).toBe(true);
+        }
+        for (const value of [0, -1, '3']) {
+            expect(validate({series: {data: []}, legend: {itemMaxRowCount: value}})).toBe(false);
+        }
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'legend-config-usage.ts'),
+                declaration +
+                    `
+            const legend: ChartLegend = {itemMaxRowCount: 3};
+            // @ts-expect-error Row count is not a per-series override.
+            const item: ChartLegendItem = {itemMaxRowCount: 3};
+            void [legend, item];
+        `,
+            ),
+        ).not.toThrow();
     });
 
     test('schema definitions and properties match the committed snapshot', () => {

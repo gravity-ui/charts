@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.63.0](https://github.com/gravity-ui/charts/compare/v1.62.0...v1.63.0) (2026-10-01)
+
+
+### Features
+
+* **chart-config:** add descriptions for string literal values ([#724](https://github.com/gravity-ui/charts/issues/724)) ([a82615e](https://github.com/gravity-ui/charts/commit/a82615e1d349782e175116bb903ed4251c903459))
+* **legend:** support multiline labels with itemMaxRowCount ([#703](https://github.com/gravity-ui/charts/issues/703)) ([0ef0341](https://github.com/gravity-ui/charts/commit/0ef0341a1003e4b0d350776281734681d38b9b89))
+
+## [1.62.0](https://github.com/gravity-ui/charts/compare/v1.61.0...v1.62.0) (2026-09-30)
+
+
+### Features
+
+* **bar-x:** add configurable borders and fix stack geometry ([#711](https://github.com/gravity-ui/charts/issues/711)) ([3367309](https://github.com/gravity-ui/charts/commit/336730978aa04f9b7159fb16d57d529c5949c8f9))
+* **legend:** add item click event ([#685](https://github.com/gravity-ui/charts/issues/685)) ([dd1eb13](https://github.com/gravity-ui/charts/commit/dd1eb131f9513bbbbb4f9254df84f75bfcaf2e4f))
+* **legend:** support automatic width and maxWidth ([#707](https://github.com/gravity-ui/charts/issues/707)) ([09d7be9](https://github.com/gravity-ui/charts/commit/09d7be998d8a35babe86cd8e9936e99cd61ee575))
+
 ## [1.61.0](https://github.com/gravity-ui/charts/compare/v1.60.0...v1.61.0) (2026-09-24)
 
 

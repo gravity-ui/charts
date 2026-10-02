@@ -502,6 +502,80 @@ function removeInvalidDefaults(schema) {
     }
 }
 
+function addEnumValueDescriptions(schema) {
+    const visited = new WeakSet();
+
+    const walk = (node, schemaPath) => {
+        if (!node || typeof node !== 'object' || Array.isArray(node) || visited.has(node)) {
+            return;
+        }
+
+        visited.add(node);
+
+        if (Array.isArray(node.enum) && typeof node.description === 'string') {
+            const descriptions = new Map();
+            const location = schemaPath.length === 0 ? '#' : `#/${schemaPath.join('/')}`;
+
+            for (const line of node.description.split('\n')) {
+                if (!line.startsWith('- ')) {
+                    continue;
+                }
+
+                const match = line.match(
+                    /^- `(?:'([^']+)'|(null))`(?:[ \t]+(\([^)]*\)))?[ \t]*(?::|—)[ \t]*(.*)$/,
+                );
+
+                if (!match || !match[4].trim()) {
+                    throw new Error(`Invalid JSDoc enum description at ${location}: ${line}`);
+                }
+
+                const value = match[2] ? null : match[1];
+
+                if (!node.enum.includes(value)) {
+                    throw new Error(
+                        `JSDoc enum value ${JSON.stringify(value)} is not allowed at ${location}`,
+                    );
+                }
+
+                if (descriptions.has(value)) {
+                    throw new Error(
+                        `Duplicate JSDoc enum value ${JSON.stringify(value)} at ${location}`,
+                    );
+                }
+
+                const description = [match[3], match[4]]
+                    .filter(Boolean)
+                    .join(' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                descriptions.set(value, description);
+            }
+
+            if (descriptions.size > 0) {
+                const undocumented = node.enum.filter(
+                    (value) =>
+                        (typeof value === 'string' || value === null) && !descriptions.has(value),
+                );
+
+                if (undocumented.length > 0) {
+                    throw new Error(
+                        `Missing JSDoc descriptions at ${location} for enum values: ${undocumented.map((value) => JSON.stringify(value)).join(', ')}`,
+                    );
+                }
+
+                // Monaco reads descriptions parallel to enum. This adds no validation constraints.
+                node.enumDescriptions = node.enum.map((value) => descriptions.get(value) ?? '');
+            }
+        }
+
+        for (const [segment, child] of getSchemaChildEntries(node)) {
+            walk(child, [...schemaPath, segment]);
+        }
+    };
+
+    walk(schema, []);
+}
+
 function normalizeSchema(schema) {
     // Run normalizeSchemaNodes to a fixpoint: a definition that only becomes callback-only after
     // its own normalization wouldn't be detected by a single pass over its referencing nodes.
@@ -513,6 +587,7 @@ function normalizeSchema(schema) {
         removeUnusedDefinitions(schema);
     } while (state.changed);
     removeInvalidDefaults(schema);
+    addEnumValueDescriptions(schema);
 
     schema.$id = `${PACKAGE_JSON.name}/chart-config.schema.json@${PACKAGE_JSON.version}`;
     schema.title = 'ChartConfig';

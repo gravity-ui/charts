@@ -94,6 +94,7 @@ export interface LineSeriesDataLabels extends BaseDataLabels {
 }
 
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
+    /** Line series: points joined by line segments or a smooth curve. */
     type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
     /**

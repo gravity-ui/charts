@@ -111,8 +111,10 @@ export interface PreparedLegendRow {
 }
 
 export interface PreparedLegendOptions extends Required<
-    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'events'>
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth' | 'events'>
 > {
+    width?: ChartLegend['width'];
+    maxWidth?: ChartLegend['maxWidth'];
     events: ChartLegend['events'];
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;
@@ -120,10 +122,14 @@ export interface PreparedLegendOptions extends Required<
     availableWidth: number;
     hangingOffset: number;
     lineHeight: number;
+    multilineItems: boolean;
     title: {
         enable: boolean;
         hangingOffset: number;
         text: string;
+        resolvedText: string;
+        width: number;
+        resolvedWidth: number;
         margin: number;
         style: BaseTextStyle;
         height: number;
@@ -144,11 +150,15 @@ export interface PreparedLegendOptions extends Required<
 export interface PreparedLegend extends PreparedLegendOptions {
     height: number;
     rows: PreparedLegendRow[];
+    /** Clip discrete content and fit pagination controls to the legend viewport. */
+    clipContent: boolean;
+    /** Space reserved above discrete rows; zero for the legacy title layout. */
+    titleHeight: number;
 }
 
 export type OnLegendItemClick = (data: {id: string; name: string; metaKey: boolean}) => void;
 
-export type LegendItem = {
+export interface LegendItem {
     id: string;
     color: string;
     height: number;
@@ -156,10 +166,13 @@ export type LegendItem = {
     text: string;
     symbol: PreparedLegendSymbol;
     textWidth: number;
+    /** Width available for the label before its visible rows are measured. */
+    textMaxWidth?: number;
+    textRows?: string[];
     dashStyle?: DashStyle;
     overflowed?: boolean;
     visible?: boolean;
-};
+}
 
 export type PreparedHaloOptions = {
     enabled: boolean;
@@ -238,6 +251,8 @@ export type PreparedBarXSeries = {
         format?: BarXValueFormat;
     };
     borderRadius: number;
+    borderWidth: number;
+    borderColor: string;
     yAxis: number;
 } & BasePreparedSeries<BarXSeries['tooltip']> &
     BasePreparedAxisRelatedSeries;

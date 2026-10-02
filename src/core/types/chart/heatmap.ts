@@ -26,6 +26,7 @@ export interface HeatmapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
 }
 
 export interface HeatmapSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Heatmap series: cells whose colors represent values on two axes. */
     type: typeof SERIES_TYPE.Heatmap;
     data: HeatmapSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

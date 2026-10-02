@@ -74,6 +74,7 @@ export interface AreaFormatContext<T = MeaningfulAny>
 export type AreaValueFormat<T = MeaningfulAny> = ValueFormat<AreaFormatContext<T>>;
 
 export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Area series: a line with the region below it filled. */
     type: typeof SERIES_TYPE.Area;
     data: AreaSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc) */

@@ -19,6 +19,40 @@ export const SharedLegend = {
     },
 } satisfies Story;
 
+export const WrappedLabels = {
+    name: 'Wrapped labels',
+    args: {
+        data: {
+            legend: {
+                enabled: true,
+                position: 'left',
+                width: 230,
+                itemMaxRowCount: 3,
+            },
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        dataLabels: {enabled: false},
+                        data: [
+                            {
+                                name: 'Revenue from international enterprise customers and recurring subscriptions',
+                                value: 40,
+                            },
+                            {name: 'Domestic small business customers', value: 30},
+                            {name: 'First line\nSecond line', value: 20},
+                            {
+                                name: 'VeryLongUnbrokenIdentifierThatWillWrapWithinTheLegendWidth',
+                                value: 10,
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    },
+} satisfies Story;
+
 export const VerticalLayout = {
     name: 'Vertical layout',
     args: {
@@ -30,6 +64,42 @@ export const VerticalLayout = {
                 layout: 'vertical',
                 align: 'left',
                 verticalAlign: 'top',
+            },
+        },
+    },
+} satisfies Story;
+
+export const ContentBasedWidth = {
+    name: 'Content-based width',
+    args: {
+        style: {
+            width: 700,
+            height: 350,
+            resize: 'horizontal',
+            overflow: 'auto',
+            minWidth: 200,
+            maxWidth: '100%',
+        },
+        data: {
+            legend: {
+                enabled: true,
+                position: 'left',
+                width: 'auto',
+                maxWidth: '30%',
+                title: {text: 'Regions'},
+            },
+            series: {
+                data: ['North', 'South', 'West', 'East', 'Central region with a long label'].map(
+                    (name, i) => ({
+                        type: 'line' as const,
+                        name,
+                        data: [
+                            {x: 0, y: i + 1},
+                            {x: 1, y: i + 3},
+                            {x: 2, y: i + 2},
+                        ],
+                    }),
+                ),
             },
         },
     },

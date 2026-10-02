@@ -45,6 +45,7 @@ export interface PieFormatContext<T = MeaningfulAny>
 export type PieValueFormat<T = MeaningfulAny> = ValueFormat<PieFormatContext<T>>;
 
 export interface PieSeries<T = MeaningfulAny> extends BaseSeries {
+    /** Pie series: slices showing each value's share of a whole. */
     type: typeof SERIES_TYPE.Pie;
     data: PieSeriesData<T>[];
     /**
