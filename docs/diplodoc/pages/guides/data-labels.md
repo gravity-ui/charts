@@ -70,6 +70,8 @@ series: {
 
 Line series can choose where a label goes and what to do when it does not fit — see [Data label placement](./series-types/line.md#data-label-placement) in the Line series guide.
 
+Area range labels show the formatted interval at its midpoint, or an explicit point `label` — see [Data labels](./series-types/area-range.md#data-labels) in the Area range guide.
+
 ## Stack total labels
 
 For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.

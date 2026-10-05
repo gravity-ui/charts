@@ -38,6 +38,33 @@ Value formatters run once for each boundary. An explicit point `label` is format
 
 Area range supports `x`, `y`, and `xy` zoom (`x` by default). Y filtering retains any interval that overlaps the selected range, including one that contains the entire viewport. X zoom and the range slider preserve neighboring points on continuous axes so the band reaches the viewport edges.
 
+## Combining with a line
+
+Use an area range for an expected interval and a line for the forecast or observed value. Put the area-range series before the line in `series.data` so the line is drawn on top of the band. Both series should use the same X coordinates and Y axis. A lower `opacity` keeps the line easy to read.
+
+The example shows a forecast inside its expected range. Hover to see the forecast value and both range boundaries:
+
+<div data-chart-example="series-types/area-range-with-line"></div>
+
+## Data labels
+
+Set `dataLabels.enabled: true` on the area-range series to show a label at the midpoint of each complete interval. By default, the label shows `y0 — y1`; `dataLabels.format` formats each boundary independently. An explicit point `label` replaces the interval text and is formatted once. Incomplete points have no labels.
+
+```javascript
+{
+  type: 'area-range',
+  name: 'Expected range',
+  dataLabels: {enabled: true, format: {type: 'number', precision: 1}},
+  data: [
+    {x: 0, y0: 18.25, y1: 26.75},
+    {x: 1, y0: 20.15, y1: 29.45},
+    {x: 2, y0: 17.35, y1: 25.65, label: 'Revised estimate'},
+  ],
+}
+```
+
+See [Data labels](../data-labels.md) for visibility settings and [Value formatting](../value-formatting.md) for formatting options.
+
 ## Boundary markers
 
 By default, normal markers are hidden and hovering a point shows markers on both visible boundaries, with a white border. Coincident boundaries share one marker. Incomplete points and boundaries outside the visible plot have no markers.

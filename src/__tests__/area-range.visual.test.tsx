@@ -3,13 +3,43 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {areaRangeBasicData} from '../__stories__/__data__';
+import {areaRangeBasicData, areaRangeWithLineData} from '../__stories__/__data__';
 import type {ChartData} from '../types';
 
 import {AreaRangeEventsTestStory} from './components/AreaRangeEventsTestStory';
 import {getLocatorBoundingBox} from './utils';
 
 test.describe('Area range series', () => {
+    test('forecast line stays above the band and both series appear in the tooltip', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(<ChartTestStory data={areaRangeWithLineData} />);
+        const region = component.locator('.gcharts-area-range__region');
+        const line = component.locator('.gcharts-line > path');
+        await expect(line).toHaveAttribute('d', /^M/);
+        expect(
+            await region.evaluate((element) => {
+                const lineElement = element.closest('svg')?.querySelector('.gcharts-line > path');
+                return (
+                    lineElement !== undefined &&
+                    lineElement !== null &&
+                    element.compareDocumentPosition(lineElement) ===
+                        Node.DOCUMENT_POSITION_FOLLOWING
+                );
+            }),
+        ).toBe(true);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        const box = await getLocatorBoundingBox(region);
+        await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip).toContainText('Expected range');
+        await expect(tooltip).toContainText('17 — 25');
+        await expect(tooltip).toContainText('Forecast');
+        await expect(tooltip).toContainText('21');
+    });
+
     for (const permanent of [false, true]) {
         test(`boundary markers match area hover behavior (permanent=${permanent})`, async ({
             mount,
