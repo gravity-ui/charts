@@ -19,6 +19,7 @@ import type {
     ChartTooltipRowRendererArgs,
     ChartXAxis,
     TooltipDataChunk,
+    TooltipDataChunkRadar,
 } from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
@@ -128,6 +129,55 @@ describe('DefaultTooltipContent — header values', () => {
         ];
         renderTooltip(<DefaultTooltipContent hovered={hovered} xAxis={{type: 'linear'}} />);
         expect(screen.getByText('0')).toBeDefined();
+    });
+
+    const radarChunk: TooltipDataChunkRadar = {
+        data: {value: 10},
+        series: {type: 'radar', name: 'Radar', data: []},
+        category: {key: 'Category A'},
+        closest: true,
+    };
+
+    test('keeps radar headers hidden without headerFormat', () => {
+        renderTooltip(<DefaultTooltipContent hovered={[radarChunk]} />);
+        expect(screen.queryByText('Category A')).toBeNull();
+        expect(screen.getByText('10')).toBeDefined();
+    });
+
+    test('formats a radar category exactly once', () => {
+        const formatter = jest.fn(({value}) => `Category:${value}`);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[radarChunk]}
+                headerFormat={{type: 'custom', formatter}}
+            />,
+        );
+        expect(screen.getByText('Category:Category A')).toBeDefined();
+        expect(formatter).toHaveBeenCalledTimes(1);
+        expect(formatter).toHaveBeenCalledWith({value: 'Category A'});
+    });
+
+    test('applies built-in date formatting to radar headers', () => {
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[{...radarChunk, category: {key: '2026-10-05'}}]}
+                headerFormat={{type: 'date', format: 'DD.MM.YYYY'}}
+            />,
+        );
+        expect(screen.getByText('05.10.2026')).toBeDefined();
+    });
+
+    test('does not call the radar header formatter for a missing category', () => {
+        const formatter = jest.fn(() => 'Unexpected header');
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[{...radarChunk, category: undefined}]}
+                headerFormat={{type: 'custom', formatter}}
+            />,
+        );
+        expect(formatter).not.toHaveBeenCalled();
+        expect(screen.queryByText('Unexpected header')).toBeNull();
+        expect(screen.getByText('10')).toBeDefined();
     });
 });
 

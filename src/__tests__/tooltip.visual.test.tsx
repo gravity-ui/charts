@@ -21,6 +21,76 @@ import {StackingPercentRowRendererTestStory} from './components/StackingPercentR
 import {getLocator, getLocatorBoundingBox} from './utils';
 
 test.describe('Tooltip', () => {
+    for (const {name, categories} of [
+        {name: 'categories and data are replaced', categories: ['C', 'D']},
+        {name: 'data is replaced on unchanged categories', categories: ['A', 'B']},
+    ]) {
+        test(`Clears stale hover after ${name}`, async ({mount, page}) => {
+            const data: ChartData = {
+                legend: {enabled: false},
+                xAxis: {type: 'category', categories: ['A', 'B']},
+                yAxis: [{min: 0, max: 30}],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Series',
+                            data: [
+                                {x: 0, y: 5},
+                                {x: 1, y: 10},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            const bar = component.locator('.gcharts-bar-x__segment').nth(1);
+            await expect(bar).toBeVisible();
+            const position = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                position.x + position.width / 2,
+                position.y + position.height / 2,
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.getByText('B', {exact: true})).toBeVisible();
+            await expect(tooltip.getByText('10', {exact: true})).toBeVisible();
+
+            await component.update(
+                <ChartTestStory
+                    data={{
+                        ...data,
+                        xAxis: {type: 'category', categories},
+                        series: {
+                            data: [
+                                {
+                                    type: 'bar-x',
+                                    name: 'Series',
+                                    data: [
+                                        {x: 0, y: 5},
+                                        {x: 1, y: 20},
+                                    ],
+                                },
+                            ],
+                        },
+                    }}
+                />,
+            );
+            await expect(
+                component.locator('svg').getByText(categories[1], {exact: true}),
+            ).toBeVisible();
+            await expect(tooltip).not.toBeVisible();
+
+            const updatedPosition = await getLocatorBoundingBox(bar);
+            await page.mouse.move(
+                updatedPosition.x + updatedPosition.width / 2,
+                updatedPosition.y + updatedPosition.height / 2,
+            );
+            await expect(tooltip.getByText(categories[1], {exact: true})).toBeVisible();
+            await expect(tooltip.getByText('20', {exact: true})).toBeVisible();
+            await expect(tooltip.getByText('10', {exact: true})).not.toBeVisible();
+        });
+    }
+
     test('More points row', async ({mount, page}) => {
         await page.setViewportSize({width: 500, height: 280});
         const component = await mount(<ChartTestStory data={tooltipOverflowedRowsData} />);

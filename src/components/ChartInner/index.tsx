@@ -488,6 +488,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                 <Tooltip
                     dispatcher={dispatcher}
                     tooltip={preparedTooltip}
+                    seriesData={allPreparedSeries}
                     svgContainer={svgRef.current}
                     xAxis={xAxis}
                     yAxis={yAxis[0]}
