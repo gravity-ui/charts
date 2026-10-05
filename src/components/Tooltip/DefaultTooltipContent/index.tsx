@@ -20,6 +20,7 @@ import type {
     ValueFormat,
 } from '../../../types';
 import {block} from '../../../utils';
+import {TooltipAxesContext} from '../TooltipAxesContext';
 
 import {Row} from './Row';
 import {RowWithAggregation} from './RowWithAggregation';
@@ -56,8 +57,9 @@ export const DefaultTooltipContent = ({
     const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
     const [scrollBarWidth, setScrollBarWidth] = React.useState<number>(0);
     const contentRowsRef = React.useRef<HTMLDivElement>(null);
-    const measureValue = getMeasureValue({data: hovered, xAxis, yAxis, headerFormat});
-    const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
+    const yAxes = React.useContext(TooltipAxesContext);
+    const measureValue = getMeasureValue({data: hovered, xAxis, yAxis, yAxes, headerFormat});
+    const hoveredValues = getHoveredValues({hovered, xAxis, yAxis, yAxes});
     const prevHoveredValues = usePrevious(hoveredValues);
     const visibleHovered = pinned || !visibleRows ? hovered : hovered.slice(0, visibleRows);
     const restHoveredValues = pinned || !visibleRows ? [] : hoveredValues.slice(visibleRows);

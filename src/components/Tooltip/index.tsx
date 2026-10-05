@@ -10,6 +10,7 @@ import type {ChartYAxis} from '../../types';
 import {block} from '../../utils';
 
 import {ChartTooltipContent} from './ChartTooltipContent';
+import {TooltipAxesContext} from './TooltipAxesContext';
 
 import './styles.scss';
 
@@ -20,7 +21,7 @@ type TooltipProps = {
     tooltip: PreparedTooltip;
     svgContainer: SVGSVGElement | null;
     xAxis: PreparedXAxis | null;
-    yAxis: PreparedYAxis;
+    yAxis: PreparedYAxis[];
     tooltipPinned: boolean;
     onOutsideClick?: () => void;
 };
@@ -92,22 +93,24 @@ export const Tooltip = (props: TooltipProps) => {
             placement={['right', 'left', 'top', 'bottom']}
         >
             <div className={b('popup-content')}>
-                <ChartTooltipContent
-                    hovered={hovered}
-                    hoveredPlotBands={hoveredPlotBands}
-                    hoveredPlotLines={hoveredPlotLines}
-                    hoveredPlotShapes={hoveredPlotShapes}
-                    pinned={tooltipPinned}
-                    renderer={tooltip.renderer}
-                    rows={tooltip.rows}
-                    rowRenderer={tooltip.rowRenderer}
-                    totals={tooltip.totals}
-                    valueFormat={tooltip.valueFormat}
-                    headerFormat={tooltip.headerFormat}
-                    xAxis={xAxis}
-                    yAxis={yAxis as ChartYAxis}
-                    qa={tooltip.qa}
-                />
+                <TooltipAxesContext.Provider value={yAxis}>
+                    <ChartTooltipContent
+                        hovered={hovered}
+                        hoveredPlotBands={hoveredPlotBands}
+                        hoveredPlotLines={hoveredPlotLines}
+                        hoveredPlotShapes={hoveredPlotShapes}
+                        pinned={tooltipPinned}
+                        renderer={tooltip.renderer}
+                        rows={tooltip.rows}
+                        rowRenderer={tooltip.rowRenderer}
+                        totals={tooltip.totals}
+                        valueFormat={tooltip.valueFormat}
+                        headerFormat={tooltip.headerFormat}
+                        xAxis={xAxis}
+                        yAxis={yAxis[0] as ChartYAxis}
+                        qa={tooltip.qa}
+                    />
+                </TooltipAxesContext.Provider>
             </div>
         </Popup>
     ) : null;

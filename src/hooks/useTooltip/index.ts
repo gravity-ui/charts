@@ -19,7 +19,7 @@ type Args = {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
     xAxis?: PreparedXAxis | null;
-    yAxis?: PreparedYAxis;
+    yAxis?: PreparedYAxis[];
 };
 
 type TooltipState = {
@@ -72,7 +72,8 @@ export const useTooltip = ({dispatcher, tooltip, xAxis, yAxis}: Args) => {
                         hovered: filteredNextHovered ?? [],
                         sorting: tooltip?.sorting,
                         xAxis,
-                        yAxis,
+                        yAxis: yAxis?.[0],
+                        yAxes: yAxis,
                     });
                     const isHoveredChanged = !isEqual(prevHovered.current, sortedHovered);
                     const newTooltipState: TooltipState = {

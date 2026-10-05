@@ -22,6 +22,10 @@ import type {
 
 export type HoveredValue = string | number | null | undefined;
 
+function getSeriesYAxis(item: TooltipDataChunk, yAxis?: ChartYAxis, yAxes?: ChartYAxis[]) {
+    return yAxes ? yAxes[get(item.series, 'yAxis', 0)] : yAxis;
+}
+
 function getRowData(
     fieldName: 'x' | 'y',
     data: ChartSeriesData,
@@ -50,11 +54,13 @@ export const getMeasureValue = ({
     data,
     xAxis,
     yAxis,
+    yAxes,
     headerFormat,
 }: {
     data: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
     headerFormat?: ChartTooltip['headerFormat'];
 }) => {
     if (
@@ -71,9 +77,10 @@ export const getMeasureValue = ({
     }
 
     if (data.some((item) => ['bar-y', 'x-range'].includes(item.series.type))) {
-        const value = getYRowData(data[0]?.data, yAxis);
+        const seriesYAxis = getSeriesYAxis(data[0], yAxis, yAxes);
+        const value = getYRowData(data[0]?.data, seriesYAxis);
         const formattedValue = getFormattedValue({
-            value: getYRowData(data[0]?.data, yAxis),
+            value: getYRowData(data[0]?.data, seriesYAxis),
             format: headerFormat,
         });
         return {value, formattedValue};
@@ -92,15 +99,17 @@ export function getHoveredValues(args: {
     hovered: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
 }): HoveredValue[] {
-    const {hovered, xAxis, yAxis} = args;
+    const {hovered, xAxis, yAxis, yAxes} = args;
 
     return hovered.map((seriesItem) => {
         const {data, series} = seriesItem;
+        const seriesYAxis = getSeriesYAxis(seriesItem, yAxis, yAxes);
         const getPluginValue = getSeriesPlugin(series.type).tooltip.getValue;
 
         if (getPluginValue) {
-            return getPluginValue({item: seriesItem, xAxis, yAxis});
+            return getPluginValue({item: seriesItem, xAxis, yAxis: seriesYAxis});
         }
 
         switch (series.type) {
@@ -110,7 +119,7 @@ export function getHoveredValues(args: {
             case 'waterfall':
             case 'scatter':
             case 'x-range': {
-                return getYRowData(data, yAxis);
+                return getYRowData(data, seriesYAxis);
             }
             case 'bar-y': {
                 return getXRowData(data, xAxis);
@@ -189,8 +198,9 @@ export function getSortedHovered(args: {
     sorting?: ChartTooltip['sorting'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
 }): TooltipDataChunk[] {
-    const {hovered, sorting, xAxis, yAxis} = args;
+    const {hovered, sorting, xAxis, yAxis, yAxes} = args;
 
     if (!sorting) {
         return hovered;
@@ -202,7 +212,7 @@ export function getSortedHovered(args: {
 
     switch (sorting.key) {
         case 'value': {
-            const values = getHoveredValues({hovered, xAxis, yAxis});
+            const values = getHoveredValues({hovered, xAxis, yAxis, yAxes});
             const direction = sorting.direction ?? 'asc';
 
             const compareValue = (a: HoveredValue, b: HoveredValue): number => {

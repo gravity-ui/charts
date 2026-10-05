@@ -70,6 +70,7 @@ export interface PrepareShapeDataResult {
 export interface GetTooltipValueArgs {
     item: TooltipDataChunk;
     xAxis?: ChartXAxis | null;
+    /** Y axis assigned to this item's series (defaults to axis 0). */
     yAxis?: ChartYAxis;
 }
 
