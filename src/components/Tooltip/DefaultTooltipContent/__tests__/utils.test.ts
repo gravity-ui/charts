@@ -21,7 +21,13 @@ import type {
     TooltipDataChunkWaterfall,
     TooltipDataChunkXRange,
 } from '../../../../types';
-import {getBuiltInAggregatedValue, getHoveredValues, getSortedHovered} from '../utils';
+import {
+    getBuiltInAggregatedValue,
+    getHoveredValues,
+    getMeasureValue,
+    getPreparedHovered,
+    getSortedHovered,
+} from '../utils';
 import type * as TooltipUtils from '../utils';
 
 const createLineChunk = (
@@ -433,5 +439,90 @@ describe('getSortedHovered', () => {
         ]);
         expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(24);
         expect(hovered).toEqual(original);
+    });
+});
+
+describe('plugin tooltip headers', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it.each(['pie', 'treemap', 'heatmap', 'funnel', 'sankey'] as const)(
+        'omits headers for %s',
+        (type) => expect(getMeasureValue({data: [delegationChunks[type]]})).toBeNull(),
+    );
+
+    it('resolves the header once and formats it once', () => {
+        const item = createLineChunk('Line', 10);
+        const header = getSeriesPlugin('line').tooltip.header;
+        if (!header) {
+            throw new Error('Line plugin must declare a tooltip header');
+        }
+        const getValue = jest.spyOn(header, 'getValue');
+        const formatter = jest.fn(({value}) => `header:${value}`);
+        expect(getMeasureValue({data: [item], headerFormat: {type: 'custom', formatter}})).toEqual({
+            value: 1,
+            formattedValue: 'header:1',
+        });
+        expect(getValue).toHaveBeenCalledTimes(1);
+        expect(formatter).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses plugin priorities for mixed charts regardless of chunk order', () => {
+        const line = createLineChunk('Line', 10);
+        const horizontal = createBarYChunk('Bar', 20);
+        horizontal.data.y = 0;
+        const radar: TooltipDataChunkRadar = {
+            ...chunkFactories.radar(30),
+            category: {key: 'Radar category'},
+        };
+        const yAxis: ChartYAxis = {type: 'category', categories: ['Horizontal category']};
+        expect(getMeasureValue({data: [line, horizontal], yAxis})?.value).toBe(
+            'Horizontal category',
+        );
+        expect(getMeasureValue({data: [horizontal, line], yAxis})?.value).toBe(
+            'Horizontal category',
+        );
+        expect(getMeasureValue({data: [line, horizontal, radar], yAxis})?.value).toBe(
+            'Radar category',
+        );
+    });
+
+    it('keeps the first header for equal priorities and accepts empty input', () => {
+        const first = createLineChunk('First', 10);
+        const second = createLineChunk('Second', 20);
+        second.data.x = 2;
+        expect(getMeasureValue({data: [first, second]})?.value).toBe(1);
+        expect(getMeasureValue({data: []})).toBeNull();
+    });
+});
+
+describe('prepared tooltip values', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it.each([
+        undefined,
+        ASC,
+        DESC,
+        (a: TooltipDataChunk, b: TooltipDataChunk) =>
+            (a.series.name ?? '').localeCompare(b.series.name ?? ''),
+    ])('keeps cached values aligned with chunks for sorting %s', (sorting) => {
+        const hovered = [createLineChunk('B', 20), createLineChunk('A', 10)];
+        const getValue = jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue');
+        const result = getPreparedHovered({hovered, sorting});
+        expect(result.values).toEqual(
+            result.hovered.map((item) => ('y' in item.data ? item.data.y : undefined)),
+        );
+        expect(getValue).toHaveBeenCalledTimes(2);
+        expect(hovered.map((item) => item.series.name)).toEqual(['B', 'A']);
+    });
+
+    it('supports plugins that omit the optional getValue hook', () => {
+        const tooltip = getSeriesPlugin('line').tooltip;
+        const original = tooltip.getValue;
+        delete tooltip.getValue;
+        try {
+            expect(getHoveredValues({hovered: [createLineChunk('Line', 10)]})).toEqual([10]);
+        } finally {
+            tooltip.getValue = original;
+        }
     });
 });

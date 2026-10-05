@@ -41,8 +41,9 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ## 4. Define tooltip values
 
-- Implement the required `tooltip.getValue({item, xAxis, yAxis})` hook for built-in sorting and totals. Shared code delegates each hovered chunk to its plugin, including in mixed charts.
+- Implement `tooltip.getValue({item, xAxis, yAxis})` hook for built-in sorting and totals. Shared code delegates each hovered chunk to its plugin, including in mixed charts. The hook is optional for compatibility; omitting it falls back to the point's scalar `value`, or its Y value.
 - Return an unformatted value and preserve `null`/`undefined`. Use `getTooltipAxisValue` from `src/core/tooltip/utils.ts` for axis values: it resolves category indices to names and preserves numeric/date values. Non-axis plugins extract their scalar value; interval plugins can return a width (as `area-range` does).
+- Declare `tooltip.header.getValue` for series with a header; omit `header` for series without one. Reuse `getTooltipXValue` / `getTooltipYValue` and `getTooltipScalarValue` for common extraction. In mixed tooltips, the highest header priority wins (ties use the first hovered chunk): X headers use the default `0`, horizontal series use `1`, and radar categories use `2`. Values are resolved and formatted once.
 - Keep tooltip row values, custom formatter context, and renderer payloads independent of the sorting/totals value. Shared code sorts the plugin values and sums only numeric values.
 - Use `source: 'color'` for swatches; format labels/endpoints once. Preserve renderer precedence and keep plugin formatting hooks internal.
 

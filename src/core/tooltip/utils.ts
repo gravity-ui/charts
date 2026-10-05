@@ -2,6 +2,7 @@ import {create} from 'd3-selection';
 import get from 'lodash/get';
 
 import type {DashStyle} from '../constants';
+import type {GetTooltipValueArgs} from '../series/plugin';
 import {getRectPath} from '../shapes/utils';
 import type {ChartSeriesData, ChartTooltip, ChartXAxis, ChartYAxis, ValueFormat} from '../types';
 import {createLineSymbol, getDataCategoryValue, getDefaultDateFormat} from '../utils';
@@ -17,6 +18,30 @@ export function getTooltipAxisValue(
     }
 
     return get(data, axisDirection);
+}
+
+export function getTooltipXValue({item, xAxis}: GetTooltipValueArgs) {
+    return getTooltipAxisValue(item.data, 'x', xAxis);
+}
+
+export function getTooltipYValue({item, yAxis}: GetTooltipValueArgs) {
+    return getTooltipAxisValue(item.data, 'y', yAxis);
+}
+
+interface ScalarTooltipValueArgs {
+    item: {
+        data: {value?: number | null};
+    };
+}
+
+export function getTooltipScalarValue({item}: ScalarTooltipValueArgs) {
+    return item.data.value;
+}
+
+export function getDefaultTooltipValue(args: GetTooltipValueArgs) {
+    return 'value' in args.item.data
+        ? getTooltipScalarValue({item: {data: args.item.data}})
+        : getTooltipYValue(args);
 }
 
 export function getDefaultValueFormat({

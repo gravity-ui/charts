@@ -117,7 +117,7 @@ describe('DefaultTooltipContent — plugin aggregate values', () => {
         renderTooltip(<DefaultTooltipContent hovered={[chunk]} rowRenderer={rowRenderer} />);
 
         expect(rowRenderer).toHaveBeenCalledWith(expect.objectContaining({value}));
-        expect(getSeriesPlugin('sankey').tooltip.getValue({item: chunk})).toBe(value);
+        expect(getSeriesPlugin('sankey').tooltip.getValue?.({item: chunk})).toBe(value);
     });
 });
 

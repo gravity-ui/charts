@@ -67,8 +67,8 @@ export interface PrepareShapeDataResult {
     labels?: SvgLabel[];
 }
 
-export interface GetTooltipValueArgs {
-    item: TooltipDataChunk;
+export interface GetTooltipValueArgs<TTooltipChunk extends TooltipDataChunk = TooltipDataChunk> {
+    item: TTooltipChunk;
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
 }
@@ -162,8 +162,18 @@ export interface SeriesPlugin<
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
-        /** Unformatted value used by built-in sorting and totals. Resolve category indices to names. */
-        getValue: (args: GetTooltipValueArgs) => string | number | null | undefined;
+        /**
+         * Unformatted value used by built-in sorting and totals. Resolve category indices to names.
+         * Omit to use the point's scalar value, or its Y value for axis-based points.
+         */
+        getValue?(args: GetTooltipValueArgs<TTooltipChunk>): AxisDomainValue;
+        /** Omit for series without a tooltip header. */
+        header?: {
+            /** Unformatted header value, resolved once before applying headerFormat. */
+            getValue(args: GetTooltipValueArgs<TTooltipChunk>): AxisDomainValue;
+            /** Higher priorities win in mixed tooltips; ties keep the first hovered chunk. Defaults to 0. */
+            priority?: number;
+        };
         /**
          * Returns series-specific fields passed to a custom tooltip value formatter.
          * The shared tooltip renderer supplies `value`; plugins own all other context.

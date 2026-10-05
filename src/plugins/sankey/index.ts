@@ -36,7 +36,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
     return renderSankey({plot}, preparedData[0] as PreparedSankeyData, seriesOptions, dispatcher);
 }
 
-export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
+export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = {
     type: 'sankey',
     useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
@@ -45,7 +45,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        getValue: ({item}) => getLinkValue(item as TooltipDataChunkSankey),
+        getValue: ({item}) => getLinkValue(item),
         rows: [
             {
                 id: 'default',

@@ -10,6 +10,7 @@ import type {ChartYAxis} from '../../types';
 import {block} from '../../utils';
 
 import {ChartTooltipContent} from './ChartTooltipContent';
+import {TooltipValuesContext} from './TooltipValuesContext';
 
 import './styles.scss';
 
@@ -27,13 +28,19 @@ type TooltipProps = {
 
 export const Tooltip = (props: TooltipProps) => {
     const {tooltip, xAxis, yAxis, svgContainer, dispatcher, tooltipPinned, onOutsideClick} = props;
-    const {hovered, hoveredPlotBands, hoveredPlotLines, hoveredPlotShapes, pointerPosition} =
-        useTooltip({
-            dispatcher,
-            tooltip,
-            xAxis,
-            yAxis,
-        });
+    const {
+        hovered,
+        hoveredValues,
+        hoveredPlotBands,
+        hoveredPlotLines,
+        hoveredPlotShapes,
+        pointerPosition,
+    } = useTooltip({
+        dispatcher,
+        tooltip,
+        xAxis,
+        yAxis,
+    });
     const containerRectRef = React.useRef<{left: number; top: number}>({left: 0, top: 0});
 
     React.useEffect(() => {
@@ -92,22 +99,24 @@ export const Tooltip = (props: TooltipProps) => {
             placement={['right', 'left', 'top', 'bottom']}
         >
             <div className={b('popup-content')}>
-                <ChartTooltipContent
-                    hovered={hovered}
-                    hoveredPlotBands={hoveredPlotBands}
-                    hoveredPlotLines={hoveredPlotLines}
-                    hoveredPlotShapes={hoveredPlotShapes}
-                    pinned={tooltipPinned}
-                    renderer={tooltip.renderer}
-                    rows={tooltip.rows}
-                    rowRenderer={tooltip.rowRenderer}
-                    totals={tooltip.totals}
-                    valueFormat={tooltip.valueFormat}
-                    headerFormat={tooltip.headerFormat}
-                    xAxis={xAxis}
-                    yAxis={yAxis as ChartYAxis}
-                    qa={tooltip.qa}
-                />
+                <TooltipValuesContext.Provider value={{hovered, values: hoveredValues ?? []}}>
+                    <ChartTooltipContent
+                        hovered={hovered}
+                        hoveredPlotBands={hoveredPlotBands}
+                        hoveredPlotLines={hoveredPlotLines}
+                        hoveredPlotShapes={hoveredPlotShapes}
+                        pinned={tooltipPinned}
+                        renderer={tooltip.renderer}
+                        rows={tooltip.rows}
+                        rowRenderer={tooltip.rowRenderer}
+                        totals={tooltip.totals}
+                        valueFormat={tooltip.valueFormat}
+                        headerFormat={tooltip.headerFormat}
+                        xAxis={xAxis}
+                        yAxis={yAxis as ChartYAxis}
+                        qa={tooltip.qa}
+                    />
+                </TooltipValuesContext.Provider>
             </div>
         </Popup>
     ) : null;

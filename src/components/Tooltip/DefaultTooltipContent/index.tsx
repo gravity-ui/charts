@@ -20,6 +20,7 @@ import type {
     ValueFormat,
 } from '../../../types';
 import {block} from '../../../utils';
+import {TooltipValuesContext} from '../TooltipValuesContext';
 
 import {Row} from './Row';
 import {RowWithAggregation} from './RowWithAggregation';
@@ -57,7 +58,14 @@ export const DefaultTooltipContent = ({
     const [scrollBarWidth, setScrollBarWidth] = React.useState<number>(0);
     const contentRowsRef = React.useRef<HTMLDivElement>(null);
     const measureValue = getMeasureValue({data: hovered, xAxis, yAxis, headerFormat});
-    const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
+    const preparedValues = React.useContext(TooltipValuesContext);
+    const hoveredValues = React.useMemo(
+        () =>
+            preparedValues?.hovered === hovered
+                ? preparedValues.values
+                : getHoveredValues({hovered, xAxis, yAxis}),
+        [preparedValues, hovered, xAxis, yAxis],
+    );
     const prevHoveredValues = usePrevious(hoveredValues);
     const visibleHovered = pinned || !visibleRows ? hovered : hovered.slice(0, visibleRows);
     const restHoveredValues = pinned || !visibleRows ? [] : hoveredValues.slice(visibleRows);
@@ -84,15 +92,7 @@ export const DefaultTooltipContent = ({
         );
     };
 
-    let formattedHeadValue: string | undefined;
-    if (measureValue) {
-        formattedHeadValue = headerFormat
-            ? getFormattedValue({
-                  value: measureValue.value,
-                  format: headerFormat,
-              })
-            : measureValue.formattedValue;
-    }
+    const formattedHeadValue = measureValue?.formattedValue;
 
     React.useEffect(() => {
         if (!contentRowsRef.current) {

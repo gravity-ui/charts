@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/funnel/get-tooltip-data';
 import {prepareFunnelData} from '~core/shapes/funnel/prepare-data';
 import {renderFunnel} from '~core/shapes/funnel/renderer';
 import type {PreparedFunnelData} from '~core/shapes/funnel/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import type {FunnelSeries, TooltipDataChunkFunnel} from '../../types';
 
@@ -32,7 +32,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
     return renderFunnel({plot}, preparedData[0] as PreparedFunnelData, seriesOptions, dispatcher);
 }
 
-export const funnelPlugin: SeriesPlugin<FunnelSeries> = {
+export const funnelPlugin: SeriesPlugin<FunnelSeries, TooltipDataChunkFunnel> = {
     type: 'funnel',
     useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
@@ -42,7 +42,7 @@ export const funnelPlugin: SeriesPlugin<FunnelSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        getValue: ({item}) => (item as TooltipDataChunkFunnel).data.value,
+        getValue: getTooltipScalarValue,
         rows: [
             {
                 id: 'default',

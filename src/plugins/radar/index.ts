@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/radar/get-tooltip-data';
 import {prepareRadarData} from '~core/shapes/radar/prepare-data';
 import {renderRadar} from '~core/shapes/radar/renderer';
 import type {PreparedRadarData} from '~core/shapes/radar/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
 
@@ -32,7 +32,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
     return renderRadar({plot}, preparedData as PreparedRadarData[], seriesOptions, dispatcher);
 }
 
-export const radarPlugin: SeriesPlugin<RadarSeries> = {
+export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
     type: 'radar',
     useClipPath: false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
@@ -41,7 +41,8 @@ export const radarPlugin: SeriesPlugin<RadarSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        getValue: ({item}) => (item as TooltipDataChunkRadar).data.value,
+        getValue: getTooltipScalarValue,
+        header: {getValue: ({item}) => item.category?.key ?? null, priority: 2},
         rows: [
             {
                 id: 'default',

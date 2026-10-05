@@ -11,7 +11,7 @@ import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
 import {prepareAreaRangeData, projectAreaRangeData} from '~core/shapes/area-range/prepare-data';
 import {renderAreaRange} from '~core/shapes/area-range/renderer';
 import type {PreparedAreaRangeData} from '~core/shapes/area-range/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipXValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -25,7 +25,7 @@ import type {AreaRangeSeries, TooltipDataChunkAreaRange} from '../../types';
 
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
 
-export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
+export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
     zoom: {
         types: ['x', 'xy', 'y'],
@@ -112,7 +112,8 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
     },
     tooltip: {
         prepareData: getTooltipData,
-        getValue: ({item}) => getAreaRangeWidth((item as TooltipDataChunkAreaRange).data),
+        getValue: ({item}) => getAreaRangeWidth(item.data),
+        header: {getValue: getTooltipXValue},
         rows: [
             {
                 id: 'default',
