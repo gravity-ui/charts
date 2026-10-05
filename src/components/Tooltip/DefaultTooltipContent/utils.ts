@@ -22,8 +22,8 @@ import type {
 
 export type HoveredValue = string | number | null | undefined;
 
-function getSeriesYAxis(item: TooltipDataChunk, yAxis?: ChartYAxis, yAxes?: ChartYAxis[]) {
-    return yAxes ? yAxes[get(item.series, 'yAxis', 0)] : yAxis;
+function getSeriesYAxis(item: TooltipDataChunk, yAxes?: ChartYAxis[]) {
+    return yAxes?.[get(item.series, 'yAxis') ?? 0] ?? yAxes?.[0];
 }
 
 function getRowData(
@@ -53,13 +53,11 @@ function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
 export const getMeasureValue = ({
     data,
     xAxis,
-    yAxis,
     yAxes,
     headerFormat,
 }: {
     data: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
     yAxes?: ChartYAxis[];
     headerFormat?: ChartTooltip['headerFormat'];
 }) => {
@@ -73,14 +71,21 @@ export const getMeasureValue = ({
 
     if (data.some((item) => item.series.type === 'radar')) {
         const value = (data[0] as TooltipDataChunkRadar).category?.key ?? null;
-        return {value};
+        return {
+            value,
+            formattedValue: headerFormat
+                ? getFormattedValue({value, format: headerFormat})
+                : undefined,
+        };
     }
 
-    if (data.some((item) => ['bar-y', 'x-range'].includes(item.series.type))) {
-        const seriesYAxis = getSeriesYAxis(data[0], yAxis, yAxes);
-        const value = getYRowData(data[0]?.data, seriesYAxis);
+    const yHeaderItem = data.find(
+        (item) => getSeriesPlugin(item.series.type).tooltip.headerAxis === 'y',
+    );
+    if (yHeaderItem) {
+        const value = getYRowData(yHeaderItem.data, getSeriesYAxis(yHeaderItem, yAxes));
         const formattedValue = getFormattedValue({
-            value: getYRowData(data[0]?.data, seriesYAxis),
+            value,
             format: headerFormat,
         });
         return {value, formattedValue};
@@ -88,7 +93,7 @@ export const getMeasureValue = ({
 
     const value = getXRowData(data[0]?.data, xAxis);
     const formattedValue = getFormattedValue({
-        value: getXRowData(data[0]?.data, xAxis),
+        value,
         format: headerFormat,
     });
 
@@ -98,14 +103,13 @@ export const getMeasureValue = ({
 export function getHoveredValues(args: {
     hovered: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
     yAxes?: ChartYAxis[];
 }): HoveredValue[] {
-    const {hovered, xAxis, yAxis, yAxes} = args;
+    const {hovered, xAxis, yAxes} = args;
 
     return hovered.map((seriesItem) => {
         const {data, series} = seriesItem;
-        const seriesYAxis = getSeriesYAxis(seriesItem, yAxis, yAxes);
+        const seriesYAxis = getSeriesYAxis(seriesItem, yAxes);
         const getPluginValue = getSeriesPlugin(series.type).tooltip.getValue;
 
         if (getPluginValue) {
@@ -177,8 +181,9 @@ export function getPreparedAggregation(args: {
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
 }): ChartTooltipTotalsBuiltInAggregation | (() => ChartTooltipTotalsAggregationValue) {
-    const {hovered, totals, xAxis, yAxis} = args;
+    const {hovered, totals, xAxis, yAxis, yAxes} = args;
 
     const aggregation = totals?.aggregation;
 
@@ -187,20 +192,29 @@ export function getPreparedAggregation(args: {
     }
 
     if (typeof aggregation === 'function') {
-        return () => aggregation({hovered, xAxis, yAxis});
+        return () => aggregation({hovered, xAxis, yAxis, yAxes});
     }
 
     return 'sum';
 }
 
-export function getSortedHovered(args: {
+interface SortHoveredArgs {
     hovered: TooltipDataChunk[];
     sorting?: ChartTooltip['sorting'];
     xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
     yAxes?: ChartYAxis[];
-}): TooltipDataChunk[] {
-    const {hovered, sorting, xAxis, yAxis, yAxes} = args;
+    values?: HoveredValue[];
+}
+
+export function getPreparedHovered(args: SortHoveredArgs) {
+    const values = getHoveredValues(args);
+    const valuesByChunk = new Map(args.hovered.map((item, index) => [item, values[index]]));
+    const hovered = getSortedHovered({...args, values});
+    return {hovered, values: hovered.map((item) => valuesByChunk.get(item))};
+}
+
+export function getSortedHovered(args: SortHoveredArgs): TooltipDataChunk[] {
+    const {hovered, sorting, xAxis, yAxes} = args;
 
     if (!sorting) {
         return hovered;
@@ -212,7 +226,7 @@ export function getSortedHovered(args: {
 
     switch (sorting.key) {
         case 'value': {
-            const values = getHoveredValues({hovered, xAxis, yAxis, yAxes});
+            const values = args.values ?? getHoveredValues({hovered, xAxis, yAxes});
             const direction = sorting.direction ?? 'asc';
 
             const compareValue = (a: HoveredValue, b: HoveredValue): number => {
@@ -232,8 +246,13 @@ export function getSortedHovered(args: {
                 }
 
                 if (typeof a === 'number' && typeof b === 'number') {
+                    if (Number.isNaN(a)) return Number.isNaN(b) ? 0 : -1;
+                    if (Number.isNaN(b)) return 1;
                     return a - b;
                 }
+
+                if (typeof a === 'number') return -1;
+                if (typeof b === 'number') return 1;
 
                 return String(a).localeCompare(String(b));
             };

@@ -50,6 +50,8 @@ export interface TooltipDataChunkScatter<T = MeaningfulAny> {
     data: ScatterSeriesData<T>;
     series: {
         type: ScatterSeries['type'];
+        /** Assigned Y axis index; defaults to 0. */
+        yAxis?: ScatterSeries['yAxis'];
         id: string;
         name: string;
         tooltip?: BaseSeries['tooltip'];
@@ -62,6 +64,8 @@ export interface TooltipDataChunkLine<T = MeaningfulAny> {
     color?: string;
     series: {
         type: LineSeries['type'];
+        /** Assigned Y axis index; defaults to 0. */
+        yAxis?: LineSeries['yAxis'];
         id: string;
         name: string;
         tooltip?: BaseSeries['tooltip'];
@@ -77,6 +81,8 @@ export interface TooltipDataChunkArea<T = MeaningfulAny> {
     percentage?: number;
     series: {
         type: AreaSeries['type'];
+        /** Assigned Y axis index; defaults to 0. */
+        yAxis?: AreaSeries['yAxis'];
         id: string;
         name: string;
         tooltip?: AreaSeries<T>['tooltip'];
@@ -88,6 +94,8 @@ export interface TooltipDataChunkAreaRange<T = MeaningfulAny> {
     color?: string;
     series: {
         type: AreaRangeSeries['type'];
+        /** Assigned Y axis index; defaults to 0. */
+        yAxis?: AreaRangeSeries['yAxis'];
         id: string;
         name: string;
         tooltip?: BaseSeries['tooltip'];
@@ -164,7 +172,10 @@ export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     /** Plot shapes that contain the current pointer position. */
     hoveredPlotShapes?: AxisPlotShape[];
     xAxis?: ChartXAxis | null;
+    /** First Y axis, retained for single-axis callbacks. */
     yAxis?: ChartYAxis;
+    /** All Y axes. A series uses its `yAxis` index, defaulting to axis 0. */
+    yAxes?: ChartYAxis[];
     /** Formatting settings for tooltip header row (includes computed default). */
     headerFormat?: ValueFormat;
 }
@@ -178,7 +189,7 @@ export type ChartTooltipTotalsBuiltInAggregation =
 
 export type ChartTooltipTotalsAggregationValue = number | string | undefined;
 
-export type ChartTooltipRowRendererArgs = {
+export interface ChartTooltipRowRendererArgs {
     id: string;
     name: string;
     active?: boolean;
@@ -198,12 +209,14 @@ export type ChartTooltipRowRendererArgs = {
     /** Display value; the default area-range row formats both boundaries independently. */
     formattedValue?: string;
     hovered?: TooltipDataChunk<unknown>[];
+    /** All Y axes, for resolving coordinates of hovered series on different axes. */
+    yAxes?: ChartYAxis[];
     /**
      * CSS class name pre-built with active/striped modifiers.
      * Apply it to the root `<tr>` element of the returned row: `<tr className={className}>`.
      */
     className?: string;
-};
+}
 
 export type ChartTooltipSortComparator<T = MeaningfulAny> = (
     a: TooltipDataChunk<T>,
@@ -345,7 +358,10 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * Determines what data should be used to sort by.
                * `'value'` uses the numeric value of each series point: `y` for most series
                * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
-               * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
+               * pie, radar, heatmap, treemap, funnel. Category indices are resolved on each
+               * series' axis. Ascending order is missing values, numbers, then category
+               * strings (lexicographically). NaN precedes other numbers. Descending
+               * order reverses these groups.
                * Area-range uses its width (y1 - y0).
                * Leave unset to disable sorting.
                */
