@@ -1,8 +1,24 @@
+import React from 'react';
+
+import {Col, Container, Row} from '@gravity-ui/uikit';
+import {
+    Controls,
+    Description,
+    Primary,
+    Stories,
+    Subtitle,
+    Title,
+} from '@storybook/addon-docs/blocks';
 import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {areaRangeBasicData, areaRangeDataLabelsData, areaRangeWithLineData} from '../__data__';
+import {
+    areaRangeBasicData,
+    areaRangeNullModeConnectData,
+    areaRangeNullModeSkipData,
+    areaRangeWithLineData,
+} from '../__data__';
 
 const meta: Meta<typeof Chart> = {
     title: 'Area range',
@@ -11,6 +27,16 @@ const meta: Meta<typeof Chart> = {
     tags: ['autodocs'],
     parameters: {
         docs: {
+            page: () => (
+                <React.Fragment>
+                    <Title />
+                    <Subtitle />
+                    <Description />
+                    <Primary />
+                    <Controls />
+                    <Stories includePrimary={false} />
+                </React.Fragment>
+            ),
             description: {
                 component:
                     'An area range chart displays the interval between two y-axis values for every point on the x-axis.',
@@ -40,13 +66,24 @@ export const AreaRangeWithLine = {
     },
 } satisfies Story;
 
-export const AreaRangeDataLabels = {
-    name: 'Data labels',
-    args: {data: areaRangeDataLabelsData},
+export const AreaRangeNullHandlingComparisonStory = {
+    name: 'Null modes',
+    render: () => (
+        <Container>
+            <Row space={3}>
+                <Col s={12} m={6}>
+                    <ChartStory data={areaRangeNullModeSkipData} />
+                </Col>
+                <Col s={12} m={6}>
+                    <ChartStory data={areaRangeNullModeConnectData} />
+                </Col>
+            </Row>
+        </Container>
+    ),
     parameters: {
         docs: {
             description: {
-                story: 'Labels format both boundaries independently. An explicit point label replaces the interval text.',
+                story: 'The March point has a null upper boundary. The whole point is incomplete: skip leaves a gap, while connect joins February to April.',
             },
         },
     },

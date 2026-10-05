@@ -19,25 +19,25 @@ test.describe('Area range series', () => {
         const line = component.locator('.gcharts-line > path');
         await expect(line).toHaveAttribute('d', /^M/);
         expect(
-            await region.evaluate((element) => {
-                const lineElement = element.closest('svg')?.querySelector('.gcharts-line > path');
-                return (
-                    lineElement !== undefined &&
+            await region.evaluate(
+                (element, lineElement) =>
                     lineElement !== null &&
                     element.compareDocumentPosition(lineElement) ===
-                        Node.DOCUMENT_POSITION_FOLLOWING
-                );
-            }),
+                        Node.DOCUMENT_POSITION_FOLLOWING,
+                await line.elementHandle(),
+            ),
         ).toBe(true);
         await expect(component.locator('svg')).toHaveScreenshot();
 
         const box = await getLocatorBoundingBox(region);
         await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2);
         const tooltip = page.locator('.gcharts-tooltip');
-        await expect(tooltip).toContainText('Expected range');
-        await expect(tooltip).toContainText('17 — 25');
-        await expect(tooltip).toContainText('Forecast');
-        await expect(tooltip).toContainText('21');
+        await expect(
+            tooltip.getByRole('row').filter({hasText: 'Expected range'}).getByRole('cell').last(),
+        ).toHaveText('17 — 25');
+        await expect(
+            tooltip.getByRole('row').filter({hasText: 'Forecast'}).getByRole('cell').last(),
+        ).toHaveText('21');
     });
 
     for (const permanent of [false, true]) {
