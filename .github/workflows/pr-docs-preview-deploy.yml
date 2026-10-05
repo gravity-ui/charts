@@ -1,0 +1,113 @@
+name: PR Docs Preview Deploy
+
+# Runs in the context of the base repository, so repository secrets are
+# available even when the build was triggered by a pull request from a fork.
+# The build artifact is untrusted: it is only uploaded, never executed.
+on:
+  workflow_run:
+    workflows: ['PR Docs Preview']
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      (github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GRAVITY_UI_APP_ID }}
+          private-key: ${{ secrets.GRAVITY_UI_APP_PRIVATE_KEY }}
+
+      # The PR number is resolved from the event instead of being passed
+      # through an artifact, because the artifact is controlled by the PR.
+      # `workflow_run.pull_requests` is empty for forks, hence the lookup.
+      # A run for a commit that is no longer the PR head resolves to nothing,
+      # and the remaining steps are skipped.
+      - name: Find PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_LABEL: ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          number=$(
+            gh api --method GET "repos/${GITHUB_REPOSITORY}/pulls" \
+              -f state=open -f base=main -f head="${HEAD_LABEL}" |
+              jq -r --arg sha "${HEAD_SHA}" 'map(select(.head.sha == $sha)) | .[0].number // empty'
+          )
+          if [ -z "${number}" ]; then
+            echo "::notice::No open PR has this commit as its head, skipping."
+          fi
+          echo "number=${number}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      # Installed before the download so that nothing from the PR is on disk yet.
+      - name: Install AWS CLI
+        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2.22.35
+          arch: amd64
+
+      # Not v4: its bundled extractor is affected by GHSA-6jrj-vc65-c983 (files
+      # written outside the target directory), and this archive is untrusted.
+      - name: Download docs artifact
+        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        uses: actions/download-artifact@v7
+        with:
+          name: docs-preview
+          path: dist-docs
+          github-token: ${{ steps.generate-token.outputs.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Upload to S3
+        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STORYBOOK_S3_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
+          AWS_EC2_METADATA_DISABLED: true
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          aws s3 cp dist-docs "s3://playwright-reports/charts/pulls/${PR_NUMBER}/docs/" \
+            --endpoint-url=https://storage.yandexcloud.net \
+            --recursive
+        shell: bash
+
+      - name: Comment on PR (success)
+        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          number: ${{ steps.pr.outputs.number }}
+          header: docs-preview
+          message: |
+            📖 [Docs Preview](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.number }}/docs/index.html) is ready.
+
+      - name: Comment on PR (build failure)
+        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'failure'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          number: ${{ steps.pr.outputs.number }}
+          header: docs-preview
+          message: |
+            ❌ Docs preview build failed. Check the [workflow run](${{ github.event.workflow_run.html_url }}) for details.
+
+      - name: Comment on PR (deploy failure)
+        if: failure() && steps.pr.outputs.number
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          number: ${{ steps.pr.outputs.number }}
+          header: docs-preview
+          message: |
+            ❌ Docs preview deploy failed. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
