@@ -59,6 +59,37 @@ describe('Chart/reflow', () => {
         expect(onResize).toHaveBeenCalledTimes(1);
     });
 
+    test('continuous reflow() calls stay debounced until calls stop', async () => {
+        jest.useFakeTimers();
+        const onResize = jest.fn();
+        const ref = React.createRef<ChartRef>();
+
+        renderChart(<Chart ref={ref} data={data} onResize={onResize} />);
+
+        await act(async () => {
+            jest.runAllTimers();
+        });
+        onResize.mockClear();
+
+        ref.current?.reflow();
+        await act(async () => {
+            jest.advanceTimersByTime(100);
+        });
+        ref.current?.reflow();
+        await act(async () => {
+            jest.advanceTimersByTime(100);
+        });
+        ref.current?.reflow();
+
+        expect(onResize).not.toHaveBeenCalled();
+
+        await act(async () => {
+            jest.advanceTimersByTime(200);
+        });
+
+        expect(onResize).toHaveBeenCalledTimes(1);
+    });
+
     test('reflow({ immediate: true }) triggers onResize without waiting for debounce', async () => {
         jest.useFakeTimers();
         const onResize = jest.fn();
@@ -130,6 +161,41 @@ describe('Chart/reflow', () => {
         expect(onResize).toHaveBeenCalledTimes(1);
         expect(onResize).toHaveBeenCalledWith({
             dimensions: {width: 600, height: 400},
+        });
+    });
+
+    test('continuous container resize triggers onResize after throttle interval', async () => {
+        jest.useFakeTimers();
+        const onResize = jest.fn();
+
+        const {container} = renderChart(<Chart data={data} onResize={onResize} />);
+
+        await act(async () => {
+            jest.runAllTimers();
+        });
+        onResize.mockClear();
+
+        Object.defineProperty(container, 'clientWidth', {value: 600, configurable: true});
+        act(() => {
+            __triggerResizeObserver(container);
+        });
+
+        await act(async () => {
+            jest.advanceTimersByTime(100);
+        });
+
+        Object.defineProperty(container, 'clientWidth', {value: 700, configurable: true});
+        act(() => {
+            __triggerResizeObserver(container);
+        });
+
+        await act(async () => {
+            jest.advanceTimersByTime(100);
+        });
+
+        expect(onResize).toHaveBeenCalledTimes(1);
+        expect(onResize).toHaveBeenCalledWith({
+            dimensions: {width: 700, height: 400},
         });
     });
 
