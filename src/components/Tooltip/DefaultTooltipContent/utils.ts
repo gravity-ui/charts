@@ -1,8 +1,6 @@
-import get from 'lodash/get';
-
 import {i18n} from '~core/i18n';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
-import {getDataCategoryValue} from '~core/utils';
+import {getTooltipAxisValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {PreparedPieSeries} from '../../../hooks';
@@ -22,28 +20,12 @@ import type {
 
 export type HoveredValue = string | number | null | undefined;
 
-function getRowData(
-    fieldName: 'x' | 'y',
-    data: ChartSeriesData,
-    axis?: ChartXAxis | ChartYAxis | null,
-) {
-    switch (axis?.type) {
-        case 'category': {
-            const categories = get(axis, 'categories', [] as string[]);
-            return getDataCategoryValue({axisDirection: fieldName, categories, data});
-        }
-        default: {
-            return get(data, fieldName);
-        }
-    }
-}
-
 export function getXRowData(data: ChartSeriesData, xAxis?: ChartXAxis | null) {
-    return getRowData('x', data, xAxis);
+    return getTooltipAxisValue(data, 'x', xAxis);
 }
 
 function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
-    return getRowData('y', data, yAxis);
+    return getTooltipAxisValue(data, 'y', yAxis);
 }
 
 export const getMeasureValue = ({
