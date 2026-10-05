@@ -26,7 +26,9 @@ See the complete configuration in the [AreaRangeSeries API reference](../../api/
 
 ## Appearance and interaction
 
-The `color` property controls both boundary lines and, by default, the range fill. Use `fillColor` for a different fill and `opacity` to change its opacity. Both colors support solid values and linear gradients.
+The `color` property controls both boundary lines and, by default, the range fill. Use `fillColor` for a different fill and `opacity` to change its opacity. Both colors support solid values and [gradients](../colors.md#gradients).
+
+Line and fill gradient bounds include both boundaries. The discrete legend uses the range fill color.
 
 Hovering the chart highlights the selected range and shows both formatted boundaries in the tooltip. Built-in tooltip sorting and totals use the range width (`y1 - y0`) as the point value. Chart `pointermove` and `click` events receive the original point, including its `y0` and `y1` values.
 
@@ -40,7 +42,7 @@ Area range supports `x`, `y`, and `xy` zoom (`x` by default). Y filtering retain
 
 By default, normal markers are hidden and hovering a point shows markers on both visible boundaries, with a white border. Coincident boundaries share one marker. Incomplete points and boundaries outside the visible plot have no markers.
 
-Set `series.marker.enabled` to show normal markers. Defaults for all area-range series are configured in `series.options['area-range'].marker`; per-series values take precedence. A point's `marker.states.normal.enabled` can also enable normal markers when the series setting is disabled. Marker fill uses the point's `marker.color`, then its `color`, then the series gradient sampled at that boundary, then the series color.
+Set `series.marker.enabled` to show normal markers. Defaults for all area-range series are configured in `series.options['area-range'].marker`; per-series values take precedence. A point's `marker.states.normal.enabled` can also enable normal markers when the series setting is disabled. The line gradient is sampled at each boundary marker, following the [marker color priority](../colors.md#point-colors).
 
 Configure hover markers through `series.options['area-range'].states.hover.marker`:
 

@@ -8,11 +8,12 @@ import type {
 import type {PreparedAreaRangeSeries} from '~core/series/types';
 import {formatAreaRange, getAreaRangeWidth} from '~core/shapes/area-range/format';
 import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
-import {prepareAreaRangeData} from '~core/shapes/area-range/prepare-data';
+import {prepareAreaRangeData, projectAreaRangeData} from '~core/shapes/area-range/prepare-data';
 import {renderAreaRange} from '~core/shapes/area-range/renderer';
 import type {PreparedAreaRangeData} from '~core/shapes/area-range/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
     validateAxisPlotValues,
     validateSeriesColor,
@@ -32,6 +33,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
         preserveAdjacentPoints: true,
         isYInRange: ({y0, y1}, [min, max]) => y0 !== null && y1 !== null && y0 <= max && y1 >= min,
     },
+    prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
     prepareSeries: prepareAreaRangeSeries,
     getAxisDomainValues: {
         y: (data) => (data.y0 === null || data.y1 === null ? [] : [data.y0, data.y1]),
@@ -97,7 +99,11 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries> = {
             isRangeSlider,
         });
         const filteredData = filterLayerLabels(data, otherLayers);
-        return {renderData: filteredData, tooltipItems: filteredData};
+        return {
+            renderData: filteredData,
+            tooltipItems: filteredData,
+            gradientGeometry: getGradientGeometry(filteredData),
+        };
     },
     renderShapes: ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) => {
         const data = preparedData as PreparedAreaRangeData[];

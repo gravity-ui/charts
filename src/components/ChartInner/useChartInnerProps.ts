@@ -11,15 +11,15 @@ import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
 import type {TooltipItemData} from '~core/shapes/types';
 import {createIsOutsideBounds} from '~core/shapes/utils';
 import {
-    getChartDimensions,
     getEffectiveXRange,
+    getOnlyVisibleSeries,
     getSortedSeriesData,
     getYAxisWidth,
     getZoomedSeriesData,
-    isAxisRelatedSeries,
 } from '~core/utils';
+import {hasGradient} from '~core/utils/gradient';
 
-import {createScales, getAxes, getShapes, getSplit, getVisibleSeries, useZoom} from '../../hooks';
+import {getShapes, getVisibleSeries, useZoom} from '../../hooks';
 import type {
     ChartScale,
     ClipPathBySeriesType,
@@ -35,16 +35,15 @@ import type {
     ZoomState,
 } from '../../hooks';
 import type {PreparedChart, PreparedTitle} from '../../hooks/types';
+import type {GradientLayoutReference} from '../../hooks/useShapes/types';
 import type {ChartData, LegendConfig} from '../../types';
 
+import type {GradientReferenceCacheEntry} from './gradientReferenceCache';
+import {isGradientReferenceCurrent} from './gradientReferenceCache';
+import {prepareAxisLayout} from './prepareAxisLayout';
+import {prepareGradientReference} from './prepareGradientReference';
 import type {ChartInnerProps} from './types';
-import {
-    getNormalizedXAxis,
-    getNormalizedYAxis,
-    getPreparedChart,
-    getPreparedTitle,
-    recalculateYAxisLabelsWidth,
-} from './utils';
+import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
 
 type Props = ChartInnerProps & {
@@ -114,6 +113,7 @@ function getBoundsOffsetLeft(args: {
 }
 
 type ChartState = {
+    gradientReference?: GradientLayoutReference;
     allPreparedSeries: PreparedSeries[];
     boundsHeight: number;
     boundsOffsetLeft: number;
@@ -156,6 +156,7 @@ export function useChartInnerProps(props: Props) {
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
     const currentRunRef = React.useRef(0);
+    const gradientReferenceRef = React.useRef<GradientReferenceCacheEntry>();
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
@@ -248,7 +249,15 @@ export function useChartInnerProps(props: Props) {
                 preparedLegend: legendOptions,
             });
 
-            const axes = await getAxes({
+            const {
+                xAxis,
+                yAxis,
+                split: preparedSplit,
+                xScale,
+                yScale,
+                boundsWidth,
+                boundsHeight,
+            } = await prepareAxisLayout({
                 height,
                 preparedChart,
                 legendConfig,
@@ -258,61 +267,55 @@ export function useChartInnerProps(props: Props) {
                 width,
                 xAxis: normalizedXAxis,
                 yAxis: normalizedYAxis,
+                split: data.split,
+                rangeSliderState,
+                zoomState,
             });
-            const xAxis = axes.xAxis;
-            let yAxis = axes.yAxis;
 
-            let preparedSplit: PreparedSplit = {plots: [], gap: 0};
-            let xScale: ChartScale | undefined;
-            let yScale: (ChartScale | undefined)[] | undefined;
-            let boundsWidth = 0;
-            let boundsHeight = 0;
-
-            const calculateAxisBasedProps = async () => {
-                const chartDimensions = getChartDimensions({
-                    height,
-                    margin: preparedChart.margin,
-                    preparedLegend,
-                    preparedSeries: preparedSeries,
-                    preparedYAxis: yAxis,
-                    preparedXAxis: xAxis,
-                    width,
-                    legendConfig,
-                });
-                boundsHeight = chartDimensions.boundsHeight;
-                boundsWidth = chartDimensions.boundsWidth;
-
-                preparedSplit = await getSplit({
-                    split: data.split,
-                    boundsHeight,
-                    chartWidth: width,
-                });
-
-                if (preparedSeries.some(isAxisRelatedSeries)) {
-                    ({xScale, yScale} = createScales({
-                        boundsWidth,
-                        boundsHeight,
-                        isRangeSlider: false,
-                        rangeSliderState,
-                        series: preparedSeries,
-                        split: preparedSplit,
-                        xAxis,
-                        yAxis,
-                        zoomState,
-                    }));
+            let gradientReference = gradientReferenceRef.current;
+            const getGradientReference = async (): Promise<GradientLayoutReference> => {
+                if (
+                    !gradientReference ||
+                    !isGradientReferenceCurrent(gradientReference, {
+                        width,
+                        height,
+                        allPreparedSeries,
+                        activeLegendItems,
+                    })
+                ) {
+                    const reference = Object.keys(effectiveZoomState).length
+                        ? await prepareGradientReference({
+                              height,
+                              width,
+                              preparedChart,
+                              legendConfig,
+                              preparedLegend,
+                              preparedSeries: visiblePreparedSeries,
+                              preparedSeriesOptions,
+                              xAxis: normalizedXAxis,
+                              yAxis: normalizedYAxis,
+                              split: data.split,
+                          })
+                        : {
+                              boundsWidth,
+                              boundsHeight,
+                              series: visiblePreparedSeries,
+                              xAxis,
+                              yAxis,
+                              split: preparedSplit,
+                              xScale,
+                              yScale,
+                          };
+                    gradientReference = {
+                        width,
+                        height,
+                        allPreparedSeries,
+                        activeLegendItems,
+                        data: reference,
+                    };
                 }
+                return gradientReference.data;
             };
-
-            await calculateAxisBasedProps();
-            const newYAxis = await recalculateYAxisLabelsWidth({
-                seriesData: preparedSeries,
-                yAxis,
-                yScale,
-            });
-            if (!isEqual(yAxis, newYAxis)) {
-                yAxis = newYAxis;
-                await calculateAxisBasedProps();
-            }
 
             const {shapes, shapesData} = await getShapes({
                 boundsWidth,
@@ -330,6 +333,7 @@ export function useChartInnerProps(props: Props) {
                 clipPathId,
                 isOutsideBounds: createIsOutsideBounds({boundsWidth, boundsHeight}),
                 zoomState: effectiveZoomState,
+                getGradientReference,
             });
 
             const boundsOffsetTop = getBoundsOffsetTop({
@@ -347,7 +351,13 @@ export function useChartInnerProps(props: Props) {
                 legendConfig,
             });
 
+            const hasVisibleGradient =
+                getOnlyVisibleSeries(visiblePreparedSeries).some(hasGradient);
+            const activeGradientReference = hasVisibleGradient
+                ? await getGradientReference()
+                : undefined;
             const newStateValue = {
+                gradientReference: activeGradientReference,
                 allPreparedSeries,
                 boundsHeight,
                 boundsOffsetLeft,
@@ -371,6 +381,7 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
+                gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);
                     prevStateValue.current = newStateValue;

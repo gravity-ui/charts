@@ -1,13 +1,13 @@
 /** @jest-environment jsdom */
 
-import {scaleLinear, scaleOrdinal} from 'd3-scale';
+import {scaleBand, scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import {prepareAreaSeries} from '../../../../plugins/area/prepare-area-series';
 import type {AreaSeries} from '../../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import type {PreparedSplit} from '../../../layout/split-types';
 import type {PreparedLegend} from '../../../series/types';
-import {prepareAreaData} from '../prepare-data';
+import {prepareAreaData, projectAreaData} from '../prepare-data';
 
 const BOUNDS_WIDTH = 590;
 
@@ -107,3 +107,41 @@ test('area returns zero shares and finite geometry for an empty total', async ()
     expect(points.map((point) => point.percentage)).toEqual(Array(8).fill(0));
     expect(points.map((point) => point.y)).toEqual(Array(8).fill(200));
 });
+
+test.each(['linear', 'category'] as const)(
+    'successive viewport changes reuse full-series stack neighbors on a %s axis',
+    (axisType) => {
+        const args = buildArgs(200);
+        const fullData = args.series[0].fullData ?? args.series[0].data;
+        const readOffscreenX = jest.fn(() => 0);
+        Object.defineProperty(fullData[0], 'x', {get: readOffscreenX});
+        const series = args.series.map((item) => ({...item, data: item.data.slice(2)}));
+        const xAxis = {
+            type: axisType,
+            categories: axisType === 'category' ? ['A', 'B', 'C', 'D'] : undefined,
+        } as PreparedXAxis;
+        const first = projectAreaData({
+            ...args,
+            series,
+            xAxis,
+            xScale:
+                axisType === 'category'
+                    ? scaleBand().domain(['C', 'D']).range([0, 590])
+                    : scaleLinear().domain([2, 3]).range([0, 590]),
+        });
+        expect(first).toHaveLength(2);
+        expect(readOffscreenX).toHaveBeenCalled();
+        const reads = readOffscreenX.mock.calls.length;
+        const second = projectAreaData({
+            ...args,
+            series,
+            xAxis: {...xAxis, categories: xAxis.categories?.slice()},
+            xScale:
+                axisType === 'category'
+                    ? scaleBand().domain(['C', 'D']).range([0, 500])
+                    : scaleLinear().domain([2, 4]).range([0, 590]),
+        });
+        expect(second).toHaveLength(2);
+        expect(readOffscreenX).toHaveBeenCalledTimes(reads);
+    },
+);

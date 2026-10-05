@@ -1,12 +1,19 @@
+import type {AreaRangeSeriesData} from '../../../types';
 import type {PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedAreaRangeSeries} from '../../series/types';
-import {createGradientColorResolver} from '../../utils/gradient';
 import {buildHoverMarkerGetter, getMarkerFill} from '../marker';
 import type {HoveredShapeData, MarkerItem} from '../types';
 
 import type {AreaRangePointData} from './types';
-import {getRangeBBox} from './utils';
+
+interface BoundaryPoint {
+    x: number;
+    y: number;
+    data: AreaRangeSeriesData;
+    color?: string;
+    fill?: string;
+}
 
 export function prepareAreaRangeMarkers(args: {
     points: AreaRangePointData[];
@@ -15,12 +22,11 @@ export function prepareAreaRangeMarkers(args: {
     yScale: ChartScale;
     yAxisTop: number;
     isOutsideBounds: (x: number, y: number) => boolean;
+    getGradientColor?: (x: number, y: number) => string;
+    preparePointFills?: (points: BoundaryPoint[], boundary: 'y0' | 'y1') => void;
 }) {
     const {points, series, yAxis, yScale, yAxisTop, isOutsideBounds} = args;
     const {normal} = series.marker.states;
-    const bbox = series.gradient ? getRangeBBox(points) : null;
-    const getColor =
-        series.gradient && bbox ? createGradientColorResolver(series.gradient, bbox) : undefined;
     const minY = yAxisTop + Math.min(...yScale.range());
     const maxY = yAxisTop + Math.max(...yScale.range());
     const markers: MarkerItem[] = [];
@@ -54,10 +60,11 @@ export function prepareAreaRangeMarkers(args: {
                     y,
                     data: point.data,
                     color,
-                    fill: color === undefined ? getColor?.(point.x, y) : undefined,
+                    fill: color === undefined ? args.getGradientColor?.(point.x, y) : undefined,
                 },
             ];
         });
+        args.preparePointFills?.(boundaryPoints, boundary);
         if (normalMarkersEnabled) {
             for (const point of boundaryPoints) {
                 if (!normal.enabled && !point.data.marker?.states?.normal?.enabled) continue;

@@ -7,11 +7,12 @@ import type {
 } from '~core/series/plugin';
 import type {PreparedAreaSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
-import {prepareAreaData} from '~core/shapes/area/prepare-data';
+import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
 import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
+import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
     validateAxisPlotValues,
     validatePercentStackingValues,
@@ -31,6 +32,9 @@ import {getAreaStackLabelAnchors} from './stack-labels';
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
+    prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
+        includeSolidSeries: true,
+    }),
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({
@@ -94,7 +98,12 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
             otherLayers: [...otherLayers, ...filteredData],
         });
-        return {renderData: filteredData, tooltipItems: filteredData, labels};
+        return {
+            renderData: filteredData,
+            tooltipItems: filteredData,
+            labels,
+            gradientGeometry: getGradientGeometry(filteredData),
+        };
     },
     renderShapes: function ({
         plot,

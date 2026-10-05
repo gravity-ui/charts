@@ -407,7 +407,7 @@ export function createYScale(args: {
                 const filteredCategories = filterCategoriesByVisibleSeries({
                     axisDirection: 'y',
                     categories: yCategories,
-                    series: series,
+                    series,
                 });
                 return scaleBand().domain(filteredCategories).range(range);
             }

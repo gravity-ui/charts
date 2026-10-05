@@ -1,6 +1,6 @@
 import type {AreaRangeSeriesData, LabelData} from '../../../types';
 import type {PreparedAreaRangeSeries} from '../../series/types';
-import type {SeriesShapeData} from '../types';
+import type {GradientShapeData, SeriesShapeData} from '../types';
 
 export interface AreaRangePointData {
     color?: string;
@@ -15,7 +15,7 @@ export interface AreaRangePointData {
     y: number | null;
 }
 
-export type PreparedAreaRangeData = {
+export interface PreparedAreaRangeData extends SeriesShapeData, GradientShapeData {
     active: boolean;
     color: string;
     hovered: boolean;
@@ -25,4 +25,4 @@ export type PreparedAreaRangeData = {
     series: PreparedAreaRangeSeries;
     svgLabels: LabelData[];
     width: number;
-} & SeriesShapeData;
+}

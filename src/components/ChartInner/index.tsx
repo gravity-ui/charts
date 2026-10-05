@@ -102,6 +102,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         yScale,
         preparedTitle,
         preparedChart,
+        gradientReference,
     } = useChartInnerProps({
         ...props,
         clipPathId,
@@ -116,16 +117,12 @@ export const ChartInner = (props: ChartInnerProps) => {
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
     const hasPlotArea = boundsWidth > 0 && boundsHeight > 0;
-    const debouncedBoundsWidth = useDebouncedValue({
-        value: boundsWidth,
-        delay: DEBOUNCED_VALUE_DELAY,
-    });
-    const debouncedOffsetLeft = useDebouncedValue({
-        value: boundsOffsetLeft,
-        delay: DEBOUNCED_VALUE_DELAY,
-    });
-    const debouncedAllPreparedSeries = useDebouncedValue({
-        value: allPreparedSeries,
+    const rangeSliderData = React.useMemo(
+        () => ({series: allPreparedSeries, gradientReference, boundsWidth, boundsOffsetLeft}),
+        [allPreparedSeries, gradientReference, boundsWidth, boundsOffsetLeft],
+    );
+    const debouncedRangeSliderData = useDebouncedValue({
+        value: rangeSliderData,
         delay: DEBOUNCED_VALUE_DELAY,
     });
     const {
@@ -402,18 +399,19 @@ export const ChartInner = (props: ChartInnerProps) => {
                 xAxis?.rangeSlider?.enabled &&
                 preparedChart &&
                 preparedLegend &&
-                debouncedAllPreparedSeries &&
+                debouncedRangeSliderData.series &&
                 preparedSeriesOptions && (
                     <RangeSlider
+                        gradientReference={debouncedRangeSliderData.gradientReference}
                         activeLegendItems={activeLegendItems ?? []}
-                        boundsOffsetLeft={debouncedOffsetLeft}
-                        boundsWidth={debouncedBoundsWidth}
+                        boundsOffsetLeft={debouncedRangeSliderData.boundsOffsetLeft}
+                        boundsWidth={debouncedRangeSliderData.boundsWidth}
                         height={height}
                         htmlLayout={htmlLayout}
                         onUpdate={updateRangeSliderState}
                         preparedChart={preparedChart}
                         preparedLegend={preparedLegend}
-                        preparedSeries={debouncedAllPreparedSeries}
+                        preparedSeries={debouncedRangeSliderData.series}
                         preparedSeriesOptions={preparedSeriesOptions}
                         preparedRangeSlider={xAxis.rangeSlider}
                         rangeSliderState={rangeSliderState}
