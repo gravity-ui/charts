@@ -45,6 +45,16 @@ tooltip: {
 }
 ```
 
+### Interval series
+
+For `x-range`, built-in totals sum interval durations, `Math.abs(Number(x1) - Number(x0))`, and sorting by `value` orders intervals by that duration. The Y category is a row label. Tooltip rows continue to display the start and end values. Timestamp boundaries produce durations in milliseconds.
+
+For `area-range`, totals and sorting use the width `y1 - y0`. Both types sum individual widths, including overlaps; totals do not compute the union of intervals.
+
+In the example below, hover over the overlapping bars in the middle. The tooltip sorts intervals from shortest to longest and shows a total duration of 19.
+
+<div data-chart-example="tooltip/x-range-values"></div>
+
 ## Hiding specific series from the tooltip
 
 There are scenarios where you might want to display a chart with multiple data series but exclude specific ones from the tooltip. This is useful for providing a cleaner, more focused user experience, especially when certain series are used for contextual or decorative purposes rather than for precise data reading.

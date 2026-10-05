@@ -314,7 +314,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /**
          * The aggregation method for calculating totals.
          * It can be a built-in function (e.g., 'sum') or a custom function.
-         * Area-range contributes its width (y1 - y0); 'sum' adds widths, not interval unions.
+         * Area-range contributes its width (y1 - y0); x-range contributes its duration (abs(x1 - x0)).
+         * 'sum' adds interval widths, not interval unions.
          * @default 'sum'
          */
         aggregation?:
@@ -346,7 +347,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * `'value'` uses the numeric value of each series point: `y` for most series
                * (line, area, bar-x, scatter, waterfall), `x` for bar-y, and `value` for
                * pie, radar, heatmap, treemap, funnel. `null` values are sorted as lowest.
-               * Area-range uses its width (y1 - y0).
+               * Area-range uses its width (y1 - y0); x-range uses its duration (abs(x1 - x0)).
                * Leave unset to disable sorting.
                */
               key?: 'value' | undefined;
