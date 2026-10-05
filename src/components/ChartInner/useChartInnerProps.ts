@@ -12,6 +12,7 @@ import type {TooltipItemData} from '~core/shapes/types';
 import {createIsOutsideBounds} from '~core/shapes/utils';
 import {
     getEffectiveXRange,
+    getOnlyVisibleSeries,
     getSortedSeriesData,
     getYAxisWidth,
     getZoomedSeriesData,
@@ -350,7 +351,8 @@ export function useChartInnerProps(props: Props) {
                 legendConfig,
             });
 
-            const hasVisibleGradient = visiblePreparedSeries.some(hasGradient);
+            const hasVisibleGradient =
+                getOnlyVisibleSeries(visiblePreparedSeries).some(hasGradient);
             const activeGradientReference = hasVisibleGradient
                 ? await getGradientReference()
                 : undefined;
