@@ -8,7 +8,7 @@ import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
 import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
 
-import {getTickValues} from '../../components/AxisY/utils';
+import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {
     PreparedAxis,
     PreparedSeries,
@@ -80,7 +80,7 @@ export const createScales = (args: Args) => {
             let primaryTicksCount: number | undefined;
 
             if (primaryAxisScale && secondaryAxis && !isRangeSlider) {
-                primaryTicksCount = getTickValues({
+                primaryTicksCount = getAutomaticTickValues({
                     axis: primaryAxis,
                     scale: primaryAxisScale,
                     labelLineHeight: primaryAxis.labels.lineHeight,

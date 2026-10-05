@@ -44,6 +44,30 @@ export async function getLocatorBoundingBox(locator: Locator): Promise<LocatorBo
     return boundingBox;
 }
 
+export async function getOverlappingLabelPairs(labels: Locator) {
+    return labels.evaluateAll((elements) => {
+        const bounds = elements
+            .filter((element) => element.textContent?.trim())
+            .map((element) => element.getBoundingClientRect());
+        const pairs: number[][] = [];
+        for (let i = 0; i < bounds.length; i++) {
+            for (let j = i + 1; j < bounds.length; j++) {
+                const left = bounds[i];
+                const right = bounds[j];
+                if (
+                    left.left < right.right &&
+                    left.right > right.left &&
+                    left.top < right.bottom &&
+                    left.bottom > right.top
+                ) {
+                    pairs.push([i, j]);
+                }
+            }
+        }
+        return pairs;
+    });
+}
+
 async function simulateDrag(args: {from: [number, number]; page: Page; to: [number, number]}) {
     const {from, page, to} = args;
     const [fromX, fromY] = from;
