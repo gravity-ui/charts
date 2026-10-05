@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/x-range/get-tooltip-data';
 import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
 import {renderXRange} from '~core/shapes/x-range/renderer';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipAxisValue, getTooltipColorSymbol} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {TooltipDataChunkXRange, XRangeSeries} from '../../types';
@@ -54,6 +54,7 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item, yAxis}) => getTooltipAxisValue(item.data, 'y', yAxis),
         rows: [
             {
                 id: 'default',

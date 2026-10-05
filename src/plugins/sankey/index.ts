@@ -15,6 +15,10 @@ import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
 import {prepareSankeySeries} from './prepare-sankey-series';
 
+function getLinkValue({target, data: source}: TooltipDataChunkSankey) {
+    return source.links.find((link) => link.name === target?.name)?.value;
+}
+
 function prepareShapeData({
     series,
     boundsWidth,
@@ -41,6 +45,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item}) => getLinkValue(item as TooltipDataChunkSankey),
         rows: [
             {
                 id: 'default',
@@ -64,10 +69,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries> = {
                     },
                     {
                         id: 'value',
-                        source: ({item}) => {
-                            const {target, data: source} = item as TooltipDataChunkSankey;
-                            return source.links.find((d) => d.name === target?.name)?.value;
-                        },
+                        source: ({item}) => getLinkValue(item as TooltipDataChunkSankey),
                         align: 'end',
                     },
                 ],

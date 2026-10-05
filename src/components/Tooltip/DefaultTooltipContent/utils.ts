@@ -1,11 +1,8 @@
-import get from 'lodash/get';
-
 import {i18n} from '~core/i18n';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
-import {getDataCategoryValue} from '~core/utils';
+import {getTooltipAxisValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
-import type {PreparedPieSeries} from '../../../hooks';
 import type {
     ChartSeriesData,
     ChartTooltip,
@@ -13,37 +10,18 @@ import type {
     ChartTooltipTotalsBuiltInAggregation,
     ChartXAxis,
     ChartYAxis,
-    RadarSeriesData,
     TooltipDataChunk,
     TooltipDataChunkRadar,
-    TooltipDataChunkSankey,
-    TreemapSeriesData,
 } from '../../../types';
 
 export type HoveredValue = string | number | null | undefined;
 
-function getRowData(
-    fieldName: 'x' | 'y',
-    data: ChartSeriesData,
-    axis?: ChartXAxis | ChartYAxis | null,
-) {
-    switch (axis?.type) {
-        case 'category': {
-            const categories = get(axis, 'categories', [] as string[]);
-            return getDataCategoryValue({axisDirection: fieldName, categories, data});
-        }
-        default: {
-            return get(data, fieldName);
-        }
-    }
-}
-
 export function getXRowData(data: ChartSeriesData, xAxis?: ChartXAxis | null) {
-    return getRowData('x', data, xAxis);
+    return getTooltipAxisValue(data, 'x', xAxis);
 }
 
 function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
-    return getRowData('y', data, yAxis);
+    return getTooltipAxisValue(data, 'y', yAxis);
 }
 
 export const getMeasureValue = ({
@@ -95,43 +73,9 @@ export function getHoveredValues(args: {
 }): HoveredValue[] {
     const {hovered, xAxis, yAxis} = args;
 
-    return hovered.map((seriesItem) => {
-        const {data, series} = seriesItem;
-        const getPluginValue = getSeriesPlugin(series.type).tooltip.getValue;
-
-        if (getPluginValue) {
-            return getPluginValue({item: seriesItem, xAxis, yAxis});
-        }
-
-        switch (series.type) {
-            case 'area':
-            case 'line':
-            case 'bar-x':
-            case 'waterfall':
-            case 'scatter':
-            case 'x-range': {
-                return getYRowData(data, yAxis);
-            }
-            case 'bar-y': {
-                return getXRowData(data, xAxis);
-            }
-            case 'pie':
-            case 'radar':
-            case 'heatmap':
-            case 'treemap':
-            case 'funnel': {
-                const seriesData = data as PreparedPieSeries | TreemapSeriesData | RadarSeriesData;
-                return seriesData.value;
-            }
-            case 'sankey': {
-                const {target, data: source} = seriesItem as TooltipDataChunkSankey;
-                return source.links.find((d) => d.name === target?.name)?.value;
-            }
-            default: {
-                return undefined;
-            }
-        }
-    });
+    return hovered.map((item) =>
+        getSeriesPlugin(item.series.type).tooltip.getValue({item, xAxis, yAxis}),
+    );
 }
 
 export function getBuiltInAggregatedValue(args: {

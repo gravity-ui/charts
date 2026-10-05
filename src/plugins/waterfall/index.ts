@@ -9,6 +9,7 @@ import {getTooltipData} from '~core/shapes/waterfall/get-tooltip-data';
 import {prepareWaterfallData} from '~core/shapes/waterfall/prepare-data';
 import {renderWaterfall} from '~core/shapes/waterfall/renderer';
 import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
+import {getTooltipAxisValue} from '~core/tooltip/utils';
 import {filterOverlappingLabels} from '~core/utils';
 
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
@@ -60,6 +61,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     },
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item, yAxis}) => getTooltipAxisValue(item.data, 'y', yAxis),
         rows: (chunk) => {
             const c = chunk as TooltipDataChunkWaterfall;
             if (c.data.total) {

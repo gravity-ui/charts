@@ -11,7 +11,7 @@ import {renderRadar} from '~core/shapes/radar/renderer';
 import type {PreparedRadarData} from '~core/shapes/radar/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
-import type {RadarSeries} from '../../types';
+import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
 
 import {prepareRadarSeries} from './prepare-radar-series';
 
@@ -41,6 +41,7 @@ export const radarPlugin: SeriesPlugin<RadarSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item}) => (item as TooltipDataChunkRadar).data.value,
         rows: [
             {
                 id: 'default',

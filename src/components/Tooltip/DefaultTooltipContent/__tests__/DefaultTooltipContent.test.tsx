@@ -6,7 +6,7 @@ import React from 'react';
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {render, screen} from '@testing-library/react';
 
-import {registerSeriesPlugin} from '~core/series/seriesRegistry';
+import {getSeriesPlugin, registerSeriesPlugin} from '~core/series/seriesRegistry';
 import {getTooltipColorSymbol, getTooltipLineSymbol} from '~core/tooltip/utils';
 
 import {areaPlugin} from '../../../../plugins/area';
@@ -14,7 +14,16 @@ import {areaRangePlugin} from '../../../../plugins/area-range';
 import {barXPlugin} from '../../../../plugins/bar-x';
 import {linePlugin} from '../../../../plugins/line';
 import {waterfallPlugin} from '../../../../plugins/waterfall';
-import type {ChartTooltip, ChartTooltipRowRendererArgs, TooltipDataChunk} from '../../../../types';
+import type {
+    ChartTooltip,
+    ChartTooltipRowRendererArgs,
+    ChartTooltipTotalsAggregationArgs,
+    ChartXAxis,
+    ChartYAxis,
+    TooltipDataChunk,
+    TooltipDataChunkLine,
+    TooltipDataChunkSankey,
+} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
 registerSeriesPlugin(areaPlugin);
@@ -27,18 +36,90 @@ function makeLineChunk(
     name: string,
     y: number,
     tooltip?: {valueFormat?: {type: 'custom'; formatter: (args: {value: unknown}) => string}},
-): TooltipDataChunk {
-    // `tooltip` is not declared on TooltipDataChunkLine.series, but at runtime
-    // the hovered chunk carries a prepared series which includes it — mimic that.
+): TooltipDataChunkLine {
     return {
         data: {x: 1, y},
-        series: {type: 'line', id: name, name, ...(tooltip ? {tooltip} : {})} as never,
+        series: {type: 'line', id: name, name, ...(tooltip ? {tooltip} : {})},
     };
 }
 
 function renderTooltip(ui: React.ReactElement) {
     return render(<ThemeProvider theme="light">{ui}</ThemeProvider>);
 }
+
+describe('DefaultTooltipContent — plugin aggregate values', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    test('keeps raw row formatter and renderer values independent of plugin totals', () => {
+        const hovered = [makeLineChunk('First', 10), makeLineChunk('Second', 20)];
+        jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue').mockReturnValue(100);
+        const formatter = jest.fn(({value}) => `raw:${value}`);
+        const rowRenderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
+        const totalFormatter = jest.fn(({value}) => `total:${value}`);
+
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                yAxis={{type: 'linear'}}
+                rowRenderer={rowRenderer}
+                valueFormat={{type: 'custom', formatter}}
+                totals={{enabled: true, valueFormat: {type: 'custom', formatter: totalFormatter}}}
+            />,
+        );
+
+        expect(formatter.mock.calls).toEqual([[{value: 10}], [{value: 20}]]);
+        expect(rowRenderer.mock.calls.map(([args]) => args.value)).toEqual([10, 20]);
+        expect(rowRenderer.mock.calls.map(([args]) => args.formattedValue)).toEqual([
+            'raw:10',
+            'raw:20',
+        ]);
+        expect(rowRenderer.mock.calls[0][0].hovered).toBe(hovered);
+        expect(totalFormatter).toHaveBeenCalledWith({value: 200});
+    });
+
+    test('passes original chunks and axes to custom aggregation', () => {
+        const hovered = [makeLineChunk('First', 10), makeLineChunk('Second', 20)];
+        const xAxis: ChartXAxis = {type: 'linear'};
+        const yAxis: ChartYAxis = {type: 'linear'};
+        jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue').mockReturnValue(100);
+        const aggregation = jest.fn((_args: ChartTooltipTotalsAggregationArgs) => 30);
+
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                xAxis={xAxis}
+                yAxis={yAxis}
+                totals={{enabled: true, aggregation}}
+            />,
+        );
+
+        expect(aggregation).toHaveBeenCalledWith({hovered, xAxis, yAxis});
+        const [args] = aggregation.mock.calls[0];
+        expect(args.hovered).toBe(hovered);
+        expect(args.xAxis).toBe(xAxis);
+        expect(args.yAxis).toBe(yAxis);
+    });
+
+    test.each([7, 0, undefined])('passes Sankey link value %s to the row renderer', (value) => {
+        const chunk: TooltipDataChunkSankey = {
+            series: {type: 'sankey', name: 'Flow', data: []},
+            data: {
+                name: 'Source',
+                links: [
+                    {name: 'Other', value: 100},
+                    ...(value === undefined ? [] : [{name: 'Target', value}]),
+                ],
+            },
+            target: {name: 'Target', links: []},
+        };
+        const rowRenderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
+
+        renderTooltip(<DefaultTooltipContent hovered={[chunk]} rowRenderer={rowRenderer} />);
+
+        expect(rowRenderer).toHaveBeenCalledWith(expect.objectContaining({value}));
+        expect(getSeriesPlugin('sankey').tooltip.getValue({item: chunk})).toBe(value);
+    });
+});
 
 describe('DefaultTooltipContent — valueFormat precedence', () => {
     afterEach(() => {

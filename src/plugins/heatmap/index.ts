@@ -11,7 +11,7 @@ import {renderHeatmap} from '~core/shapes/heatmap/renderer';
 import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
-import type {HeatmapSeries} from '../../types';
+import type {HeatmapSeries, TooltipDataChunkHeatmap} from '../../types';
 
 import {prepareHeatmapSeries} from './prepare-heatmap-series';
 
@@ -51,6 +51,7 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item}) => (item as TooltipDataChunkHeatmap).data.value,
         rows: [
             {
                 id: 'default',

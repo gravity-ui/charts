@@ -1,9 +1,23 @@
 import {create} from 'd3-selection';
+import get from 'lodash/get';
 
 import type {DashStyle} from '../constants';
 import {getRectPath} from '../shapes/utils';
-import type {ChartTooltip, ChartXAxis, ChartYAxis, ValueFormat} from '../types';
-import {createLineSymbol, getDefaultDateFormat} from '../utils';
+import type {ChartSeriesData, ChartTooltip, ChartXAxis, ChartYAxis, ValueFormat} from '../types';
+import {createLineSymbol, getDataCategoryValue, getDefaultDateFormat} from '../utils';
+
+export function getTooltipAxisValue(
+    data: ChartSeriesData,
+    axisDirection: 'x' | 'y',
+    axis?: ChartXAxis | ChartYAxis | null,
+): string | number | null | undefined {
+    if (axis?.type === 'category') {
+        const categories = get(axis, 'categories', [] as string[]);
+        return getDataCategoryValue({axisDirection, categories, data});
+    }
+
+    return get(data, axisDirection);
+}
 
 export function getDefaultValueFormat({
     axis,

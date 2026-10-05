@@ -54,6 +54,7 @@ export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatCo
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item}) => (item as TooltipDataChunkPie).data.value,
         getValueFormatContext: (item) => {
             return {
                 percentage: item.percentage,

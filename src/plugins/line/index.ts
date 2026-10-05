@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
 import {prepareLineData, projectLineData} from '~core/shapes/line/prepare-data';
 import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
-import {getTooltipLineSymbol} from '~core/tooltip/utils';
+import {getTooltipAxisValue, getTooltipLineSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -91,6 +91,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item, yAxis}) => getTooltipAxisValue(item.data, 'y', yAxis),
         // The line symbol needs the series stroke options, which a `format` formatter cannot
         // reach on its own — so the rows are built per chunk and close over them. `source` stays
         // a plain value lookup, which is what a custom `rowRenderer` receives as `color`.

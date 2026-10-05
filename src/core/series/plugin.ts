@@ -162,8 +162,8 @@ export interface SeriesPlugin<
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
-        /** Scalar value used by built-in sorting and totals. Omit to use the default series value. */
-        getValue?: (args: GetTooltipValueArgs) => string | number | null | undefined;
+        /** Unformatted value used by built-in sorting and totals. Resolve category indices to names. */
+        getValue: (args: GetTooltipValueArgs) => string | number | null | undefined;
         /**
          * Returns series-specific fields passed to a custom tooltip value formatter.
          * The shared tooltip renderer supplies `value`; plugins own all other context.

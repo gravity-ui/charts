@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/scatter/get-tooltip-data';
 import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
 import {renderScatter} from '~core/shapes/scatter/renderer';
 import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipAxisValue, getTooltipColorSymbol} from '~core/tooltip/utils';
 import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
 
 import type {ScatterSeries} from '../../types';
@@ -59,6 +59,7 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item, yAxis}) => getTooltipAxisValue(item.data, 'y', yAxis),
         rows: [
             {
                 id: 'default',

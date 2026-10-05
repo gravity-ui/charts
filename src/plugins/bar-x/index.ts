@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/bar-x/get-tooltip-data';
 import {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
 import {renderBarX} from '~core/shapes/bar-x/renderer';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipAxisValue, getTooltipColorSymbol} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {
     validateAxisPlotValues,
@@ -110,6 +110,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        getValue: ({item, yAxis}) => getTooltipAxisValue(item.data, 'y', yAxis),
         getValueFormatContext: (item) => {
             return {percentage: item.percentage, data: item.data};
         },
