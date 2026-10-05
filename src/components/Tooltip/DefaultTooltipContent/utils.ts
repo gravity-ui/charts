@@ -49,23 +49,20 @@ export const getMeasureValue = ({
 
     if (data.some((item) => item.series.type === 'radar')) {
         const value = (data[0] as TooltipDataChunkRadar).category?.key ?? null;
-        return {value};
-    }
-
-    if (data.some((item) => ['bar-y', 'x-range'].includes(item.series.type))) {
-        const value = getYRowData(data[0]?.data, yAxis);
-        const formattedValue = getFormattedValue({
-            value: getYRowData(data[0]?.data, yAxis),
-            format: headerFormat,
-        });
+        const formattedValue =
+            value === null || !headerFormat
+                ? undefined
+                : getFormattedValue({value, format: headerFormat});
         return {value, formattedValue};
     }
 
-    const value = getXRowData(data[0]?.data, xAxis);
-    const formattedValue = getFormattedValue({
-        value: getXRowData(data[0]?.data, xAxis),
-        format: headerFormat,
-    });
+    const value = data.some((item) => ['bar-y', 'x-range'].includes(item.series.type))
+        ? getYRowData(data[0]?.data, yAxis)
+        : getXRowData(data[0]?.data, xAxis);
+    const formattedValue =
+        value === null || value === undefined
+            ? undefined
+            : getFormattedValue({value, format: headerFormat});
 
     return {value, formattedValue};
 };

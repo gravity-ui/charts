@@ -111,6 +111,10 @@ the same way as everywhere else in the chart (data labels, axis labels, etc.) â€
 see the [Value formatting](./value-formatting.md) guide for the full reference,
 the `units` option, custom formatters, and examples.
 
+The default tooltip omits its header when the axis value is `null`, `undefined`,
+or a category index cannot be resolved. A custom header formatter is called only
+when the header value is available.
+
 ### Per-series override
 
 The value format set on `tooltip.valueFormat` applies to every series in the chart.

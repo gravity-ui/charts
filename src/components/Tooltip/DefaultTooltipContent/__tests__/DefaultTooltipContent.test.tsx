@@ -14,7 +14,12 @@ import {areaRangePlugin} from '../../../../plugins/area-range';
 import {barXPlugin} from '../../../../plugins/bar-x';
 import {linePlugin} from '../../../../plugins/line';
 import {waterfallPlugin} from '../../../../plugins/waterfall';
-import type {ChartTooltip, ChartTooltipRowRendererArgs, TooltipDataChunk} from '../../../../types';
+import type {
+    ChartTooltip,
+    ChartTooltipRowRendererArgs,
+    ChartXAxis,
+    TooltipDataChunk,
+} from '../../../../types';
 import {DefaultTooltipContent} from '../index';
 
 registerSeriesPlugin(areaPlugin);
@@ -39,6 +44,92 @@ function makeLineChunk(
 function renderTooltip(ui: React.ReactElement) {
     return render(<ThemeProvider theme="light">{ui}</ThemeProvider>);
 }
+
+describe('DefaultTooltipContent — header values', () => {
+    const xAxis: ChartXAxis = {type: 'category', categories: ['A', 'B']};
+
+    test.each([null, undefined, 5])('omits an unresolved header value (%s)', (x) => {
+        const hovered: TooltipDataChunk[] = [
+            {data: {x, y: 10}, series: {type: 'scatter', id: 'scatter', name: 'Scatter'}},
+        ];
+        const {container, rerender} = renderTooltip(
+            <DefaultTooltipContent hovered={hovered} xAxis={xAxis} />,
+        );
+        expect(container.textContent).toBe('Scatter10');
+
+        rerender(
+            <ThemeProvider theme="light">
+                <DefaultTooltipContent
+                    hovered={hovered}
+                    xAxis={xAxis}
+                    headerFormat={{type: 'date', format: 'YYYY-MM-DD'}}
+                />
+            </ThemeProvider>,
+        );
+        expect(container.textContent).toBe('Scatter10');
+
+        const formatter = jest.fn(() => 'Unexpected header');
+        rerender(
+            <ThemeProvider theme="light">
+                <DefaultTooltipContent
+                    hovered={hovered}
+                    xAxis={xAxis}
+                    headerFormat={{type: 'custom', formatter}}
+                />
+            </ThemeProvider>,
+        );
+        expect(formatter).not.toHaveBeenCalled();
+        expect(container.textContent).toBe('Scatter10');
+    });
+
+    test.each(['bar-y', 'x-range'] as const)('omits a missing Y header for %s', (type) => {
+        const hovered: TooltipDataChunk[] = [
+            type === 'bar-y'
+                ? {data: {x: 10}, series: {type, name: 'Series', data: []}}
+                : {
+                      data: {x0: 0, x1: 10},
+                      series: {type, name: 'Series', data: []},
+                  },
+        ];
+        const formatter = jest.fn(() => 'Unexpected header');
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                yAxis={{type: 'category', categories: ['A', 'B']}}
+                headerFormat={{type: 'custom', formatter}}
+            />,
+        );
+        expect(formatter).not.toHaveBeenCalled();
+        expect(screen.queryByText('Unexpected header')).toBeNull();
+    });
+
+    test.each(['bar-x', 'scatter'] as const)('uses a legacy category in a %s header', (type) => {
+        const hovered: TooltipDataChunk[] = [
+            type === 'bar-x'
+                ? {data: {category: 'A', y: 10}, series: {type, name: 'Series', data: []}}
+                : {data: {category: 'A', y: 10}, series: {type, name: 'Series', id: 'series'}},
+        ];
+        const formatter = jest.fn(({value}) => `Category:${value}`);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                xAxis={xAxis}
+                headerFormat={{type: 'custom', formatter}}
+            />,
+        );
+        expect(screen.getByText('Category:A')).toBeDefined();
+        expect(formatter).toHaveBeenCalledTimes(1);
+        expect(formatter).toHaveBeenCalledWith({value: 'A'});
+    });
+
+    test('preserves zero in the header', () => {
+        const hovered: TooltipDataChunk[] = [
+            {data: {x: 0, y: 10}, series: {type: 'line', id: 'line', name: 'Line'}},
+        ];
+        renderTooltip(<DefaultTooltipContent hovered={hovered} xAxis={{type: 'linear'}} />);
+        expect(screen.getByText('0')).toBeDefined();
+    });
+});
 
 describe('DefaultTooltipContent — valueFormat precedence', () => {
     afterEach(() => {
