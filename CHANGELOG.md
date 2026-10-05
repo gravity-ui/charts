@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.64.0](https://github.com/gravity-ui/charts/compare/v1.63.0...v1.64.0) (2026-10-05)
+
+
+### Features
+
+* **axis:** support explicit tick values ([#684](https://github.com/gravity-ui/charts/issues/684)) ([ef50627](https://github.com/gravity-ui/charts/commit/ef50627fe064c80b4b64dd2aa8461312f64ef23c))
+
+
+### Bug Fixes
+
+* **deps:** update vulnerable dependencies ([#734](https://github.com/gravity-ui/charts/issues/734)) ([b7d2636](https://github.com/gravity-ui/charts/commit/b7d263686f0623409034b5d7b518aa595fc4ddd7))
+* preserve gradient colors across zoom and range slider changes ([#718](https://github.com/gravity-ui/charts/issues/718)) ([922e61e](https://github.com/gravity-ui/charts/commit/922e61ee570fa8ff3535a5f25b34b4c14fde2fe3))
+* **text:** ignore trailing line breaks in multiline label bounds ([#722](https://github.com/gravity-ui/charts/issues/722)) ([7e790c5](https://github.com/gravity-ui/charts/commit/7e790c54c641bccd18fc4dbd723a0f4840b762d8))
+
 ## [1.63.0](https://github.com/gravity-ui/charts/compare/v1.62.0...v1.63.0) (2026-10-01)
 
 
