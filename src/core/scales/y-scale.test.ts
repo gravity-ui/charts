@@ -1,7 +1,10 @@
+import {scaleOrdinal} from 'd3-scale';
+
 import {createScales} from '../../hooks/useAxisScales';
+import {prepareWaterfallSeries} from '../../plugins/waterfall/prepare-waterfall-series';
 import type {ChartSeries} from '../../types';
 import type {PreparedAxis, PreparedYAxis} from '../axes/types';
-import type {PreparedSeries} from '../series/types';
+import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from '../series/types';
 
 import {createYScale} from './y-scale';
 
@@ -72,6 +75,32 @@ describe('createYScale with explicit tick values', () => {
 
         expect(getDomain({...options, values: [20, 40]})).toEqual(getDomain(options));
     });
+});
+
+test('waterfall Y domain includes running totals in the original point order', () => {
+    const series = prepareWaterfallSeries({
+        series: [
+            {
+                type: 'waterfall',
+                name: 'Balance',
+                data: [
+                    {x: 0, y: -10},
+                    {x: 1, total: true},
+                    {x: 2, y: 15},
+                    {x: 3, total: true},
+                    {x: 4, y: -5},
+                    {x: 5, total: true},
+                ],
+            },
+        ],
+        colorScale: scaleOrdinal<string, string>().range(['#000']),
+        colors: [],
+        legend: {enabled: false} as PreparedLegend,
+    }) as PreparedWaterfallSeries[];
+    const axis = {...getAxis({maxPadding: 0}), startOnTick: false, endOnTick: false};
+
+    expect(series.map((s) => s.data.map((d) => d.x))).toEqual([[2], [0, 4], [1, 3, 5]]);
+    expect(createYScale({axis, boundsHeight: 100, series})?.domain()).toEqual([-10, 5]);
 });
 
 describe('createScales with a synchronized secondary Y axis', () => {
