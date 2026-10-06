@@ -900,6 +900,156 @@ describe('vertical legend layout', () => {
     });
 });
 
+describe('discrete legend row spacing', () => {
+    test('resolves pixel gaps and preserves the raw configuration', async () => {
+        for (const rowGap of [undefined, 0, 4, '4px', '4.5px', '.5px']) {
+            const legend = Object.freeze({enabled: true, layout: 'vertical' as const, rowGap});
+            const {preparedLegend} = await prepareLegend(legend);
+            const gap = rowGap === undefined ? 0 : Number.parseFloat(String(rowGap));
+            expect(preparedLegend.resolvedRowGap).toBe(gap);
+            expect(preparedLegend.rowGap).toBe(rowGap);
+            expect(legend.rowGap).toBe(rowGap);
+            expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 14 + gap, 28 + 2 * gap]);
+            expect(preparedLegend.height).toBe(42 + 2 * gap);
+        }
+        for (const names of [[], ['AAA']]) {
+            const {preparedLegend} = await prepareLegend(
+                {enabled: true, layout: 'vertical', rowGap: 4},
+                {names},
+            );
+            expect(preparedLegend.height).toBe(names.length * 14);
+        }
+    });
+
+    test.each(['vertical', 'horizontal'] as const)(
+        'paginates complete %s rows without gaps at page boundaries',
+        async (layout) => {
+            const {preparedLegend, legendConfig} = await prepareLegend(
+                {
+                    enabled: true,
+                    position: 'left',
+                    layout,
+                    width: 140,
+                    rowGap: 7,
+                    title: {text: 'Legend', margin: 8},
+                },
+                {names: Array(layout === 'vertical' ? 5 : 10).fill('AAA'), height: 112},
+            );
+            expect(preparedLegend.titleHeight).toBe(22);
+            expect(preparedLegend.height).toBe(92);
+            expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 21, 42, 63, 84]);
+            expect(legendConfig.pagination?.pages).toEqual([
+                {start: 0, end: 3},
+                {start: 3, end: 5},
+            ]);
+            // Three rows exactly fill the content area; title and paginator spacing are separate.
+            expect(3 * 14 + 2 * 7 + 14 + 22).toBe(preparedLegend.height);
+        },
+    );
+
+    test('counts gaps when deciding whether truncated multiline labels fit below the title', async () => {
+        const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
+            {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                width: 200,
+                rowGap: 4,
+                itemMaxRowCount: 20,
+                title: {text: 'Legend', margin: 4},
+            },
+            {names: ['A\nB\nC\nD\nE', 'Short'], height: 72},
+        );
+        expect(preparedLegend.titleHeight).toBe(18);
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 1},
+            {start: 1, end: 2},
+        ]);
+        expect(legendItems[0][0].textRows).toEqual(['A…']);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 18]);
+    });
+
+    test('keeps geometry finite and pages nonempty when gaps exceed the available height', async () => {
+        for (const rowGap of [4, 1000, Number.MAX_VALUE]) {
+            const {preparedLegend, legendConfig} = await prepareLegend(
+                {
+                    enabled: true,
+                    position: 'left',
+                    layout: 'vertical',
+                    rowGap,
+                },
+                {names: ['A', 'B', 'C', 'D'], height: 48},
+            );
+            expect(legendConfig.pagination?.pages).toEqual([
+                {start: 0, end: 1},
+                {start: 1, end: 2},
+                {start: 2, end: 3},
+                {start: 3, end: 4},
+            ]);
+            expect(preparedLegend.height).toBe(28);
+            expect(preparedLegend.rows.every((row) => Number.isFinite(row.top))).toBe(true);
+        }
+        for (const height of [0, 35]) {
+            const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
+                {
+                    enabled: true,
+                    position: 'left',
+                    layout: 'vertical',
+                    rowGap: 1000,
+                    itemMaxRowCount: 3,
+                },
+                {height},
+            );
+            expect(preparedLegend.height).toBe(0);
+            expect(legendItems).toEqual([]);
+            expect(legendConfig.pagination).toBeUndefined();
+        }
+    });
+
+    test('a gap leaves oversized rows on separate nonempty pages', async () => {
+        const {preparedLegend, legendConfig} = await prepareLegend(
+            {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                rowGap: 4,
+            },
+            {
+                height: 80,
+                seriesData: [
+                    {
+                        type: 'scatter',
+                        symbolType: 'square',
+                        legend: {symbol: {width: 120}},
+                        name: 'Tall',
+                        data: [{x: 0, y: 1}],
+                    },
+                    {type: 'line', name: 'Short', data: []},
+                ],
+            },
+        );
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 1},
+            {start: 1, end: 2},
+        ]);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 124]);
+        expect(preparedLegend.height).toBe(56);
+    });
+
+    test('omitted and zero gaps preserve layout and continuous legends ignore the gap', async () => {
+        for (const type of ['discrete', 'continuous'] as const) {
+            const legend: ChartLegend = {enabled: true, layout: 'vertical', type};
+            const baseline = await prepareLegend(legend);
+            const spaced = await prepareLegend({...legend, rowGap: type === 'discrete' ? 0 : 1000});
+            expect(spaced.legendConfig).toEqual(baseline.legendConfig);
+            expect(spaced.legendItems.map((row) => row.map((item) => item.text))).toEqual(
+                baseline.legendItems.map((row) => row.map((item) => item.text)),
+            );
+            expect(spaced.preparedLegend.rows).toEqual(baseline.preparedLegend.rows);
+        }
+    });
+});
+
 test('continuous legend ignores vertical layout', async () => {
     const horizontal = await prepareLegend({enabled: true, type: 'continuous'});
     const vertical = await prepareLegend({enabled: true, type: 'continuous', layout: 'vertical'});

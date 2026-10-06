@@ -20,7 +20,7 @@ export interface ChartLegendEvents {
 export interface ChartLegendItem {
     enabled?: boolean;
     /**
-     * Defines the pixel distance between each legend item
+     * Pixel distance between items within a horizontal legend row.
      * @default 20
      */
     itemDistance?: number;
@@ -29,6 +29,15 @@ export interface ChartLegendItem {
 }
 
 export interface ChartLegend extends ChartLegendItem {
+    /**
+     * Gap between discrete legend rows: a finite, nonnegative number or decimal `px` string.
+     * Applies to vertical lists and wrapped horizontal rows with SVG or HTML labels.
+     * Preserves spacing within labels and symbol padding. Ignored for continuous legends.
+     * Invalid values, including percentages, cause a validation error.
+     * @default 0
+     * @minimum 0
+     */
+    rowGap?: number | string;
     /**
      * Maximum number of text rows in each discrete SVG legend item.
      * Labels wrap within the resolved legend width, excluding the symbol and its padding.

@@ -41,6 +41,10 @@ export async function getPreparedLegend(args: {
 }): Promise<PreparedLegendOptions> {
     const {legend, series, chartWidth, chartMargin} = args;
     const itemMaxRowCount = legend?.itemMaxRowCount ?? legendDefaults.itemMaxRowCount;
+    // validateData has already checked the pixel value and its format.
+    const resolvedRowGap = calculateNumericProperty({
+        value: legend?.rowGap ?? legendDefaults.rowGap,
+    }) as number;
     const availableWidth = Math.max(0, chartWidth - chartMargin.left - chartMargin.right);
     const parsedWidth = parseLegendWidth(legend?.width);
     let width = parsedWidth?.value;
@@ -115,6 +119,8 @@ export async function getPreparedLegend(args: {
         itemClickAction: legend?.itemClickAction ?? 'default',
         hangingOffset: itemHangingOffset,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
+        rowGap: legend?.rowGap,
+        resolvedRowGap,
         itemMaxRowCount,
         multilineItems: !legend?.html && itemMaxRowCount > 1,
         itemStyle: computedItemStyle,
@@ -235,17 +241,22 @@ function getPagination(args: {
     rows: PreparedLegendRow[];
     maxLegendHeight: number;
     paginatorHeight: number;
+    rowGap: number;
 }) {
-    const {rows, maxLegendHeight, paginatorHeight} = args;
+    const {rows, maxLegendHeight, paginatorHeight, rowGap} = args;
     const pages: NonNullable<LegendConfig['pagination']>['pages'] = [];
     let currentHeight = 0;
     rows.forEach((row, i) => {
-        if (!pages.length || currentHeight + row.height > maxLegendHeight - paginatorHeight) {
+        if (
+            !pages.length ||
+            currentHeight + rowGap + row.height > maxLegendHeight - paginatorHeight
+        ) {
             pages.push({start: i, end: i + 1});
-            currentHeight = 0;
+            currentHeight = row.height;
+        } else {
+            currentHeight += rowGap + row.height;
         }
         pages[pages.length - 1].end = i + 1;
-        currentHeight += row.height;
     });
     return {pages};
 }
@@ -291,9 +302,17 @@ function getLegendRows(
             ...line.map((item) => Math.max(item.height, getLegendSymbolHeight(item.symbol))),
         );
         const row = {top, left: 0, height, width, items: positions};
-        top += height;
+        // Finite pixel gaps can still overflow when accumulated across many rows.
+        top = Math.min(Number.MAX_VALUE, top + height + legend.resolvedRowGap);
         return row;
     });
+}
+
+function getLegendRowsHeight(rows: PreparedLegendRow[], rowGap: number): number {
+    return rows.reduce(
+        (height, row, i) => Math.min(Number.MAX_VALUE, height + row.height + (i > 0 ? rowGap : 0)),
+        0,
+    );
 }
 
 function alignLegendRows(rows: PreparedLegendRow[], legend: PreparedLegendOptions) {
@@ -494,7 +513,7 @@ export async function finalizePreparedLegend(args: {
 
     if (discrete) {
         rows = getLegendRows(items, preparedLegend, symbolMetrics);
-        legendHeight = rows.reduce((acc, row) => acc + row.height, 0);
+        legendHeight = getLegendRowsHeight(rows, preparedLegend.resolvedRowGap);
         const heightWithRowLimit = (maxRows: number) => {
             if (maxRows < 1) {
                 return Infinity;
@@ -507,9 +526,9 @@ export async function finalizePreparedLegend(args: {
                         : item.height,
                 })),
             );
-            return getLegendRows(limitedItems, preparedLegend, symbolMetrics).reduce(
-                (height, row) => height + row.height,
-                0,
+            return getLegendRowsHeight(
+                getLegendRows(limitedItems, preparedLegend, symbolMetrics),
+                preparedLegend.resolvedRowGap,
             );
         };
         if (preparedLegend.title.enable) {
@@ -570,7 +589,7 @@ export async function finalizePreparedLegend(args: {
                 }
                 rows = getLegendRows(items, preparedLegend, symbolMetrics);
                 if (fitsWithoutPagination) {
-                    legendHeight = rows.reduce((height, row) => height + row.height, 0);
+                    legendHeight = getLegendRowsHeight(rows, preparedLegend.resolvedRowGap);
                 }
             }
             pagination =
@@ -579,6 +598,7 @@ export async function finalizePreparedLegend(args: {
                           rows,
                           maxLegendHeight: legendHeight,
                           paginatorHeight: preparedLegend.lineHeight,
+                          rowGap: preparedLegend.resolvedRowGap,
                       })
                     : undefined;
         }

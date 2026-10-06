@@ -136,6 +136,38 @@ describe('chart config artifacts', () => {
         expect(validateChoice.errors[0].keyword).toBe('enum');
     });
 
+    test('standalone declarations expose row spacing only on the chart legend', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration +
+                    `
+                    const legend: ChartLegend = {rowGap: 4};
+                    legend.rowGap = '4px';
+                    // @ts-expect-error Row gaps must be a number or string.
+                    legend.rowGap = true;
+                    // @ts-expect-error Row spacing is not an individual item option.
+                    const item: ChartLegendItem = {rowGap: 4};
+                `,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema exposes pixel row spacing with a compatible default', () => {
+        expect(schema.definitions.ChartLegend.properties.rowGap).toMatchObject({
+            type: ['number', 'string'],
+            minimum: 0,
+            default: 0,
+        });
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const rowGap of [undefined, 0, 4, 4.5, '4px', '.5px']) {
+            expect(validateConfig({series: {data: []}, legend: {rowGap}})).toBe(true);
+        }
+        for (const rowGap of [-1, NaN, Infinity, -Infinity, true]) {
+            expect(validateConfig({series: {data: []}, legend: {rowGap}})).toBe(false);
+        }
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(
