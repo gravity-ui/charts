@@ -111,10 +111,12 @@ export interface PreparedLegendRow {
 }
 
 export interface PreparedLegendOptions extends Required<
-    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth' | 'events'>
+    Omit<ChartLegend, 'title' | 'colorScale' | 'width' | 'maxWidth' | 'rowGap' | 'events'>
 > {
     width?: ChartLegend['width'];
     maxWidth?: ChartLegend['maxWidth'];
+    /** Validated nonnegative pixel spacing between discrete rows. */
+    resolvedRowGap: number;
     events: ChartLegend['events'];
     /** Pixel width, constrained to the available layout space for discrete legends and percentage widths. */
     resolvedWidth: number;

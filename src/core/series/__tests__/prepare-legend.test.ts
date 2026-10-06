@@ -9,13 +9,15 @@ const mockMeasureText = jest.fn(async (text: string) => ({
     hangingOffset: 2,
 }));
 
+const mockMeasureLabels = jest.fn(async ({labels}: {labels: string[]}) => ({
+    maxWidth: Math.max(...labels.map((label) => label.length * 10)),
+    maxHeight: 14,
+}));
+
 jest.mock('../../utils', () => ({
     ...jest.requireActual('../../utils'),
     getTextSizeFn: () => mockMeasureText,
-    getLabelsSize: async ({labels}: {labels: string[]}) => ({
-        maxWidth: Math.max(...labels.map((label) => label.length * 10)),
-        maxHeight: 14,
-    }),
+    getLabelsSize: (...args: Parameters<typeof mockMeasureLabels>) => mockMeasureLabels(...args),
 }));
 
 const chartWidth = 1000;
@@ -897,6 +899,214 @@ describe('vertical legend layout', () => {
         expect(implicit.preparedLegend.layout).toBe('horizontal');
         expect(implicit.preparedLegend.rows).toEqual(explicit.preparedLegend.rows);
         expect(implicit.legendItems.map((row) => row.length)).toEqual([2, 1]);
+    });
+});
+
+describe('discrete legend row spacing', () => {
+    test.each(['left', 'right', 'top', 'bottom'] as const)(
+        'preserves default HTML pagination height and plot dimensions (%s)',
+        async (position) => {
+            const sideLegend = position === 'left' || position === 'right';
+            const height = sideLegend ? 56 : 107;
+            for (const rowGap of [undefined, 0, 7]) {
+                // A 20 px HTML row fits in 36 - 14 px, but not in 28 - 14 px.
+                for (let i = 0; i < 3; i++) {
+                    mockMeasureLabels.mockResolvedValueOnce({maxWidth: 30, maxHeight: 20});
+                }
+                const {preparedLegend, legendConfig, series} = await prepareLegend(
+                    {enabled: true, html: true, position, layout: 'vertical', rowGap},
+                    {names: ['AAA', 'BBB', 'CCC'], height},
+                );
+                expect(preparedLegend.rows.map((row) => row.height)).toEqual([20, 20, 20]);
+                expect(preparedLegend.height).toBe(rowGap ? 36 : 28);
+                expect(legendConfig.pagination?.pages).toEqual([
+                    {start: 0, end: 1},
+                    {start: 1, end: 2},
+                    {start: 2, end: 3},
+                ]);
+                const {boundsHeight} = getChartDimensions({
+                    height,
+                    width: chartWidth,
+                    margin: chartMargin,
+                    preparedLegend,
+                    preparedSeries: series,
+                    preparedXAxis: null,
+                    preparedYAxis: null,
+                    legendConfig,
+                });
+                expect(boundsHeight).toBe(sideLegend || rowGap ? 36 : 44);
+                const bottomLegendTop = rowGap ? 61 : 69;
+                expect(legendConfig.offset.top).toBe(position === 'bottom' ? bottomLegendTop : 10);
+            }
+        },
+    );
+
+    test('fits decimal gaps at the exact available height', async () => {
+        const {preparedLegend, legendConfig} = await prepareLegend(
+            {enabled: true, position: 'left', layout: 'vertical', rowGap: 0.2},
+            {names: Array(6).fill('A'), height: 105},
+        );
+        expect(preparedLegend.height).toBe(85);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 14.2, 28.4, 42.6, 56.8, 71]);
+        expect(legendConfig.pagination).toBeUndefined();
+    });
+
+    test('fills complete pages when decimal gaps meet the content height exactly', async () => {
+        const {legendConfig} = await prepareLegend(
+            {enabled: true, position: 'left', layout: 'vertical', rowGap: 1.4},
+            {names: Array(23).fill('A'), height: 202},
+        );
+        // Eleven 14 px rows and ten 1.4 px gaps fill the 168 px content area.
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 11},
+            {start: 11, end: 22},
+            {start: 22, end: 23},
+        ]);
+    });
+
+    test('resolves pixel gaps and preserves the raw configuration', async () => {
+        for (const rowGap of [undefined, 0, 4, '4px', '4.5px', '.5px']) {
+            const legend = Object.freeze({enabled: true, layout: 'vertical' as const, rowGap});
+            const {preparedLegend} = await prepareLegend(legend);
+            const gap = rowGap === undefined ? 0 : Number.parseFloat(String(rowGap));
+            expect(preparedLegend.resolvedRowGap).toBe(gap);
+            expect(legend.rowGap).toBe(rowGap);
+            expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 14 + gap, 28 + 2 * gap]);
+            expect(preparedLegend.height).toBe(42 + 2 * gap);
+        }
+        for (const names of [[], ['AAA']]) {
+            const {preparedLegend} = await prepareLegend(
+                {enabled: true, layout: 'vertical', rowGap: 4},
+                {names},
+            );
+            expect(preparedLegend.height).toBe(names.length * 14);
+        }
+    });
+
+    test.each(['vertical', 'horizontal'] as const)(
+        'paginates complete %s rows without gaps at page boundaries',
+        async (layout) => {
+            const {preparedLegend, legendConfig} = await prepareLegend(
+                {
+                    enabled: true,
+                    position: 'left',
+                    layout,
+                    width: 140,
+                    rowGap: 7,
+                    title: {text: 'Legend', margin: 8},
+                },
+                {names: Array(layout === 'vertical' ? 5 : 10).fill('AAA'), height: 112},
+            );
+            expect(preparedLegend.titleHeight).toBe(22);
+            expect(preparedLegend.height).toBe(92);
+            expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 21, 42, 63, 84]);
+            expect(legendConfig.pagination?.pages).toEqual([
+                {start: 0, end: 3},
+                {start: 3, end: 5},
+            ]);
+        },
+    );
+
+    test('counts gaps when deciding whether truncated multiline labels fit below the title', async () => {
+        const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
+            {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                width: 200,
+                rowGap: 4,
+                itemMaxRowCount: 20,
+                title: {text: 'Legend', margin: 4},
+            },
+            {names: ['A\nB\nC\nD\nE', 'Short'], height: 72},
+        );
+        expect(preparedLegend.titleHeight).toBe(18);
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 1},
+            {start: 1, end: 2},
+        ]);
+        expect(legendItems[0][0].textRows).toEqual(['A…']);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 18]);
+    });
+
+    test('keeps geometry finite and pages nonempty when gaps exceed the available height', async () => {
+        for (const rowGap of [4, 1000, Number.MAX_VALUE]) {
+            const {preparedLegend, legendConfig} = await prepareLegend(
+                {
+                    enabled: true,
+                    position: 'left',
+                    layout: 'vertical',
+                    rowGap,
+                },
+                {names: ['A', 'B', 'C', 'D'], height: 48},
+            );
+            expect(legendConfig.pagination?.pages).toEqual([
+                {start: 0, end: 1},
+                {start: 1, end: 2},
+                {start: 2, end: 3},
+                {start: 3, end: 4},
+            ]);
+            expect(preparedLegend.height).toBe(28);
+            expect(preparedLegend.rows.every((row) => Number.isFinite(row.top))).toBe(true);
+        }
+        for (const height of [0, 35]) {
+            const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
+                {
+                    enabled: true,
+                    position: 'left',
+                    layout: 'vertical',
+                    rowGap: 1000,
+                    itemMaxRowCount: 3,
+                },
+                {height},
+            );
+            expect(preparedLegend.height).toBe(0);
+            expect(legendItems).toEqual([]);
+            expect(legendConfig.pagination).toBeUndefined();
+        }
+    });
+
+    test('a gap leaves oversized rows on separate nonempty pages', async () => {
+        const {preparedLegend, legendConfig} = await prepareLegend(
+            {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                rowGap: 4,
+            },
+            {
+                height: 80,
+                seriesData: [
+                    {
+                        type: 'scatter',
+                        symbolType: 'square',
+                        legend: {symbol: {width: 120}},
+                        name: 'Tall',
+                        data: [{x: 0, y: 1}],
+                    },
+                    {type: 'line', name: 'Short', data: []},
+                ],
+            },
+        );
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 1},
+            {start: 1, end: 2},
+        ]);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 124]);
+        expect(preparedLegend.height).toBe(56);
+    });
+
+    test('omitted and zero gaps preserve layout and continuous legends ignore the gap', async () => {
+        for (const type of ['discrete', 'continuous'] as const) {
+            const legend: ChartLegend = {enabled: true, layout: 'vertical', type};
+            const baseline = await prepareLegend(legend);
+            const spaced = await prepareLegend({...legend, rowGap: type === 'discrete' ? 0 : 1000});
+            expect(spaced.legendConfig).toEqual(baseline.legendConfig);
+            expect(spaced.legendItems.map((row) => row.map((item) => item.text))).toEqual(
+                baseline.legendItems.map((row) => row.map((item) => item.text)),
+            );
+            expect(spaced.preparedLegend.rows).toEqual(baseline.preparedLegend.rows);
+        }
     });
 });
 

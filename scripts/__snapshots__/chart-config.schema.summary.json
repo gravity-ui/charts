@@ -319,6 +319,7 @@
       "margin",
       "maxWidth",
       "position",
+      "rowGap",
       "title",
       "type",
       "verticalAlign",

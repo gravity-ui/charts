@@ -15,6 +15,27 @@ function getValidGradient() {
 }
 
 describe('validation/validateData', () => {
+    test('accepts nonnegative pixel row gaps and rejects invalid formats', () => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+        };
+        for (const rowGap of [undefined, 0, 4, '0px', '4.5px', '.5px']) {
+            expect(() => validateData({...data, legend: {rowGap}})).not.toThrow();
+        }
+        // Strict decimal syntax is covered by parseLegendWidth's own tests.
+        for (const value of [-1, NaN, Infinity, null, true, '4%', '4', 'auto', '-4px', '4px\n']) {
+            expect(() =>
+                validateData({...data, legend: {rowGap: value as ChartLegend['rowGap']}}),
+            ).toThrow(
+                expect.objectContaining({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'legend.rowGap must be a finite, nonnegative number or decimal px string',
+                }),
+            );
+        }
+    });
+
     test.each([
         -10,
         -0.5,
