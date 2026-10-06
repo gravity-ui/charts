@@ -61,7 +61,7 @@ export const DefaultTooltipContent = ({
     const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
     const [scrollBarWidth, setScrollBarWidth] = React.useState<number>(0);
     const contentRowsRef = React.useRef<HTMLDivElement>(null);
-    const resolvedYAxes = (yAxes?.length ? yAxes : undefined) ?? (yAxis ? [yAxis] : undefined);
+    const resolvedYAxes = yAxes ?? (yAxis ? [yAxis] : undefined);
     const measureValue = getMeasureValue({
         data: hovered,
         xAxis,

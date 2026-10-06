@@ -27,11 +27,12 @@ export interface ChartTooltipContentProps {
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    /** All Y axes. Takes precedence over yAxis when resolving series values. */
+    yAxes?: ChartYAxis[];
     qa?: string;
 }
 
 interface TooltipContentProps extends ChartTooltipContentProps {
-    yAxes?: ChartYAxis[];
     hoveredValues?: HoveredValue[];
 }
 
@@ -98,7 +99,7 @@ TooltipContent.displayName = 'TooltipContent';
 export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) => (
     <TooltipContent
         {...props}
-        yAxes={props.yAxis ? [props.yAxis] : undefined}
+        yAxes={props.yAxes ?? (props.yAxis ? [props.yAxis] : undefined)}
         hoveredValues={undefined}
     />
 ));

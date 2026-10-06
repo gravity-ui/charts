@@ -1,31 +1,17 @@
 import React from 'react';
 
-import {ChartTestStory} from '../../../playwright/components/ChartTestStory';
-import type {ChartData} from '../../types';
+import type {BarXSeriesData, ChartData} from '../../types';
+
+import {ChartClickEventsTestStory} from './ChartClickEventsTestStory';
 
 interface Props {
     data: ChartData;
 }
 
-export function CrosshairEventsTestStory({data}: Props) {
-    const [clicked, setClicked] = React.useState('');
-    const chartData = React.useMemo<ChartData>(
-        () => ({
-            ...data,
-            chart: {
-                ...data.chart,
-                events: {
-                    click: ({point}) => setClicked(`${point.x}:${point.y}`),
-                },
-            },
-        }),
-        [data],
-    );
+const formatPoint = (point: BarXSeriesData) => `${point.x}:${point.y}`;
 
+export function CrosshairEventsTestStory({data}: Props) {
     return (
-        <React.Fragment>
-            <ChartTestStory data={chartData} />
-            <output data-qa="clicked-point">{clicked}</output>
-        </React.Fragment>
+        <ChartClickEventsTestStory data={data} formatPoint={formatPoint} dataQa="clicked-point" />
     );
 }

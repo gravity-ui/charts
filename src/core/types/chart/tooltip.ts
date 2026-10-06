@@ -189,7 +189,7 @@ export type ChartTooltipTotalsBuiltInAggregation =
 
 export type ChartTooltipTotalsAggregationValue = number | string | undefined;
 
-export interface ChartTooltipRowRendererArgs {
+export type ChartTooltipRowRendererArgs = {
     id: string;
     name: string;
     active?: boolean;
@@ -216,7 +216,7 @@ export interface ChartTooltipRowRendererArgs {
      * Apply it to the root `<tr>` element of the returned row: `<tr className={className}>`.
      */
     className?: string;
-}
+};
 
 export type ChartTooltipSortComparator<T = MeaningfulAny> = (
     a: TooltipDataChunk<T>,

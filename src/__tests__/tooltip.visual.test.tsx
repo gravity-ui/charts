@@ -4,6 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
+import {MultipleYAxesTooltipExample} from '../../docs/examples/src/charts/tooltip/multiple-y-axes';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     areaStakingPercentData,
@@ -22,6 +23,27 @@ import {StackingPercentRowRendererTestStory} from './components/StackingPercentR
 import {getLocator, getLocatorBoundingBox} from './utils';
 
 test.describe('Tooltip', () => {
+    test('Custom renderer reuses default content with multiple Y axes', async ({
+        mount,
+        page,
+    }, testInfo) => {
+        const component = await mount(
+            <div style={{height: 280, width: 400}}>
+                <MultipleYAxesTooltipExample />
+            </div>,
+        );
+        const line = component.locator('.gcharts-line').first();
+        await expect(line).toBeVisible();
+        const box = await getLocatorBoundingBox(line);
+        await page.mouse.move(box.x + 1, box.y + box.height - 1);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip.getByText('Jan', {exact: true})).toBeVisible();
+        await expect(tooltip.getByText('Load', {exact: true})).toBeVisible();
+        const total = tooltip.locator('.gcharts-tooltip__content-row_totals');
+        await expect(total.getByText('10', {exact: true})).toBeVisible();
+        await page.screenshot({path: testInfo.outputPath('multiple-y-axes-tooltip.png')});
+    });
+
     test('Clears stale crosshair after categories shrink', async ({mount, page}) => {
         const errors: string[] = [];
         page.on('pageerror', (error) => errors.push(error.message));
@@ -70,7 +92,13 @@ test.describe('Tooltip', () => {
     for (const axis of ['x', 'y']) {
         for (const snap of [true, false]) {
             test(`Crosshair allows chart clicks (${axis}, snap=${snap})`, async ({mount, page}) => {
+                let pointerMoveCount = 0;
                 const data: ChartData = {
+                    chart: {
+                        events: {
+                            pointermove: () => pointerMoveCount++,
+                        },
+                    },
                     legend: {enabled: false},
                     tooltip: {pin: {enabled: true}},
                     xAxis: {
@@ -111,6 +139,7 @@ test.describe('Tooltip', () => {
                 const y = Math.round(axis === 'y' && snap ? box.y + 1 : box.y + box.height / 2);
                 await page.mouse.move(x, y);
                 await expect(component.locator('[data-crosshair] path')).toHaveCount(1);
+                await expect.poll(() => pointerMoveCount).toBeGreaterThan(0);
                 // A crosshair drawn over the pointer must leave the underlying bar clickable.
                 await expect
                     .poll(() =>

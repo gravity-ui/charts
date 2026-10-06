@@ -50,7 +50,12 @@ describe('chart config artifacts', () => {
                     });
                     return null;
                 },
-                rows: [{renderer: ({yAxes}) => { void yAxes?.[1]; return ''; }}],
+                rows: [{renderer: (args) => {
+                    const record: Record<string, unknown> = args;
+                    void record;
+                    void args.yAxes?.[1];
+                    return '';
+                }}],
                 totals: {aggregation: ({yAxes}) => yAxes?.length},
             };
             void tooltip;

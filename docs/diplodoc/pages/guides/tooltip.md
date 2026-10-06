@@ -45,6 +45,16 @@ tooltip: {
 }
 ```
 
+## Multiple Y axes and custom content
+
+Custom `renderer`, `rowRenderer`, and `totals.aggregation` callbacks receive
+all Y axes in `yAxes`. To reuse default content, pass the renderer arguments to
+`ChartTooltipContent`. Its `yAxes` prop resolves values using each series'
+assigned axis; if omitted, it falls back to `yAxis`. The example excludes
+category values from the numeric total.
+
+<div data-chart-example="tooltip/multiple-y-axes"></div>
+
 ## Hiding specific series from the tooltip
 
 There are scenarios where you might want to display a chart with multiple data series but exclude specific ones from the tooltip. This is useful for providing a cleaner, more focused user experience, especially when certain series are used for contextual or decorative purposes rather than for precise data reading.
