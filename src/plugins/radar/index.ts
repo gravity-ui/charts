@@ -11,6 +11,7 @@ import {renderRadar} from '~core/shapes/radar/renderer';
 import type {PreparedRadarData} from '~core/shapes/radar/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
+import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {RadarSeries} from '../../types';
 
 import {prepareRadarSeries} from './prepare-radar-series';
@@ -35,6 +36,39 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const radarPlugin: SeriesPlugin<RadarSeries> = {
     type: 'radar',
     useClipPath: false,
+    validate: ({series, allSeries}) => {
+        if (
+            series.categories !== undefined &&
+            (!Array.isArray(series.categories) ||
+                !series.categories.every(
+                    (category) =>
+                        typeof category === 'object' &&
+                        category !== null &&
+                        !Array.isArray(category) &&
+                        typeof category.key === 'string',
+                ))
+        ) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: 'Radar series.categories must be an array of objects with a string key',
+            });
+        }
+
+        if (
+            !allSeries.some(
+                (item) =>
+                    item.type === 'radar' &&
+                    Array.isArray(item.categories) &&
+                    item.categories.length > 0,
+            )
+        ) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message:
+                    'Radar categories must be specified as a nonempty array in series.categories',
+            });
+        }
+    },
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     prepareShapeData,
