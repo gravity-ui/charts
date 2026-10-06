@@ -120,7 +120,6 @@ export async function getPreparedLegend(args: {
         itemClickAction: legend?.itemClickAction ?? 'default',
         hangingOffset: itemHangingOffset,
         itemDistance: get(legend, 'itemDistance', legendDefaults.itemDistance),
-        rowGap: legend?.rowGap,
         resolvedRowGap,
         itemMaxRowCount,
         multilineItems: !legend?.html && itemMaxRowCount > 1,
@@ -301,16 +300,19 @@ function getLegendRows(
             ...line.map((item) => Math.max(item.height, getLegendSymbolHeight(item.symbol))),
         );
         const row = {top, left: 0, height, width, items: positions};
-        // Finite pixel gaps can still overflow when accumulated across many rows.
-        top = Math.min(Number.MAX_VALUE, sumDecimals([top, height, legend.resolvedRowGap]));
+        top = sumLegendHeights([top, height, legend.resolvedRowGap]);
         return row;
     });
 }
 
+/** Finite sizes can still overflow when accumulated across many rows. */
+function sumLegendHeights(values: number[]): number {
+    return Math.min(Number.MAX_VALUE, sumDecimals(values));
+}
+
 function getLegendRowsHeight(rows: PreparedLegendRow[], rowGap: number): number {
     return rows.reduce(
-        (height, row, i) =>
-            Math.min(Number.MAX_VALUE, sumDecimals([height, row.height, i > 0 ? rowGap : 0])),
+        (height, row, i) => sumLegendHeights([height, row.height, i > 0 ? rowGap : 0]),
         0,
     );
 }
@@ -576,6 +578,7 @@ export async function finalizePreparedLegend(args: {
             // the remainder if rounding would clip a row that fits beside the paginator.
             if (
                 preparedLegend.html &&
+                preparedLegend.resolvedRowGap > 0 &&
                 rows.some(
                     (row) =>
                         row.height > legendHeight - preparedLegend.lineHeight &&

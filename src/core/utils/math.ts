@@ -43,8 +43,7 @@ export function parseNonNegativeSize(value: unknown): ParsedNumericProperty | un
     }
 
     const match = SIZE_REGEXP.exec(value);
-    // `$` can match before a final newline; require the entire input to match.
-    if (!match || match[0] !== value) {
+    if (!match) {
         return undefined;
     }
 

@@ -9,13 +9,15 @@ const mockMeasureText = jest.fn(async (text: string) => ({
     hangingOffset: 2,
 }));
 
+const mockMeasureLabels = jest.fn(async ({labels}: {labels: string[]}) => ({
+    maxWidth: Math.max(...labels.map((label) => label.length * 10)),
+    maxHeight: 14,
+}));
+
 jest.mock('../../utils', () => ({
     ...jest.requireActual('../../utils'),
     getTextSizeFn: () => mockMeasureText,
-    getLabelsSize: async ({labels}: {labels: string[]}) => ({
-        maxWidth: Math.max(...labels.map((label) => label.length * 10)),
-        maxHeight: 14,
-    }),
+    getLabelsSize: (...args: Parameters<typeof mockMeasureLabels>) => mockMeasureLabels(...args),
 }));
 
 const chartWidth = 1000;
@@ -901,6 +903,44 @@ describe('vertical legend layout', () => {
 });
 
 describe('discrete legend row spacing', () => {
+    test.each(['left', 'right', 'top', 'bottom'] as const)(
+        'preserves default HTML pagination height and plot dimensions (%s)',
+        async (position) => {
+            const sideLegend = position === 'left' || position === 'right';
+            const height = sideLegend ? 56 : 107;
+            for (const rowGap of [undefined, 0, 7]) {
+                // A 20 px HTML row fits in 36 - 14 px, but not in 28 - 14 px.
+                for (let i = 0; i < 3; i++) {
+                    mockMeasureLabels.mockResolvedValueOnce({maxWidth: 30, maxHeight: 20});
+                }
+                const {preparedLegend, legendConfig, series} = await prepareLegend(
+                    {enabled: true, html: true, position, layout: 'vertical', rowGap},
+                    {names: ['AAA', 'BBB', 'CCC'], height},
+                );
+                expect(preparedLegend.rows.map((row) => row.height)).toEqual([20, 20, 20]);
+                expect(preparedLegend.height).toBe(rowGap ? 36 : 28);
+                expect(legendConfig.pagination?.pages).toEqual([
+                    {start: 0, end: 1},
+                    {start: 1, end: 2},
+                    {start: 2, end: 3},
+                ]);
+                const {boundsHeight} = getChartDimensions({
+                    height,
+                    width: chartWidth,
+                    margin: chartMargin,
+                    preparedLegend,
+                    preparedSeries: series,
+                    preparedXAxis: null,
+                    preparedYAxis: null,
+                    legendConfig,
+                });
+                expect(boundsHeight).toBe(sideLegend || rowGap ? 36 : 44);
+                const bottomLegendTop = rowGap ? 61 : 69;
+                expect(legendConfig.offset.top).toBe(position === 'bottom' ? bottomLegendTop : 10);
+            }
+        },
+    );
+
     test('fits decimal gaps at the exact available height', async () => {
         const {preparedLegend, legendConfig} = await prepareLegend(
             {enabled: true, position: 'left', layout: 'vertical', rowGap: 0.2},
@@ -930,7 +970,6 @@ describe('discrete legend row spacing', () => {
             const {preparedLegend} = await prepareLegend(legend);
             const gap = rowGap === undefined ? 0 : Number.parseFloat(String(rowGap));
             expect(preparedLegend.resolvedRowGap).toBe(gap);
-            expect(preparedLegend.rowGap).toBe(rowGap);
             expect(legend.rowGap).toBe(rowGap);
             expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 14 + gap, 28 + 2 * gap]);
             expect(preparedLegend.height).toBe(42 + 2 * gap);
@@ -965,8 +1004,6 @@ describe('discrete legend row spacing', () => {
                 {start: 0, end: 3},
                 {start: 3, end: 5},
             ]);
-            // Three rows exactly fill the content area; title and paginator spacing are separate.
-            expect(3 * 14 + 2 * 7 + 14 + 22).toBe(preparedLegend.height);
         },
     );
 

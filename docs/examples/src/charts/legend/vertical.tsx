@@ -11,7 +11,6 @@ const data: ChartData = {
         align: 'left',
         verticalAlign: 'top',
         width: 160,
-        itemMaxRowCount: 2,
         rowGap: 4,
     },
     series: {

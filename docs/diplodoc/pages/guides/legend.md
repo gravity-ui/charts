@@ -16,7 +16,7 @@ Set `legend.layout: 'vertical'` to place one item per row, independently of `pos
 
 For vertical layout, use `align` to position the list and `verticalAlign` for vertical alignment of side legends; `justifyContent` only affects horizontal layout. Lists that exceed the available height use pagination. If a single row is taller than the page, its content is clipped to keep the pagination controls accessible.
 
-Use `legend.rowGap: 4` (or `'4px'`) to separate vertical items or wrapped horizontal rows. It accepts finite, nonnegative pixel sizes and defaults to `0`. Invalid values, including percentages, cause a validation error. The gap preserves spacing within labels and between symbols and text. `itemDistance` controls horizontal spacing within a row. Both SVG and HTML labels support the gap; continuous legends ignore it.
+Use `legend.rowGap` to separate vertical items or wrapped horizontal rows in discrete legends with SVG or HTML labels. It accepts finite, nonnegative numbers (e.g. `4`) or decimal `px` strings (e.g. `'4px'`) and defaults to `0`; invalid values throw `INVALID_DATA`.
 
 <div data-chart-example="legend/vertical"></div>
 

@@ -30,10 +30,8 @@ export interface ChartLegendItem {
 
 export interface ChartLegend extends ChartLegendItem {
     /**
-     * Gap between discrete legend rows: a finite, nonnegative number or decimal `px` string.
-     * Applies to vertical lists and wrapped horizontal rows with SVG or HTML labels.
-     * Preserves spacing within labels and symbol padding. Ignored for continuous legends.
-     * Invalid values, including percentages, cause a validation error.
+     * Gap between vertical items or wrapped horizontal rows in discrete legends with SVG or HTML labels.
+     * Accepts finite, nonnegative numbers or decimal `px` strings; invalid values throw `INVALID_DATA`.
      * @default 0
      * @minimum 0
      */

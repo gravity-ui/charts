@@ -115,7 +115,6 @@ export interface PreparedLegendOptions extends Required<
 > {
     width?: ChartLegend['width'];
     maxWidth?: ChartLegend['maxWidth'];
-    rowGap?: ChartLegend['rowGap'];
     /** Validated nonnegative pixel spacing between discrete rows. */
     resolvedRowGap: number;
     events: ChartLegend['events'];

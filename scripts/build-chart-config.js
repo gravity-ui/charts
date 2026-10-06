@@ -589,13 +589,6 @@ function normalizeSchema(schema) {
     removeInvalidDefaults(schema);
     addEnumValueDescriptions(schema);
 
-    const rowGap = schema.definitions?.ChartLegend?.properties?.rowGap;
-    if (rowGap) {
-        // Match the decimal px syntax in parseNonNegativeSize. The final assertion
-        // rejects trailing newlines as well, unlike JavaScript's `$` anchor.
-        rowGap.pattern = '^(?:\\d+(?:\\.\\d+)?|\\.\\d+)px(?![\\s\\S])';
-    }
-
     schema.$id = `${PACKAGE_JSON.name}/chart-config.schema.json@${PACKAGE_JSON.version}`;
     schema.title = 'ChartConfig';
     schema.version = PACKAGE_JSON.version;
