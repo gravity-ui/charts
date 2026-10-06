@@ -7,6 +7,7 @@
 ## Chart types
 
 - `Area`
+- [Area range](guides/series-types/area-range.md)
 - `Bar-X`
 - `Bar-Y`
 - `Line`
