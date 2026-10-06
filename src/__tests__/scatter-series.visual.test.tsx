@@ -105,6 +105,38 @@ test.describe('Scatter series', () => {
         );
     });
 
+    test('Snapped crosshair follows a shifted cluster marker', async ({mount, page}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Observations',
+                        data: [49, 49.1, 50.1, 50.2].map((x) => ({x, y: 75})),
+                        cluster: {
+                            enabled: true,
+                            layoutAlgorithm: {gridSize: '50%'},
+                            overlapMode: 'shift',
+                            marker: {radius: 12},
+                        },
+                    },
+                ],
+            },
+            xAxis: {type: 'linear', min: 0, max: 100, crosshair: {enabled: true, snap: true}},
+            yAxis: [{type: 'linear', min: 0, max: 100, crosshair: {enabled: true, snap: true}}],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const label = component.locator('.gcharts-scatter__cluster-label').first();
+        const labelBox = await getLocatorBoundingBox(label);
+        const markerX = labelBox.x + labelBox.width / 2;
+        await page.mouse.move(Math.round(markerX), Math.round(labelBox.y + labelBox.height / 2));
+
+        const crosshair = component.locator('[data-crosshair-x-line] path').first();
+        await expect(crosshair).toHaveCount(1);
+        const crosshairX = await crosshair.evaluate((node) => node.getBoundingClientRect().x);
+        expect(Math.abs(crosshairX - markerX)).toBeLessThan(2);
+    });
+
     test('Cluster clicks work with the tooltip disabled', async ({mount, page}) => {
         const component = await mount(
             <ScatterClusterEventsTestStory

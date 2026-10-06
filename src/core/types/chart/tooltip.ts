@@ -1,6 +1,6 @@
 import type {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../../constants';
 import type {DateTimeLabelFormats} from '../../utils/time';
-import type {MeaningfulAny} from '../misc';
+import type {MeaningfulAny, PointPosition} from '../misc';
 import type {RendererElement} from '../renderer';
 
 import type {AreaSeries, AreaSeriesData} from './area';
@@ -49,6 +49,8 @@ export interface TooltipDataChunkPie<T = MeaningfulAny> {
 export interface TooltipDataChunkScatter<T = MeaningfulAny> {
     data: ScatterClusterData<T>;
     color?: string;
+    /** Marker position in plot pixels; may differ from the data centroid when clustering shifts a marker. */
+    displayPosition?: PointPosition;
     series: {
         type: ScatterSeries['type'];
         /** Assigned Y axis index; defaults to 0. */

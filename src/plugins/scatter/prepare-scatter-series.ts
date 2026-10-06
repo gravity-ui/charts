@@ -102,13 +102,10 @@ export function prepareScatterSeries(
                     gridSize: s.cluster?.layoutAlgorithm?.gridSize ?? DEFAULT_CLUSTER_GRID_SIZE,
                 },
                 overlapMode: s.cluster?.overlapMode ?? 'allow',
-                minimumClusterSize: Math.max(
-                    2,
-                    Math.floor(s.cluster?.minimumClusterSize ?? DEFAULT_CLUSTER_MINIMUM_SIZE),
-                ),
+                minimumClusterSize: s.cluster?.minimumClusterSize ?? DEFAULT_CLUSTER_MINIMUM_SIZE,
                 marker: {
                     ...marker.states.normal,
-                    radius: Math.max(1, s.cluster?.marker?.radius ?? DEFAULT_CLUSTER_RADIUS),
+                    radius: DEFAULT_CLUSTER_RADIUS,
                     ...s.cluster?.marker,
                 },
                 dataLabels: {

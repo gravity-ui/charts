@@ -202,6 +202,30 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('documents scatter cluster defaults, grid units and overlap modes', () => {
+        const cluster = schema.definitions.ScatterClusterOptions.properties;
+        const layout = schema.definitions.ScatterClusterLayoutAlgorithmOptions.properties;
+
+        expect(cluster.enabled.default).toBe(false);
+        expect(cluster.minimumClusterSize.default).toBe(2);
+        expect(layout.type).toMatchObject({const: 'grid', default: 'grid'});
+        expect(layout.type.description).toContain("`'grid'`");
+        expect(layout.gridSize).toMatchObject({default: 50});
+        expect(layout.gridSize.description).toContain('relative to the plot width');
+        expect(
+            schema.definitions['ScatterSeries<JsonValue>'].properties.cluster.description,
+        ).toContain('datetime X axis');
+        expect(cluster.overlapMode).toMatchObject({
+            enum: ['allow', 'shift'],
+            default: 'allow',
+            enumDescriptions: [
+                'Leave cluster markers at their centroids.',
+                'Move overlapping cluster markers within their cells when space permits.',
+            ],
+        });
+        expect(declaration).toContain('percentages are relative to the plot width');
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(

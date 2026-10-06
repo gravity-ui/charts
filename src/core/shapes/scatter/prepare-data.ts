@@ -87,7 +87,10 @@ export async function prepareScatterData(args: {
 
     const xMax = Math.max(...xScale.range());
 
+    const markersBySeries = new Map<string, PreparedScatterData[]>();
     const markers: PreparedScatterData[] = series.reduce<PreparedScatterData[]>((acc, s) => {
+        const seriesMarkers: PreparedScatterData[] = [];
+        markersBySeries.set(s.id, seriesMarkers);
         const yAxisIndex = get(s, 'yAxis', 0);
         const seriesYAxis = yAxis[yAxisIndex];
         const seriesYScale = yScale[yAxisIndex];
@@ -115,7 +118,7 @@ export async function prepareScatterData(args: {
                 return;
             }
 
-            acc.push({
+            const marker: PreparedScatterData = {
                 point: {
                     data: d,
                     series: s,
@@ -128,23 +131,33 @@ export async function prepareScatterData(args: {
                 active: true,
                 htmlElements: [],
                 clipped: isOutsideBounds(x, y),
-            });
+            };
+            acc.push(marker);
+            seriesMarkers.push(marker);
         });
 
         return acc;
     }, []);
 
-    const scatterData = isRangeSlider
-        ? markers
-        : series.flatMap((item) =>
-              clusterSeriesData({
-                  data: markers.filter((marker) => marker.point.series.id === item.id),
-                  series: item,
-                  boundsWidth,
-                  boundsHeight,
-                  isOutsideBounds,
-              }),
-          );
+    const scatterDataBySeries = new Map(markersBySeries);
+    const scatterData =
+        isRangeSlider || !series.some((item) => item.cluster.enabled)
+            ? markers
+            : series.flatMap((item) => {
+                  const seriesMarkers = scatterDataBySeries.get(item.id) ?? [];
+                  if (!item.cluster.enabled) {
+                      return seriesMarkers;
+                  }
+                  const clustered = clusterSeriesData({
+                      data: seriesMarkers,
+                      series: item,
+                      boundsWidth,
+                      boundsHeight,
+                      isOutsideBounds,
+                  });
+                  scatterDataBySeries.set(item.id, clustered);
+                  return clustered;
+              });
 
     const allSvgLabels: ScatterSvgLabelData[] = [];
     const allHtmlLabels: HtmlItem[] = [];
@@ -193,8 +206,8 @@ export async function prepareScatterData(args: {
 
             const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
 
-            const seriesPoints = scatterData
-                .filter((m) => m.point.series.id === s.id && !m.clipped)
+            const seriesPoints = (scatterDataBySeries.get(s.id) ?? [])
+                .filter((m) => !m.clipped)
                 .filter((m) => !m.point.data.cluster)
                 .map((m) => m.point);
 

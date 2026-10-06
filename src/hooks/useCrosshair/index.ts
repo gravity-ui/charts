@@ -82,7 +82,13 @@ export const useCrosshair = (props: Props) => {
                 .append('path')
                 .attr('d', (hoveredElement) => {
                     let lineValue = 0;
-                    if (
+                    const displayX =
+                        'displayPosition' in hoveredElement
+                            ? hoveredElement.displayPosition?.[0]
+                            : undefined;
+                    if (xAxis.crosshair.snap && displayX !== undefined) {
+                        lineValue = displayX;
+                    } else if (
                         xAxis.crosshair.snap &&
                         typeof hoveredElement.data === 'object' &&
                         'x' in hoveredElement.data
@@ -164,7 +170,13 @@ export const useCrosshair = (props: Props) => {
                     .append('path')
                     .attr('d', (hoveredElement) => {
                         let lineValue = 0;
-                        if (
+                        const displayY =
+                            'displayPosition' in hoveredElement
+                                ? hoveredElement.displayPosition?.[1]
+                                : undefined;
+                        if (yAxis.crosshair.snap && displayY !== undefined) {
+                            lineValue = displayY;
+                        } else if (
                             yAxis.crosshair.snap &&
                             typeof hoveredElement.data === 'object' &&
                             'y' in hoveredElement.data

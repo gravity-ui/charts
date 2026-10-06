@@ -5,6 +5,9 @@ import {calculateNumericProperty, getSymbolSize} from '../../utils';
 
 import type {PreparedScatterData} from './types';
 
+const SHIFT_CLEARANCE_PX = 0.1;
+const SHIFT_SEARCH_DIRECTIONS = 16;
+
 interface GridCell {
     x: number;
     y: number;
@@ -161,9 +164,9 @@ function shiftClusters(
         ];
 
         for (const blocker of blockers) {
-            const radius = own.radius + blocker.radius + 0.1;
-            for (let step = 0; step < 16; step++) {
-                const angle = (step * Math.PI) / 8;
+            const radius = own.radius + blocker.radius + SHIFT_CLEARANCE_PX;
+            for (let step = 0; step < SHIFT_SEARCH_DIRECTIONS; step++) {
+                const angle = (step * 2 * Math.PI) / SHIFT_SEARCH_DIRECTIONS;
                 candidates.push({
                     x: blocker.marker.point.x + radius * Math.cos(angle),
                     y: blocker.marker.point.y + radius * Math.sin(angle),
@@ -198,20 +201,8 @@ function shiftClusters(
     }
 }
 
-function makeCluster(
-    points: PreparedScatterData[],
-    series: PreparedScatterSeries,
-    isOutsideBounds: (x: number, y: number) => boolean,
-): PreparedScatterData {
-    const x = points.reduce((sum, item) => sum + item.point.x, 0) / points.length;
-    const y = points.reduce((sum, item) => sum + item.point.y, 0) / points.length;
-    const sourcePoints = points.map((item) => item.point.data as ScatterSeriesData);
-    const data: ScatterClusterData = {
-        x: sourcePoints.reduce((sum, item) => sum + Number(item.x), 0) / points.length,
-        y: sourcePoints.reduce((sum, item) => sum + Number(item.y), 0) / points.length,
-        cluster: {size: points.length, points: sourcePoints},
-    };
-    const markerSeries: PreparedScatterSeries = {
+function prepareClusterMarkerSeries(series: PreparedScatterSeries): PreparedScatterSeries {
+    return {
         ...series,
         marker: {
             states: {
@@ -224,7 +215,21 @@ function makeCluster(
             },
         },
     };
+}
 
+function makeCluster(
+    points: PreparedScatterData[],
+    markerSeries: PreparedScatterSeries,
+    isOutsideBounds: (x: number, y: number) => boolean,
+): PreparedScatterData {
+    const x = points.reduce((sum, item) => sum + item.point.x, 0) / points.length;
+    const y = points.reduce((sum, item) => sum + item.point.y, 0) / points.length;
+    const sourcePoints = points.map((item) => item.point.data as ScatterSeriesData);
+    const data: ScatterClusterData = {
+        x: sourcePoints.reduce((sum, item) => sum + Number(item.x), 0) / points.length,
+        y: sourcePoints.reduce((sum, item) => sum + Number(item.y), 0) / points.length,
+        cluster: {size: points.length, points: sourcePoints},
+    };
     return {
         point: {
             data,
@@ -232,7 +237,7 @@ function makeCluster(
             x,
             y,
             opacity: null,
-            color: series.cluster.marker.color ?? series.color,
+            color: markerSeries.cluster.marker.color ?? markerSeries.color,
         },
         hovered: false,
         active: true,
@@ -280,13 +285,15 @@ export function clusterSeriesData(args: {
     const emitted = new Set<GridCell>();
     const clusters: Array<{cell: GridCell; marker: PreparedScatterData}> = [];
     const result: PreparedScatterData[] = [];
+    let markerSeries: PreparedScatterSeries | undefined;
 
     for (const point of data) {
         const cell = pointCells.get(point);
         if (!cell || cell.points.length < series.cluster.minimumClusterSize) {
             result.push(point);
         } else if (!emitted.has(cell)) {
-            const marker = makeCluster(cell.points, series, isOutsideBounds);
+            markerSeries ??= prepareClusterMarkerSeries(series);
+            const marker = makeCluster(cell.points, markerSeries, isOutsideBounds);
             result.push(marker);
             clusters.push({cell, marker});
             emitted.add(cell);

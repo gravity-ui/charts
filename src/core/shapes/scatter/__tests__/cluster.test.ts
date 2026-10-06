@@ -1,5 +1,11 @@
+import {scaleLinear} from 'd3-scale';
+
+import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
+import type {PreparedSplit} from '../../../layout/split-types';
+import type {ChartScale} from '../../../scales/types';
 import type {PreparedScatterSeries} from '../../../series/types';
 import {clusterSeriesData} from '../cluster';
+import {prepareScatterData} from '../prepare-data';
 import type {PreparedScatterData} from '../types';
 
 function makeSeries(
@@ -91,6 +97,8 @@ describe('scatter grid clustering', () => {
         expect(result[0].point.data.cluster?.size).toBe(
             result[0].point.data.cluster?.points.length,
         );
+        expect(result[0].point.series).toBe(result[2].point.series);
+        expect(result[0].point.series).not.toBe(series);
     });
 
     test.each(['50px', '25%'] as const)('resolves grid size %s in pixels', (gridSize) => {
@@ -264,5 +272,44 @@ describe('scatter grid clustering', () => {
         expect(result[0].point.data.x).toBe(45.5);
         expect(result[1]).toBe(points[2]);
         expect(result[1].point.x).toBe(51);
+    });
+
+    test('does not rescan all points for each series when clustering is disabled', async () => {
+        let idReads = 0;
+        const preparedSeries = Array.from({length: 30}, (_seriesValue, seriesIndex) => {
+            const id = `series-${seriesIndex}`;
+            const item = {
+                id,
+                type: 'scatter',
+                data: Array.from({length: 30}, (_pointValue, pointIndex) => ({
+                    x: pointIndex,
+                    y: pointIndex,
+                })),
+                cluster: {enabled: false},
+                dataLabels: {enabled: false},
+                yAxis: 0,
+            } as unknown as PreparedScatterSeries;
+            Object.defineProperty(item, 'id', {
+                get: () => {
+                    idReads++;
+                    return id;
+                },
+            });
+            return item;
+        });
+        const prepared = await prepareScatterData({
+            series: preparedSeries,
+            xAxis: {type: 'linear'} as PreparedXAxis,
+            xScale: scaleLinear().domain([0, 30]).range([0, 200]) as ChartScale,
+            yAxis: [{type: 'linear'} as PreparedYAxis],
+            yScale: [scaleLinear().domain([0, 30]).range([100, 0]) as ChartScale],
+            split: {} as PreparedSplit,
+            isOutsideBounds: () => false,
+            boundsWidth: 200,
+            boundsHeight: 100,
+        });
+
+        expect(prepared.scatterData).toHaveLength(900);
+        expect(idReads).toBeLessThan(100);
     });
 });
