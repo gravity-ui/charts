@@ -62,10 +62,10 @@ interface LabelPoint {
  * 2. Measures the label size (HTML → getLabelsSize, SVG → getTextSizeFn)
  * 3. Positions the label centered above the point, clamped to chart bounds
  *
- * `anchorYOffset` shifts the vertical anchor from the point center upward by the given
- * number of pixels (e.g. marker radius for scatter), so padding is measured from the
- * marker edge rather than its center. The top-boundary clamp also respects this offset
- * so the label never drops below the anchor.
+ * `getAnchorYOffset` returns, for each point, how many pixels to shift the vertical anchor
+ * from the point center upward (e.g. the point's marker radius for scatter), so padding is
+ * measured from the marker edge rather than its center. The top-boundary clamp also respects
+ * this offset so the label never drops below the anchor.
  *
  * Overlap filtering is intentionally left to the caller.
  */
@@ -78,7 +78,7 @@ export async function preparePointDataLabels<
     xMax,
     yAxisTop,
     isOutsideBounds,
-    anchorYOffset = 0,
+    getAnchorYOffset,
     getFormatContext,
     getLabelText,
 }: {
@@ -87,7 +87,7 @@ export async function preparePointDataLabels<
     xMax: number;
     yAxisTop: number;
     isOutsideBounds: (x: number, y: number) => boolean;
-    anchorYOffset?: number;
+    getAnchorYOffset?: (point: P) => number;
     getFormatContext: (point: P) => Omit<TContext, 'value'>;
     getLabelText?: (point: P) => string;
 }): Promise<{svgLabels: LabelData[]; htmlLabels: HtmlItem[]}> {
@@ -115,7 +115,7 @@ export async function preparePointDataLabels<
                 context: getFormatContext(point),
             });
 
-        const anchorY = point.y - anchorYOffset;
+        const anchorY = point.y - (getAnchorYOffset?.(point) ?? 0);
 
         if (series.dataLabels.html) {
             const size = await getLabelsSize({
