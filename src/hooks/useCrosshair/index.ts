@@ -74,6 +74,7 @@ export const useCrosshair = (props: Props) => {
                 .selectAll(`[${crosshairDataAttr}]`)
                 .data(hovered)
                 .join('g')
+                .attr('pointer-events', 'none')
                 .attr(plotCrosshairDataAttr, 1)
                 .attr(crosshairDataAttr, 1);
 
@@ -149,6 +150,7 @@ export const useCrosshair = (props: Props) => {
                         }),
                     )
                     .join('g')
+                    .attr('pointer-events', 'none')
                     .attr(plotCrosshairDataAttr, 1)
                     .attr(crosshairDataAttr, 1)
                     .style(
