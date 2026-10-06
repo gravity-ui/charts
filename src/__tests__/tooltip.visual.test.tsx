@@ -15,6 +15,7 @@ import {
 import {TIME_UNITS} from '../core/utils/time';
 import type {ChartData} from '../types';
 
+import {CrosshairEventsTestStory} from './components/CrosshairEventsTestStory';
 import {DrawerChartTestStory} from './components/DrawerChartTestStory';
 import {HoveredPlotsTestStory} from './components/HoveredPlotsTestStory';
 import {StackingPercentRowRendererTestStory} from './components/StackingPercentRowRendererTestStory';
@@ -45,6 +46,7 @@ test.describe('Tooltip', () => {
         await component.locator('.gcharts-bar-x__segment').last().hover();
         const crosshair = component.locator('[data-crosshair-x-line] path');
         await expect(crosshair).toHaveAttribute('d', /^M[\d.]+,0L[\d.]+,[\d.]+$/);
+        await expect(page.locator('.gcharts-tooltip').getByText('10', {exact: true})).toBeVisible();
 
         await component.update(
             <ChartTestStory
@@ -64,6 +66,71 @@ test.describe('Tooltip', () => {
         expect(errors).toEqual([]);
         await expect(component.locator('.gcharts-chart')).toHaveScreenshot();
     });
+
+    for (const axis of ['x', 'y']) {
+        for (const snap of [true, false]) {
+            test(`Crosshair allows chart clicks (${axis}, snap=${snap})`, async ({mount, page}) => {
+                const data: ChartData = {
+                    legend: {enabled: false},
+                    tooltip: {pin: {enabled: true}},
+                    xAxis: {
+                        type: 'category',
+                        categories: ['A', 'B'],
+                        crosshair: {enabled: axis === 'x', snap, width: 8, layerPlacement: 'after'},
+                    },
+                    yAxis: [
+                        {
+                            min: 0,
+                            max: 30,
+                            crosshair: {
+                                enabled: axis === 'y',
+                                snap,
+                                width: 8,
+                                layerPlacement: 'after',
+                            },
+                        },
+                    ],
+                    series: {
+                        data: [
+                            {
+                                type: 'bar-x',
+                                name: 'Series',
+                                data: [
+                                    {x: 0, y: 5},
+                                    {x: 1, y: 10},
+                                ],
+                            },
+                        ],
+                    },
+                };
+                const component = await mount(<CrosshairEventsTestStory data={data} />);
+                const bar = component.locator('.gcharts-bar-x__segment').last();
+                await expect(bar).toBeVisible();
+                const box = await getLocatorBoundingBox(bar);
+                const x = Math.round(box.x + box.width / 2);
+                const y = Math.round(axis === 'y' && snap ? box.y + 1 : box.y + box.height / 2);
+                await page.mouse.move(x, y);
+                await expect(component.locator('[data-crosshair] path')).toHaveCount(1);
+                // A crosshair drawn over the pointer must leave the underlying bar clickable.
+                await expect
+                    .poll(() =>
+                        bar.evaluate(
+                            (element, position) =>
+                                document.elementFromPoint(position.x, position.y) === element,
+                            {x, y},
+                        ),
+                    )
+                    .toBe(true);
+                const tooltip = page.locator('.gcharts-tooltip');
+                await expect(tooltip.getByText('10', {exact: true})).toBeVisible();
+                await page.mouse.click(x, y);
+                await expect(component.getByTestId('clicked-point')).toHaveText('1:10');
+                await expect(tooltip).toHaveClass(/gcharts-tooltip_pinned/);
+                await page.mouse.click(x, y);
+                await expect(tooltip).not.toHaveClass(/gcharts-tooltip_pinned/);
+            });
+        }
+    }
 
     test('Unpins a stale tooltip after data changes', async ({mount, page}) => {
         const data: ChartData = {

@@ -25,13 +25,14 @@ async function getLabelData(
         return undefined;
     }
 
-    const labelValue = d.data.label ?? d.data.y ?? d.subTotal;
+    const yValue = d.data.total ? d.subTotal : Number(d.data.y);
+    const labelValue = d.data.label ?? yValue;
     const text = getFormattedValue({value: labelValue, ...d.series.dataLabels});
     const style = d.series.dataLabels.style;
     const {maxHeight: height, maxWidth: width} = await getLabelsSize({labels: [text], style});
 
     let y: number;
-    if (Number(d.data.y) > 0 || d.data.total) {
+    if (yValue > 0 || (d.data.total && yValue === 0)) {
         y = Math.max(height, d.y - d.series.dataLabels.padding);
     } else {
         y = Math.min(
@@ -82,7 +83,10 @@ function getBandWidth(args: {
     return bandWidth;
 }
 
-type DataItem = {data: PreparedWaterfallSeriesData; series: PreparedWaterfallSeries};
+interface DataItem {
+    data: PreparedWaterfallSeriesData;
+    series: PreparedWaterfallSeries;
+}
 
 export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
@@ -139,9 +143,7 @@ export const prepareWaterfallData = async (args: {
             continue;
         }
 
-        if (item.data.total) {
-            item.data.y = totalValue;
-        } else {
+        if (!item.data.total) {
             totalValue += Number(item.data.y);
         }
 
@@ -171,7 +173,7 @@ export const prepareWaterfallData = async (args: {
                 yScale: yLinearScale,
                 yAxis,
             });
-        } else if (Number(prevPoint.data.y) < 0) {
+        } else if ((prevPoint.data.total ? prevPoint.subTotal : Number(prevPoint.data.y)) < 0) {
             if (Number(item.data.y) > 0) {
                 y = prevPoint.y + prevPoint.height - height;
             } else {

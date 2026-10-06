@@ -74,7 +74,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
                             },
                             {
                                 id: 'value',
-                                source: 'data.y',
+                                source: 'subTotal',
                                 align: 'end',
                             },
                         ],
