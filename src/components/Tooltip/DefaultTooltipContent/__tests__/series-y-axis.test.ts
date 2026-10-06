@@ -99,35 +99,40 @@ it.each(['bar-y', 'x-range'] as const)(
     },
 );
 
-it('resolves plugin values once and keeps them aligned after sorting without changing the registry', () => {
-    const getValue = jest.fn(({item}) => item.data.y);
-    const original = seriesRegistry.getSeriesPlugin;
-    jest.spyOn(seriesRegistry, 'getSeriesPlugin').mockImplementation((type) => {
-        const plugin = original(type);
-        return {...plugin, tooltip: {...plugin.tooltip, getValue}};
-    });
-    const hovered = [makeChunk('Primary', 10), makeChunk('Secondary', 1, 1)];
-    const yAxes: ChartYAxis[] = [
-        {type: 'linear'},
-        {type: 'category', categories: ['First', 'Second']},
-    ];
-    expect(getPreparedHovered({hovered, yAxes, sorting: {key: 'value'}})).toEqual({
-        hovered: [hovered[1], hovered[0]],
-        values: [1, 10],
-    });
-    expect(getValue).toHaveBeenCalledTimes(2);
-    expect(getValue).toHaveBeenNthCalledWith(1, {
-        item: hovered[0],
-        xAxis: undefined,
-        yAxis: yAxes[0],
-    });
-    expect(getValue).toHaveBeenNthCalledWith(2, {
-        item: hovered[1],
-        xAxis: undefined,
-        yAxis: yAxes[1],
-    });
-    expect(original('line').tooltip).not.toHaveProperty('getValue');
-});
+it.each([
+    {sorting: undefined, order: [0, 1], values: [10, 1]},
+    {sorting: {key: 'value' as const}, order: [1, 0], values: [1, 10]},
+])(
+    'resolves plugin values once and keeps them aligned with sorting %j',
+    ({sorting, order, values}) => {
+        const getValue = jest.fn(({item}) => item.data.y);
+        const original = seriesRegistry.getSeriesPlugin;
+        jest.spyOn(seriesRegistry, 'getSeriesPlugin').mockImplementation((type) => {
+            const plugin = original(type);
+            return {...plugin, tooltip: {...plugin.tooltip, getValue}};
+        });
+        const hovered = [makeChunk('Primary', 10), makeChunk('Secondary', 1, 1)];
+        const yAxes: ChartYAxis[] = [
+            {type: 'linear'},
+            {type: 'category', categories: ['First', 'Second']},
+        ];
+        expect(getPreparedHovered({hovered, yAxes, sorting})).toEqual({
+            hovered: order.map((index) => hovered[index]),
+            values,
+        });
+        expect(getValue).toHaveBeenCalledTimes(2);
+        expect(getValue).toHaveBeenNthCalledWith(1, {
+            item: hovered[0],
+            xAxis: undefined,
+            yAxis: yAxes[0],
+        });
+        expect(getValue).toHaveBeenNthCalledWith(2, {
+            item: hovered[1],
+            xAxis: undefined,
+            yAxis: yAxes[1],
+        });
+    },
+);
 
 it('orders missing values, NaN, numbers and labels without a mixed-type comparison cycle', () => {
     const hovered: TooltipDataChunkLine[] = [

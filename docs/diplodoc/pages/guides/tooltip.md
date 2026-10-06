@@ -45,31 +45,6 @@ tooltip: {
 }
 ```
 
-## Multiple Y axes
-
-Tooltip sorting and built-in totals resolve each series' category indices using
-its assigned `series.yAxis` (axis 0 by default). An unavailable axis index falls
-back to axis 0. Built-in `sum` includes numeric values and excludes category labels.
-
-For ascending value sorting, missing values come first, followed by numbers and
-then category labels in lexicographic order. Descending sorting reverses this
-order. This keeps mixed numeric and category values ordered consistently.
-
-Custom `renderer`, row renderers, and `totals.aggregation` receive `yAxes`, the
-complete axis list. Use the hovered series' `yAxis` index to look up its axis;
-raw point coordinates remain unchanged. The existing `yAxis` argument in
-`renderer` and `totals.aggregation` still refers to the first axis. Row renderers
-continue to receive the value selected by their row cell's `source`.
-
-The public `ChartTooltipContent` component resolves values using its explicit
-`yAxis` prop, including when returned by a custom renderer. It does not inherit
-axes or prepared values from the surrounding chart.
-
-This example sorts numeric counts before category labels and uses `yAxes` in a
-custom renderer to display each series' value on its own axis:
-
-<div data-chart-example="tooltip/multiple-y-axes"></div>
-
 ## Hiding specific series from the tooltip
 
 There are scenarios where you might want to display a chart with multiple data series but exclude specific ones from the tooltip. This is useful for providing a cleaner, more focused user experience, especially when certain series are used for contextual or decorative purposes rather than for precise data reading.

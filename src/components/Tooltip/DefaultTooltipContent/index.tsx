@@ -28,7 +28,7 @@ import type {HoveredValue} from './utils';
 
 const b = block('tooltip');
 
-type Props = {
+interface Props {
     hovered: TooltipDataChunk[];
     pinned?: boolean;
     rows?: ChartTooltip['rows'];
@@ -41,7 +41,7 @@ type Props = {
     yAxes?: ChartYAxis[];
     hoveredValues?: HoveredValue[];
     qa?: string;
-};
+}
 
 export const DefaultTooltipContent = ({
     hovered,

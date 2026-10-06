@@ -187,8 +187,11 @@ interface SortHoveredArgs {
 
 export function getPreparedHovered(args: SortHoveredArgs) {
     const values = getHoveredValues(args);
-    const valuesByChunk = new Map(args.hovered.map((item, index) => [item, values[index]]));
     const hovered = getSortedHovered({...args, values});
+    if (hovered === args.hovered) {
+        return {hovered, values};
+    }
+    const valuesByChunk = new Map(args.hovered.map((item, index) => [item, values[index]]));
     return {hovered, values: hovered.map((item) => valuesByChunk.get(item))};
 }
 

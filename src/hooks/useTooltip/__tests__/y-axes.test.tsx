@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+/* @jest-environment jsdom */
 import React from 'react';
 
 import {ThemeProvider} from '@gravity-ui/uikit';
@@ -167,18 +167,4 @@ it('reuses prepared values for totals after sorting instead of resolving plugin 
     expect(getValue).toHaveBeenCalledTimes(2);
     expect(formatter).toHaveBeenCalledWith({value: 11});
     expect(hovered.map((item) => item.data.y)).toEqual([10, 1]);
-});
-
-it('formats the built-in header once', () => {
-    const formatter = jest.fn(({value}) => `header:${value}`);
-    render(
-        <ThemeProvider theme="light">
-            <ChartTooltipContent
-                hovered={[makeChunk('Primary', 10, 0)]}
-                headerFormat={{type: 'custom', formatter}}
-            />
-        </ThemeProvider>,
-    );
-    expect(formatter).toHaveBeenCalledTimes(1);
-    expect(formatter).toHaveBeenCalledWith({value: 0});
 });

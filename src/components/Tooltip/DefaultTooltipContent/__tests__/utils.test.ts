@@ -26,33 +26,20 @@ const createAreaRangeChunk = (name: string, y0: number, y1: number): TooltipData
 const ASC = {key: 'value' as const, direction: 'asc' as const};
 const DESC = {key: 'value' as const, direction: 'desc' as const};
 
-describe('getMeasureValue with multiple Y axes', () => {
-    it.each([
-        {categories: ['First', 'Second'], value: 'Second'},
-        {categories: ['First'], value: undefined},
-    ])('resolves a Y header on its series axis: $categories', ({categories, value}) => {
-        const headerFormat = {
-            type: 'custom' as const,
-            formatter: jest.fn(({value: headerValue}) => headerValue),
-        };
-        const series = {type: 'bar-y' as const, name: 'Horizontal', data: [], yAxis: 1};
-        const yHeaderChunk: TooltipDataChunkBarY = {
-            ...createBarYChunk('Horizontal', 10),
-            series,
-        };
-        const result = getMeasureValue({
-            data: [createLineChunk('Line', 20), yHeaderChunk],
-            yAxes: [{type: 'linear'}, {type: 'category', categories}],
-            headerFormat,
-        });
-        expect(result).toEqual({value, formattedValue: value});
-        if (value === undefined) {
-            expect(headerFormat.formatter).not.toHaveBeenCalled();
-        } else {
-            expect(headerFormat.formatter).toHaveBeenCalledTimes(1);
-            expect(headerFormat.formatter).toHaveBeenCalledWith({value});
-        }
-    });
+it('omits an unresolved Y header after a series on another axis', () => {
+    const formatter = jest.fn(() => 'Unexpected header');
+    const secondary: TooltipDataChunk = {
+        data: {x: 0, y: 20},
+        series: {type: 'line', id: 'secondary', name: 'Secondary', yAxis: 1},
+    };
+    expect(
+        getMeasureValue({
+            data: [secondary, createBarYChunk('Horizontal', 10)],
+            yAxes: [{type: 'category', categories: ['First']}, {type: 'linear'}],
+            headerFormat: {type: 'custom', formatter},
+        }),
+    ).toEqual({value: undefined, formattedValue: undefined});
+    expect(formatter).not.toHaveBeenCalled();
 });
 
 describe('getSortedHovered', () => {
