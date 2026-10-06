@@ -54,6 +54,7 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        headerAxis: 'y',
         rows: [
             {
                 id: 'default',

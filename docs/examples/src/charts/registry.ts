@@ -40,6 +40,8 @@ import {BarXSeriesExample} from './series-types/bar-x';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
+import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
+import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
 import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
 
@@ -54,6 +56,10 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'tooltip/multiple-y-axes': {
+        code: extractDisplayCode(multipleYAxesTooltipRaw),
+        Component: MultipleYAxesTooltipExample,
+    },
     'legend/wrapping': {
         code: extractDisplayCode(legendWrappingRaw),
         Component: LegendWrappingExample,

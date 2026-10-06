@@ -86,6 +86,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
+        headerAxis: 'y',
         getValueFormatContext: (item) => {
             return {percentage: item.percentage, data: item.data};
         },

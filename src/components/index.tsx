@@ -11,7 +11,8 @@ import type {ChartData} from '../types';
 
 import {ChartInner} from './ChartInner';
 
-export * from './Tooltip/ChartTooltipContent';
+export {ChartTooltipContent} from './Tooltip/ChartTooltipContent';
+export type {ChartTooltipContentProps} from './Tooltip/ChartTooltipContent';
 
 export interface ChartReflowOptions {
     immediate?: boolean;

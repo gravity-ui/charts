@@ -501,7 +501,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     seriesData={allPreparedSeries}
                     svgContainer={svgRef.current}
                     xAxis={xAxis}
-                    yAxis={yAxis[0]}
+                    yAxis={yAxis}
                     onOutsideClick={unpinTooltip}
                     tooltipPinned={tooltipPinned}
                 />

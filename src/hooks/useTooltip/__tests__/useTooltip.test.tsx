@@ -13,7 +13,7 @@ import {useTooltip} from '../index';
 interface AxisProps {
     seriesData: PreparedSeries[];
     xAxis?: PreparedXAxis | null;
-    yAxis?: PreparedYAxis;
+    yAxis?: PreparedYAxis[];
 }
 
 function setup() {
@@ -25,7 +25,7 @@ function setup() {
     };
     const xAxis = {type: 'category', categories: ['A', 'B']} as PreparedXAxis;
     const yAxis = {type: 'category', categories: ['A', 'B']} as PreparedYAxis;
-    const axes: AxisProps = {xAxis, yAxis, seriesData: []};
+    const axes: AxisProps = {xAxis, yAxis: [yAxis], seriesData: []};
     const view = renderHook((props: AxisProps) => useTooltip({dispatcher, tooltip, ...props}), {
         initialProps: axes,
     });
@@ -57,13 +57,16 @@ it('clears hover when source series are replaced without changing axes', () => {
 });
 
 describe.each(['xAxis', 'yAxis'] as const)('hover state on %s updates', (axisKey) => {
+    const updateAxis = (axes: AxisProps, changes: Partial<PreparedXAxis>) => {
+        const axis = axisKey === 'yAxis' ? axes.yAxis?.[0] : axes.xAxis;
+        const updatedAxis = {...axis, ...changes};
+        return {...axes, [axisKey]: axisKey === 'yAxis' ? [updatedAxis] : updatedAxis};
+    };
+
     it('preserves hover across layout/range changes and equivalent category arrays', () => {
         const {result, rerender, axes, pointerPosition, hover} = setup();
         const previousHovered = result.current.hovered;
-        rerender({
-            ...axes,
-            [axisKey]: {...axes[axisKey], min: 1, max: 5, categories: ['A', 'B']},
-        });
+        rerender(updateAxis(axes, {min: 1, max: 5, categories: ['A', 'B']}));
         expect(result.current.hovered).toBe(previousHovered);
         expect(result.current.pointerPosition).toEqual(pointerPosition);
         hover();
@@ -74,7 +77,7 @@ describe.each(['xAxis', 'yAxis'] as const)('hover state on %s updates', (axisKey
         'clears stale hover when categories become $categories',
         ({categories}) => {
             const {result, rerender, axes, hovered, hover} = setup();
-            rerender({...axes, [axisKey]: {...axes[axisKey], categories}});
+            rerender(updateAxis(axes, {categories}));
             expect(result.current.hovered).toBeUndefined();
             expect(result.current.pointerPosition).toBeUndefined();
             expect(result.current.hoveredPlotBands).toBeUndefined();
@@ -91,7 +94,7 @@ describe.each(['xAxis', 'yAxis'] as const)('hover state on %s updates', (axisKey
 
     it('clears hover when the axis type changes', () => {
         const {result, rerender, axes} = setup();
-        rerender({...axes, [axisKey]: {...axes[axisKey], type: 'linear'}});
+        rerender(updateAxis(axes, {type: 'linear'}));
         expect(result.current.hovered).toBeUndefined();
     });
 
@@ -103,14 +106,11 @@ describe.each(['xAxis', 'yAxis'] as const)('hover state on %s updates', (axisKey
 
     it('ignores categories on a continuous axis', () => {
         const {result, rerender, axes, hover} = setup();
-        const continuousAxes = {...axes, [axisKey]: {...axes[axisKey], type: 'linear' as const}};
+        const continuousAxes = updateAxis(axes, {type: 'linear'});
         rerender(continuousAxes);
         hover();
         const previousHovered = result.current.hovered;
-        rerender({
-            ...continuousAxes,
-            [axisKey]: {...continuousAxes[axisKey], categories: ['C', 'D']},
-        });
+        rerender(updateAxis(continuousAxes, {categories: ['C', 'D']}));
         expect(result.current.hovered).toBe(previousHovered);
     });
 });

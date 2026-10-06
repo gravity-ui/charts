@@ -5,7 +5,8 @@ import isEqual from 'lodash/isEqual';
 
 import type {PreparedSeries} from '~core/series/types';
 
-import {getSortedHovered} from '../../components/Tooltip/DefaultTooltipContent/utils';
+import {getPreparedHovered} from '../../components/Tooltip/DefaultTooltipContent/utils';
+import type {HoveredValue} from '../../components/Tooltip/DefaultTooltipContent/utils';
 import type {
     AxisPlotBand,
     AxisPlotLine,
@@ -23,12 +24,13 @@ interface Args {
     tooltip: PreparedTooltip;
     seriesData: PreparedSeries[] | undefined;
     xAxis?: PreparedXAxis | null;
-    yAxis?: PreparedYAxis;
+    yAxis?: PreparedYAxis[];
 }
 
 interface TooltipState {
     resetKey: ReturnType<typeof useHoverResetKey>;
     hovered?: TooltipDataChunk[];
+    hoveredValues?: HoveredValue[];
     hoveredPlotBands?: ChartTooltipRendererArgs['hoveredPlotBands'];
     hoveredPlotLines?: ChartTooltipRendererArgs['hoveredPlotLines'];
     hoveredPlotShapes?: ChartTooltipRendererArgs['hoveredPlotShapes'];
@@ -36,11 +38,12 @@ interface TooltipState {
 }
 
 export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args) => {
-    const resetKey = useHoverResetKey({seriesData, xAxis, yAxes: [yAxis]});
+    const resetKey = useHoverResetKey({seriesData, xAxis, yAxes: yAxis ?? []});
     const [
         {
             resetKey: previousResetKey,
             hovered,
+            hoveredValues,
             hoveredPlotBands,
             hoveredPlotLines,
             hoveredPlotShapes,
@@ -72,16 +75,18 @@ export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args
                     const filteredNextHovered = nextHovered?.filter((item) =>
                         'y' in item.data ? item.data.y !== null : true,
                     );
-                    const sortedHovered = getSortedHovered({
+                    const preparedHovered = getPreparedHovered({
                         hovered: filteredNextHovered ?? [],
                         sorting: tooltip?.sorting,
                         xAxis,
-                        yAxis,
+                        yAxes: yAxis,
                     });
+                    const sortedHovered = preparedHovered.hovered;
                     const isHoveredChanged = !isEqual(prevHovered.current, sortedHovered);
                     const newTooltipState: TooltipState = {
                         resetKey,
                         hovered: isHoveredChanged ? sortedHovered : prevHovered.current,
+                        hoveredValues: preparedHovered.values,
                         hoveredPlotBands: nextHoveredPlots?.bands,
                         hoveredPlotLines: nextHoveredPlots?.lines,
                         hoveredPlotShapes: nextHoveredPlots?.shapes,
@@ -104,6 +109,7 @@ export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args
     }, [resetKey, dispatcher, tooltip, xAxis, yAxis]);
     return {
         hovered,
+        hoveredValues,
         hoveredPlotBands,
         hoveredPlotLines,
         hoveredPlotShapes,

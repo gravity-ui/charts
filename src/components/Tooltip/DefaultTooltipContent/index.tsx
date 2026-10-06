@@ -24,10 +24,11 @@ import {block} from '../../../utils';
 import {Row} from './Row';
 import {RowWithAggregation} from './RowWithAggregation';
 import {getHoveredValues, getMeasureValue, getPreparedAggregation} from './utils';
+import type {HoveredValue} from './utils';
 
 const b = block('tooltip');
 
-type Props = {
+interface Props {
     hovered: TooltipDataChunk[];
     pinned?: boolean;
     rows?: ChartTooltip['rows'];
@@ -37,8 +38,10 @@ type Props = {
     headerFormat?: ChartTooltip['headerFormat'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
+    hoveredValues?: HoveredValue[];
     qa?: string;
-};
+}
 
 export const DefaultTooltipContent = ({
     hovered,
@@ -50,14 +53,23 @@ export const DefaultTooltipContent = ({
     headerFormat,
     xAxis,
     yAxis,
+    yAxes,
+    hoveredValues: preparedHoveredValues,
     qa,
 }: Props) => {
     const [visibleRows, setVisibleRows] = React.useState<number | undefined>();
     const [maxContentRowsHeight, setMaxContentRowsHeight] = React.useState<number | undefined>();
     const [scrollBarWidth, setScrollBarWidth] = React.useState<number>(0);
     const contentRowsRef = React.useRef<HTMLDivElement>(null);
-    const measureValue = getMeasureValue({data: hovered, xAxis, yAxis, headerFormat});
-    const hoveredValues = getHoveredValues({hovered, xAxis, yAxis});
+    const resolvedYAxes = yAxes ?? (yAxis ? [yAxis] : undefined);
+    const measureValue = getMeasureValue({
+        data: hovered,
+        xAxis,
+        yAxes: resolvedYAxes,
+        headerFormat,
+    });
+    const hoveredValues =
+        preparedHoveredValues ?? getHoveredValues({hovered, xAxis, yAxes: resolvedYAxes});
     const prevHoveredValues = usePrevious(hoveredValues);
     const visibleHovered = pinned || !visibleRows ? hovered : hovered.slice(0, visibleRows);
     const restHoveredValues = pinned || !visibleRows ? [] : hoveredValues.slice(visibleRows);
@@ -187,6 +199,7 @@ export const DefaultTooltipContent = ({
                             active,
                             className: b('content-row', {active, striped}),
                             hovered,
+                            yAxes: resolvedYAxes,
                         });
 
                         if (typeof result === 'string') {
@@ -271,6 +284,7 @@ export const DefaultTooltipContent = ({
                             totals,
                             xAxis,
                             yAxis,
+                            yAxes: resolvedYAxes,
                         })}
                         label={totals.label}
                         style={{marginRight: scrollBarWidth}}

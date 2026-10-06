@@ -8,10 +8,9 @@ import type {PreparedSeries} from '~core/series/types';
 
 import type {PreparedTooltip, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import {useTooltip} from '../../hooks';
-import type {ChartYAxis} from '../../types';
 import {block} from '../../utils';
 
-import {ChartTooltipContent} from './ChartTooltipContent';
+import {TooltipContent} from './ChartTooltipContent';
 
 import './styles.scss';
 
@@ -23,7 +22,7 @@ interface TooltipProps {
     seriesData: PreparedSeries[] | undefined;
     svgContainer: SVGSVGElement | null;
     xAxis: PreparedXAxis | null;
-    yAxis: PreparedYAxis;
+    yAxis: PreparedYAxis[];
     tooltipPinned: boolean;
     onOutsideClick?: () => void;
 }
@@ -39,14 +38,20 @@ export const Tooltip = (props: TooltipProps) => {
         tooltipPinned,
         onOutsideClick,
     } = props;
-    const {hovered, hoveredPlotBands, hoveredPlotLines, hoveredPlotShapes, pointerPosition} =
-        useTooltip({
-            dispatcher,
-            tooltip,
-            seriesData,
-            xAxis,
-            yAxis,
-        });
+    const {
+        hovered,
+        hoveredValues,
+        hoveredPlotBands,
+        hoveredPlotLines,
+        hoveredPlotShapes,
+        pointerPosition,
+    } = useTooltip({
+        dispatcher,
+        tooltip,
+        seriesData,
+        xAxis,
+        yAxis,
+    });
     const containerRectRef = React.useRef<{left: number; top: number}>({left: 0, top: 0});
 
     React.useEffect(() => {
@@ -105,8 +110,10 @@ export const Tooltip = (props: TooltipProps) => {
             placement={['right', 'left', 'top', 'bottom']}
         >
             <div className={b('popup-content')}>
-                <ChartTooltipContent
+                <TooltipContent
                     hovered={hovered}
+                    hoveredValues={hoveredValues}
+                    yAxes={yAxis}
                     hoveredPlotBands={hoveredPlotBands}
                     hoveredPlotLines={hoveredPlotLines}
                     hoveredPlotShapes={hoveredPlotShapes}
@@ -118,7 +125,6 @@ export const Tooltip = (props: TooltipProps) => {
                     valueFormat={tooltip.valueFormat}
                     headerFormat={tooltip.headerFormat}
                     xAxis={xAxis}
-                    yAxis={yAxis as ChartYAxis}
                     qa={tooltip.qa}
                 />
             </div>
