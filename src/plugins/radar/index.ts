@@ -37,10 +37,20 @@ export const radarPlugin: SeriesPlugin<RadarSeries> = {
     type: 'radar',
     useClipPath: false,
     validate: ({series, allSeries}) => {
-        if (series.categories !== undefined && !Array.isArray(series.categories)) {
+        if (
+            series.categories !== undefined &&
+            (!Array.isArray(series.categories) ||
+                !series.categories.every(
+                    (category) =>
+                        typeof category === 'object' &&
+                        category !== null &&
+                        !Array.isArray(category) &&
+                        typeof category.key === 'string',
+                ))
+        ) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Radar series.categories must be an array',
+                message: 'Radar series.categories must be an array of objects with a string key',
             });
         }
 
@@ -54,7 +64,8 @@ export const radarPlugin: SeriesPlugin<RadarSeries> = {
         ) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Radar categories must be specified in series.categories',
+                message:
+                    'Radar categories must be specified as a nonempty array in series.categories',
             });
         }
     },

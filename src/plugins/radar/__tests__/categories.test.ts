@@ -36,21 +36,56 @@ test.each([undefined, []])('rejects missing radar categories: %j', (value) => {
     expect(() => validateData(data)).toThrow(
         expect.objectContaining({
             code: CHART_ERROR_CODE.INVALID_DATA,
-            message: 'Radar categories must be specified in series.categories',
+            message: 'Radar categories must be specified as a nonempty array in series.categories',
         }),
     );
 });
 
-test('rejects non-array categories even when another series provides valid categories', () => {
+test.each(
+    [
+        'A',
+        null,
+        42,
+        {},
+        ['A'],
+        [null],
+        [undefined],
+        [{}],
+        [{key: 42}],
+        [{key: null}],
+        [{key: 'A'}, 'B'],
+        [[]],
+    ].map((value) => [value]),
+)('rejects invalid categories even when another series provides valid categories: %j', (value) => {
     const series = createSeries();
-    Object.assign(series[0], {categories: 'A'});
+    Object.assign(series[0], {categories: value});
     series[1].categories = categories;
     expect(() => validateData({series: {data: series}})).toThrow(
         expect.objectContaining({
             code: CHART_ERROR_CODE.INVALID_DATA,
-            message: 'Radar series.categories must be an array',
+            message: 'Radar series.categories must be an array of objects with a string key',
         }),
     );
+});
+
+test('rejects invalid categories in a later series even when they are not used', () => {
+    const series = createSeries();
+    series[0].categories = categories;
+    Object.assign(series[1], {categories: ['A']});
+
+    expect(() => validateData({series: {data: series}})).toThrow(
+        expect.objectContaining({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: 'Radar series.categories must be an array of objects with a string key',
+        }),
+    );
+});
+
+test('accepts category objects with optional maxValue', () => {
+    const series = createSeries();
+    series[0].categories = [{key: 'A'}, {key: 'B', maxValue: 10}];
+
+    expect(() => validateData({series: {data: series}})).not.toThrow();
 });
 
 test.each([undefined, []])(
