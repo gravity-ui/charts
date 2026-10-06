@@ -7,7 +7,7 @@ import type {ScatterSeriesData} from '../../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import type {PreparedSplit} from '../../../layout/split-types';
 import {DEFAULT_POINT_MARKER_OPTIONS} from '../../../series/constants';
-import type {PreparedLegend, PreparedScatterSeries} from '../../../series/types';
+import type {PreparedLegend} from '../../../series/types';
 import * as textUtils from '../../../utils/text';
 import {prepareScatterData} from '../prepare-data';
 
@@ -17,7 +17,7 @@ async function getLabels(data: ScatterSeriesData[]) {
         colorScale: scaleOrdinal([] as string[], ['#000']),
         colors: [],
         legend: {enabled: false} as PreparedLegend,
-    }) as PreparedScatterSeries[];
+    });
 
     const result = await prepareScatterData({
         series,
