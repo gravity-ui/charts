@@ -2,7 +2,7 @@ import get from 'lodash/get';
 
 import {i18n} from '~core/i18n';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
-import {getDataCategoryValue} from '~core/utils';
+import {getTooltipAxisValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {PreparedPieSeries} from '../../../hooks';
@@ -26,28 +26,12 @@ function getSeriesYAxis(item: TooltipDataChunk, yAxes?: ChartYAxis[]) {
     return yAxes?.[get(item.series, 'yAxis') ?? 0] ?? yAxes?.[0];
 }
 
-function getRowData(
-    fieldName: 'x' | 'y',
-    data: ChartSeriesData,
-    axis?: ChartXAxis | ChartYAxis | null,
-) {
-    switch (axis?.type) {
-        case 'category': {
-            const categories = get(axis, 'categories', [] as string[]);
-            return getDataCategoryValue({axisDirection: fieldName, categories, data});
-        }
-        default: {
-            return get(data, fieldName);
-        }
-    }
-}
-
 export function getXRowData(data: ChartSeriesData, xAxis?: ChartXAxis | null) {
-    return getRowData('x', data, xAxis);
+    return getTooltipAxisValue(data, 'x', xAxis);
 }
 
 function getYRowData(data: ChartSeriesData, yAxis?: ChartYAxis) {
-    return getRowData('y', data, yAxis);
+    return getTooltipAxisValue(data, 'y', yAxis);
 }
 
 export const getMeasureValue = ({
@@ -71,31 +55,26 @@ export const getMeasureValue = ({
 
     if (data.some((item) => item.series.type === 'radar')) {
         const value = (data[0] as TooltipDataChunkRadar).category?.key ?? null;
-        return {
-            value,
-            formattedValue: headerFormat
-                ? getFormattedValue({value, format: headerFormat})
-                : undefined,
-        };
+        const formattedValue =
+            !headerFormat || (value === null && headerFormat.type !== 'custom')
+                ? undefined
+                : getFormattedValue({value, format: headerFormat});
+        return {value, formattedValue};
     }
 
     const yHeaderItem = data.find(
         (item) => getSeriesPlugin(item.series.type).tooltip.headerAxis === 'y',
     );
-    if (yHeaderItem) {
-        const value = getYRowData(yHeaderItem.data, getSeriesYAxis(yHeaderItem, yAxes));
-        const formattedValue = getFormattedValue({
-            value,
-            format: headerFormat,
-        });
-        return {value, formattedValue};
-    }
-
-    const value = getXRowData(data[0]?.data, xAxis);
-    const formattedValue = getFormattedValue({
-        value,
-        format: headerFormat,
-    });
+    const seriesYAxis = yHeaderItem ? getSeriesYAxis(yHeaderItem, yAxes) : undefined;
+    const axis = yHeaderItem ? seriesYAxis : xAxis;
+    const value = yHeaderItem
+        ? getYRowData(yHeaderItem.data, seriesYAxis)
+        : getXRowData(data[0]?.data, xAxis);
+    const formattedValue =
+        (value === null || value === undefined) &&
+        (axis?.type === 'category' || headerFormat?.type !== 'custom')
+            ? undefined
+            : getFormattedValue({value, format: headerFormat});
 
     return {value, formattedValue};
 };

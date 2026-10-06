@@ -320,7 +320,12 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * and then by `row.cells.items[].format`.
      */
     valueFormat?: ValueFormat;
-    /** Formatting settings for tooltip header row. */
+    /**
+     * Formatting settings for tooltip header row.
+     * On category axes, unresolved values omit the header and do not call a custom formatter.
+     * On linear/datetime axes and radar charts, a custom formatter can return a placeholder
+     * for a missing value. Without a custom formatter, missing values omit the header.
+     */
     headerFormat?: ValueFormat;
     /** Settings for totals block in tooltip */
     totals?: {

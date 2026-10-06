@@ -144,7 +144,8 @@ export async function prepareScatterData(args: {
                 xMax,
                 yAxisTop,
                 isOutsideBounds,
-                anchorYOffset: s.marker.states.normal.radius,
+                getAnchorYOffset: (point) =>
+                    get(point.data, 'radius', s.marker.states.normal.radius),
             });
 
             if (s.dataLabels.allowOverlap) {

@@ -27,12 +27,17 @@ it('uses all Y axes for hover sorting and clears stale chunks when a secondary a
     ] as PreparedYAxis[];
     const hovered = [makeChunk('Primary', 0, 0), makeChunk('Secondary', 1, 1)];
     const {result, rerender} = renderHook((props) => useTooltip(props), {
-        initialProps: {dispatcher, tooltip, yAxis},
+        initialProps: {dispatcher, tooltip, yAxis, seriesData: undefined},
     });
     act(() => dispatcher.call('hover-shape', undefined, hovered, [10, 20]));
     expect(result.current.hovered).toEqual([hovered[1], hovered[0]]);
     expect(result.current.hoveredValues).toEqual(['Ant', 'Zebra']);
-    rerender({dispatcher, tooltip, yAxis: [yAxis[0], {...yAxis[1], categories: ['Only']}]});
+    rerender({
+        dispatcher,
+        tooltip,
+        yAxis: [yAxis[0], {...yAxis[1], categories: ['Only']}],
+        seriesData: undefined,
+    });
     expect(result.current.hovered).toBeUndefined();
     expect(result.current.hoveredValues).toBeUndefined();
 });
@@ -145,7 +150,9 @@ it('reuses prepared values for totals after sorting instead of resolving plugin 
     const yAxis = [{type: 'linear'}] as PreparedYAxis[];
     const hovered = [makeChunk('Ten', 10, 0), makeChunk('One', 1, 0)];
     const formatter = jest.fn(({value}) => String(value));
-    const {result} = renderHook(() => useTooltip({dispatcher, tooltip, yAxis}));
+    const {result} = renderHook(() =>
+        useTooltip({dispatcher, tooltip, yAxis, seriesData: undefined}),
+    );
     act(() => dispatcher.call('hover-shape', undefined, hovered, [10, 20]));
     render(
         <ThemeProvider theme="light">

@@ -3,7 +3,12 @@ import type {
     TooltipDataChunkAreaRange,
     TooltipDataChunkBarY,
 } from '../../../../types';
-import {getBuiltInAggregatedValue, getHoveredValues, getSortedHovered} from '../utils';
+import {
+    getBuiltInAggregatedValue,
+    getHoveredValues,
+    getMeasureValue,
+    getSortedHovered,
+} from '../utils';
 
 const createLineChunk = (name: string, value: number | null): TooltipDataChunk => ({
     data: {x: 1, y: value},
@@ -20,6 +25,35 @@ const createAreaRangeChunk = (name: string, y0: number, y1: number): TooltipData
 
 const ASC = {key: 'value' as const, direction: 'asc' as const};
 const DESC = {key: 'value' as const, direction: 'desc' as const};
+
+describe('getMeasureValue with multiple Y axes', () => {
+    it.each([
+        {categories: ['First', 'Second'], value: 'Second'},
+        {categories: ['First'], value: undefined},
+    ])('resolves a Y header on its series axis: $categories', ({categories, value}) => {
+        const headerFormat = {
+            type: 'custom' as const,
+            formatter: jest.fn(({value: headerValue}) => headerValue),
+        };
+        const series = {type: 'bar-y' as const, name: 'Horizontal', data: [], yAxis: 1};
+        const yHeaderChunk: TooltipDataChunkBarY = {
+            ...createBarYChunk('Horizontal', 10),
+            series,
+        };
+        const result = getMeasureValue({
+            data: [createLineChunk('Line', 20), yHeaderChunk],
+            yAxes: [{type: 'linear'}, {type: 'category', categories}],
+            headerFormat,
+        });
+        expect(result).toEqual({value, formattedValue: value});
+        if (value === undefined) {
+            expect(headerFormat.formatter).not.toHaveBeenCalled();
+        } else {
+            expect(headerFormat.formatter).toHaveBeenCalledTimes(1);
+            expect(headerFormat.formatter).toHaveBeenCalledWith({value});
+        }
+    });
+});
 
 describe('getSortedHovered', () => {
     it('returns hovered as-is when sorting is undefined', () => {
@@ -159,5 +193,33 @@ describe('getSortedHovered', () => {
         expect(values).toEqual([5, 10, 20]);
         expect(result.map((chunk) => chunk.series.name)).toEqual(['Narrow', 'Medium', 'Wide']);
         expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(35);
+    });
+
+    it('sorts category values with missing and stale indices without throwing', () => {
+        const yAxis = {type: 'category' as const, categories: ['First', 'Second']};
+        const hovered: TooltipDataChunk[] = [1, null, undefined, 10, 0].map((y, i) => ({
+            data: {x: 0, y},
+            series: {type: 'scatter', id: String(i), name: String(i)},
+        }));
+        const sorted = getSortedHovered({hovered, yAxes: [yAxis], sorting: ASC});
+        expect(sorted).toEqual([hovered[1], hovered[2], hovered[3], hovered[4], hovered[0]]);
+        expect(getHoveredValues({hovered: sorted, yAxes: [yAxis]})).toEqual([
+            null,
+            undefined,
+            undefined,
+            'First',
+            'Second',
+        ]);
+    });
+
+    it('sorts legacy category values as resolved values', () => {
+        const hovered: TooltipDataChunk[] = ['B', 'A'].map((category) => ({
+            data: {category},
+            series: {type: 'scatter', id: category, name: category},
+        }));
+        const yAxis = {type: 'category' as const, categories: ['A', 'B']};
+        const sorted = getSortedHovered({hovered, yAxes: [yAxis], sorting: ASC});
+        expect(sorted).toEqual([hovered[1], hovered[0]]);
+        expect(getHoveredValues({hovered: sorted, yAxes: [yAxis]})).toEqual(['A', 'B']);
     });
 });

@@ -1,7 +1,6 @@
 import {group} from 'd3-array';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
-import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';
 
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
@@ -231,11 +230,14 @@ export const getHorizontalHtmlTextHeight = (args: {
     return height;
 };
 
-const extractCategoryValue = (args: {
+interface DataCategoryValueArgs {
     axisDirection: AxisDirection;
     categories: string[];
     data: ChartSeriesData;
-}) => {
+}
+
+/** Resolve a category without throwing when a value or numeric index cannot be resolved. */
+export const tryGetDataCategoryValue = (args: DataCategoryValueArgs): string | undefined => {
     const {axisDirection, categories, data} = args;
     const dataCategory = get(data, axisDirection);
     let categoryValue: string | undefined;
@@ -252,20 +254,16 @@ const extractCategoryValue = (args: {
         categoryValue = categories[dataCategory];
     }
 
-    if (isNil(categoryValue)) {
-        throw new Error('It seems you are trying to get non-existing category value');
-    }
-
-    return categoryValue;
+    return categoryValue ?? undefined;
 };
 
-export const getDataCategoryValue = (args: {
-    axisDirection: AxisDirection;
-    categories: string[];
-    data: ChartSeriesData;
-}) => {
-    const {axisDirection, categories, data} = args;
-    const categoryValue = extractCategoryValue({axisDirection, categories, data});
+/** Strict category resolution for data preparation, where invalid input must be reported. */
+export const getDataCategoryValue = (args: DataCategoryValueArgs): string => {
+    const categoryValue = tryGetDataCategoryValue(args);
+
+    if (categoryValue === undefined) {
+        throw new Error('It seems you are trying to get non-existing category value');
+    }
 
     return categoryValue;
 };
