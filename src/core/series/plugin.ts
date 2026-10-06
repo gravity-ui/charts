@@ -163,7 +163,11 @@ export interface SeriesPlugin<
     tooltip: {
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
-        /** Header coordinate. Y headers use the first matching chunk; defaults to X. */
+        /**
+         * Coordinate for axis-based tooltip headers (X by default).
+         * Y uses the first hovered chunk whose plugin declares a Y header.
+         * Ignored for non-axis headers.
+         */
         headerAxis?: 'x' | 'y';
         /** Scalar value used by built-in sorting and totals. Omit to use the default series value. */
         getValue?: (args: GetTooltipValueArgs) => string | number | null | undefined;
