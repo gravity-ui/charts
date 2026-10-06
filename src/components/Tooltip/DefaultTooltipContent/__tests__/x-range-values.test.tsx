@@ -39,15 +39,15 @@ it('sorts durations independently of Y positions and sums their widths', () => {
     const short = makeChunk({x0: 4, x1: 6, y: 2}, 'Short');
     const reverse = makeChunk({x0: 9, x1: 2, y: 1}, 'Reverse');
     const hovered = [long, short, reverse];
-    const yAxis = {type: 'category' as const, categories: ['A', 'Z', 'B']};
-    const ascending = getSortedHovered({hovered, yAxis, sorting: {key: 'value'}});
+    const yAxes = [{type: 'category' as const, categories: ['A', 'Z', 'B']}];
+    const ascending = getSortedHovered({hovered, yAxes, sorting: {key: 'value'}});
     expect(ascending).toEqual([short, reverse, long]);
-    expect(getSortedHovered({hovered, yAxis, sorting: {key: 'value', direction: 'desc'}})).toEqual([
+    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}})).toEqual([
         long,
         reverse,
         short,
     ]);
-    const values = getHoveredValues({hovered: ascending, yAxis});
+    const values = getHoveredValues({hovered: ascending, yAxes});
     expect(values).toEqual([2, 7, 10]);
     expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(19);
     expect(hovered).toEqual([long, short, reverse]);

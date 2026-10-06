@@ -484,17 +484,30 @@ describe('validation/validateData', () => {
         },
     );
 
-    test('validateData should throw an error in case of invalid axis index', () => {
-        const data = {series: {data: [{type: 'line', yAxis: 5, data: [{x: 1, y: 1}]}]}};
+    test.each([5, -1, 0.5])('rejects missing Y axis %s and identifies the series', (yAxis) => {
+        const data: ChartData = {
+            yAxis: [{type: 'linear'}],
+            series: {data: [{type: 'line', name: 'Revenue', yAxis, data: [{x: 1, y: 1}]}]},
+        };
         let error: ChartError | null = null;
 
         try {
-            validateData(data as ChartData);
+            validateData(data);
         } catch (e) {
             error = e as ChartError;
         }
 
         expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+        expect(error?.message).toContain(`"${yAxis}"`);
+        expect(error?.message).toContain('"Revenue"');
+    });
+
+    test.each([undefined, 0])('uses the first Y axis for index %s', (yAxis) => {
+        const data: ChartData = {
+            yAxis: [{type: 'category', categories: ['Low', 'High']}],
+            series: {data: [{type: 'line', name: 'Tier', yAxis, data: [{x: 1, y: 'High'}]}]},
+        };
+        expect(() => validateData(data)).not.toThrow();
     });
 
     test.each([

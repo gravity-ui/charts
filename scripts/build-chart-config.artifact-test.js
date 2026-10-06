@@ -39,6 +39,39 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
+        const usage = `
+            const tooltip: ChartTooltip = {
+                renderer: ({hovered, yAxis, yAxes}) => {
+                    hovered.forEach(item => {
+                        const index = 'yAxis' in item.series ? item.series.yAxis ?? 0 : 0;
+                        const axis: ChartYAxis | undefined = yAxes?.[index] ?? yAxis;
+                        void axis;
+                    });
+                    return null;
+                },
+                rows: [{renderer: (args) => {
+                    const record: Record<string, unknown> = args;
+                    void record;
+                    void args.yAxes?.[1];
+                    return '';
+                }}],
+                totals: {aggregation: ({yAxes}) => yAxes?.length},
+            };
+            void tooltip;
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'tooltip-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        // Callback arguments are TypeScript-only and must not become chart config fields.
+        expect(schema.definitions['ChartTooltip<JsonValue>'].properties).not.toHaveProperty(
+            'yAxes',
+        );
+    });
+
     test('standalone declarations support automatic legend width and size limits', () => {
         const usage = `
             const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};

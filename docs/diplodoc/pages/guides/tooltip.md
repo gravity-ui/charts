@@ -55,6 +55,16 @@ In the example below, hover over the overlapping bars in the middle. The tooltip
 
 <div data-chart-example="tooltip/x-range-values"></div>
 
+## Multiple Y axes and custom content
+
+Custom `renderer`, `rowRenderer`, and `totals.aggregation` callbacks receive
+all Y axes in `yAxes`. To reuse default content, pass the renderer arguments to
+`ChartTooltipContent`. Its `yAxes` prop resolves values using each series'
+assigned axis; if omitted, it falls back to `yAxis`. The example excludes
+category values from the numeric total.
+
+<div data-chart-example="tooltip/multiple-y-axes"></div>
+
 ## Hiding specific series from the tooltip
 
 There are scenarios where you might want to display a chart with multiple data series but exclude specific ones from the tooltip. This is useful for providing a cleaner, more focused user experience, especially when certain series are used for contextual or decorative purposes rather than for precise data reading.
@@ -120,6 +130,11 @@ as [ValueFormat](../api/Utilities/type-aliases/ValueFormat.md). Formatting works
 the same way as everywhere else in the chart (data labels, axis labels, etc.) —
 see the [Value formatting](./value-formatting.md) guide for the full reference,
 the `units` option, custom formatters, and examples.
+
+The default tooltip omits its header when the axis value is `null`, `undefined`,
+or a category index cannot be resolved. On category axes, a custom header
+formatter is called only when the header value is available. On linear/datetime
+axes and radar charts, a custom formatter can return a placeholder for a missing value.
 
 ### Per-series override
 

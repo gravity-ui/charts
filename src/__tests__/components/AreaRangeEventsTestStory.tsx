@@ -1,25 +1,17 @@
 import React from 'react';
 
-import {ChartTestStory} from '../../../playwright/components/ChartTestStory';
-import type {ChartData} from '../../types';
+import type {AreaRangeSeriesData, ChartData} from '../../types';
 
-export function AreaRangeEventsTestStory({data}: {data: ChartData}) {
-    const [clicked, setClicked] = React.useState('');
-    const chartData: ChartData = {
-        ...data,
-        chart: {
-            ...data.chart,
-            events: {
-                ...data.chart?.events,
-                click: ({point}) => setClicked(`${point.y0} — ${point.y1}`),
-            },
-        },
-    };
+import {ChartClickEventsTestStory} from './ChartClickEventsTestStory';
 
+interface Props {
+    data: ChartData;
+}
+
+const formatPoint = (point: AreaRangeSeriesData) => `${point.y0} — ${point.y1}`;
+
+export function AreaRangeEventsTestStory({data}: Props) {
     return (
-        <React.Fragment>
-            <ChartTestStory data={chartData} />
-            <output data-qa="clicked-range">{clicked}</output>
-        </React.Fragment>
+        <ChartClickEventsTestStory data={data} formatPoint={formatPoint} dataQa="clicked-range" />
     );
 }
