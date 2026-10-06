@@ -888,6 +888,40 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: [], unknownProperty: true}})).toBe(false);
     });
 
+    test('rejects category objects on xAxis', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        expect(
+            validateConfig({
+                series: {data: [{type: 'radar', categories: [{key: 'A'}], data: [{value: 1}]}]},
+                xAxis: {categories: [{key: 'A'}]},
+            }),
+        ).toBe(false);
+        expect(validateConfig.errors).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    instancePath: '/xAxis/categories/0',
+                    keyword: 'type',
+                    params: {type: 'string'},
+                }),
+            ]),
+        );
+    });
+
+    test('accepts shared radar categories', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const categories = [{key: 'A'}];
+        expect(
+            validateConfig({
+                series: {
+                    data: [
+                        {type: 'radar', data: [{value: 1}]},
+                        {type: 'radar', categories, data: [{value: 2}]},
+                    ],
+                },
+            }),
+        ).toBe(true);
+    });
+
     test('does not contain unsafe definition references', () => {
         expect(JSON.stringify(schema)).not.toMatch(/#\/definitions\/[^"%]*[<>]/);
     });
