@@ -58,6 +58,83 @@ async function getItemGeometry(component: Locator, html: boolean) {
 }
 
 test.describe('Legend row gap', () => {
+    test('decimal gaps exactly fill the available height without pagination', async ({mount}) => {
+        const data = getData({layout: 'vertical', itemMaxRowCount: 1});
+        const styles = {width: 650, height: 200};
+        const component = await mount(<ChartTestStory data={data} styles={styles} />);
+        const legend = component.locator('.gcharts-legend');
+        await expect(component.locator('.gcharts-legend__item')).toHaveCount(6);
+        await expect(legend).toHaveCSS('opacity', '1');
+        const height = Number(await legend.getAttribute('height')) + 5 * 0.2;
+        const spaced: ChartData = {
+            ...data,
+            chart: {margin: {left: 10, right: 10, top: 10, bottom: styles.height - 10 - height}},
+            legend: {...data.legend, rowGap: '0.2px'},
+        };
+        await component.update(<ChartTestStory data={spaced} styles={styles} />);
+        await expect(legend).toHaveAttribute('height', String(height));
+        await expect(component.locator('.gcharts-legend__pagination-counter')).toHaveCount(0);
+        await expect(component.locator('.gcharts-legend__item')).toHaveCount(6);
+    });
+
+    test('short HTML rows remain visible and clickable when a gap introduces pagination', async ({
+        mount,
+    }) => {
+        const styles = {width: 400, height: 120};
+        const availableHeight = 28;
+        const data: ChartData = {
+            chart: {
+                margin: {
+                    left: 10,
+                    right: 10,
+                    top: 10,
+                    bottom: styles.height - 10 - availableHeight,
+                },
+            },
+            legend: {
+                enabled: true,
+                position: 'left',
+                layout: 'vertical',
+                width: 150,
+                align: 'left',
+                html: true,
+            },
+            series: {
+                data: Array.from({length: 3}, (_, i) => ({
+                    type: 'scatter',
+                    name: `<div style="height:6px;line-height:6px;font-size:6px">Item ${i}</div>`,
+                    symbolType: 'square',
+                    legend: {symbol: {width: 6}},
+                    data: [{x: i, y: i + 1}],
+                })),
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} styles={styles} />);
+        const labels = component.locator('.gcharts-legend__item-text-html');
+        await expect(labels).toHaveCount(3);
+        await expect(component.locator('.gcharts-legend__pagination-counter')).toHaveCount(0);
+        await component.update(
+            <ChartTestStory
+                data={{...data, legend: {...data.legend, rowGap: 7}}}
+                styles={styles}
+            />,
+        );
+        const counter = component.locator('.gcharts-legend__pagination-counter');
+        for (let page = 1; page <= 3; page++) {
+            await expect(counter).toHaveText(`${page}/3`);
+            await expect(labels).toHaveCount(1);
+            await expect(labels).toHaveText(`Item ${page - 1}`);
+            const label = await labels.boundingBox();
+            const paginator = await counter.boundingBox();
+            expect(label?.height).toBe(6);
+            expect((label?.y ?? Infinity) + 6).toBeLessThanOrEqual(paginator?.y ?? -Infinity);
+            await labels.click({trial: true});
+            if (page < 3) {
+                await component.locator('.gcharts-legend__pagination-arrow').last().click();
+            }
+        }
+    });
+
     for (const html of [false, true]) {
         const output = html ? 'html' : 'svg';
         for (const layout of ['vertical', 'horizontal'] as const) {
@@ -237,10 +314,22 @@ test.describe('Legend row gap', () => {
                 <ChartTestStory data={data} styles={{width: 650, height: 130}} />,
             );
             const counter = component.locator('.gcharts-legend__pagination-counter');
+            const labels = component.locator(
+                html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
+            );
             for (let page = 1; page <= 3; page++) {
                 await expect(counter).toHaveText(`${page}/3`);
                 await expect(component.locator('.gcharts-legend__item')).toHaveCount(1);
                 expect(await getRowTops(component)).toEqual([0]);
+                expect((await labels.textContent())?.replace(/\s/g, '')).toBe(
+                    `Region${page - 1}Revenue`,
+                );
+                const geometry = await getItemGeometry(component, html);
+                const paginator = await counter.boundingBox();
+                for (const box of [...geometry.labels, ...geometry.symbols]) {
+                    expect(box.y + box.height).toBeLessThanOrEqual(paginator?.y ?? -Infinity);
+                }
+                await labels.click({trial: true});
                 if (page < 3) {
                     await component.locator('.gcharts-legend__pagination-arrow').last().click();
                 }

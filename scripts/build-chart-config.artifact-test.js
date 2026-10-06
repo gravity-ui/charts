@@ -163,7 +163,26 @@ describe('chart config artifacts', () => {
         for (const rowGap of [undefined, 0, 4, 4.5, '4px', '.5px']) {
             expect(validateConfig({series: {data: []}, legend: {rowGap}})).toBe(true);
         }
-        for (const rowGap of [-1, NaN, Infinity, -Infinity, true]) {
+        for (const rowGap of [
+            -1,
+            NaN,
+            Infinity,
+            -Infinity,
+            true,
+            null,
+            '4%',
+            'auto',
+            '-4px',
+            '4',
+            'garbage',
+            '4px\n',
+            '4px\r',
+            '4px\u2028',
+            '4px\u2029',
+            '1e2px',
+            ' 4px',
+            '4px ',
+        ]) {
             expect(validateConfig({series: {data: []}, legend: {rowGap}})).toBe(false);
         }
     });

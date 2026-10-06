@@ -901,6 +901,29 @@ describe('vertical legend layout', () => {
 });
 
 describe('discrete legend row spacing', () => {
+    test('fits decimal gaps at the exact available height', async () => {
+        const {preparedLegend, legendConfig} = await prepareLegend(
+            {enabled: true, position: 'left', layout: 'vertical', rowGap: 0.2},
+            {names: Array(6).fill('A'), height: 105},
+        );
+        expect(preparedLegend.height).toBe(85);
+        expect(preparedLegend.rows.map((row) => row.top)).toEqual([0, 14.2, 28.4, 42.6, 56.8, 71]);
+        expect(legendConfig.pagination).toBeUndefined();
+    });
+
+    test('fills complete pages when decimal gaps meet the content height exactly', async () => {
+        const {legendConfig} = await prepareLegend(
+            {enabled: true, position: 'left', layout: 'vertical', rowGap: 1.4},
+            {names: Array(23).fill('A'), height: 202},
+        );
+        // Eleven 14 px rows and ten 1.4 px gaps fill the 168 px content area.
+        expect(legendConfig.pagination?.pages).toEqual([
+            {start: 0, end: 11},
+            {start: 11, end: 22},
+            {start: 22, end: 23},
+        ]);
+    });
+
     test('resolves pixel gaps and preserves the raw configuration', async () => {
         for (const rowGap of [undefined, 0, 4, '4px', '4.5px', '.5px']) {
             const legend = Object.freeze({enabled: true, layout: 'vertical' as const, rowGap});

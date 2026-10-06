@@ -13,6 +13,7 @@ import {
     getTextSizeFn,
     getTextWithElipsis,
     parseLegendWidth,
+    sumDecimals,
 } from '../utils';
 
 import {getLegendTextSizeFn, limitLegendItemRows, prepareLegendItems} from './legend-label';
@@ -247,14 +248,12 @@ function getPagination(args: {
     const pages: NonNullable<LegendConfig['pagination']>['pages'] = [];
     let currentHeight = 0;
     rows.forEach((row, i) => {
-        if (
-            !pages.length ||
-            currentHeight + rowGap + row.height > maxLegendHeight - paginatorHeight
-        ) {
+        const nextHeight = sumDecimals([currentHeight, rowGap, row.height]);
+        if (!pages.length || nextHeight > maxLegendHeight - paginatorHeight) {
             pages.push({start: i, end: i + 1});
             currentHeight = row.height;
         } else {
-            currentHeight += rowGap + row.height;
+            currentHeight = nextHeight;
         }
         pages[pages.length - 1].end = i + 1;
     });
@@ -303,14 +302,15 @@ function getLegendRows(
         );
         const row = {top, left: 0, height, width, items: positions};
         // Finite pixel gaps can still overflow when accumulated across many rows.
-        top = Math.min(Number.MAX_VALUE, top + height + legend.resolvedRowGap);
+        top = Math.min(Number.MAX_VALUE, sumDecimals([top, height, legend.resolvedRowGap]));
         return row;
     });
 }
 
 function getLegendRowsHeight(rows: PreparedLegendRow[], rowGap: number): number {
     return rows.reduce(
-        (height, row, i) => Math.min(Number.MAX_VALUE, height + row.height + (i > 0 ? rowGap : 0)),
+        (height, row, i) =>
+            Math.min(Number.MAX_VALUE, sumDecimals([height, row.height, i > 0 ? rowGap : 0])),
         0,
     );
 }
@@ -572,6 +572,18 @@ export async function finalizePreparedLegend(args: {
         if (availableHeight < legendHeight) {
             const lines = Math.floor(availableHeight / preparedLegend.lineHeight);
             legendHeight = preparedLegend.lineHeight * lines;
+            // HTML rows need not be multiples of the SVG text line height. Reclaim
+            // the remainder if rounding would clip a row that fits beside the paginator.
+            if (
+                preparedLegend.html &&
+                rows.some(
+                    (row) =>
+                        row.height > legendHeight - preparedLegend.lineHeight &&
+                        row.height <= availableHeight - preparedLegend.lineHeight,
+                )
+            ) {
+                legendHeight = availableHeight;
+            }
             let fitsWithoutPagination = false;
             if (preparedLegend.multilineItems) {
                 fitsWithoutPagination = heightWithRowLimit(lines) <= availableHeight;

@@ -1,5 +1,7 @@
 import isNil from 'lodash/isNil';
 
+import {SIZE_REGEXP} from '../constants/dimensions';
+
 function shiftDecimal(value: number, places: number): number {
     const [coefficient, exponent = '0'] = String(value).split('e');
     return Number(`${coefficient}e${Number(exponent) + places}`);
@@ -31,10 +33,32 @@ interface ParsedNumericProperty {
     unit: 'px' | '%';
 }
 
+/** Parse a complete, finite, nonnegative pixel or percentage size. */
+export function parseNonNegativeSize(value: unknown): ParsedNumericProperty | undefined {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) && value >= 0 ? {value, unit: 'px'} : undefined;
+    }
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+
+    const match = SIZE_REGEXP.exec(value);
+    // `$` can match before a final newline; require the entire input to match.
+    if (!match || match[0] !== value) {
+        return undefined;
+    }
+
+    const magnitude = Number(match[1]);
+    const unit = match[2];
+    return Number.isFinite(magnitude) && (unit === 'px' || unit === '%')
+        ? {value: magnitude, unit}
+        : undefined;
+}
+
 /**
  * Parses numeric values and units without scaling percentages.
  * Preserves numeric prefixes and numeric NaN/Infinity for compatibility.
- * Callers requiring strict validation must check format and finiteness (see parseLegendWidth).
+ * Callers requiring strict validation must check format and finiteness (see parseNonNegativeSize).
  */
 export function parseNumericProperty(
     value?: string | number | null,

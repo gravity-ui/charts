@@ -5,7 +5,7 @@ import {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {getRegisteredSeriesTypes, getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartData, ChartTooltip} from '../types';
-import {parseLegendWidth} from '../utils/legend';
+import {parseNonNegativeSize} from '../utils/math';
 
 import {validateAxes} from './validate-axes';
 
@@ -78,7 +78,7 @@ export function validateData(data?: ChartData) {
     }
 
     const rowGap = data.legend?.rowGap;
-    if (rowGap !== undefined && parseLegendWidth(rowGap)?.unit !== 'px') {
+    if (rowGap !== undefined && parseNonNegativeSize(rowGap)?.unit !== 'px') {
         throw new ChartError({
             code: CHART_ERROR_CODE.INVALID_DATA,
             message: 'legend.rowGap must be a finite, nonnegative number or decimal px string',
