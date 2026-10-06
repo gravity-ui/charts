@@ -50,17 +50,18 @@ export const getMeasureValue = ({
     if (data.some((item) => item.series.type === 'radar')) {
         const value = (data[0] as TooltipDataChunkRadar).category?.key ?? null;
         const formattedValue =
-            value === null || !headerFormat
+            !headerFormat || (value === null && headerFormat.type !== 'custom')
                 ? undefined
                 : getFormattedValue({value, format: headerFormat});
         return {value, formattedValue};
     }
 
-    const value = data.some((item) => ['bar-y', 'x-range'].includes(item.series.type))
-        ? getYRowData(data[0]?.data, yAxis)
-        : getXRowData(data[0]?.data, xAxis);
+    const usesYAxis = data.some((item) => ['bar-y', 'x-range'].includes(item.series.type));
+    const axis = usesYAxis ? yAxis : xAxis;
+    const value = usesYAxis ? getYRowData(data[0]?.data, yAxis) : getXRowData(data[0]?.data, xAxis);
     const formattedValue =
-        value === null || value === undefined
+        (value === null || value === undefined) &&
+        (axis?.type === 'category' || headerFormat?.type !== 'custom')
             ? undefined
             : getFormattedValue({value, format: headerFormat});
 

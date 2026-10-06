@@ -16,25 +16,18 @@ import type {
 } from '../../types';
 import type {PreparedTooltip} from '../types';
 import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
+import {useHoverResetKey} from '../useHoverResetKey';
 
 interface Args {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
-    seriesData?: PreparedSeries[];
+    seriesData: PreparedSeries[] | undefined;
     xAxis?: PreparedXAxis | null;
     yAxis?: PreparedYAxis;
 }
 
-interface TooltipAxes {
-    xType: PreparedXAxis['type'];
-    yType: PreparedYAxis['type'];
-    xCategories?: string[];
-    yCategories?: string[];
-}
-
 interface TooltipState {
-    axes: TooltipAxes;
-    seriesData?: PreparedSeries[];
+    resetKey: ReturnType<typeof useHoverResetKey>;
     hovered?: TooltipDataChunk[];
     hoveredPlotBands?: ChartTooltipRendererArgs['hoveredPlotBands'];
     hoveredPlotLines?: ChartTooltipRendererArgs['hoveredPlotLines'];
@@ -43,19 +36,10 @@ interface TooltipState {
 }
 
 export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args) => {
-    const axes = React.useMemo<TooltipAxes>(
-        () => ({
-            xType: xAxis?.type ?? 'linear',
-            yType: yAxis?.type ?? 'linear',
-            xCategories: xAxis?.type === 'category' ? (xAxis.categories ?? []) : undefined,
-            yCategories: yAxis?.type === 'category' ? (yAxis.categories ?? []) : undefined,
-        }),
-        [xAxis?.type, xAxis?.categories, yAxis?.type, yAxis?.categories],
-    );
+    const resetKey = useHoverResetKey({seriesData, xAxis, yAxes: [yAxis]});
     const [
         {
-            axes: previousAxes,
-            seriesData: previousSeriesData,
+            resetKey: previousResetKey,
             hovered,
             hoveredPlotBands,
             hoveredPlotLines,
@@ -63,12 +47,12 @@ export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args
             pointerPosition,
         },
         setTooltipState,
-    ] = React.useState<TooltipState>({axes, seriesData});
+    ] = React.useState<TooltipState>({resetKey});
     const prevHovered = React.useRef(hovered);
 
     // New data or an axis value mapping invalidates old points before children render.
-    if (previousSeriesData !== seriesData || !isEqual(previousAxes, axes)) {
-        setTooltipState({axes, seriesData});
+    if (previousResetKey !== resetKey) {
+        setTooltipState({resetKey});
         prevHovered.current = undefined;
     }
 
@@ -96,8 +80,7 @@ export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args
                     });
                     const isHoveredChanged = !isEqual(prevHovered.current, sortedHovered);
                     const newTooltipState: TooltipState = {
-                        axes,
-                        seriesData,
+                        resetKey,
                         hovered: isHoveredChanged ? sortedHovered : prevHovered.current,
                         hoveredPlotBands: nextHoveredPlots?.bands,
                         hoveredPlotLines: nextHoveredPlots?.lines,
@@ -118,7 +101,7 @@ export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args
                 dispatcher.on('hover-shape.tooltip', null);
             }
         };
-    }, [axes, dispatcher, tooltip, seriesData, xAxis, yAxis]);
+    }, [resetKey, dispatcher, tooltip, xAxis, yAxis]);
     return {
         hovered,
         hoveredPlotBands,

@@ -112,8 +112,9 @@ see the [Value formatting](./value-formatting.md) guide for the full reference,
 the `units` option, custom formatters, and examples.
 
 The default tooltip omits its header when the axis value is `null`, `undefined`,
-or a category index cannot be resolved. A custom header formatter is called only
-when the header value is available.
+or a category index cannot be resolved. On category axes, a custom header
+formatter is called only when the header value is available. On linear/datetime
+axes and radar charts, a custom formatter can return a placeholder for a missing value.
 
 ### Per-series override
 

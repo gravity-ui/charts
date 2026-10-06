@@ -20,7 +20,7 @@ const b = block('tooltip');
 interface TooltipProps {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
-    seriesData?: PreparedSeries[];
+    seriesData: PreparedSeries[] | undefined;
     svgContainer: SVGSVGElement | null;
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis;

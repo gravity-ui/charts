@@ -158,14 +158,14 @@ describe('getSortedHovered', () => {
     });
 
     it('sorts category values with missing and stale indices without throwing', () => {
-        const xAxis = {type: 'category' as const, categories: ['First', 'Second']};
-        const hovered: TooltipDataChunkBarY[] = [1, null, undefined, 10, 0].map((x, i) => ({
-            data: {x, y: 0},
-            series: {type: 'bar-y', name: String(i), data: []},
+        const yAxis = {type: 'category' as const, categories: ['First', 'Second']};
+        const hovered: TooltipDataChunk[] = [1, null, undefined, 10, 0].map((y, i) => ({
+            data: {x: 0, y},
+            series: {type: 'scatter', id: String(i), name: String(i)},
         }));
-        const sorted = getSortedHovered({hovered, xAxis, sorting: ASC});
+        const sorted = getSortedHovered({hovered, yAxis, sorting: ASC});
         expect(sorted).toEqual([hovered[1], hovered[2], hovered[3], hovered[4], hovered[0]]);
-        expect(getHoveredValues({hovered: sorted, xAxis})).toEqual([
+        expect(getHoveredValues({hovered: sorted, yAxis})).toEqual([
             null,
             undefined,
             undefined,

@@ -11,7 +11,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import {useTooltip} from '../index';
 
 interface AxisProps {
-    seriesData?: PreparedSeries[];
+    seriesData: PreparedSeries[];
     xAxis?: PreparedXAxis | null;
     yAxis?: PreparedYAxis;
 }

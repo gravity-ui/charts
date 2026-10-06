@@ -7,6 +7,7 @@ import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {EventType, getDispatcher, isBandScale} from '~core/utils';
 
 import {useCrosshair, usePrevious} from '../../hooks';
+import {useHoverResetKey} from '../../hooks/useHoverResetKey';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
 import {block} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
@@ -114,6 +115,8 @@ export const ChartInner = (props: ChartInnerProps) => {
         updateZoomState,
         zoomState,
     });
+    const hoverResetKey = useHoverResetKey({seriesData: allPreparedSeries, xAxis, yAxes: yAxis});
+    const previousHoverResetKey = usePrevious(hoverResetKey);
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
     const hasPlotArea = boundsWidth > 0 && boundsHeight > 0;
@@ -167,6 +170,7 @@ export const ChartInner = (props: ChartInnerProps) => {
     const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);
 
     useCrosshair({
+        resetKey: hoverResetKey,
         split: preparedSplit,
         plotElement: plotAfterRef.current,
         boundsOffsetLeft,
@@ -179,6 +183,12 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         dispatcher,
     });
+
+    React.useEffect(() => {
+        if (previousHoverResetKey !== hoverResetKey && tooltipPinned) {
+            unpinTooltip?.();
+        }
+    }, [previousHoverResetKey, hoverResetKey, tooltipPinned, unpinTooltip]);
 
     React.useEffect(() => {
         if (clickHandler) {

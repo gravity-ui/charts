@@ -46,6 +46,12 @@ function renderTooltip(ui: React.ReactElement) {
     return render(<ThemeProvider theme="light">{ui}</ThemeProvider>);
 }
 
+function expectNoHeader(container: HTMLElement) {
+    // The tooltip header has no accessible role; assert its absence independently of row contents.
+    // eslint-disable-next-line testing-library/no-node-access
+    expect(container.querySelector('.gcharts-tooltip__series-name')).toBeNull();
+}
+
 describe('DefaultTooltipContent — header values', () => {
     const xAxis: ChartXAxis = {type: 'category', categories: ['A', 'B']};
 
@@ -56,7 +62,7 @@ describe('DefaultTooltipContent — header values', () => {
         const {container, rerender} = renderTooltip(
             <DefaultTooltipContent hovered={hovered} xAxis={xAxis} />,
         );
-        expect(container.textContent).toBe('Scatter10');
+        expectNoHeader(container);
 
         rerender(
             <ThemeProvider theme="light">
@@ -67,7 +73,7 @@ describe('DefaultTooltipContent — header values', () => {
                 />
             </ThemeProvider>,
         );
-        expect(container.textContent).toBe('Scatter10');
+        expectNoHeader(container);
 
         const formatter = jest.fn(() => 'Unexpected header');
         rerender(
@@ -80,28 +86,41 @@ describe('DefaultTooltipContent — header values', () => {
             </ThemeProvider>,
         );
         expect(formatter).not.toHaveBeenCalled();
-        expect(container.textContent).toBe('Scatter10');
+        expectNoHeader(container);
     });
 
-    test.each(['bar-y', 'x-range'] as const)('omits a missing Y header for %s', (type) => {
+    test.each([
+        {type: 'bar-y', y: undefined},
+        {type: 'bar-y', y: 5},
+        {type: 'x-range', y: undefined},
+        {type: 'x-range', y: 5},
+    ] as const)('omits an unresolved Y header for $type ($y)', ({type, y}) => {
         const hovered: TooltipDataChunk[] = [
             type === 'bar-y'
-                ? {data: {x: 10}, series: {type, name: 'Series', data: []}}
+                ? {data: {x: 10, y}, series: {type, name: 'Series', data: []}}
                 : {
-                      data: {x0: 0, x1: 10},
+                      data: {x0: 0, x1: 10, y},
                       series: {type, name: 'Series', data: []},
                   },
         ];
+        const yAxis = {type: 'category' as const, categories: ['A', 'B']};
+        const {container, rerender} = renderTooltip(
+            <DefaultTooltipContent hovered={hovered} yAxis={yAxis} />,
+        );
+        expectNoHeader(container);
+
         const formatter = jest.fn(() => 'Unexpected header');
-        renderTooltip(
-            <DefaultTooltipContent
-                hovered={hovered}
-                yAxis={{type: 'category', categories: ['A', 'B']}}
-                headerFormat={{type: 'custom', formatter}}
-            />,
+        rerender(
+            <ThemeProvider theme="light">
+                <DefaultTooltipContent
+                    hovered={hovered}
+                    yAxis={yAxis}
+                    headerFormat={{type: 'custom', formatter}}
+                />
+            </ThemeProvider>,
         );
         expect(formatter).not.toHaveBeenCalled();
-        expect(screen.queryByText('Unexpected header')).toBeNull();
+        expectNoHeader(container);
     });
 
     test.each(['bar-x', 'scatter'] as const)('uses a legacy category in a %s header', (type) => {
@@ -109,6 +128,14 @@ describe('DefaultTooltipContent — header values', () => {
             type === 'bar-x'
                 ? {data: {category: 'A', y: 10}, series: {type, name: 'Series', data: []}}
                 : {data: {category: 'A', y: 10}, series: {type, name: 'Series', id: 'series'}},
+        ];
+        renderTooltip(<DefaultTooltipContent hovered={hovered} xAxis={xAxis} />);
+        expect(screen.getByText('A')).toBeDefined();
+    });
+
+    test('formats a Cartesian header exactly once', () => {
+        const hovered: TooltipDataChunk[] = [
+            {data: {x: 1, y: 10}, series: {type: 'line', id: 'line', name: 'Line'}},
         ];
         const formatter = jest.fn(({value}) => `Category:${value}`);
         renderTooltip(
@@ -118,9 +145,9 @@ describe('DefaultTooltipContent — header values', () => {
                 headerFormat={{type: 'custom', formatter}}
             />,
         );
-        expect(screen.getByText('Category:A')).toBeDefined();
+        expect(screen.getByText('Category:B')).toBeDefined();
         expect(formatter).toHaveBeenCalledTimes(1);
-        expect(formatter).toHaveBeenCalledWith({value: 'A'});
+        expect(formatter).toHaveBeenCalledWith({value: 'B'});
     });
 
     test('preserves zero in the header', () => {
@@ -129,6 +156,38 @@ describe('DefaultTooltipContent — header values', () => {
         ];
         renderTooltip(<DefaultTooltipContent hovered={hovered} xAxis={{type: 'linear'}} />);
         expect(screen.getByText('0')).toBeDefined();
+    });
+
+    describe.each(['linear', 'datetime'] as const)('%s headers with missing values', (type) => {
+        test.each([null, undefined])('allows a custom placeholder for %s', (x) => {
+            const hovered: TooltipDataChunk[] = [
+                {data: {x, y: 10}, series: {type: 'scatter', id: 'scatter', name: 'Scatter'}},
+            ];
+            const formatter = jest.fn(() => 'No coordinate');
+            renderTooltip(
+                <DefaultTooltipContent
+                    hovered={hovered}
+                    xAxis={{type}}
+                    headerFormat={{type: 'custom', formatter}}
+                />,
+            );
+            expect(screen.getByText('No coordinate')).toBeDefined();
+            expect(formatter).toHaveBeenCalledTimes(1);
+            expect(formatter).toHaveBeenCalledWith({value: x});
+        });
+
+        test.each([null, undefined])(
+            'omits a missing value without a custom formatter (%s)',
+            (x) => {
+                const hovered: TooltipDataChunk[] = [
+                    {data: {x, y: 10}, series: {type: 'scatter', id: 'scatter', name: 'Scatter'}},
+                ];
+                const {container} = renderTooltip(
+                    <DefaultTooltipContent hovered={hovered} xAxis={{type}} />,
+                );
+                expectNoHeader(container);
+            },
+        );
     });
 
     const radarChunk: TooltipDataChunkRadar = {
@@ -167,16 +226,17 @@ describe('DefaultTooltipContent — header values', () => {
         expect(screen.getByText('05.10.2026')).toBeDefined();
     });
 
-    test('does not call the radar header formatter for a missing category', () => {
-        const formatter = jest.fn(() => 'Unexpected header');
+    test('allows a custom radar header placeholder for a missing category', () => {
+        const formatter = jest.fn(() => 'No category');
         renderTooltip(
             <DefaultTooltipContent
                 hovered={[{...radarChunk, category: undefined}]}
                 headerFormat={{type: 'custom', formatter}}
             />,
         );
-        expect(formatter).not.toHaveBeenCalled();
-        expect(screen.queryByText('Unexpected header')).toBeNull();
+        expect(formatter).toHaveBeenCalledTimes(1);
+        expect(formatter).toHaveBeenCalledWith({value: null});
+        expect(screen.getByText('No category')).toBeDefined();
         expect(screen.getByText('10')).toBeDefined();
     });
 });
