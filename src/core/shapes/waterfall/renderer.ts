@@ -74,7 +74,8 @@ export function renderWaterfall(
                 points.push([prev.x, prev.y + prev.height]);
             }
 
-            if (Number(d.data.y) > 0 && !d.data.total) {
+            const connectToBottom = d.data.total ? Number(d.data.y) < 0 : Number(d.data.y) > 0;
+            if (connectToBottom) {
                 points.push([d.x + d.width, d.y + d.height]);
             } else {
                 points.push([d.x + d.width, d.y]);
