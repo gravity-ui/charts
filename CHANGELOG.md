@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.65.0](https://github.com/gravity-ui/charts/compare/v1.64.0...v1.65.0) (2026-10-06)
+
+
+### Features
+
+* add configurable row spacing for discrete legends ([#745](https://github.com/gravity-ui/charts/issues/745)) ([d1e9de7](https://github.com/gravity-ui/charts/commit/d1e9de718a5584f84dd3ffb80f54d2ccbf88a40f))
+* **tooltip:** support series Y axes in tooltip content ([#741](https://github.com/gravity-ui/charts/issues/741)) ([f189853](https://github.com/gravity-ui/charts/commit/f18985398b12fdd7aed657cf72c87c308ef0914a))
+
+
+### Bug Fixes
+
+* account for per-point marker radius in scatter data labels ([#747](https://github.com/gravity-ui/charts/issues/747)) ([da49ac7](https://github.com/gravity-ui/charts/commit/da49ac7ee2462b4ff48d2feb04c2c3d5478c0387))
+* correct waterfall negative totals and Y domain ([#746](https://github.com/gravity-ui/charts/issues/746)) ([33dddea](https://github.com/gravity-ui/charts/commit/33dddea6e21971291c06541c6e4996bcc1ab9d79))
+* handle category names consistently with numeric indexes in applyAxisCategoriesOrder ([#736](https://github.com/gravity-ui/charts/issues/736)) ([a474070](https://github.com/gravity-ui/charts/commit/a4740704771bbd4cae2e91d83da64a4a52fdb192))
+* preserve missing category values in tooltips ([#740](https://github.com/gravity-ui/charts/issues/740)) ([96ce211](https://github.com/gravity-ui/charts/commit/96ce211510067a47332ec140ee68168719f7c51b))
+* prevent crosshair from intercepting pointer events ([#749](https://github.com/gravity-ui/charts/issues/749)) ([d72a669](https://github.com/gravity-ui/charts/commit/d72a669a75e7e57bea564859632f0287638e1ec6))
+* validate radar categories before rendering ([#748](https://github.com/gravity-ui/charts/issues/748)) ([9385bec](https://github.com/gravity-ui/charts/commit/9385bec6e7b2564131fe16da3a8c2a78f8c7d35b))
+
 ## [1.64.0](https://github.com/gravity-ui/charts/compare/v1.63.0...v1.64.0) (2026-10-05)
 
 
