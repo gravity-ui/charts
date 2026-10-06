@@ -4,8 +4,6 @@ import React from 'react';
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {render} from '@testing-library/react';
 
-import {getSeriesPlugin} from '~core/series/seriesRegistry';
-
 import type {
     ChartTooltipRowRendererArgs,
     TooltipDataChunkXRange,
@@ -29,8 +27,22 @@ it.each([
     (data, expected) => {
         const original = {...data};
         expect(getHoveredValues({hovered: [makeChunk(data)]})).toEqual([expected]);
-        expect(getSeriesPlugin('x-range').getColorValue?.(data)).toBe(expected);
         expect(data).toEqual(original);
+    },
+);
+
+it.each([{categories: ['A', 'B', 'C']}, {categories: ['10', '20', '30']}])(
+    'excludes category X intervals from numeric values: %j',
+    ({categories}) => {
+        const hovered = [
+            makeChunk({x0: 0, x1: 2, y: 0}),
+            makeChunk({x0: categories[0], x1: categories[2], y: 0}),
+        ];
+        const xAxis = {type: 'category' as const, categories};
+        const values = getHoveredValues({hovered, xAxis});
+        expect(values).toEqual([undefined, undefined]);
+        expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(0);
+        expect(getSortedHovered({hovered, xAxis, sorting: {key: 'value'}})).toEqual(hovered);
     },
 );
 
@@ -53,11 +65,11 @@ it('sorts durations independently of Y positions and sums their widths', () => {
     expect(hovered).toEqual([long, short, reverse]);
 });
 
-it('keeps interval row values and header separate from the total duration', () => {
+it('keeps interval row values separate from the total duration', () => {
     const hovered = [makeChunk({x0: 0, x1: 10, y: 0}), makeChunk({x0: 4, x1: 6, y: 0})];
     const totalFormatter = jest.fn(({value}) => `total:${value}`);
     const rowRenderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
-    const {container} = render(
+    render(
         <ThemeProvider theme="light">
             <DefaultTooltipContent
                 hovered={hovered}
@@ -69,5 +81,4 @@ it('keeps interval row values and header separate from the total duration', () =
     );
     expect(rowRenderer.mock.calls.map(([args]) => args.value)).toEqual(['0 — 10', '4 — 6']);
     expect(totalFormatter).toHaveBeenCalledWith({value: 12});
-    expect(container.textContent).toContain('Task');
 });

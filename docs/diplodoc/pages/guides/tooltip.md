@@ -47,7 +47,7 @@ tooltip: {
 
 ### Interval series
 
-For `x-range`, built-in totals sum interval durations, `Math.abs(Number(x1) - Number(x0))`, and sorting by `value` orders intervals by that duration. The Y category is a row label. Tooltip rows continue to display the start and end values. Timestamp boundaries produce durations in milliseconds.
+For `x-range`, totals and sorting by `value` use the absolute difference between interval boundaries. Timestamp durations are in milliseconds. On category X axes, intervals have no numeric value for totals or sorting. Tooltip rows display both boundaries.
 
 For `area-range`, totals and sorting use the width `y1 - y0`. Both types sum individual widths, including overlaps; totals do not compute the union of intervals.
 

@@ -59,7 +59,10 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         headerAxis: 'y',
-        getValue: ({item}) => getXRangeWidth((item as TooltipDataChunkXRange).data),
+        getValue: ({item, xAxis}) =>
+            xAxis?.type === 'category'
+                ? undefined
+                : getXRangeWidth((item as TooltipDataChunkXRange).data),
         rows: [
             {
                 id: 'default',
