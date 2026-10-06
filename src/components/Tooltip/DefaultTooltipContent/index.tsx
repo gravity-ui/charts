@@ -84,15 +84,7 @@ export const DefaultTooltipContent = ({
         );
     };
 
-    let formattedHeadValue: string | undefined;
-    if (measureValue) {
-        formattedHeadValue = headerFormat
-            ? getFormattedValue({
-                  value: measureValue.value,
-                  format: headerFormat,
-              })
-            : measureValue.formattedValue;
-    }
+    const formattedHeadValue = measureValue?.formattedValue;
 
     React.useEffect(() => {
         if (!contentRowsRef.current) {

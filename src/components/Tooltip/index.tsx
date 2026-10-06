@@ -4,6 +4,8 @@ import {Popup, useVirtualElement} from '@gravity-ui/uikit';
 import type {PopupProps} from '@gravity-ui/uikit';
 import type {Dispatch} from 'd3-dispatch';
 
+import type {PreparedSeries} from '~core/series/types';
+
 import type {PreparedTooltip, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import {useTooltip} from '../../hooks';
 import type {ChartYAxis} from '../../types';
@@ -15,22 +17,33 @@ import './styles.scss';
 
 const b = block('tooltip');
 
-type TooltipProps = {
+interface TooltipProps {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
+    seriesData: PreparedSeries[] | undefined;
     svgContainer: SVGSVGElement | null;
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis;
     tooltipPinned: boolean;
     onOutsideClick?: () => void;
-};
+}
 
 export const Tooltip = (props: TooltipProps) => {
-    const {tooltip, xAxis, yAxis, svgContainer, dispatcher, tooltipPinned, onOutsideClick} = props;
+    const {
+        tooltip,
+        seriesData,
+        xAxis,
+        yAxis,
+        svgContainer,
+        dispatcher,
+        tooltipPinned,
+        onOutsideClick,
+    } = props;
     const {hovered, hoveredPlotBands, hoveredPlotLines, hoveredPlotShapes, pointerPosition} =
         useTooltip({
             dispatcher,
             tooltip,
+            seriesData,
             xAxis,
             yAxis,
         });

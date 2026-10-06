@@ -156,4 +156,32 @@ describe('getSortedHovered', () => {
         expect(result.map((chunk) => chunk.series.name)).toEqual(['Narrow', 'Medium', 'Wide']);
         expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(35);
     });
+
+    it('sorts category values with missing and stale indices without throwing', () => {
+        const yAxis = {type: 'category' as const, categories: ['First', 'Second']};
+        const hovered: TooltipDataChunk[] = [1, null, undefined, 10, 0].map((y, i) => ({
+            data: {x: 0, y},
+            series: {type: 'scatter', id: String(i), name: String(i)},
+        }));
+        const sorted = getSortedHovered({hovered, yAxis, sorting: ASC});
+        expect(sorted).toEqual([hovered[1], hovered[2], hovered[3], hovered[4], hovered[0]]);
+        expect(getHoveredValues({hovered: sorted, yAxis})).toEqual([
+            null,
+            undefined,
+            undefined,
+            'First',
+            'Second',
+        ]);
+    });
+
+    it('sorts legacy category values as resolved values', () => {
+        const hovered: TooltipDataChunk[] = ['B', 'A'].map((category) => ({
+            data: {category},
+            series: {type: 'scatter', id: category, name: category},
+        }));
+        const yAxis = {type: 'category' as const, categories: ['A', 'B']};
+        const sorted = getSortedHovered({hovered, yAxis, sorting: ASC});
+        expect(sorted).toEqual([hovered[1], hovered[0]]);
+        expect(getHoveredValues({hovered: sorted, yAxis})).toEqual(['A', 'B']);
+    });
 });
