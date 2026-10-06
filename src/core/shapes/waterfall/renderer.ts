@@ -68,13 +68,14 @@ export function renderWaterfall(
             }
 
             const points: [number, number][] = [];
-            if (Number(prev.data.y) > 0) {
+            const connectFromTop = prev.data.total ? prev.subTotal > 0 : Number(prev.data.y) > 0;
+            if (connectFromTop) {
                 points.push([prev.x, prev.y]);
             } else {
                 points.push([prev.x, prev.y + prev.height]);
             }
 
-            const connectToBottom = d.data.total ? Number(d.data.y) < 0 : Number(d.data.y) > 0;
+            const connectToBottom = d.data.total ? d.subTotal < 0 : Number(d.data.y) > 0;
             if (connectToBottom) {
                 points.push([d.x + d.width, d.y + d.height]);
             } else {

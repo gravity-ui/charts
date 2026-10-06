@@ -204,12 +204,12 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Negative subtotals fit the automatic Y domain', async ({mount}) => {
+    test('Negative subtotals fit the automatic Y domain', async ({mount, page}) => {
         const data: WaterfallSeriesData[] = [
             {x: 'Loss', y: -10},
-            {x: 'Negative total', total: true},
+            {x: 'Negative total', total: true, y: 100},
             {x: 'Income', y: 15},
-            {x: 'Positive total', total: true},
+            {x: 'Positive total', total: true, y: -100},
             {x: 'Expense', y: -5},
             {x: 'Zero total', total: true},
         ];
@@ -226,7 +226,12 @@ test.describe('Waterfall series', () => {
 
         const bars = component.locator('.gcharts-waterfall__segment');
         await expect(bars).toHaveCount(data.length);
-        const plotBounds = component.locator('clipPath rect').first();
+        const waterfall = component.locator('.gcharts-waterfall');
+        await expect(waterfall).toHaveAttribute('clip-path', /^url\(#.+\)$/);
+        const clipPath = await waterfall.getAttribute('clip-path');
+        const clipPathId = clipPath?.match(/^url\(#(.+)\)$/)?.[1];
+        const plotBounds = component.locator(`clipPath[id="${clipPathId}"] rect`);
+        await expect(plotBounds).toHaveCount(1);
         await expect
             .poll(async () => {
                 const plotHeight = Number(await plotBounds.getAttribute('height'));
@@ -257,5 +262,8 @@ test.describe('Waterfall series', () => {
                 ),
             )
             .toBeCloseTo(0, 2);
+
+        await bars.nth(1).hover();
+        await expect(page.locator('.gcharts-tooltip')).toContainText('-10');
     });
 });
