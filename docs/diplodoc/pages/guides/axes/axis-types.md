@@ -88,3 +88,21 @@ A category axis displays discrete, non-numeric labels. Each category occupies eq
 - Plotting continuous data on category axis loses interpolation
 - Large number of categories may cause readability issues
 - Consider grouping or filtering if categories exceed ~20-30 items
+
+## Inspecting X values on plot clicks
+
+Use `chart.events.plotclick` to inspect the position of a click independently of the selected data point. The callback handles clicks on the SVG plot background and shapes inside the plot bounds, including blank regions and a plot with all series hidden. Clicks on HTML overlays are not included. Its second argument is the native `MouseEvent`.
+
+The callback receives `position: [x, y]` in pixels relative to the top-left corner of the plot area, and an optional `xAxisValue` derived from the current X scale. The value accounts for the current zoom and chart layout:
+
+- On `datetime` axes, `xAxisValue` is a Unix timestamp in milliseconds.
+- On `linear` and `logarithmic` axes, it is a numeric axis value.
+- On category axes or when the X scale is unavailable, it is `undefined`.
+
+The example supplies `xAxis.timestamps` explicitly as an optional date domain. With a `chart.events.plotclick` callback configured, hiding all legend items preserves axes and their domains from configured series, so coordinate inspection can continue without `timestamps`. Charts without `plotclick` retain their existing behavior when all legend items are hidden.
+
+The existing `chart.events.click` callback still receives a selected `point` and `series`, and runs only when a point is selected. Both callbacks can run for the same click when a point is available. Use `plotclick` alone for actions based on the axis coordinate, and `click` for actions based on the selected point.
+
+In this example, click above the area or between data points to compare the continuous plot date with the selected point's date. Then choose **Hide all series** and click the empty plot: the plot date still updates, while the selected-point callback does not run. Drag horizontally to zoom and inspect dates within the new view.
+
+<div data-chart-example="axis-types/plot-click"></div>

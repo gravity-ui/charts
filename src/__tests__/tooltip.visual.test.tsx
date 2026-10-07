@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {MountResult} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
@@ -14,13 +15,273 @@ import {
     tooltipOverflowedRowsHtmlData,
 } from '../__stories__/__data__';
 import {TIME_UNITS} from '../core/utils/time';
-import type {ChartData} from '../types';
+import type {ChartData, ChartPlotClickData} from '../types';
 
+import {ChartPlotClickEventsTestStory} from './components/ChartPlotClickEventsTestStory';
 import {CrosshairEventsTestStory} from './components/CrosshairEventsTestStory';
 import {DrawerChartTestStory} from './components/DrawerChartTestStory';
 import {HoveredPlotsTestStory} from './components/HoveredPlotsTestStory';
 import {StackingPercentRowRendererTestStory} from './components/StackingPercentRowRendererTestStory';
 import {getLocator, getLocatorBoundingBox} from './utils';
+
+test.describe('Plot click events @webkit', () => {
+    test.use({hasTouch: true});
+
+    const start = Date.UTC(2026, 0, 1);
+    const day = TIME_UNITS.day;
+    const margin = 40;
+
+    function getData(): ChartData {
+        return {
+            chart: {margin: {left: margin, right: margin, top: margin, bottom: margin}},
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            xAxis: {
+                type: 'datetime',
+                visible: false,
+                timestamps: [start, start + 640 * day],
+                maxPadding: 0,
+                startOnTick: false,
+                endOnTick: false,
+            },
+            yAxis: [{visible: false, min: 0, max: 100, maxPadding: 0}],
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Value',
+                        data: [
+                            {x: start, y: 10},
+                            {x: start + 640 * day, y: 90},
+                        ],
+                    },
+                ],
+            },
+        };
+    }
+
+    async function getPlotBox(component: MountResult) {
+        await expect(component.locator('.gcharts-chart__content')).toBeAttached();
+        const box = await getLocatorBoundingBox(component.locator('svg').first());
+        await expect(component.locator('.gcharts-chart__content')).toHaveAttribute(
+            'width',
+            String(box.width - margin * 2),
+        );
+        return {
+            x: box.x + margin,
+            y: box.y + margin,
+            width: box.width - margin * 2,
+            height: box.height - margin * 2,
+        };
+    }
+
+    async function getPlotClicks(component: MountResult): Promise<ChartPlotClickData[]> {
+        return JSON.parse((await component.getByTestId('plot-clicks').textContent()) || '[]');
+    }
+
+    for (const mode of ['empty', 'all hidden'] as const) {
+        test(`Datetime plot clicks preserve the timestamp domain (${mode})`, async ({
+            mount,
+            page,
+        }) => {
+            const data = getData();
+            if (mode === 'empty') {
+                data.series.data = [
+                    {
+                        type: 'line',
+                        name: 'Value',
+                        data: [
+                            {x: start, y: null},
+                            {x: start + 640 * day, y: null},
+                        ],
+                    },
+                ];
+            } else {
+                data.legend = {enabled: true};
+                data.xAxis = {...data.xAxis, timestamps: undefined};
+            }
+            const component = await mount(<ChartPlotClickEventsTestStory data={data} />);
+            await getPlotBox(component);
+            if (mode === 'all hidden') {
+                await component
+                    .locator('.gcharts-legend__item')
+                    .click({modifiers: ['ControlOrMeta']});
+            }
+            await expect(component.locator('.gcharts-line')).toHaveCount(0);
+            const box = await getPlotBox(component);
+            await page.touchscreen.tap(box.x + box.width / 2, box.y + 30);
+
+            await expect(component.getByTestId('plot-clicks')).toContainText('"eventType":"click"');
+            const clicks = await getPlotClicks(component);
+            expect(clicks).toHaveLength(1);
+            expect(clicks[0].position).toEqual([box.width / 2, 30]);
+            expect(clicks[0].xAxisValue).toBe(start + 320 * day);
+            await expect(component.getByTestId('point-clicks')).toHaveText('[]');
+        });
+    }
+
+    test('Dense datetime data keeps point clicks and resolves plot clicks independently of Y', async ({
+        mount,
+        page,
+    }) => {
+        const data = getData();
+        data.series.data = [
+            {
+                type: 'line',
+                name: 'Value',
+                data: Array.from({length: 641}, (_, index) => ({
+                    x: start + index * day,
+                    y: index === 319 ? 90 : 10,
+                    custom: {index},
+                })),
+            },
+        ];
+        const component = await mount(<ChartPlotClickEventsTestStory data={data} />);
+        const box = await getPlotBox(component);
+        await expect(component.locator('.gcharts-line')).toBeVisible();
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 10);
+
+        await expect(component.getByTestId('point-clicks')).toHaveText(
+            JSON.stringify([{x: start + 319 * day, y: 90, custom: {index: 319}}]),
+        );
+        const clicks = await getPlotClicks(component);
+        expect(clicks).toHaveLength(1);
+        expect(clicks[0].xAxisValue).toBe(start + 320 * day);
+        await expect(component.getByTestId('plot-clicks')).toContainText('"nativeMouseEvent":true');
+    });
+
+    test('Datetime plot clicks use the current zoom scale after resizing', async ({
+        mount,
+        page,
+    }) => {
+        const data = getData();
+        data.chart = {...data.chart, zoom: {enabled: true, type: 'x'}};
+        data.series.data = [
+            {
+                type: 'line',
+                name: 'Value',
+                data: Array.from({length: 641}, (_, index) => ({x: start + index * day, y: 50})),
+            },
+        ];
+        const component = await mount(<ChartPlotClickEventsTestStory data={data} />);
+        const box = await getPlotBox(component);
+        const y = box.y + box.height / 2;
+        await expect(component.locator('.gcharts-brush .overlay')).toBeVisible();
+        await page.mouse.move(box.x + box.width / 4, y);
+        await page.mouse.down();
+        await page.mouse.move(box.x + (box.width * 3) / 4, y, {steps: 5});
+        await page.mouse.up();
+        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+
+        for (const width of [400, 600]) {
+            await component.update(<ChartPlotClickEventsTestStory data={data} width={width} />);
+            await expect(component.locator('svg').first()).toHaveAttribute('width', String(width));
+            const resizedBox = await getPlotBox(component);
+            await page.mouse.click(
+                resizedBox.x + resizedBox.width / 4,
+                resizedBox.y + resizedBox.height / 2,
+            );
+            const clicks = await getPlotClicks(component);
+            const click = clicks[clicks.length - 1];
+            expect(click.position).toEqual([resizedBox.width / 4, resizedBox.height / 2]);
+            const expected = start + (160 + (320 * (0.25 - 0.02)) / 0.96) * day;
+            expect(Math.abs(Number(click.xAxisValue) - expected)).toBeLessThanOrEqual(1);
+        }
+    });
+
+    for (const axisType of ['linear', 'logarithmic'] as const) {
+        test(`${axisType} plot clicks return axis units`, async ({mount, page}) => {
+            const data = getData();
+            data.xAxis = {
+                type: axisType,
+                visible: false,
+                min: 1,
+                max: 100,
+                maxPadding: 0,
+                startOnTick: false,
+                endOnTick: false,
+            };
+            data.series.data = [
+                {
+                    type: 'line',
+                    name: 'Value',
+                    data: [
+                        {x: 1, y: 10},
+                        {x: 100, y: 90},
+                    ],
+                },
+            ];
+            const component = await mount(<ChartPlotClickEventsTestStory data={data} />);
+            const box = await getPlotBox(component);
+            await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+            const clicks = await getPlotClicks(component);
+            expect(clicks).toHaveLength(1);
+            expect(clicks[0].xAxisValue).toBeCloseTo(axisType === 'linear' ? 50.5 : 10, 8);
+        });
+    }
+
+    for (const axisType of ['category', 'unavailable'] as const) {
+        test(`${axisType} X scale still emits plot clicks without an axis value`, async ({
+            mount,
+            page,
+        }) => {
+            const data = getData();
+            data.xAxis =
+                axisType === 'category'
+                    ? {type: 'category', visible: false, categories: ['A', 'B']}
+                    : undefined;
+            data.yAxis = axisType === 'category' ? data.yAxis : undefined;
+            data.series.data =
+                axisType === 'category'
+                    ? [
+                          {
+                              type: 'line',
+                              name: 'Value',
+                              data: [
+                                  {x: 0, y: 10},
+                                  {x: 1, y: 90},
+                              ],
+                          },
+                      ]
+                    : [
+                          {
+                              type: 'pie',
+                              data: [
+                                  {name: 'A', value: 10},
+                                  {name: 'B', value: 90},
+                              ],
+                          },
+                      ];
+            const component = await mount(<ChartPlotClickEventsTestStory data={data} />);
+            const box = await getPlotBox(component);
+            if (axisType === 'unavailable') {
+                await expect(component.locator('.gcharts-pie__segment')).toHaveCount(2);
+            }
+            await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+            const clicks = await getPlotClicks(component);
+            expect(clicks).toHaveLength(1);
+            expect(clicks[0].position).toEqual([box.width / 2, box.height / 2]);
+            expect(clicks[0].xAxisValue).toBeUndefined();
+        });
+    }
+
+    test('Clicks outside plot bounds do not emit plot or point events', async ({mount, page}) => {
+        const component = await mount(<ChartPlotClickEventsTestStory data={getData()} />);
+        const box = await getPlotBox(component);
+        const x = box.x + box.width / 2;
+        const y = box.y + box.height / 2;
+        for (const [clickX, clickY] of [
+            [box.x - 1, y],
+            [box.x + box.width + 1, y],
+            [x, box.y - 1],
+            [x, box.y + box.height + 1],
+        ]) {
+            await page.mouse.click(clickX, clickY);
+        }
+        await expect(component.getByTestId('plot-clicks')).toHaveText('[]');
+        await expect(component.getByTestId('point-clicks')).toHaveText('[]');
+    });
+});
 
 test.describe('Tooltip', () => {
     test('Custom renderer reuses default content with multiple Y axes', async ({

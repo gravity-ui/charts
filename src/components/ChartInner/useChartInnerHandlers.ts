@@ -6,13 +6,18 @@ import throttle from 'lodash/throttle';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
-import {EventType} from '~core/utils';
+import {EventType, isBandScale} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {useHoverResetKey} from '../../hooks/useHoverResetKey';
-import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
+import type {
+    ChartPlotClickData,
+    ChartTooltipRendererArgs,
+    ChartYAxis,
+    PointPosition,
+} from '../../types';
 
 import type {useChartInnerState} from './useChartInnerState';
 
@@ -184,9 +189,30 @@ export function useChartInnerHandlers(props: Props) {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
 
-        if (isOutsideBounds(x, y)) {
+        if (
+            boundsWidth <= 0 ||
+            boundsHeight <= 0 ||
+            !Number.isFinite(x) ||
+            !Number.isFinite(y) ||
+            isOutsideBounds(x, y)
+        ) {
             return;
         }
+
+        const xAxisValue = xScale && !isBandScale(xScale) ? Number(xScale.invert(x)) : undefined;
+
+        dispatcher.call(
+            EventType.PLOTCLICK_CHART,
+            undefined,
+            {
+                position: [x, y],
+                xAxisValue:
+                    typeof xAxisValue === 'number' && Number.isFinite(xAxisValue)
+                        ? xAxisValue
+                        : undefined,
+            } satisfies ChartPlotClickData,
+            event.nativeEvent,
+        );
 
         const items = getClosestPoints({
             position: [x, y],

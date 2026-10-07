@@ -39,6 +39,28 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('standalone declarations expose continuous plot click coordinates', () => {
+        const usage = `
+            const options: ChartOptions = {
+                events: {
+                    plotclick: (data, event) => {
+                        const position: [number, number] = data.position;
+                        const value: number | undefined = data.xAxisValue;
+                        const nativeEvent: MouseEvent = event;
+                        void [position, value, nativeEvent];
+                    },
+                },
+            };
+            void options;
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'plot-click-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
     test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
         const usage = `
             const tooltip: ChartTooltip = {
