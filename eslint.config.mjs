@@ -52,7 +52,16 @@ export default [
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
             'jsdoc/check-tag-names': [
                 'warn',
-                {definedTags: ['minimum', 'maximum', 'minItems', 'minLength']},
+                {
+                    definedTags: [
+                        'minimum',
+                        'exclusiveMinimum',
+                        'maximum',
+                        'multipleOf',
+                        'minItems',
+                        'minLength',
+                    ],
+                },
             ],
             'valid-jsdoc': 'off',
             'no-param-reassign': 'off',

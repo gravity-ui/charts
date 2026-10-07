@@ -1,15 +1,20 @@
-import type {HtmlItem, LabelData, ScatterSeriesData} from '../../../types';
+import type {HtmlItem, LabelData, ScatterClusterData, ScatterSeriesData} from '../../../types';
 import type {PreparedScatterSeries} from '../../series/types';
 import type {SeriesShapeData} from '../types';
 
-type PointData = {
+interface PointData {
     x: number;
     y: number;
     opacity: number | null;
-    data: ScatterSeriesData;
+    data: ScatterClusterData;
+    sourceData?: ScatterSeriesData;
     series: PreparedScatterSeries;
     color: string;
-};
+}
+
+export interface ScatterSvgLabelData extends LabelData {
+    cluster?: true;
+}
 
 export type MarkerData = {
     point: PointData;
@@ -23,5 +28,5 @@ export type PreparedScatterData = MarkerData;
 
 export type PreparedScatterShapeData = {
     scatterData: PreparedScatterData[];
-    svgLabels: LabelData[];
+    svgLabels: ScatterSvgLabelData[];
 } & SeriesShapeData;

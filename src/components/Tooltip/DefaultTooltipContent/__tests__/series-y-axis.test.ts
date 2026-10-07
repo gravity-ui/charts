@@ -48,6 +48,33 @@ it('keeps raw values when no Y axes are supplied', () => {
     expect(getHoveredValues({hovered})).toEqual([0]);
 });
 
+it('keeps ordinary scatter category resolution when cluster values are overridden', () => {
+    const hovered: TooltipDataChunk[] = [
+        {
+            data: {x: 0, y: 1},
+            series: {type: 'scatter', id: 'secondary', name: 'Secondary', yAxis: 1},
+        },
+        {
+            data: {x: 0, category: 'Legacy'},
+            series: {type: 'scatter', id: 'legacy', name: 'Legacy'},
+        },
+        {
+            data: {x: 0, y: 5},
+            series: {type: 'scatter', id: 'missing', name: 'Missing', yAxis: 1},
+        },
+    ];
+    const yAxes: ChartYAxis[] = [
+        {type: 'category', categories: ['Legacy']},
+        {type: 'category', categories: ['First', 'Second']},
+    ];
+    expect(getHoveredValues({hovered, yAxes})).toEqual(['Second', 'Legacy', undefined]);
+    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value'}})).toEqual([
+        hovered[2],
+        hovered[1],
+        hovered[0],
+    ]);
+});
+
 it.each([
     [0, 1, 2],
     [0, 2, 1],

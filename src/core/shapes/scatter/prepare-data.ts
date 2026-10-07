@@ -1,14 +1,24 @@
 import get from 'lodash/get';
 
-import type {HtmlItem, LabelData, ScatterSeriesData} from '../../../types';
+import type {HtmlItem, ScatterSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedScatterSeries} from '../../series/types';
-import {getXValue, getYValue} from '../../shapes/utils';
-import {filterOverlappingLabels, getDataCategoryValue, preparePointDataLabels} from '../../utils';
+import {createIsOutsideBounds, getXValue, getYValue} from '../../shapes/utils';
+import {
+    filterOverlappingLabels,
+    getDataCategoryValue,
+    getFormattedValue,
+    getLabelRect,
+    getTextSizeFn,
+    preparePointDataLabels,
+    shouldPrepareSeriesDataLabels,
+} from '../../utils';
+import type {LabelRect} from '../types';
 
-import type {PreparedScatterData, PreparedScatterShapeData} from './types';
+import {clusterSeriesData} from './cluster';
+import type {PreparedScatterData, PreparedScatterShapeData, ScatterSvgLabelData} from './types';
 
 function getFilteredLinearScatterData(data: ScatterSeriesData[]) {
     return data.filter((d) => typeof d.x === 'number' && typeof d.y === 'number');
@@ -61,13 +71,29 @@ export async function prepareScatterData(args: {
     yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
+    boundsWidth: number;
+    boundsHeight: number;
     isRangeSlider?: boolean;
 }): Promise<PreparedScatterShapeData> {
-    const {series, xAxis, xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
+    const {
+        series,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        split,
+        isOutsideBounds,
+        boundsWidth,
+        boundsHeight,
+        isRangeSlider,
+    } = args;
 
     const xMax = Math.max(...xScale.range());
 
+    const scatterDataBySeries = new Map<string, PreparedScatterData[]>();
     const markers: PreparedScatterData[] = series.reduce<PreparedScatterData[]>((acc, s) => {
+        const seriesMarkers: PreparedScatterData[] = [];
+        scatterDataBySeries.set(s.id, seriesMarkers);
         const yAxisIndex = get(s, 'yAxis', 0);
         const seriesYAxis = yAxis[yAxisIndex];
         const seriesYScale = yScale[yAxisIndex];
@@ -75,6 +101,12 @@ export async function prepareScatterData(args: {
         if (!seriesYScale) {
             return acc;
         }
+        const plot = split.plots?.[seriesYAxis.plotIndex];
+        const plotTop = plot?.top ?? 0;
+        const isOutsidePlotBounds = createIsOutsideBounds({
+            boundsWidth,
+            boundsHeight: plot?.height ?? boundsHeight,
+        });
 
         const filteredData =
             xAxis.type === 'category' || seriesYAxis.type === 'category'
@@ -94,32 +126,99 @@ export async function prepareScatterData(args: {
             if (x === null || y === null || !Number.isFinite(x) || !Number.isFinite(y)) {
                 return;
             }
+            const plotY = y + plotTop;
 
-            acc.push({
+            const marker: PreparedScatterData = {
                 point: {
                     data: d,
+                    sourceData: s.sourceData?.get(d) ?? d,
                     series: s,
                     x,
-                    y,
+                    y: plotY,
                     opacity: get(d, 'opacity', null),
                     color: d.color ?? s.color,
                 },
                 hovered: false,
                 active: true,
                 htmlElements: [],
-                clipped: isOutsideBounds(x, y),
-            });
+                clipped: isOutsideBounds(x, plotY) || isOutsidePlotBounds(x, y),
+            };
+            acc.push(marker);
+            seriesMarkers.push(marker);
         });
 
         return acc;
     }, []);
 
-    const allSvgLabels: LabelData[] = [];
+    const scatterData =
+        isRangeSlider || !series.some((item) => item.cluster.enabled)
+            ? markers
+            : series.flatMap((item) => {
+                  const seriesMarkers = scatterDataBySeries.get(item.id) ?? [];
+                  if (!item.cluster.enabled) {
+                      return seriesMarkers;
+                  }
+                  const plot = split.plots?.[yAxis[item.yAxis].plotIndex];
+                  const boundsTop = plot?.top ?? 0;
+                  const plotHeight = plot?.height ?? boundsHeight;
+                  const isOutsidePlotBounds = createIsOutsideBounds({
+                      boundsWidth,
+                      boundsHeight: plotHeight,
+                  });
+                  const clustered = clusterSeriesData({
+                      data: seriesMarkers,
+                      series: item,
+                      boundsWidth,
+                      boundsHeight: plotHeight,
+                      boundsTop,
+                      isOutsideBounds: (x, y) =>
+                          isOutsideBounds(x, y) || isOutsidePlotBounds(x, y - boundsTop),
+                  });
+                  scatterDataBySeries.set(item.id, clustered);
+                  return clustered;
+              });
+
+    const allSvgLabels: ScatterSvgLabelData[] = [];
     const allHtmlLabels: HtmlItem[] = [];
+    const labelBounds: LabelRect[] = [];
+    const textSizes = new Map<string, ReturnType<typeof getTextSizeFn>>();
+    for (const item of scatterData) {
+        const {data, series: itemSeries} = item.point;
+        if (item.clipped || !data.cluster || !itemSeries.cluster.dataLabels.enabled) {
+            continue;
+        }
+        const {style, format, allowOverlap} = itemSeries.cluster.dataLabels;
+        const text = getFormattedValue({value: data.cluster.size, format});
+        let getTextSize = textSizes.get(itemSeries.id);
+        if (!getTextSize) {
+            getTextSize = getTextSizeFn({style});
+            textSizes.set(itemSeries.id, getTextSize);
+        }
+        const size = await getTextSize(text);
+        const label: ScatterSvgLabelData = {
+            cluster: true,
+            text,
+            x: item.point.x,
+            y: item.point.y + size.height / 2,
+            textAnchor: 'middle',
+            style,
+            size,
+            series: {id: itemSeries.id},
+        };
+        const bounds: LabelRect = {
+            x: label.x - size.width / 2,
+            y: item.point.y - size.height / 2,
+            size,
+        };
+        if (allowOverlap || filterOverlappingLabels([bounds], labelBounds).length) {
+            allSvgLabels.push(label);
+            labelBounds.push(bounds);
+        }
+    }
 
     if (!isRangeSlider) {
         for (const s of series) {
-            if (!s.dataLabels.enabled) {
+            if (!shouldPrepareSeriesDataLabels(s)) {
                 continue;
             }
 
@@ -133,8 +232,9 @@ export async function prepareScatterData(args: {
 
             const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
 
-            const seriesPoints = markers
-                .filter((m) => m.point.series.id === s.id && !m.clipped)
+            const seriesPoints = (scatterDataBySeries.get(s.id) ?? [])
+                .filter((m) => !m.clipped)
+                .filter((m) => !m.point.data.cluster)
                 .map((m) => m.point);
 
             const {svgLabels, htmlLabels} = await preparePointDataLabels({
@@ -151,15 +251,23 @@ export async function prepareScatterData(args: {
             if (s.dataLabels.allowOverlap) {
                 allSvgLabels.push(...svgLabels);
                 allHtmlLabels.push(...htmlLabels);
+                labelBounds.push(...svgLabels.map(getLabelRect), ...htmlLabels);
             } else {
-                allSvgLabels.push(...filterOverlappingLabels(svgLabels, allSvgLabels));
-                allHtmlLabels.push(...filterOverlappingLabels(htmlLabels, allHtmlLabels));
+                const keptSvgLabels = filterOverlappingLabels(
+                    svgLabels.map((label) => ({...getLabelRect(label), label})),
+                    labelBounds,
+                );
+                allSvgLabels.push(...keptSvgLabels.map(({label}) => label));
+                labelBounds.push(...keptSvgLabels);
+                const keptHtmlLabels = filterOverlappingLabels(htmlLabels, labelBounds);
+                allHtmlLabels.push(...keptHtmlLabels);
+                labelBounds.push(...keptHtmlLabels);
             }
         }
     }
 
     return {
-        scatterData: markers,
+        scatterData,
         svgLabels: allSvgLabels,
         htmlLabels: allHtmlLabels,
         markers: [],

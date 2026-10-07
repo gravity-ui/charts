@@ -29,6 +29,7 @@ import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
 import {useDefaultState} from './useDefaultState';
+import {useHoverGeometryRefresh} from './useHoverGeometryRefresh';
 import {
     getPreparedTooltip,
     getResetZoomButtonStyle,
@@ -134,6 +135,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         throttledHandlePointerMove,
         throttledHandleTouchMove,
     } = useChartInnerHandlers({
+        resetKey: hoverResetKey,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
@@ -149,6 +151,21 @@ export const ChartInner = (props: ChartInnerProps) => {
         xScale,
         yScale,
         tooltipThrottle: preparedTooltip.throttle,
+    });
+    useHoverGeometryRefresh({
+        resetKey: hoverResetKey,
+        dispatcher,
+        shapesData,
+        boundsWidth,
+        boundsHeight,
+        boundsOffsetLeft,
+        boundsOffsetTop,
+        xAxis,
+        yAxis,
+        xScale,
+        yScale,
+        tooltipPinned,
+        unpinTooltip,
     });
     useDefaultState({
         boundsHeight,
