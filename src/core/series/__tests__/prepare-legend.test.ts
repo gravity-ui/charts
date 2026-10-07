@@ -748,14 +748,16 @@ describe('vertical legend layout', () => {
         },
     );
 
-    test.each<[number, boolean]>([
-        [0, false],
-        [10, false],
-        [100, false],
-        [100, true],
+    test.each<[number, boolean, number]>([
+        [0, false, 0],
+        [10, false, 0],
+        // 10px is available, but not even one 14px text line fits: the legend stays hidden.
+        [30, false, 0],
+        [100, false, 80],
+        [100, true, 80],
     ])(
         'keeps an oversized row without a single-page paginator at chart height %s (html=%s)',
-        async (height, html) => {
+        async (height, html, expectedHeight) => {
             const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
                 {enabled: true, layout: 'vertical', position: 'left', html},
                 {
@@ -768,8 +770,8 @@ describe('vertical legend layout', () => {
             expect(legendConfig.pagination).toBeUndefined();
             // Without a paginator the row may use the whole available height,
             // not only a whole number of text lines.
-            expect(preparedLegend.height).toBe(Math.max(0, height - 20));
-            expect(legendConfig.height).toBe(Math.max(0, height - 20));
+            expect(preparedLegend.height).toBe(expectedHeight);
+            expect(legendConfig.height).toBe(expectedHeight);
         },
     );
 

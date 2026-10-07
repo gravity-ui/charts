@@ -619,10 +619,11 @@ export async function finalizePreparedLegend(args: {
                       }).pages
                     : [];
             pagination = pages.length > 1 ? {pages} : undefined;
-            if (!pagination && rows.length && !fitsWithoutPagination) {
+            if (!pagination && rows.length && !fitsWithoutPagination && lines > 0) {
                 // A single page needs no navigation: give the rows the full available height
                 // instead of a whole number of text lines, and clip them in the component
-                // only if they still do not fit.
+                // only if they still do not fit. Without room for one text line the legend
+                // stays hidden, as before.
                 legendHeight = Math.min(
                     availableHeight,
                     getLegendRowsHeight(rows, preparedLegend.resolvedRowGap),
