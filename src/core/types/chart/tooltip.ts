@@ -335,6 +335,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
          * Area-range contributes its width (y1 - y0); x-range contributes its duration (abs(x1 - x0)).
          * X-range intervals on category X axes are excluded from built-in totals.
          * 'sum' adds interval widths, not interval unions.
+         * On datetime X axes, x-range durations are in milliseconds. Set totals.valueFormat
+         * to format them as durations, e.g. with a custom formatter, rather than as dates.
          * @default 'sum'
          */
         aggregation?:

@@ -100,8 +100,7 @@ export function getHoveredValues(args: {
             case 'line':
             case 'bar-x':
             case 'waterfall':
-            case 'scatter':
-            case 'x-range': {
+            case 'scatter': {
                 return getYRowData(data, seriesYAxis);
             }
             case 'bar-y': {
