@@ -202,6 +202,61 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('documents scatter cluster defaults, grid units and overlap modes', () => {
+        const cluster = schema.definitions.ScatterClusterOptions.properties;
+        const layout = schema.definitions.ScatterClusterLayoutAlgorithmOptions.properties;
+
+        expect(cluster.enabled.default).toBe(false);
+        expect(cluster.minimumClusterSize.default).toBe(2);
+        expect(layout.type).toMatchObject({const: 'grid', default: 'grid'});
+        expect(layout.type.description).toContain("`'grid'`");
+        expect(layout.gridSize).toMatchObject({default: 50});
+        expect(layout.gridSize.description).toContain('relative to the plot width');
+        expect(
+            schema.definitions['ScatterSeries<JsonValue>'].properties.cluster.description,
+        ).toContain('datetime X axis');
+        expect(cluster.overlapMode).toMatchObject({
+            enum: ['allow', 'shift'],
+            default: 'allow',
+            enumDescriptions: [
+                'Leave cluster markers at their centroids.',
+                'Move overlapping cluster markers within their cells when space permits.',
+            ],
+        });
+        expect(declaration).toContain('percentages are relative to the plot width');
+    });
+
+    test('rejects invalid scatter cluster sizes in config tooling', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const config = (cluster) => ({
+            series: {
+                data: [{type: 'scatter', name: 'S', data: [{x: 0, y: 1}], cluster}],
+            },
+        });
+
+        expect(
+            schema.definitions.ScatterClusterOptions.properties.minimumClusterSize,
+        ).toMatchObject({
+            minimum: 2,
+            multipleOf: 1,
+            default: 2,
+        });
+        for (const minimumClusterSize of [1, 2.5, -3]) {
+            expect(validateConfig(config({enabled: true, minimumClusterSize}))).toBe(false);
+        }
+        for (const minimumClusterSize of [2, 3, 100]) {
+            expect(validateConfig(config({enabled: true, minimumClusterSize}))).toBe(true);
+        }
+        for (const gridSize of [0, -1]) {
+            expect(validateConfig(config({enabled: true, layoutAlgorithm: {gridSize}}))).toBe(
+                false,
+            );
+        }
+        for (const gridSize of [0.5, 50, '50px', '25%']) {
+            expect(validateConfig(config({enabled: true, layoutAlgorithm: {gridSize}}))).toBe(true);
+        }
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(
@@ -834,6 +889,27 @@ describe('chart config artifacts', () => {
                 },
             },
         ],
+        [
+            'scatter with grid clustering',
+            {
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'S',
+                            data: [{x: 0, y: 1, custom: {id: 'A'}}],
+                            cluster: {
+                                enabled: true,
+                                layoutAlgorithm: {type: 'grid', gridSize: '25%'},
+                                overlapMode: 'shift',
+                                marker: {symbol: 'circle', radius: 8, borderWidth: 1},
+                                dataLabels: {enabled: true, allowOverlap: false},
+                            },
+                        },
+                    ],
+                },
+            },
+        ],
     ])('accepts a valid config: %s', (_label, config) => {
         const validateConfig = createSchemaValidator().compile(schema);
         expect(validateConfig(config)).toBe(true);
@@ -924,6 +1000,23 @@ describe('chart config artifacts', () => {
         };
 
         expect(actual).toEqual(snapshot);
+    });
+
+    test('excludes derived cluster metadata from raw scatter points', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        expect(
+            validateConfig({
+                series: {
+                    data: [
+                        {
+                            type: 'scatter',
+                            name: 'S',
+                            data: [{x: 1, y: 2, cluster: {size: 2, points: []}}],
+                        },
+                    ],
+                },
+            }),
+        ).toBe(false);
     });
 
     test('omits callback-only properties', () => {

@@ -56,13 +56,16 @@ export const useCrosshair = (props: Props) => {
     const pointerYPos = pointerPosition?.[1] ?? 0;
 
     React.useEffect(() => {
-        if (!plotElement || !xScale || !yScale?.length || !crosshairEnabled) {
+        if (!plotElement) {
             return;
         }
         const plotCrosshairDataAttr = 'data-crosshair';
 
         const svgElement = select(plotElement);
         svgElement.selectAll(`[${plotCrosshairDataAttr}]`).remove();
+        if (!xScale || !yScale?.length || !crosshairEnabled) {
+            return;
+        }
 
         const lineGenerator = line();
 
@@ -82,7 +85,13 @@ export const useCrosshair = (props: Props) => {
                 .append('path')
                 .attr('d', (hoveredElement) => {
                     let lineValue = 0;
-                    if (
+                    const displayX =
+                        'displayPosition' in hoveredElement
+                            ? hoveredElement.displayPosition?.[0]
+                            : undefined;
+                    if (xAxis.crosshair.snap && displayX !== undefined) {
+                        lineValue = displayX;
+                    } else if (
                         xAxis.crosshair.snap &&
                         typeof hoveredElement.data === 'object' &&
                         'x' in hoveredElement.data
@@ -164,7 +173,13 @@ export const useCrosshair = (props: Props) => {
                     .append('path')
                     .attr('d', (hoveredElement) => {
                         let lineValue = 0;
-                        if (
+                        const displayY =
+                            'displayPosition' in hoveredElement
+                                ? hoveredElement.displayPosition?.[1]
+                                : undefined;
+                        if (yAxis.crosshair.snap && displayY !== undefined) {
+                            lineValue = displayY - crosshairPosition[1];
+                        } else if (
                             yAxis.crosshair.snap &&
                             typeof hoveredElement.data === 'object' &&
                             'y' in hoveredElement.data

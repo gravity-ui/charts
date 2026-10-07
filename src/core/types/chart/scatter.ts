@@ -1,9 +1,74 @@
 import type {SERIES_TYPE, SymbolType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
+import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {RectLegendSymbolOptions} from './legend';
+import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions} from './series';
+
+export interface ScatterClusterData<T = MeaningfulAny> extends ScatterSeriesData<T> {
+    /** Derived metadata present only on cluster points returned to tooltip and click callbacks. */
+    cluster?: {
+        /** Number of original points in the cluster; always equals `points.length`. */
+        size: number;
+        /** Original points with their coordinates and custom fields unchanged. */
+        points: ScatterSeriesData<T>[];
+    };
+}
+
+export interface ScatterClusterLayoutAlgorithmOptions {
+    /**
+     * Algorithm used to group visible points.
+     *
+     * - `'grid'`: Group points that fall in the same square cell.
+     * @default 'grid'
+     */
+    type?: 'grid';
+    /**
+     * Side length of a square grid cell. Numbers and `px` strings are pixels;
+     * percentages are relative to the plot width. Recomputed on resize and zoom.
+     * @default 50
+     * @exclusiveMinimum 0
+     */
+    gridSize?: number | string;
+}
+
+/** Options for the count label centered inside a cluster marker. */
+export interface ScatterClusterDataLabelsOptions extends Pick<
+    BaseDataLabels,
+    'enabled' | 'style' | 'format' | 'allowOverlap'
+> {}
+
+export interface ScatterClusterOptions {
+    /**
+     * Whether to cluster visible points. Existing scatter behavior is unchanged when disabled.
+     * @default false
+     */
+    enabled?: boolean;
+    /** Grid layout settings; only the `grid` algorithm is supported. */
+    layoutAlgorithm?: ScatterClusterLayoutAlgorithmOptions;
+    /**
+     * Placement of cluster markers that overlap other clusters or single points in the same series.
+     * Only cluster markers can move, and only within their original grid cells;
+     * source coordinates and membership remain unchanged. Separation is best-effort.
+     *
+     * - `'allow'`: Leave cluster markers at their centroids.
+     * - `'shift'`: Move overlapping cluster markers within their cells when space permits.
+     * @default 'allow'
+     */
+    overlapMode?: 'allow' | 'shift';
+    /**
+     * Minimum number of points required to form a cluster; must be an integer of at least 2.
+     * @default 2
+     * @minimum 2
+     * @multipleOf 1
+     */
+    minimumClusterSize?: number;
+    /** Marker appearance, using `PointMarkerOptions`; the default cluster radius is 8 pixels. */
+    marker?: PointMarkerOptions;
+    /** Centered count label options. Enabled by default; `allowOverlap` defaults to `true`. */
+    dataLabels?: ScatterClusterDataLabelsOptions;
+}
 
 export interface ScatterSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
@@ -57,6 +122,11 @@ export interface ScatterSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 'skip'
      */
     nullMode?: 'zero' | 'skip';
+    /**
+     * Scatter point clustering. Supported only with linear X/Y axes or a datetime X axis
+     * and linear Y axis. The range-slider overview remains unclustered.
+     */
+    cluster?: ScatterClusterOptions;
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */

@@ -40,6 +40,8 @@ import {BarXSeriesExample} from './series-types/bar-x';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
+import {ScatterSeriesExample} from './series-types/scatter';
+import scatterSeriesRaw from './series-types/scatter.tsx?raw';
 import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
 import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
 import {WaterfallHeaderTooltipExample} from './tooltip/waterfall-header';
@@ -113,6 +115,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/line': {
         code: extractDisplayCode(lineSeriesRaw),
         Component: LineSeriesExample,
+    },
+    'series-types/scatter': {
+        code: extractDisplayCode(scatterSeriesRaw),
+        Component: ScatterSeriesExample,
     },
     'series-types/area': {
         code: extractDisplayCode(areaSeriesRaw),

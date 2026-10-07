@@ -88,6 +88,9 @@
     "RectLegendSymbolOptions",
     "SankeySeries<JsonValue>",
     "SankeySeriesData<JsonValue>",
+    "ScatterClusterDataLabelsOptions",
+    "ScatterClusterLayoutAlgorithmOptions",
+    "ScatterClusterOptions",
     "ScatterSeries<JsonValue>",
     "ScatterSeriesData<JsonValue>",
     "SeriesColor",
@@ -636,7 +639,18 @@
       "visible"
     ],
     "SankeySeriesData<JsonValue>": ["color", "custom", "dataLabels", "links", "name", "tooltip"],
+    "ScatterClusterDataLabelsOptions": ["allowOverlap", "enabled", "format", "style"],
+    "ScatterClusterLayoutAlgorithmOptions": ["gridSize", "type"],
+    "ScatterClusterOptions": [
+      "dataLabels",
+      "enabled",
+      "layoutAlgorithm",
+      "marker",
+      "minimumClusterSize",
+      "overlapMode"
+    ],
     "ScatterSeries<JsonValue>": [
+      "cluster",
       "color",
       "cursor",
       "custom",

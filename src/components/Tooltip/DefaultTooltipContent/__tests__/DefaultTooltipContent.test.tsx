@@ -13,6 +13,7 @@ import {areaPlugin} from '../../../../plugins/area';
 import {areaRangePlugin} from '../../../../plugins/area-range';
 import {barXPlugin} from '../../../../plugins/bar-x';
 import {linePlugin} from '../../../../plugins/line';
+import {scatterPlugin} from '../../../../plugins/scatter';
 import {waterfallPlugin} from '../../../../plugins/waterfall';
 import type {
     ChartTooltip,
@@ -24,14 +25,17 @@ import type {
     TooltipDataChunkLine,
     TooltipDataChunkRadar,
     TooltipDataChunkSankey,
+    TooltipDataChunkScatter,
 } from '../../../../types';
 import {DefaultTooltipContent} from '../index';
+import {getPreparedHovered} from '../utils';
 
 registerSeriesPlugin(areaPlugin);
 registerSeriesPlugin(barXPlugin);
 registerSeriesPlugin(linePlugin);
 registerSeriesPlugin(areaRangePlugin);
 registerSeriesPlugin(waterfallPlugin);
+registerSeriesPlugin(scatterPlugin);
 
 function makeLineChunk(
     name: string,
@@ -451,6 +455,138 @@ describe('DefaultTooltipContent — area-range values', () => {
         expect(container.textContent).toContain('5 — 10');
         expect(container.textContent).toContain('3 — 6');
         expect(container.textContent).toContain('Total width8');
+    });
+});
+
+describe('DefaultTooltipContent — scatter cluster values', () => {
+    const cluster: TooltipDataChunkScatter = {
+        data: {
+            x: 1,
+            y: 100,
+            cluster: {
+                size: 3,
+                points: [
+                    {x: 1, y: 99},
+                    {x: 1, y: 100},
+                    {x: 1, y: 101},
+                ],
+            },
+        },
+        series: {type: 'scatter', id: 'cluster', name: 'Cluster'},
+    };
+
+    test('renders a count independently of Y formatting and totals it with a line value', () => {
+        const formatter = jest.fn(({value}) => `${value} m`);
+        const {container} = renderTooltip(
+            <DefaultTooltipContent
+                hovered={[
+                    {
+                        ...cluster,
+                        series: {
+                            ...cluster.series,
+                            tooltip: {valueFormat: {type: 'custom', formatter}},
+                        },
+                    },
+                    makeLineChunk('Line', 2),
+                ]}
+                totals={{enabled: true, label: 'Total'}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(screen.getAllByRole('row').map((row) => row.textContent)).toEqual([
+            'Cluster3',
+            'Line2',
+        ]);
+        expect(container.textContent).toContain('Total5');
+        expect(formatter).not.toHaveBeenCalled();
+    });
+
+    test('passes the formatted count to rowRenderer while retaining the centroid header', () => {
+        const formatter = jest.fn(({value}) => `${value} m`);
+        const rowRenderer = jest.fn(({id, formattedValue}: ChartTooltipRowRendererArgs) => (
+            <tr key={id}>
+                <td>{formattedValue}</td>
+            </tr>
+        ));
+        const headerFormatter = jest.fn(({value}) => `X: ${value}`);
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={[cluster]}
+                rowRenderer={rowRenderer}
+                valueFormat={{type: 'custom', formatter}}
+                headerFormat={{type: 'custom', formatter: headerFormatter}}
+                xAxis={{type: 'linear'}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(rowRenderer).toHaveBeenCalledWith(
+            expect.objectContaining({value: 3, formattedValue: '3'}),
+        );
+        expect(screen.getByText('3')).toBeDefined();
+        expect(screen.getByText('X: 1')).toBeDefined();
+        expect(headerFormatter).toHaveBeenCalledWith({value: 1});
+        expect(formatter).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        {direction: 'asc' as const, names: ['Line2', 'Cluster3', 'Single10']},
+        {direction: 'desc' as const, names: ['Single10', 'Cluster3', 'Line2']},
+    ])('sorts mixed rows by their displayed values ($direction)', ({direction, names}) => {
+        const hovered: TooltipDataChunk[] = [
+            cluster,
+            {
+                data: {x: 1, y: 10},
+                series: {type: 'scatter', id: 'single', name: 'Single'},
+            },
+            makeLineChunk('Line', 2),
+        ];
+        const prepared = getPreparedHovered({
+            hovered,
+            yAxes: [{type: 'linear'}],
+            sorting: {key: 'value', direction},
+        });
+        const {container} = renderTooltip(
+            <DefaultTooltipContent
+                hovered={prepared.hovered}
+                hoveredValues={prepared.values}
+                totals={{enabled: true, label: 'Total'}}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(screen.getAllByRole('row').map((row) => row.textContent)).toEqual(names);
+        expect(container.textContent).toContain('Total15');
+        expect(hovered.map((item) => item.series.name)).toEqual(['Cluster', 'Single', 'Line']);
+    });
+
+    test('preserves explicit user cells and total formatting for cluster chunks', () => {
+        const {container} = renderTooltip(
+            <DefaultTooltipContent
+                hovered={[cluster, makeLineChunk('Line', 2)]}
+                rows={[
+                    {
+                        cells: [
+                            {id: 'name', source: 'name'},
+                            {
+                                id: 'value',
+                                source: 'data.y',
+                                format: {type: 'custom', formatter: ({value}) => `${value} m`},
+                            },
+                        ],
+                    },
+                ]}
+                totals={{
+                    enabled: true,
+                    label: 'Total',
+                    valueFormat: {type: 'custom', formatter: ({value}) => `sum:${value}`},
+                }}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+        expect(screen.getAllByRole('row').map((row) => row.textContent)).toEqual([
+            'Cluster100 m',
+            'Line2 m',
+        ]);
+        expect(container.textContent).toContain('Totalsum:5');
     });
 });
 

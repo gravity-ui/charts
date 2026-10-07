@@ -109,6 +109,7 @@ test.describe('Tooltip', () => {
             />,
         );
         const bar = component.locator('.gcharts-bar-x__segment');
+        await expect(bar).toHaveCount(1);
         await expect(bar).toBeVisible();
         await expect(crosshair).toHaveCount(0);
         await bar.hover();
@@ -619,6 +620,7 @@ test.describe('Tooltip', () => {
         const component = await mount(<HoveredPlotsTestStory data={chartData} />);
         const plotLine = component.locator('[data-plot-x] path').first();
         await plotLine.waitFor({state: 'attached'});
+        await expect(plotLine).toHaveAttribute('d', /^M.+L.+$/);
         const lineBox = await getLocatorBoundingBox(plotLine);
         await page.mouse.move(
             Math.round(lineBox.x + lineBox.width / 2),
