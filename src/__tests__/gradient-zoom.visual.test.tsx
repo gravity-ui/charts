@@ -337,7 +337,11 @@ test.describe('Gradient colors across zoom', () => {
         const plotBox = await getLocatorBoundingBox(
             component.locator('.gcharts-chart__content .gcharts-brush .overlay'),
         );
-        await page.mouse.move(markerBox.x + markerBox.width / 2, plotBox.y + plotBox.height / 2);
+        // Integer CSS coordinates avoid inconsistent text rasterization in tooltip screenshots.
+        await page.mouse.move(
+            Math.round(markerBox.x + markerBox.width / 2),
+            Math.round(plotBox.y + plotBox.height / 2),
+        );
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toBeVisible();
         await expect(tooltip).toHaveScreenshot('computed-color-tooltip.png');
