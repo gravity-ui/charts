@@ -12,7 +12,7 @@ import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
-import type {TooltipDataChunkXRange, XRangeSeries} from '../../types';
+import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
 
 import {prepareXRangeSeries} from './prepare-x-range-series';
 
@@ -40,6 +40,10 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
     return renderXRange({plot}, preparedData as PreparedXRangeData[], seriesOptions, dispatcher);
 }
 
+function getXRangeWidth(data: XRangeSeriesData) {
+    return Math.abs(Number(data.x1) - Number(data.x0));
+}
+
 export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     type: 'x-range',
     zoom: {types: ['x'], defaultType: 'x'},
@@ -49,12 +53,16 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     },
     // Use bar duration (x1 - x0) as the color value so that longer bars can be
     // visually distinguished by color intensity.
-    getColorValue: (d) => Math.abs(Number(d.x1) - Number(d.x0)),
+    getColorValue: getXRangeWidth,
     prepareShapeData,
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
         headerAxis: 'y',
+        getValue: ({item, xAxis}) =>
+            xAxis?.type === 'category'
+                ? undefined
+                : getXRangeWidth((item as TooltipDataChunkXRange).data),
         rows: [
             {
                 id: 'default',

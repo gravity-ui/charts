@@ -332,7 +332,11 @@ export interface ChartTooltip<T = MeaningfulAny> {
         /**
          * The aggregation method for calculating totals.
          * It can be a built-in function (e.g., 'sum') or a custom function.
-         * Area-range contributes its width (y1 - y0); 'sum' adds widths, not interval unions.
+         * Area-range contributes its width (y1 - y0); x-range contributes its duration (abs(x1 - x0)).
+         * X-range intervals on category X axes are excluded from built-in totals.
+         * 'sum' adds interval widths, not interval unions.
+         * On datetime X axes, x-range durations are in milliseconds. Set totals.valueFormat
+         * to format them as durations, e.g. with a custom formatter, rather than as dates.
          * @default 'sum'
          */
         aggregation?:
@@ -367,7 +371,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
                * series' axis. Ascending order is missing values, numbers, then category
                * strings (lexicographically). NaN precedes other numbers. Descending
                * order reverses these groups.
-               * Area-range uses its width (y1 - y0).
+               * Area-range uses its width (y1 - y0); x-range uses its duration (abs(x1 - x0)).
+               * On category X axes, x-range has no sorting value.
                * Leave unset to disable sorting.
                */
               key?: 'value' | undefined;

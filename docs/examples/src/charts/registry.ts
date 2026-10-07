@@ -42,6 +42,8 @@ import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
 import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
 import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
+import {XRangeTooltipValuesExample} from './tooltip/x-range-values';
+import xRangeTooltipValuesRaw from './tooltip/x-range-values.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
 import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
 
@@ -56,6 +58,10 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'tooltip/x-range-values': {
+        code: extractDisplayCode(xRangeTooltipValuesRaw),
+        Component: XRangeTooltipValuesExample,
+    },
     'tooltip/multiple-y-axes': {
         code: extractDisplayCode(multipleYAxesTooltipRaw),
         Component: MultipleYAxesTooltipExample,

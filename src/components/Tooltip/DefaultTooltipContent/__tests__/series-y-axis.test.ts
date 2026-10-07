@@ -88,7 +88,7 @@ it.each(['bar-y', 'x-range'] as const)(
             yAxes,
             sorting: {key: 'value'},
         });
-        // x-range sorts by Y category; bar-y sorts by numeric X.
+        // x-range sorts by duration; bar-y sorts by numeric X.
         for (const hovered of [data, [...data].reverse()]) {
             const formatter = jest.fn(({value}) => String(value));
             expect(
