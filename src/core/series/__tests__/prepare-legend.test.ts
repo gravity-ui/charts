@@ -749,7 +749,7 @@ describe('vertical legend layout', () => {
     );
 
     test.each([0, 10, 100])(
-        'keeps an oversized row on a nonempty page at chart height %s',
+        'keeps an oversized row without a single-page paginator at chart height %s',
         async (height) => {
             const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
                 {enabled: true, layout: 'vertical', position: 'left'},
@@ -760,7 +760,7 @@ describe('vertical legend layout', () => {
             );
             expect(legendItems.map((row) => row.length)).toEqual([1]);
             expect(preparedLegend.rows[0].height).toBe(120);
-            expect(legendConfig.pagination?.pages).toEqual([{start: 0, end: 1}]);
+            expect(legendConfig.pagination).toBeUndefined();
             expect(preparedLegend.height).toBeGreaterThanOrEqual(0);
             expect(preparedLegend.height).toBeLessThanOrEqual(Math.max(0, height - 20));
         },

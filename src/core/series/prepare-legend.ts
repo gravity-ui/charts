@@ -607,15 +607,18 @@ export async function finalizePreparedLegend(args: {
                     legendHeight = getLegendRowsHeight(rows, preparedLegend.resolvedRowGap);
                 }
             }
-            pagination =
+            const pages =
                 rows.length && !fitsWithoutPagination
                     ? getPagination({
                           rows,
                           maxLegendHeight: legendHeight,
                           paginatorHeight: preparedLegend.lineHeight,
                           rowGap: preparedLegend.resolvedRowGap,
-                      })
-                    : undefined;
+                      }).pages
+                    : [];
+            // A single page needs no navigation: let the rows use the full height and clip
+            // them in the component only if they still do not fit.
+            pagination = pages.length > 1 ? {pages} : undefined;
         }
 
         if (autoWidth) {
