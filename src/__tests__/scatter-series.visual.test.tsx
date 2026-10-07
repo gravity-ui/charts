@@ -16,6 +16,7 @@ import {
 import type {ChartData} from '../types';
 
 import {ScatterClusterEventsTestStory} from './components/ScatterClusterEventsTestStory';
+import {ScatterClusterSourceTestStory} from './components/ScatterClusterSourceTestStory';
 import {getLocatorBoundingBox} from './utils';
 
 test.describe('Scatter series', () => {
@@ -67,6 +68,268 @@ test.describe('Scatter series', () => {
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toContainText('3');
         await expect(tooltip).not.toContainText('Y format');
+    });
+
+    test('Zero null mode preserves raw cluster members and resolved centroids', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(
+            <ScatterClusterSourceTestStory
+                data={{
+                    series: {
+                        data: [
+                            {
+                                type: 'scatter',
+                                name: 'Observations',
+                                data: [
+                                    {x: null, y: 2, custom: {id: 'a'}},
+                                    {x: 2, y: null, custom: {id: 'b'}},
+                                ],
+                                nullMode: 'zero',
+                                cluster: {enabled: true, layoutAlgorithm: {gridSize: '100%'}},
+                            },
+                        ],
+                    },
+                    xAxis: {min: -5, max: 5},
+                    yAxis: [{min: -5, max: 5}],
+                }}
+            />,
+        );
+        const label = component.locator('.gcharts-scatter__cluster-label');
+        await expect(label).toHaveText('2');
+        const box = await getLocatorBoundingBox(label);
+        const x = Math.round(box.x + box.width / 2);
+        const y = Math.round(box.y + box.height / 2);
+        await page.mouse.move(x, y);
+        const expected = JSON.stringify({
+            x: 1,
+            y: 1,
+            points: [
+                {x: null, y: 2, sameReference: true, custom: {id: 'a'}},
+                {x: 2, y: null, sameReference: true, custom: {id: 'b'}},
+            ],
+        });
+        await expect(page.locator('[data-qa="hovered-source"]')).toHaveText(expected);
+        await page.mouse.click(x, y);
+        await expect(component.locator('[data-qa="clicked-source"]')).toHaveText(expected);
+    });
+
+    test('Cluster counts and ordinary HTML labels share overlap filtering', async ({mount}) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Clustered',
+                        data: [
+                            {x: 5, y: 50},
+                            {x: 5, y: 50},
+                        ],
+                        cluster: {
+                            enabled: true,
+                            layoutAlgorithm: {gridSize: '100%'},
+                            dataLabels: {allowOverlap: false, style: {fontSize: '24px'}},
+                        },
+                    },
+                    {
+                        type: 'scatter',
+                        name: 'Ordinary',
+                        data: [
+                            {
+                                x: 5,
+                                y: 40,
+                                radius: 0,
+                                label: '<div style="width:40px;height:20px">HTML</div>',
+                            },
+                            {
+                                x: 8,
+                                y: 40,
+                                radius: 0,
+                                label: '<div style="width:40px;height:20px">Separate</div>',
+                            },
+                        ],
+                        dataLabels: {enabled: true, html: true, allowOverlap: true, padding: 0},
+                    },
+                ],
+            },
+            xAxis: {min: 0, max: 10},
+            yAxis: [{min: 0, max: 100}],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const count = component.locator('.gcharts-scatter__cluster-label');
+        const html = component.locator('.gcharts-chart__html-layer-item').filter({hasText: 'HTML'});
+        await expect(count).toHaveCount(1);
+        await expect(html).toHaveCount(1);
+        const countBounds = await getLocatorBoundingBox(count);
+        const htmlBounds = await getLocatorBoundingBox(html);
+        expect(
+            Math.min(countBounds.x + countBounds.width, htmlBounds.x + htmlBounds.width) -
+                Math.max(countBounds.x, htmlBounds.x),
+        ).toBeGreaterThan(0);
+        expect(
+            Math.min(countBounds.y + countBounds.height, htmlBounds.y + htmlBounds.height) -
+                Math.max(countBounds.y, htmlBounds.y),
+        ).toBeGreaterThan(0);
+
+        const filtered = cloneDeep(data);
+        set(filtered, 'series.data[1].dataLabels.allowOverlap', false);
+        await component.update(<ChartTestStory data={filtered} />);
+        await expect(count).toHaveCount(1);
+        await expect(html).toHaveCount(0);
+        await expect(
+            component.locator('.gcharts-chart__html-layer-item').filter({hasText: 'Separate'}),
+        ).toHaveCount(1);
+        const separateBounds = await getLocatorBoundingBox(
+            component.locator('.gcharts-chart__html-layer-item').filter({hasText: 'Separate'}),
+        );
+        expect(
+            Math.min(countBounds.x + countBounds.width, separateBounds.x + separateBounds.width) -
+                Math.max(countBounds.x, separateBounds.x),
+        ).toBeLessThanOrEqual(0);
+    });
+
+    test('Point overrides enable oversized SVG and HTML labels without negative coordinates', async ({
+        mount,
+    }) => {
+        const component = await mount(
+            <ChartTestStory
+                styles={{width: 200}}
+                data={{
+                    legend: {enabled: false},
+                    series: {
+                        data: [
+                            {
+                                type: 'scatter',
+                                name: 'SVG',
+                                data: [
+                                    {
+                                        x: 5,
+                                        y: 75,
+                                        label: 'Oversized SVG label '.repeat(10),
+                                        dataLabels: {enabled: true},
+                                    },
+                                    {x: 8, y: 75, label: 'Disabled SVG'},
+                                ],
+                                dataLabels: {enabled: false, allowOverlap: true},
+                            },
+                            {
+                                type: 'scatter',
+                                name: 'HTML',
+                                data: [
+                                    {
+                                        x: 5,
+                                        y: 25,
+                                        label: '<div style="width:500px;height:20px">Oversized HTML</div>',
+                                        dataLabels: {enabled: true},
+                                    },
+                                    {x: 8, y: 25, label: 'Disabled HTML'},
+                                ],
+                                dataLabels: {enabled: false, html: true, allowOverlap: true},
+                            },
+                        ],
+                    },
+                    xAxis: {min: 0, max: 10},
+                    yAxis: [{min: 0, max: 100}],
+                }}
+            />,
+        );
+        const svg = component.locator('.gcharts-scatter__label');
+        const html = component
+            .locator('.gcharts-chart__html-layer-item')
+            .filter({hasText: 'Oversized HTML'});
+        await expect(svg).toHaveCount(1);
+        await expect(html).toHaveCount(1);
+        expect(Number(await svg.getAttribute('x'))).toBeGreaterThanOrEqual(0);
+        expect(
+            await html.evaluate((element) =>
+                Number.parseFloat((element as HTMLElement).style.left),
+            ),
+        ).toBeGreaterThanOrEqual(0);
+        expect((await getLocatorBoundingBox(svg)).width).toBeGreaterThan(200);
+        expect((await getLocatorBoundingBox(html)).width).toBe(500);
+    });
+
+    test('Shifted clusters stay in their split plot and the snapped crosshair follows them', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(
+            <ScatterClusterEventsTestStory
+                data={{
+                    legend: {enabled: false},
+                    split: {enable: true, gap: '40px', plots: [{}, {}]},
+                    series: {
+                        data: [
+                            {
+                                type: 'scatter',
+                                name: 'Lower plot',
+                                yAxis: 1,
+                                data: [49, 49.1, 50.1, 50.2].map((x, index) => ({
+                                    x,
+                                    y: 75,
+                                    custom: {id: String(index)},
+                                })),
+                                cluster: {
+                                    enabled: true,
+                                    layoutAlgorithm: {gridSize: '50%'},
+                                    overlapMode: 'shift',
+                                    marker: {radius: 12},
+                                },
+                            },
+                            {
+                                type: 'scatter',
+                                name: 'Upper plot',
+                                data: [{x: 10, y: 50}],
+                            },
+                        ],
+                    },
+                    xAxis: {min: 0, max: 100, crosshair: {enabled: true, snap: true}},
+                    yAxis: [
+                        {min: 0, max: 100, plotIndex: 0},
+                        {min: 0, max: 100, plotIndex: 1, crosshair: {enabled: true, snap: true}},
+                    ],
+                }}
+            />,
+        );
+        const labels = component.locator('.gcharts-scatter__cluster-label');
+        await expect(labels).toHaveCount(2);
+        const lowerAxisDomain = component.locator('.gcharts-y-axis__domain').nth(1);
+        await expect
+            .poll(() =>
+                lowerAxisDomain.evaluateAll(
+                    (elements) => elements[0]?.getBoundingClientRect().height ?? 0,
+                ),
+            )
+            .toBeGreaterThan(0);
+        const plotBounds = await getLocatorBoundingBox(lowerAxisDomain);
+        const labelBounds = await getLocatorBoundingBox(labels.first());
+        const x = Math.round(labelBounds.x + labelBounds.width / 2);
+        const y = Math.round(labelBounds.y + labelBounds.height / 2);
+        expect(y).toBeGreaterThan(plotBounds.y);
+        expect(y).toBeLessThan(plotBounds.y + plotBounds.height);
+        await page.mouse.move(x, y);
+        await expect(page.locator('.gcharts-tooltip')).toContainText('Lower plot');
+        const crosshair = component.locator('[data-crosshair-y-line-1] path');
+        await expect(crosshair).toHaveCount(1);
+        await expect
+            .poll(async () => {
+                const currentLabelBounds = await getLocatorBoundingBox(labels.first());
+                const crosshairBounds = await getLocatorBoundingBox(crosshair);
+                return Math.abs(
+                    crosshairBounds.y +
+                        crosshairBounds.height / 2 -
+                        (currentLabelBounds.y + currentLabelBounds.height / 2),
+                );
+            })
+            .toBeLessThan(1);
+        const currentLabelBounds = await getLocatorBoundingBox(labels.first());
+        await page.mouse.click(
+            Math.round(currentLabelBounds.x + currentLabelBounds.width / 2),
+            Math.round(currentLabelBounds.y + currentLabelBounds.height / 2),
+        );
+        await expect(component.locator('[data-qa="clicked-cluster"]')).toHaveText('2:0,1');
     });
 
     test('Cluster marker uses its own symbol, fill and border', async ({mount, page}) => {

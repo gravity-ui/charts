@@ -126,7 +126,7 @@ export async function preparePointDataLabels<
             const width = size.maxWidth;
             const height = size.maxHeight;
             htmlLabels.push({
-                x: Math.min(xMax - width, Math.max(0, point.x - width / 2)),
+                x: Math.max(0, Math.min(xMax - width, point.x - width / 2)),
                 y: Math.max(yAxisTop, anchorY - series.dataLabels.padding - height),
                 content: text,
                 size: {width, height},
@@ -136,7 +136,7 @@ export async function preparePointDataLabels<
             const labelSize = await getTextSize(text);
             svgLabels.push({
                 text,
-                x: Math.min(xMax - labelSize.width, Math.max(0, point.x - labelSize.width / 2)),
+                x: Math.max(0, Math.min(xMax - labelSize.width, point.x - labelSize.width / 2)),
                 y: Math.max(
                     yAxisTop,
                     anchorY -

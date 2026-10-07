@@ -56,13 +56,16 @@ export const useCrosshair = (props: Props) => {
     const pointerYPos = pointerPosition?.[1] ?? 0;
 
     React.useEffect(() => {
-        if (!plotElement || !xScale || !yScale?.length || !crosshairEnabled) {
+        if (!plotElement) {
             return;
         }
         const plotCrosshairDataAttr = 'data-crosshair';
 
         const svgElement = select(plotElement);
         svgElement.selectAll(`[${plotCrosshairDataAttr}]`).remove();
+        if (!xScale || !yScale?.length || !crosshairEnabled) {
+            return;
+        }
 
         const lineGenerator = line();
 
@@ -175,7 +178,7 @@ export const useCrosshair = (props: Props) => {
                                 ? hoveredElement.displayPosition?.[1]
                                 : undefined;
                         if (yAxis.crosshair.snap && displayY !== undefined) {
-                            lineValue = displayY;
+                            lineValue = displayY - crosshairPosition[1];
                         } else if (
                             yAxis.crosshair.snap &&
                             typeof hoveredElement.data === 'object' &&

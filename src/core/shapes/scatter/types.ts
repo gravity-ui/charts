@@ -1,4 +1,4 @@
-import type {HtmlItem, LabelData, ScatterClusterData} from '../../../types';
+import type {HtmlItem, LabelData, ScatterClusterData, ScatterSeriesData} from '../../../types';
 import type {PreparedScatterSeries} from '../../series/types';
 import type {SeriesShapeData} from '../types';
 
@@ -7,6 +7,7 @@ interface PointData {
     y: number;
     opacity: number | null;
     data: ScatterClusterData;
+    sourceData?: ScatterSeriesData;
     series: PreparedScatterSeries;
     color: string;
 }

@@ -5,7 +5,9 @@ import {calculateNumericProperty, getSymbolSize} from '../../utils';
 
 import type {PreparedScatterData} from './types';
 
+// Subpixel clearance keeps candidate marker strokes from visually touching.
 const SHIFT_CLEARANCE_PX = 0.1;
+// Finite angular sampling bounds search work and includes diagonal candidates.
 const SHIFT_SEARCH_DIRECTIONS = 16;
 
 interface GridCell {
@@ -85,6 +87,7 @@ function shiftClusters(
     gridSize: number,
     boundsWidth: number,
     boundsHeight: number,
+    boundsTop: number,
 ) {
     const occupied: OccupiedMarker[] = rendered
         .filter((marker) => !marker.clipped && marker.point.series.marker.states.normal.enabled)
@@ -129,10 +132,13 @@ function shiftClusters(
         const originalY = marker.point.y;
         const minX = Math.max(cell.x * gridSize + own.halfWidth, own.halfWidth);
         const maxX = Math.min((cell.x + 1) * gridSize - own.halfWidth, boundsWidth - own.halfWidth);
-        const minY = Math.max(cell.y * gridSize + own.halfHeight, own.halfHeight);
+        const minY = Math.max(
+            boundsTop + cell.y * gridSize + own.halfHeight,
+            boundsTop + own.halfHeight,
+        );
         const maxY = Math.min(
-            (cell.y + 1) * gridSize - own.halfHeight,
-            boundsHeight - own.halfHeight,
+            boundsTop + (cell.y + 1) * gridSize - own.halfHeight,
+            boundsTop + boundsHeight - own.halfHeight,
         );
         if (minX > maxX || minY > maxY) {
             continue;
@@ -217,17 +223,33 @@ function prepareClusterMarkerSeries(series: PreparedScatterSeries): PreparedScat
     };
 }
 
+function getMean(points: PreparedScatterData[], getValue: (point: PreparedScatterData) => number) {
+    const sum = points.reduce((total, point) => total + getValue(point), 0);
+    if (Number.isFinite(sum)) {
+        return sum / points.length;
+    }
+    const scale = points.reduce(
+        (maximum, point) => Math.max(maximum, Math.abs(getValue(point))),
+        0,
+    );
+    const normalizedMean =
+        points.reduce((total, point) => total + getValue(point) / scale, 0) / points.length;
+    return Math.max(-1, Math.min(1, normalizedMean)) * scale;
+}
+
 function makeCluster(
     points: PreparedScatterData[],
     markerSeries: PreparedScatterSeries,
     isOutsideBounds: (x: number, y: number) => boolean,
 ): PreparedScatterData {
-    const x = points.reduce((sum, item) => sum + item.point.x, 0) / points.length;
-    const y = points.reduce((sum, item) => sum + item.point.y, 0) / points.length;
-    const sourcePoints = points.map((item) => item.point.data as ScatterSeriesData);
+    const x = getMean(points, (item) => item.point.x);
+    const y = getMean(points, (item) => item.point.y);
+    const sourcePoints = points.map(
+        (item) => item.point.sourceData ?? (item.point.data as ScatterSeriesData),
+    );
     const data: ScatterClusterData = {
-        x: sourcePoints.reduce((sum, item) => sum + Number(item.x), 0) / points.length,
-        y: sourcePoints.reduce((sum, item) => sum + Number(item.y), 0) / points.length,
+        x: getMean(points, (item) => Number(item.point.data.x)),
+        y: getMean(points, (item) => Number(item.point.data.y)),
         cluster: {size: points.length, points: sourcePoints},
     };
     return {
@@ -251,9 +273,10 @@ export function clusterSeriesData(args: {
     series: PreparedScatterSeries;
     boundsWidth: number;
     boundsHeight: number;
+    boundsTop?: number;
     isOutsideBounds: (x: number, y: number) => boolean;
 }): PreparedScatterData[] {
-    const {data, series, boundsWidth, boundsHeight, isOutsideBounds} = args;
+    const {data, series, boundsWidth, boundsHeight, boundsTop = 0, isOutsideBounds} = args;
     if (!series.cluster.enabled) {
         return data;
     }
@@ -274,7 +297,7 @@ export function clusterSeriesData(args: {
             continue;
         }
         const x = Math.floor(point.point.x / gridSize);
-        const y = Math.floor(point.point.y / gridSize);
+        const y = Math.floor((point.point.y - boundsTop) / gridSize);
         const key = getCellKey(x, y);
         const cell = cells.get(key) ?? {x, y, points: []};
         cell.points.push(point);
@@ -301,7 +324,7 @@ export function clusterSeriesData(args: {
     }
 
     if (series.cluster.overlapMode === 'shift') {
-        shiftClusters(clusters, result, gridSize, boundsWidth, boundsHeight);
+        shiftClusters(clusters, result, gridSize, boundsWidth, boundsHeight, boundsTop);
     }
 
     return result;

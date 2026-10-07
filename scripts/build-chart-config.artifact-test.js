@@ -226,6 +226,37 @@ describe('chart config artifacts', () => {
         expect(declaration).toContain('percentages are relative to the plot width');
     });
 
+    test('rejects invalid scatter cluster sizes in config tooling', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const config = (cluster) => ({
+            series: {
+                data: [{type: 'scatter', name: 'S', data: [{x: 0, y: 1}], cluster}],
+            },
+        });
+
+        expect(
+            schema.definitions.ScatterClusterOptions.properties.minimumClusterSize,
+        ).toMatchObject({
+            minimum: 2,
+            multipleOf: 1,
+            default: 2,
+        });
+        for (const minimumClusterSize of [1, 2.5, -3]) {
+            expect(validateConfig(config({enabled: true, minimumClusterSize}))).toBe(false);
+        }
+        for (const minimumClusterSize of [2, 3, 100]) {
+            expect(validateConfig(config({enabled: true, minimumClusterSize}))).toBe(true);
+        }
+        for (const gridSize of [0, -1]) {
+            expect(validateConfig(config({enabled: true, layoutAlgorithm: {gridSize}}))).toBe(
+                false,
+            );
+        }
+        for (const gridSize of [0.5, 50, '50px', '25%']) {
+            expect(validateConfig(config({enabled: true, layoutAlgorithm: {gridSize}}))).toBe(true);
+        }
+    });
+
     test('standalone declarations support both legend layouts', () => {
         expect(() =>
             validateDeclaration(

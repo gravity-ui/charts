@@ -11,6 +11,7 @@ import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
+import type {useHoverResetKey} from '../../hooks/useHoverResetKey';
 import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
 
 import type {useChartInnerState} from './useChartInnerState';
@@ -18,6 +19,7 @@ import type {useChartInnerState} from './useChartInnerState';
 type ChartInnerState = ReturnType<typeof useChartInnerState>;
 
 type Props = {
+    resetKey: ReturnType<typeof useHoverResetKey>;
     boundsHeight: number;
     boundsOffsetLeft: number;
     boundsOffsetTop: number;
@@ -52,6 +54,7 @@ export function useChartInnerHandlers(props: Props) {
         xScale,
         yScale,
         tooltipThrottle,
+        resetKey,
     } = props;
 
     // Strict on purpose, unlike `createIsOutsideBounds`: these are pointer
@@ -63,68 +66,87 @@ export function useChartInnerHandlers(props: Props) {
         [boundsHeight, boundsWidth],
     );
 
-    const handleMove = (
-        [pointerX, pointerY]: PointPosition,
-        event: React.MouseEvent | React.TouchEvent,
-    ) => {
-        if (tooltipPinned) {
-            return;
-        }
+    const handleMove = React.useCallback(
+        ([pointerX, pointerY]: PointPosition, event: React.MouseEvent | React.TouchEvent) => {
+            if (tooltipPinned) {
+                return;
+            }
 
-        const x = pointerX - boundsOffsetLeft;
-        const y = pointerY - boundsOffsetTop;
-        if (isOutsideBounds(x, y)) {
-            dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
-            dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
-            return;
-        }
+            const x = pointerX - boundsOffsetLeft;
+            const y = pointerY - boundsOffsetTop;
+            if (isOutsideBounds(x, y)) {
+                dispatcher.call(EventType.HOVER_SHAPE, {}, undefined);
+                dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
+                return;
+            }
 
-        const closest = getClosestPoints({
-            position: [x, y],
+            const closest = getClosestPoints({
+                position: [x, y],
+                shapesData,
+                boundsHeight,
+                boundsWidth,
+            });
+            const {plotBands, plotLines, plotShapes} = getHoveredPlots({
+                pointerX: x,
+                pointerY: y,
+                xAxis,
+                yAxis,
+                xScale,
+                yScale,
+            });
+            const hoveredPlotsArg = {bands: plotBands, lines: plotLines, shapes: plotShapes};
+            dispatcher.call(
+                EventType.HOVER_SHAPE,
+                event.target,
+                closest,
+                [pointerX, pointerY],
+                hoveredPlotsArg,
+            );
+            dispatcher.call(
+                EventType.POINTERMOVE_CHART,
+                {},
+                {
+                    hovered: closest,
+                    xAxis,
+                    yAxis: yAxis[0] as ChartYAxis,
+                    hoveredPlotLines: plotLines,
+                    hoveredPlotBands: plotBands,
+                } satisfies ChartTooltipRendererArgs,
+                event,
+            );
+        },
+        [
+            tooltipPinned,
+            boundsOffsetLeft,
+            boundsOffsetTop,
+            isOutsideBounds,
+            dispatcher,
             shapesData,
             boundsHeight,
             boundsWidth,
-        });
-        const {plotBands, plotLines, plotShapes} = getHoveredPlots({
-            pointerX: x,
-            pointerY: y,
             xAxis,
             yAxis,
             xScale,
             yScale,
-        });
-        const hoveredPlotsArg = {bands: plotBands, lines: plotLines, shapes: plotShapes};
-        dispatcher.call(
-            EventType.HOVER_SHAPE,
-            event.target,
-            closest,
-            [pointerX, pointerY],
-            hoveredPlotsArg,
-        );
-        dispatcher.call(
-            EventType.POINTERMOVE_CHART,
-            {},
-            {
-                hovered: closest,
-                xAxis,
-                yAxis: yAxis[0] as ChartYAxis,
-                hoveredPlotLines: plotLines,
-                hoveredPlotBands: plotBands,
-            } satisfies ChartTooltipRendererArgs,
-            event,
-        );
-    };
+        ],
+    );
 
-    const handlePointerMove: React.PointerEventHandler<SVGSVGElement> = (event) => {
-        if (event.pointerType === 'touch') {
-            return;
-        }
+    const handlePointerMove: React.PointerEventHandler<SVGSVGElement> = React.useCallback(
+        (event) => {
+            if (event.pointerType === 'touch') {
+                return;
+            }
 
-        const [pointerX, pointerY] = pointer(event, svgContainer);
-        handleMove([pointerX, pointerY], event);
-    };
+            const [pointerX, pointerY] = pointer(event, svgContainer);
+            handleMove([pointerX, pointerY], event);
+        },
+        [svgContainer, handleMove],
+    );
 
-    const throttledHandlePointerMove = throttle(handlePointerMove, tooltipThrottle);
+    const throttledHandlePointerMove = React.useMemo(
+        () => throttle(handlePointerMove, tooltipThrottle),
+        [handlePointerMove, tooltipThrottle],
+    );
 
     const handlePointerLeave: React.PointerEventHandler<SVGSVGElement> = (event) => {
         if (tooltipPinned) {
@@ -136,13 +158,26 @@ export function useChartInnerHandlers(props: Props) {
         dispatcher.call(EventType.POINTERMOVE_CHART, {}, undefined, event);
     };
 
-    const handleTouchMove: React.TouchEventHandler<SVGSVGElement> = (event) => {
-        const touch = event.touches[0];
-        const [pointerX, pointerY] = pointer(touch, svgContainer);
-        handleMove([pointerX, pointerY], event);
-    };
+    const handleTouchMove: React.TouchEventHandler<SVGSVGElement> = React.useCallback(
+        (event) => {
+            const touch = event.touches[0];
+            const [pointerX, pointerY] = pointer(touch, svgContainer);
+            handleMove([pointerX, pointerY], event);
+        },
+        [svgContainer, handleMove],
+    );
 
-    const throttledHandleTouchMove = throttle(handleTouchMove, tooltipThrottle);
+    const throttledHandleTouchMove = React.useMemo(
+        () => throttle(handleTouchMove, tooltipThrottle),
+        [handleTouchMove, tooltipThrottle],
+    );
+
+    React.useEffect(() => {
+        return () => {
+            throttledHandlePointerMove.cancel();
+            throttledHandleTouchMove.cancel();
+        };
+    }, [resetKey, throttledHandlePointerMove, throttledHandleTouchMove]);
 
     const handleChartClick = (event: React.MouseEvent<SVGSVGElement>) => {
         const [pointerX, pointerY] = pointer(event, svgContainer);

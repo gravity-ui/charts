@@ -28,6 +28,7 @@ export interface ScatterClusterLayoutAlgorithmOptions {
      * Side length of a square grid cell. Numbers and `px` strings are pixels;
      * percentages are relative to the plot width. Recomputed on resize and zoom.
      * @default 50
+     * @exclusiveMinimum 0
      */
     gridSize?: number | string;
 }
@@ -47,7 +48,7 @@ export interface ScatterClusterOptions {
     /** Grid layout settings; only the `grid` algorithm is supported. */
     layoutAlgorithm?: ScatterClusterLayoutAlgorithmOptions;
     /**
-     * Placement of cluster markers that overlap other clusters or single points.
+     * Placement of cluster markers that overlap other clusters or single points in the same series.
      * Only cluster markers can move, and only within their original grid cells;
      * source coordinates and membership remain unchanged. Separation is best-effort.
      *
@@ -59,6 +60,8 @@ export interface ScatterClusterOptions {
     /**
      * Minimum number of points required to form a cluster; must be an integer of at least 2.
      * @default 2
+     * @minimum 2
+     * @multipleOf 1
      */
     minimumClusterSize?: number;
     /** Marker appearance, using `PointMarkerOptions`; the default cluster radius is 8 pixels. */

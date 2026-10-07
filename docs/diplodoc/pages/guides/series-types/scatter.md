@@ -29,9 +29,7 @@ The only supported algorithm is `grid`. The default `gridSize` is `50` pixels. A
 
 Clustering supports linear X and Y axes, or a datetime X axis with a linear Y axis. Other axis combinations are rejected when clustering is enabled. Existing scatter behavior for those axes is unchanged when clustering is disabled.
 
-By default, `overlapMode: 'allow'` leaves cluster markers at their centroids. With `'shift'`, cluster markers can move within their own grid cells to avoid neighboring markers, including single points. This changes display positions only: the original data coordinates and cluster membership are preserved. Some markers cannot fit inside a small cell, and tightly packed markers cannot always be separated. Single points are never moved.
-
-The current shift search checks cell corners and edges plus 16 evenly spaced directions around each overlapping marker. This keeps the search bounded while offering diagonal escape routes. Radial candidates use a 0.1-pixel clearance to avoid subpixel strokes touching; the nearest collision-free candidate is used when one exists.
+By default, `overlapMode: 'allow'` leaves cluster markers at their centroids. With `'shift'`, cluster markers can move within their own grid cells to avoid neighboring markers in the same series, including single points. This changes display positions only: the original data coordinates and cluster membership are preserved. Some markers cannot fit inside a small cell, and tightly packed markers cannot always be separated. Single points are never moved.
 
 `cluster.marker` supports `enabled`, `radius`, `symbol`, `color`, `borderColor`, and `borderWidth`. `cluster.dataLabels` supports `enabled`, `style`, `format`, and `allowOverlap`. The count is shown by default in the center of each cluster marker and remains visible on hover. Marker overlap and label overlap are configured separately.
 
@@ -51,7 +49,7 @@ chart: {
 }
 ```
 
-The default tooltip displays the cluster count independently of the series Y-value format. Use a custom tooltip renderer to list members or show other aggregates. Clicking a cluster does not zoom automatically.
+The default tooltip displays the cluster count independently of the series Y-value format. Tooltip value sorting and built-in totals use that count, while the axis header uses the data centroid. Use a custom tooltip renderer to list members or show other aggregates. Clicking a cluster does not zoom automatically.
 
 Scatter tooltip chunks also include `displayPosition` in plot pixels. Crosshairs snap to that rendered position when a cluster marker has shifted; the data centroid and original member coordinates remain unchanged.
 

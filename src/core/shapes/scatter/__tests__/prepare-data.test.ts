@@ -27,6 +27,8 @@ async function getLabels(data: ScatterSeriesData[]) {
         yScale: [scaleLinear().domain([0, 100]).range([200, 0])],
         split: {plots: [{top: 0, height: 200}]} as PreparedSplit,
         isOutsideBounds: () => false,
+        boundsWidth: 400,
+        boundsHeight: 200,
     });
 
     return result.svgLabels;

@@ -109,6 +109,104 @@ describe('scatter grid clustering', () => {
         ]);
     });
 
+    test.each([
+        {value: 1e308, count: 2},
+        {value: Number.MAX_VALUE, count: 3},
+        {value: Number.MAX_VALUE, count: 100},
+    ])('keeps the centroid finite for $count large finite data values', ({value, count}) => {
+        const series = makeSeries();
+        const points = Array.from({length: count}, () => makePoint(10, 20, series));
+        for (const point of points) {
+            point.point.data.x = value;
+            point.point.data.y = value;
+        }
+        const [cluster] = group(points, series);
+
+        expect(cluster.point.data.x).toBe(value);
+        expect(cluster.point.data.y).toBe(value);
+        expect(cluster.point.x).toBe(10);
+        expect(cluster.point.y).toBe(20);
+    });
+
+    test('keeps a finite centroid when large opposite data values cancel after overflow', () => {
+        const series = makeSeries();
+        const points = [1, 1, -1, -1].map((sign) => {
+            const point = makePoint(10, 20, series);
+            point.point.data.x = sign * Number.MAX_VALUE;
+            point.point.data.y = sign * Number.MAX_VALUE;
+            return point;
+        });
+        const [cluster] = group(points, series);
+
+        expect(cluster.point.data.x).toBe(0);
+        expect(cluster.point.data.y).toBe(0);
+    });
+
+    test.each(['allow', 'shift'] as const)(
+        'keeps grid cells and shifts relative to the split plot in %s mode',
+        (overlapMode) => {
+            const series = makeSeries({overlapMode});
+            const local = [45, 46, 51, 52].map((y) => makePoint(20, y, series));
+            const offset = [45, 46, 51, 52].map((y) => {
+                const point = makePoint(20, y, series);
+                point.point.y += 125;
+                return point;
+            });
+            const expected = group(local, series);
+            const shifted = clusterSeriesData({
+                data: offset,
+                series,
+                boundsWidth: 200,
+                boundsHeight: 100,
+                boundsTop: 125,
+                isOutsideBounds: (x, y) => x < 0 || x > 200 || y < 125 || y > 225,
+            });
+
+            expect(shifted.map((point) => point.point.data.cluster?.size)).toEqual([2, 2]);
+            shifted.forEach((point, index) => {
+                expect(point.point.x).toBeCloseTo(expected[index].point.x);
+                expect(point.point.y).toBeCloseTo(expected[index].point.y + 125);
+                expect(point.point.y).toBeGreaterThanOrEqual(125);
+                expect(point.point.y).toBeLessThanOrEqual(225);
+                expect(point.point.data.y).toBe(expected[index].point.data.y);
+            });
+        },
+    );
+
+    test('positions scatter markers in their split plot and clips points outside that plot', async () => {
+        const series = makeSeries({enabled: false});
+        series.yAxis = 1;
+        series.data = [
+            {x: 5, y: 50},
+            {x: 5, y: 150},
+        ];
+        const prepared = await prepareScatterData({
+            series: [series],
+            xAxis: {type: 'linear'} as PreparedXAxis,
+            xScale: scaleLinear().domain([0, 10]).range([0, 200]) as ChartScale,
+            yAxis: [
+                {type: 'linear', plotIndex: 0},
+                {type: 'linear', plotIndex: 1},
+            ] as PreparedYAxis[],
+            yScale: [
+                scaleLinear().domain([0, 100]).range([100, 0]),
+                scaleLinear().domain([0, 100]).range([100, 0]),
+            ] as ChartScale[],
+            split: {
+                plots: [
+                    {top: 0, height: 100},
+                    {top: 125, height: 100},
+                ],
+            } as PreparedSplit,
+            isOutsideBounds: (x, y) => x < 0 || x > 200 || y < 0 || y > 225,
+            boundsWidth: 200,
+            boundsHeight: 225,
+        });
+
+        expect(prepared.scatterData.map((point) => point.point.y)).toEqual([175, 75]);
+        expect(prepared.scatterData.map((point) => point.clipped)).toEqual([false, true]);
+    });
+
     test('rebuilds membership when the plot width changes', () => {
         const series = makeSeries({layoutAlgorithm: {type: 'grid', gridSize: '25%'}});
         const wide = [10, 30, 70, 90].map((x) => makePoint(x, 20, series));

@@ -53,17 +53,20 @@ function prepareMarker(
     };
 }
 
-function prepareSeriesData(series: ScatterSeries): ScatterSeriesData[] {
+function prepareSeriesData(
+    series: ScatterSeries,
+    sourceData: WeakMap<ScatterSeriesData, ScatterSeriesData>,
+): ScatterSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
 
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({
-                ...p,
-                x: p.x ?? 0,
-                y: p.y ?? 0,
-            }));
+            return data.map((p) => {
+                const resolvedPoint = {...p, x: p.x ?? 0, y: p.y ?? 0};
+                sourceData.set(resolvedPoint, p);
+                return resolvedPoint;
+            });
         case 'skip':
         default:
             return data.filter((p) => p.y !== null && p.x !== null);
@@ -81,6 +84,7 @@ export function prepareScatterSeries(
         const symbolType = (s as ScatterSeries).symbolType || getSymbolType(index);
         const yAxisIndex = get(s, 'yAxis', 0);
         const marker = prepareMarker(s, seriesOptions, index);
+        const sourceData = new WeakMap<ScatterSeriesData, ScatterSeriesData>();
 
         const prepared: PreparedScatterSeries = {
             id,
@@ -94,7 +98,8 @@ export function prepareScatterSeries(
                 groupId: s.legend?.groupId ?? getUniqId(),
                 itemText: s.legend?.itemText ?? name,
             },
-            data: prepareSeriesData(s),
+            data: prepareSeriesData(s, sourceData),
+            sourceData,
             cluster: {
                 enabled: s.cluster?.enabled ?? false,
                 layoutAlgorithm: {
