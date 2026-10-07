@@ -48,7 +48,6 @@ export function renderScatter(
         className: b('label'),
     })
         .attr('class', (data) => (data.cluster ? b('cluster-label') : b('label')))
-        .attr('y', (data) => (data.cluster ? data.y - data.size.height / 2 : data.y))
         .attr('dominant-baseline', (data) => (data.cluster ? 'central' : null))
         .attr('pointer-events', (data) => (data.cluster ? 'none' : null));
 

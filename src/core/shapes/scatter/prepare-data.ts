@@ -199,17 +199,14 @@ export async function prepareScatterData(args: {
             cluster: true,
             text,
             x: item.point.x,
-            y: item.point.y + size.height / 2,
+            y: item.point.y,
             textAnchor: 'middle',
             style,
-            size,
+            // Central-baseline text extends half its height above the anchor.
+            size: {...size, hangingOffset: size.height / 2},
             series: {id: itemSeries.id},
         };
-        const bounds: LabelRect = {
-            x: label.x - size.width / 2,
-            y: item.point.y - size.height / 2,
-            size,
-        };
+        const bounds = getLabelRect(label);
         if (allowOverlap || filterOverlappingLabels([bounds], labelBounds).length) {
             allSvgLabels.push(label);
             labelBounds.push(bounds);

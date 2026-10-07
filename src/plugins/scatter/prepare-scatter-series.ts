@@ -55,7 +55,7 @@ function prepareMarker(
 
 function prepareSeriesData(
     series: ScatterSeries,
-    sourceData: WeakMap<ScatterSeriesData, ScatterSeriesData>,
+    sourceData?: WeakMap<ScatterSeriesData, ScatterSeriesData>,
 ): ScatterSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
@@ -64,7 +64,7 @@ function prepareSeriesData(
         case 'zero':
             return data.map((p) => {
                 const resolvedPoint = {...p, x: p.x ?? 0, y: p.y ?? 0};
-                sourceData.set(resolvedPoint, p);
+                sourceData?.set(resolvedPoint, p);
                 return resolvedPoint;
             });
         case 'skip':
@@ -84,7 +84,10 @@ export function prepareScatterSeries(
         const symbolType = (s as ScatterSeries).symbolType || getSymbolType(index);
         const yAxisIndex = get(s, 'yAxis', 0);
         const marker = prepareMarker(s, seriesOptions, index);
-        const sourceData = new WeakMap<ScatterSeriesData, ScatterSeriesData>();
+        const sourceData =
+            s.cluster?.enabled && s.nullMode === 'zero'
+                ? new WeakMap<ScatterSeriesData, ScatterSeriesData>()
+                : undefined;
 
         const prepared: PreparedScatterSeries = {
             id,

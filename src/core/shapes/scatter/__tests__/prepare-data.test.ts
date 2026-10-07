@@ -79,3 +79,29 @@ describe('prepareScatterData: data labels', () => {
         expect(small.y - large.y).toBe(16);
     });
 });
+
+test.each([false, true])(
+    'tracks raw zero-mode points only for clustering (enabled=%s)',
+    (enabled) => {
+        const point: ScatterSeriesData = {x: null, y: null, custom: {id: 'raw'}};
+        const [series] = prepareScatterSeries({
+            series: [
+                {
+                    type: 'scatter',
+                    name: 'Scatter',
+                    data: [point],
+                    nullMode: 'zero',
+                    cluster: {enabled},
+                },
+            ],
+            colorScale: scaleOrdinal([] as string[], ['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        });
+
+        expect(series.data[0]).toEqual({...point, x: 0, y: 0});
+        expect(point).toEqual({x: null, y: null, custom: {id: 'raw'}});
+        expect(Boolean(series.sourceData)).toBe(enabled);
+        expect(series.sourceData?.get(series.data[0])).toBe(enabled ? point : undefined);
+    },
+);
