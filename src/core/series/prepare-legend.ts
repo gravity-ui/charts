@@ -590,7 +590,9 @@ export async function finalizePreparedLegend(args: {
             let fitsWithoutPagination = false;
             if (preparedLegend.multilineItems) {
                 fitsWithoutPagination = heightWithRowLimit(lines) <= availableHeight;
-                const maxRows = Math.max(0, lines - (fitsWithoutPagination ? 0 : 1));
+                // A single row never gets a paginator, so it may use every text line.
+                const reservesPaginator = !fitsWithoutPagination && rows.length > 1;
+                const maxRows = Math.max(0, lines - (reservesPaginator ? 1 : 0));
                 if (maxRows === 0) {
                     items = [];
                     legendHeight = 0;
@@ -616,9 +618,16 @@ export async function finalizePreparedLegend(args: {
                           rowGap: preparedLegend.resolvedRowGap,
                       }).pages
                     : [];
-            // A single page needs no navigation: let the rows use the full height and clip
-            // them in the component only if they still do not fit.
             pagination = pages.length > 1 ? {pages} : undefined;
+            if (!pagination && rows.length && !fitsWithoutPagination) {
+                // A single page needs no navigation: give the rows the full available height
+                // instead of a whole number of text lines, and clip them in the component
+                // only if they still do not fit.
+                legendHeight = Math.min(
+                    availableHeight,
+                    getLegendRowsHeight(rows, preparedLegend.resolvedRowGap),
+                );
+            }
         }
 
         if (autoWidth) {
