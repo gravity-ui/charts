@@ -14,7 +14,7 @@ Set `legend.type: 'continuous'` to display a color scale configured through `leg
 
 Set `legend.layout: 'vertical'` to place one item per row, independently of `position`. The default is `'horizontal'`. This option applies to discrete legends with SVG or HTML labels.
 
-For vertical layout, use `align` to position the list and `verticalAlign` for vertical alignment of side legends; `justifyContent` only affects horizontal layout. Lists that exceed the available height use pagination. If a single row is taller than the page, its content is clipped to keep the pagination controls accessible.
+For vertical layout, use `align` to position the list and `verticalAlign` for vertical alignment of side legends; `justifyContent` only affects horizontal layout. Lists that exceed the available height use pagination; when all rows fit on one page, no pagination controls are shown. A row taller than a page is clipped: alongside other pages, it leaves room for the pagination controls, and as the only row, it uses the full available height.
 
 Use `legend.rowGap` to separate vertical items or wrapped horizontal rows in discrete legends with SVG or HTML labels. It accepts finite, nonnegative numbers (e.g. `4`) or decimal `px` strings (e.g. `'4px'`) and defaults to `0`; invalid values throw `INVALID_DATA`.
 
@@ -64,7 +64,7 @@ Set `legend.itemMaxRowCount` to a positive integer greater than `1` to wrap SVG 
 
 Item layout determines which items share a row; label wrapping adds lines within an individual item. Labels wrap within the resolved legend width after subtracting the marker and its padding. Explicit line breaks are preserved, long unbroken words are split, and the final visible row is ellipsized when needed.
 
-Labels reflow on resize. Pagination keeps items together, reducing the row count only when an item is taller than a page. When truncation leaves all items on one page, no pagination controls are shown. The title is kept if the visible items fit below it, or if at least one text line, the marker, and pagination fit.
+Labels reflow on resize. Pagination keeps items together, reducing the row count only when an item is taller than a page. When truncation leaves all items on one page, no pagination controls are shown. A legend with a single item never reserves a line for pagination, so its label keeps every text line that fits the available height. The title is kept if the visible items fit below it, or if at least one text line, the marker, and pagination fit.
 
 With `width: 'auto'`, the legend fits the visible text rows, title, and pagination across all pages, including after labels are shortened to fit the page height. Use `maxWidth` to limit the available wrapping width.
 

@@ -748,11 +748,18 @@ describe('vertical legend layout', () => {
         },
     );
 
-    test.each([0, 10, 100])(
-        'keeps an oversized row on a nonempty page at chart height %s',
-        async (height) => {
+    test.each<[number, boolean, number]>([
+        [0, false, 0],
+        [10, false, 0],
+        // 10px is available, but not even one 14px text line fits: the legend stays hidden.
+        [30, false, 0],
+        [100, false, 80],
+        [100, true, 80],
+    ])(
+        'keeps an oversized row without a single-page paginator at chart height %s (html=%s)',
+        async (height, html, expectedHeight) => {
             const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
-                {enabled: true, layout: 'vertical', position: 'left'},
+                {enabled: true, layout: 'vertical', position: 'left', html},
                 {
                     height,
                     seriesData: [{type: 'line', name: 'Tall', data: [], lineWidth: 120}],
@@ -760,11 +767,38 @@ describe('vertical legend layout', () => {
             );
             expect(legendItems.map((row) => row.length)).toEqual([1]);
             expect(preparedLegend.rows[0].height).toBe(120);
-            expect(legendConfig.pagination?.pages).toEqual([{start: 0, end: 1}]);
-            expect(preparedLegend.height).toBeGreaterThanOrEqual(0);
-            expect(preparedLegend.height).toBeLessThanOrEqual(Math.max(0, height - 20));
+            expect(legendConfig.pagination).toBeUndefined();
+            // Without a paginator the row may use the whole available height,
+            // not only a whole number of text lines.
+            expect(preparedLegend.height).toBe(expectedHeight);
+            expect(legendConfig.height).toBe(expectedHeight);
         },
     );
+
+    test('gives a single tall row every text line and the full available height', async () => {
+        // Six 14px text lines fit into 84px, but the 91px marker does not,
+        // so the row is clipped instead of reserving a line for a paginator.
+        const {preparedLegend, legendConfig, legendItems} = await prepareLegend(
+            {enabled: true, layout: 'vertical', position: 'left', width: 250, itemMaxRowCount: 10},
+            {
+                height: 104,
+                seriesData: [
+                    {
+                        type: 'scatter',
+                        name: 'A\nB\nC\nD\nE\nF',
+                        symbolType: 'square',
+                        legend: {symbol: {width: 91}},
+                        data: [{x: 0, y: 1}],
+                    },
+                ],
+            },
+        );
+        expect(legendConfig.pagination).toBeUndefined();
+        expect(preparedLegend.rows[0].height).toBe(91);
+        expect(legendItems[0][0].textRows).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+        expect(legendItems[0][0].height).toBe(6 * 14);
+        expect(preparedLegend.height).toBe(84);
+    });
 
     test('includes line stroke width in row heights', async () => {
         const {preparedLegend} = await prepareLegend(

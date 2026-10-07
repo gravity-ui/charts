@@ -590,7 +590,9 @@ export async function finalizePreparedLegend(args: {
             let fitsWithoutPagination = false;
             if (preparedLegend.multilineItems) {
                 fitsWithoutPagination = heightWithRowLimit(lines) <= availableHeight;
-                const maxRows = Math.max(0, lines - (fitsWithoutPagination ? 0 : 1));
+                // A single row never gets a paginator, so it may use every text line.
+                const reservesPaginator = !fitsWithoutPagination && rows.length > 1;
+                const maxRows = Math.max(0, lines - (reservesPaginator ? 1 : 0));
                 if (maxRows === 0) {
                     items = [];
                     legendHeight = 0;
@@ -607,15 +609,26 @@ export async function finalizePreparedLegend(args: {
                     legendHeight = getLegendRowsHeight(rows, preparedLegend.resolvedRowGap);
                 }
             }
-            pagination =
+            const pages =
                 rows.length && !fitsWithoutPagination
                     ? getPagination({
                           rows,
                           maxLegendHeight: legendHeight,
                           paginatorHeight: preparedLegend.lineHeight,
                           rowGap: preparedLegend.resolvedRowGap,
-                      })
-                    : undefined;
+                      }).pages
+                    : [];
+            pagination = pages.length > 1 ? {pages} : undefined;
+            if (!pagination && rows.length && !fitsWithoutPagination && lines > 0) {
+                // A single page needs no navigation: give the rows the full available height
+                // instead of a whole number of text lines, and clip them in the component
+                // only if they still do not fit. Without room for one text line the legend
+                // stays hidden, as before.
+                legendHeight = Math.min(
+                    availableHeight,
+                    getLegendRowsHeight(rows, preparedLegend.resolvedRowGap),
+                );
+            }
         }
 
         if (autoWidth) {
