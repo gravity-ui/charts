@@ -62,6 +62,7 @@ export function validateXYSeries(args: {
             code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-y-axis-index', {
                 index: yAxisIndex,
+                seriesName: series.name,
             }),
         });
     }
@@ -165,6 +166,7 @@ export function validateAxisPlotValues(args: {
             code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-y-axis-index', {
                 index: yAxisIndex,
+                seriesName: series.name,
             }),
         });
     }

@@ -7,8 +7,7 @@ import {dispatch} from 'd3-dispatch';
 
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 
-import {ChartTooltipContent} from '../../../components/Tooltip/ChartTooltipContent';
-import {TooltipValuesContext} from '../../../components/Tooltip/TooltipValuesContext';
+import {TooltipContent} from '../../../components/Tooltip/ChartTooltipContent';
 import type {TooltipDataChunkLine} from '../../../types';
 import type {PreparedTooltip} from '../../types';
 import {useTooltip} from '../index';
@@ -26,22 +25,17 @@ it('resolves each hovered value once for sorting and totals, then reuses it on r
         {data: {x: 0, y: 10}, series: {type: 'line', id: 'small', name: 'Small'}},
     ];
     function TestTooltip() {
-        const state = useTooltip({dispatcher, tooltip});
+        const state = useTooltip({dispatcher, tooltip, seriesData: undefined});
         return (
             <ThemeProvider theme="light">
-                <TooltipValuesContext.Provider
-                    value={
-                        state.hovered && {hovered: state.hovered, values: state.hoveredValues ?? []}
-                    }
-                >
-                    <ChartTooltipContent
-                        hovered={state.hovered}
-                        totals={{
-                            enabled: true,
-                            valueFormat: {type: 'custom', formatter: totalFormatter},
-                        }}
-                    />
-                </TooltipValuesContext.Provider>
+                <TooltipContent
+                    hoveredValues={state.hoveredValues}
+                    hovered={state.hovered}
+                    totals={{
+                        enabled: true,
+                        valueFormat: {type: 'custom', formatter: totalFormatter},
+                    }}
+                />
             </ThemeProvider>
         );
     }

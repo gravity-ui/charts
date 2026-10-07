@@ -60,7 +60,7 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
-        header: {getValue: getTooltipXValue},
+        header: {getValue: getTooltipXValue, axis: 'x'},
         rows: [
             {
                 id: 'default',

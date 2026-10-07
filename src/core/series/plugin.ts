@@ -70,6 +70,7 @@ export interface PrepareShapeDataResult {
 export interface GetTooltipValueArgs<TTooltipChunk extends TooltipDataChunk = TooltipDataChunk> {
     item: TTooltipChunk;
     xAxis?: ChartXAxis | null;
+    /** Y axis assigned to this item's series (defaults to axis 0). */
     yAxis?: ChartYAxis;
 }
 
@@ -171,6 +172,10 @@ export interface SeriesPlugin<
         header?: {
             /** Unformatted header value, resolved once before applying headerFormat. */
             getValue(args: GetTooltipValueArgs<TTooltipChunk>): AxisDomainValue;
+            /** Axis supplying this header's value and category formatting context. */
+            axis?: 'x' | 'y';
+            /** Require an explicit headerFormat before displaying this header. Defaults to false. */
+            requiresFormat?: boolean;
             /** Higher priorities win in mixed tooltips; ties keep the first hovered chunk. Defaults to 0. */
             priority?: number;
         };

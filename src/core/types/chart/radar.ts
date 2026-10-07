@@ -26,7 +26,11 @@ export interface RadarMarkerOptions extends PointMarkerOptions {
 export interface RadarSeries<T = MeaningfulAny> extends BaseSeries {
     /** Radar series: values plotted on axes radiating from a common center. */
     type: typeof SERIES_TYPE.Radar;
-    /** The categories for the radar chart. */
+    /**
+     * Categories shared by all radar series. Specify a nonempty array on at least one radar series.
+     * The first nonempty array is used, and data points follow its order.
+     * Set each category's `maxValue` to fix its radial scale maximum.
+     */
     categories?: RadarSeriesCategory[];
     data: RadarSeriesData<T>[];
     /** The name of the radar series. */

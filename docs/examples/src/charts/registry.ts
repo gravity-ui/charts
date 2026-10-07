@@ -32,12 +32,18 @@ import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
 import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
 import {AreaSeriesExample} from './series-types/area';
 import {AreaRangeSeriesExample} from './series-types/area-range';
+import {AreaRangeWithLineExample} from './series-types/area-range-with-line';
+import areaRangeWithLineRaw from './series-types/area-range-with-line.tsx?raw';
 import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
 import {BarXSeriesExample} from './series-types/bar-x';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
+import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
+import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
+import {XRangeTooltipValuesExample} from './tooltip/x-range-values';
+import xRangeTooltipValuesRaw from './tooltip/x-range-values.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
 import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
 
@@ -52,6 +58,14 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'tooltip/x-range-values': {
+        code: extractDisplayCode(xRangeTooltipValuesRaw),
+        Component: XRangeTooltipValuesExample,
+    },
+    'tooltip/multiple-y-axes': {
+        code: extractDisplayCode(multipleYAxesTooltipRaw),
+        Component: MultipleYAxesTooltipExample,
+    },
     'legend/wrapping': {
         code: extractDisplayCode(legendWrappingRaw),
         Component: LegendWrappingExample,
@@ -101,6 +115,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/area-range': {
         code: extractDisplayCode(areaRangeSeriesRaw),
         Component: AreaRangeSeriesExample,
+    },
+    'series-types/area-range-with-line': {
+        code: extractDisplayCode(areaRangeWithLineRaw),
+        Component: AreaRangeWithLineExample,
     },
     'value-formatting/quarterly-x-axis': {
         code: extractDisplayCode(quarterlyXAxisRaw),

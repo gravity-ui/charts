@@ -45,6 +45,41 @@ tooltip: {
 }
 ```
 
+## Totals and sorting for interval series
+
+For `x-range`, totals and sorting by `value` use the absolute difference between interval boundaries. On category X axes, intervals have no numeric value for totals or sorting. Tooltip rows display both boundaries.
+
+For `area-range`, totals and sorting use the width `y1 - y0`. Both types sum individual widths, including overlaps; totals do not compute the union of intervals.
+
+On a `datetime` X axis, `x-range` rows display dates by default, while totals represent elapsed milliseconds. Totals use `tooltip.totals.valueFormat`, falling back to `tooltip.valueFormat` and then to a number format. Without a format, a one-day total displays as `86,400,000`; a date format treats that duration as a timestamp near the Unix epoch. Set `tooltip.totals.valueFormat` to format durations separately from the interval boundaries. For example, this formatter displays elapsed time in 24-hour days:
+
+```javascript
+tooltip: {
+  totals: {
+    enabled: true,
+    label: 'Total duration',
+    valueFormat: {
+      type: 'custom',
+      formatter: ({value}) => `${Number(value) / 86_400_000} days`,
+    },
+  },
+}
+```
+
+In the example below, hover over the overlapping bars in the middle. The tooltip sorts intervals from shortest to longest and shows a total duration of 19.
+
+<div data-chart-example="tooltip/x-range-values"></div>
+
+## Multiple Y axes and custom content
+
+Custom `renderer`, `rowRenderer`, and `totals.aggregation` callbacks receive
+all Y axes in `yAxes`. To reuse default content, pass the renderer arguments to
+`ChartTooltipContent`. Its `yAxes` prop resolves values using each series'
+assigned axis; if omitted, it falls back to `yAxis`. The example excludes
+category values from the numeric total.
+
+<div data-chart-example="tooltip/multiple-y-axes"></div>
+
 ## Hiding specific series from the tooltip
 
 There are scenarios where you might want to display a chart with multiple data series but exclude specific ones from the tooltip. This is useful for providing a cleaner, more focused user experience, especially when certain series are used for contextual or decorative purposes rather than for precise data reading.
@@ -110,6 +145,11 @@ as [ValueFormat](../api/Utilities/type-aliases/ValueFormat.md). Formatting works
 the same way as everywhere else in the chart (data labels, axis labels, etc.) —
 see the [Value formatting](./value-formatting.md) guide for the full reference,
 the `units` option, custom formatters, and examples.
+
+The default tooltip omits its header when the axis value is `null`, `undefined`,
+or a category index cannot be resolved. On category axes, a custom header
+formatter is called only when the header value is available. On linear/datetime
+axes and radar charts, a custom formatter can return a placeholder for a missing value.
 
 ### Per-series override
 

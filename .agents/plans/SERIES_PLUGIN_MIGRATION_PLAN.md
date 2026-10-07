@@ -11,10 +11,10 @@ Deliver the migration incrementally, preserving behavior. The axis-domain and sc
 ### 1. Complete tooltip delegation
 
 - Implement `tooltip.getValue` for the remaining plugins and remove the type switch in [getHoveredValues](../../src/components/Tooltip/DefaultTooltipContent/utils.ts).
-- Move series-specific header rules into plugins: whether to show a header, which axis supplies its value, and radar category handling. These rules currently live in `getMeasureValue` in the same file and [getDefaultTooltipHeaderFormat](../../src/core/utils/tooltip.ts).
+- Delegate complete header resolution to plugins instead of combining `tooltip.headerAxis` with shared series-type checks. A plugin should supply the raw header value and axis/formatting context, or declare that there is no header. Cover Cartesian X/Y headers, radar categories, and plugins that suppress the header; series without axes must not inherit an implicit X header. Remove the corresponding rules from `getMeasureValue` in the same file and [getDefaultTooltipHeaderFormat](../../src/core/utils/tooltip.ts).
 - Keep sorting, aggregation, formatting, and rendering shared. Define how header contributions combine in mixed charts, preserving current precedence.
 
-Verify mixed-series tooltips, totals, sorting, category/date formatting, and the raw values supplied to custom formatters and renderers.
+Verify mixed-series tooltips, totals, sorting, category/date formatting, and the raw values supplied to custom formatters and renderers. Preserve the distinction between no header and a missing header value that a custom formatter can replace with a placeholder.
 
 Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): tooltip value/header hooks and mixed-chart precedence.
 

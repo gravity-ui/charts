@@ -1,16 +1,14 @@
 import {group} from 'd3-array';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
-import isNil from 'lodash/isNil';
 import sortBy from 'lodash/sortBy';
 
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
-import {DEFAULT_AXIS_LABEL_FONT_SIZE, SERIES_TYPE} from '../constants';
+import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../constants';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {PreparedWaterfallSeries, StackedSeries} from '../series/types';
 import {getSeriesStackId} from '../series/utils';
 
-import {getWaterfallPointSubtotal} from './series/waterfall';
 import {isSeriesWithNumericalXValues, isSeriesWithNumericalYValues} from './series-type-guards';
 import type {UnknownSeries} from './series-type-guards';
 import type {AxisDirection} from './types';
@@ -174,15 +172,6 @@ export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
 
 export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
     if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
-        if (series.some((s) => s.type === SERIES_TYPE.Waterfall)) {
-            const seriesData = (series as PreparedWaterfallSeries[]).map((s) => s.data).flat();
-            const minSubTotal = seriesData.reduce(
-                (res, d) => Math.min(res, getWaterfallPointSubtotal(d, seriesData) || 0),
-                0,
-            );
-            return Math.min(0, minSubTotal);
-        }
-
         const domainData = getDomainDataYBySeries(series) as number[];
         return domainData.reduce((minValue, d) => {
             return Math.min(minValue, d);
@@ -231,11 +220,14 @@ export const getHorizontalHtmlTextHeight = (args: {
     return height;
 };
 
-const extractCategoryValue = (args: {
+interface DataCategoryValueArgs {
     axisDirection: AxisDirection;
     categories: string[];
     data: ChartSeriesData;
-}) => {
+}
+
+/** Resolve a category without throwing when a value or numeric index cannot be resolved. */
+export const tryGetDataCategoryValue = (args: DataCategoryValueArgs): string | undefined => {
     const {axisDirection, categories, data} = args;
     const dataCategory = get(data, axisDirection);
     let categoryValue: string | undefined;
@@ -252,20 +244,16 @@ const extractCategoryValue = (args: {
         categoryValue = categories[dataCategory];
     }
 
-    if (isNil(categoryValue)) {
-        throw new Error('It seems you are trying to get non-existing category value');
-    }
-
-    return categoryValue;
+    return categoryValue ?? undefined;
 };
 
-export const getDataCategoryValue = (args: {
-    axisDirection: AxisDirection;
-    categories: string[];
-    data: ChartSeriesData;
-}) => {
-    const {axisDirection, categories, data} = args;
-    const categoryValue = extractCategoryValue({axisDirection, categories, data});
+/** Strict category resolution for data preparation, where invalid input must be reported. */
+export const getDataCategoryValue = (args: DataCategoryValueArgs): string => {
+    const categoryValue = tryGetDataCategoryValue(args);
+
+    if (categoryValue === undefined) {
+        throw new Error('It seems you are trying to get non-existing category value');
+    }
 
     return categoryValue;
 };

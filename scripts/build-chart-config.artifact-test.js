@@ -39,6 +39,39 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
+        const usage = `
+            const tooltip: ChartTooltip = {
+                renderer: ({hovered, yAxis, yAxes}) => {
+                    hovered.forEach(item => {
+                        const index = 'yAxis' in item.series ? item.series.yAxis ?? 0 : 0;
+                        const axis: ChartYAxis | undefined = yAxes?.[index] ?? yAxis;
+                        void axis;
+                    });
+                    return null;
+                },
+                rows: [{renderer: (args) => {
+                    const record: Record<string, unknown> = args;
+                    void record;
+                    void args.yAxes?.[1];
+                    return '';
+                }}],
+                totals: {aggregation: ({yAxes}) => yAxes?.length},
+            };
+            void tooltip;
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'tooltip-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        // Callback arguments are TypeScript-only and must not become chart config fields.
+        expect(schema.definitions['ChartTooltip<JsonValue>'].properties).not.toHaveProperty(
+            'yAxes',
+        );
+    });
+
     test('standalone declarations support automatic legend width and size limits', () => {
         const usage = `
             const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};
@@ -134,6 +167,39 @@ describe('chart config artifacts', () => {
         expect(validateChoice('unsupported')).toBe(false);
         expect(validateChoice.errors).toHaveLength(1);
         expect(validateChoice.errors[0].keyword).toBe('enum');
+    });
+
+    test('standalone declarations expose row spacing only on the chart legend', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'chart-config-usage.ts'),
+                declaration +
+                    `
+                    const legend: ChartLegend = {rowGap: 4};
+                    legend.rowGap = '4px';
+                    // @ts-expect-error Row gaps must be a number or string.
+                    legend.rowGap = true;
+                    // @ts-expect-error Row spacing is not an individual item option.
+                    const item: ChartLegendItem = {rowGap: 4};
+                `,
+            ),
+        ).not.toThrow();
+    });
+
+    test('schema exposes pixel row spacing with a compatible default', () => {
+        expect(schema.definitions.ChartLegend.properties.rowGap).toMatchObject({
+            type: ['number', 'string'],
+            minimum: 0,
+            default: 0,
+        });
+        expect(schema.definitions.ChartLegend.properties.rowGap.pattern).toBeUndefined();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const rowGap of [undefined, 0, 4, 4.5, '4px', '.5px']) {
+            expect(validateConfig({series: {data: []}, legend: {rowGap}})).toBe(true);
+        }
+        for (const rowGap of [-1, NaN, Infinity, -Infinity, true, null]) {
+            expect(validateConfig({series: {data: []}, legend: {rowGap}})).toBe(false);
+        }
     });
 
     test('standalone declarations support both legend layouts', () => {
@@ -886,6 +952,40 @@ describe('chart config artifacts', () => {
     test('rejects unknown nested properties', () => {
         const validateConfig = createSchemaValidator().compile(schema);
         expect(validateConfig({series: {data: [], unknownProperty: true}})).toBe(false);
+    });
+
+    test('rejects category objects on xAxis', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        expect(
+            validateConfig({
+                series: {data: [{type: 'radar', categories: [{key: 'A'}], data: [{value: 1}]}]},
+                xAxis: {categories: [{key: 'A'}]},
+            }),
+        ).toBe(false);
+        expect(validateConfig.errors).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    instancePath: '/xAxis/categories/0',
+                    keyword: 'type',
+                    params: {type: 'string'},
+                }),
+            ]),
+        );
+    });
+
+    test('accepts shared radar categories', () => {
+        const validateConfig = createSchemaValidator().compile(schema);
+        const categories = [{key: 'A'}];
+        expect(
+            validateConfig({
+                series: {
+                    data: [
+                        {type: 'radar', data: [{value: 1}]},
+                        {type: 'radar', categories, data: [{value: 2}]},
+                    ],
+                },
+            }),
+        ).toBe(true);
     });
 
     test('does not contain unsafe definition references', () => {

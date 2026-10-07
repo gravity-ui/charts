@@ -180,4 +180,90 @@ test.describe('Waterfall series', () => {
         const component = await mount(<ChartTestStory data={waterfallDataWithTotals} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
+
+    test('Connectors with a negative total', async ({mount}) => {
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Series',
+                        data: [
+                            {x: 0, y: -10},
+                            {x: 1, total: true},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['Loss', 'Total'],
+            },
+        };
+        const component = await mount(<ChartTestStory data={chartData} />);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Negative subtotals fit the automatic Y domain', async ({mount, page}) => {
+        const data: WaterfallSeriesData[] = [
+            {x: 'Loss', y: -10},
+            {x: 'Negative total', total: true, y: 100},
+            {x: 'Income', y: 15},
+            {x: 'Positive total', total: true, y: -100},
+            {x: 'Expense', y: -5},
+            {x: 'Zero total', total: true},
+        ];
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    series: {data: [{type: 'waterfall', name: 'Balance', data}]},
+                    xAxis: {type: 'category', categories: data.map((d) => String(d.x))},
+                    legend: {enabled: false},
+                }}
+                styles={{width: 700, height: 300}}
+            />,
+        );
+
+        const bars = component.locator('.gcharts-waterfall__segment');
+        await expect(bars).toHaveCount(data.length);
+        const waterfall = component.locator('.gcharts-waterfall');
+        await expect(waterfall).toHaveAttribute('clip-path', /^url\(#.+\)$/);
+        const clipPath = await waterfall.getAttribute('clip-path');
+        const clipPathId = clipPath?.match(/^url\(#(.+)\)$/)?.[1];
+        const plotBounds = component.locator(`clipPath[id="${clipPathId}"] rect`);
+        await expect(plotBounds).toHaveCount(1);
+        await expect
+            .poll(async () => {
+                const plotHeight = Number(await plotBounds.getAttribute('height'));
+                return bars.evaluateAll(
+                    (elements, height) =>
+                        Math.max(
+                            0,
+                            ...elements.flatMap((element) => {
+                                const bounds = (element as SVGGraphicsElement).getBBox();
+                                return [-bounds.y, bounds.y + bounds.height - height];
+                            }),
+                        ),
+                    plotHeight,
+                );
+            })
+            .toBeCloseTo(0, 2);
+
+        const connectors = component.locator('.gcharts-waterfall__connector[d]');
+        await expect(connectors).toHaveCount(data.length - 1);
+        await expect
+            .poll(() =>
+                connectors.evaluateAll((elements) =>
+                    Math.max(
+                        ...elements.map(
+                            (element) => (element as SVGGraphicsElement).getBBox().height,
+                        ),
+                    ),
+                ),
+            )
+            .toBeCloseTo(0, 2);
+
+        await bars.nth(1).hover();
+        await expect(page.locator('.gcharts-tooltip')).toContainText('-10');
+    });
 });

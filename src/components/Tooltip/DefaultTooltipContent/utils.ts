@@ -1,3 +1,5 @@
+import get from 'lodash/get';
+
 import {i18n} from '~core/i18n';
 import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
@@ -24,7 +26,7 @@ interface PrepareHoveredArgs {
     hovered: TooltipDataChunk[];
     sorting?: ChartTooltip['sorting'];
     xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
 }
 
 export interface PreparedHovered {
@@ -32,15 +34,19 @@ export interface PreparedHovered {
     values: HoveredValue[];
 }
 
+function getSeriesYAxis(item: TooltipDataChunk, yAxes?: ChartYAxis[]) {
+    return yAxes?.[get(item.series, 'yAxis') ?? 0] ?? yAxes?.[0];
+}
+
 export const getMeasureValue = ({
     data,
     xAxis,
-    yAxis,
+    yAxes,
     headerFormat,
 }: {
     data: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
     headerFormat?: ChartTooltip['headerFormat'];
 }) => {
     let selected: TooltipHeaderSelection | undefined;
@@ -53,21 +59,29 @@ export const getMeasureValue = ({
     if (!selected) {
         return null;
     }
+    const yAxis = getSeriesYAxis(selected.item, yAxes);
     const value = selected.header.getValue({item: selected.item, xAxis, yAxis});
-    return {value, formattedValue: getFormattedValue({value, format: headerFormat})};
+    const axis = selected.header.axis && (selected.header.axis === 'y' ? yAxis : xAxis);
+    const formattedValue =
+        (selected.header.requiresFormat && !headerFormat) ||
+        ((value === null || value === undefined) &&
+            (axis?.type === 'category' || headerFormat?.type !== 'custom'))
+            ? undefined
+            : getFormattedValue({value, format: headerFormat});
+    return {value, formattedValue};
 };
 
 export function getHoveredValues(args: {
     hovered: TooltipDataChunk[];
     xAxis?: ChartXAxis | null;
-    yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
 }): HoveredValue[] {
-    const {hovered, xAxis, yAxis} = args;
+    const {hovered, xAxis, yAxes} = args;
 
     return hovered.map((item) => {
         const getValue =
             getSeriesPlugin(item.series.type).tooltip.getValue ?? getDefaultTooltipValue;
-        return getValue({item, xAxis, yAxis});
+        return getValue({item, xAxis, yAxis: getSeriesYAxis(item, yAxes)});
     });
 }
 
@@ -105,8 +119,9 @@ export function getPreparedAggregation(args: {
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    yAxes?: ChartYAxis[];
 }): ChartTooltipTotalsBuiltInAggregation | (() => ChartTooltipTotalsAggregationValue) {
-    const {hovered, totals, xAxis, yAxis} = args;
+    const {hovered, totals, xAxis, yAxis, yAxes} = args;
 
     const aggregation = totals?.aggregation;
 
@@ -115,7 +130,7 @@ export function getPreparedAggregation(args: {
     }
 
     if (typeof aggregation === 'function') {
-        return () => aggregation({hovered, xAxis, yAxis});
+        return () => aggregation({hovered, xAxis, yAxis, yAxes});
     }
 
     return 'sum';
@@ -132,8 +147,8 @@ export function getSortedHovered(args: PrepareHoveredArgs): TooltipDataChunk[] {
 }
 
 export function getPreparedHovered(args: PrepareHoveredArgs): PreparedHovered {
-    const {hovered, sorting, xAxis, yAxis} = args;
-    const values = getHoveredValues({hovered, xAxis, yAxis});
+    const {hovered, sorting, xAxis, yAxes} = args;
+    const values = getHoveredValues({hovered, xAxis, yAxes});
     const indices = hovered.map((_, i) => i);
     const getResult = (): PreparedHovered => ({
         hovered: indices.map((i) => hovered[i]),
@@ -170,8 +185,13 @@ export function getPreparedHovered(args: PrepareHoveredArgs): PreparedHovered {
                 }
 
                 if (typeof a === 'number' && typeof b === 'number') {
+                    if (Number.isNaN(a)) return Number.isNaN(b) ? 0 : -1;
+                    if (Number.isNaN(b)) return 1;
                     return a - b;
                 }
+
+                if (typeof a === 'number') return -1;
+                if (typeof b === 'number') return 1;
 
                 return String(a).localeCompare(String(b));
             };

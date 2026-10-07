@@ -58,7 +58,7 @@ export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
         radarSeries.map((s, index) => s.name ?? `Series ${index + 1}`),
         colors,
     );
-    const categories = radarSeries.find((s) => s.categories)?.categories ?? [];
+    const categories = radarSeries.find((s) => s.categories?.length)?.categories ?? [];
 
     return radarSeries.map((series, index) => {
         const name = series.name ?? `Series ${index + 1}`;

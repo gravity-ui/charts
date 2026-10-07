@@ -111,7 +111,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
-        header: {getValue: getTooltipXValue},
+        header: {getValue: getTooltipXValue, axis: 'x'},
         getValueFormatContext: (item) => {
             return {percentage: item.percentage, data: item.data};
         },

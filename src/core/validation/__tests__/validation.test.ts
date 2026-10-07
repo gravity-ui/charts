@@ -15,6 +15,27 @@ function getValidGradient() {
 }
 
 describe('validation/validateData', () => {
+    test('accepts nonnegative pixel row gaps and rejects invalid formats', () => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+        };
+        for (const rowGap of [undefined, 0, 4, '0px', '4.5px', '.5px']) {
+            expect(() => validateData({...data, legend: {rowGap}})).not.toThrow();
+        }
+        // Strict decimal syntax is covered by parseLegendWidth's own tests.
+        for (const value of [-1, NaN, Infinity, null, true, '4%', '4', 'auto', '-4px', '4px\n']) {
+            expect(() =>
+                validateData({...data, legend: {rowGap: value as ChartLegend['rowGap']}}),
+            ).toThrow(
+                expect.objectContaining({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'legend.rowGap must be a finite, nonnegative number or decimal px string',
+                }),
+            );
+        }
+    });
+
     test.each([
         -10,
         -0.5,
@@ -484,17 +505,30 @@ describe('validation/validateData', () => {
         },
     );
 
-    test('validateData should throw an error in case of invalid axis index', () => {
-        const data = {series: {data: [{type: 'line', yAxis: 5, data: [{x: 1, y: 1}]}]}};
+    test.each([5, -1, 0.5])('rejects missing Y axis %s and identifies the series', (yAxis) => {
+        const data: ChartData = {
+            yAxis: [{type: 'linear'}],
+            series: {data: [{type: 'line', name: 'Revenue', yAxis, data: [{x: 1, y: 1}]}]},
+        };
         let error: ChartError | null = null;
 
         try {
-            validateData(data as ChartData);
+            validateData(data);
         } catch (e) {
             error = e as ChartError;
         }
 
         expect(error?.code).toEqual(CHART_ERROR_CODE.INVALID_DATA);
+        expect(error?.message).toContain(`"${yAxis}"`);
+        expect(error?.message).toContain('"Revenue"');
+    });
+
+    test.each([undefined, 0])('uses the first Y axis for index %s', (yAxis) => {
+        const data: ChartData = {
+            yAxis: [{type: 'category', categories: ['Low', 'High']}],
+            series: {data: [{type: 'line', name: 'Tier', yAxis, data: [{x: 1, y: 'High'}]}]},
+        };
+        expect(() => validateData(data)).not.toThrow();
     });
 
     test.each([

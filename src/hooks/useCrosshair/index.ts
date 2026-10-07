@@ -9,11 +9,13 @@ import {getAxisPlotsPosition, getLineDashArray} from '~core/utils';
 
 import type {ChartScale, PreparedSplit, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {PointPosition, TooltipDataChunk} from '../../types';
+import type {useHoverResetKey} from '../useHoverResetKey';
 import {getXValue, getYValue} from '../useShapes/utils';
 
 import {useCrosshairHover} from './useCrosshairHover';
 
-type Props = {
+interface Props {
+    resetKey: ReturnType<typeof useHoverResetKey>;
     xAxis: PreparedXAxis | null;
     yAxes: PreparedYAxis[];
     width: number;
@@ -25,7 +27,7 @@ type Props = {
     dispatcher: Dispatch<object>;
     boundsOffsetLeft: number;
     boundsOffsetTop: number;
-};
+}
 
 export const useCrosshair = (props: Props) => {
     const {
@@ -40,11 +42,16 @@ export const useCrosshair = (props: Props) => {
         height: totalHeight,
         boundsOffsetTop,
         boundsOffsetLeft,
+        resetKey,
     } = props;
     const crosshairEnabled =
         xAxis?.crosshair.enabled || yAxes.some((axis) => axis.crosshair.enabled);
 
-    const {hovered, pointerPosition} = useCrosshairHover({dispatcher, enabled: crosshairEnabled});
+    const {hovered, pointerPosition} = useCrosshairHover({
+        dispatcher,
+        enabled: crosshairEnabled,
+        resetKey,
+    });
     const pointerXPos = pointerPosition?.[0] ?? 0;
     const pointerYPos = pointerPosition?.[1] ?? 0;
 
@@ -67,6 +74,7 @@ export const useCrosshair = (props: Props) => {
                 .selectAll(`[${crosshairDataAttr}]`)
                 .data(hovered)
                 .join('g')
+                .attr('pointer-events', 'none')
                 .attr(plotCrosshairDataAttr, 1)
                 .attr(crosshairDataAttr, 1);
 
@@ -142,6 +150,7 @@ export const useCrosshair = (props: Props) => {
                         }),
                     )
                     .join('g')
+                    .attr('pointer-events', 'none')
                     .attr(plotCrosshairDataAttr, 1)
                     .attr(crosshairDataAttr, 1)
                     .style(

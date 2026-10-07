@@ -1,4 +1,5 @@
 import type {ChartSeries, ChartTooltip, ChartXAxis, ChartYAxis} from '../../types';
+import {getSeriesPlugin} from '../series/seriesRegistry';
 import {getDefaultValueFormat} from '../tooltip/utils';
 
 import {getMinSpaceBetween} from './array';
@@ -25,7 +26,7 @@ export function getDefaultTooltipHeaderFormat({
         return undefined;
     }
 
-    if (seriesData.some((item) => item.type === 'bar-y')) {
+    if (seriesData.some((item) => getSeriesPlugin(item.type).tooltip.header?.axis === 'y')) {
         const domainData = getDomainDataYBySeries(seriesData) as number[];
         const closestPointsRange = getMinSpaceBetween(domainData, (d) => d);
         return getDefaultValueFormat({

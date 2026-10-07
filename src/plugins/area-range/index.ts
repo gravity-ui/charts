@@ -113,7 +113,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
     tooltip: {
         prepareData: getTooltipData,
         getValue: ({item}) => getAreaRangeWidth(item.data),
-        header: {getValue: getTooltipXValue},
+        header: {getValue: getTooltipXValue, axis: 'x'},
         rows: [
             {
                 id: 'default',

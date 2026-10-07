@@ -11,6 +11,7 @@ import type {
 } from '../../types';
 
 import {DefaultTooltipContent} from './DefaultTooltipContent';
+import type {HoveredValue} from './DefaultTooltipContent/utils';
 
 export interface ChartTooltipContentProps {
     hovered?: TooltipDataChunk[];
@@ -26,10 +27,18 @@ export interface ChartTooltipContentProps {
     totals?: ChartTooltip['totals'];
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis;
+    /** All Y axes. Takes precedence over yAxis when resolving series values. */
+    yAxes?: ChartYAxis[];
     qa?: string;
 }
 
-export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) => {
+interface TooltipContentProps extends ChartTooltipContentProps {
+    hoveredValues?: HoveredValue[];
+}
+
+// Internal entry point receives prepared values explicitly. Public consumers resolve
+// their own values from the axes supplied in ChartTooltipContentProps.
+export const TooltipContent = React.memo((props: TooltipContentProps) => {
     const {
         hovered,
         hoveredPlotBands,
@@ -37,6 +46,8 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         hoveredPlotShapes,
         xAxis,
         yAxis,
+        yAxes,
+        hoveredValues,
         renderer,
         rows,
         rowRenderer,
@@ -51,6 +62,7 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         return null;
     }
 
+    const firstYAxis = yAxis ?? yAxes?.[0];
     const customTooltip = renderer?.({
         headerFormat,
         hovered,
@@ -58,7 +70,8 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
         hoveredPlotLines,
         hoveredPlotShapes,
         xAxis,
-        yAxis,
+        yAxis: firstYAxis,
+        yAxes,
     }) as React.ReactElement | null | undefined;
 
     return isNil(customTooltip) ? (
@@ -71,12 +84,24 @@ export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) 
             valueFormat={valueFormat}
             headerFormat={headerFormat}
             xAxis={xAxis}
-            yAxis={yAxis}
+            yAxis={firstYAxis}
+            yAxes={yAxes}
+            hoveredValues={hoveredValues}
             qa={qa}
         />
     ) : (
         customTooltip
     );
 });
+
+TooltipContent.displayName = 'TooltipContent';
+
+export const ChartTooltipContent = React.memo((props: ChartTooltipContentProps) => (
+    <TooltipContent
+        {...props}
+        yAxes={props.yAxes ?? (props.yAxis ? [props.yAxis] : undefined)}
+        hoveredValues={undefined}
+    />
+));
 
 ChartTooltipContent.displayName = 'ChartTooltipContent';

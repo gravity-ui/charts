@@ -92,7 +92,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
-        header: {getValue: getTooltipXValue},
+        header: {getValue: getTooltipXValue, axis: 'x'},
         // The line symbol needs the series stroke options, which a `format` formatter cannot
         // reach on its own — so the rows are built per chunk and close over them. `source` stays
         // a plain value lookup, which is what a custom `rowRenderer` receives as `color`.

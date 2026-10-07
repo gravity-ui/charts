@@ -7,6 +7,7 @@ import {ChartStory} from './ChartStory';
 import {
     areaBasicData,
     areaNegativeValuesData,
+    areaRangeBasicData,
     areaStakingNormalData,
     areaStakingPercentData,
     areaTwoYAxisData,
@@ -76,6 +77,10 @@ const ShowcaseStory = () => {
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Basic area chart</Text>
                         <ChartStory data={areaBasicData} />
+                    </Col>
+                    <Col s={12} m={6}>
+                        <Text variant="subheader-1">Area range</Text>
+                        <ChartStory data={areaRangeBasicData} />
                     </Col>
                     <Col s={12} m={6}>
                         <Text variant="subheader-1">Stacked area</Text>

@@ -121,7 +121,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
-        header: {getValue: getTooltipXValue},
+        header: {getValue: getTooltipXValue, axis: 'x'},
         getValueFormatContext: (item) => {
             return {percentage: item.percentage, data: item.data};
         },

@@ -62,7 +62,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
-        header: {getValue: getTooltipXValue},
+        header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (chunk) => {
             const c = chunk as TooltipDataChunkWaterfall;
             if (c.data.total) {
@@ -77,7 +77,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
                             },
                             {
                                 id: 'value',
-                                source: 'data.y',
+                                source: 'subTotal',
                                 align: 'end',
                             },
                         ],

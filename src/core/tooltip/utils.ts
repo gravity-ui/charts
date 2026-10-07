@@ -5,19 +5,23 @@ import type {DashStyle} from '../constants';
 import type {GetTooltipValueArgs} from '../series/plugin';
 import {getRectPath} from '../shapes/utils';
 import type {ChartSeriesData, ChartTooltip, ChartXAxis, ChartYAxis, ValueFormat} from '../types';
-import {createLineSymbol, getDataCategoryValue, getDefaultDateFormat} from '../utils';
+import {createLineSymbol, getDefaultDateFormat, tryGetDataCategoryValue} from '../utils';
 
 export function getTooltipAxisValue(
     data: ChartSeriesData,
     axisDirection: 'x' | 'y',
     axis?: ChartXAxis | ChartYAxis | null,
 ): string | number | null | undefined {
+    const value = get(data, axisDirection);
     if (axis?.type === 'category') {
-        const categories = get(axis, 'categories', [] as string[]);
-        return getDataCategoryValue({axisDirection, categories, data});
+        const categoryValue = tryGetDataCategoryValue({
+            axisDirection,
+            categories: axis.categories ?? [],
+            data,
+        });
+        return categoryValue ?? (value === null ? null : undefined);
     }
-
-    return get(data, axisDirection);
+    return value;
 }
 
 export function getTooltipXValue({item, xAxis}: GetTooltipValueArgs) {
