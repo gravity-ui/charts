@@ -10,7 +10,7 @@ import type {
     XRangeSeriesData,
 } from '../../../../types';
 import {DefaultTooltipContent} from '../index';
-import {getBuiltInAggregatedValue, getHoveredValues, getSortedHovered} from '../utils';
+import {getBuiltInAggregatedValue, getHoveredValues, getPreparedHovered} from '../utils';
 
 function makeChunk(data: XRangeSeriesData, name = 'Interval'): TooltipDataChunkXRange {
     return {data, series: {type: 'x-range', name, data: []}};
@@ -42,7 +42,9 @@ it.each([{categories: ['A', 'B', 'C']}, {categories: ['10', '20', '30']}])(
         const values = getHoveredValues({hovered, xAxis});
         expect(values).toEqual([undefined, undefined]);
         expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(0);
-        expect(getSortedHovered({hovered, xAxis, sorting: {key: 'value'}})).toEqual(hovered);
+        expect(getPreparedHovered({hovered, xAxis, sorting: {key: 'value'}}).hovered).toEqual(
+            hovered,
+        );
     },
 );
 
@@ -52,13 +54,11 @@ it('sorts durations independently of Y positions and sums their widths', () => {
     const reverse = makeChunk({x0: 9, x1: 2, y: 1}, 'Reverse');
     const hovered = [long, short, reverse];
     const yAxes = [{type: 'category' as const, categories: ['A', 'Z', 'B']}];
-    const ascending = getSortedHovered({hovered, yAxes, sorting: {key: 'value'}});
+    const ascending = getPreparedHovered({hovered, yAxes, sorting: {key: 'value'}}).hovered;
     expect(ascending).toEqual([short, reverse, long]);
-    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}})).toEqual([
-        long,
-        reverse,
-        short,
-    ]);
+    expect(
+        getPreparedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}}).hovered,
+    ).toEqual([long, reverse, short]);
     const values = getHoveredValues({hovered: ascending, yAxes});
     expect(values).toEqual([2, 7, 10]);
     expect(getBuiltInAggregatedValue({aggregation: 'sum', values})).toBe(19);

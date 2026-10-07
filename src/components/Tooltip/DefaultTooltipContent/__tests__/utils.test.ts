@@ -26,7 +26,6 @@ import {
     getHoveredValues,
     getMeasureValue,
     getPreparedHovered,
-    getSortedHovered,
 } from '../utils';
 import type * as TooltipUtils from '../utils';
 
@@ -263,13 +262,27 @@ describe('getHoveredValues', () => {
             expect(registry.getRegisteredSeriesTypes()).toEqual([]);
             const {linePlugin} = jest.requireActual<typeof LinePlugin>('../../../../plugins/line');
             const getValue = jest.fn(() => 42);
+            const getHeaderValue = jest.fn(() => 'Independent header');
             registry.registerSeriesPlugin({
                 ...linePlugin,
-                tooltip: {...linePlugin.tooltip, getValue},
+                tooltip: {
+                    ...linePlugin.tooltip,
+                    getValue,
+                    header: {getValue: getHeaderValue},
+                },
             });
             const item = createLineChunk('Line', 10);
             expect(utils.getHoveredValues({hovered: [item]})).toEqual([42]);
             expect(getValue).toHaveBeenCalledWith({item, xAxis: undefined, yAxis: undefined});
+            expect(utils.getMeasureValue({data: [item]})).toEqual({
+                value: 'Independent header',
+                formattedValue: 'Independent header',
+            });
+            expect(getHeaderValue).toHaveBeenCalledWith({
+                item,
+                xAxis: undefined,
+                yAxis: undefined,
+            });
             expect(registry.getRegisteredSeriesTypes()).toEqual(['line']);
         });
     });
@@ -279,14 +292,14 @@ describe('getHoveredValues', () => {
     });
 });
 
-describe('getSortedHovered', () => {
+describe('getPreparedHovered', () => {
     it('returns hovered as-is when sorting is undefined', () => {
         const hovered: TooltipDataChunk[] = [
             createLineChunk('C', 30),
             createLineChunk('A', 10),
             createLineChunk('B', 20),
         ];
-        expect(getSortedHovered({hovered})).toBe(hovered);
+        expect(getPreparedHovered({hovered}).hovered).toBe(hovered);
     });
 
     it('sorts by value ascending', () => {
@@ -295,11 +308,11 @@ describe('getSortedHovered', () => {
             createLineChunk('A', 10),
             createLineChunk('B', 20),
         ];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: ASC,
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(getHoveredValues({hovered: result, yAxes: [{type: 'linear'}]})).toEqual([
             10, 20, 30,
         ]);
@@ -312,11 +325,11 @@ describe('getSortedHovered', () => {
             createLineChunk('B', 20),
             createLineChunk('C', 30),
         ];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: DESC,
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(getHoveredValues({hovered: result, yAxes: [{type: 'linear'}]})).toEqual([
             30, 20, 10,
         ]);
@@ -329,37 +342,37 @@ describe('getSortedHovered', () => {
             createLineChunk('Alice', 30),
             createLineChunk('Bob', 20),
         ];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: (a, b) => (a.series.name ?? '').localeCompare(b.series.name ?? ''),
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(result.map((c) => c.series.name)).toEqual(['Alice', 'Bob', 'Charlie']);
     });
 
     it('returns empty array when hovered is empty', () => {
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered: [],
             sorting: ASC,
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(result).toEqual([]);
     });
 
     it('returns single-element array unchanged', () => {
         const hovered: TooltipDataChunk[] = [createLineChunk('A', 10)];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: DESC,
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(result).toEqual(hovered);
     });
 
     it('does not mutate original hovered array', () => {
         const hovered: TooltipDataChunk[] = [createLineChunk('C', 30), createLineChunk('A', 10)];
         const originalOrder = hovered.map((c) => c.series.name);
-        getSortedHovered({hovered, sorting: ASC, yAxes: [{type: 'linear'}]});
+        getPreparedHovered({hovered, sorting: ASC, yAxes: [{type: 'linear'}]});
         expect(hovered.map((c) => c.series.name)).toEqual(originalOrder);
     });
 
@@ -369,11 +382,11 @@ describe('getSortedHovered', () => {
             createLineChunk('Null', null),
             createLineChunk('B', 5),
         ];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: DESC,
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(result.map((c) => c.series.name)).toEqual(['A', 'B', 'Null']);
     });
 
@@ -383,11 +396,11 @@ describe('getSortedHovered', () => {
             createLineChunk('Null', null),
             createLineChunk('B', 5),
         ];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: ASC,
             yAxes: [{type: 'linear'}],
-        });
+        }).hovered;
         expect(result.map((c) => c.series.name)).toEqual(['Null', 'B', 'A']);
     });
 
@@ -397,11 +410,11 @@ describe('getSortedHovered', () => {
             createBarYChunk('Low', 10),
             createBarYChunk('Mid', 50),
         ];
-        const result = getSortedHovered({
+        const result = getPreparedHovered({
             hovered,
             sorting: ASC,
             xAxis: {type: 'linear'},
-        });
+        }).hovered;
         expect(getHoveredValues({hovered: result, xAxis: {type: 'linear'}})).toEqual([10, 50, 100]);
     });
 
@@ -411,7 +424,11 @@ describe('getSortedHovered', () => {
             createAreaRangeChunk('Narrow', 10, 15),
             createAreaRangeChunk('Medium', 10, 20),
         ];
-        const result = getSortedHovered({hovered, sorting: ASC, yAxes: [{type: 'linear'}]});
+        const result = getPreparedHovered({
+            hovered,
+            sorting: ASC,
+            yAxes: [{type: 'linear'}],
+        }).hovered;
         const values = getHoveredValues({hovered: result, yAxes: [{type: 'linear'}]});
 
         expect(values).toEqual([5, 10, 20]);
@@ -429,7 +446,7 @@ describe('getSortedHovered', () => {
             createLineChunk('Missing', null),
         ];
         const original = [...hovered];
-        const sorted = getSortedHovered({hovered, sorting: ASC});
+        const sorted = getPreparedHovered({hovered, sorting: ASC}).hovered;
         const values = getHoveredValues({hovered: sorted});
 
         expect(values).toEqual([null, 3, 4, 7, 10, 'Category']);
@@ -554,7 +571,7 @@ describe('category sorting regressions', () => {
             data: {x: 0, y},
             series: {type: 'scatter', id: String(i), name: String(i)},
         }));
-        const sorted = getSortedHovered({hovered, yAxes: [yAxis], sorting: ASC});
+        const sorted = getPreparedHovered({hovered, yAxes: [yAxis], sorting: ASC}).hovered;
         expect(sorted).toEqual([hovered[1], hovered[2], hovered[3], hovered[4], hovered[0]]);
         expect(getHoveredValues({hovered: sorted, yAxes: [yAxis]})).toEqual([
             null,
@@ -571,7 +588,7 @@ describe('category sorting regressions', () => {
             series: {type: 'scatter', id: category, name: category},
         }));
         const yAxis = {type: 'category' as const, categories: ['A', 'B']};
-        const sorted = getSortedHovered({hovered, yAxes: [yAxis], sorting: ASC});
+        const sorted = getPreparedHovered({hovered, yAxes: [yAxis], sorting: ASC}).hovered;
         expect(sorted).toEqual([hovered[1], hovered[0]]);
         expect(getHoveredValues({hovered: sorted, yAxes: [yAxis]})).toEqual(['A', 'B']);
     });

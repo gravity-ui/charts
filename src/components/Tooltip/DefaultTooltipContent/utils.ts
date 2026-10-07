@@ -1,8 +1,6 @@
-import get from 'lodash/get';
-
 import {i18n} from '~core/i18n';
-import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import {getTooltipHeader, getTooltipYAxis} from '~core/tooltip/header';
 import {getDefaultTooltipValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
@@ -17,11 +15,6 @@ import type {
 
 export type HoveredValue = string | number | null | undefined;
 
-interface TooltipHeaderSelection {
-    item: TooltipDataChunk;
-    header: NonNullable<SeriesPlugin['tooltip']['header']>;
-}
-
 interface PrepareHoveredArgs {
     hovered: TooltipDataChunk[];
     sorting?: ChartTooltip['sorting'];
@@ -32,10 +25,6 @@ interface PrepareHoveredArgs {
 export interface PreparedHovered {
     hovered: TooltipDataChunk[];
     values: HoveredValue[];
-}
-
-function getSeriesYAxis(item: TooltipDataChunk, yAxes?: ChartYAxis[]) {
-    return yAxes?.[get(item.series, 'yAxis') ?? 0] ?? yAxes?.[0];
 }
 
 export const getMeasureValue = ({
@@ -49,17 +38,11 @@ export const getMeasureValue = ({
     yAxes?: ChartYAxis[];
     headerFormat?: ChartTooltip['headerFormat'];
 }) => {
-    let selected: TooltipHeaderSelection | undefined;
-    for (const item of data) {
-        const header = getSeriesPlugin(item.series.type).tooltip.header;
-        if (header && (!selected || (header.priority ?? 0) > (selected.header.priority ?? 0))) {
-            selected = {item, header};
-        }
-    }
+    const selected = getTooltipHeader(data);
     if (!selected) {
         return null;
     }
-    const yAxis = getSeriesYAxis(selected.item, yAxes);
+    const yAxis = getTooltipYAxis(selected.item.series, yAxes);
     const value = selected.header.getValue({item: selected.item, xAxis, yAxis});
     const axis = selected.header.axis && (selected.header.axis === 'y' ? yAxis : xAxis);
     const formattedValue =
@@ -81,7 +64,7 @@ export function getHoveredValues(args: {
     return hovered.map((item) => {
         const getValue =
             getSeriesPlugin(item.series.type).tooltip.getValue ?? getDefaultTooltipValue;
-        return getValue({item, xAxis, yAxis: getSeriesYAxis(item, yAxes)});
+        return getValue({item, xAxis, yAxis: getTooltipYAxis(item.series, yAxes)});
     });
 }
 
@@ -134,16 +117,6 @@ export function getPreparedAggregation(args: {
     }
 
     return 'sum';
-}
-
-export function getSortedHovered(args: PrepareHoveredArgs): TooltipDataChunk[] {
-    if (!args.sorting) {
-        return args.hovered;
-    }
-    if (typeof args.sorting === 'function') {
-        return [...args.hovered].sort(args.sorting);
-    }
-    return getPreparedHovered(args).hovered;
 }
 
 export function getPreparedHovered(args: PrepareHoveredArgs): PreparedHovered {

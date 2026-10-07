@@ -8,6 +8,7 @@ import type {PreparedSeries} from '~core/series/types';
 
 import type {PreparedTooltip, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import {useTooltip} from '../../hooks';
+import type {ChartTooltip, TooltipDataChunk} from '../../types';
 import {block} from '../../utils';
 
 import {TooltipContent} from './ChartTooltipContent';
@@ -20,6 +21,7 @@ interface TooltipProps {
     dispatcher: Dispatch<object>;
     tooltip: PreparedTooltip;
     seriesData: PreparedSeries[] | undefined;
+    getHeaderFormat?: (hovered: TooltipDataChunk[]) => ChartTooltip['headerFormat'];
     svgContainer: SVGSVGElement | null;
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
@@ -31,6 +33,7 @@ export const Tooltip = (props: TooltipProps) => {
     const {
         tooltip,
         seriesData,
+        getHeaderFormat,
         xAxis,
         yAxis,
         svgContainer,
@@ -52,6 +55,7 @@ export const Tooltip = (props: TooltipProps) => {
         xAxis,
         yAxis,
     });
+    const headerFormat = tooltip.headerFormat ?? getHeaderFormat?.(hovered ?? []);
     const containerRectRef = React.useRef<{left: number; top: number}>({left: 0, top: 0});
 
     React.useEffect(() => {
@@ -123,7 +127,7 @@ export const Tooltip = (props: TooltipProps) => {
                     rowRenderer={tooltip.rowRenderer}
                     totals={tooltip.totals}
                     valueFormat={tooltip.valueFormat}
-                    headerFormat={tooltip.headerFormat}
+                    headerFormat={headerFormat}
                     xAxis={xAxis}
                     qa={tooltip.qa}
                 />

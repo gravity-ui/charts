@@ -1,42 +1,11 @@
 import type {ChartSeries, ChartTooltip, ChartXAxis, ChartYAxis} from '../../types';
-import {getSeriesPlugin} from '../series/seriesRegistry';
-import {getDefaultValueFormat} from '../tooltip/utils';
+import {prepareTooltipHeaderFormat} from '../tooltip/header';
 
-import {getMinSpaceBetween} from './array';
-import {getDomainDataXBySeries, getDomainDataYBySeries} from './common';
-
-export function getDefaultTooltipHeaderFormat({
-    seriesData,
-    yAxes,
-    xAxis,
-    dateTimeLabelFormats,
-}: {
+export function getDefaultTooltipHeaderFormat(args: {
     seriesData: ChartSeries[];
     yAxes?: ChartYAxis[];
     xAxis?: ChartXAxis;
     dateTimeLabelFormats?: ChartTooltip['dateTimeLabelFormats'];
 }) {
-    if (
-        seriesData.every((item) =>
-            ['pie', 'treemap', 'waterfall', 'sankey', 'radar', 'heatmap', 'funnel'].includes(
-                item.type,
-            ),
-        )
-    ) {
-        return undefined;
-    }
-
-    if (seriesData.some((item) => getSeriesPlugin(item.type).tooltip.header?.axis === 'y')) {
-        const domainData = getDomainDataYBySeries(seriesData) as number[];
-        const closestPointsRange = getMinSpaceBetween(domainData, (d) => d);
-        return getDefaultValueFormat({
-            axis: yAxes?.[0],
-            closestPointsRange,
-            dateTimeLabelFormats,
-        });
-    }
-
-    const domainData = getDomainDataXBySeries(seriesData) as number[];
-    const closestPointsRange = getMinSpaceBetween(domainData, (d) => d);
-    return getDefaultValueFormat({axis: xAxis, closestPointsRange, dateTimeLabelFormats});
+    return prepareTooltipHeaderFormat(args)();
 }
