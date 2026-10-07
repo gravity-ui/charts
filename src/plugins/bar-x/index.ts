@@ -72,11 +72,12 @@ function renderShapes({
     boundsWidth,
     boundsHeight,
     dispatcher,
+    isRangeSlider,
 }: RenderShapesArgs) {
     const data = preparedData as PreparedBarXData[];
     const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
     const cleanup = renderBarX(
-        {plot, boundsWidth, boundsHeight},
+        {plot, boundsWidth, boundsHeight, isRangeSlider},
         data,
         seriesOptions,
         allowOverlap,

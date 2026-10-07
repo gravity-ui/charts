@@ -25,3 +25,15 @@ In percent stacks, the available plot height is shared between the segments and 
 ## States
 
 Hover changes the fill color; the border retains its configured color. The inactive state applies the configured opacity to the fill, border, and SVG data labels.
+
+## Point click events
+
+Use a Bar-X series' `events.pointClick` to react to the column that was actually clicked or tapped. The callback receives `{point, series}` and the native browser `MouseEvent`. `point` and `series` are the original configured objects, including their `custom` values, even when category ordering or `nullMode: 'zero'` requires normalized copies for rendering.
+
+`chart.events.click` continues to select the nearest point in the plot. It can select a line point in a mixed chart or a nearby column when the user clicks the background. `events.pointClick` is independent of that selection: it only fires for the rendered fill or border of a column. It does not fire for the background, a line, a gap, an empty rounded corner, a zero-height column, or the range slider preview. It also works when tooltips are disabled for the chart, series, or point.
+
+<div data-chart-example="series-types/bar-x-events"></div>
+
+Both mechanisms can be configured together. The column's `pointClick` runs first; normal event propagation then reaches the existing chart click handler and tooltip pinning. Return values are ignored. Calling `event.preventDefault()` does not suppress the chart callback or pinning. Call `event.stopPropagation()` in the point callback when the interaction should only invoke the column action.
+
+SVG data labels let pointer events reach the column below them. HTML labels and other overlays, such as the zoom selection brush, can intercept pointer events; `pointClick` does not perform a separate geometry lookup through these overlays. For nearest-point interactions over the plot, keep using `chart.events.click`.

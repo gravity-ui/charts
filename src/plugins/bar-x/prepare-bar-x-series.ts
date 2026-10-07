@@ -7,15 +7,23 @@ import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
+import {getOriginalSeries, getOriginalSeriesData} from '~core/utils/series/sorting';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
 
-function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
+function prepareSeriesData(
+    series: BarXSeries,
+    sourceData?: WeakMap<BarXSeriesData, BarXSeriesData>,
+): BarXSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, y: p.y ?? 0}));
+            return data.map((p) => {
+                const resolvedPoint = {...p, y: p.y ?? 0};
+                sourceData?.set(resolvedPoint, p);
+                return resolvedPoint;
+            });
         case 'skip':
         default:
             return data;
@@ -31,6 +39,9 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         const dataLabelsInside =
             series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
         const yAxisIndex = get(series, 'yAxis', 0);
+        const originalSeries = getOriginalSeries(series);
+        const pointClick = originalSeries.events?.pointClick;
+        const sourceData = pointClick ? new WeakMap<BarXSeriesData, BarXSeriesData>() : undefined;
 
         return {
             type: series.type,
@@ -44,7 +55,18 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
                 groupId: series.legend?.groupId ?? getUniqId(),
                 itemText: series.legend?.itemText ?? name,
             },
-            data: prepareSeriesData(series),
+            data: prepareSeriesData(series, sourceData),
+            pointClick: pointClick
+                ? (point, event) => {
+                      pointClick(
+                          {
+                              point: getOriginalSeriesData(sourceData?.get(point) ?? point),
+                              series: originalSeries,
+                          },
+                          event,
+                      );
+                  }
+                : undefined,
             stacking: series.stacking,
             stackLabels: series.stackLabels,
             stackId: getSeriesStackId(series),

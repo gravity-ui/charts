@@ -55,10 +55,18 @@ export interface BarXFormatContext<T = MeaningfulAny>
 
 export type BarXValueFormat<T = MeaningfulAny> = ValueFormat<BarXFormatContext<T>>;
 
+export interface BarXSeriesEvents<T = MeaningfulAny> {
+    pointClick?: (
+        data: {point: BarXSeriesData<T>; series: BarXSeries<T>},
+        event: MouseEvent,
+    ) => void;
+}
+
 export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     /** Bar-X series: vertical columns for values along the X axis. */
     type: typeof SERIES_TYPE.BarX;
     data: BarXSeriesData<T>[];
+    events?: BarXSeriesEvents<T>;
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
     /** The main color of the series (hex, rgba) */

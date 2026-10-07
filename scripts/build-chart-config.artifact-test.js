@@ -72,6 +72,35 @@ describe('chart config artifacts', () => {
         );
     });
 
+    test('bar point callbacks preserve typed custom data and stay out of JSON Schema', () => {
+        const usage = `
+            const bar: BarXSeries<{id: string}> = {
+                type: 'bar-x',
+                name: 'Actual',
+                data: [{x: 'Jan', y: 8, custom: {id: 'actual-jan'}}],
+                events: {
+                    pointClick: ({point, series}, event) => {
+                        const customId: string | undefined = point.custom?.id;
+                        const configuredSeries: BarXSeries<{id: string}> = series;
+                        const nativeEvent: MouseEvent = event;
+                        nativeEvent.preventDefault();
+                        void [customId, configuredSeries];
+                    },
+                },
+            };
+            const lineSupportsEvents: 'events' extends keyof LineSeries ? true : false = false;
+            const baseSupportsEvents: 'events' extends keyof BaseSeries ? true : false = false;
+            void [bar, lineSupportsEvents, baseSupportsEvents];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'bar-point-click-config-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions['BarXSeries<JsonValue>'].properties).not.toHaveProperty('events');
+    });
+
     test('standalone declarations support automatic legend width and size limits', () => {
         const usage = `
             const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};

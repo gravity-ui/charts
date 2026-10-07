@@ -37,6 +37,8 @@ import areaRangeWithLineRaw from './series-types/area-range-with-line.tsx?raw';
 import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
 import {BarXSeriesExample} from './series-types/bar-x';
+import {BarXPointClickExample} from './series-types/bar-x-events';
+import barXPointClickRaw from './series-types/bar-x-events.tsx?raw';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
@@ -105,6 +107,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/bar-x': {
         code: extractDisplayCode(barXSeriesRaw),
         Component: BarXSeriesExample,
+    },
+    'series-types/bar-x-events': {
+        code: extractDisplayCode(barXPointClickRaw),
+        Component: BarXPointClickExample,
     },
     'series-types/line': {
         code: extractDisplayCode(lineSeriesRaw),

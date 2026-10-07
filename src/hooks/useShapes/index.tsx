@@ -233,6 +233,7 @@ export async function getShapes(args: Args) {
                 clipPathId={resolvedClipPathId}
                 seriesOptions={seriesOptions}
                 dispatcher={dispatcher}
+                isRangeSlider={isRangeSlider}
                 htmlLayout={htmlLayout}
                 namespace={`hover-markers-${groupKey}`}
             />
