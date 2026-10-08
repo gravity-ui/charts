@@ -71,4 +71,3 @@ items:
   - name: API
     href: ./pages/api
     autodoc: true
-
