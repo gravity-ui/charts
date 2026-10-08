@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.66.0](https://github.com/gravity-ui/charts/compare/v1.65.0...v1.66.0) (2026-10-07)
+
+
+### Features
+
+* **scatter:** add point clustering ([#683](https://github.com/gravity-ui/charts/issues/683)) ([27ed823](https://github.com/gravity-ui/charts/commit/27ed823bb49f1d7aeae37326e089eea9a8d88f80))
+
+
+### Bug Fixes
+
+* omit legend pagination when there is only one page ([#751](https://github.com/gravity-ui/charts/issues/751)) ([9ac38c2](https://github.com/gravity-ui/charts/commit/9ac38c2ee311559ab6c29091d753580316ade195))
+* use interval duration for x-range tooltip values ([#742](https://github.com/gravity-ui/charts/issues/742)) ([ba79938](https://github.com/gravity-ui/charts/commit/ba799383c69209b6e68b94731c6ea9589bc6c691))
+
 ## [1.65.0](https://github.com/gravity-ui/charts/compare/v1.64.0...v1.65.0) (2026-10-06)
 
 
