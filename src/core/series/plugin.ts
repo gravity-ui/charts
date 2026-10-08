@@ -67,8 +67,8 @@ export interface PrepareShapeDataResult {
     labels?: SvgLabel[];
 }
 
-export interface GetTooltipValueArgs {
-    item: TooltipDataChunk;
+export interface GetTooltipValueArgs<TTooltipChunk extends TooltipDataChunk = TooltipDataChunk> {
+    item: TTooltipChunk;
     xAxis?: ChartXAxis | null;
     /** Y axis assigned to this item's series (defaults to axis 0). */
     yAxis?: ChartYAxis;
@@ -165,13 +165,21 @@ export interface SeriesPlugin<
         /** Returns tooltip data for a given pointer position and prepared series. */
         prepareData: GetTooltipDataFn;
         /**
-         * Coordinate for axis-based tooltip headers (X by default).
-         * Y uses the first hovered chunk whose plugin declares a Y header.
-         * Ignored for non-axis headers.
+         * Unformatted value used by built-in sorting and totals. Resolve category indices to names.
+         * Omit to use the point's scalar value, or its Y value for axis-based points.
          */
-        headerAxis?: 'x' | 'y';
-        /** Scalar value used by built-in sorting and totals. Omit to use the default series value. */
-        getValue?: (args: GetTooltipValueArgs) => string | number | null | undefined;
+        getValue?(args: GetTooltipValueArgs<TTooltipChunk>): AxisDomainValue;
+        /** Omit for series without a tooltip header. */
+        header?: {
+            /** Unformatted header value, resolved once before applying headerFormat. */
+            getValue(args: GetTooltipValueArgs<TTooltipChunk>): AxisDomainValue;
+            /** Axis supplying this header's value and category formatting context. */
+            axis?: 'x' | 'y';
+            /** Require an explicit headerFormat before displaying this header. Defaults to false. */
+            requiresFormat?: boolean;
+            /** Higher priorities win in mixed tooltips; ties keep the first hovered chunk. Defaults to 0. */
+            priority?: number;
+        };
         /**
          * Returns series-specific fields passed to a custom tooltip value formatter.
          * The shared tooltip renderer supplies `value`; plugins own all other context.

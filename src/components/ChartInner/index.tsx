@@ -4,6 +4,8 @@ import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
 import {getPreparedRangeSlider} from '~core/axes/range-slider';
+import {getVisibleSeries} from '~core/series/utils';
+import {prepareTooltipHeaderFormat} from '~core/tooltip/header';
 import {EventType, getDispatcher, isBandScale} from '~core/utils';
 
 import {useCrosshair, usePrevious} from '../../hooks';
@@ -58,11 +60,8 @@ export const ChartInner = (props: ChartInnerProps) => {
     const preparedTooltip = React.useMemo(() => {
         return getPreparedTooltip({
             tooltip: data.tooltip,
-            seriesData: data.series.data,
-            yAxes: data.yAxis,
-            xAxis: data.xAxis,
         });
-    }, [data.series.data, data.tooltip, data.yAxis, data.xAxis]);
+    }, [data.tooltip]);
     const preparedRangeSlider = React.useMemo(() => {
         return getPreparedRangeSlider({xAxis: data.xAxis});
     }, [data.xAxis]);
@@ -116,6 +115,29 @@ export const ChartInner = (props: ChartInnerProps) => {
         updateZoomState,
         zoomState,
     });
+    const getHeaderFormat = React.useMemo(
+        () =>
+            !preparedTooltip.enabled || preparedTooltip.headerFormat
+                ? undefined
+                : prepareTooltipHeaderFormat({
+                      seriesData: getVisibleSeries({
+                          preparedSeries: allPreparedSeries ?? [],
+                          activeLegendItems,
+                      }),
+                      xAxis: data.xAxis,
+                      yAxes: data.yAxis,
+                      dateTimeLabelFormats: preparedTooltip.dateTimeLabelFormats,
+                  }),
+        [
+            allPreparedSeries,
+            activeLegendItems,
+            data.xAxis,
+            data.yAxis,
+            preparedTooltip.enabled,
+            preparedTooltip.headerFormat,
+            preparedTooltip.dateTimeLabelFormats,
+        ],
+    );
     const hoverResetKey = useHoverResetKey({seriesData: allPreparedSeries, xAxis, yAxes: yAxis});
     const previousHoverResetKey = usePrevious(hoverResetKey);
     const prevWidth = usePrevious(width);
@@ -516,6 +538,7 @@ export const ChartInner = (props: ChartInnerProps) => {
                     dispatcher={dispatcher}
                     tooltip={preparedTooltip}
                     seriesData={allPreparedSeries}
+                    getHeaderFormat={getHeaderFormat}
                     svgContainer={svgRef.current}
                     xAxis={xAxis}
                     yAxis={yAxis}

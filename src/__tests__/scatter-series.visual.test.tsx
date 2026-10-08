@@ -190,6 +190,77 @@ test.describe('Scatter series', () => {
         ).toBeLessThanOrEqual(0);
     });
 
+    test('Other layers avoid the upper half of a cluster count label', async ({
+        mount,
+    }, testInfo) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            xAxis: {min: 0, max: 10},
+            yAxis: [{min: 0, max: 100}],
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Line',
+                        data: [
+                            {
+                                x: 5,
+                                y: 50,
+                                label: '<div style="width:40px;height:8px">Overlap</div>',
+                            },
+                            {
+                                x: 8,
+                                y: 50,
+                                label: '<div style="width:40px;height:8px">Separate</div>',
+                            },
+                        ],
+                        dataLabels: {enabled: true, html: true, allowOverlap: true, padding: 0},
+                    },
+                    {
+                        type: 'scatter',
+                        name: 'Cluster',
+                        data: [
+                            {x: 5, y: 50},
+                            {x: 5, y: 50},
+                        ],
+                        cluster: {
+                            enabled: true,
+                            layoutAlgorithm: {gridSize: '100%'},
+                            dataLabels: {allowOverlap: false, style: {fontSize: '24px'}},
+                        },
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const count = component.locator('.gcharts-scatter__cluster-label');
+        const overlap = component
+            .locator('.gcharts-chart__html-layer-item')
+            .filter({hasText: 'Overlap'});
+        await expect(count).toHaveCount(1);
+        await expect(overlap).toHaveCount(1);
+        const countBounds = await getLocatorBoundingBox(count);
+        const overlapBounds = await getLocatorBoundingBox(overlap);
+        expect(
+            Math.min(countBounds.x + countBounds.width, overlapBounds.x + overlapBounds.width) -
+                Math.max(countBounds.x, overlapBounds.x),
+        ).toBeGreaterThan(0);
+        expect(
+            Math.min(countBounds.y + countBounds.height, overlapBounds.y + overlapBounds.height) -
+                Math.max(countBounds.y, overlapBounds.y),
+        ).toBeGreaterThan(0);
+
+        const filtered = cloneDeep(data);
+        set(filtered, 'series.data[0].dataLabels.allowOverlap', false);
+        await component.update(<ChartTestStory data={filtered} />);
+        await expect(count).toHaveCount(1);
+        await expect(overlap).toHaveCount(0);
+        await expect(
+            component.locator('.gcharts-chart__html-layer-item').filter({hasText: 'Separate'}),
+        ).toHaveCount(1);
+        await component.screenshot({path: testInfo.outputPath('cluster-label-overlap.png')});
+    });
+
     test('Point overrides enable oversized SVG and HTML labels without negative coordinates', async ({
         mount,
     }) => {

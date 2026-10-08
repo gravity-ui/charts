@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/bar-y/get-tooltip-data';
 import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {
     validateAxisPlotValues,
     validatePercentStackingValues,
@@ -93,7 +93,8 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        headerAxis: 'y',
+        getValue: getTooltipXValue,
+        header: {getValue: getTooltipYValue, axis: 'y', priority: 1},
         getValueFormatContext: (item) => {
             return {percentage: item.percentage, data: item.data};
         },

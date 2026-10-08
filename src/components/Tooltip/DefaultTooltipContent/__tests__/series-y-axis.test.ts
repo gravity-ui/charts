@@ -1,7 +1,7 @@
 import * as seriesRegistry from '~core/series/seriesRegistry';
 
 import type {ChartYAxis, TooltipDataChunk, TooltipDataChunkLine} from '../../../../types';
-import {getHoveredValues, getMeasureValue, getPreparedHovered, getSortedHovered} from '../utils';
+import {getHoveredValues, getMeasureValue, getPreparedHovered} from '../utils';
 
 function makeChunk(name: string, y: number, yAxis?: number): TooltipDataChunkLine {
     const series = {type: 'line' as const, id: name, name, ...(yAxis === undefined ? {} : {yAxis})};
@@ -18,10 +18,9 @@ it('resolves and sorts category indices using each series Y axis', () => {
         {type: 'category', categories: ['Bee', 'Ant']},
     ];
     expect(getHoveredValues({hovered: [first, second], yAxes})).toEqual(['Zebra', 'Ant']);
-    expect(getSortedHovered({hovered: [first, second], yAxes, sorting: {key: 'value'}})).toEqual([
-        second,
-        first,
-    ]);
+    expect(
+        getPreparedHovered({hovered: [first, second], yAxes, sorting: {key: 'value'}}).hovered,
+    ).toEqual([second, first]);
     expect(first.data.y).toBe(0);
     expect(second.data.y).toBe(1);
 });
@@ -68,7 +67,7 @@ it('keeps ordinary scatter category resolution when cluster values are overridde
         {type: 'category', categories: ['First', 'Second']},
     ];
     expect(getHoveredValues({hovered, yAxes})).toEqual(['Second', 'Legacy', undefined]);
-    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value'}})).toEqual([
+    expect(getPreparedHovered({hovered, yAxes, sorting: {key: 'value'}}).hovered).toEqual([
         hovered[2],
         hovered[1],
         hovered[0],
@@ -86,12 +85,10 @@ it.each([
     const chunks = [makeChunk('Two', 2), makeChunk('Ten', 10), makeChunk('Category', 0, 1)];
     const hovered = indices.map((index) => chunks[index]);
     const yAxes: ChartYAxis[] = [{type: 'linear'}, {type: 'category', categories: ['1x']}];
-    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value'}})).toEqual(chunks);
-    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}})).toEqual([
-        chunks[2],
-        chunks[1],
-        chunks[0],
-    ]);
+    expect(getPreparedHovered({hovered, yAxes, sorting: {key: 'value'}}).hovered).toEqual(chunks);
+    expect(
+        getPreparedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}}).hovered,
+    ).toEqual([chunks[2], chunks[1], chunks[0]]);
     expect(hovered).toEqual(indices.map((index) => chunks[index]));
 });
 
@@ -110,11 +107,11 @@ it.each(['bar-y', 'x-range'] as const)(
             {type: 'category', categories: ['Correct']},
             {type: 'category', categories: ['Other', 'Aardvark']},
         ];
-        const data = getSortedHovered({
+        const data = getPreparedHovered({
             hovered: [horizontal, other],
             yAxes,
             sorting: {key: 'value'},
-        });
+        }).hovered;
         // x-range sorts by duration; bar-y sorts by numeric X.
         for (const hovered of [data, [...data].reverse()]) {
             const formatter = jest.fn(({value}) => String(value));
@@ -171,7 +168,7 @@ it('orders missing values, NaN, numbers and labels without a mixed-type comparis
         {...makeChunk('Undefined', 0), data: {x: 0, y: undefined}},
     ];
     const yAxes: ChartYAxis[] = [{type: 'linear'}, {type: 'category', categories: ['1x']}];
-    const sorted = getSortedHovered({hovered, yAxes, sorting: {key: 'value'}});
+    const sorted = getPreparedHovered({hovered, yAxes, sorting: {key: 'value'}}).hovered;
     expect(sorted).toEqual([
         hovered[4],
         hovered[5],
@@ -180,12 +177,7 @@ it('orders missing values, NaN, numbers and labels without a mixed-type comparis
         hovered[0],
         hovered[1],
     ]);
-    expect(getSortedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}})).toEqual([
-        hovered[1],
-        hovered[0],
-        hovered[2],
-        hovered[3],
-        hovered[4],
-        hovered[5],
-    ]);
+    expect(
+        getPreparedHovered({hovered, yAxes, sorting: {key: 'value', direction: 'desc'}}).hovered,
+    ).toEqual([hovered[1], hovered[0], hovered[2], hovered[3], hovered[4], hovered[5]]);
 });

@@ -7,10 +7,17 @@ import {dispatch} from 'd3-dispatch';
 
 import type {PreparedYAxis} from '~core/axes/types';
 import * as seriesRegistry from '~core/series/seriesRegistry';
+import {prepareTooltipHeaderFormat} from '~core/tooltip/header';
 
 import type {PreparedTooltip} from '../../../hooks/types';
 import {useTooltip} from '../../../hooks/useTooltip';
-import type {ChartYAxis, TooltipDataChunk, TooltipDataChunkLine} from '../../../types';
+import type {
+    ChartTooltipRendererArgs,
+    ChartYAxis,
+    TooltipDataChunk,
+    TooltipDataChunkLine,
+    WaterfallSeries,
+} from '../../../types';
 import {ChartTooltipContent, TooltipContent} from '../ChartTooltipContent';
 
 function makeChunk(name: string, y: number, yAxis: number): TooltipDataChunkLine {
@@ -19,6 +26,36 @@ function makeChunk(name: string, y: number, yAxis: number): TooltipDataChunkLine
 }
 
 afterEach(() => jest.restoreAllMocks());
+
+it('preserves automatic header formatting and raw chunks when a custom renderer reuses default content', () => {
+    const series: WaterfallSeries = {
+        type: 'waterfall',
+        name: 'Revenue',
+        data: [{x: Date.UTC(2025, 0, 1), y: 150}],
+    };
+    const hovered: TooltipDataChunk[] = [{series, data: series.data[0], subTotal: 150}];
+    const xAxis = {type: 'datetime' as const};
+    const headerFormat = prepareTooltipHeaderFormat({seriesData: [series], xAxis})(hovered);
+    const renderer = jest.fn((args: ChartTooltipRendererArgs) => <ChartTooltipContent {...args} />);
+    render(
+        <ThemeProvider theme="light">
+            <TooltipContent
+                hovered={hovered}
+                xAxis={xAxis}
+                headerFormat={headerFormat}
+                renderer={renderer}
+            />
+        </ThemeProvider>,
+    );
+    expect(screen.getByText('01.01.25')).toBeTruthy();
+    expect(renderer).toHaveBeenCalledWith(
+        expect.objectContaining({
+            hovered,
+            headerFormat: {type: 'date', format: 'DD.MM.YY'},
+        }),
+    );
+    expect(renderer.mock.calls[0][0].hovered[0].data).toBe(series.data[0]);
+});
 
 it.each([true, false])(
     'preserves all Y axes when a custom renderer reuses default content (legacy axis: %s)',

@@ -46,6 +46,8 @@ import {ScatterSeriesExample} from './series-types/scatter';
 import scatterSeriesRaw from './series-types/scatter.tsx?raw';
 import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
 import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
+import {WaterfallHeaderTooltipExample} from './tooltip/waterfall-header';
+import waterfallHeaderTooltipRaw from './tooltip/waterfall-header.tsx?raw';
 import {XRangeTooltipValuesExample} from './tooltip/x-range-values';
 import xRangeTooltipValuesRaw from './tooltip/x-range-values.tsx?raw';
 import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
@@ -65,6 +67,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/bar-y-events': {
         code: extractDisplayCode(barYPointClickRaw),
         Component: BarYPointClickExample,
+    },
+    'tooltip/waterfall-header': {
+        code: extractDisplayCode(waterfallHeaderTooltipRaw),
+        Component: WaterfallHeaderTooltipExample,
     },
     'tooltip/x-range-values': {
         code: extractDisplayCode(xRangeTooltipValuesRaw),

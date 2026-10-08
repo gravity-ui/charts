@@ -23,6 +23,35 @@ import {StackingPercentRowRendererTestStory} from './components/StackingPercentR
 import {getLocator, getLocatorBoundingBox} from './utils';
 
 test.describe('Tooltip', () => {
+    test('Preserves raw header formatting when axes are omitted', async ({mount, page}) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    legend: {enabled: false},
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Series',
+                                data: [
+                                    {x: 1234567, y: 10},
+                                    {x: 1234568, y: 20},
+                                ],
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+        const line = component.locator('.gcharts-line').first();
+        await expect(line).toBeVisible();
+        const box = await getLocatorBoundingBox(line);
+        await page.mouse.move(box.x + 1, box.y + box.height - 1);
+        await expect(
+            page.locator('.gcharts-tooltip').getByText('1234567', {exact: true}),
+        ).toBeVisible();
+    });
+
     test('Custom renderer reuses default content with multiple Y axes', async ({
         mount,
         page,
