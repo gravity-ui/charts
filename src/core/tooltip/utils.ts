@@ -80,11 +80,13 @@ const TOOLTIP_COLOR_SYMBOL_HEIGHT = 8;
 
 export function getTooltipColorSymbol({
     color,
+    opacity,
     width = TOOLTIP_COLOR_SYMBOL_WIDTH,
     height = TOOLTIP_COLOR_SYMBOL_HEIGHT,
     borderRadius = 2,
 }: {
     color: string;
+    opacity?: number;
     width?: number;
     height?: number;
     borderRadius?: number;
@@ -103,7 +105,8 @@ export function getTooltipColorSymbol({
 
             return p.toString();
         })
-        .attr('fill', color);
+        .attr('fill', color)
+        .attr('opacity', opacity ?? null);
 
     return colorSymbol.node()?.outerHTML ?? '';
 }

@@ -68,17 +68,18 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
         seriesList.map<Promise<PreparedBarYSeries>>(async (series) => {
             const name = series.name || '';
             const color = series.color || colorScale(name);
+            const opacity = series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1;
 
             return {
                 type: series.type,
                 color,
-                opacity: series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1,
+                opacity,
                 name,
                 id: getUniqId(),
                 visible: get(series, 'visible', true),
                 legend: {
                     enabled: get(series, 'legend.enabled', legend.enabled),
-                    symbol: prepareLegendSymbol(series),
+                    symbol: {...prepareLegendSymbol(series), opacity},
                     groupId: series.legend?.groupId ?? getUniqId(),
                     itemText: series.legend?.itemText ?? name,
                 },

@@ -96,6 +96,7 @@ export type SymbolLegendSymbol = {
 
 export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | SymbolLegendSymbol) & {
     bboxWidth: number;
+    opacity?: number;
 };
 
 export interface PreparedLegendRowItem {

@@ -101,9 +101,12 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
                     {
                         id: 'color',
                         source: 'color',
-                        format: {
-                            type: 'custom',
-                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        formatValue: ({item, value}) => {
+                            const {data, series} = item as TooltipDataChunkBarY;
+                            return getTooltipColorSymbol({
+                                color: String(value),
+                                opacity: data.opacity ?? series.opacity ?? 1,
+                            });
                         },
                         width: '16px',
                     },

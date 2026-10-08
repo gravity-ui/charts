@@ -189,6 +189,9 @@ function renderLegendSymbol(args: {
                 break;
             }
         }
+        element
+            .selectAll(`.${b('item-symbol')}`)
+            .attr('opacity', d.visible ? (d.symbol.opacity ?? null) : null);
     });
 }
 

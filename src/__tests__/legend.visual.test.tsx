@@ -314,6 +314,96 @@ test.describe('Legend', () => {
     });
 
     test.describe('Discrete', () => {
+        for (const type of ['bar-x', 'bar-y'] as const) {
+            for (const html of [false, true]) {
+                test(`Bar symbol opacity: ${type}, html=${html}`, async ({mount, page}) => {
+                    const data: ChartData = {
+                        legend: {enabled: true, html},
+                        tooltip: {enabled: true},
+                        series: {
+                            options: {[type]: {opacity: 0.4}},
+                            data: [
+                                {name: 'Inherited'},
+                                {name: 'Null', opacity: null},
+                                {name: 'Override', opacity: 0.3},
+                                {name: 'Transparent', opacity: 0},
+                                {name: 'Opaque', opacity: 1},
+                                {name: 'Point override', data: [{x: 6, y: 6, opacity: 0.8}]},
+                            ].map((series, index) => ({
+                                type,
+                                legend: {groupId: `series-${index}`},
+                                color: 'rgba(50, 100, 150, 0.5)',
+                                data: [{x: index + 1, y: index + 1}],
+                                ...series,
+                            })),
+                        },
+                    };
+                    const component = await mount(
+                        <ChartTestStory data={data} styles={{width: 800, height: 320}} />,
+                    );
+                    const symbols = component.locator('.gcharts-legend__item-symbol');
+                    const labels = component.locator(
+                        html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
+                    );
+                    const getOpacities = () =>
+                        symbols.evaluateAll((elements) =>
+                            elements.map((element) => getComputedStyle(element).opacity),
+                        );
+                    await expect.poll(getOpacities).toEqual(['0.4', '0.4', '0.3', '0', '1', '0.4']);
+                    expect(
+                        await labels.evaluateAll((elements) =>
+                            elements.every((element) => {
+                                let current: Element | null = element;
+                                while (current) {
+                                    if (getComputedStyle(current).opacity !== '1') return false;
+                                    current = current.parentElement;
+                                }
+                                return true;
+                            }),
+                        ),
+                    ).toBe(true);
+
+                    if (!html) {
+                        const bars = component.locator(`.gcharts-${type}__segment`);
+                        const tooltip = page.locator('.gcharts-tooltip');
+                        const marker = tooltip.locator(
+                            '.gcharts-tooltip__content-row-cell svg path',
+                        );
+                        for (const [index, opacity] of [
+                            '0.4',
+                            '0.4',
+                            '0.3',
+                            '0',
+                            '1',
+                            '0.8',
+                        ].entries()) {
+                            await bars.nth(index).hover();
+                            await expect(tooltip).toBeVisible();
+                            await expect(marker).toHaveAttribute('opacity', opacity);
+                            await expect(marker).toHaveAttribute('fill', 'rgba(50, 100, 150, 0.5)');
+                        }
+                        await expect
+                            .poll(getOpacities)
+                            .toEqual(['0.4', '0.4', '0.3', '0', '1', '0.4']);
+                    }
+
+                    await labels.nth(3).click({modifiers: ['Control']});
+                    await expect(symbols.nth(3)).toHaveClass(/_unselected/);
+                    await expect.poll(getOpacities).toEqual(['0.4', '0.4', '0.3', '1', '1', '0.4']);
+                    await labels.nth(3).click({modifiers: ['Control']});
+                    await expect.poll(getOpacities).toEqual(['0.4', '0.4', '0.3', '0', '1', '0.4']);
+
+                    await component.update(
+                        <ChartTestStory
+                            data={{...data, series: {...data.series, options: undefined}}}
+                            styles={{width: 800, height: 320}}
+                        />,
+                    );
+                    await expect.poll(getOpacities).toEqual(['1', '1', '0.3', '0', '1', '1']);
+                });
+            }
+        }
+
         test.describe('Content-based width', () => {
             test('title respects available space and recovers', async ({mount}) => {
                 const data: ChartData = {

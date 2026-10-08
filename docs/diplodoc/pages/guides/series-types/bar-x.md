@@ -22,6 +22,8 @@ Borders are drawn inside the column bounds and follow rounded corners. For stack
 
 Set `opacity` from `0` to `1` in `series.options['bar-x']`, and override it on individual series or points. Omitted or `null` values inherit the next level, defaulting to `1`. Opacity affects the fill and border, including the bar-x range slider, and leaves normal data labels opaque.
 
+The legend symbol follows series opacity. Tooltip markers follow point opacity, falling back to series opacity. Legend and tooltip text remain opaque; hidden series keep the standard inactive legend symbol.
+
 The example combines borders with a default opacity of `0.8`, `0.3` on Plan, and a point override of `0.6` in February.
 
 <div data-chart-example="series-types/bar-x"></div>

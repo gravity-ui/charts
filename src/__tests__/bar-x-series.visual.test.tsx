@@ -1396,6 +1396,6 @@ test.describe('Bar-x series', () => {
             </div>,
         );
         await expect(component.locator('.gcharts-bar-x__segment')).toHaveCount(6);
-        await expect(component).toHaveScreenshot();
+        await expect(component).toHaveScreenshot({threshold: 0});
     });
 });

@@ -1407,6 +1407,6 @@ test.describe('Bar-y series', () => {
             </div>,
         );
         await expect(component.locator('.gcharts-bar-y__segment')).toHaveCount(6);
-        await expect(component).toHaveScreenshot();
+        await expect(component).toHaveScreenshot({threshold: 0});
     });
 });
