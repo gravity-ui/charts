@@ -216,8 +216,14 @@ export function useChartInnerProps(props: Props) {
                 allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];
             }
 
-            const activeLegendItems =
+            const nextActiveLegendItems =
                 selectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
+            const previousActiveLegendItems = prevStateValue.current?.activeLegendItems;
+            const activeLegendItems =
+                previousActiveLegendItems &&
+                isEqual(previousActiveLegendItems, nextActiveLegendItems)
+                    ? previousActiveLegendItems
+                    : nextActiveLegendItems;
             const visiblePreparedSeries = getVisibleSeries({
                 preparedSeries: allPreparedSeries,
                 activeLegendItems,
@@ -477,6 +483,7 @@ export function useChartInnerProps(props: Props) {
 
     return {
         ...chartState,
+        activeLegendItems,
         preparedSeries,
         boundsOffsetLeft: chartState?.boundsOffsetLeft ?? 0,
         boundsOffsetTop: chartState?.boundsOffsetTop ?? 0,

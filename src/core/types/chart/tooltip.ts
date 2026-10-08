@@ -325,6 +325,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
     valueFormat?: ValueFormat;
     /**
      * Formatting settings for tooltip header row.
+     * Defaults to the selected header's axis format for Cartesian series, including waterfall.
+     * Radar headers require an explicit format; series without headers remain headerless.
      * On category axes, unresolved values omit the header and do not call a custom formatter.
      * On linear/datetime axes and radar charts, a custom formatter can return a placeholder
      * for a missing value. Without a custom formatter, missing values omit the header.

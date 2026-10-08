@@ -9,7 +9,7 @@ import {getTooltipData} from '~core/shapes/x-range/get-tooltip-data';
 import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
 import {renderXRange} from '~core/shapes/x-range/renderer';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipYValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
@@ -44,7 +44,7 @@ function getXRangeWidth(data: XRangeSeriesData) {
     return Math.abs(Number(data.x1) - Number(data.x0));
 }
 
-export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
+export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = {
     type: 'x-range',
     zoom: {types: ['x'], defaultType: 'x'},
     prepareSeries: prepareXRangeSeries,
@@ -58,11 +58,9 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        headerAxis: 'y',
         getValue: ({item, xAxis}) =>
-            xAxis?.type === 'category'
-                ? undefined
-                : getXRangeWidth((item as TooltipDataChunkXRange).data),
+            xAxis?.type === 'category' ? undefined : getXRangeWidth(item.data),
+        header: {getValue: getTooltipYValue, axis: 'y', priority: 1},
         rows: [
             {
                 id: 'default',

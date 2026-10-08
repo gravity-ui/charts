@@ -151,6 +151,14 @@ or a category index cannot be resolved. On category axes, a custom header
 formatter is called only when the header value is available. On linear/datetime
 axes and radar charts, a custom formatter can return a placeholder for a missing value.
 
+By default, Cartesian headers use the selected header's axis for number/date
+formatting, including waterfall. An explicit `tooltip.headerFormat` takes
+precedence. Radar requires an explicit format; series without headers remain
+headerless. Without an explicit axis `type`, headers retain raw values.
+This waterfall example displays dates automatically:
+
+<div data-chart-example="tooltip/waterfall-header"></div>
+
 ### Per-series override
 
 The value format set on `tooltip.valueFormat` applies to every series in the chart.

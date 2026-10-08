@@ -10,7 +10,7 @@ import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
 import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
-import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -120,6 +120,8 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     },
     tooltip: {
         prepareData: getTooltipData,
+        getValue: getTooltipYValue,
+        header: {getValue: getTooltipXValue, axis: 'x'},
         getValueFormatContext: (item) => {
             return {percentage: item.percentage, data: item.data};
         },

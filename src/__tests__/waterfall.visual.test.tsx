@@ -2,6 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
+import {WaterfallHeaderTooltipExample} from '../../docs/examples/src/charts/tooltip/waterfall-header';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     waterfallBasicData,
@@ -19,6 +20,18 @@ test.describe('Waterfall series', () => {
     });
 
     test.describe('Tooltip', () => {
+        test('Datetime header in the runnable docs example', async ({mount, page}, testInfo) => {
+            const component = await mount(
+                <div style={{width: 500, height: 300}}>
+                    <WaterfallHeaderTooltipExample />
+                </div>,
+            );
+            await component.locator('.gcharts-waterfall__segment').first().hover();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.getByText('01.01.25', {exact: true})).toBeVisible();
+            await component.screenshot({path: testInfo.outputPath('waterfall-date-header.png')});
+        });
+
         test('Income column', async ({page, mount}) => {
             page.setViewportSize({width: 450, height: 280});
             const component = await mount(<ChartTestStory data={waterfallBasicData} />);

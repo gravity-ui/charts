@@ -10,7 +10,7 @@ import {getTooltipData} from '~core/shapes/scatter/get-tooltip-data';
 import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
 import {renderScatter} from '~core/shapes/scatter/renderer';
 import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
-import {getTooltipAxisValue, getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {calculateNumericProperty} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
@@ -133,10 +133,11 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     renderShapes,
     tooltip: {
         prepareData: getTooltipData,
-        getValue: ({item, yAxis}) => {
-            const data = item.data as ScatterClusterData;
-            return data.cluster?.size ?? getTooltipAxisValue(data, 'y', yAxis);
+        getValue: (args) => {
+            const data = args.item.data as ScatterClusterData;
+            return data.cluster?.size ?? getTooltipYValue(args);
         },
+        header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (item: TooltipDataChunk) => {
             const cluster = (item.data as ScatterClusterData).cluster;
             return [
