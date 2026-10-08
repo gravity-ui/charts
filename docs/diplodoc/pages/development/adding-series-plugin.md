@@ -41,12 +41,9 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ## 4. Define layers and clipping
 
-- Implement `getLayers({series, getSeriesKey})` for both raw and prepared series. Return nonempty groups containing each input exactly once, retaining the original objects and member order. Use stable, chart-unique layer keys. `getSingleSeriesLayer` from `src/core/series/layers.ts` supplies the current one-layer-per-type behavior; line returns one layer per series using `getSeriesKey(item, index)`.
-- Core merges plugin layers by the first member's position in the input. Raw keys use config indices; prepared keys use series IDs. Layers are prepared from last to first to reserve label space through `otherLayers`, then rendered in forward order. Preserve keys and hover-marker namespaces on visibility, resize, and zoom updates.
-- Built-in bars currently share one layer per type, including interleaved series and multiple stacks. Supporting `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` requires separating shared bar geometry from render layers, retaining source order through preparation, and defining placement when a group's members straddle other layers. Returning smaller bar groups alone would change widths, offsets, and stacking calculations.
-- Implement `getClipPath({isRangeSlider, yAxis, zoomState})` when the default plot-bounds clipping is unsuitable. Return `'bounds'`, `'horizontal'`, or `false`; omitting the hook selects `'bounds'`. Core owns SVG IDs and clip geometry. The horizontal region retains the plot's X bounds and extends vertically from `-plotHeight` to `2 * plotHeight`.
-- The hook runs once per nonempty shape layer with all prepared Y axes and the effective zoom state. Line uses bounds clipping when any Y axis has a numeric `min`/`max` or zoom state is nonempty; otherwise it uses the horizontal region. Scatter is unclipped in the main plot and clipped in the range slider. Non-axis plugins return `false`.
-- Clipping applies to the shape group, including SVG labels rendered inside it. Separate marker, hover-marker, annotation, and HTML-label layers keep their existing clipping behavior.
+- Implement `getLayers({series, getSeriesKey})` for raw and prepared series. Return nonempty layers containing each input exactly once, preserving object references and member order. Use stable, chart-unique keys. `getSingleSeriesLayer` from `src/core/series/layers.ts` groups a plugin's series into one layer; line uses `getSeriesKey(item, index)` for independent layers.
+- Core orders layers by their first member's input position, prepares shapes in reverse order to reserve label space through `otherLayers`, and renders in forward order. Bars retain one layer per type; see the TODO on `SeriesPlugin.getLayers` for future layer splitting.
+- Optional `getClipPath({isRangeSlider, yAxis, zoomState})` returns `'bounds'` (default), `'horizontal'` (X bounds with an expanded vertical region), or `false`. Core owns SVG IDs and geometry. Clipping affects the shape group and its SVG labels; separate marker, annotation, and HTML-label layers are unaffected.
 
 ## 5. Define tooltip values
 

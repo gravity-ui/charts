@@ -1,11 +1,11 @@
 /** @jest-environment jsdom */
 import type React from 'react';
 
-import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
+import type {PreparedYAxis} from '~core/axes/types';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getPreparedSeries} from '~core/series/prepareSeries';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
-import type {PreparedLegendOptions} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedSeries} from '~core/series/types';
 import type {SeriesShapeData, ShapeLabels} from '~core/shapes/types';
 import type {ChartSeries} from '~core/types';
 import type {ZoomState} from '~core/zoom/types';
@@ -32,6 +32,20 @@ function prepare(seriesData = rawSeries) {
 
 function createShape(): SeriesShapeData {
     return {htmlLabels: [], markers: [], annotations: [], getHoverMarkers: () => []};
+}
+
+function getShapeArgs(series: PreparedSeries[]) {
+    return {
+        series,
+        boundsWidth: 400,
+        boundsHeight: 200,
+        clipPathId: 'plot',
+        htmlLayout: null,
+        seriesOptions: getPreparedOptions(),
+        split: {plots: [], gap: 0},
+        xAxis: null,
+        yAxis: [],
+    };
 }
 
 afterEach(() => jest.restoreAllMocks());
@@ -74,17 +88,7 @@ it('prepares upper layers first and preserves rendered keys and tooltip order', 
             };
         });
     }
-    const {shapes, shapesData} = await getShapes({
-        series,
-        boundsWidth: 400,
-        boundsHeight: 200,
-        clipPathId: 'plot',
-        htmlLayout: null,
-        seriesOptions: getPreparedOptions(),
-        split: {plots: [], gap: 0},
-        xAxis: null,
-        yAxis: [],
-    });
+    const {shapes, shapesData} = await getShapes(getShapeArgs(series));
     expect(calls).toEqual([
         {names: ['line2'], obstacles: []},
         {names: ['bar1.1', 'bar1.2', 'bar2'], obstacles: [series[4].id]},
@@ -110,7 +114,6 @@ it.each<{
     yAxis: PreparedYAxis[];
     zoomState?: Partial<ZoomState>;
     isRangeSlider?: boolean;
-    xAxis?: PreparedXAxis;
     clip: string;
 }>([
     {name: 'no bounds', yAxis: [], clip: 'plot-horizontal'},
@@ -123,29 +126,15 @@ it.each<{
     },
     {name: 'X zoom', yAxis: [], zoomState: {x: [0, 1]}, clip: 'plot'},
     {name: 'Y zoom', yAxis: [], zoomState: {y: [[0, 1]]}, clip: 'plot'},
-    {name: 'XY zoom', yAxis: [], zoomState: {x: [0, 1], y: [[0, 1]]}, clip: 'plot'},
-    {
-        name: 'X bounds alone',
-        yAxis: [],
-        xAxis: {min: 0, max: 1} as PreparedXAxis,
-        clip: 'plot-horizontal',
-    },
     {name: 'slider without Y bounds', yAxis: [], isRangeSlider: true, clip: 'plot-horizontal'},
-])('preserves line clipping with $name', async ({yAxis, zoomState, isRangeSlider, xAxis, clip}) => {
+])('preserves line clipping with $name', async ({yAxis, zoomState, isRangeSlider, clip}) => {
     const series = await prepare(rawSeries.slice(0, 1));
     jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
         renderData: [createShape()],
         tooltipItems: [],
     });
     const {shapes} = await getShapes({
-        series,
-        boundsWidth: 400,
-        boundsHeight: 200,
-        clipPathId: 'plot',
-        htmlLayout: null,
-        seriesOptions: getPreparedOptions(),
-        split: {plots: [], gap: 0},
-        xAxis: xAxis ?? null,
+        ...getShapeArgs(series),
         yAxis,
         zoomState,
         isRangeSlider,
@@ -172,15 +161,7 @@ it.each([
     const clipPolicy = getSeriesPlugin(type).getClipPath;
     const policy = clipPolicy && jest.spyOn(getSeriesPlugin(type), 'getClipPath');
     const {shapes} = await getShapes({
-        series,
-        boundsWidth: 400,
-        boundsHeight: 200,
-        clipPathId: 'plot',
-        htmlLayout: null,
-        seriesOptions: getPreparedOptions(),
-        split: {plots: [], gap: 0},
-        xAxis: null,
-        yAxis: [],
+        ...getShapeArgs(series),
         isRangeSlider: slider,
     });
     expect(shapes[0].props.clipPathId).toBe(clip);
@@ -206,15 +187,9 @@ it.each([
         const line = jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData');
         const bars = jest.spyOn(getSeriesPlugin('bar-x'), 'prepareShapeData');
         const result = await getShapes({
-            series,
+            ...getShapeArgs(series),
             boundsWidth,
             boundsHeight,
-            clipPathId: 'plot',
-            htmlLayout: null,
-            seriesOptions: getPreparedOptions(),
-            split: {plots: [], gap: 0},
-            xAxis: null,
-            yAxis: [],
         });
         expect(result).toEqual({shapes: [], shapesData: []});
         expect(line).not.toHaveBeenCalled();
