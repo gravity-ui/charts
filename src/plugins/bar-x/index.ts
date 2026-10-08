@@ -22,7 +22,7 @@ import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../ty
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
-import {prepareBarXSeries} from './prepare-bar-x-series';
+import {prepareBarXSeries, refreshBarXSourceReferences} from './prepare-bar-x-series';
 import {getBarXStackLabelAnchors} from './stack-labels';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
@@ -91,6 +91,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     type: 'bar-x',
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
+    refreshSourceReferences: refreshBarXSourceReferences,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({
             series,

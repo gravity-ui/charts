@@ -39,14 +39,6 @@ export function renderBarY(
         .attr('opacity', (d) => d.data.opacity || null)
         .attr('cursor', (d) => d.series.cursor);
 
-    if (!elements.isRangeSlider) {
-        segmentSelection
-            .filter((d) => Boolean(d.series.pointClick))
-            .on('click.point-click', (event: MouseEvent, d) => {
-                d.series.pointClick?.(d.data, event);
-            });
-    }
-
     const borderSelection = svgElement
         .selectAll(`path.${b('segment-border')}`)
         .data(shapes.filter((d) => d.borderWidth > 0))
@@ -57,6 +49,20 @@ export function renderBarY(
         .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.data.opacity || null)
         .attr('pointer-events', 'none');
+
+    if (!elements.isRangeSlider) {
+        const handlePointClick = (event: MouseEvent, d: PreparedBarYData) => {
+            d.series.pointClick?.(d.data, event);
+        };
+        segmentSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .on('click.point-click', handlePointClick);
+        borderSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .attr('pointer-events', null)
+            .attr('cursor', (d) => d.series.cursor)
+            .on('click.point-click', handlePointClick);
+    }
 
     const labelSelection = renderDataLabels({
         container: svgElement,
@@ -106,6 +112,7 @@ export function renderBarY(
 
     return () => {
         segmentSelection.on('click.point-click', null);
+        borderSelection.on('click.point-click', null);
         dispatcher?.on('hover-shape.bar-y', null);
     };
 }

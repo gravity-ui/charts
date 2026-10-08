@@ -7,6 +7,7 @@ import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
 import {getPreparedSeries} from '~core/series';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
+import {refreshPreparedSeriesSourceReferences} from '~core/series/prepareSeries';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
 import type {TooltipItemData} from '~core/shapes/types';
 import {createIsOutsideBounds} from '~core/shapes/utils';
@@ -213,7 +214,10 @@ export function useChartInnerProps(props: Props) {
                     yAxis: normalizedYAxis,
                 });
             } else {
-                allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];
+                allPreparedSeries = refreshPreparedSeriesSourceReferences({
+                    series: normalizedSeriesData,
+                    preparedSeries: prevStateValue.current?.allPreparedSeries ?? [],
+                });
             }
 
             const activeLegendItems =

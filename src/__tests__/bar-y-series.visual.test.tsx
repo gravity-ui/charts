@@ -41,6 +41,8 @@ test.describe('Bar-y series', () => {
                     {
                         type: 'bar-y',
                         name: 'Actual',
+                        borderWidth: 3,
+                        borderColor: '#000',
                         tooltip: {enabled: false},
                         nullMode: 'zero',
                         data: [
@@ -99,7 +101,7 @@ test.describe('Bar-y series', () => {
             await expect(component.getByTestId('chart-clicks')).toHaveText('[]');
         });
 
-        test('Enabled tooltips preserve native propagation @webkit', async ({mount}) => {
+        test('Visible borders preserve native propagation @webkit', async ({mount, page}) => {
             const enabledData: ChartData = {
                 ...data,
                 tooltip: {enabled: true},
@@ -119,14 +121,34 @@ test.describe('Bar-y series', () => {
             };
             const component = await mount(<BarYPointClickTestStory data={enabledData} />);
             const chartClicks = component.getByTestId('chart-clicks');
-            await component.locator('.gcharts-bar-y__segment').last().click();
+            const border = component.locator('.gcharts-bar-y__segment-border').last();
+            await expect(border).toBeVisible();
+            const clickBorder = async () => {
+                const box = await getLocatorBoundingBox(border);
+                await page.mouse.click(box.x + box.width / 2, box.y + 1);
+            };
+            await clickBorder();
+            await expect
+                .poll(async () =>
+                    JSON.parse((await component.getByTestId('point-clicks').textContent()) ?? ''),
+                )
+                .toEqual([
+                    expect.objectContaining({
+                        x: 8,
+                        y: 1,
+                        originalPoint: true,
+                        originalSeries: true,
+                        nativeEvent: true,
+                        target: 'gcharts-bar-y__segment-border',
+                    }),
+                ]);
             await expect
                 .poll(async () => JSON.parse((await chartClicks.textContent()) ?? ''))
                 .toEqual([expect.objectContaining({name: 'Actual', defaultPrevented: false})]);
             await component.update(
                 <BarYPointClickTestStory data={enabledData} eventAction="preventDefault" />,
             );
-            await component.locator('.gcharts-bar-y__segment').last().click();
+            await clickBorder();
             await expect
                 .poll(async () => JSON.parse((await chartClicks.textContent()) ?? ''))
                 .toEqual([
@@ -136,7 +158,7 @@ test.describe('Bar-y series', () => {
             await component.update(
                 <BarYPointClickTestStory data={enabledData} eventAction="stopPropagation" />,
             );
-            await component.locator('.gcharts-bar-y__segment').last().click();
+            await clickBorder();
             await expect
                 .poll(
                     async () =>
@@ -161,6 +183,11 @@ test.describe('Bar-y series', () => {
                 .last();
             await expect(previewBar).toBeVisible();
             await previewBar.dispatchEvent('click');
+            const previewBorder = component
+                .locator('.gcharts-range-slider .gcharts-bar-y__segment-border')
+                .last();
+            await expect(previewBorder).toBeVisible();
+            await previewBorder.dispatchEvent('click');
             await expect(component.getByTestId('point-clicks')).toHaveText('[]');
             await component
                 .locator('.gcharts-chart__content .gcharts-bar-y__segment')

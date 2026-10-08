@@ -4,8 +4,25 @@ import {scaleOrdinal} from 'd3-scale';
 import type {ChartData, ChartXAxis, ChartYAxis} from '../../types';
 import {getSeriesNames} from '../utils';
 
+import type {RefreshSourceReferencesArgs} from './plugin';
 import {getSeriesPlugin} from './seriesRegistry';
 import type {PreparedLegendOptions, PreparedSeries} from './types';
+
+const preparedSeriesSourceKeys = new WeakMap<PreparedSeries[], object>();
+
+export function getPreparedSeriesSourceKey(series?: PreparedSeries[]): object | undefined {
+    if (!series) {
+        return undefined;
+    }
+
+    let key = preparedSeriesSourceKeys.get(series);
+    if (!key) {
+        key = {};
+        preparedSeriesSourceKeys.set(series, key);
+    }
+
+    return key;
+}
 
 export const getPreparedSeries = async ({
     seriesData,
@@ -57,3 +74,43 @@ export const getPreparedSeries = async ({
 
     return acc;
 };
+
+export function refreshPreparedSeriesSourceReferences({
+    series,
+    preparedSeries,
+}: RefreshSourceReferencesArgs): PreparedSeries[] {
+    const sourceGroups = group(series, (item) => item.type);
+    const preparedGroups = group(preparedSeries, (item) => item.type);
+    const replacements = new Map<PreparedSeries, PreparedSeries>();
+
+    for (const [type, preparedGroup] of preparedGroups) {
+        const plugin = getSeriesPlugin(type);
+        if (!plugin.refreshSourceReferences) {
+            continue;
+        }
+
+        const refreshedGroup = plugin.refreshSourceReferences({
+            series: sourceGroups.get(type) ?? [],
+            preparedSeries: preparedGroup,
+        });
+        preparedGroup.forEach((prepared, index) => {
+            const refreshed = refreshedGroup[index];
+            if (refreshed && refreshed !== prepared) {
+                replacements.set(prepared, refreshed);
+            }
+        });
+    }
+
+    if (!replacements.size) {
+        return preparedSeries;
+    }
+
+    const refreshedSeries = preparedSeries.map(
+        (prepared) => replacements.get(prepared) ?? prepared,
+    );
+    const sourceKey = getPreparedSeriesSourceKey(preparedSeries);
+    if (sourceKey) {
+        preparedSeriesSourceKeys.set(refreshedSeries, sourceKey);
+    }
+    return refreshedSeries;
+}

@@ -2,6 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
@@ -33,6 +34,25 @@ interface HoverState {
     resetKey: Props['resetKey'];
     chunks?: TooltipDataChunk[];
     position?: PointPosition;
+}
+
+function isSamePoint(previous: TooltipDataChunk, current: TooltipDataChunk) {
+    if (previous.data === current.data) {
+        return true;
+    }
+
+    const previousData = get(previous.series, 'data', []);
+    const currentData = get(current.series, 'data', []);
+    if (!Array.isArray(previousData) || !Array.isArray(currentData)) {
+        return false;
+    }
+
+    const previousIndex = previousData.findIndex((point) => point === previous.data);
+    return (
+        previousIndex >= 0 &&
+        previousIndex === currentData.findIndex((point) => point === current.data) &&
+        isEqual(previous.data, current.data)
+    );
 }
 
 export function useHoverGeometryRefresh({
@@ -121,7 +141,7 @@ export function useHoverGeometryRefresh({
                     !previousSelected ||
                     !selected ||
                     get(previousSelected.series, 'id') !== get(selected.series, 'id') ||
-                    previousSelected.data !== selected.data
+                    !isSamePoint(previousSelected, selected)
                 ) {
                     unpinTooltip?.();
                     dispatcher.call(EventType.HOVER_SHAPE, undefined, undefined);
