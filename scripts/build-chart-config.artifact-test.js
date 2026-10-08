@@ -39,6 +39,49 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('bar series opacity is available in declarations and constrained in schema', () => {
+        const usage = `
+            const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', opacity: 0, data: [{x: 0, y: 10}]};
+            const horizontal: BarYSeries = {type: 'bar-y', name: 'Plan', opacity: null, data: [{x: 10, y: 0}]};
+            const options: ChartSeriesOptions = {'bar-x': {opacity: 0.3}, 'bar-y': {opacity: null}};
+            // @ts-expect-error Opacity is specific to bar plugin options.
+            options.opacity = 0.3;
+            // @ts-expect-error Opacity must be numeric or null.
+            vertical.opacity = '0.3';
+            // @ts-expect-error Opacity is not a base series option.
+            const base: BaseSeries = {opacity: 0.3};
+            void [vertical, horizontal, base, options];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'bar-opacity-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const type of ['bar-x', 'bar-y']) {
+            for (const source of ['series', 'options']) {
+                for (const opacity of [undefined, null, 0, 0.3, 1, -0.1, 1.1, '0.3']) {
+                    expect(
+                        validateConfig({
+                            series: {
+                                data: [
+                                    {
+                                        type,
+                                        name: 'Plan',
+                                        opacity: source === 'series' ? opacity : undefined,
+                                        data: [{x: 10, y: 20}],
+                                    },
+                                ],
+                                options: source === 'options' ? {[type]: {opacity}} : undefined,
+                            },
+                        }),
+                    ).toBe([undefined, null, 0, 0.3, 1].includes(opacity));
+                }
+            }
+        }
+    });
+
     test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
         const usage = `
             const tooltip: ChartTooltip = {

@@ -18,6 +18,7 @@ import {
 } from '~core/validation/helpers';
 
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
+import {validateBarOpacity} from '../bar-opacity';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
@@ -71,6 +72,8 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateBarOpacity(series.opacity, 'opacity');
+        validateBarOpacity(seriesOptions?.['bar-y']?.opacity, 'series.options.bar-y.opacity');
         validateStackLabelsOptions({
             series,
             allSeries,

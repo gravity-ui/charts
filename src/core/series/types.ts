@@ -252,6 +252,7 @@ export type PreparedScatterSeries = {
     BasePreparedAxisRelatedSeries;
 
 export type PreparedBarXSeries = {
+    opacity: number;
     type: BarXSeries['type'];
     data: BarXSeriesData[];
     stackId: string;
@@ -275,6 +276,7 @@ export type PreparedBarXSeries = {
     BasePreparedAxisRelatedSeries;
 
 export type PreparedBarYSeries = {
+    opacity: number;
     type: BarYSeries['type'];
     data: BarYSeriesData[];
     stackId: string;

@@ -35,6 +35,7 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         return {
             type: series.type,
             color,
+            opacity: series.opacity ?? seriesOptions?.['bar-x']?.opacity ?? 1,
             name,
             id: getUniqId(),
             visible: get(series, 'visible', true),

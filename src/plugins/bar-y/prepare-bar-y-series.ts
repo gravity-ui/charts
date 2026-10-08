@@ -72,6 +72,7 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
             return {
                 type: series.type,
                 color,
+                opacity: series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1,
                 name,
                 id: getUniqId(),
                 visible: get(series, 'visible', true),

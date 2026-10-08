@@ -35,7 +35,7 @@ export function renderBarY(
         .attr('height', (d) => d.height)
         .attr('width', (d) => d.width)
         .attr('fill', (d) => d.color)
-        .attr('opacity', (d) => d.data.opacity || null)
+        .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
     const borderSelection = svgElement
@@ -46,7 +46,7 @@ export function renderBarY(
         .attr('class', b('segment-border'))
         .attr('fill', (d) => d.borderColor)
         .attr('fill-rule', 'evenodd')
-        .attr('opacity', (d) => d.data.opacity || null)
+        .attr('opacity', (d) => d.opacity)
         .attr('pointer-events', 'none');
 
     const labelSelection = renderDataLabels({
@@ -80,16 +80,19 @@ export function renderBarY(
 
         if (inactiveOptions?.enabled) {
             const hoveredSeries = data?.map((d) => d.series.id);
-            const newOpacity = (d: PreparedBarYData | LabelData) => {
-                if (hoveredSeries?.length && !hoveredSeries.includes(d.series.id)) {
+            const isInactive = (d: PreparedBarYData | LabelData) =>
+                hoveredSeries?.length && !hoveredSeries.includes(d.series.id);
+            const newOpacity = (d: PreparedBarYData) =>
+                isInactive(d) ? inactiveOptions.opacity || null : d.opacity;
+            segmentSelection.attr('opacity', newOpacity);
+            borderSelection.attr('opacity', newOpacity);
+            labelSelection.attr('opacity', (d) => {
+                if (isInactive(d)) {
                     return inactiveOptions.opacity || null;
                 }
 
                 return null;
-            };
-            segmentSelection.attr('opacity', newOpacity);
-            borderSelection.attr('opacity', newOpacity);
-            labelSelection.attr('opacity', newOpacity);
+            });
         }
     }
 

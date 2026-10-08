@@ -5,37 +5,37 @@ import type {ChartData} from '@gravity-ui/charts';
 
 const data: ChartData = {
     series: {
-        options: {'bar-x': {borderWidth: 3, borderColor: '#283593', borderRadius: 6, opacity: 0.8}},
+        options: {'bar-y': {borderWidth: 3, borderColor: '#283593', borderRadius: 6, opacity: 0.8}},
         data: [
             {
-                type: 'bar-x',
+                type: 'bar-y',
                 name: 'Actual',
                 color: '#90caf9',
                 data: [
-                    {x: 'Jan', y: 42},
-                    {x: 'Feb', y: 58},
-                    {x: 'Mar', y: 51},
+                    {x: 42, y: 'Jan'},
+                    {x: 58, y: 'Feb'},
+                    {x: 51, y: 'Mar'},
                 ],
             },
             {
-                type: 'bar-x',
+                type: 'bar-y',
                 name: 'Plan',
                 color: '#a5d6a7',
                 opacity: 0.3,
                 borderWidth: 2,
                 borderColor: '#2e7d32',
                 data: [
-                    {x: 'Jan', y: 32},
-                    {x: 'Feb', y: 40, opacity: 0.6},
-                    {x: 'Mar', y: 35},
+                    {x: 32, y: 'Jan'},
+                    {x: 40, y: 'Feb', opacity: 0.6},
+                    {x: 35, y: 'Mar'},
                 ],
             },
         ],
     },
-    xAxis: {type: 'category', categories: ['Jan', 'Feb', 'Mar']},
+    yAxis: [{type: 'category', categories: ['Jan', 'Feb', 'Mar']}],
 };
 
-export function BarXSeriesExample() {
+export function BarYSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

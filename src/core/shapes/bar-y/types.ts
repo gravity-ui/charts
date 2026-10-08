@@ -10,7 +10,7 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     color: string;
     borderWidth: number;
     borderColor: string;
-    opacity: number | null;
+    opacity: number;
     series: PreparedBarYSeries;
     isLastStackItem: boolean;
 };

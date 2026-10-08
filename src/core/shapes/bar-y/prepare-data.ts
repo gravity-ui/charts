@@ -172,7 +172,7 @@ export async function prepareBarYData(args: {
                     color: data.color || s.color,
                     borderColor: s.borderColor,
                     borderWidth,
-                    opacity: get(data, 'opacity', null),
+                    opacity: data.opacity ?? s.opacity,
                     data,
                     series: s,
                     percentage:

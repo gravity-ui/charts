@@ -36,7 +36,7 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     category?: string;
     /** Data label value of the bar-x column. If not specified, the y value is used. */
     label?: string | number;
-    /** Individual opacity for the bar-x column. */
+    /** Individual opacity for the bar-x column. Overrides series opacity. */
     opacity?: number;
     /**
      * Annotation displayed near this data point as a bubble with text label.
@@ -63,6 +63,13 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     name: string;
     /** The main color of the series (hex, rgba) */
     color?: string;
+    /**
+     * Opacity of the bar fill and border. Does not affect normal data labels.
+     * Point opacity takes precedence. Omitted or null values inherit `series.options['bar-x'].opacity` (default 1).
+     * @minimum 0
+     * @maximum 1
+     */
+    opacity?: number | null;
     /**
      * The width of the border in pixels, drawn inside each bar.
      * Ignored in the range slider and when the bar width or height is at most twice the border width.
