@@ -18,6 +18,7 @@ interface Props {
     boundsWidth: number;
     clipPathId?: string;
     dispatcher?: Dispatch<object>;
+    isRangeSlider?: boolean;
     htmlLayout: HTMLElement | null;
     namespace: string;
     plugin: SeriesPlugin;
@@ -31,6 +32,7 @@ export const SeriesShapes = ({
     boundsWidth,
     clipPathId,
     dispatcher,
+    isRangeSlider,
     htmlLayout,
     namespace,
     plugin,
@@ -52,9 +54,19 @@ export const SeriesShapes = ({
                 boundsWidth,
                 boundsHeight,
                 dispatcher,
+                isRangeSlider,
             }) ?? undefined
         );
-    }, [boundsHeight, boundsWidth, dispatcher, plugin, preparedData, labels, seriesOptions]);
+    }, [
+        boundsHeight,
+        boundsWidth,
+        dispatcher,
+        isRangeSlider,
+        plugin,
+        preparedData,
+        labels,
+        seriesOptions,
+    ]);
 
     const markers = React.useMemo(() => preparedData.flatMap((d) => d.markers), [preparedData]);
     const annotations = React.useMemo(

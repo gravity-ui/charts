@@ -6,6 +6,17 @@ import type {ChartAxis, ChartSeries, ChartSeriesData} from '../../../types';
 import {SERIES_TYPE} from '../../constants';
 import {getAxisCategories} from '../../utils';
 
+const originalSeries = new WeakMap<ChartSeries, ChartSeries>();
+const originalSeriesData = new WeakMap<ChartSeriesData, ChartSeriesData>();
+
+export function getOriginalSeries<T extends ChartSeries>(series: T): T {
+    return (originalSeries.get(series) ?? series) as T;
+}
+
+export function getOriginalSeriesData<T extends ChartSeriesData>(data: T): T {
+    return (originalSeriesData.get(data) ?? data) as T;
+}
+
 function applyAxisCategoriesOrder<T extends ChartSeries>({
     series,
     axis,
@@ -36,6 +47,7 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
             // applied to the corresponding axis
             if (newIndex !== undefined) {
                 newData = {...d, [key]: newIndex};
+                originalSeriesData.set(newData, getOriginalSeriesData(d));
             }
         } else if (typeof value === 'string') {
             // a category name does not depend on the axis order, so the point is kept as is
@@ -55,10 +67,12 @@ function applyAxisCategoriesOrder<T extends ChartSeries>({
         return acc;
     }, []);
 
-    return {
+    const normalizedSeries = {
         ...series,
         data: newSeriesData,
     };
+    originalSeries.set(normalizedSeries, getOriginalSeries(series));
+    return normalizedSeries;
 }
 
 export function getSortedSeriesData({
@@ -81,10 +95,12 @@ export function getSortedSeriesData({
 
         switch (sortedSeries.type) {
             case SERIES_TYPE.Area: {
+                const sourceSeries = getOriginalSeries(sortedSeries);
                 sortedSeries = {
                     ...sortedSeries,
                     data: sort(sortedSeries.data, (d) => d.x),
                 };
+                originalSeries.set(sortedSeries, sourceSeries);
                 break;
             }
         }

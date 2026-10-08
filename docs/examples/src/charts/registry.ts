@@ -38,6 +38,8 @@ import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
 import {BarXSeriesExample} from './series-types/bar-x';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
+import {BarYPointClickExample} from './series-types/bar-y-events';
+import barYPointClickRaw from './series-types/bar-y-events.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
 import {ScatterSeriesExample} from './series-types/scatter';
@@ -60,6 +62,10 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'series-types/bar-y-events': {
+        code: extractDisplayCode(barYPointClickRaw),
+        Component: BarYPointClickExample,
+    },
     'tooltip/x-range-values': {
         code: extractDisplayCode(xRangeTooltipValuesRaw),
         Component: XRangeTooltipValuesExample,

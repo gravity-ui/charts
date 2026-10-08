@@ -277,6 +277,7 @@ export type PreparedBarXSeries = {
 export type PreparedBarYSeries = {
     type: BarYSeries['type'];
     data: BarYSeriesData[];
+    pointClick?: (point: BarYSeriesData, event: MouseEvent) => void;
     stackId: string;
     stacking: BarYSeries['stacking'];
     stackLabels?: BarYSeries['stackLabels'];

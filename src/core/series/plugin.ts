@@ -93,6 +93,7 @@ export interface RenderShapesArgs {
     boundsWidth: number;
     boundsHeight: number;
     dispatcher?: Dispatch<object>;
+    isRangeSlider?: boolean;
 }
 
 export interface ValidateSeriesArgs<T = ChartSeries> {
