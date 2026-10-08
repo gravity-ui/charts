@@ -3,7 +3,7 @@ import React from 'react';
 import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
-import {DEFAULT_PALETTE, SERIES_TYPE} from '~core/constants';
+import {DEFAULT_PALETTE} from '~core/constants';
 import {getPreparedSeries} from '~core/series';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
@@ -22,7 +22,6 @@ import {hasGradient} from '~core/utils/gradient';
 import {getShapes, getVisibleSeries, useZoom} from '../../hooks';
 import type {
     ChartScale,
-    ClipPathBySeriesType,
     LegendItem,
     OnLegendItemClick,
     PreparedLegend,
@@ -55,10 +54,6 @@ type Props = ChartInnerProps & {
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
     rangeSliderState?: RangeSliderState;
-};
-
-const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
-    [SERIES_TYPE.Scatter]: false,
 };
 
 function getBoundsOffsetTop({
@@ -326,7 +321,6 @@ export function useChartInnerProps(props: Props) {
             const {shapes, shapesData} = await getShapes({
                 boundsWidth,
                 boundsHeight,
-                clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
                 dispatcher,
                 series: preparedShapesSeries,
                 seriesOptions: preparedSeriesOptions,

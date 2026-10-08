@@ -5,11 +5,12 @@ import type {Dispatch} from 'd3-dispatch';
 
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
+import {getSeriesLayers} from '~core/series/layers';
 import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
-import {getSeriesClipPathId} from '~core/shapes/utils';
+import {getClipPathIdByBounds} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
 import type {GradientGeometry, SeriesGradientState} from '~core/utils/gradient-reference';
@@ -24,7 +25,6 @@ import type {GradientLayoutReference} from './types';
 import './styles.scss';
 
 export type {TooltipItemData};
-export type ClipPathBySeriesType = Partial<Record<string, boolean>>;
 
 interface Args {
     boundsWidth: number;
@@ -36,7 +36,6 @@ interface Args {
     split: PreparedSplit;
     xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
-    clipPathBySeriesType?: ClipPathBySeriesType;
     dispatcher?: Dispatch<object>;
     isOutsideBounds?: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
@@ -122,18 +121,16 @@ function IS_OUTSIDE_BOUNDS() {
 function resolveClipPathId(args: {
     plugin: SeriesPlugin;
     clipPathId: string;
-    clipPathBySeriesType?: ClipPathBySeriesType;
+    isRangeSlider?: boolean;
     yAxis: PreparedYAxis[];
     zoomState?: Partial<ZoomState>;
 }) {
-    const {plugin, clipPathId, clipPathBySeriesType, yAxis, zoomState} = args;
-
-    if (plugin.type === 'line') {
-        return getSeriesClipPathId({clipPathId, yAxis, zoomState});
-    }
-
-    const useClip = clipPathBySeriesType?.[plugin.type] ?? plugin.useClipPath ?? true;
-    return useClip ? clipPathId : undefined;
+    const {plugin, clipPathId, isRangeSlider, yAxis, zoomState} = args;
+    const clip =
+        plugin.getClipPath?.({isRangeSlider: Boolean(isRangeSlider), yAxis, zoomState}) ?? 'bounds';
+    return clip === false
+        ? undefined
+        : getClipPathIdByBounds({clipPathId, bounds: clip === 'horizontal' ? clip : undefined});
 }
 
 export async function getShapes(args: Args) {
@@ -141,7 +138,6 @@ export async function getShapes(args: Args) {
         boundsWidth,
         boundsHeight,
         clipPathId,
-        clipPathBySeriesType,
         dispatcher,
         htmlLayout,
         isOutsideBounds = IS_OUTSIDE_BOUNDS,
@@ -175,21 +171,16 @@ export async function getShapes(args: Args) {
             return gradientState ? {...item, gradientState} : item;
         });
     }
-    const groupedSeries = group(visibleSeries, (item) => {
-        if (item.type === 'line') {
-            return item.id;
-        }
-        return item.type;
-    });
+    const seriesLayers = getSeriesLayers(visibleSeries, (item) => item.id);
 
     const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
     const layers: ShapeLabels[] = [];
     const preparedGradientGeometry: GradientGeometry[] = [];
 
-    const groupedSeriesItems = Array.from(groupedSeries);
-    for (let index = groupedSeriesItems.length - 1; index >= 0; index--) {
-        const [groupKey, chartSeries] = groupedSeriesItems[index];
+    for (let index = seriesLayers.length - 1; index >= 0; index--) {
+        const {key: groupKey, series: layerSeries} = seriesLayers[index];
+        const chartSeries = [...layerSeries];
         const seriesType = chartSeries[0].type;
         const plugin = getSeriesPlugin(seriesType);
 
@@ -217,7 +208,7 @@ export async function getShapes(args: Args) {
         const resolvedClipPathId = resolveClipPathId({
             plugin,
             clipPathId,
-            clipPathBySeriesType,
+            isRangeSlider,
             yAxis,
             zoomState,
         });
@@ -265,7 +256,6 @@ export const useShapes = (args: Args) => {
         boundsWidth,
         boundsHeight,
         clipPathId,
-        clipPathBySeriesType,
         dispatcher,
         htmlLayout,
         isOutsideBounds = IS_OUTSIDE_BOUNDS,
@@ -302,7 +292,6 @@ export const useShapes = (args: Args) => {
                 boundsHeight,
                 boundsWidth,
                 clipPathId,
-                clipPathBySeriesType,
                 dispatcher,
                 htmlLayout,
                 isOutsideBounds,
@@ -329,7 +318,6 @@ export const useShapes = (args: Args) => {
         boundsHeight,
         boundsWidth,
         clipPathId,
-        clipPathBySeriesType,
         dispatcher,
         htmlLayout,
         isOutsideBounds,

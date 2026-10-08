@@ -19,7 +19,7 @@ function getRuntimeFiles(directory: string): string[] {
 }
 
 function getSeriesDependencies(source: string): string[] {
-    const file = ts.createSourceFile('tooltip.tsx', source, ts.ScriptTarget.Latest, true);
+    const file = ts.createSourceFile('runtime.tsx', source, ts.ScriptTarget.Latest, true);
     const dependencies: string[] = [];
     const visit = (node: ts.Node) => {
         if (
@@ -60,6 +60,23 @@ it('keeps the migrated tooltip runtime independent of built-in series implementa
     const violations = files.flatMap((file) =>
         getSeriesDependencies(readFileSync(file, 'utf8')).map(
             (dependency) => `${path.relative(sourceRoot, file)}: ${dependency}`,
+        ),
+    );
+    expect(violations).toEqual([]);
+});
+
+it('keeps migrated grouping and clipping independent of built-in series implementations', () => {
+    const files = [
+        'core/series/layers.ts',
+        'core/series/prepareSeries.ts',
+        'core/shapes/utils.ts',
+        'hooks/useShapes/index.tsx',
+        'hooks/useRangeSlider/index.ts',
+        'components/ChartInner/useChartInnerProps.ts',
+    ];
+    const violations = files.flatMap((file) =>
+        getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
+            (dependency) => `${file}: ${dependency}`,
         ),
     );
     expect(violations).toEqual([]);

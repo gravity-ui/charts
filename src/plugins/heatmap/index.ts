@@ -1,3 +1,4 @@
+import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -39,6 +40,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap> = {
     type: 'heatmap',
+    getLayers: getSingleSeriesLayer,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareHeatmapSeries({
             series: series as HeatmapSeries[],

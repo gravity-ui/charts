@@ -1,4 +1,5 @@
 import {i18n} from '~core/i18n';
+import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -71,7 +72,8 @@ function validateTreemapData(series: TreemapSeries) {
 
 export const treemapPlugin: SeriesPlugin<TreemapSeries, TooltipDataChunkTreemap> = {
     type: 'treemap',
-    useClipPath: false,
+    getClipPath: () => false,
+    getLayers: getSingleSeriesLayer,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
     validate: ({series, allSeries}) => {

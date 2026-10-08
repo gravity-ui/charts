@@ -1,3 +1,4 @@
+import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -35,7 +36,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
     type: 'radar',
-    useClipPath: false,
+    getClipPath: () => false,
     validate: ({series, allSeries}) => {
         if (
             series.categories !== undefined &&
@@ -69,6 +70,7 @@ export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
             });
         }
     },
+    getLayers: getSingleSeriesLayer,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     prepareShapeData,

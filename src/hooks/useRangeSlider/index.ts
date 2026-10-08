@@ -5,7 +5,6 @@ import {isEqual} from 'lodash';
 
 import type {UseBrushProps} from '~core/brush/types';
 import {getNormalizedSelection, isOneDimensionalSelection} from '~core/brush/utils';
-import {SERIES_TYPE} from '~core/constants';
 import type {PreparedSplit} from '~core/layout/split-types';
 import {getRangeSliderOffsetTop, getRangeSliderSelection} from '~core/range-slider/utils';
 import {isBandScale} from '~core/utils';
@@ -14,17 +13,12 @@ import {selectionToZoomBounds} from '~core/zoom/utils';
 import {useAxis} from '../useAxis';
 import {useAxisScales} from '../useAxisScales';
 import {useShapes} from '../useShapes';
-import type {ClipPathBySeriesType} from '../useShapes';
 
 import type {PreparedRangeSliderProps, UseRangeSliderProps} from './types';
 
 export const EMPTY_PREPARED_SPLIT: PreparedSplit = {
     plots: [],
     gap: 0,
-};
-
-const CLIP_PATH_BY_SERIES_TYPE: ClipPathBySeriesType = {
-    [SERIES_TYPE.Scatter]: true,
 };
 
 export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderProps {
@@ -87,7 +81,6 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         boundsHeight: preparedRangeSlider.height,
         boundsWidth,
         clipPathId,
-        clipPathBySeriesType: CLIP_PATH_BY_SERIES_TYPE,
         htmlLayout,
         isRangeSlider: true,
         series: filteredPreparedSeries,

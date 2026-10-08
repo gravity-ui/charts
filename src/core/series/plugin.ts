@@ -18,10 +18,28 @@ import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
 import type {GradientGeometry} from '../utils/gradient-reference';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
+import type {ZoomState} from '../zoom/types';
 
 import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
 
 export type AxisDomainValue = number | string | null | undefined;
+
+export interface SeriesLayer<TSeries> {
+    key: string;
+    series: readonly TSeries[];
+}
+
+export interface GetLayersArgs<TSeries> {
+    series: readonly TSeries[];
+    /** Existing raw/prepared key for an item at its index in this plugin's input. */
+    getSeriesKey(series: TSeries, index: number): string;
+}
+
+export interface SeriesClipPathArgs {
+    isRangeSlider: boolean;
+    yAxis: readonly PreparedYAxis[];
+    zoomState?: Readonly<Partial<ZoomState>>;
+}
 
 export interface SeriesAxisDomainValues<T extends ChartSeries> {
     x?(data: T['data'][number]): AxisDomainValue | AxisDomainValue[];
@@ -115,10 +133,20 @@ export interface SeriesPlugin<
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
     /**
-     * Whether the shape `<g>` element should be clipped to the chart bounds.
-     * Defaults to `true`. Set to `false` for series that render outside the plot area (e.g. pie, radar, treemap).
+     * Partitions this plugin's raw/prepared series into nonempty layers, retaining each input once.
+     * Preserve member order and use stable, chart-unique keys. Core orders layers by their first member.
+     * TODO: Support line1 / [bar1.1 + bar1.2 stack] / line2 / bar2 by separating shared bar
+     * geometry from render-layer partitioning, retaining source order, and defining placement
+     * for groups whose members straddle other layers. Built-in bars still use one layer per type.
      */
-    useClipPath?: boolean;
+    getLayers<TSeries extends ChartSeries | PreparedSeries>(
+        args: GetLayersArgs<TSeries>,
+    ): readonly SeriesLayer<TSeries>[];
+    /**
+     * Shape-group clipping: plot bounds by default, an expanded vertical region, or no clipping.
+     * Does not control the separate marker, annotation, and HTML-label layers.
+     */
+    getClipPath?(args: SeriesClipPathArgs): 'bounds' | 'horizontal' | false;
     /** Supported zoom directions and point-filtering behavior. Omit to disable zoom. */
     zoom?: SeriesPluginZoomOptions<T>;
 

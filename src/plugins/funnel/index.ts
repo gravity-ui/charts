@@ -1,3 +1,4 @@
+import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -34,7 +35,8 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const funnelPlugin: SeriesPlugin<FunnelSeries, TooltipDataChunkFunnel> = {
     type: 'funnel',
-    useClipPath: false,
+    getClipPath: () => false,
+    getLayers: getSingleSeriesLayer,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareFunnelSeries({series: series as FunnelSeries[], seriesOptions, legend, colors}),
     getColorValue: (d) => d.value,

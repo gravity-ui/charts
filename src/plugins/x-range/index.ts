@@ -1,3 +1,4 @@
+import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -47,6 +48,7 @@ function getXRangeWidth(data: XRangeSeriesData) {
 export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = {
     type: 'x-range',
     zoom: {types: ['x'], defaultType: 'x'},
+    getLayers: getSingleSeriesLayer,
     prepareSeries: prepareXRangeSeries,
     getAxisDomainValues: {
         x: (d) => [d.x0, d.x1],

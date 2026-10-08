@@ -1,9 +1,9 @@
-import {group} from 'd3-array';
 import {scaleOrdinal} from 'd3-scale';
 
 import type {ChartData, ChartXAxis, ChartYAxis} from '../../types';
 import {getSeriesNames} from '../utils';
 
+import {getSeriesLayers} from './layers';
 import {getSeriesPlugin} from './seriesRegistry';
 import type {PreparedLegendOptions, PreparedSeries} from './types';
 
@@ -24,23 +24,15 @@ export const getPreparedSeries = async ({
 }) => {
     const seriesNames = getSeriesNames(seriesData);
     const colorScale = scaleOrdinal(seriesNames, colors);
-    const groupedSeries = group(seriesData, (item, index) => {
-        if (item.type === 'line') {
-            return `${item.type}_${index}`;
-        }
-
-        return item.type;
-    });
-
     const acc: PreparedSeries[] = [];
 
     if (!preparedLegend) {
         return acc;
     }
 
-    const list = Array.from(groupedSeries);
-    for (let i = 0; i < list.length; i++) {
-        const [_groupId, seriesList] = list[i];
+    const layers = getSeriesLayers(seriesData, (item, index) => `${item.type}_${index}`);
+    for (const layer of layers) {
+        const seriesList = [...layer.series];
         const plugin = getSeriesPlugin(seriesList[0].type);
         acc.push(
             ...(await plugin.prepareSeries({

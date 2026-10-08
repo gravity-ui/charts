@@ -39,7 +39,16 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - Implement domain/baseline rules, clipping, plot offsets, and layer/category order; define fill/stroke behavior where applicable.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
 
-## 4. Define tooltip values
+## 4. Define layers and clipping
+
+- Implement `getLayers({series, getSeriesKey})` for both raw and prepared series. Return nonempty groups containing each input exactly once, retaining the original objects and member order. Use stable, chart-unique layer keys. `getSingleSeriesLayer` from `src/core/series/layers.ts` supplies the current one-layer-per-type behavior; line returns one layer per series using `getSeriesKey(item, index)`.
+- Core merges plugin layers by the first member's position in the input. Raw keys use config indices; prepared keys use series IDs. Layers are prepared from last to first to reserve label space through `otherLayers`, then rendered in forward order. Preserve keys and hover-marker namespaces on visibility, resize, and zoom updates.
+- Built-in bars currently share one layer per type, including interleaved series and multiple stacks. Supporting `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` requires separating shared bar geometry from render layers, retaining source order through preparation, and defining placement when a group's members straddle other layers. Returning smaller bar groups alone would change widths, offsets, and stacking calculations.
+- Implement `getClipPath({isRangeSlider, yAxis, zoomState})` when the default plot-bounds clipping is unsuitable. Return `'bounds'`, `'horizontal'`, or `false`; omitting the hook selects `'bounds'`. Core owns SVG IDs and clip geometry. The horizontal region retains the plot's X bounds and extends vertically from `-plotHeight` to `2 * plotHeight`.
+- The hook runs once per nonempty shape layer with all prepared Y axes and the effective zoom state. Line uses bounds clipping when any Y axis has a numeric `min`/`max` or zoom state is nonempty; otherwise it uses the horizontal region. Scatter is unclipped in the main plot and clipped in the range slider. Non-axis plugins return `false`.
+- Clipping applies to the shape group, including SVG labels rendered inside it. Separate marker, hover-marker, annotation, and HTML-label layers keep their existing clipping behavior.
+
+## 5. Define tooltip values
 
 - Implement `tooltip.getValue({item, xAxis, yAxis})` hook for built-in sorting and totals. Shared code delegates each hovered chunk to its plugin, including in mixed charts. The hook is optional for compatibility; omitting it falls back to the point's scalar `value`, or its Y value.
 - Return an unformatted value and preserve `null`/`undefined`. Use `getTooltipAxisValue` from `src/core/tooltip/utils.ts` for axis values: it resolves category indices to names and preserves numeric/date values. Non-axis plugins extract their scalar value; interval plugins can return a width (as `area-range` does).
@@ -49,17 +58,17 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - Keep tooltip row values, custom formatter context, and renderer payloads independent of the sorting/totals value. Shared code sorts the plugin values and sums only numeric values.
 - Use `source: 'color'` for swatches; format labels/endpoints once. Preserve renderer precedence and keep plugin formatting hooks internal.
 
-## 5. Integrate
+## 6. Integrate
 
 - Register in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts); add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).
 - Check shared axis, scale, header, grouping, and zoom assumptions. Extend the plugin contract where needed; never add shared series-name branches or lists.
 
-## 6. Test
+## 7. Test
 
 - Cover declared capabilities, limitations, feature combinations, and affected existing plugins. Always check empty prepared data, zero-size plots, and resize/data/visibility updates.
 - Run `npm run typecheck`, focused unit tests, Docker visual tests, and `npm run test:chart-config`. Inspect snapshots, declarations, and JSON Schema; preserve unrelated baselines.
 
-## 7. Document
+## 8. Document
 
 - Add a Storybook example, series guide, API-doc export, runnable docs example, and navigation/registry entries.
 - Explain defaults, constraints, and tooltip value semantics.
