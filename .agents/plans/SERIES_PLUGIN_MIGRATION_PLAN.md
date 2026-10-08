@@ -8,7 +8,9 @@ The goal is to make each built-in plugin own its behavior while the core coordin
 
 Deliver the migration incrementally, preserving behavior. The axis-domain and scale stages are the largest and should be split into focused changes.
 
-### 1. Complete tooltip delegation
+Stages 1 and 2 are complete. Next: stage 3, axis-domain contributions.
+
+### 1. Complete tooltip delegation — completed
 
 - Implement `tooltip.getValue` for the remaining plugins and remove the type switch in [getHoveredValues](../../src/components/Tooltip/DefaultTooltipContent/utils.ts).
 - Delegate complete header resolution to plugins instead of combining `tooltip.headerAxis` with shared series-type checks. A plugin should supply the raw header value and axis/formatting context, or declare that there is no header. Cover Cartesian X/Y headers, radar categories, and plugins that suppress the header; series without axes must not inherit an implicit X header. Remove the corresponding rules from `getMeasureValue` in the same file and [getDefaultTooltipHeaderFormat](../../src/core/utils/tooltip.ts).
@@ -18,15 +20,17 @@ Verify mixed-series tooltips, totals, sorting, category/date formatting, and the
 
 Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): tooltip value/header hooks and mixed-chart precedence.
 
-### 2. Delegate layer grouping and clipping
+### 2. Delegate layer grouping and clipping — completed
 
-- Replace the special handling of `line` in [series preparation](../../src/core/series/prepareSeries.ts) and [shape preparation](../../src/hooks/useShapes/index.tsx) with plugin-declared grouping behavior.
-- Replace line-specific clipping and the scatter override tables in [ChartInner](../../src/components/ChartInner/useChartInnerProps.ts) and [range slider](../../src/hooks/useRangeSlider/index.ts) with plugin-owned clipping decisions.
-- Pass the relevant context: main chart versus slider, axis bounds, and zoom state.
+- Added required `SeriesPlugin.getLayers({series, getSeriesKey})` for raw and prepared series. [Shared layer coordination](../../src/core/series/layers.ts) replaces the line branches in [series preparation](../../src/core/series/prepareSeries.ts) and [shape preparation](../../src/hooks/useShapes/index.tsx).
+- Replaced `useClipPath`, line-specific clipping, and scatter override tables with optional `getClipPath({isRangeSlider, yAxis, zoomState})`. Plugins return `'bounds'` (default), `'horizontal'`, or `false`; core owns SVG IDs and geometry.
+- Preserved independent line layers, one layer per type for other plugins, reverse shape preparation for label priority, React keys, hover namespaces, tooltip ordering, and existing clipping behavior. Public config and exports are unchanged.
+- Updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md) and added layer, clipping, and architecture regression coverage. Verified with typecheck, unit tests, chart-config tests, and Docker Chromium regressions; visual snapshots are unchanged.
 
-Preserve layer order, cross-layer label priority, stable React keys, and clipping at plot boundaries.
+Deferred work:
 
-Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): grouping and context-aware clipping.
+- Interleaved layers such as `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` remain unsupported. Keep the TODO on [SeriesPlugin.getLayers](../../src/core/series/plugin.ts): separate shared bar geometry from render layers, retain source order through preparation, and define placement when group members straddle other layers. Splitting current bar groups alone would change widths, offsets, and stacking.
+- Existing bug in `main`: slider lines without explicit Y bounds reference a horizontal clipPath that [RangeSlider](../../src/components/RangeSlider/index.tsx) does not define, allowing strokes to overflow the preview. Reproduced during this stage; left unchanged for a separate fix with browser regression coverage.
 
 ### 3. Delegate axis-domain contributions
 
