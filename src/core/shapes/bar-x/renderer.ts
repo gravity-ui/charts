@@ -18,6 +18,7 @@ export function renderBarX(
         plot: SVGGElement;
         boundsWidth: number;
         boundsHeight: number;
+        isRangeSlider?: boolean;
     },
     preparedData: PreparedBarXData[],
     seriesOptions: PreparedSeriesOptions,
@@ -51,6 +52,18 @@ export function renderBarX(
         .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
+
+    if (!elements.isRangeSlider) {
+        const handlePointClick = (event: MouseEvent, d: PreparedBarXData) => {
+            d.series.pointClick?.(d.data, event);
+        };
+        rectSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .on('click.point-click', handlePointClick);
+        borderSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .on('click.point-click', handlePointClick);
+    }
 
     let dataLabels = preparedData.map((d) => d.svgLabels).flat();
     if (!allowOverlapDataLabels) {
@@ -111,6 +124,8 @@ export function renderBarX(
     dispatcher?.on('hover-shape.bar-x', handleShapeHover);
 
     return () => {
+        rectSelection.on('click.point-click', null);
+        borderSelection.on('click.point-click', null);
         dispatcher?.on('hover-shape.bar-x', null);
     };
 }

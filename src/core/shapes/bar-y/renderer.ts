@@ -16,6 +16,7 @@ const b = block('bar-y');
 export function renderBarY(
     elements: {
         plot: SVGGElement;
+        isRangeSlider?: boolean;
     },
     preparedData: BarYShapesArgs,
     seriesOptions: PreparedSeriesOptions,
@@ -48,6 +49,20 @@ export function renderBarY(
         .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.data.opacity || null)
         .attr('pointer-events', 'none');
+
+    if (!elements.isRangeSlider) {
+        const handlePointClick = (event: MouseEvent, d: PreparedBarYData) => {
+            d.series.pointClick?.(d.data, event);
+        };
+        segmentSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .on('click.point-click', handlePointClick);
+        borderSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .attr('pointer-events', null)
+            .attr('cursor', (d) => d.series.cursor)
+            .on('click.point-click', handlePointClick);
+    }
 
     const labelSelection = renderDataLabels({
         container: svgElement,
@@ -96,6 +111,8 @@ export function renderBarY(
     dispatcher?.on('hover-shape.bar-y', handleShapeHover);
 
     return () => {
+        segmentSelection.on('click.point-click', null);
+        borderSelection.on('click.point-click', null);
         dispatcher?.on('hover-shape.bar-y', null);
     };
 }

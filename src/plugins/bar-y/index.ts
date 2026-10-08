@@ -21,7 +21,7 @@ import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../ty
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
-import {prepareBarYSeries} from './prepare-bar-y-series';
+import {prepareBarYSeries, refreshBarYSourceReferences} from './prepare-bar-y-series';
 import {getBarYStackLabelAnchors} from './stack-labels';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
@@ -55,9 +55,16 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: [data], tooltipItems: data.shapes, labels};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher, labels}: RenderShapesArgs) {
+function renderShapes({
+    plot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+    labels,
+    isRangeSlider,
+}: RenderShapesArgs) {
     const cleanup = renderBarY(
-        {plot},
+        {plot, isRangeSlider},
         preparedData[0] as BarYShapesArgs,
         seriesOptions,
         dispatcher,
@@ -70,6 +77,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     type: 'bar-y',
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
+    refreshSourceReferences: refreshBarYSourceReferences,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({
             series,

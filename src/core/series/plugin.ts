@@ -38,6 +38,11 @@ export interface PrepareSeriesArgs<T = ChartSeries> {
     yAxis?: ChartYAxis[];
 }
 
+export interface RefreshSourceReferencesArgs<T = ChartSeries> {
+    series: T[];
+    preparedSeries: PreparedSeries[];
+}
+
 export interface PrepareShapeDataArgs {
     series: PreparedSeries[];
     boundsWidth: number;
@@ -93,6 +98,7 @@ export interface RenderShapesArgs {
     boundsWidth: number;
     boundsHeight: number;
     dispatcher?: Dispatch<object>;
+    isRangeSlider?: boolean;
 }
 
 export interface ValidateSeriesArgs<T = ChartSeries> {
@@ -134,6 +140,7 @@ export interface SeriesPlugin<
 
     /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
+    refreshSourceReferences?(args: RefreshSourceReferencesArgs<T>): PreparedSeries[];
     /**
      * Returns the value of a data point that places it on a continuous color scale.
      * `getDomainForContinuousColorScale` coerces the result to a number and builds the `[min, max]`

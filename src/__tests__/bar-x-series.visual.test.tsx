@@ -22,9 +22,299 @@ import {barXBordersData} from '../__stories__/__data__/bar-x/borders';
 import type {BarXSeries, ChartData} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
+import {BarXPointClickTestStory} from './components/BarXPointClickTestStory';
 import {getLocatorBoundingBox} from './utils';
 
+function getPointClickData(): ChartData {
+    return {
+        legend: {enabled: false},
+        tooltip: {pin: {enabled: true}},
+        xAxis: {type: 'category', categories: ['Jan', 'Feb']},
+        yAxis: [
+            {min: 0, max: 10},
+            {min: 0, max: 100, position: 'right'},
+        ],
+        series: {
+            data: [
+                {
+                    type: 'bar-x',
+                    name: 'Plan',
+                    data: [
+                        {x: 0, y: 10},
+                        {x: 1, y: 10},
+                    ],
+                },
+                {
+                    type: 'bar-x',
+                    name: 'Actual',
+                    data: [
+                        {x: 0, y: 8, custom: {id: 'actual-jan'}},
+                        {x: 1, y: 8, custom: {id: 'actual-feb'}},
+                    ],
+                },
+                {
+                    type: 'line',
+                    name: 'Completion',
+                    yAxis: 1,
+                    marker: {enabled: true, radius: 4},
+                    data: [
+                        {x: 0, y: 50},
+                        {x: 1, y: 50},
+                    ],
+                },
+            ],
+        },
+    };
+}
+
 test.describe('Bar-x series', () => {
+    test.describe('Point clicks', () => {
+        test('Exact bars and nearest chart clicks coexist @webkit', async ({mount, page}) => {
+            const component = await mount(<BarXPointClickTestStory data={getPointClickData()} />);
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await expect(bar).toBeVisible();
+            const box = await getLocatorBoundingBox(bar);
+            const position = {x: box.x + box.width / 2, y: box.y + box.height * 0.85};
+            await page.mouse.move(position.x, position.y);
+            await page.mouse.click(position.x, position.y);
+            const pointClicks = component.getByTestId('point-clicks');
+            const chartClicks = component.getByTestId('chart-clicks');
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? ''))
+                .toEqual([
+                    expect.objectContaining({
+                        name: 'Actual',
+                        x: 1,
+                        y: 8,
+                        custom: {id: 'actual-feb'},
+                        originalPoint: true,
+                        originalSeries: true,
+                        nativeEvent: true,
+                        eventType: 'click',
+                        target: 'gcharts-bar-x__segment',
+                        clientX: expect.any(Number),
+                        clientY: expect.any(Number),
+                    }),
+                ]);
+            await expect(chartClicks).toHaveText(
+                JSON.stringify([{name: 'Completion', y: 50, defaultPrevented: false}]),
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip).toHaveClass(/gcharts-tooltip_pinned/);
+            await page.mouse.click(position.x, position.y);
+            await expect(tooltip).not.toHaveClass(/gcharts-tooltip_pinned/);
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? '').length)
+                .toBe(2);
+
+            await component.locator('.gcharts-marker__symbol').first().click();
+            await expect
+                .poll(async () => JSON.parse((await chartClicks.textContent()) ?? '').length)
+                .toBe(3);
+            await page.mouse.click(box.x + box.width + 10, box.y + box.height * 0.1);
+            await expect
+                .poll(async () => JSON.parse((await chartClicks.textContent()) ?? '').length)
+                .toBe(4);
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? '').length)
+                .toBe(2);
+        });
+
+        test('Disabled tooltips preserve source data, borders and replacement callbacks @webkit', async ({
+            mount,
+            page,
+        }) => {
+            const data = getPointClickData();
+            data.tooltip = {enabled: false};
+            data.xAxis = {...data.xAxis, order: 'reverse'};
+            const actual = data.series.data[1] as BarXSeries;
+            actual.tooltip = {enabled: false};
+            actual.nullMode = 'zero';
+            actual.borderWidth = 3;
+            actual.dataLabels = {enabled: true, inside: true};
+            actual.data[1].tooltip = {enabled: false};
+            const component = await mount(<BarXPointClickTestStory data={data} />);
+            const pointClicks = component.getByTestId('point-clicks');
+            const border = component.locator('.gcharts-bar-x__segment-border').last();
+            await expect(border).toBeVisible();
+            const borderBox = await getLocatorBoundingBox(border);
+            await page.mouse.click(borderBox.x + 1, borderBox.y + borderBox.height / 2);
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? ''))
+                .toEqual([
+                    expect.objectContaining({
+                        name: 'Actual',
+                        x: 1,
+                        y: 8,
+                        custom: {id: 'actual-feb'},
+                        originalPoint: true,
+                        originalSeries: true,
+                        nativeEvent: true,
+                        target: 'gcharts-bar-x__segment-border',
+                    }),
+                ]);
+            await expect(page.locator('.gcharts-tooltip')).toHaveCount(0);
+
+            const label = component.locator('.gcharts-bar-x__label').last();
+            await expect(label).toBeVisible();
+            const labelPosition = await label.evaluate((element) => {
+                const svgElement = element as SVGGraphicsElement;
+                const box = svgElement.getBBox();
+                const transform = svgElement.getScreenCTM();
+                if (!transform) throw new Error('Missing label transform');
+                const center = new DOMPoint(
+                    box.x + box.width / 2,
+                    box.y + box.height / 2,
+                ).matrixTransform(transform);
+                return {x: center.x, y: center.y};
+            });
+            expect(
+                await component
+                    .locator('.gcharts-bar-x__segment')
+                    .evaluateAll((elements, position) => {
+                        const target = document.elementFromPoint(position.x, position.y);
+                        return target !== null && elements.some((element) => element === target);
+                    }, labelPosition),
+            ).toBe(true);
+            await page.mouse.click(labelPosition.x, labelPosition.y);
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? ''))
+                .toEqual([
+                    expect.objectContaining({target: 'gcharts-bar-x__segment-border'}),
+                    expect.objectContaining({
+                        name: 'Actual',
+                        y: 8,
+                        originalPoint: true,
+                        originalSeries: true,
+                        nativeEvent: true,
+                        target: 'gcharts-bar-x__segment',
+                    }),
+                ]);
+
+            await component.update(
+                <BarXPointClickTestStory data={data} callbackLabel="replacement" />,
+            );
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await expect(bar).toBeVisible();
+            const box = await getLocatorBoundingBox(bar);
+            await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.85);
+            await expect
+                .poll(async () =>
+                    JSON.parse((await pointClicks.textContent()) ?? '').map(
+                        (click: {label: string}) => click.label,
+                    ),
+                )
+                .toEqual(['initial', 'initial', 'replacement']);
+        });
+
+        for (const eventAction of ['preventDefault', 'stopPropagation'] as const) {
+            test(`Native ${eventAction} keeps its propagation semantics @webkit`, async ({
+                mount,
+                page,
+            }) => {
+                const component = await mount(
+                    <BarXPointClickTestStory
+                        data={getPointClickData()}
+                        eventAction={eventAction}
+                    />,
+                );
+                const bar = component.locator('.gcharts-bar-x__segment').last();
+                await expect(bar).toBeVisible();
+                const box = await getLocatorBoundingBox(bar);
+                await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.85);
+                await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.85);
+                await expect
+                    .poll(async () =>
+                        JSON.parse(
+                            (await component.getByTestId('point-clicks').textContent()) ?? '',
+                        ),
+                    )
+                    .toEqual([
+                        expect.objectContaining({
+                            nativeEvent: true,
+                            defaultPrevented: eventAction === 'preventDefault',
+                        }),
+                    ]);
+                const tooltip = page.locator('.gcharts-tooltip');
+                if (eventAction === 'preventDefault') {
+                    await expect(component.getByTestId('chart-clicks')).toHaveText(
+                        JSON.stringify([{name: 'Completion', y: 50, defaultPrevented: true}]),
+                    );
+                    await expect(tooltip).toHaveClass(/gcharts-tooltip_pinned/);
+                } else {
+                    await expect(component.getByTestId('chart-clicks')).toHaveText('[]');
+                    await expect(tooltip).not.toHaveClass(/gcharts-tooltip_pinned/);
+                }
+            });
+        }
+
+        test('Touch selects the rendered bar @desktop-touch', async ({mount, page}) => {
+            const component = await mount(<BarXPointClickTestStory data={getPointClickData()} />);
+            const bar = component.locator('.gcharts-bar-x__segment').last();
+            await expect(bar).toBeVisible();
+            const box = await getLocatorBoundingBox(bar);
+            await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.85);
+            await expect
+                .poll(async () =>
+                    JSON.parse((await component.getByTestId('point-clicks').textContent()) ?? ''),
+                )
+                .toEqual([
+                    expect.objectContaining({
+                        name: 'Actual',
+                        x: 1,
+                        y: 8,
+                        nativeEvent: true,
+                    }),
+                ]);
+            await expect(component.getByTestId('chart-clicks')).toHaveText(
+                JSON.stringify([{name: 'Completion', y: 50, defaultPrevented: false}]),
+            );
+        });
+
+        test('Range slider preview does not invoke point actions @webkit', async ({
+            mount,
+            page,
+        }) => {
+            const data: ChartData = {
+                legend: {enabled: false},
+                xAxis: {type: 'linear', min: 0, max: 2, rangeSlider: {enabled: true}},
+                yAxis: [{min: 0, max: 10}],
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Actual',
+                            data: [
+                                {x: 0, y: 4},
+                                {x: 1, y: 8},
+                                {x: 2, y: 6},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(<BarXPointClickTestStory data={data} />);
+            const previewBar = component
+                .locator('.gcharts-range-slider .gcharts-bar-x__segment')
+                .nth(1);
+            await expect(previewBar).toBeVisible();
+            const box = await getLocatorBoundingBox(previewBar);
+            await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+            await previewBar.dispatchEvent('click');
+            await expect(component.getByTestId('point-clicks')).toHaveText('[]');
+            await expect(component.getByTestId('chart-clicks')).toHaveText('[]');
+            await component
+                .locator('.gcharts-chart__content .gcharts-bar-x__segment')
+                .nth(1)
+                .click();
+            await expect
+                .poll(async () =>
+                    JSON.parse((await component.getByTestId('point-clicks').textContent()) ?? ''),
+                )
+                .toEqual([expect.objectContaining({name: 'Actual', x: 1, y: 8})]);
+        });
+    });
+
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barXBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
