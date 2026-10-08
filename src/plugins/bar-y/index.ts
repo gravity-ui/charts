@@ -55,9 +55,16 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: [data], tooltipItems: data.shapes, labels};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher, labels}: RenderShapesArgs) {
+function renderShapes({
+    plot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+    labels,
+    isRangeSlider,
+}: RenderShapesArgs) {
     const cleanup = renderBarY(
-        {plot},
+        {plot, isRangeSlider},
         preparedData[0] as BarYShapesArgs,
         seriesOptions,
         dispatcher,

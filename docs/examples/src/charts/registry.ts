@@ -40,6 +40,8 @@ import {BarXSeriesExample} from './series-types/bar-x';
 import {BarXPointClickExample} from './series-types/bar-x-events';
 import barXPointClickRaw from './series-types/bar-x-events.tsx?raw';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
+import {BarYPointClickExample} from './series-types/bar-y-events';
+import barYPointClickRaw from './series-types/bar-y-events.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
 import {ScatterSeriesExample} from './series-types/scatter';
@@ -111,6 +113,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/bar-x-events': {
         code: extractDisplayCode(barXPointClickRaw),
         Component: BarXPointClickExample,
+    },
+    'series-types/bar-y-events': {
+        code: extractDisplayCode(barYPointClickRaw),
+        Component: BarYPointClickExample,
     },
     'series-types/line': {
         code: extractDisplayCode(lineSeriesRaw),

@@ -16,6 +16,7 @@ const b = block('bar-y');
 export function renderBarY(
     elements: {
         plot: SVGGElement;
+        isRangeSlider?: boolean;
     },
     preparedData: BarYShapesArgs,
     seriesOptions: PreparedSeriesOptions,
@@ -37,6 +38,14 @@ export function renderBarY(
         .attr('fill', (d) => d.color)
         .attr('opacity', (d) => d.data.opacity || null)
         .attr('cursor', (d) => d.series.cursor);
+
+    if (!elements.isRangeSlider) {
+        segmentSelection
+            .filter((d) => Boolean(d.series.pointClick))
+            .on('click.point-click', (event: MouseEvent, d) => {
+                d.series.pointClick?.(d.data, event);
+            });
+    }
 
     const borderSelection = svgElement
         .selectAll(`path.${b('segment-border')}`)
@@ -96,6 +105,7 @@ export function renderBarY(
     dispatcher?.on('hover-shape.bar-y', handleShapeHover);
 
     return () => {
+        segmentSelection.on('click.point-click', null);
         dispatcher?.on('hover-shape.bar-y', null);
     };
 }

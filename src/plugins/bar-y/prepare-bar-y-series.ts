@@ -7,17 +7,25 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {getOriginalSeries, getOriginalSeriesData} from '~core/utils/series/sorting';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
 
 const DEFAULT_LABEL_PADDING = 7;
 
-function prepareSeriesData(series: BarYSeries): BarYSeriesData[] {
+function prepareSeriesData(
+    series: BarYSeries,
+    sourceData?: WeakMap<BarYSeriesData, BarYSeriesData>,
+): BarYSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, x: p.x ?? 0}));
+            return data.map((p) => {
+                const resolvedPoint = {...p, x: p.x ?? 0};
+                sourceData?.set(resolvedPoint, p);
+                return resolvedPoint;
+            });
         case 'skip':
         default:
             return data;
@@ -68,6 +76,11 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
         seriesList.map<Promise<PreparedBarYSeries>>(async (series) => {
             const name = series.name || '';
             const color = series.color || colorScale(name);
+            const originalSeries = getOriginalSeries(series);
+            const pointClick = originalSeries.events?.pointClick;
+            const sourceData = pointClick
+                ? new WeakMap<BarYSeriesData, BarYSeriesData>()
+                : undefined;
 
             return {
                 type: series.type,
@@ -81,7 +94,18 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                     groupId: series.legend?.groupId ?? getUniqId(),
                     itemText: series.legend?.itemText ?? name,
                 },
-                data: prepareSeriesData(series),
+                data: prepareSeriesData(series, sourceData),
+                pointClick: pointClick
+                    ? (point, event) => {
+                          pointClick(
+                              {
+                                  point: getOriginalSeriesData(sourceData?.get(point) ?? point),
+                                  series: originalSeries,
+                              },
+                              event,
+                          );
+                      }
+                    : undefined,
                 stacking: series.stacking,
                 stackLabels: series.stackLabels,
                 stackId: getSeriesStackId(series),

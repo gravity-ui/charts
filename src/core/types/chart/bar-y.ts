@@ -43,10 +43,18 @@ export interface BarYFormatContext<T = MeaningfulAny>
 
 export type BarYValueFormat<T = MeaningfulAny> = ValueFormat<BarYFormatContext<T>>;
 
+export interface BarYSeriesEvents<T = MeaningfulAny> {
+    pointClick?: (
+        data: {point: BarYSeriesData<T>; series: BarYSeries<T>},
+        event: MouseEvent,
+    ) => void;
+}
+
 export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /** Bar-Y series: horizontal bars for values along the Y axis. */
     type: typeof SERIES_TYPE.BarY;
     data: BarYSeriesData<T>[];
+    events?: BarYSeriesEvents<T>;
     /** The name of the series (used in legend, tooltip etc) */
     name: string;
     /** The main color of the series (hex, rgba) */

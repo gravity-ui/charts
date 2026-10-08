@@ -19,6 +19,7 @@ import {
 } from '../__stories__/__data__';
 import type {BarYSeries, BarYSeriesData, ChartData, ChartMargin} from '../types';
 
+import {BarYPointClickTestStory} from './components/BarYPointClickTestStory';
 import {getLocatorBoundingBox} from './utils';
 
 const CHART_MARGIN: ChartMargin = {
@@ -29,6 +30,174 @@ const CHART_MARGIN: ChartMargin = {
 };
 
 test.describe('Bar-y series', () => {
+    test.describe('Point clicks', () => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            xAxis: {min: 0, max: 12},
+            yAxis: [{type: 'category', categories: ['First', 'Second'], order: 'reverse'}],
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Actual',
+                        tooltip: {enabled: false},
+                        nullMode: 'zero',
+                        data: [
+                            {y: 0, x: 4, custom: {id: 'first'}},
+                            {y: 1, x: 8, custom: {id: 'second'}, tooltip: {enabled: false}},
+                        ],
+                    },
+                ],
+            },
+        };
+
+        test('Disabled tooltips preserve original data and ignore background @webkit', async ({
+            mount,
+            page,
+        }) => {
+            const component = await mount(<BarYPointClickTestStory data={data} />);
+            const bar = component.locator('.gcharts-bar-y__segment').last();
+            await expect(bar).toBeVisible();
+            const box = await getLocatorBoundingBox(bar);
+            await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+            const pointClicks = component.getByTestId('point-clicks');
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? ''))
+                .toEqual([
+                    expect.objectContaining({
+                        name: 'Actual',
+                        x: 8,
+                        y: 1,
+                        custom: {id: 'second'},
+                        originalPoint: true,
+                        originalSeries: true,
+                        nativeEvent: true,
+                        eventType: 'click',
+                    }),
+                ]);
+            await page.mouse.click(box.x + box.width + 10, box.y + box.height / 2);
+            await expect
+                .poll(async () => JSON.parse((await pointClicks.textContent()) ?? '').length)
+                .toBe(1);
+            await expect(page.locator('.gcharts-tooltip')).toHaveCount(0);
+            await component.update(
+                <BarYPointClickTestStory
+                    data={data}
+                    callbackLabel="replacement"
+                    eventAction="stopPropagation"
+                />,
+            );
+            await component.locator('.gcharts-bar-y__segment').last().click();
+            await expect
+                .poll(async () =>
+                    JSON.parse((await pointClicks.textContent()) ?? '').map(
+                        (click: {label: string}) => click.label,
+                    ),
+                )
+                .toEqual(['initial', 'replacement']);
+            await expect(component.getByTestId('chart-clicks')).toHaveText('[]');
+        });
+
+        test('Enabled tooltips preserve native propagation @webkit', async ({mount}) => {
+            const enabledData: ChartData = {
+                ...data,
+                tooltip: {enabled: true},
+                series: {
+                    data: data.series.data.map((series) => {
+                        if (series.type !== 'bar-y') return series;
+                        return {
+                            ...series,
+                            tooltip: {enabled: true},
+                            data: series.data.map((point) => ({
+                                ...point,
+                                tooltip: {enabled: true},
+                            })),
+                        };
+                    }),
+                },
+            };
+            const component = await mount(<BarYPointClickTestStory data={enabledData} />);
+            const chartClicks = component.getByTestId('chart-clicks');
+            await component.locator('.gcharts-bar-y__segment').last().click();
+            await expect
+                .poll(async () => JSON.parse((await chartClicks.textContent()) ?? ''))
+                .toEqual([expect.objectContaining({name: 'Actual', defaultPrevented: false})]);
+            await component.update(
+                <BarYPointClickTestStory data={enabledData} eventAction="preventDefault" />,
+            );
+            await component.locator('.gcharts-bar-y__segment').last().click();
+            await expect
+                .poll(async () => JSON.parse((await chartClicks.textContent()) ?? ''))
+                .toEqual([
+                    expect.objectContaining({defaultPrevented: false}),
+                    expect.objectContaining({defaultPrevented: true}),
+                ]);
+            await component.update(
+                <BarYPointClickTestStory data={enabledData} eventAction="stopPropagation" />,
+            );
+            await component.locator('.gcharts-bar-y__segment').last().click();
+            await expect
+                .poll(
+                    async () =>
+                        JSON.parse(
+                            (await component.getByTestId('point-clicks').textContent()) ?? '',
+                        ).length,
+                )
+                .toBe(3);
+            await expect
+                .poll(async () => JSON.parse((await chartClicks.textContent()) ?? '').length)
+                .toBe(2);
+        });
+
+        test('Range slider previews do not invoke point actions @webkit', async ({mount}) => {
+            const previewData: ChartData = {
+                ...data,
+                xAxis: {...data.xAxis, rangeSlider: {enabled: true}},
+            };
+            const component = await mount(<BarYPointClickTestStory data={previewData} />);
+            const previewBar = component
+                .locator('.gcharts-range-slider .gcharts-bar-y__segment')
+                .last();
+            await expect(previewBar).toBeVisible();
+            await previewBar.dispatchEvent('click');
+            await expect(component.getByTestId('point-clicks')).toHaveText('[]');
+            await component
+                .locator('.gcharts-chart__content .gcharts-bar-y__segment')
+                .last()
+                .click();
+            await expect
+                .poll(
+                    async () =>
+                        JSON.parse(
+                            (await component.getByTestId('point-clicks').textContent()) ?? '',
+                        ).length,
+                )
+                .toBe(1);
+        });
+
+        test('Touch invokes the rendered point action @desktop-touch', async ({mount, page}) => {
+            const component = await mount(<BarYPointClickTestStory data={data} />);
+            const bar = component.locator('.gcharts-bar-y__segment').last();
+            await expect(bar).toBeVisible();
+            const box = await getLocatorBoundingBox(bar);
+            await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+            await expect
+                .poll(async () =>
+                    JSON.parse((await component.getByTestId('point-clicks').textContent()) ?? ''),
+                )
+                .toEqual([
+                    expect.objectContaining({
+                        x: 8,
+                        y: 1,
+                        originalPoint: true,
+                        originalSeries: true,
+                        nativeEvent: true,
+                    }),
+                ]);
+        });
+    });
+
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={barYBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
