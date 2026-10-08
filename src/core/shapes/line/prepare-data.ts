@@ -7,7 +7,7 @@ import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedLineSeries, PreparedSeries, PreparedSeriesOptions} from '../../series/types';
 import {getGradientBBox, setGradientPointFills} from '../../utils/gradient';
 import {applyCapturedPointColors, prepareGradientCoords} from '../../utils/gradient-reference';
-import {getMarkerFill} from '../marker';
+import {getMarkerFill, matchHoverPoints} from '../marker';
 import type {HoveredShapeData, MarkerItem, ShapeLabels} from '../types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
@@ -23,6 +23,7 @@ import type {PointData, PreparedLineData} from './types';
 export function buildLineHoverMarkerGetter(
     points: PointData[],
     series: PreparedLineSeries,
+    isOutsideBounds?: (x: number, y: number) => boolean,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
@@ -34,37 +35,20 @@ export function buildLineHoverMarkerGetter(
         return () => [];
     }
 
-    const pointsByData = new Map<unknown, PointData[]>();
-    for (const p of points) {
-        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
-            const dataPoints = pointsByData.get(p.data) ?? [];
-            dataPoints.push(p);
-            pointsByData.set(p.data, dataPoints);
-        }
-    }
+    const findHoverPoints = matchHoverPoints(points, series.id);
 
     return (hoveredData: HoveredShapeData[]) => {
+        const matches = findHoverPoints(hoveredData);
         const items: MarkerItem[] = [];
-        for (const hovered of hoveredData) {
-            if (hovered.series?.id !== undefined && hovered.series.id !== series.id) {
-                continue;
-            }
-
-            const dataPoints = pointsByData.get(hovered.data);
-            const hasGeometry = hovered.x !== undefined && hovered.y1 !== undefined;
-            const point = hasGeometry
-                ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
-                : dataPoints?.[dataPoints.length - 1];
-            if (!point || point.x === null || point.y === null) continue;
-
+        for (const {point, hovered} of matches) {
             const isNormalMarkerDrawn =
                 normalState.enabled || Boolean(point.data.marker?.states?.normal?.enabled);
 
             const markerState = haloEnabled && isNormalMarkerDrawn ? normalState : hoverState;
 
             items.push({
-                cx: point.x,
-                cy: point.y,
+                cx: point.x as number,
+                cy: point.y as number,
                 radius: markerState.radius,
                 symbolType: normalState.symbol,
                 fill: getMarkerFill(point, series.color),
@@ -72,10 +56,14 @@ export function buildLineHoverMarkerGetter(
                 strokeWidth: markerState.borderWidth,
                 opacity: 1,
                 active: true,
-                clipped: false,
+                clipped:
+                    isOutsideBounds && point.x !== null && point.y !== null
+                        ? isOutsideBounds(point.x, point.y)
+                        : Boolean(point.clipped),
                 series: {id: series.id},
                 data: hovered.data,
                 halo: haloEnabled ? hoverState.halo : undefined,
+                renderSymbol: !(haloEnabled && isNormalMarkerDrawn),
             });
         }
         return items;
@@ -103,7 +91,7 @@ interface Args {
 }
 
 export function projectLineData(args: Args): PreparedLineData[] {
-    const {series, xAxis, yAxis, xScale, yScale, split, isRangeSlider} = args;
+    const {series, xAxis, yAxis, xScale, yScale, split, isRangeSlider, isOutsideBounds} = args;
     const result: PreparedLineData[] = [];
     for (const s of series) {
         const seriesYAxis = yAxis[s.yAxis];
@@ -120,12 +108,15 @@ export function projectLineData(args: Args): PreparedLineData[] {
                 yAxis: seriesYAxis,
                 yScale: seriesYScale,
             });
+            const x = getXValue({point: data, points: s.data, xAxis, xScale});
+            const resolvedY = y === null ? null : yAxisTop + y;
             return {
-                x: getXValue({point: data, points: s.data, xAxis, xScale}),
-                y: y === null ? null : yAxisTop + y,
+                x,
+                y: resolvedY,
                 color: data.marker?.color ?? data.color,
                 data,
                 series: s,
+                clipped: x !== null && resolvedY !== null ? isOutsideBounds(x, resolvedY) : false,
             };
         });
         markHiddenPointsOutOfYRange({
@@ -227,12 +218,12 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
                 strokeWidth: normal.borderWidth,
                 opacity: 1,
                 active: true,
-                clipped: isOutsideBounds(point.x, point.y),
+                clipped: Boolean(point.clipped),
                 series: {id: s.id},
                 data: point.data,
             });
         }
-        item.getHoverMarkers = buildLineHoverMarkerGetter(points, s);
+        item.getHoverMarkers = buildLineHoverMarkerGetter(points, s, isOutsideBounds);
     }
 
     const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);

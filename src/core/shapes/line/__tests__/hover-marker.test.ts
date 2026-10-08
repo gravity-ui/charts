@@ -117,6 +117,31 @@ describe('buildLineHoverMarkerGetter', () => {
             const result = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
             expect(result[0].fill).toBe('red');
         });
+
+        test('omits symbol rendering to avoid duplicating existing marker when halo is enabled', () => {
+            const {points, series} = createSeries({
+                normalEnabled: true,
+                halo: {enabled: true, size: 8, opacity: 0.3},
+            });
+            const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+            const result = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+            expect(result).toHaveLength(1);
+            expect(result[0].renderSymbol).toBe(false);
+        });
+
+        test('preserves point clipping on hover', () => {
+            const {points, series} = createSeries({
+                normalEnabled: true,
+                halo: {enabled: true, size: 8, opacity: 0.3},
+            });
+            points[0].clipped = true;
+            const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+            const result = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+            expect(result).toHaveLength(1);
+            expect(result[0].clipped).toBe(true);
+        });
     });
 
     describe('hover-only markers mode', () => {
@@ -175,6 +200,18 @@ describe('buildLineHoverMarkerGetter', () => {
                 size: 6,
                 opacity: 0,
             });
+        });
+
+        test('includes symbol rendering when marker is hover-only with halo enabled', () => {
+            const {points, series} = createSeries({
+                normalEnabled: false,
+                halo: {enabled: true, size: 10, opacity: 0.5},
+            });
+            const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+            const result = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+            expect(result).toHaveLength(1);
+            expect(result[0].renderSymbol).toBe(true);
         });
     });
 
@@ -343,6 +380,86 @@ describe('buildLineHoverMarkerGetter', () => {
                         }),
                     );
                 });
+            });
+        });
+
+        describe('clipping preservation', () => {
+            test('preserves point clipping when isOutsideBounds returns true', () => {
+                const {points, series} = createSeries({
+                    normalEnabled: true,
+                    halo: {enabled: true},
+                    pointsData: [
+                        {x: -0.5, y: 10},
+                        {x: 5, y: 20},
+                    ],
+                });
+                points[0].x = -5;
+                const isOutsideBounds = (x: number) => x < 0;
+                const getHoverMarkers = buildLineHoverMarkerGetter(points, series, isOutsideBounds);
+
+                const resClipped = getHoverMarkers([
+                    {data: points[0].data, series: {id: series.id}},
+                ]);
+                expect(resClipped[0].clipped).toBe(true);
+
+                const resUnclipped = getHoverMarkers([
+                    {data: points[1].data, series: {id: series.id}},
+                ]);
+                expect(resUnclipped[0].clipped).toBe(false);
+            });
+
+            test('falls back to point.clipped when isOutsideBounds is not provided', () => {
+                const {points, series} = createSeries({
+                    normalEnabled: true,
+                    halo: {enabled: true},
+                });
+                points[0].clipped = true;
+                const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                const res = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                expect(res[0].clipped).toBe(true);
+            });
+        });
+
+        describe('renderSymbol deduplication', () => {
+            test('sets renderSymbol: false for always-visible markers with halo', () => {
+                const {points, series} = createSeries({
+                    normalEnabled: true,
+                    halo: {enabled: true},
+                });
+                const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                const res = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                expect(res[0].renderSymbol).toBe(false);
+            });
+
+            test('sets renderSymbol: true for hover-only markers with halo', () => {
+                const {points, series} = createSeries({
+                    normalEnabled: false,
+                    halo: {enabled: true},
+                });
+                const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                const res = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                expect(res[0].renderSymbol).toBe(true);
+            });
+
+            test('sets renderSymbol: false when point normal marker is enabled by override', () => {
+                const {points, series} = createSeries({
+                    normalEnabled: false,
+                    halo: {enabled: true},
+                    pointsData: [
+                        {x: 1, y: 10, marker: {states: {normal: {enabled: true}}}},
+                        {x: 2, y: 20},
+                    ],
+                });
+                const getHoverMarkers = buildLineHoverMarkerGetter(points, series);
+
+                const res0 = getHoverMarkers([{data: points[0].data, series: {id: series.id}}]);
+                expect(res0[0].renderSymbol).toBe(false);
+
+                const res1 = getHoverMarkers([{data: points[1].data, series: {id: series.id}}]);
+                expect(res1[0].renderSymbol).toBe(true);
             });
         });
     });

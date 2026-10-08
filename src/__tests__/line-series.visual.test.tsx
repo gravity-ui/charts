@@ -1429,17 +1429,19 @@ test.describe('Line series', () => {
             await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
             await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
 
-            // 2. Hover near point 0 -> halo appears over existing marker
+            // 2. Hover near point 0 -> halo appears behind existing marker without duplicating symbol
             await page.mouse.move(lineBox.x + lineBox.width * 0.1, lineBox.y + lineBox.height / 2);
             const halo = component.locator('.gcharts-marker__halo');
             await expect(halo).toHaveCount(1);
             await expect(halo).toBeVisible();
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
             const haloBox1 = await getLocatorBoundingBox(halo);
 
-            // 3. Move near point 1 -> halo moves to new position
+            // 3. Move near point 1 -> halo moves to new position without duplicating symbol
             await page.mouse.move(lineBox.x + lineBox.width * 0.9, lineBox.y + lineBox.height / 2);
             await expect(halo).toHaveCount(1);
             await expect(halo).toBeVisible();
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
             const haloBox2 = await getLocatorBoundingBox(halo);
             expect(haloBox2.x).not.toBe(haloBox1.x);
 

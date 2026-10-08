@@ -2,7 +2,7 @@
 import {select} from 'd3-selection';
 
 import {SymbolType} from '../../constants';
-import {buildHoverMarkerGetter, renderHoverMarkers} from '../marker';
+import {buildHoverMarkerGetter, matchHoverPoints, renderHoverMarkers} from '../marker';
 import type {MarkerItem} from '../types';
 
 describe('buildHoverMarkerGetter', () => {
@@ -59,6 +59,52 @@ describe('buildHoverMarkerGetter', () => {
 
         expect(getHoverMarkers([{data, series: {id: series.id}, x: 10, y1: 20}])).toEqual([
             expect.objectContaining({cx: 10, cy: 20, fill: 'red'}),
+        ]);
+    });
+
+    test('preserves point clipping in returned hover marker', () => {
+        const data = {x: 1, y: 20};
+        const point = {data, x: 10, y: 20, clipped: true};
+        const series = {
+            id: 'line-1',
+            color: 'black',
+            marker: {
+                states: {
+                    normal: {enabled: false, symbol: SymbolType.Circle},
+                    hover: {
+                        enabled: true,
+                        radius: 4,
+                        borderColor: 'white',
+                        borderWidth: 1,
+                    },
+                },
+            },
+        };
+        const getHoverMarkers = buildHoverMarkerGetter([point], series);
+
+        expect(getHoverMarkers([{data, series: {id: series.id}}])).toEqual([
+            expect.objectContaining({clipped: true}),
+        ]);
+    });
+});
+
+describe('matchHoverPoints', () => {
+    test('ignores hovered data from other series', () => {
+        const point = {data: {x: 1}, x: 10, y: 20};
+        const matcher = matchHoverPoints([point], 'series-1');
+
+        expect(matcher([{data: {x: 1}, series: {id: 'other-series'}}])).toEqual([]);
+    });
+
+    test('matches by coordinates when provided', () => {
+        const data = {x: 1};
+        const point1 = {data, x: 10, y: 20};
+        const point2 = {data, x: 30, y: 40};
+        const matcher = matchHoverPoints([point1, point2], 'series-1');
+
+        const result = matcher([{data, series: {id: 'series-1'}, x: 30, y1: 40}]);
+        expect(result).toEqual([
+            {point: point2, hovered: expect.objectContaining({x: 30, y1: 40})},
         ]);
     });
 });
@@ -165,5 +211,31 @@ describe('renderHoverMarkers', () => {
 
         renderHoverMarkers(select(container), []);
         expect(container.children.length).toBe(0);
+    });
+
+    test('does not render symbol when renderSymbol is false', () => {
+        const markerWithoutSymbol = createMarkerItem({
+            renderSymbol: false,
+            halo: {enabled: true, size: 8, opacity: 0.3},
+        });
+
+        renderHoverMarkers(select(container), [markerWithoutSymbol]);
+
+        expect(container.querySelector('.gcharts-marker__halo')).not.toBeNull();
+        expect(container.querySelector('.gcharts-marker__symbol')).toBeNull();
+    });
+
+    test('omits path d when clipped is true', () => {
+        const marker = createMarkerItem({
+            halo: {enabled: true, size: 6, opacity: 0.25},
+            clipped: true,
+        });
+
+        renderHoverMarkers(select(container), [marker]);
+
+        const halo = container.querySelector('.gcharts-marker__halo');
+        const symbol = container.querySelector('.gcharts-marker__symbol');
+        expect(halo?.hasAttribute('d')).toBe(false);
+        expect(symbol?.hasAttribute('d')).toBe(false);
     });
 });
