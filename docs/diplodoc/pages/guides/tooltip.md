@@ -154,7 +154,8 @@ axes and radar charts, a custom formatter can return a placeholder for a missing
 By default, Cartesian headers use the selected header's axis for number/date
 formatting, including waterfall. An explicit `tooltip.headerFormat` takes
 precedence. Radar requires an explicit format; series without headers remain
-headerless. This waterfall example displays dates automatically:
+headerless. Without an explicit axis `type`, headers retain raw values.
+This waterfall example displays dates automatically:
 
 <div data-chart-example="tooltip/waterfall-header"></div>
 

@@ -69,7 +69,9 @@ export function prepareTooltipHeaderFormat({
         if (!header) continue;
         const data = Array.isArray(series.data) ? series.data : [series.data];
         const points = data.filter((point) => isPointTooltipEnabled({data: point, series}));
-        if (!points.length && (data.length || !isPointTooltipEnabled({series}))) continue;
+        // Empty series still provide a default format to getDefaultTooltipHeaderFormat callers.
+        const enabled = data.length ? points.length > 0 : isPointTooltipEnabled({series});
+        if (!enabled) continue;
         eligibleItems.push({series});
         if (!header.axis || header.requiresFormat) continue;
 

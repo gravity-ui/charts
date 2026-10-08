@@ -120,12 +120,10 @@ export const ChartInner = (props: ChartInnerProps) => {
             !preparedTooltip.enabled || preparedTooltip.headerFormat
                 ? undefined
                 : prepareTooltipHeaderFormat({
-                      seriesData: activeLegendItems
-                          ? getVisibleSeries({
-                                preparedSeries: allPreparedSeries ?? [],
-                                activeLegendItems,
-                            })
-                          : (allPreparedSeries ?? []),
+                      seriesData: getVisibleSeries({
+                          preparedSeries: allPreparedSeries ?? [],
+                          activeLegendItems,
+                      }),
                       xAxis: data.xAxis,
                       yAxes: data.yAxis,
                       dateTimeLabelFormats: preparedTooltip.dateTimeLabelFormats,
