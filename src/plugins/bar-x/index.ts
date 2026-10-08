@@ -89,7 +89,6 @@ function renderShapes({
 export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
-    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareBarXSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({

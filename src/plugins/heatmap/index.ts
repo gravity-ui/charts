@@ -39,7 +39,6 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap> = {
     type: 'heatmap',
-    getLayerKey: ({series}) => series.type,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareHeatmapSeries({
             series: series as HeatmapSeries[],

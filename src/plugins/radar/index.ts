@@ -69,7 +69,6 @@ export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
             });
         }
     },
-    getLayerKey: ({series}) => series.type,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     prepareShapeData,

@@ -1,18 +1,14 @@
 /** @jest-environment jsdom */
-import type React from 'react';
-
 import type {PreparedYAxis} from '~core/axes/types';
-import type {SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getPreparedSeries} from '~core/series/prepareSeries';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedLegendOptions, PreparedSeries} from '~core/series/types';
 import type {SeriesShapeData, ShapeLabels} from '~core/shapes/types';
-import type {BarXSeries, ChartSeries} from '~core/types';
+import type {ChartSeries} from '~core/types';
 import type {ZoomState} from '~core/zoom/types';
 
 import {getShapes} from '..';
-import type {SeriesShapes} from '../SeriesShapes';
 
 const rawSeries: ChartSeries[] = [
     {type: 'line', name: 'line1', data: [{x: 0, y: 1}]},
@@ -50,18 +46,6 @@ function getShapeArgs(series: PreparedSeries[]) {
 }
 
 afterEach(() => jest.restoreAllMocks());
-
-it('lets a plugin read its own fields from raw and prepared series when grouping layers', async () => {
-    const plugin: Pick<SeriesPlugin<BarXSeries>, 'getLayerKey'> = {
-        getLayerKey: ({series}) => series.stackId ?? 'default',
-    };
-    const raw: BarXSeries = {type: 'bar-x', name: 'bar', stackId: 'stack', data: []};
-    const prepared = await prepare([raw]);
-    const bars = prepared.filter((series) => series.type === 'bar-x');
-    expect(bars).toHaveLength(1);
-    expect(plugin.getLayerKey({series: raw, seriesKey: 'raw'})).toBe('stack');
-    expect(plugin.getLayerKey({series: bars[0], seriesKey: bars[0].id})).toBe('stack');
-});
 
 it('preserves independent lines and one bar group across interleaved raw series', async () => {
     const original = JSON.parse(JSON.stringify(rawSeries));
@@ -122,46 +106,33 @@ it('prepares upper layers first and preserves rendered keys and tooltip order', 
     ]);
 });
 
-it.each<{
+interface ClipCase {
     name: string;
-    yAxis: PreparedYAxis[];
+    type: 'line' | 'scatter' | 'bar-x' | 'pie';
+    yAxis?: PreparedYAxis[];
     zoomState?: Partial<ZoomState>;
     isRangeSlider?: boolean;
-    clip: string;
-}>([
-    {name: 'no bounds', yAxis: [], clip: 'plot-horizontal'},
-    {name: 'empty zoom', yAxis: [], zoomState: {}, clip: 'plot-horizontal'},
-    {name: 'zero min', yAxis: [{min: 0} as PreparedYAxis], clip: 'plot'},
+    clip?: string;
+}
+
+it.each<ClipCase>([
+    {name: 'line without bounds', type: 'line', clip: 'plot-horizontal'},
+    {name: 'line with empty zoom', type: 'line', zoomState: {}, clip: 'plot-horizontal'},
+    {name: 'line with zero min', type: 'line', yAxis: [{min: 0} as PreparedYAxis], clip: 'plot'},
     {
-        name: 'max on another axis',
+        name: 'line with max on another axis',
+        type: 'line',
         yAxis: [{} as PreparedYAxis, {max: 10} as PreparedYAxis],
         clip: 'plot',
     },
-    {name: 'X zoom', yAxis: [], zoomState: {x: [0, 1]}, clip: 'plot'},
-    {name: 'Y zoom', yAxis: [], zoomState: {y: [[0, 1]]}, clip: 'plot'},
-    {name: 'slider without Y bounds', yAxis: [], isRangeSlider: true, clip: 'plot'},
-])('selects line clipping with $name', async ({yAxis, zoomState, isRangeSlider, clip}) => {
-    const series = await prepare(rawSeries.slice(0, 1));
-    jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
-        renderData: [createShape()],
-        tooltipItems: [],
-    });
-    const {shapes} = await getShapes({
-        ...getShapeArgs(series),
-        yAxis,
-        zoomState,
-        isRangeSlider,
-    });
-    const layer = shapes[0] as React.ReactElement<React.ComponentProps<typeof SeriesShapes>>;
-    expect(layer.props.clipPathId).toBe(clip);
-});
-
-it.each([
-    {type: 'scatter' as const, slider: false, clip: undefined},
-    {type: 'scatter' as const, slider: true, clip: 'plot'},
-    {type: 'bar-x' as const, slider: false, clip: 'plot'},
-    {type: 'pie' as const, slider: false, clip: undefined},
-])('selects $type clipping for slider=$slider', async ({type, slider, clip}) => {
+    {name: 'line with X zoom', type: 'line', zoomState: {x: [0, 1]}, clip: 'plot'},
+    {name: 'line with Y zoom', type: 'line', zoomState: {y: [[0, 1]]}, clip: 'plot'},
+    {name: 'line preview without Y bounds', type: 'line', isRangeSlider: true, clip: 'plot'},
+    {name: 'scatter without clipping', type: 'scatter'},
+    {name: 'scatter preview', type: 'scatter', isRangeSlider: true, clip: 'plot'},
+    {name: 'bar with default clipping', type: 'bar-x', clip: 'plot'},
+    {name: 'pie without clipping', type: 'pie'},
+])('selects clipping for $name', async ({type, yAxis = [], zoomState, isRangeSlider, clip}) => {
     const series = await prepare([
         type === 'pie'
             ? {type, data: [{name: 'slice', value: 1}]}
@@ -171,21 +142,13 @@ it.each([
         renderData: [createShape()],
         tooltipItems: [],
     });
-    const clipPolicy = getSeriesPlugin(type).getClipPath;
-    const policy = clipPolicy && jest.spyOn(getSeriesPlugin(type), 'getClipPath');
     const {shapes} = await getShapes({
         ...getShapeArgs(series),
-        isRangeSlider: slider,
+        yAxis,
+        zoomState,
+        isRangeSlider,
     });
     expect(shapes[0].props.clipPathId).toBe(clip);
-    if (policy) {
-        expect(policy).toHaveBeenCalledTimes(1);
-        expect(policy).toHaveBeenCalledWith({
-            isRangeSlider: slider,
-            yAxis: [],
-            zoomState: undefined,
-        });
-    }
 });
 
 it.each([

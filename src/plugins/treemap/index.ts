@@ -72,7 +72,6 @@ function validateTreemapData(series: TreemapSeries) {
 export const treemapPlugin: SeriesPlugin<TreemapSeries, TooltipDataChunkTreemap> = {
     type: 'treemap',
     getClipPath: () => false,
-    getLayerKey: ({series}) => series.type,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
     validate: ({series, allSeries}) => {

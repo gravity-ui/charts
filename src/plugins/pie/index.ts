@@ -37,7 +37,6 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatContext> = {
     type: 'pie',
     getClipPath: () => false,
-    getLayerKey: ({series}) => series.type,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
     validate: ({series}) => {

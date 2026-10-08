@@ -179,8 +179,7 @@ export async function getShapes(args: Args) {
     const preparedGradientGeometry: GradientGeometry[] = [];
 
     for (let index = seriesLayers.length - 1; index >= 0; index--) {
-        const {key: groupKey, series: layerSeries} = seriesLayers[index];
-        const chartSeries = [...layerSeries];
+        const {key: groupKey, series: chartSeries} = seriesLayers[index];
         const seriesType = chartSeries[0].type;
         const plugin = getSeriesPlugin(seriesType);
 

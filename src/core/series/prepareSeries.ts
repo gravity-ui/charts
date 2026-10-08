@@ -32,11 +32,10 @@ export const getPreparedSeries = async ({
 
     const layers = getSeriesLayers(seriesData, (item, index) => `${item.type}_${index}`);
     for (const layer of layers) {
-        const seriesList = [...layer.series];
-        const plugin = getSeriesPlugin(seriesList[0].type);
+        const plugin = getSeriesPlugin(layer.series[0].type);
         acc.push(
             ...(await plugin.prepareSeries({
-                series: seriesList,
+                series: layer.series,
                 seriesOptions,
                 legend: preparedLegend,
                 colorScale,

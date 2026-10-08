@@ -67,7 +67,6 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
-    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareScatterSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});

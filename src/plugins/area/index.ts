@@ -35,7 +35,6 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
         includeSolidSeries: true,
     }),
-    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({

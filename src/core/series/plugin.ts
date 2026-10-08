@@ -30,11 +30,13 @@ export interface GetLayerKeyArgs<TSeries> {
     seriesKey: string;
 }
 
-export interface SeriesClipPathArgs {
+export interface GetClipPathArgs {
     isRangeSlider: boolean;
     yAxis: readonly PreparedYAxis[];
     zoomState?: Readonly<Partial<ZoomState>>;
 }
+
+export type SeriesClipPath = 'bounds' | 'horizontal' | false;
 
 export interface SeriesAxisDomainValues<T extends ChartSeries> {
     x?(data: T['data'][number]): AxisDomainValue | AxisDomainValue[];
@@ -129,20 +131,20 @@ export interface SeriesPlugin<
     type: T['type'];
     /**
      * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
-     * Use stable, chart-unique layer keys; return seriesKey for an independent layer.
+     * Omit to use series.type: all series of this plugin share one layer by default.
+     * Use stable, chart-unique layer keys; core rejects keys shared by different types.
+     * Return seriesKey for an independent layer.
      * Core preserves member order and orders layers by their first occurrence.
      * TODO: Support line1 / [bar1.1 + bar1.2 stack] / line2 / bar2 by separating shared bar
      * geometry from render-layer partitioning, retaining source order, and defining placement
      * for groups whose members straddle other layers. Built-in bars still use one layer per type.
      */
-    getLayerKey<TSeries extends T | Extract<PreparedSeries, {type: T['type']}>>(
-        args: GetLayerKeyArgs<TSeries>,
-    ): string;
+    getLayerKey?(args: GetLayerKeyArgs<T | Extract<PreparedSeries, {type: T['type']}>>): string;
     /**
      * Shape-group clipping: plot bounds by default, an expanded vertical region, or no clipping.
      * Does not control the separate marker, annotation, and HTML-label layers.
      */
-    getClipPath?(args: SeriesClipPathArgs): 'bounds' | 'horizontal' | false;
+    getClipPath?(args: GetClipPathArgs): SeriesClipPath;
     /** Supported zoom directions and point-filtering behavior. Omit to disable zoom. */
     zoom?: SeriesPluginZoomOptions<T>;
 

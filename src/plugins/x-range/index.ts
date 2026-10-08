@@ -47,7 +47,6 @@ function getXRangeWidth(data: XRangeSeriesData) {
 export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = {
     type: 'x-range',
     zoom: {types: ['x'], defaultType: 'x'},
-    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareXRangeSeries,
     getAxisDomainValues: {
         x: (d) => [d.x0, d.x1],
