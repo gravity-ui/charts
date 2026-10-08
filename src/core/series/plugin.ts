@@ -24,15 +24,10 @@ import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from 
 
 export type AxisDomainValue = number | string | null | undefined;
 
-export interface SeriesLayer<TSeries> {
-    key: string;
-    series: readonly TSeries[];
-}
-
-export interface GetLayersArgs<TSeries> {
-    series: readonly TSeries[];
-    /** Existing raw/prepared key for an item at its index in this plugin's input. */
-    getSeriesKey(series: TSeries, index: number): string;
+export interface GetLayerKeyArgs<TSeries> {
+    series: TSeries;
+    /** Core-provided key for this occurrence: type/index for raw input, id for prepared input. */
+    seriesKey: string;
 }
 
 export interface SeriesClipPathArgs {
@@ -133,15 +128,16 @@ export interface SeriesPlugin<
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
     /**
-     * Partitions this plugin's raw/prepared series into nonempty layers, retaining each input once.
-     * Preserve member order and use stable, chart-unique keys. Core orders layers by their first member.
+     * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
+     * Use stable, chart-unique layer keys; return seriesKey for an independent layer.
+     * Core preserves member order and orders layers by their first occurrence.
      * TODO: Support line1 / [bar1.1 + bar1.2 stack] / line2 / bar2 by separating shared bar
      * geometry from render-layer partitioning, retaining source order, and defining placement
      * for groups whose members straddle other layers. Built-in bars still use one layer per type.
      */
-    getLayers<TSeries extends ChartSeries | PreparedSeries>(
-        args: GetLayersArgs<TSeries>,
-    ): readonly SeriesLayer<TSeries>[];
+    getLayerKey<TSeries extends T | Extract<PreparedSeries, {type: T['type']}>>(
+        args: GetLayerKeyArgs<TSeries>,
+    ): string;
     /**
      * Shape-group clipping: plot bounds by default, an expanded vertical region, or no clipping.
      * Does not control the separate marker, annotation, and HTML-label layers.

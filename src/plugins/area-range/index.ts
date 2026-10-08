@@ -1,5 +1,4 @@
 import {i18n} from '~core/i18n';
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -35,7 +34,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
         isYInRange: ({y0, y1}, [min, max]) => y0 !== null && y1 !== null && y0 <= max && y1 >= min,
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareAreaRangeSeries,
     getAxisDomainValues: {
         y: (data) => (data.y0 === null || data.y1 === null ? [] : [data.y0, data.y1]),

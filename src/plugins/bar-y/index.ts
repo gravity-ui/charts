@@ -1,4 +1,3 @@
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -70,7 +69,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher, labels}: R
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareBarYSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({

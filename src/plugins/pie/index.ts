@@ -1,5 +1,4 @@
 import {i18n} from '~core/i18n';
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -38,7 +37,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatContext> = {
     type: 'pie',
     getClipPath: () => false,
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
     validate: ({series}) => {

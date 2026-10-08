@@ -1,4 +1,3 @@
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -52,7 +51,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareWaterfallSeries,
     getColorValue: (d) => d.y,
     prepareShapeData,

@@ -1,5 +1,4 @@
 import {DEFAULT_AXIS_TYPE} from '~core/constants';
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -68,7 +67,7 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareScatterSeries,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});

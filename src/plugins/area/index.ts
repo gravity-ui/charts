@@ -1,5 +1,4 @@
 import {i18n} from '~core/i18n';
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -36,7 +35,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
         includeSolidSeries: true,
     }),
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateStackLabelsOptions({

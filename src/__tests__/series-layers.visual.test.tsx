@@ -133,6 +133,50 @@ test('Main lines reference independent clip regions and switch to bounds with ex
         .toBe(true);
 });
 
+test('Range-slider lines reference the preview bounds without explicit Y limits', async ({
+    mount,
+}) => {
+    const data: ChartData = {
+        legend: {enabled: false},
+        xAxis: {type: 'linear', rangeSlider: {enabled: true}},
+        series: {
+            data: [
+                {
+                    type: 'line',
+                    name: 'line',
+                    rangeSlider: {lineWidth: 12},
+                    data: [
+                        {x: 0, y: 0},
+                        {x: 1, y: 1},
+                    ],
+                },
+            ],
+        },
+    };
+    const component = await mount(<ChartTestStory data={data} />);
+    const preview = component.locator('.gcharts-range-slider__shapes > .gcharts-line');
+    await expect(preview.locator('path')).not.toHaveCount(0);
+    const clip = await preview.evaluate((element) => {
+        const id = (element.getAttribute('clip-path') ?? '').slice(5, -1);
+        const rect = document.getElementById(id)?.querySelector('rect');
+        const slider = element.closest('.gcharts-range-slider');
+        return {
+            x: rect?.getAttribute('x'),
+            y: rect?.getAttribute('y'),
+            width: rect?.getAttribute('width'),
+            height: rect?.getAttribute('height'),
+            sliderWidth: slider?.getAttribute('width'),
+            sliderHeight: slider?.getAttribute('height'),
+        };
+    });
+    expect(clip.x).toBe('0');
+    expect(clip.y).toBe('0');
+    expect(Number(clip.width)).toBeGreaterThan(0);
+    expect(Number(clip.height)).toBeGreaterThan(0);
+    expect(clip.width).toBe(clip.sliderWidth);
+    expect(clip.height).toBe(clip.sliderHeight);
+});
+
 test('Scatter uses plot clipping only in the range-slider preview', async ({mount}) => {
     const data: ChartData = {
         legend: {enabled: false},

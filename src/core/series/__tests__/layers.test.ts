@@ -22,29 +22,45 @@ it('preserves raw occurrence keys when one object appears twice', () => {
     expect(result.map((layer) => layer.series)).toEqual([[raw[0]], [raw[1]], [raw[0]]]);
 });
 
-it('uses an isolated plugin registry and orders plugin layers by source position', () => {
+it.each([
+    {
+        name: 'distinct objects',
+        input: raw,
+        sharedLineKeys: new Map<string, string>(),
+        expected: [[raw[0]], [raw[1], raw[3]], [raw[2]]],
+    },
+    {
+        name: 'repeated objects',
+        input: [raw[0], raw[1], raw[2], raw[0]],
+        sharedLineKeys: new Map([['line_3', 'line_2']]),
+        expected: [[raw[0]], [raw[1]], [raw[2], raw[0]]],
+    },
+])('groups plugin keys in source order with $name', ({input, sharedLineKeys, expected}) => {
     jest.isolateModules(() => {
         const registry = jest.requireActual<typeof Registry>('../seriesRegistry');
-        const {getSeriesLayers: getLayers, getSingleSeriesLayer} =
-            jest.requireActual<typeof Layers>('../layers');
+        const {getSeriesLayers: resolveLayers} = jest.requireActual<typeof Layers>('../layers');
         expect(registry.getRegisteredSeriesTypes()).toEqual([]);
         const line: SeriesPlugin = {
             type: 'line',
-            getLayers: ({series, getSeriesKey}) =>
-                series.map((item, index) => ({key: getSeriesKey(item, index), series: [item]})),
+            getLayerKey: ({seriesKey}) => sharedLineKeys.get(seriesKey) ?? seriesKey,
             prepareSeries: () => [],
             prepareShapeData: () => ({renderData: [], tooltipItems: []}),
             renderShapes: () => {},
             tooltip: {prepareData: () => ({chunks: []}), rows: []},
         };
         registry.registerSeriesPlugin(line);
-        registry.registerSeriesPlugin({...line, type: 'bar-x', getLayers: getSingleSeriesLayer});
+        registry.registerSeriesPlugin({
+            ...line,
+            type: 'bar-x',
+            getLayerKey: ({series}) => series.type,
+        });
         const getKey = jest.fn((series: ChartSeries, index: number) => `${series.type}_${index}`);
-        const layers = getLayers(raw, getKey);
+        const layers = resolveLayers(input, getKey);
         expect(layers.map((layer) => layer.key)).toEqual(['line_0', 'bar-x', 'line_2']);
-        expect(layers.map((layer) => layer.series)).toEqual([[raw[0]], [raw[1], raw[3]], [raw[2]]]);
-        expect(getKey.mock.calls.map(([, index]) => index)).toEqual([0, 2]);
-        expect(layers[0].series[0]).toBe(raw[0]);
-        expect(layers[1].series[1]).toBe(raw[3]);
+        expect(layers.map((layer) => layer.series)).toEqual(expected);
+        expect(getKey.mock.calls.map(([, index]) => index)).toEqual([0, 1, 2, 3]);
+        layers.forEach((layer, index) => {
+            layer.series.forEach((series, member) => expect(series).toBe(expected[index][member]));
+        });
     });
 });

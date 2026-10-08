@@ -22,15 +22,15 @@ Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-pl
 
 ### 2. Delegate layer grouping and clipping — completed
 
-- Added required `SeriesPlugin.getLayers({series, getSeriesKey})` for raw and prepared series. [Shared layer coordination](../../src/core/series/layers.ts) replaces the line branches in [series preparation](../../src/core/series/prepareSeries.ts) and [shape preparation](../../src/hooks/useShapes/index.tsx).
+- Added required `SeriesPlugin.getLayerKey({series, seriesKey})` for one occurrence of the plugin's raw or prepared series. Equal keys share a layer. Core supplies a per-occurrence key, retains object references and member order, and orders layers by their first occurrence. [Shared layer coordination](../../src/core/series/layers.ts) replaces the line branches in [series preparation](../../src/core/series/prepareSeries.ts) and [shape preparation](../../src/hooks/useShapes/index.tsx).
 - Replaced `useClipPath`, line-specific clipping, and scatter override tables with optional `getClipPath({isRangeSlider, yAxis, zoomState})`. Plugins return `'bounds'` (default), `'horizontal'`, or `false`; core owns SVG IDs and geometry.
-- Preserved independent line layers, one layer per type for other plugins, reverse shape preparation for label priority, React keys, hover namespaces, tooltip ordering, and existing clipping behavior. Public config and exports are unchanged.
-- Updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md) and added layer, clipping, and architecture regression coverage. Verified with typecheck, unit tests, chart-config tests, and Docker Chromium regressions; visual snapshots are unchanged.
+- Preserved independent line layers, one layer per type for other plugins, reverse shape preparation for label priority, React keys, hover namespaces, tooltip ordering, and main-plot clipping behavior. Public config and exports are unchanged.
+- Fixed an existing bug in `main`: range-slider lines without explicit Y bounds referenced a horizontal clipPath that the preview does not define. The line plugin now selects the preview's bounds clipPath, preventing strokes from overflowing the preview.
+- Updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md) and added layer, clipping, and architecture regression coverage.
 
 Deferred work:
 
-- Interleaved layers such as `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` remain unsupported. Keep the TODO on [SeriesPlugin.getLayers](../../src/core/series/plugin.ts): separate shared bar geometry from render layers, retain source order through preparation, and define placement when group members straddle other layers. Splitting current bar groups alone would change widths, offsets, and stacking.
-- Existing bug in `main`: slider lines without explicit Y bounds reference a horizontal clipPath that [RangeSlider](../../src/components/RangeSlider/index.tsx) does not define, allowing strokes to overflow the preview. Reproduced during this stage; left unchanged for a separate fix with browser regression coverage.
+- Interleaved layers such as `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` remain unsupported. Keep the TODO on [SeriesPlugin.getLayerKey](../../src/core/series/plugin.ts): separate shared bar geometry from render layers, retain source order through preparation, and define placement when group members straddle other layers. Splitting current bar groups alone would change widths, offsets, and stacking.
 
 ### 3. Delegate axis-domain contributions
 

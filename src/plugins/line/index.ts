@@ -77,9 +77,9 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
-    getLayers: ({series, getSeriesKey}) =>
-        series.map((item, index) => ({key: getSeriesKey(item, index), series: [item]})),
-    getClipPath: ({yAxis, zoomState}) => {
+    getLayerKey: ({seriesKey}) => seriesKey,
+    getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
+        if (isRangeSlider) return 'bounds';
         const hasMinOrMax = yAxis.some(
             (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
         );

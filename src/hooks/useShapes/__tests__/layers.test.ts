@@ -2,12 +2,13 @@
 import type React from 'react';
 
 import type {PreparedYAxis} from '~core/axes/types';
+import type {SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getPreparedSeries} from '~core/series/prepareSeries';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedLegendOptions, PreparedSeries} from '~core/series/types';
 import type {SeriesShapeData, ShapeLabels} from '~core/shapes/types';
-import type {ChartSeries} from '~core/types';
+import type {BarXSeries, ChartSeries} from '~core/types';
 import type {ZoomState} from '~core/zoom/types';
 
 import {getShapes} from '..';
@@ -49,6 +50,18 @@ function getShapeArgs(series: PreparedSeries[]) {
 }
 
 afterEach(() => jest.restoreAllMocks());
+
+it('lets a plugin read its own fields from raw and prepared series when grouping layers', async () => {
+    const plugin: Pick<SeriesPlugin<BarXSeries>, 'getLayerKey'> = {
+        getLayerKey: ({series}) => series.stackId ?? 'default',
+    };
+    const raw: BarXSeries = {type: 'bar-x', name: 'bar', stackId: 'stack', data: []};
+    const prepared = await prepare([raw]);
+    const bars = prepared.filter((series) => series.type === 'bar-x');
+    expect(bars).toHaveLength(1);
+    expect(plugin.getLayerKey({series: raw, seriesKey: 'raw'})).toBe('stack');
+    expect(plugin.getLayerKey({series: bars[0], seriesKey: bars[0].id})).toBe('stack');
+});
 
 it('preserves independent lines and one bar group across interleaved raw series', async () => {
     const original = JSON.parse(JSON.stringify(rawSeries));
@@ -126,8 +139,8 @@ it.each<{
     },
     {name: 'X zoom', yAxis: [], zoomState: {x: [0, 1]}, clip: 'plot'},
     {name: 'Y zoom', yAxis: [], zoomState: {y: [[0, 1]]}, clip: 'plot'},
-    {name: 'slider without Y bounds', yAxis: [], isRangeSlider: true, clip: 'plot-horizontal'},
-])('preserves line clipping with $name', async ({yAxis, zoomState, isRangeSlider, clip}) => {
+    {name: 'slider without Y bounds', yAxis: [], isRangeSlider: true, clip: 'plot'},
+])('selects line clipping with $name', async ({yAxis, zoomState, isRangeSlider, clip}) => {
     const series = await prepare(rawSeries.slice(0, 1));
     jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
         renderData: [createShape()],

@@ -1,4 +1,3 @@
-import {getSingleSeriesLayer} from '~core/series/layers';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -70,7 +69,7 @@ export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
             });
         }
     },
-    getLayers: getSingleSeriesLayer,
+    getLayerKey: ({series}) => series.type,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     prepareShapeData,
