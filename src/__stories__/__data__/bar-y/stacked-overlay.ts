@@ -1,9 +1,6 @@
-import React from 'react';
+import type {ChartData} from '../../../types';
 
-import {Chart} from '@gravity-ui/charts';
-import type {ChartData} from '@gravity-ui/charts';
-
-const data: ChartData = {
+export const barYStackedOverlayData: ChartData = {
     series: {
         data: [
             {stackId: 'Plan', segments: [60, 40]},
@@ -23,11 +20,3 @@ const data: ChartData = {
     },
     yAxis: [{type: 'category', categories: ['A']}],
 };
-
-export function BarYStackedOverlayExample() {
-    return (
-        <div style={{height: '100%'}}>
-            <Chart data={data} />
-        </div>
-    );
-}

@@ -5,12 +5,11 @@ import type {ChartData} from '@gravity-ui/charts';
 
 const data: ChartData = {
     series: {
-        options: {'bar-x': {borderWidth: 3, borderColor: '#283593', borderRadius: 6, opacity: 0.8}},
+        options: {'bar-x': {borderWidth: 1, borderRadius: 4, opacity: 0.6}},
         data: [
             {
                 type: 'bar-x',
                 name: 'Actual',
-                color: '#90caf9',
                 data: [
                     {x: 'Jan', y: 42},
                     {x: 'Feb', y: 58},
@@ -20,13 +19,9 @@ const data: ChartData = {
             {
                 type: 'bar-x',
                 name: 'Plan',
-                color: '#a5d6a7',
-                opacity: 0.3,
-                borderWidth: 2,
-                borderColor: '#2e7d32',
                 data: [
                     {x: 'Jan', y: 32},
-                    {x: 'Feb', y: 40, opacity: 0.6},
+                    {x: 'Feb', y: 40},
                     {x: 'Mar', y: 35},
                 ],
             },

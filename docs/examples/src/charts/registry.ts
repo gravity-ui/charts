@@ -39,14 +39,10 @@ import areaSeriesRaw from './series-types/area.tsx?raw';
 import {BarXSeriesExample} from './series-types/bar-x';
 import {BarXOverlayExample} from './series-types/bar-x-overlay';
 import barXOverlayRaw from './series-types/bar-x-overlay.tsx?raw';
-import {BarXStackedOverlayExample} from './series-types/bar-x-stacked-overlay';
-import barXStackedOverlayRaw from './series-types/bar-x-stacked-overlay.tsx?raw';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {BarYSeriesExample} from './series-types/bar-y';
 import {BarYOverlayExample} from './series-types/bar-y-overlay';
 import barYOverlayRaw from './series-types/bar-y-overlay.tsx?raw';
-import {BarYStackedOverlayExample} from './series-types/bar-y-stacked-overlay';
-import barYStackedOverlayRaw from './series-types/bar-y-stacked-overlay.tsx?raw';
 import barYSeriesRaw from './series-types/bar-y.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import lineSeriesRaw from './series-types/line.tsx?raw';
@@ -125,14 +121,6 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/bar-y-overlay': {
         Component: BarYOverlayExample,
         code: extractDisplayCode(barYOverlayRaw),
-    },
-    'series-types/bar-x-stacked-overlay': {
-        Component: BarXStackedOverlayExample,
-        code: extractDisplayCode(barXStackedOverlayRaw),
-    },
-    'series-types/bar-y-stacked-overlay': {
-        Component: BarYStackedOverlayExample,
-        code: extractDisplayCode(barYStackedOverlayRaw),
     },
     'series-types/bar-x': {
         code: extractDisplayCode(barXSeriesRaw),

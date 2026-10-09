@@ -3,10 +3,10 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 
 import {BarXOverlayExample} from '../../docs/examples/src/charts/series-types/bar-x-overlay';
-import {BarXStackedOverlayExample} from '../../docs/examples/src/charts/series-types/bar-x-stacked-overlay';
 import {BarYOverlayExample} from '../../docs/examples/src/charts/series-types/bar-y-overlay';
-import {BarYStackedOverlayExample} from '../../docs/examples/src/charts/series-types/bar-y-stacked-overlay';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {barXStackedOverlayData} from '../__stories__/__data__/bar-x/stacked-overlay';
+import {barYStackedOverlayData} from '../__stories__/__data__/bar-y/stacked-overlay';
 import {DEFAULT_PALETTE, seriesOptionsDefaults} from '../core/constants';
 import type {ChartData} from '../types';
 
@@ -219,11 +219,12 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             await expect(component.locator(`.gcharts-${type}__label`)).toHaveCount(2);
         });
 
-        test('stacked guide example, tooltip and visibility', async ({mount, page}) => {
+        test('stacked overlays, tooltip and visibility', async ({mount, page}) => {
             const component = await mount(
-                <div style={{width: 600, height: 360}}>
-                    {vertical ? <BarXStackedOverlayExample /> : <BarYStackedOverlayExample />}
-                </div>,
+                <ChartTestStory
+                    data={vertical ? barXStackedOverlayData : barYStackedOverlayData}
+                    styles={{width: 600, height: 360}}
+                />,
             );
             const bars = component.locator(`.gcharts-${type}__segment`);
             await expect(bars).toHaveCount(4);

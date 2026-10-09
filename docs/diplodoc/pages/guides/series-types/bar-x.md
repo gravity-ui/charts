@@ -24,8 +24,6 @@ Thickness is controlled by the shared `series.options['bar-x'].barPadding` and `
 
 To overlay complete stacks, set `grouping: false` on every series in each `stackId`.
 
-<div data-chart-example="series-types/bar-x-stacked-overlay"></div>
-
 ## Appearance
 
 ### Borders
@@ -40,7 +38,7 @@ Set `opacity` from `0` to `1` in `series.options['bar-x']`, and override it on i
 
 The legend symbol follows series opacity. Tooltip markers follow point opacity, falling back to series opacity. Legend and tooltip text remain opaque; hidden series keep the standard inactive legend symbol.
 
-The example combines borders with a default opacity of `0.8`, `0.3` on Plan, and a point override of `0.6` in February.
+The example uses the default palette with rounded borders and a shared opacity of `0.6`.
 
 <div data-chart-example="series-types/bar-x"></div>
 
