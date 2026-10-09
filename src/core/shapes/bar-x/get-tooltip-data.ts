@@ -14,6 +14,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
     const xLookupPoints: ShapePoint[] = [];
+    const paintOrder = data.some((d) => d.series.grouping === false && !d.series.stacking)
+        ? new Map(data.map((d, index) => [d, index]))
+        : undefined;
 
     for (const group of Object.values(barXGroups)) {
         const groupCenterX = group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
@@ -26,6 +29,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
                 y0: d.y,
                 y1: d.y + d.height,
                 sourceX: d.x + d.width / 2,
+                hitTest: paintOrder
+                    ? {x0: d.x, x1: d.x + d.width, priority: paintOrder.get(d) ?? 0}
+                    : undefined,
             });
         }
     }

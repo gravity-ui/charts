@@ -48,8 +48,13 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             },
             data: prepareSeriesData(series),
             stacking: series.stacking,
+            grouping: series.grouping ?? true,
             stackLabels: series.stackLabels,
-            stackId: getSeriesStackId(series),
+            // Overlays need independent domains even when a stackId was supplied.
+            stackId:
+                series.grouping === false && !series.stacking
+                    ? getUniqId()
+                    : getSeriesStackId(series),
             valueAxis: 'y',
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,

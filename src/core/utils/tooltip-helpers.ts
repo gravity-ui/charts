@@ -14,6 +14,8 @@ export interface ShapePoint {
     series: ChartSeries;
     subTotal?: number;
     sourceX?: number;
+    /** X bounds and paint order for rectangle hit testing; Y bounds are y0/y1. */
+    hitTest?: {x0: number; x1: number; priority: number};
 }
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
@@ -71,6 +73,28 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
     );
 
     const closestPoints = sort(groupedBySeries, (p) => p.y0);
+
+    if (closestPoints.some((p) => p.hitTest)) {
+        let winner: ShapePoint | undefined;
+        let closestDistance = Infinity;
+        for (const point of closestPoints) {
+            const x0 = point.hitTest?.x0 ?? point.sourceX ?? point.x;
+            const x1 = point.hitTest?.x1 ?? point.sourceX ?? point.x;
+            const distance = Math.hypot(
+                Math.max(x0 - x, x - x1, 0),
+                Math.max(point.y0 - y, y - point.y1, 0),
+            );
+            if (
+                distance < closestDistance ||
+                (distance === closestDistance &&
+                    (point.hitTest?.priority ?? -1) > (winner?.hitTest?.priority ?? -1))
+            ) {
+                winner = point;
+                closestDistance = distance;
+            }
+        }
+        return closestPoints.map((point) => ({...point, closest: point === winner}));
+    }
 
     const pointsWithSourceX = closestPoints.filter((p) => p.sourceX !== undefined);
     const uniqueSourceX = new Set(pointsWithSourceX.map((p) => p.sourceX));

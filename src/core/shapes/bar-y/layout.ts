@@ -2,15 +2,13 @@ import {max} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
-import type {BarYSeries, BarYSeriesData} from '../../types';
-import type {PreparedYAxis} from '../axes/types';
-import type {ChartScale} from '../scales/types';
-import type {PreparedBarYSeries, PreparedSeriesOptions, StackedSeries} from '../series/types';
-import {getSeriesStackId} from '../series/utils';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../shapes/bar-constants';
-import {getDataCategoryValue} from '../utils';
-
-import {getBandSize} from './band-size';
+import type {BarYSeriesData} from '../../../types';
+import type {PreparedYAxis} from '../../axes/types';
+import type {ChartScale} from '../../scales/types';
+import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
+import {getDataCategoryValue} from '../../utils';
+import {getBandSize} from '../../utils/band-size';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../bar-constants';
 
 /**
  * BarY always filters out data with null or replace null by zero.
@@ -21,19 +19,17 @@ const isSeriesDataValid = (
     d: BarYSeriesData | PreparedBarYSeriesData,
 ): d is PreparedBarYSeriesData => d.x !== null;
 
-export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>(
-    series: T[],
-    yAxis: PreparedYAxis[],
-) {
+export function groupBarYDataByYValue(series: PreparedBarYSeries[], yAxis: PreparedYAxis[]) {
     const data: Record<
         string | number,
-        Record<string, {data: PreparedBarYSeriesData; series: T}[]>
+        Record<string, {data: PreparedBarYSeriesData; series: PreparedBarYSeries}[]>
     > = {};
     series.forEach((s) => {
         const axisIndex = get(s, 'yAxis', 0);
         const seriesYAxis = yAxis[axisIndex];
         const categories = get(seriesYAxis, 'categories', [] as string[]);
 
+        const stackId = s.stackId;
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;
@@ -49,7 +45,6 @@ export function groupBarYDataByYValue<T extends BarYSeries | PreparedBarYSeries>
                     data[key] = {};
                 }
 
-                const stackId = getSeriesStackId(s as StackedSeries);
                 if (!data[key][stackId]) {
                     data[key][stackId] = [];
                 }
@@ -74,11 +69,20 @@ export function getBarYLayout(args: {
     const domain = Object.keys(groupedData);
     const bandSize = getBandSize({domain, scale: scale as AxisScale<AxisDomain>});
     const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
-    const maxGroupSize = max(Object.values(groupedData), (d) => Object.values(d).length) || 1;
-    const groupSize = bandSize - groupGap;
+    const maxGroupSize =
+        max(
+            Object.values(groupedData),
+            (d) =>
+                Object.values(d).filter(
+                    (items) => items[0].series.grouping !== false || items[0].series.stacking,
+                ).length,
+        ) || 1;
+    const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
     const barGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
     const barSize = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - barGap, barMaxWidth));
 
-    return {bandSize, barGap, barSize};
+    const overlayGap = Math.max(groupSize * barPadding, MIN_BAR_GAP);
+    const overlaySize = Math.max(MIN_BAR_WIDTH, Math.min(groupSize - overlayGap, barMaxWidth));
+    return {bandSize, barGap, barSize, overlaySize};
 }

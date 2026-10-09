@@ -14,10 +14,10 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
-import {getBarYLayout, groupBarYDataByYValue} from '../../utils/bar-y';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
 
+import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 export async function prepareBarYData(args: {
@@ -73,7 +73,7 @@ export async function prepareBarYData(args: {
     })();
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
-    const {bandSize, barGap, barSize} = getBarYLayout({
+    const {bandSize, barGap, barSize, overlaySize} = getBarYLayout({
         groupedData,
         seriesOptions,
         scale: yScale,
@@ -82,10 +82,18 @@ export async function prepareBarYData(args: {
     const result: PreparedBarYData[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
-        const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
-        stacks.forEach((measureValues, groupItemIndex) => {
+        const groupedCount = stacks.filter(
+            (items) => items[0].series.grouping !== false || items[0].series.stacking,
+        ).length;
+        const currentBarHeight = barSize * groupedCount + barGap * Math.max(0, groupedCount - 1);
+        let groupedIndex = 0;
+        stacks.forEach((measureValues) => {
+            const overlay =
+                measureValues[0].series.grouping === false && !measureValues[0].series.stacking;
+            const height = overlay ? overlaySize : barSize;
+            const slotIndex = overlay ? 0 : groupedIndex++;
             const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
-            const base = baseValue - measureValues[0].series.borderWidth;
+            const base = overlay ? baseValue : baseValue - measureValues[0].series.borderWidth;
             let positiveStack = base;
             let negativeStack = base;
 
@@ -129,10 +137,12 @@ export async function prepareBarYData(args: {
                     center = scale(Number(yValue));
                 }
 
-                const y = center - currentBarHeight / 2 + (barSize + barGap) * groupItemIndex;
+                const y = overlay
+                    ? center - height / 2
+                    : center - currentBarHeight / 2 + (barSize + barGap) * slotIndex;
                 const xValue = Number(data.x);
                 const width = Math.abs(xLinearScale(xValue) * ratio - base);
-                let shapeWidth = width - (stackItems.length ? stackGap : 0);
+                let shapeWidth = width - (!overlay && stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
                 }
@@ -142,22 +152,26 @@ export async function prepareBarYData(args: {
                 }
 
                 const itemStackGap = width - shapeWidth;
-                const borderWidth = barSize > s.borderWidth * 2 ? s.borderWidth : 0;
+                const borderWidth =
+                    height > s.borderWidth * 2 && (!overlay || shapeWidth > s.borderWidth * 2)
+                        ? s.borderWidth
+                        : 0;
                 const isFirstInStack = xValueIndex === 0;
-                const isLastStackItem = xValueIndex === sortedData.length - 1;
+                const isLastStackItem = overlay || xValueIndex === sortedData.length - 1;
                 const extendsRight = xLinearScale(xValue) > baseValue;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
                 let itemX = extendsRight ? positiveStack : negativeStack - width;
+                if (overlay) itemX = Math.min(base, xLinearScale(xValue));
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
-                if (isFirstInStack && extendsRight) {
+                if (!overlay && isFirstInStack && extendsRight) {
                     // Bar extends right from base, border extends outward to the
                     // left → shift left by halfBorder to keep the visual left
                     // edge at the zero line.
                     itemX -= halfBorder;
-                } else if (isFirstInStack && !extendsRight && xValue !== 0) {
+                } else if (!overlay && isFirstInStack && !extendsRight && xValue !== 0) {
                     // Bar extends left from base, border extends outward to the
                     // right → shift right by halfBorder to keep the visual
                     // right edge at the zero line.
@@ -168,7 +182,7 @@ export async function prepareBarYData(args: {
                     x: itemX,
                     y: y,
                     width: shapeWidth,
-                    height: barSize,
+                    height,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
                     borderWidth,
@@ -194,6 +208,11 @@ export async function prepareBarYData(args: {
             result.push(...stackItems);
         });
     });
+
+    if (series.some((s) => s.grouping === false && !s.stacking)) {
+        const seriesOrder = new Map(series.map((s, index) => [s, index]));
+        result.sort((a, b) => (seriesOrder.get(a.series) ?? 0) - (seriesOrder.get(b.series) ?? 0));
+    }
 
     let labels: LabelData[] = [];
     let htmlLabels: HtmlItem[] = [];

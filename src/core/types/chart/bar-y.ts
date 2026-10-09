@@ -88,8 +88,10 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /** Override plugin stack label options. Only enabled series contribute to totals. */
     stackLabels?: StackLabelsOptions;
     /**
-     * Whether to group non-stacked columns or to let them render independent of each other.
-     * When false columns will be laid out individually and overlap each other.
+     * Whether to place non-stacked bars side by side.
+     * When false, bars share the category center and start at the value-axis baseline
+     * without accumulating values or taking up grouped slots. Later series cover earlier
+     * ones, including their borders. Ignored for stacked series.
      * @default true
      */
     grouping?: boolean;

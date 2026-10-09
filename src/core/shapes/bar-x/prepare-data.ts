@@ -8,8 +8,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
-import type {PreparedBarXSeries, PreparedSeriesOptions, StackedSeries} from '../../series/types';
-import {getSeriesStackId} from '../../series/utils';
+import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../series/types';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
 import {
     getDataCategoryValue,
@@ -153,6 +152,7 @@ export const prepareBarXData = async (args: {
         }
         const data = dataByPlots.get(plotIndex) ?? {};
 
+        const stackId = JSON.stringify([s.yAxis, s.stackId]);
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;
@@ -167,7 +167,6 @@ export const prepareBarXData = async (args: {
                     data[key] = {};
                 }
 
-                const stackId = JSON.stringify([s.yAxis, getSeriesStackId(s as StackedSeries)]);
                 if (!data[key][stackId]) {
                     data[key][stackId] = [];
                 }
@@ -176,12 +175,20 @@ export const prepareBarXData = async (args: {
                 domain.add(key);
             }
         });
+    });
 
+    for (const data of dataByPlots.values()) {
         maxGroupSize = Math.max(
             maxGroupSize,
-            max(Object.values(data), (d) => Object.values(d).length) || 1,
+            max(
+                Object.values(data),
+                (d) =>
+                    Object.values(d).filter(
+                        (items) => items[0].series.grouping !== false || items[0].series.stacking,
+                    ).length,
+            ) || 1,
         );
-    });
+    }
 
     const result: PreparedBarXData[] = [];
 
@@ -193,20 +200,27 @@ export const prepareBarXData = async (args: {
         scale: xScale as AxisScale<AxisDomain>,
     });
     const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
-    const groupSize = bandSize - groupGap;
+    const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
     const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
     const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - rectGap, barMaxWidth));
+    const overlayRectGap = Math.max(groupSize * barPadding, MIN_BAR_GAP);
+    const overlayRectWidth = Math.max(
+        MIN_BAR_WIDTH,
+        Math.min(groupSize - overlayRectGap, barMaxWidth),
+    );
     const borderWidthBySeries = new Map(
-        series.map((s) => [
-            s,
-            !isRangeSlider &&
-            Number.isFinite(s.borderWidth) &&
-            s.borderWidth > 0 &&
-            rectWidth > s.borderWidth * 2
-                ? s.borderWidth
-                : 0,
-        ]),
+        series.map((s) => {
+            const width = s.grouping === false && !s.stacking ? overlayRectWidth : rectWidth;
+            const borderWidth =
+                !isRangeSlider &&
+                Number.isFinite(s.borderWidth) &&
+                s.borderWidth > 0 &&
+                width > s.borderWidth * 2
+                    ? s.borderWidth
+                    : 0;
+            return [s, borderWidth];
+        }),
     );
     const positiveExtendsUpByAxis = yScale.map((scale) => {
         const range = scale?.range() ?? [1, 0];
@@ -224,10 +238,18 @@ export const prepareBarXData = async (args: {
         for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
             const [xValue, val] = groupedData[groupedDataIndex];
             const stacks = Object.values(val);
-            const currentGroupWidth = rectWidth * stacks.length + rectGap * (stacks.length - 1);
+            const groupedCount = stacks.filter(
+                (items) => items[0].series.grouping !== false || items[0].series.stacking,
+            ).length;
+            const currentGroupWidth =
+                rectWidth * groupedCount + rectGap * Math.max(0, groupedCount - 1);
+            let groupedIndex = 0;
 
             for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
                 const yValues = stacks[groupItemIndex];
+                const overlay = yValues[0].series.grouping === false && !yValues[0].series.stacking;
+                const width = overlay ? overlayRectWidth : rectWidth;
+                const slotIndex = overlay ? 0 : groupedIndex++;
                 const percentStack = yValues.some((item) => item.series.stacking === 'percent');
                 let positiveStackSum = 0;
                 let negativeStackSum = 0;
@@ -274,8 +296,9 @@ export const prepareBarXData = async (args: {
                         xCenter = scale(Number(xValue));
                     }
 
-                    const x =
-                        xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * groupItemIndex;
+                    const x = overlay
+                        ? xCenter - width / 2
+                        : xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * slotIndex;
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
 
@@ -288,7 +311,8 @@ export const prepareBarXData = async (args: {
                             seriesYAxis.type === 'logarithmic'
                                 ? (min(seriesYScale.domain()) ?? 0)
                                 : 0;
-                        const stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
+                        let stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
+                        if (overlay) stackSum = 0;
                         const startPixel = seriesYScale(stackSum === 0 ? baseValue : stackSum);
                         const endPixel = seriesYScale(stackSum + yDataValue);
                         const height = Math.abs(endPixel - startPixel);
@@ -299,7 +323,7 @@ export const prepareBarXData = async (args: {
                         // segment of the same sign, including on reversed axes.
                         // Preserve the baseline gap after zero segments so the first
                         // visible bar does not merge with the axis.
-                        const hasPreviousItem = stackSum !== 0 || hasZeroStackItem;
+                        const hasPreviousItem = !overlay && (stackSum !== 0 || hasZeroStackItem);
                         const itemGap = hasPreviousItem && height >= stackGap ? stackGap : 0;
                         shapeHeight = height - itemGap;
                         barPositionY =
@@ -318,7 +342,7 @@ export const prepareBarXData = async (args: {
                         annotations: [],
                         x,
                         y: barPositionY,
-                        width: rectWidth,
+                        width,
                         height: shapeHeight,
                         valueEndPadding: 0,
                         borderWidth: borderWidthBySeries.get(yValue.series) ?? 0,
@@ -327,7 +351,7 @@ export const prepareBarXData = async (args: {
                         series: yValue.series,
                         htmlLabels: [],
                         svgLabels: [],
-                        isStackEnd: false,
+                        isStackEnd: overlay,
                         extendsUp,
                         markers: [],
                         getHoverMarkers: () => [],
@@ -406,6 +430,11 @@ export const prepareBarXData = async (args: {
                 result.push(...stackItems);
             }
         }
+    }
+
+    if (series.some((s) => s.grouping === false && !s.stacking)) {
+        const seriesOrder = new Map(series.map((s, index) => [s, index]));
+        result.sort((a, b) => (seriesOrder.get(a.series) ?? 0) - (seriesOrder.get(b.series) ?? 0));
     }
 
     for (const barData of result) {

@@ -12,7 +12,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
 
     const visibleData = data.filter((p) => isPointTooltipEnabled({data: p.data, series: p.series}));
 
-    const sorted = sort(visibleData, (p) => p.y);
+    const sorted = sort(visibleData, (p) => p.y + p.height / 2);
     const closestYIndex = bisector<PreparedBarYData, number>((p) => p.y + p.height / 2).center(
         sorted,
         pointerY,
@@ -25,6 +25,30 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     }
 
     const selectedPoints = visibleData.filter((p) => p.data.y === closestYPoint.data.y);
+
+    if (selectedPoints.some((p) => p.series.grouping === false && !p.series.stacking)) {
+        let closestPoint: PreparedBarYData | undefined;
+        let closestDistance = Infinity;
+        // selectedPoints retains paint order, so the later bar wins overlapping hits.
+        for (const point of selectedPoints) {
+            const distance = Math.hypot(
+                Math.max(point.x - pointerX, pointerX - point.x - point.width, 0),
+                Math.max(point.y - pointerY, pointerY - point.y - point.height, 0),
+            );
+            if (distance <= closestDistance) {
+                closestPoint = point;
+                closestDistance = distance;
+            }
+        }
+        return {
+            chunks: selectedPoints.map((p) => ({
+                data: p.data,
+                percentage: p.percentage,
+                series: p.series,
+                closest: p === closestPoint,
+            })) as TooltipDataChunk[],
+        };
+    }
 
     const closestPoints = sort(
         selectedPoints.filter((p) => p.y === closestYPoint.y),
