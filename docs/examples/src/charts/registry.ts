@@ -10,6 +10,8 @@ import {LinearAxisExample} from './axis-types/linear';
 import linearRaw from './axis-types/linear.tsx?raw';
 import {LogarithmicAxisExample} from './axis-types/logarithmic';
 import logarithmicRaw from './axis-types/logarithmic.tsx?raw';
+import {PlotClickExample} from './axis-types/plot-click';
+import plotClickRaw from './axis-types/plot-click.tsx?raw';
 import {DataLabelsPlacementAutoExample} from './data-labels/placement-auto';
 import dataLabelsPlacementAutoRaw from './data-labels/placement-auto.tsx?raw';
 import {DataLabelsPlacementFallbackHideExample} from './data-labels/placement-fallback-hide';
@@ -107,6 +109,10 @@ export const registry: Record<string, ExampleModule> = {
     'axis-types/category': {
         code: extractDisplayCode(categoryRaw),
         Component: CategoryAxisExample,
+    },
+    'axis-types/plot-click': {
+        code: extractDisplayCode(plotClickRaw),
+        Component: PlotClickExample,
     },
     'series-types/bar-x': {
         code: extractDisplayCode(barXSeriesRaw),

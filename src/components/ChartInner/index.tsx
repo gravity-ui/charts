@@ -205,6 +205,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         yScale,
     });
     const clickHandler = data.chart?.events?.click;
+    const plotClickHandler = data.chart?.events?.plotclick;
     const pointerMoveHandler = data.chart?.events?.pointermove;
     const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);
 
@@ -234,6 +235,10 @@ export const ChartInner = (props: ChartInnerProps) => {
             dispatcher.on(EventType.CLICK_CHART, clickHandler);
         }
 
+        if (plotClickHandler) {
+            dispatcher.on(EventType.PLOTCLICK_CHART, plotClickHandler);
+        }
+
         if (pointerMoveHandler) {
             dispatcher.on(EventType.POINTERMOVE_CHART, (...args) => {
                 const [handlerData, event] = args;
@@ -243,9 +248,10 @@ export const ChartInner = (props: ChartInnerProps) => {
 
         return () => {
             dispatcher.on(EventType.CLICK_CHART, null);
+            dispatcher.on(EventType.PLOTCLICK_CHART, null);
             dispatcher.on(EventType.POINTERMOVE_CHART, null);
         };
-    }, [dispatcher, clickHandler, pointerMoveHandler]);
+    }, [dispatcher, clickHandler, plotClickHandler, pointerMoveHandler]);
 
     React.useEffect(() => {
         if ((prevWidth !== width || prevHeight !== height) && tooltipPinned) {

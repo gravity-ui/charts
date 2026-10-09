@@ -259,6 +259,7 @@ export function useChartInnerProps(props: Props) {
                 boundsWidth,
                 boundsHeight,
             } = await prepareAxisLayout({
+                preserveHiddenSeriesAxes: Boolean(data.chart?.events?.plotclick),
                 height,
                 preparedChart,
                 legendConfig,

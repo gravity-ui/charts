@@ -22,6 +22,7 @@ interface UseAxesProps {
     boundsHeight?: number;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
+    preserveHiddenSeriesAxes?: boolean;
 }
 
 export async function getAxes(props: UseAxesProps) {
@@ -35,8 +36,12 @@ export async function getAxes(props: UseAxesProps) {
         width,
         xAxis,
         yAxis,
+        preserveHiddenSeriesAxes,
     } = props;
-    const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+    const visibleSeries = preparedSeries.filter((s) => s.visible);
+    const seriesData = (
+        visibleSeries.length || !preserveHiddenSeriesAxes ? visibleSeries : preparedSeries
+    ) as ChartSeries[];
 
     const estimatedPreparedYAxis = await getPreparedYAxis({
         height,
@@ -96,6 +101,7 @@ export function useAxis(props: UseAxesProps) {
         width,
         xAxis,
         yAxis,
+        preserveHiddenSeriesAxes,
     } = props;
     const [axesState, setAxes] = React.useState<AxesState>({xAxis: null, yAxis: []});
     const axesStateRunRef = React.useRef(0);
@@ -124,6 +130,7 @@ export function useAxis(props: UseAxesProps) {
                 width,
                 xAxis,
                 yAxis,
+                preserveHiddenSeriesAxes,
             });
 
             if (axesStateRunRef.current === currentRun) {
@@ -146,6 +153,7 @@ export function useAxis(props: UseAxesProps) {
         width,
         xAxis,
         yAxis,
+        preserveHiddenSeriesAxes,
     ]);
 
     const isAxesReady = axesStateReady.current;
