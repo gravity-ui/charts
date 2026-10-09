@@ -10,6 +10,8 @@ import {LogarithmicAxisExample} from '../../docs/examples/src/charts/axis-types/
 import {DataLabelsPlacementAutoExample} from '../../docs/examples/src/charts/data-labels/placement-auto';
 import {DataLabelsPlacementFallbackHideExample} from '../../docs/examples/src/charts/data-labels/placement-fallback-hide';
 import {DataLabelsPlacementFixedExample} from '../../docs/examples/src/charts/data-labels/placement-fixed';
+import {BarXSeriesExample} from '../../docs/examples/src/charts/series-types/bar-x';
+import {BarYSeriesExample} from '../../docs/examples/src/charts/series-types/bar-y';
 
 const CONTAINER_STYLE: React.CSSProperties = {
     width: 600,
@@ -92,5 +94,25 @@ test.describe('Docs examples: Data Labels', () => {
             </div>,
         );
         await expect(component.locator('svg')).toBeVisible();
+    });
+});
+
+test.describe('Docs examples: Series Types', () => {
+    test('bar-x appearance', async ({mount}) => {
+        const component = await mount(
+            <div style={CONTAINER_STYLE}>
+                <BarXSeriesExample />
+            </div>,
+        );
+        await expect(component.locator('.gcharts-bar-x__segment')).toHaveCount(6);
+    });
+
+    test('bar-y appearance', async ({mount}) => {
+        const component = await mount(
+            <div style={CONTAINER_STYLE}>
+                <BarYSeriesExample />
+            </div>,
+        );
+        await expect(component.locator('.gcharts-bar-y__segment')).toHaveCount(6);
     });
 });

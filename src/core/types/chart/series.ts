@@ -122,6 +122,14 @@ export interface ChartSeriesOptions {
         renderer?: (args: DataLabelRendererData) => SVGTextAttributes;
     };
     'bar-x'?: {
+        /**
+         * Default opacity of the bar fill and border. Does not affect normal data labels.
+         * Individual series and point opacity take precedence. Null resolves to 1.
+         * @minimum 0
+         * @maximum 1
+         * @default 1
+         */
+        opacity?: number | null;
         /** Total labels for each visible stack, grouped by category, stackId and value axis. */
         stackLabels?: StackLabelsOptions;
         /**
@@ -178,12 +186,21 @@ export interface ChartSeriesOptions {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;
+            /** Opacity multiplies the resolved bar opacity; SVG data labels use it directly. */
             inactive?: BasicInactiveState;
         };
         /** Default annotation settings for all bar-x data points */
         annotation?: ChartAnnotationSeriesOptions;
     };
     'bar-y'?: {
+        /**
+         * Default opacity of the bar fill and border. Does not affect normal data labels.
+         * Individual series and point opacity take precedence. Null resolves to 1.
+         * @minimum 0
+         * @maximum 1
+         * @default 1
+         */
+        opacity?: number | null;
         /** Total labels for each visible stack, grouped by category and stackId. */
         stackLabels?: StackLabelsOptions;
         /**
@@ -236,6 +253,7 @@ export interface ChartSeriesOptions {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;
+            /** Opacity multiplies the resolved bar opacity; SVG data labels use it directly. */
             inactive?: BasicInactiveState;
         };
     };

@@ -29,8 +29,12 @@ export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     y?: string | number;
     /** Data label value of the bar. If not specified, the x value is used. */
     label?: string | number;
-    /** Individual opacity for the bar. */
-    opacity?: number;
+    /**
+     * Individual opacity for the bar. Omitted or null values inherit series opacity.
+     * @minimum 0
+     * @maximum 1
+     */
+    opacity?: number | null;
 }
 
 /**
@@ -51,6 +55,14 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     name: string;
     /** The main color of the series (hex, rgba) */
     color?: string;
+    /**
+     * Opacity of the bar fill and border. Does not affect normal data labels.
+     * Point opacity takes precedence. Omitted or null values inherit `series.options['bar-y'].opacity` (default 1).
+     * The inactive state's opacity multiplies the resolved bar opacity.
+     * @minimum 0
+     * @maximum 1
+     */
+    opacity?: number | null;
     /**
      * The width of the border surrounding each bar.
      * @default 0

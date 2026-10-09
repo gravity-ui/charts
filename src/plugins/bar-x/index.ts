@@ -19,6 +19,7 @@ import {
 } from '~core/validation/helpers';
 
 import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
+import {validateBarOpacity} from '../bar-opacity';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
@@ -91,6 +92,11 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateBarOpacity(series.opacity, 'opacity');
+        validateBarOpacity(seriesOptions?.['bar-x']?.opacity, 'series.options.bar-x.opacity');
+        series.data.forEach((point, index) => {
+            validateBarOpacity(point.opacity, `data[${index}].opacity`);
+        });
         validateStackLabelsOptions({
             series,
             allSeries,
@@ -122,9 +128,12 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
                     {
                         id: 'color',
                         source: 'color',
-                        format: {
-                            type: 'custom',
-                            formatter: ({value}) => getTooltipColorSymbol({color: String(value)}),
+                        formatValue: ({item, value}) => {
+                            const {data, series} = item as TooltipDataChunkBarX;
+                            return getTooltipColorSymbol({
+                                color: String(value),
+                                opacity: data.opacity ?? series.opacity ?? 1,
+                            });
                         },
                         width: '16px',
                     },

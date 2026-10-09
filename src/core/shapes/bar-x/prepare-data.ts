@@ -322,7 +322,7 @@ export const prepareBarXData = async (args: {
                         height: shapeHeight,
                         valueEndPadding: 0,
                         borderWidth: borderWidthBySeries.get(yValue.series) ?? 0,
-                        opacity: get(yValue.data, 'opacity', null),
+                        opacity: yValue.data.opacity ?? yValue.series.opacity,
                         data: yValue.data,
                         series: yValue.series,
                         htmlLabels: [],

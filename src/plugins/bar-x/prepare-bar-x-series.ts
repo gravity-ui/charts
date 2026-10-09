@@ -28,6 +28,7 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
     return seriesList.map<PreparedBarXSeries>((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
+        const opacity = series.opacity ?? seriesOptions?.['bar-x']?.opacity ?? 1;
         const dataLabelsInside =
             series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
         const yAxisIndex = get(series, 'yAxis', 0);
@@ -35,12 +36,13 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         return {
             type: series.type,
             color,
+            opacity,
             name,
             id: getUniqId(),
             visible: get(series, 'visible', true),
             legend: {
                 enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
+                symbol: {...prepareLegendSymbol(series), opacity},
                 groupId: series.legend?.groupId ?? getUniqId(),
                 itemText: series.legend?.itemText ?? name,
             },

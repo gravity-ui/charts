@@ -12,7 +12,7 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     /** Extra pixels at the value end to cover the grid stroke, without shifting label anchors. */
     valueEndPadding: number;
     borderWidth: number;
-    opacity: number | null;
+    opacity: number;
     series: PreparedBarXSeries;
     svgLabels: LabelData[];
     /** The outer segment of the positive or negative part of a stack. */

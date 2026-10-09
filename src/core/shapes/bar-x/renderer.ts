@@ -99,11 +99,15 @@ export function renderBarX(
         if (inactiveEnabled) {
             const hoveredSeries = data.map((d) => d.series.id);
             const getOpacity = (d: PreparedBarXData) =>
-                hoveredSeries.includes(d.series.id) ? d.opacity : inactiveOptions.opacity || null;
+                hoveredSeries.includes(d.series.id)
+                    ? d.opacity
+                    : d.opacity * (inactiveOptions.opacity ?? 1);
             rectSelection.attr('opacity', getOpacity);
             borderSelection.attr('opacity', getOpacity);
             labelSelection.attr('opacity', (d) => {
-                return hoveredSeries.includes(d.series.id) ? null : inactiveOptions.opacity || null;
+                return hoveredSeries.includes(d.series.id)
+                    ? null
+                    : (inactiveOptions.opacity ?? null);
             });
         }
     }

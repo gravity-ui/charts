@@ -96,6 +96,7 @@ export type SymbolLegendSymbol = {
 
 export type PreparedLegendSymbol = (RectLegendSymbol | PathLegendSymbol | SymbolLegendSymbol) & {
     bboxWidth: number;
+    opacity?: number;
 };
 
 export interface PreparedLegendRowItem {
@@ -252,6 +253,7 @@ export type PreparedScatterSeries = {
     BasePreparedAxisRelatedSeries;
 
 export type PreparedBarXSeries = {
+    opacity: number;
     type: BarXSeries['type'];
     data: BarXSeriesData[];
     stackId: string;
@@ -275,6 +277,7 @@ export type PreparedBarXSeries = {
     BasePreparedAxisRelatedSeries;
 
 export type PreparedBarYSeries = {
+    opacity: number;
     type: BarYSeries['type'];
     data: BarYSeriesData[];
     stackId: string;

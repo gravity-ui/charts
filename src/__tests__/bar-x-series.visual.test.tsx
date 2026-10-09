@@ -1203,4 +1203,206 @@ test.describe('Bar-x series', () => {
             });
         }
     });
+
+    test.describe('Opacity', () => {
+        const type = 'bar-x' as const;
+        for (const inactiveOpacity of [0.2, 0]) {
+            test(`Defaults, overrides and state restoration (inactive opacity ${inactiveOpacity})`, async ({
+                mount,
+                page,
+            }) => {
+                const data: ChartData = {
+                    series: {
+                        data: [
+                            {
+                                type,
+                                name: 'Plan',
+                                color: '#90caf9',
+                                opacity: 0.3,
+                                borderWidth: 2,
+                                borderColor: '#283593',
+                                dataLabels: {enabled: true},
+                                data: [
+                                    {x: 10, y: 10},
+                                    {x: 20, y: 20, opacity: 0.6},
+                                    {x: 30, y: 30, opacity: 0},
+                                ],
+                            },
+                            {
+                                type,
+                                name: 'Actual',
+                                opacity: 0.8,
+                                borderWidth: 2,
+                                dataLabels: {enabled: true},
+                                data: [{x: 40, y: 40}],
+                            },
+                            {
+                                type,
+                                name: 'Default',
+                                borderWidth: 2,
+                                dataLabels: {enabled: true},
+                                data: [{x: 50, y: 50}],
+                            },
+                            {
+                                type,
+                                name: 'Null',
+                                opacity: null,
+                                borderWidth: 2,
+                                dataLabels: {enabled: true},
+                                data: [{x: 60, y: 60, opacity: null}],
+                            },
+                            {
+                                type,
+                                name: 'Transparent',
+                                opacity: 0,
+                                borderWidth: 2,
+                                dataLabels: {enabled: true},
+                                data: [{x: 70, y: 70}],
+                            },
+                        ],
+                        options: {
+                            [type]: {
+                                opacity: 0.4,
+                                states: {
+                                    hover: {enabled: true, brightness: 0.5},
+                                    inactive: {enabled: true, opacity: inactiveOpacity},
+                                },
+                            },
+                        },
+                    },
+                    tooltip: {enabled: true},
+                };
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: 700, height: 320}} />,
+                );
+                const fills = component.locator(`.gcharts-${type}__segment`);
+                const borders = component.locator(`.gcharts-${type}__segment-border`);
+                const labels = component.locator(`.gcharts-${type}__label`);
+                const expected = [0.3, 0.6, 0, 0.8, 0.4, 0.4, 0].map(String);
+                async function expectNormalOpacity() {
+                    await expect(fills).toHaveCount(7);
+                    await expect(borders).toHaveCount(7);
+                    await expect(labels).toHaveCount(7);
+                    await expect
+                        .poll(() =>
+                            fills.evaluateAll((elements) =>
+                                elements.map((element) => element.getAttribute('opacity')),
+                            ),
+                        )
+                        .toEqual(expected);
+                    await expect
+                        .poll(() =>
+                            borders.evaluateAll((elements) =>
+                                elements.map((element) => element.getAttribute('opacity')),
+                            ),
+                        )
+                        .toEqual(expected);
+                    await expect
+                        .poll(() =>
+                            labels.evaluateAll((elements) =>
+                                elements.map((element) => getComputedStyle(element).opacity),
+                            ),
+                        )
+                        .toEqual(Array(7).fill('1'));
+                }
+                await expectNormalOpacity();
+                // Tooltip data retains the raw point without inherited opacity.
+                expect(
+                    await fills
+                        .first()
+                        .evaluate(
+                            (element) =>
+                                (element as SVGElement & {__data__: {data: {opacity?: number}}})
+                                    .__data__.data.opacity,
+                        ),
+                ).toBeUndefined();
+                const box = await getLocatorBoundingBox(fills.nth(1));
+                await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+                await expect(fills.nth(1)).not.toHaveAttribute('fill', '#90caf9');
+                const hoveredExpected = [
+                    ...expected.slice(0, 3),
+                    ...(inactiveOpacity === 0
+                        ? ['0', '0', '0', '0']
+                        : ['0.16', '0.08', '0.08', '0']),
+                ];
+                await expect
+                    .poll(() =>
+                        fills.evaluateAll((elements) =>
+                            elements.map((element) => getComputedStyle(element).opacity),
+                        ),
+                    )
+                    .toEqual(hoveredExpected);
+                await expect
+                    .poll(() =>
+                        borders.evaluateAll((elements) =>
+                            elements.map((element) => getComputedStyle(element).opacity),
+                        ),
+                    )
+                    .toEqual(hoveredExpected);
+                expect(
+                    await labels.evaluateAll(
+                        (elements, opacity) =>
+                            elements.every((element) => {
+                                const {series} = (
+                                    element as SVGElement & {__data__: {series: {name: string}}}
+                                ).__data__;
+                                return (
+                                    getComputedStyle(element).opacity ===
+                                    (series.name === 'Plan' ? '1' : String(opacity))
+                                );
+                            }),
+                        inactiveOpacity,
+                    ),
+                ).toBe(true);
+                await expect(borders.first()).toHaveAttribute('fill', '#283593');
+                await page.mouse.move(0, 0);
+                await expect(fills.nth(1)).toHaveAttribute('fill', '#90caf9');
+                await expectNormalOpacity();
+                const actualBox = await getLocatorBoundingBox(fills.nth(3));
+                await page.mouse.move(
+                    actualBox.x + actualBox.width / 2,
+                    actualBox.y + actualBox.height / 2,
+                );
+                await expect(fills.first()).toHaveAttribute(
+                    'opacity',
+                    inactiveOpacity === 0 ? '0' : '0.06',
+                );
+                await expect(borders.first()).toHaveAttribute(
+                    'opacity',
+                    inactiveOpacity === 0 ? '0' : '0.06',
+                );
+                await page.mouse.move(0, 0);
+                await expectNormalOpacity();
+            });
+        }
+    });
+
+    test('Range slider inherits opacity defaults and point overrides', async ({mount}) => {
+        const data: ChartData = {
+            xAxis: {type: 'linear', rangeSlider: {enabled: true}},
+            series: {
+                options: {'bar-x': {opacity: 0.3}},
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Plan',
+                        borderWidth: 2,
+                        data: [
+                            {x: 0, y: 50},
+                            {x: 1, y: 60, opacity: 0.6},
+                            {x: 2, y: 70, opacity: 0},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const preview = component.locator('.gcharts-range-slider');
+        const bars = preview.locator('.gcharts-bar-x__segment');
+        await expect(bars).toHaveCount(3);
+        for (const [index, opacity] of [0.3, 0.6, 0].entries()) {
+            await expect(bars.nth(index)).toHaveAttribute('opacity', String(opacity));
+        }
+        await expect(preview.locator('.gcharts-bar-x__segment-border')).toHaveCount(0);
+    });
 });
