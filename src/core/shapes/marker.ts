@@ -180,25 +180,79 @@ export function renderHoverMarkers(
 
     if (hoverMarkers.length === 0) return;
 
-    container
+    const selection = container
         .selectAll<SVGGElement, MarkerItem>('g')
         .data(hoverMarkers)
         .join('g')
         .attr('class', b('wrapper'))
-        .attr('transform', (d) => `translate(${d.cx},${d.cy})`)
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
+
+    selection
+        .filter((d) => Boolean(d.halo?.enabled))
         .append('path')
-        .attr('class', b('symbol'))
-        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth))
+        .attr('class', haloClassName)
+        .attr('d', (d) =>
+            d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + (d.halo?.size ?? 0)),
+        )
+        .attr('fill', (d) => d.fill)
+        .attr('opacity', (d) => d.halo?.opacity ?? 0);
+
+    selection
+        .filter((d) => d.renderSymbol !== false)
+        .append('path')
+        .attr('class', symbolClassName)
+        .attr('d', (d) =>
+            d.clipped ? null : getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth),
+        )
         .attr('fill', (d) => d.fill)
         .attr('stroke', (d) => d.stroke)
         .attr('stroke-width', (d) => d.strokeWidth);
 }
 
-interface HoverMarkerPoint extends MarkerFillPoint {
+export interface HoverMarkerPoint extends MarkerFillPoint {
     data: unknown;
     x: number | null;
     y: number | null;
+    clipped?: boolean;
     hiddenInLine?: boolean;
+}
+
+export interface MatchedHoverPoint<T extends HoverMarkerPoint> {
+    point: T;
+    hovered: HoveredShapeData;
+}
+
+export function matchHoverPoints<T extends HoverMarkerPoint>(
+    points: T[],
+    seriesId: string,
+): (hoveredData: HoveredShapeData[]) => MatchedHoverPoint<T>[] {
+    const pointsByData = new Map<unknown, T[]>();
+    for (const p of points) {
+        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
+            const dataPoints = pointsByData.get(p.data) ?? [];
+            dataPoints.push(p);
+            pointsByData.set(p.data, dataPoints);
+        }
+    }
+
+    return (hoveredData: HoveredShapeData[]) => {
+        const matches: MatchedHoverPoint<T>[] = [];
+        for (const hovered of hoveredData) {
+            if (hovered.series?.id !== undefined && hovered.series.id !== seriesId) {
+                continue;
+            }
+
+            const dataPoints = pointsByData.get(hovered.data);
+            const hasGeometry = hovered.x !== undefined && hovered.y1 !== undefined;
+            const point = hasGeometry
+                ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
+                : dataPoints?.[dataPoints.length - 1];
+            if (!point || point.x === null || point.y === null) continue;
+
+            matches.push({point, hovered});
+        }
+        return matches;
+    };
 }
 
 interface HoverMarkerSeries {
@@ -220,43 +274,22 @@ export function buildHoverMarkerGetter(
 
     if (normalState.enabled || !hoverState.enabled) return () => [];
 
-    const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
-    for (const p of points) {
-        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
-            const dataPoints = pointsByData.get(p.data) ?? [];
-            dataPoints.push(p);
-            pointsByData.set(p.data, dataPoints);
-        }
-    }
+    const findHoverPoints = matchHoverPoints(points, series.id);
 
     return (hoveredData: HoveredShapeData[]) => {
-        const items: MarkerItem[] = [];
-        for (const hovered of hoveredData) {
-            if (hovered.series?.id !== undefined && hovered.series.id !== series.id) {
-                continue;
-            }
-
-            const dataPoints = pointsByData.get(hovered.data);
-            const hasGeometry = hovered.x !== undefined && hovered.y1 !== undefined;
-            const point = hasGeometry
-                ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
-                : dataPoints?.[dataPoints.length - 1];
-            if (!point || point.x === null || point.y === null) continue;
-            items.push({
-                cx: point.x,
-                cy: point.y,
-                radius: hoverState.radius,
-                symbolType: normalState.symbol,
-                fill: getMarkerFill(point, series.color),
-                stroke: hoverState.borderColor,
-                strokeWidth: hoverState.borderWidth,
-                opacity: 1,
-                active: true,
-                clipped: false,
-                series: {id: series.id},
-                data: hovered.data,
-            });
-        }
-        return items;
+        return findHoverPoints(hoveredData).map(({point, hovered}) => ({
+            cx: point.x as number,
+            cy: point.y as number,
+            radius: hoverState.radius,
+            symbolType: normalState.symbol,
+            fill: getMarkerFill(point, series.color),
+            stroke: hoverState.borderColor,
+            strokeWidth: hoverState.borderWidth,
+            opacity: 1,
+            active: true,
+            clipped: Boolean(point.clipped),
+            series: {id: series.id},
+            data: hovered.data,
+        }));
     };
 }

@@ -99,7 +99,10 @@ function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
         radius: markerNormalState.radius,
         borderWidth: 1,
         borderColor: '#ffffff',
-        halo: DEFAULT_HALO_OPTIONS,
+        halo: {
+            ...DEFAULT_HALO_OPTIONS,
+            enabled: false,
+        },
     };
 
     return {

@@ -6,6 +6,7 @@ export * from './explicit-tick-values';
 export * from './gradient';
 export * from './html-labels';
 export * from './markers';
+export * from './marker-halo';
 export * from './null-modes';
 export * from './playground';
 export * from './shapes';

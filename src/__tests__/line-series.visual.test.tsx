@@ -1381,4 +1381,143 @@ test.describe('Line series', () => {
         const tooltip = page.locator('.gcharts-tooltip');
         await expect(tooltip).toHaveScreenshot();
     });
+
+    test.describe('Marker halo on hover', () => {
+        test('always-visible markers: halo appears over marker on hover, moves between points, and disappears on exit', async ({
+            mount,
+            page,
+        }) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                tooltip: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 10, y: 20},
+                            ],
+                            marker: {enabled: true},
+                        },
+                    ],
+                    options: {
+                        line: {
+                            states: {
+                                hover: {
+                                    marker: {
+                                        enabled: true,
+                                        halo: {
+                                            enabled: true,
+                                            size: 8,
+                                            opacity: 0.25,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const line = component.locator('.gcharts-line > path');
+            const lineBox = await getLocatorBoundingBox(line);
+
+            // 1. Initial state: normal markers are visible, no halo
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
+            await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
+
+            // 2. Hover near point 0 -> halo appears behind existing marker without duplicating symbol
+            await page.mouse.move(lineBox.x + lineBox.width * 0.1, lineBox.y + lineBox.height / 2);
+            const halo = component.locator('.gcharts-marker__halo');
+            await expect(halo).toHaveCount(1);
+            await expect(halo).toBeVisible();
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
+            const haloBox1 = await getLocatorBoundingBox(halo);
+
+            // 3. Move near point 1 -> halo moves to new position without duplicating symbol
+            await page.mouse.move(lineBox.x + lineBox.width * 0.9, lineBox.y + lineBox.height / 2);
+            await expect(halo).toHaveCount(1);
+            await expect(halo).toBeVisible();
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
+            const haloBox2 = await getLocatorBoundingBox(halo);
+            expect(haloBox2.x).not.toBe(haloBox1.x);
+
+            // 4. Stop hovering -> halo disappears, normal markers remain
+            await page.mouse.move(0, 0);
+            await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(2);
+        });
+
+        test('hover-only markers: marker and halo appear on hover, move between points, and disappear on exit', async ({
+            mount,
+            page,
+        }) => {
+            const chartData: ChartData = {
+                legend: {enabled: false},
+                tooltip: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Series 1',
+                            data: [
+                                {x: 0, y: 10},
+                                {x: 10, y: 20},
+                            ],
+                            marker: {enabled: false},
+                        },
+                    ],
+                    options: {
+                        line: {
+                            states: {
+                                hover: {
+                                    marker: {
+                                        enabled: true,
+                                        halo: {
+                                            enabled: true,
+                                            size: 8,
+                                            opacity: 0.25,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+
+            const component = await mount(<ChartTestStory data={chartData} />);
+            const line = component.locator('.gcharts-line > path');
+            const lineBox = await getLocatorBoundingBox(line);
+
+            // 1. Initial state: no markers and no halo
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(0);
+            await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
+
+            // 2. Hover near point 0 -> marker symbol and halo appear together
+            await page.mouse.move(lineBox.x + lineBox.width * 0.1, lineBox.y + lineBox.height / 2);
+            const halo = component.locator('.gcharts-marker__halo');
+            const symbol = component.locator('.gcharts-marker__symbol');
+            await expect(halo).toHaveCount(1);
+            await expect(halo).toBeVisible();
+            await expect(symbol).toHaveCount(1);
+            await expect(symbol).toBeVisible();
+            const haloBox1 = await getLocatorBoundingBox(halo);
+
+            // 3. Move near point 1 -> marker and halo move
+            await page.mouse.move(lineBox.x + lineBox.width * 0.9, lineBox.y + lineBox.height / 2);
+            await expect(halo).toHaveCount(1);
+            await expect(symbol).toHaveCount(1);
+            const haloBox2 = await getLocatorBoundingBox(halo);
+            expect(haloBox2.x).not.toBe(haloBox1.x);
+
+            // 4. Stop hovering -> both marker symbol and halo disappear
+            await page.mouse.move(0, 0);
+            await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
+            await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(0);
+        });
+    });
 });
