@@ -77,6 +77,15 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
+    getLayerKey: ({seriesKey}) => seriesKey,
+    getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
+        if (isRangeSlider) return 'bounds';
+        const hasMinOrMax = yAxis.some(
+            (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
+        );
+        const hasZoom = zoomState && Object.keys(zoomState).length > 0;
+        return hasZoom || hasMinOrMax ? 'bounds' : 'horizontal';
+    },
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
     prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
     prepareSeries: prepareLineSeries,

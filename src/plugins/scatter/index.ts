@@ -65,6 +65,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
+    getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     prepareSeries: prepareScatterSeries,
     validate: ({series, xAxis, yAxis}) => {

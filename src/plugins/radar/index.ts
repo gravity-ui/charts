@@ -35,7 +35,7 @@ function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderSha
 
 export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
     type: 'radar',
-    useClipPath: false,
+    getClipPath: () => false,
     validate: ({series, allSeries}) => {
         if (
             series.categories !== undefined &&
