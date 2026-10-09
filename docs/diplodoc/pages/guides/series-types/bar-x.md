@@ -30,4 +30,4 @@ The example combines borders with a default opacity of `0.8`, `0.3` on Plan, and
 
 ### States
 
-Hover changes the fill color; the border retains its configured color. The inactive state applies its opacity to the fill, border, and SVG data labels. When it ends, bars restore their point or series opacity.
+Hover changes the fill color; the border retains its configured color. The inactive state multiplies the resolved fill and border opacity by `states.inactive.opacity`, so transparent bars stay transparent. SVG data labels use the inactive opacity directly. When it ends, bars restore their point or series opacity.

@@ -74,6 +74,9 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateBarOpacity(series.opacity, 'opacity');
         validateBarOpacity(seriesOptions?.['bar-y']?.opacity, 'series.options.bar-y.opacity');
+        series.data.forEach((point, index) => {
+            validateBarOpacity(point.opacity, `data[${index}].opacity`);
+        });
         validateStackLabelsOptions({
             series,
             allSeries,

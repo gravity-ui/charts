@@ -94,6 +94,9 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateBarOpacity(series.opacity, 'opacity');
         validateBarOpacity(seriesOptions?.['bar-x']?.opacity, 'series.options.bar-x.opacity');
+        series.data.forEach((point, index) => {
+            validateBarOpacity(point.opacity, `data[${index}].opacity`);
+        });
         validateStackLabelsOptions({
             series,
             allSeries,

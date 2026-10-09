@@ -5,7 +5,7 @@ import type {BarXSeries, ChartData, ChartSeriesOptions} from '../../../types';
 
 describe('bar-x opacity', () => {
     const type = 'bar-x' as const;
-    describe.each(['series', 'options'] as const)('%s', (source) => {
+    describe.each(['series', 'options', 'point'] as const)('%s', (source) => {
         function config(opacity: unknown): ChartData {
             return {
                 series: {
@@ -14,7 +14,9 @@ describe('bar-x opacity', () => {
                             type,
                             name: 'Plan',
                             opacity: source === 'series' ? opacity : 0.3,
-                            data: [{x: 10, y: 20}],
+                            data: [
+                                {x: 10, y: 20, opacity: source === 'point' ? opacity : undefined},
+                            ],
                         },
                     ] as BarXSeries[],
                     options:

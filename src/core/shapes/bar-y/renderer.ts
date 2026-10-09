@@ -83,12 +83,12 @@ export function renderBarY(
             const isInactive = (d: PreparedBarYData | LabelData) =>
                 hoveredSeries?.length && !hoveredSeries.includes(d.series.id);
             const newOpacity = (d: PreparedBarYData) =>
-                isInactive(d) ? inactiveOptions.opacity || null : d.opacity;
+                isInactive(d) ? d.opacity * (inactiveOptions.opacity ?? 1) : d.opacity;
             segmentSelection.attr('opacity', newOpacity);
             borderSelection.attr('opacity', newOpacity);
             labelSelection.attr('opacity', (d) => {
                 if (isInactive(d)) {
-                    return inactiveOptions.opacity || null;
+                    return inactiveOptions.opacity ?? null;
                 }
 
                 return null;

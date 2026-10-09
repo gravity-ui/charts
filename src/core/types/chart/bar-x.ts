@@ -36,8 +36,12 @@ export interface BarXSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     category?: string;
     /** Data label value of the bar-x column. If not specified, the y value is used. */
     label?: string | number;
-    /** Individual opacity for the bar-x column. Overrides series opacity. */
-    opacity?: number;
+    /**
+     * Individual opacity for the bar-x column. Omitted or null values inherit series opacity.
+     * @minimum 0
+     * @maximum 1
+     */
+    opacity?: number | null;
     /**
      * Annotation displayed near this data point as a bubble with text label.
      * Useful for highlighting specific values, events, or adding contextual notes.
@@ -66,6 +70,7 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     /**
      * Opacity of the bar fill and border. Does not affect normal data labels.
      * Point opacity takes precedence. Omitted or null values inherit `series.options['bar-x'].opacity` (default 1).
+     * The inactive state's opacity multiplies the resolved bar opacity.
      * @minimum 0
      * @maximum 1
      */

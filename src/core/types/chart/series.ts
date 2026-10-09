@@ -186,6 +186,7 @@ export interface ChartSeriesOptions {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;
+            /** Opacity multiplies the resolved bar opacity; SVG data labels use it directly. */
             inactive?: BasicInactiveState;
         };
         /** Default annotation settings for all bar-x data points */
@@ -252,6 +253,7 @@ export interface ChartSeriesOptions {
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState;
+            /** Opacity multiplies the resolved bar opacity; SVG data labels use it directly. */
             inactive?: BasicInactiveState;
         };
     };
