@@ -85,8 +85,12 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                 },
                 data: prepareSeriesData(series),
                 stacking: series.stacking,
+                grouping: series.grouping ?? true,
                 stackLabels: series.stackLabels,
+                // Non-stacked overlays need independent domains even with a stackId.
                 stackId: getSeriesStackId(series),
+                resolvedStackId:
+                    series.grouping === false && !series.stacking ? getUniqId() : undefined,
                 valueAxis: 'x',
                 dataLabels: await prepareDataLabels(series),
                 cursor: get(series, 'cursor', null),

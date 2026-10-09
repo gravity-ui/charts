@@ -5,32 +5,34 @@ import type {ChartData} from '@gravity-ui/charts';
 
 const data: ChartData = {
     series: {
-        options: {'bar-x': {borderWidth: 1, borderRadius: 4, opacity: 0.6}},
         data: [
             {
                 type: 'bar-x',
                 name: 'Plan',
+                grouping: false,
+                opacity: 0.6,
                 data: [
-                    {x: 'Jan', y: 32},
-                    {x: 'Feb', y: 40},
-                    {x: 'Mar', y: 35},
+                    {x: 'A', y: 100},
+                    {x: 'B', y: 80},
                 ],
             },
             {
                 type: 'bar-x',
                 name: 'Actual',
+                grouping: false,
+                opacity: 0.6,
+                dataLabels: {enabled: true, inside: true},
                 data: [
-                    {x: 'Jan', y: 42},
-                    {x: 'Feb', y: 58},
-                    {x: 'Mar', y: 51},
+                    {x: 'A', y: 75},
+                    {x: 'B', y: 50},
                 ],
             },
         ],
     },
-    xAxis: {type: 'category', categories: ['Jan', 'Feb', 'Mar']},
+    xAxis: {type: 'category', categories: ['A', 'B']},
 };
 
-export function BarXSeriesExample() {
+export function BarXOverlayExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

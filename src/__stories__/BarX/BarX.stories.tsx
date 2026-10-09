@@ -17,6 +17,7 @@ import {
 } from '../__data__';
 import {barXBordersData} from '../__data__/bar-x/borders';
 import {barXSplitData} from '../__data__/bar-x/split';
+import {barXStackedOverlayData} from '../__data__/bar-x/stacked-overlay';
 
 const meta: Meta<typeof Chart> = {
     title: 'Bar-X',
@@ -176,4 +177,9 @@ export const BarXPlayground = {
 export const BarXBorders = {
     name: 'Borders',
     args: {data: barXBordersData},
+} satisfies Story;
+
+export const BarXStackedOverlay = {
+    name: 'Overlapping stacks',
+    args: {data: barXStackedOverlayData},
 } satisfies Story;

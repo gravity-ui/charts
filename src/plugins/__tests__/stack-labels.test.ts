@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+/** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
@@ -8,6 +8,7 @@ import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
+import type {BarYShapesArgs, PreparedBarYData} from '~core/shapes/bar-y/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
@@ -16,6 +17,7 @@ import {areaPlugin} from '../area';
 import {barXPlugin} from '../bar-x';
 import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
 import {barYPlugin} from '../bar-y';
+import {getBarYStackLabelAnchors} from '../bar-y/stack-labels';
 import {prepareStackLabels} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 
@@ -305,6 +307,53 @@ describe.each(plugins)('$type stack labels', (plugin) => {
         );
         expect(result.labels).toHaveLength(2);
     });
+});
+
+describe.each([barXPlugin, barYPlugin])('$type partial stack overlays', (plugin) => {
+    test.each([false, true])(
+        'keeps one total at the outer segment, reversed=%s',
+        async (reversed) => {
+            const {args} = await prepare(plugin, [
+                [20, -20],
+                [40, -40],
+                [10, -10],
+            ]);
+            Object.assign(args.series[0], {stackId: 'shared'});
+            Object.assign(args.series[1], {stackId: 'shared', grouping: false});
+            Object.assign(args.series[2], {stackId: 'other', stackLabels: {enabled: false}});
+            const horizontal = plugin.type === 'bar-y';
+            const increases = horizontal ? !reversed : reversed;
+            const valueScale = scaleLinear()
+                .domain([-100, 100])
+                .range(increases ? [0, 400] : [400, 0]);
+            if (horizontal) args.xScale = valueScale;
+            else args.yScale = [valueScale];
+            const {renderData} = await plugin.prepareShapeData(args);
+            const shapes = horizontal
+                ? (renderData[0] as BarYShapesArgs).shapes
+                : (renderData as PreparedBarXData[]);
+            const anchors = horizontal
+                ? getBarYStackLabelAnchors(shapes as PreparedBarYData[], {
+                      xScale: valueScale,
+                      boundsWidth: 400,
+                      seriesOptions: args.seriesOptions,
+                      yAxis: args.yAxis,
+                  })
+                : getBarXStackLabelAnchors(shapes as PreparedBarXData[], args);
+            expect(anchors.map((anchor) => anchor.total)).toEqual([60, -60]);
+            anchors.forEach((anchor, index) => {
+                const outer = shapes.filter(
+                    (shape) =>
+                        shape.series.name === '1' &&
+                        Number(horizontal ? shape.data.x : shape.data.y) ===
+                            (index === 0 ? 40 : -40),
+                )[0];
+                expect(horizontal ? anchor.y : anchor.x).toBeCloseTo(
+                    horizontal ? outer.y + outer.height / 2 : outer.x + outer.width / 2,
+                );
+            });
+        },
+    );
 });
 
 test('hides overlapping totals unless allowOverlap is enabled', async () => {

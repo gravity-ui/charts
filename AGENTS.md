@@ -32,5 +32,6 @@
 # User-facing documentation
 
 - For user-facing config or behavior changes, assess whether the TSDoc, relevant guide, and runnable example should be updated.
-
 - Embed live examples in user-facing guides using `docs/examples` and `data-chart-example`. Do not replace an embedded example with instructions to find a story in Storybook.
+- Keep guide examples visually polished and focused on one idea, with minimal data, series, labels, and styling. Prefer the default palette and meaningful names; include custom styling only when it demonstrates the documented feature.
+- Guides explain common usage; do not add an example for every supported combination or regression. Put edge cases, combinations of options, and exhaustive behavior coverage in Storybook and tests. A concise explanation in the guide is enough when another live example would add clutter.

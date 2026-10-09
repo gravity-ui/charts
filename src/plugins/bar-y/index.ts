@@ -47,7 +47,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         ...args,
         anchors: args.isRangeSlider
             ? []
-            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions}),
+            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions, yAxis}),
         otherLayers: [
             ...(args.otherLayers ?? []),
             {svgLabels: data.labels, htmlLabels: data.htmlLabels},

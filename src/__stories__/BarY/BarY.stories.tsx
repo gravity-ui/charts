@@ -13,6 +13,7 @@ import {
     barYStakingNormalData,
     barYStakingPercentData,
 } from '../__data__';
+import {barYStackedOverlayData} from '../__data__/bar-y/stacked-overlay';
 
 const meta: Meta<typeof ChartStory> = {
     title: 'Bar-Y',
@@ -91,4 +92,9 @@ export const BarYLinearYAxis = {
     args: {
         data: barYLinearYAxisData,
     },
+} satisfies Story;
+
+export const BarYStackedOverlay = {
+    name: 'Overlapping stacks',
+    args: {data: barYStackedOverlayData},
 } satisfies Story;

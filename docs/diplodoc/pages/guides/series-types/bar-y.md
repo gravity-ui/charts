@@ -8,6 +8,20 @@ See the [BarYSeries API reference](../../api/Series/Bar-Y/interfaces/BarYSeries.
 
 Multiple series are grouped by default. Use `stacking: 'normal'` to stack their values or `stacking: 'percent'` to show their proportions. Percent stacking supports only non-negative values. Use `stackId` to create separate stacks and `series.options['bar-y'].stackGap` to set the gap between segments in pixels.
 
+Set `grouping: false` to overlay bars at the category center without taking up grouped slots. Non-stacked bars start at the value-axis baseline; stacking still accumulates values within each `stackId`. Omitted or `true` grouping preserves side-by-side positions.
+
+Later series in `series.data` cover earlier ones, including their borders. The example places Plan before Actual to draw Actual on top.
+
+{% note warning "Bar thickness" %}
+
+Thickness is controlled by the shared `series.options['bar-y'].barPadding` and `barMaxWidth` options, so Plan and Actual have the same thickness. Independent thickness requires [per-series padding (#761)](https://github.com/gravity-ui/charts/issues/761); this example will then be updated to show a wider Plan behind a narrower Actual.
+
+{% endnote %}
+
+<div data-chart-example="series-types/bar-y-overlay"></div>
+
+To overlay complete stacks, set `grouping: false` on every series in each `stackId`.
+
 ## Appearance
 
 ### Borders
@@ -20,7 +34,7 @@ Set `opacity` from `0` to `1` in `series.options['bar-y']`, and override it on i
 
 The legend symbol follows series opacity. Tooltip markers follow point opacity, falling back to series opacity. Legend and tooltip text remain opaque; hidden series keep the standard inactive legend symbol.
 
-The example combines borders with a default opacity of `0.8`, `0.3` on Plan, and a point override of `0.6` in February.
+The example uses the default palette with rounded borders and a shared opacity of `0.6`.
 
 <div data-chart-example="series-types/bar-y"></div>
 
