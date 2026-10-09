@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.67.0](https://github.com/gravity-ui/charts/compare/v1.66.0...v1.67.0) (2026-10-09)
+
+
+### Features
+
+* support opacity for bar series ([#762](https://github.com/gravity-ui/charts/issues/762)) ([a057dd7](https://github.com/gravity-ui/charts/commit/a057dd7e002ef6692c23be9c32fd3393b65e3221))
+
+
+### Bug Fixes
+
+* correct tooltip header formatting and scatter cluster label bounds ([#743](https://github.com/gravity-ui/charts/issues/743)) ([2cf9675](https://github.com/gravity-ui/charts/commit/2cf96757e8ad44290666f76c2edf4d9fbfb8c274))
+
 ## [1.66.0](https://github.com/gravity-ui/charts/compare/v1.65.0...v1.66.0) (2026-10-07)
 
 
