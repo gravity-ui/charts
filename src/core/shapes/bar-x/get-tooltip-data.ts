@@ -1,3 +1,4 @@
+import {max, min} from 'd3-array';
 import groupBy from 'lodash/groupBy';
 
 import type {BarXSeries} from '../../../types';
@@ -18,7 +19,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
             const overlay = group.find((d) => d.series.grouping === false);
             const center = overlay
                 ? overlay.x + overlay.width / 2
-                : group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
+                : ((min(group, (d) => d.x) ?? 0) + (max(group, (d) => d.x + d.width) ?? 0)) / 2;
             return [key, center];
         }),
     );

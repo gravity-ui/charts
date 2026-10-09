@@ -10,6 +10,7 @@ import {seriesOptionsDefaults} from '../../constants';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {PreparedBarXSeries, PreparedLegend} from '../../series/types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common';
+import {getClosestPoints} from '../../utils/get-closest-data';
 import {prepareBarXData} from '../bar-x/prepare-data';
 import {getBarXPaths} from '../bar-x/utils';
 import {prepareBarYData} from '../bar-y/prepare-data';
@@ -39,10 +40,11 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         options: PrepareOptions = {},
     ) {
         const {valueSize = 400, ...layoutOptions} = options;
+        const increases = type === 'bar-y' ? !reversed : reversed;
         const categoryScale = scaleBand().domain(['A']).range([0, size]);
         const valueScale = scaleLinear()
-            .domain([-100, 100])
-            .range(reversed ? [0, valueSize] : [valueSize, 0]);
+            .domain(inputs.some((s) => s.stacking === 'percent') ? [0, 100] : [-100, 100])
+            .range(increases ? [0, valueSize] : [valueSize, 0]);
         const seriesOptions = {
             ...seriesOptionsDefaults,
             [type]: {...seriesOptionsDefaults[type], ...layoutOptions},
@@ -54,6 +56,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             colors: [],
         };
         let geometry;
+        let shapesData;
         let domainValues;
         if (type === 'bar-x') {
             const raw: BarXSeries[] = inputs.map(({value, ...seriesInput}, index) => ({
@@ -86,6 +89,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 percentage: d.percentage,
                 isStackEnd: d.isStackEnd,
             }));
+            shapesData = bars;
             bars.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
             expect(JSON.stringify(raw)).toBe(rawBefore);
         } else {
@@ -119,9 +123,22 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 percentage: d.percentage,
                 isStackEnd: d.isLastStackItem,
             }));
+            shapesData = shapes;
             shapes.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
             expect(JSON.stringify(raw)).toBe(rawBefore);
         }
+        const chunks = getClosestPoints({
+            shapesData,
+            position: [100, 100],
+            boundsWidth: 400,
+            boundsHeight: 400,
+        });
+        chunks.forEach((chunk) => {
+            const input = inputs[Number(chunk.series.name)];
+            if (input.stackId !== undefined) {
+                expect('stackId' in chunk.series && chunk.series.stackId).toBe(input.stackId);
+            }
+        });
         return {bars: geometry, domainValues};
     }
 
@@ -136,7 +153,8 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             expect(new Set(domainValues)).toEqual(new Set([80, 40, -60, -20]));
             expect(bars.map((d) => d.center)).toEqual([100, 100, 100, 100]);
             for (const bar of bars) {
-                const end = reversed ? 200 + Number(bar.value) * 2 : 200 - Number(bar.value) * 2;
+                const increases = type === 'bar-y' ? !reversed : reversed;
+                const end = 200 + Number(bar.value) * 2 * (increases ? 1 : -1);
                 expect(bar.start).toBeCloseTo(Math.min(200, end));
                 expect(bar.end).toBeCloseTo(Math.max(200, end));
             }
@@ -192,13 +210,19 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 overlaid.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar),
             ).toEqual(plain.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar));
             expect(overlaid.bars.map((bar) => bar.isStackEnd)).toEqual([false, true, false, true]);
-            if (stacking === 'percent')
+            if (stacking === 'percent') {
                 expect(overlaid.bars.map((bar) => bar.percentage)).toEqual([
                     1 / 3,
                     2 / 3,
                     1 / 4,
                     3 / 4,
                 ]);
+                for (const index of [1, 3]) {
+                    expect(
+                        type === 'bar-x' ? overlaid.bars[index].start : overlaid.bars[index].end,
+                    ).toBeCloseTo(type === 'bar-x' ? 0 : 400);
+                }
+            }
         },
     );
 

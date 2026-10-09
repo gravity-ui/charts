@@ -9,20 +9,20 @@ const data: ChartData = {
         data: [
             {
                 type: 'bar-x',
-                name: 'Actual',
-                data: [
-                    {x: 'Jan', y: 42},
-                    {x: 'Feb', y: 58},
-                    {x: 'Mar', y: 51},
-                ],
-            },
-            {
-                type: 'bar-x',
                 name: 'Plan',
                 data: [
                     {x: 'Jan', y: 32},
                     {x: 'Feb', y: 40},
                     {x: 'Mar', y: 35},
+                ],
+            },
+            {
+                type: 'bar-x',
+                name: 'Actual',
+                data: [
+                    {x: 'Jan', y: 42},
+                    {x: 'Feb', y: 58},
+                    {x: 'Mar', y: 51},
                 ],
             },
         ],

@@ -9,6 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../series/types';
+import {getSeriesStackId} from '../../series/utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
 import {
     getDataCategoryValue,
@@ -152,7 +153,7 @@ export const prepareBarXData = async (args: {
         }
         const data = dataByPlots.get(plotIndex) ?? {};
 
-        const stackId = JSON.stringify([s.yAxis, s.stackId]);
+        const stackId = JSON.stringify([s.yAxis, getSeriesStackId(s)]);
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;

@@ -116,6 +116,52 @@ describe.each(['bar-x', 'bar-y'] as const)('%s overlay tooltip', (type) => {
     });
 });
 
+test('bar-x selects the last painted duplicate point within a series', () => {
+    const series = {type: 'bar-x', id: 'actual', grouping: false} as PreparedBarXSeries;
+    const shapes = [100, 75].map((value) => ({
+        series,
+        data: {x: 'A', y: value},
+        x: 90,
+        y: 200 - value,
+        width: 20,
+        height: value,
+    })) as PreparedBarXData[];
+    for (const [pointerY, expected] of [
+        [150, 75],
+        [110, 100],
+    ]) {
+        const chunks = getClosestPoints({
+            shapesData: shapes,
+            position: [100, pointerY],
+            boundsWidth: 400,
+            boundsHeight: 400,
+        });
+        expect(chunks).toHaveLength(1);
+        expect(chunks[0]).toMatchObject({data: {y: expected}, closest: true});
+    }
+});
+
+test('bar-y includes the painted border in overlay hit testing', () => {
+    const shapes = [-100, 75].map((value, index) => ({
+        series: {type: 'bar-y', id: String(index), name: String(index), grouping: false},
+        data: {y: 'A', x: value},
+        x: 200 + Math.min(0, value),
+        y: 90,
+        width: Math.abs(value),
+        height: 20,
+        borderWidth: index === 1 ? 8 : 0,
+    })) as PreparedBarYData[];
+    const chunks = getClosestPoints({
+        shapesData: shapes,
+        position: [198, 100],
+        boundsWidth: 400,
+        boundsHeight: 400,
+    });
+    expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
+        '1',
+    ]);
+});
+
 test('bar-y chooses the nearest category when overlay and grouped centers interleave', () => {
     const shapes = [
         {id: 'overlay', grouping: false, offsets: [25, 125], height: 50},
@@ -141,20 +187,21 @@ test('bar-y chooses the nearest category when overlay and grouped centers interl
     chunks.forEach((chunk) => expect(chunk.data).toEqual({y: 'B', x: 100}));
 });
 
-test.each([
-    {pointerY: 60, expected: 'Line'},
-    {pointerY: 150, expected: 'Actual'},
-])('keeps line candidates beside unequal stacks at $pointerY', ({pointerY, expected}) => {
+test.each([false, true])('keeps line candidates beside unequal stacks, overlay=%s', (overlay) => {
     const lineSeries = {type: 'line', id: 'line', name: 'Line'} as PreparedLineSeries;
     const shapes = [
-        {
-            series: {type: 'bar-x', id: 'actual', name: 'Actual', grouping: false},
-            data: {x: 'A', y: 100},
-            x: 90,
-            y: 100,
-            width: 20,
-            height: 100,
-        } as PreparedBarXData,
+        ...(overlay
+            ? [
+                  {
+                      series: {type: 'bar-x', id: 'actual', name: 'Actual', grouping: false},
+                      data: {x: 'A', y: 100},
+                      x: 90,
+                      y: 100,
+                      width: 20,
+                      height: 100,
+                  } as PreparedBarXData,
+              ]
+            : []),
         {
             series: lineSeries,
             points: [{series: lineSeries, data: {x: 'A', y: 140}, x: 100, y: 60}],
@@ -178,13 +225,13 @@ test.each([
     ];
     const chunks = getClosestPoints({
         shapesData: shapes,
-        position: [100, pointerY],
+        position: [100, 60],
         boundsWidth: 400,
         boundsHeight: 400,
     });
-    expect(chunks).toHaveLength(5);
+    expect(chunks).toHaveLength(overlay ? 5 : 4);
     expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
-        expected,
+        'Line',
     ]);
 });
 

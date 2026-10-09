@@ -6,6 +6,7 @@ import type {BarYSeriesData} from '../../../types';
 import type {PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
+import {getSeriesStackId} from '../../series/utils';
 import {getDataCategoryValue} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../bar-constants';
@@ -29,7 +30,7 @@ export function groupBarYDataByYValue(series: PreparedBarYSeries[], yAxis: Prepa
         const seriesYAxis = yAxis[axisIndex];
         const categories = get(seriesYAxis, 'categories', [] as string[]);
 
-        const stackId = s.stackId;
+        const stackId = getSeriesStackId(s);
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;

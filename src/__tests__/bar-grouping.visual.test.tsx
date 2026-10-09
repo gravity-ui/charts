@@ -12,6 +12,67 @@ import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+test('bar-x overlay tooltip selects the last painted duplicate point', async ({mount, page}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                series: {
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Actual',
+                            grouping: false,
+                            data: [
+                                {x: 'A', y: 100},
+                                {x: 'A', y: 75, color: DEFAULT_PALETTE[1]},
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {type: 'category', categories: ['A']},
+            }}
+            styles={{width: 600, height: 360}}
+        />,
+    );
+    await component.locator('.gcharts-bar-x__segment').nth(1).hover();
+    const rows = page.locator('.gcharts-tooltip__content-row');
+    await expect(rows).toHaveCount(1);
+    await expect(rows).toContainText('75');
+});
+
+test('bar-y overlay tooltip selects the visible border over a negative bar', async ({
+    mount,
+    page,
+}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                series: {
+                    data: [
+                        {type: 'bar-y', name: 'Plan', grouping: false, data: [{y: 'A', x: -100}]},
+                        {
+                            type: 'bar-y',
+                            name: 'Actual',
+                            grouping: false,
+                            borderWidth: 8,
+                            borderColor: DEFAULT_PALETTE[2],
+                            data: [{y: 'A', x: 75}],
+                        },
+                    ],
+                },
+                xAxis: {min: -100, max: 100},
+                yAxis: [{type: 'category', categories: ['A']}],
+            }}
+            styles={{width: 600, height: 360}}
+        />,
+    );
+    const border = component.locator('.gcharts-bar-y__segment-border');
+    await expect(border).toHaveCount(1);
+    const box = await getLocatorBoundingBox(border);
+    await page.mouse.move(box.x + 1, box.y + box.height / 2);
+    await expect(page.locator('.gcharts-tooltip__content-row_active')).toContainText('Actual');
+});
+
 for (const type of ['bar-x', 'bar-y'] as const) {
     test.describe(`${type} overlays`, () => {
         const vertical = type === 'bar-x';
@@ -79,6 +140,14 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                 .click({modifiers: ['Control']});
             await expect(plan).toHaveCount(0);
             await expect(actual).toHaveCount(2);
+            await component.update(
+                <ChartTestStory
+                    data={{...data, series: {...data.series, options: {[type]: {opacity: 0.5}}}}}
+                    styles={{width: 600, height: 360}}
+                />,
+            );
+            await expect(plan).toHaveCount(0);
+            await expect(actual).toHaveCount(2);
             await component
                 .locator('.gcharts-legend__item')
                 .filter({hasText: 'Plan'})
@@ -97,6 +166,30 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                 })
                 .not.toBe(vertical ? after.x : after.width);
             await expectAligned();
+        });
+
+        test('partial stack grouping keeps one total', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory
+                    data={{
+                        series: {
+                            data: [20, 40, 10].map((value, index) => ({
+                                type,
+                                name: String(index),
+                                stacking: 'normal',
+                                grouping: index !== 1,
+                                stackId: index < 2 ? 'shared' : 'other',
+                                stackLabels: {enabled: index < 2},
+                                data: [vertical ? {x: 'A', y: value} : {y: 'A', x: value}],
+                            })),
+                        },
+                        xAxis: vertical ? {type: 'category', categories: ['A']} : undefined,
+                        yAxis: vertical ? undefined : [{type: 'category', categories: ['A']}],
+                    }}
+                    styles={{width: 600, height: 360}}
+                />,
+            );
+            await expect(component.locator('.gcharts-stack-labels__label')).toHaveText(['60']);
         });
 
         for (const stacking of [undefined, 'normal'] as const) {

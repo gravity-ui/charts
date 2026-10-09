@@ -33,9 +33,18 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
         let closestDistance = Infinity;
         // selectedPoints retains paint order, so the later bar wins overlapping hits.
         for (const point of selectedPoints) {
+            const halfBorder = (point.borderWidth ?? 0) / 2;
             const distance = Math.hypot(
-                Math.max(point.x - pointerX, pointerX - point.x - point.width, 0),
-                Math.max(point.y - pointerY, pointerY - point.y - point.height, 0),
+                Math.max(
+                    point.x - halfBorder - pointerX,
+                    pointerX - point.x - point.width - halfBorder,
+                    0,
+                ),
+                Math.max(
+                    point.y - halfBorder - pointerY,
+                    pointerY - point.y - point.height - halfBorder,
+                    0,
+                ),
             );
             if (distance <= closestDistance) {
                 closestPoint = point;

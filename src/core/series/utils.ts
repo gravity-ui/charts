@@ -41,8 +41,10 @@ export function prepareLegendSymbol(
 
 const getCommonStackId = memoize(getUniqId);
 
-export function getSeriesStackId(series: StackedSeries) {
-    let stackId = series.stackId;
+export function getSeriesStackId(
+    series: Pick<StackedSeries, 'stackId' | 'stacking'> & {resolvedStackId?: string},
+) {
+    let stackId = series.resolvedStackId ?? series.stackId;
 
     if (!stackId) {
         stackId = series.stacking ? getCommonStackId() : getUniqId();

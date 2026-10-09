@@ -257,6 +257,8 @@ export type PreparedBarXSeries = {
     type: BarXSeries['type'];
     data: BarXSeriesData[];
     stackId: string;
+    /** Independent layout/domain key for non-stacked overlays. */
+    resolvedStackId?: string;
     stacking: BarXSeries['stacking'];
     grouping?: boolean;
     stackLabels?: BarXSeries['stackLabels'];
@@ -282,6 +284,8 @@ export type PreparedBarYSeries = {
     type: BarYSeries['type'];
     data: BarYSeriesData[];
     stackId: string;
+    /** Independent layout/domain key for non-stacked overlays. */
+    resolvedStackId?: string;
     stacking: BarYSeries['stacking'];
     grouping?: boolean;
     stackLabels?: BarYSeries['stackLabels'];

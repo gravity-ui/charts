@@ -51,10 +51,9 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             grouping: series.grouping ?? true,
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
-            stackId:
-                series.grouping === false && !series.stacking
-                    ? getUniqId()
-                    : getSeriesStackId(series),
+            stackId: getSeriesStackId(series),
+            resolvedStackId:
+                series.grouping === false && !series.stacking ? getUniqId() : undefined,
             valueAxis: 'y',
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,

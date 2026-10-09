@@ -53,6 +53,28 @@ export function getClosestYIndex(items: ShapePoint[], y: number) {
     return closestYIndex;
 }
 
+function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
+    let winner: ShapePoint | undefined;
+    let closestDistance = Infinity;
+    for (const point of points) {
+        const x0 = point.hitTest?.x0 ?? point.sourceX ?? point.x;
+        const x1 = point.hitTest?.x1 ?? point.sourceX ?? point.x;
+        const distance = Math.hypot(
+            Math.max(x0 - x, x - x1, 0),
+            Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
+        );
+        if (
+            distance < closestDistance ||
+            (distance === closestDistance &&
+                (point.hitTest?.priority ?? -1) > (winner?.hitTest?.priority ?? -1))
+        ) {
+            winner = point;
+            closestDistance = distance;
+        }
+    }
+    return winner ?? points[0];
+}
+
 export function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     const sorted = sort(points, (p) => p.x);
     const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
@@ -66,6 +88,9 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
 
     const groupedBySeries = Object.values(groupBy(filtered, (p) => get(p.series, 'id'))).map(
         (items) => {
+            if (items.some((point) => point.hitTest)) {
+                return getClosestHitTestPoint(items, x, y);
+            }
             const sortedByY = sort(items, (p) => p.y0);
             const index = getClosestYIndex(sortedByY, y);
             return sortedByY[index === -1 ? 0 : index];
@@ -75,24 +100,7 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
     const closestPoints = sort(groupedBySeries, (p) => p.y0);
 
     if (closestPoints.some((p) => p.hitTest)) {
-        let winner: ShapePoint | undefined;
-        let closestDistance = Infinity;
-        for (const point of closestPoints) {
-            const x0 = point.hitTest?.x0 ?? point.sourceX ?? point.x;
-            const x1 = point.hitTest?.x1 ?? point.sourceX ?? point.x;
-            const distance = Math.hypot(
-                Math.max(x0 - x, x - x1, 0),
-                Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
-            );
-            if (
-                distance < closestDistance ||
-                (distance === closestDistance &&
-                    (point.hitTest?.priority ?? -1) > (winner?.hitTest?.priority ?? -1))
-            ) {
-                winner = point;
-                closestDistance = distance;
-            }
-        }
+        const winner = getClosestHitTestPoint(closestPoints, x, y);
         return closestPoints.map((point) => ({...point, closest: point === winner}));
     }
 
