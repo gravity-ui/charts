@@ -13,28 +13,23 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
     const {data} = args;
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
-    const xLookupPoints: ShapePoint[] = [];
-    const paintOrder = data.some((d) => d.series.grouping === false && !d.series.stacking)
-        ? new Map(data.map((d, index) => [d, index]))
-        : undefined;
-
-    for (const group of Object.values(barXGroups)) {
-        const groupCenterX = group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
-        for (const d of group) {
-            xLookupPoints.push({
-                data: d.data,
-                percentage: d.percentage,
-                series: d.series as BarXSeries,
-                x: groupCenterX,
-                y0: d.y,
-                y1: d.y + d.height,
-                sourceX: d.x + d.width / 2,
-                hitTest: paintOrder
-                    ? {x0: d.x, x1: d.x + d.width, priority: paintOrder.get(d) ?? 0}
-                    : undefined,
-            });
-        }
-    }
+    const centers: Record<string, number> = Object.fromEntries(
+        Object.entries(barXGroups).map(([key, group]) => [
+            key,
+            group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length,
+        ]),
+    );
+    const hasOverlays = data.some((d) => d.series.grouping === false && !d.series.stacking);
+    const xLookupPoints: ShapePoint[] = data.map((d, priority) => ({
+        data: d.data,
+        percentage: d.percentage,
+        series: d.series as BarXSeries,
+        x: centers[String(d.data.x)],
+        y0: d.y,
+        y1: d.y + d.height,
+        sourceX: d.x + d.width / 2,
+        hitTest: hasOverlays ? {x0: d.x, x1: d.x + d.width, priority} : undefined,
+    }));
 
     return {chunks: [], xLookupPoints};
 }

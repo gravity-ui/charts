@@ -10,13 +10,13 @@ Multiple series are grouped by default. Use `stacking: 'normal'` to stack their 
 
 In percent stacks, the available plot height is shared between the segments and their gaps. The outer column edge aligns with the visible edge of the 100% grid line. Zero and skipped null values do not add gaps. If the requested gaps exceed the plot height, they are reduced to fit and segment heights become zero.
 
-Set `grouping: false` on non-stacked series to overlay their bars at the category center. Each bar starts at the value-axis baseline; values are not added together. Overlays do not take up grouped slots, and omitted or `true` grouping keeps the default layout. Stacked series ignore this option.
+Set `grouping: false` on non-stacked series to overlay their bars at the category center. Each bar starts at the value-axis baseline without accumulating values or taking up grouped slots. Stacked series ignore this option.
 
-Later series in `series.data` cover earlier series, including their borders. Put Plan before Actual to draw Actual on top. Use the legend in the example to toggle either series.
+Later series in `series.data` cover earlier ones, including their borders. The example places Plan before Actual to draw Actual on top.
 
 {% note warning "Bar thickness" %}
 
-Bar thickness currently uses the shared `series.options['bar-x'].barPadding` and `barMaxWidth` options; it cannot be set independently for each series. Plan and Actual therefore have the same thickness in this example. [Per-series padding (#761)](https://github.com/gravity-ui/charts/issues/761) will allow a wider Plan bar behind a narrower Actual bar. The example will be updated when that support is available.
+Thickness is controlled by the shared `series.options['bar-x'].barPadding` and `barMaxWidth` options, so Plan and Actual have the same thickness. Independent thickness requires [per-series padding (#761)](https://github.com/gravity-ui/charts/issues/761); this example will then be updated to show a wider Plan behind a narrower Actual.
 
 {% endnote %}
 

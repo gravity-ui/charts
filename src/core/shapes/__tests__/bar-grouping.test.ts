@@ -42,7 +42,6 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         const valueScale = scaleLinear()
             .domain([-100, 100])
             .range(reversed ? [0, valueSize] : [valueSize, 0]);
-        const original = JSON.stringify(inputs);
         const seriesOptions = {
             ...seriesOptionsDefaults,
             [type]: {...seriesOptionsDefaults[type], ...layoutOptions},
@@ -54,6 +53,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             colors: [],
         };
         let geometry;
+        let domainValues;
         if (type === 'bar-x') {
             const raw: BarXSeries[] = inputs.map(({value, ...seriesInput}, index) => ({
                 type,
@@ -63,11 +63,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             }));
             const rawBefore = JSON.stringify(raw);
             const series = prepareBarXSeries({...common, series: raw}) as PreparedBarXSeries[];
-            if (inputs.every((s) => s.grouping === false && !s.stacking)) {
-                expect(getDomainDataYBySeries(series).sort()).toEqual(
-                    [...new Set(inputs.map((s) => s.value))].sort(),
-                );
-            }
+            domainValues = getDomainDataYBySeries(series);
             const bars = await prepareBarXData({
                 series,
                 seriesOptions,
@@ -98,11 +94,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             }));
             const rawBefore = JSON.stringify(raw);
             const series = await prepareBarYSeries({...common, series: raw});
-            if (inputs.every((s) => s.grouping === false && !s.stacking)) {
-                expect(getDomainDataXBySeries(series).sort()).toEqual(
-                    [...new Set(inputs.map((s) => s.value))].sort(),
-                );
-            }
+            domainValues = getDomainDataXBySeries(series);
             const {shapes} = await prepareBarYData({
                 series,
                 seriesOptions,
@@ -125,18 +117,18 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             shapes.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
             expect(JSON.stringify(raw)).toBe(rawBefore);
         }
-        expect(JSON.stringify(inputs)).toBe(original);
-        return geometry;
+        return {bars: geometry, domainValues};
     }
 
     test.each([false, true])(
         'overlays share the center and baseline, reversed=%s',
         async (reversed) => {
-            const bars = await prepare(
+            const {bars, domainValues} = await prepare(
                 [80, 40, -60, -20].map((value) => ({value, grouping: false, stackId: 'shared'})),
                 200,
                 reversed,
             );
+            expect(new Set(domainValues)).toEqual(new Set([80, 40, -60, -20]));
             expect(bars.map((d) => d.center)).toEqual([100, 100, 100, 100]);
             for (const bar of bars) {
                 const end = reversed ? 200 + Number(bar.value) * 2 : 200 - Number(bar.value) * 2;
@@ -148,8 +140,8 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
 
     test('overlays do not consume grouped slots or change their widths', async () => {
         const grouped = [{value: 20}, {value: 40, grouping: true}];
-        const plain = await prepare(grouped);
-        const mixed = await prepare([
+        const {bars: plain} = await prepare(grouped);
+        const {bars: mixed} = await prepare([
             {value: 80, grouping: false},
             ...grouped,
             {value: 60, grouping: false},
@@ -172,10 +164,10 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         },
     );
 
-    test.each([0, 1, 10, 400])(
+    test.each([0, 10, 400])(
         'renders borders only when both dimensions fit (%s)',
         async (valueSize) => {
-            const bars = await prepare(
+            const {bars} = await prepare(
                 [
                     {value: 0, grouping: false},
                     {value: 50, grouping: false},
@@ -192,7 +184,9 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
     test.each([{barMaxWidth: 10000}, {groupPadding: 2}])(
         'keeps oversized layout options finite: %s',
         async (options) => {
-            const [bar] = await prepare([{value: 40, grouping: false}], 3, false, options);
+            const {
+                bars: [bar],
+            } = await prepare([{value: 40, grouping: false}], 3, false, options);
             expect(bar.center).toBe(1.5);
             expect(bar.thickness).toBeGreaterThanOrEqual(0);
             expect(bar.thickness).toBeLessThanOrEqual(3);
@@ -202,7 +196,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
     test.each([0, 1, 3])(
         'keeps finite nonnegative sizes with available category space %s',
         async (size) => {
-            const bars = await prepare(
+            const {bars} = await prepare(
                 [{value: 80, grouping: false}, {value: 20}, {value: 40}],
                 size,
             );

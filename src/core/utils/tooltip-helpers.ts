@@ -82,7 +82,7 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
             const x1 = point.hitTest?.x1 ?? point.sourceX ?? point.x;
             const distance = Math.hypot(
                 Math.max(x0 - x, x - x1, 0),
-                Math.max(point.y0 - y, y - point.y1, 0),
+                Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
             );
             if (
                 distance < closestDistance ||

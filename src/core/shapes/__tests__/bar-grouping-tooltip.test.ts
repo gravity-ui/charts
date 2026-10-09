@@ -1,5 +1,11 @@
-import type {PreparedBarXSeries, PreparedBarYSeries, PreparedLineSeries} from '../../series/types';
+import type {
+    PreparedAreaSeries,
+    PreparedBarXSeries,
+    PreparedBarYSeries,
+    PreparedLineSeries,
+} from '../../series/types';
 import {getClosestPoints} from '../../utils/get-closest-data';
+import type {PreparedAreaData} from '../area/types';
 import type {PreparedBarXData} from '../bar-x/types';
 import type {PreparedBarYData} from '../bar-y/types';
 import type {PreparedLineData} from '../line/types';
@@ -133,5 +139,32 @@ test.each([
     expect(chunks).toHaveLength(2);
     expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
         expected,
+    ]);
+});
+
+test('overlay hit testing keeps area candidates above the bar', () => {
+    const areaSeries = {type: 'area', id: 'area', name: 'Area'} as PreparedAreaSeries;
+    const shapes = [
+        {
+            series: {type: 'bar-x', id: 'actual', name: 'Actual', grouping: false},
+            data: {x: 'A', y: 100},
+            x: 90,
+            y: 100,
+            width: 20,
+            height: 100,
+        } as PreparedBarXData,
+        {
+            series: areaSeries,
+            points: [{series: areaSeries, data: {x: 'A', y: 150}, x: 100, y: 50, y0: 200}],
+        } as PreparedAreaData,
+    ];
+    const chunks = getClosestPoints({
+        shapesData: shapes,
+        position: [100, 75],
+        boundsWidth: 400,
+        boundsHeight: 400,
+    });
+    expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
+        'Area',
     ]);
 });

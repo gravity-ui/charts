@@ -26,8 +26,12 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
 
     const selectedPoints = visibleData.filter((p) => p.data.y === closestYPoint.data.y);
 
-    if (selectedPoints.some((p) => p.series.grouping === false && !p.series.stacking)) {
-        let closestPoint: PreparedBarYData | undefined;
+    const hasOverlays = selectedPoints.some(
+        (p) => p.series.grouping === false && !p.series.stacking,
+    );
+    let closestPoint: PreparedBarYData | undefined;
+    let closestPointXValue: number | undefined;
+    if (hasOverlays) {
         let closestDistance = Infinity;
         // selectedPoints retains paint order, so the later bar wins overlapping hits.
         for (const point of selectedPoints) {
@@ -40,31 +44,21 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
                 closestDistance = distance;
             }
         }
-        return {
-            chunks: selectedPoints.map((p) => ({
-                data: p.data,
-                percentage: p.percentage,
-                series: p.series,
-                closest: p === closestPoint,
-            })) as TooltipDataChunk[],
-        };
-    }
-
-    const closestPoints = sort(
-        selectedPoints.filter((p) => p.y === closestYPoint.y),
-        (p) => p.x,
-    );
-
-    let closestPointXValue: number | undefined;
-    const lastPoint = closestPoints[closestPoints.length - 1];
-    if (pointerX < closestPoints[0]?.x) {
-        closestPointXValue = closestPoints[0].x;
-    } else if (lastPoint && pointerX > lastPoint.x + lastPoint.width) {
-        closestPointXValue = lastPoint.x;
     } else {
-        closestPointXValue = closestPoints.find(
-            (p) => pointerX > p.x && pointerX < p.x + p.width,
-        )?.x;
+        const closestPoints = sort(
+            selectedPoints.filter((p) => p.y === closestYPoint.y),
+            (p) => p.x,
+        );
+        const lastPoint = closestPoints[closestPoints.length - 1];
+        if (pointerX < closestPoints[0]?.x) {
+            closestPointXValue = closestPoints[0].x;
+        } else if (lastPoint && pointerX > lastPoint.x + lastPoint.width) {
+            closestPointXValue = lastPoint.x;
+        } else {
+            closestPointXValue = closestPoints.find(
+                (p) => pointerX > p.x && pointerX < p.x + p.width,
+            )?.x;
+        }
     }
 
     return {
@@ -72,7 +66,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
             data: p.data,
             percentage: p.percentage,
             series: p.series,
-            closest: p.x === closestPointXValue && p.y === closestYPoint.y,
+            closest: hasOverlays
+                ? p === closestPoint
+                : p.x === closestPointXValue && p.y === closestYPoint.y,
         })) as TooltipDataChunk[],
     };
 }

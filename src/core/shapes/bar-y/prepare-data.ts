@@ -141,7 +141,8 @@ export async function prepareBarYData(args: {
                     ? center - height / 2
                     : center - currentBarHeight / 2 + (barSize + barGap) * slotIndex;
                 const xValue = Number(data.x);
-                const width = Math.abs(xLinearScale(xValue) * ratio - base);
+                const xPixel = xLinearScale(xValue);
+                const width = Math.abs(xPixel * ratio - base);
                 let shapeWidth = width - (!overlay && stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
@@ -158,11 +159,11 @@ export async function prepareBarYData(args: {
                         : 0;
                 const isFirstInStack = xValueIndex === 0;
                 const isLastStackItem = overlay || xValueIndex === sortedData.length - 1;
-                const extendsRight = xLinearScale(xValue) > baseValue;
+                const extendsRight = xPixel > baseValue;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
                 let itemX = extendsRight ? positiveStack : negativeStack - width;
-                if (overlay) itemX = Math.min(base, xLinearScale(xValue));
+                if (overlay) itemX = Math.min(base, xPixel);
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 

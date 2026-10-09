@@ -16,36 +16,27 @@ for (const type of ['bar-x', 'bar-y'] as const) {
         const categories = ['A', 'B'];
         // Per-series thickness is tracked in https://github.com/gravity-ui/charts/issues/761.
         // Update the examples and snapshots to show a wider Plan and narrower Actual once supported.
-        const data: ChartData = {
+        const data = {
             series: {
                 data: [
-                    {name: 'Plan', values: [100, 80], grouping: false, opacity: 0.6},
-                    {name: 'Actual', values: [75, 50], grouping: false, opacity: 0.6},
-                ].map(({values, ...options}) =>
-                    vertical
-                        ? {
-                              ...options,
-                              type: 'bar-x',
-                              dataLabels: {enabled: options.name === 'Actual', inside: true},
-                              data: values.map((value, index) => ({
-                                  x: categories[index],
-                                  y: value,
-                              })),
-                          }
-                        : {
-                              ...options,
-                              type: 'bar-y',
-                              dataLabels: {enabled: options.name === 'Actual', inside: true},
-                              data: values.map((value, index) => ({
-                                  y: categories[index],
-                                  x: value,
-                              })),
-                          },
-                ),
+                    {name: 'Plan', values: [100, 80]},
+                    {name: 'Actual', values: [75, 50]},
+                ].map(({name, values}) => ({
+                    type,
+                    name,
+                    grouping: false,
+                    opacity: 0.6,
+                    dataLabels: {enabled: name === 'Actual', inside: true},
+                    data: values.map((value, index) =>
+                        vertical
+                            ? {x: categories[index], y: value}
+                            : {y: categories[index], x: value},
+                    ),
+                })),
             },
             xAxis: vertical ? {type: 'category', categories} : undefined,
             yAxis: vertical ? undefined : [{type: 'category', categories}],
-        };
+        } satisfies ChartData;
 
         test('Plan and Actual, labels, tooltip and visibility', async ({mount, page}) => {
             const component = await mount(
@@ -138,8 +129,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                     data: data.series.data.map((s) => ({
                         ...s,
                         dataLabels: {
-                            enabled:
-                                (s.type === 'bar-x' || s.type === 'bar-y') && s.name === 'Actual',
+                            enabled: s.name === 'Actual',
                             inside: true,
                             html: true,
                         },
