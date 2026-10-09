@@ -26,9 +26,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
 
     const selectedPoints = visibleData.filter((p) => p.data.y === closestYPoint.data.y);
 
-    const hasOverlays = selectedPoints.some(
-        (p) => p.series.grouping === false && !p.series.stacking,
-    );
+    const hasOverlays = selectedPoints.some((p) => p.series.grouping === false);
     let closestPoint: PreparedBarYData | undefined;
     let closestPointXValue: number | undefined;
     if (hasOverlays) {

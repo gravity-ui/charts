@@ -84,6 +84,36 @@ describe.each(['bar-x', 'bar-y'] as const)('%s overlay tooltip', (type) => {
             'Actual',
         ]);
     });
+
+    test.each([
+        {pointer: 20, expected: 'Actual 1'},
+        {pointer: 65, expected: 'Actual 2'},
+        {pointer: 90, expected: 'Plan 2'},
+    ])('selects the visible stack segment at $pointer', ({pointer, expected}) => {
+        const shapes = [
+            {name: 'Plan 1', stackId: 'plan', start: 0, value: 60},
+            {name: 'Plan 2', stackId: 'plan', start: 60, value: 40},
+            {name: 'Actual 1', stackId: 'actual', start: 0, value: 50},
+            {name: 'Actual 2', stackId: 'actual', start: 50, value: 25},
+        ].map(({name, stackId, start, value}) => ({
+            series: {type, id: name, name, stackId, stacking: 'normal', grouping: false},
+            data: type === 'bar-x' ? {x: 'A', y: value} : {y: 'A', x: value},
+            x: type === 'bar-x' ? 90 : 200 + start,
+            y: type === 'bar-x' ? 200 - start - value : 90,
+            width: type === 'bar-x' ? 20 : value,
+            height: type === 'bar-x' ? value : 20,
+        })) as (PreparedBarXData | PreparedBarYData)[];
+        const chunks = getClosestPoints({
+            shapesData: shapes,
+            position: type === 'bar-x' ? [100, 200 - pointer] : [200 + pointer, 100],
+            boundsWidth: 400,
+            boundsHeight: 400,
+        });
+        expect(chunks).toHaveLength(4);
+        expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
+            expected,
+        ]);
+    });
 });
 
 test('bar-y chooses the nearest category when overlay and grouped centers interleave', () => {
@@ -114,7 +144,7 @@ test('bar-y chooses the nearest category when overlay and grouped centers interl
 test.each([
     {pointerY: 60, expected: 'Line'},
     {pointerY: 150, expected: 'Actual'},
-])('overlay hit testing keeps line candidates at $pointerY', ({pointerY, expected}) => {
+])('keeps line candidates beside unequal stacks at $pointerY', ({pointerY, expected}) => {
     const lineSeries = {type: 'line', id: 'line', name: 'Line'} as PreparedLineSeries;
     const shapes = [
         {
@@ -129,6 +159,22 @@ test.each([
             series: lineSeries,
             points: [{series: lineSeries, data: {x: 'A', y: 140}, x: 100, y: 60}],
         } as PreparedLineData,
+        ...[78, 78, 102].map(
+            (x, index) =>
+                ({
+                    series: {
+                        type: 'bar-x',
+                        id: `grouped-${index}`,
+                        stacking: 'normal',
+                        stackId: index < 2 ? 'left' : 'right',
+                    },
+                    data: {x: 'A', y: 50},
+                    x,
+                    y: index === 1 ? 100 : 150,
+                    width: 20,
+                    height: 50,
+                }) as PreparedBarXData,
+        ),
     ];
     const chunks = getClosestPoints({
         shapesData: shapes,
@@ -136,7 +182,7 @@ test.each([
         boundsWidth: 400,
         boundsHeight: 400,
     });
-    expect(chunks).toHaveLength(2);
+    expect(chunks).toHaveLength(5);
     expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
         expected,
     ]);

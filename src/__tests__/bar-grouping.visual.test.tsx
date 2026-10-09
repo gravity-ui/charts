@@ -3,9 +3,11 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 
 import {BarXOverlayExample} from '../../docs/examples/src/charts/series-types/bar-x-overlay';
+import {BarXStackedOverlayExample} from '../../docs/examples/src/charts/series-types/bar-x-stacked-overlay';
 import {BarYOverlayExample} from '../../docs/examples/src/charts/series-types/bar-y-overlay';
+import {BarYStackedOverlayExample} from '../../docs/examples/src/charts/series-types/bar-y-stacked-overlay';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {DEFAULT_PALETTE} from '../core/constants';
+import {DEFAULT_PALETTE, seriesOptionsDefaults} from '../core/constants';
 import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
@@ -97,29 +99,40 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             await expectAligned();
         });
 
-        test('later series cover earlier borders', async ({mount}) => {
-            const component = await mount(
-                <ChartTestStory
-                    data={{
-                        ...data,
-                        series: {
-                            ...data.series,
-                            options: {[type]: {borderWidth: 3, borderColor: DEFAULT_PALETTE[2]}},
-                        },
-                    }}
-                />,
-            );
-            const paths = component.locator(
-                `.gcharts-${type}__segment, .gcharts-${type}__segment-border`,
-            );
-            await expect(paths).toHaveCount(8);
-            // SVG paint order must keep earlier borders below later fills.
-            expect(
-                await paths.evaluateAll((elements) =>
-                    elements.map((element) => element.getAttribute('fill')),
-                ),
-            ).toEqual([0, 2, 0, 2, 1, 2, 1, 2].map((index) => DEFAULT_PALETTE[index]));
-        });
+        for (const stacking of [undefined, 'normal'] as const) {
+            test(`later series cover earlier borders, stacking=${stacking ?? 'none'}`, async ({
+                mount,
+            }) => {
+                const component = await mount(
+                    <ChartTestStory
+                        data={{
+                            ...data,
+                            series: {
+                                ...data.series,
+                                data: data.series.data.map((s) => ({
+                                    ...s,
+                                    stacking,
+                                    stackId: s.name,
+                                })),
+                                options: {
+                                    [type]: {borderWidth: 3, borderColor: DEFAULT_PALETTE[2]},
+                                },
+                            },
+                        }}
+                    />,
+                );
+                const paths = component.locator(
+                    `.gcharts-${type}__segment, .gcharts-${type}__segment-border`,
+                );
+                await expect(paths).toHaveCount(8);
+                // SVG paint order must keep earlier borders below later fills.
+                expect(
+                    await paths.evaluateAll((elements) =>
+                        elements.map((element) => element.getAttribute('fill')),
+                    ),
+                ).toEqual([0, 2, 0, 2, 1, 2, 1, 2].map((index) => DEFAULT_PALETTE[index]));
+            });
+        }
 
         test('HTML labels follow overlay centers', async ({mount}) => {
             const htmlData: ChartData = {
@@ -204,6 +217,50 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             const third = await getLocatorBoundingBox(bars.nth(2));
             expect(vertical ? first.x : first.y).toBeCloseTo(vertical ? third.x : third.y);
             await expect(component.locator(`.gcharts-${type}__label`)).toHaveCount(2);
+        });
+
+        test('stacked guide example, tooltip and visibility', async ({mount, page}) => {
+            const component = await mount(
+                <div style={{width: 600, height: 360}}>
+                    {vertical ? <BarXStackedOverlayExample /> : <BarYStackedOverlayExample />}
+                </div>,
+            );
+            const bars = component.locator(`.gcharts-${type}__segment`);
+            await expect(bars).toHaveCount(4);
+            const boxes = await Promise.all(
+                [0, 1, 2, 3].map((index) => getLocatorBoundingBox(bars.nth(index))),
+            );
+            const center = (box: (typeof boxes)[number]) =>
+                vertical ? box.x + box.width / 2 : box.y + box.height / 2;
+            boxes.forEach((box) => expect(center(box)).toBeCloseTo(center(boxes[0])));
+            expect(
+                vertical
+                    ? boxes[0].y - boxes[1].y - boxes[1].height
+                    : boxes[1].x - boxes[0].x - boxes[0].width,
+            ).toBeCloseTo(seriesOptionsDefaults[type].stackGap);
+            await expect(component).toHaveScreenshot();
+            await bars.nth(3).hover();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.locator('.gcharts-tooltip__content-row')).toHaveCount(4);
+            const active = tooltip.locator('.gcharts-tooltip__content-row_active');
+            await expect(active).toHaveCount(1);
+            await expect(active).toContainText('Actual 2');
+            await page.mouse.move(
+                vertical ? center(boxes[1]) : boxes[1].x + boxes[1].width * 0.9,
+                vertical ? boxes[1].y + boxes[1].height * 0.1 : center(boxes[1]),
+            );
+            await expect(active).toContainText('Plan 2');
+            const actualBaseLegend = component
+                .locator('.gcharts-legend__item')
+                .filter({hasText: 'Actual 1'});
+            await actualBaseLegend.click({modifiers: ['Control']});
+            await expect(bars).toHaveCount(3);
+            const top = await getLocatorBoundingBox(bars.nth(2));
+            expect(center(top)).toBeCloseTo(center(boxes[3]));
+            expect(vertical ? top.y : top.x).not.toBe(vertical ? boxes[3].y : boxes[3].x);
+            await actualBaseLegend.click({modifiers: ['Control']});
+            await expect(bars).toHaveCount(4);
+            expect(await getLocatorBoundingBox(bars.nth(3))).toEqual(boxes[3]);
         });
     });
 }

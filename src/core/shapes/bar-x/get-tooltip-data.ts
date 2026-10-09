@@ -14,12 +14,15 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
     const centers: Record<string, number> = Object.fromEntries(
-        Object.entries(barXGroups).map(([key, group]) => [
-            key,
-            group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length,
-        ]),
+        Object.entries(barXGroups).map(([key, group]) => {
+            const overlay = group.find((d) => d.series.grouping === false);
+            const center = overlay
+                ? overlay.x + overlay.width / 2
+                : group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
+            return [key, center];
+        }),
     );
-    const hasOverlays = data.some((d) => d.series.grouping === false && !d.series.stacking);
+    const hasOverlays = data.some((d) => d.series.grouping === false);
     const xLookupPoints: ShapePoint[] = data.map((d, priority) => ({
         data: d.data,
         percentage: d.percentage,

@@ -26,6 +26,7 @@ interface PrepareOptions {
     barMaxWidth?: number;
     groupPadding?: number;
     valueSize?: number;
+    stackGap?: number;
 }
 
 const legend = {enabled: false} as PreparedLegend;
@@ -82,6 +83,8 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 value: d.data.y,
                 name: d.series.name,
                 hasBorder: Boolean(getBarXPaths(d).border),
+                percentage: d.percentage,
+                isStackEnd: d.isStackEnd,
             }));
             bars.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
             expect(JSON.stringify(raw)).toBe(rawBefore);
@@ -113,6 +116,8 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 value: d.data.x,
                 name: d.series.name,
                 hasBorder: d.borderWidth > 0,
+                percentage: d.percentage,
+                isStackEnd: d.isLastStackItem,
             }));
             shapes.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
             expect(JSON.stringify(raw)).toBe(rawBefore);
@@ -138,28 +143,108 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         },
     );
 
-    test('overlays do not consume grouped slots or change their widths', async () => {
-        const grouped = [{value: 20}, {value: 40, grouping: true}];
-        const {bars: plain} = await prepare(grouped);
-        const {bars: mixed} = await prepare([
-            {value: 80, grouping: false},
-            ...grouped,
-            {value: 60, grouping: false},
-        ]);
-        expect(mixed.slice(1, 3).map(({center, thickness}) => ({center, thickness}))).toEqual(
-            plain.map(({center, thickness}) => ({center, thickness})),
-        );
-        expect(mixed[0].center).toBe(100);
-        expect(mixed[3].center).toBe(100);
-        expect(mixed.map((d) => d.name)).toEqual(['0', '1', '2', '3']);
-    });
+    test.each([undefined, 'normal', 'percent'] as const)(
+        'overlays do not consume grouped slots, stacking=%s',
+        async (stacking) => {
+            const grouped = [{value: 20}, {value: 40, grouping: true}];
+            const {bars: plain} = await prepare(grouped);
+            const {bars: mixed} = await prepare([
+                {value: 80, grouping: false, stacking, stackId: 'overlay'},
+                ...grouped,
+                {value: 60, grouping: false, stacking, stackId: 'overlay'},
+            ]);
+            expect(mixed.slice(1, 3).map(({center, thickness}) => ({center, thickness}))).toEqual(
+                plain.map(({center, thickness}) => ({center, thickness})),
+            );
+            expect(mixed[0].center).toBe(100);
+            expect(mixed[3].center).toBe(100);
+            expect(mixed.map((d) => d.name)).toEqual(['0', '1', '2', '3']);
+        },
+    );
 
     test.each(['normal', 'percent'] as const)(
-        'preserves %s stacks when grouping is false',
+        'overlays %s stacks without changing their values, gaps or ends',
         async (stacking) => {
-            const inputs = [20, 40].map((value) => ({value, stacking}));
-            expect(await prepare(inputs.map((s) => ({...s, grouping: false})))).toEqual(
-                await prepare(inputs),
+            const inputs = [20, 40, 10, 30].map((value, index) => ({
+                value,
+                stacking,
+                stackId: index < 2 ? 'plan' : 'actual',
+            }));
+            const plain = await prepare(inputs, 200, false, {stackGap: 3});
+            expect(
+                await prepare(
+                    inputs.map((s) => ({...s, grouping: true})),
+                    200,
+                    false,
+                    {stackGap: 3},
+                ),
+            ).toEqual(plain);
+            const overlaid = await prepare(
+                inputs.map((s) => ({...s, grouping: false})),
+                200,
+                false,
+                {stackGap: 3},
+            );
+            expect(overlaid.domainValues).toEqual(plain.domainValues);
+            expect(new Set(overlaid.domainValues)).toEqual(new Set([60, 40]));
+            expect(overlaid.bars.map((bar) => bar.center)).toEqual([100, 100, 100, 100]);
+            expect(
+                overlaid.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar),
+            ).toEqual(plain.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar));
+            expect(overlaid.bars.map((bar) => bar.isStackEnd)).toEqual([false, true, false, true]);
+            if (stacking === 'percent')
+                expect(overlaid.bars.map((bar) => bar.percentage)).toEqual([
+                    1 / 3,
+                    2 / 3,
+                    1 / 4,
+                    3 / 4,
+                ]);
+        },
+    );
+
+    test.each([false, true])(
+        'overlaid stacks preserve positive and negative segments, reversed=%s',
+        async (reversed) => {
+            const inputs = [20, -10, 40, -30, 10, -20, 30, -40].map((value, index) => ({
+                value,
+                stacking: 'normal' as const,
+                stackId: index < 4 ? 'plan' : 'actual',
+            }));
+            const plain = await prepare(inputs, 200, reversed);
+            const overlaid = await prepare(
+                inputs.map((s) => ({...s, grouping: false})),
+                200,
+                reversed,
+            );
+            expect(new Set(overlaid.domainValues)).toEqual(new Set([60, -40, 40, -60]));
+            expect(overlaid.bars.every((bar) => bar.center === 100)).toBe(true);
+            expect(
+                overlaid.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar),
+            ).toEqual(plain.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar));
+        },
+    );
+
+    test.each([0, 1])(
+        'grouping is resolved per series within a stack, overlay index=%s',
+        async (overlayIndex) => {
+            const inputs = [20, 40, 60].map((value, index) => ({
+                value,
+                stacking: 'normal' as const,
+                stackId: index < 2 ? 'plan' : 'actual',
+            }));
+            const plain = await prepare(inputs);
+            const mixed = await prepare(
+                inputs.map((s, index) => ({
+                    ...s,
+                    grouping: index === overlayIndex ? false : undefined,
+                })),
+            );
+            expect(mixed.bars[overlayIndex].center).toBe(100);
+            expect(mixed.bars.filter((_, index) => index !== overlayIndex)).toEqual(
+                plain.bars.filter((_, index) => index !== overlayIndex),
+            );
+            expect(mixed.bars.map((bar) => [bar.start, bar.end])).toEqual(
+                plain.bars.map((bar) => [bar.start, bar.end]),
             );
         },
     );
@@ -197,7 +282,13 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         'keeps finite nonnegative sizes with available category space %s',
         async (size) => {
             const {bars} = await prepare(
-                [{value: 80, grouping: false}, {value: 20}, {value: 40}],
+                [
+                    {value: 80, grouping: false},
+                    {value: 20},
+                    {value: 40},
+                    {value: 20, grouping: false, stacking: 'normal', stackId: 'overlay'},
+                    {value: 40, grouping: false, stacking: 'normal', stackId: 'overlay'},
+                ],
                 size,
             );
             for (const bar of bars) {

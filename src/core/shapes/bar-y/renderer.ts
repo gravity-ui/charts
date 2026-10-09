@@ -49,7 +49,7 @@ export function renderBarY(
         .attr('opacity', (d) => d.opacity)
         .attr('pointer-events', 'none');
 
-    if (shapes.some((d) => d.series.grouping === false && !d.series.stacking)) {
+    if (shapes.some((d) => d.series.grouping === false)) {
         // Keep each border next to its fill so later series cover both together.
         const borders = new Map<PreparedBarYData, SVGPathElement>();
         borderSelection.each(function (d) {

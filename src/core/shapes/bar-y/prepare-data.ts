@@ -82,18 +82,19 @@ export async function prepareBarYData(args: {
     const result: PreparedBarYData[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         const stacks = Object.values(val);
-        const groupedCount = stacks.filter(
-            (items) => items[0].series.grouping !== false || items[0].series.stacking,
+        const groupedCount = stacks.filter((items) =>
+            items.some((item) => item.series.grouping !== false),
         ).length;
         const currentBarHeight = barSize * groupedCount + barGap * Math.max(0, groupedCount - 1);
         let groupedIndex = 0;
         stacks.forEach((measureValues) => {
-            const overlay =
+            const independent =
                 measureValues[0].series.grouping === false && !measureValues[0].series.stacking;
-            const height = overlay ? overlaySize : barSize;
-            const slotIndex = overlay ? 0 : groupedIndex++;
+            const slotIndex = measureValues.some((item) => item.series.grouping !== false)
+                ? groupedIndex++
+                : 0;
             const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
-            const base = overlay ? baseValue : baseValue - measureValues[0].series.borderWidth;
+            const base = independent ? baseValue : baseValue - measureValues[0].series.borderWidth;
             let positiveStack = base;
             let negativeStack = base;
 
@@ -121,6 +122,8 @@ export async function prepareBarYData(args: {
                 if (data.x === null) {
                     return;
                 }
+                const overlay = s.grouping === false;
+                const height = overlay ? overlaySize : barSize;
                 let center;
 
                 if (yAxis[0].type === 'category') {
@@ -143,7 +146,7 @@ export async function prepareBarYData(args: {
                 const xValue = Number(data.x);
                 const xPixel = xLinearScale(xValue);
                 const width = Math.abs(xPixel * ratio - base);
-                let shapeWidth = width - (!overlay && stackItems.length ? stackGap : 0);
+                let shapeWidth = width - (!independent && stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
                 }
@@ -158,21 +161,21 @@ export async function prepareBarYData(args: {
                         ? s.borderWidth
                         : 0;
                 const isFirstInStack = xValueIndex === 0;
-                const isLastStackItem = overlay || xValueIndex === sortedData.length - 1;
+                const isLastStackItem = independent || xValueIndex === sortedData.length - 1;
                 const extendsRight = xPixel > baseValue;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
                 let itemX = extendsRight ? positiveStack : negativeStack - width;
-                if (overlay) itemX = Math.min(base, xPixel);
+                if (independent) itemX = Math.min(base, xPixel);
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
-                if (!overlay && isFirstInStack && extendsRight) {
+                if (!independent && isFirstInStack && extendsRight) {
                     // Bar extends right from base, border extends outward to the
                     // left → shift left by halfBorder to keep the visual left
                     // edge at the zero line.
                     itemX -= halfBorder;
-                } else if (!overlay && isFirstInStack && !extendsRight && xValue !== 0) {
+                } else if (!independent && isFirstInStack && !extendsRight && xValue !== 0) {
                     // Bar extends left from base, border extends outward to the
                     // right → shift right by halfBorder to keep the visual
                     // right edge at the zero line.
@@ -210,7 +213,7 @@ export async function prepareBarYData(args: {
         });
     });
 
-    if (series.some((s) => s.grouping === false && !s.stacking)) {
+    if (series.some((s) => s.grouping === false)) {
         const seriesOrder = new Map(series.map((s, index) => [s, index]));
         result.sort((a, b) => (seriesOrder.get(a.series) ?? 0) - (seriesOrder.get(b.series) ?? 0));
     }

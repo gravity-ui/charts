@@ -73,8 +73,8 @@ export function getBarYLayout(args: {
         max(
             Object.values(groupedData),
             (d) =>
-                Object.values(d).filter(
-                    (items) => items[0].series.grouping !== false || items[0].series.stacking,
+                Object.values(d).filter((items) =>
+                    items.some((item) => item.series.grouping !== false),
                 ).length,
         ) || 1;
     const groupSize = Math.max(0, bandSize - groupGap);

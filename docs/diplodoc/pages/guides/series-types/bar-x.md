@@ -10,7 +10,7 @@ Multiple series are grouped by default. Use `stacking: 'normal'` to stack their 
 
 In percent stacks, the available plot height is shared between the segments and their gaps. The outer column edge aligns with the visible edge of the 100% grid line. Zero and skipped null values do not add gaps. If the requested gaps exceed the plot height, they are reduced to fit and segment heights become zero.
 
-Set `grouping: false` on non-stacked series to overlay their bars at the category center. Each bar starts at the value-axis baseline without accumulating values or taking up grouped slots. Stacked series ignore this option.
+Set `grouping: false` to overlay bars at the category center without taking up grouped slots. Non-stacked bars start at the value-axis baseline; stacking still accumulates values within each `stackId`. Omitted or `true` grouping preserves side-by-side positions.
 
 Later series in `series.data` cover earlier ones, including their borders. The example places Plan before Actual to draw Actual on top.
 
@@ -21,6 +21,10 @@ Thickness is controlled by the shared `series.options['bar-x'].barPadding` and `
 {% endnote %}
 
 <div data-chart-example="series-types/bar-x-overlay"></div>
+
+To overlay complete stacks, set `grouping: false` on every series in each `stackId`.
+
+<div data-chart-example="series-types/bar-x-stacked-overlay"></div>
 
 ## Appearance
 

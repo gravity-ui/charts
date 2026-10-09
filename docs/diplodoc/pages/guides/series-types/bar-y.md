@@ -8,7 +8,7 @@ See the [BarYSeries API reference](../../api/Series/Bar-Y/interfaces/BarYSeries.
 
 Multiple series are grouped by default. Use `stacking: 'normal'` to stack their values or `stacking: 'percent'` to show their proportions. Percent stacking supports only non-negative values. Use `stackId` to create separate stacks and `series.options['bar-y'].stackGap` to set the gap between segments in pixels.
 
-Set `grouping: false` on non-stacked series to overlay their bars at the category center. Each bar starts at the value-axis baseline without accumulating values or taking up grouped slots. Stacked series ignore this option.
+Set `grouping: false` to overlay bars at the category center without taking up grouped slots. Non-stacked bars start at the value-axis baseline; stacking still accumulates values within each `stackId`. Omitted or `true` grouping preserves side-by-side positions.
 
 Later series in `series.data` cover earlier ones, including their borders. The example places Plan before Actual to draw Actual on top.
 
@@ -19,6 +19,10 @@ Thickness is controlled by the shared `series.options['bar-y'].barPadding` and `
 {% endnote %}
 
 <div data-chart-example="series-types/bar-y-overlay"></div>
+
+To overlay complete stacks, set `grouping: false` on every series in each `stackId`.
+
+<div data-chart-example="series-types/bar-y-stacked-overlay"></div>
 
 ## Appearance
 

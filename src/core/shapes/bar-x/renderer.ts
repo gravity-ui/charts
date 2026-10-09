@@ -52,7 +52,7 @@ export function renderBarX(
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
-    if (preparedData.some((d) => d.series.grouping === false && !d.series.stacking)) {
+    if (preparedData.some((d) => d.series.grouping === false)) {
         // Keep each border next to its fill so later series cover both together.
         const borders = new Map<PreparedBarXData, SVGPathElement>();
         borderSelection.each(function (d) {

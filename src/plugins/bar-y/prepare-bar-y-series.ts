@@ -87,7 +87,7 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                 stacking: series.stacking,
                 grouping: series.grouping ?? true,
                 stackLabels: series.stackLabels,
-                // Overlays need independent domains even when a stackId was supplied.
+                // Non-stacked overlays need independent domains even with a stackId.
                 stackId:
                     series.grouping === false && !series.stacking
                         ? getUniqId()
