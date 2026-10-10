@@ -1,5 +1,7 @@
 import type React from 'react';
 
+import {ExplicitAxisLabelsExample} from './axis-labels/explicit-values';
+import explicitAxisLabelsRaw from './axis-labels/explicit-values.tsx?raw';
 import {AxisLabelFontSizeExample} from './axis-labels/font-size';
 import axisLabelFontSizeRaw from './axis-labels/font-size.tsx?raw';
 import {CategoryAxisExample} from './axis-types/category';
@@ -99,6 +101,10 @@ export const registry: Record<string, ExampleModule> = {
     'axis-labels/font-size': {
         code: extractDisplayCode(axisLabelFontSizeRaw),
         Component: AxisLabelFontSizeExample,
+    },
+    'axis-labels/explicit-values': {
+        code: extractDisplayCode(explicitAxisLabelsRaw),
+        Component: ExplicitAxisLabelsExample,
     },
     'axis-types/linear': {code: extractDisplayCode(linearRaw), Component: LinearAxisExample},
     'axis-types/logarithmic': {

@@ -26,7 +26,7 @@ import {
     isAxisRelatedSeries,
     wrapText,
 } from '../utils';
-import {getVisibleLabelIndexes} from '../utils/axis/label-collision';
+import {getSvgLabelCandidate, getVisibleLabelIndexes} from '../utils/axis/label-collision';
 import {getXAxisTickValues} from '../utils/axis/x-axis';
 
 import {getPreparedRangeSlider} from './range-slider';
@@ -92,21 +92,34 @@ async function setLabelSettings({
         axis.ticks.values !== undefined
     ) {
         const sizes = await Promise.all(labels.map(getTextSize));
-        const visibleCount = (angle: number) => {
-            const cos = Math.abs(calculateCos(angle));
-            const sin = Math.abs(calculateSin(angle));
-            const candidates = tickValues.map((tick, index) => {
-                const projectedWidth = sizes[index].width * cos + sizes[index].height * sin;
-                return {
-                    index,
-                    position: tick.x,
-                    bounds: {
-                        left: tick.x - projectedWidth / 2,
-                        right: tick.x + projectedWidth / 2,
-                        top: 0,
-                        bottom: 1,
+        const visibleCount = (angle: 0 | -45) => {
+            const cos = calculateCos(angle);
+            const sin = calculateSin(Math.abs(angle));
+            const rotationSin = calculateSin(angle);
+            const candidates = tickValues.flatMap((tick, index) => {
+                const size = sizes[index];
+                const x = angle
+                    ? tick.x - size.width * cos - (size.height * sin) / 2
+                    : tick.x - size.width / 2;
+                const y = angle ? size.width * sin : 0;
+                const candidate = getSvgLabelCandidate(
+                    {
+                        x: x - size.hangingOffset * rotationSin,
+                        y: y + size.hangingOffset * cos,
+                        angle,
+                        content: [
+                            {
+                                text: labels[index],
+                                x: 0,
+                                y: 0,
+                                size,
+                            },
+                        ],
                     },
-                };
+                    index,
+                    tick.x,
+                );
+                return candidate ? [candidate] : [];
             });
             return getVisibleLabelIndexes(candidates, axis.labels.padding * 2).size;
         };

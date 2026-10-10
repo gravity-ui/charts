@@ -141,6 +141,103 @@ test.describe('X-axis', () => {
         expect((await lastLabel.boundingBox())?.width).toBeGreaterThan(0);
     });
 
+    test('rotated explicit datetime labels keep separate text visible', async ({mount}) => {
+        const start = Date.UTC(2024, 0, 1);
+        const dates = Array.from({length: 14}, (_, index) => start + index * 60 * DAY);
+        const expectedLabels = dates.map((value) => {
+            const date = new Date(value);
+            const month = date.toLocaleString('en-US', {month: 'long', timeZone: 'UTC'});
+
+            return `${date.getUTCDate()} ${month}`;
+        });
+        const chartData: ChartData = {
+            chart: {margin: CHART_MARGIN},
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: dates.map((x, index) => ({x, y: index + 1})),
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'datetime',
+                min: dates[0],
+                max: dates[dates.length - 1],
+                startOnTick: false,
+                endOnTick: false,
+                ticks: {values: dates},
+                labels: {
+                    dateFormat: 'D MMMM',
+                    autoRotation: false,
+                    rotation: -45,
+                    style: {fontSize: '11px'},
+                },
+            },
+            yAxis: [
+                {
+                    title: {text: 'Value', margin: 10, style: {fontSize: '12px'}},
+                    labels: {margin: 15, style: {fontSize: '11px'}},
+                },
+            ],
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 575, height: 320}} />,
+        );
+        const ticks = component.locator('.gcharts-x-axis__tick');
+        const labels = ticks.locator('text tspan');
+
+        await expect(ticks).toHaveCount(dates.length);
+        await expect(labels).toHaveText(expectedLabels);
+        expect(await getOverlappingLabelPairs(labels)).not.toEqual([]);
+        const separation = await labels.evaluateAll((elements) => {
+            const intervals = elements
+                .map((element) => {
+                    const label = element as SVGGraphicsElement;
+                    const box = label.getBBox();
+                    const matrix = label.getScreenCTM();
+                    if (!matrix) throw new Error('Label transform is unavailable');
+                    const projections = [
+                        [box.x, box.y],
+                        [box.x + box.width, box.y],
+                        [box.x + box.width, box.y + box.height],
+                        [box.x, box.y + box.height],
+                    ].map(([x, y]) => {
+                        const point = new DOMPoint(x, y).matrixTransform(matrix);
+
+                        return (point.x + point.y) / Math.SQRT2;
+                    });
+
+                    return {min: Math.min(...projections), max: Math.max(...projections)};
+                })
+                .sort((first, second) => first.min - second.min);
+
+            return intervals.slice(1).map((interval, index) => interval.min - intervals[index].max);
+        });
+        expect(Math.min(...separation)).toBeGreaterThanOrEqual(0);
+
+        await component.update(
+            <ChartTestStory
+                data={{
+                    ...chartData,
+                    xAxis: {
+                        ...chartData.xAxis,
+                        ticks: {
+                            values: [...dates.slice(0, 7), dates[6] + DAY, ...dates.slice(7)],
+                        },
+                    },
+                }}
+                styles={{width: 575, height: 320}}
+            />,
+        );
+
+        await expect(ticks).toHaveCount(dates.length + 1);
+        await expect(labels).toHaveText(expectedLabels);
+    });
+
     test('nearby explicit ticks do not overlap with automatic X rotation', async ({mount}) => {
         const chartData: ChartData = {
             legend: {enabled: false},
