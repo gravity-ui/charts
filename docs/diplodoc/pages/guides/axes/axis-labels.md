@@ -29,6 +29,28 @@ The following example applies custom font sizes to both axes:
 
 <div data-chart-example="axis-labels/font-size"></div>
 
+## Explicit ticks and rotated labels
+
+Use `ticks.values` to choose the tick positions. On a datetime axis, provide Unix timestamps in milliseconds. Explicit ticks are not thinned automatically. Collision detection can hide overlapping labels while keeping their tick marks and grid lines; the first and last labels take priority.
+
+Configure `labels.rotation` to keep a fixed angle, or enable `labels.autoRotation` to let the X axis choose between horizontal labels and −45°. Rotation does not disable collision detection. For rotated SVG labels, the check uses the text rows at their actual angle rather than their enclosing horizontal rectangles. `labels.padding` controls the extra space between labels.
+
+```javascript
+xAxis: {
+  type: 'datetime',
+  ticks: { values: [Date.UTC(2024, 0, 15), Date.UTC(2024, 2, 16)] },
+  labels: {
+    dateFormat: 'D MMMM',
+    rotation: -45,
+    style: { fontSize: '11px' },
+  },
+}
+```
+
+This example preserves the full month names while displaying closely spaced dates:
+
+<div data-chart-example="axis-labels/explicit-values"></div>
+
 ## HTML labels
 
 HTML labels are supported only on category axes (`type: 'category'`). Rotation options are disabled when `html: true`.
