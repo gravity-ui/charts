@@ -8,6 +8,7 @@ import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
+import {DEFAULT_PALETTE} from '../core/constants';
 import type {
     ChartData,
     ChartLegend,
@@ -18,6 +19,46 @@ import type {
 
 import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
+
+test('legend selection survives a config update with generated group IDs', async ({mount}) => {
+    const data = {
+        series: {
+            data: ['Plan', 'Actual'].map((name) => ({
+                type: 'bar-x' as const,
+                name,
+                data: [{x: 'A', y: 40}],
+            })),
+        },
+        xAxis: {type: 'category', categories: ['A']},
+    } satisfies ChartData;
+    const component = await mount(
+        <ChartTestStory data={data} styles={{width: 600, height: 360}} />,
+    );
+    const plan = component.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[0]}"]`);
+    const actual = component.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[1]}"]`);
+    await expect(plan).toHaveCount(1);
+    await expect(actual).toHaveCount(1);
+    const planLegend = component.locator('.gcharts-legend__item').filter({hasText: 'Plan'});
+    await planLegend.click({modifiers: ['Control']});
+    await expect(plan).toHaveCount(0);
+    await component.update(
+        <ChartTestStory
+            data={{
+                ...data,
+                series: {
+                    ...data.series,
+                    options: {'bar-x': {opacity: 0.5}},
+                },
+            }}
+            styles={{width: 600, height: 360}}
+        />,
+    );
+    await expect(actual).toHaveAttribute('opacity', '0.5');
+    await expect(plan).toHaveCount(0);
+    await planLegend.click({modifiers: ['Control']});
+    await expect(plan).toHaveCount(1);
+    await expect(actual).toHaveCount(1);
+});
 
 async function visitLegendPages(
     component: Locator,

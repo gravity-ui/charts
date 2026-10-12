@@ -1,3 +1,4 @@
+import {max, min} from 'd3-array';
 import groupBy from 'lodash/groupBy';
 
 import type {BarXSeries} from '../../../types';
@@ -16,7 +17,8 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
     const xLookupPoints: ShapePoint[] = [];
 
     for (const group of Object.values(barXGroups)) {
-        const groupCenterX = group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
+        const groupCenterX =
+            ((min(group, (d) => d.x) ?? 0) + (max(group, (d) => d.x + d.width) ?? 0)) / 2;
         for (const d of group) {
             xLookupPoints.push({
                 data: d.data,
