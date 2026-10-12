@@ -1,0 +1,48 @@
+import type {PreparedSeries} from '~core/series/types';
+
+interface IdentityQueue {
+    series: PreparedSeries[];
+    index: number;
+}
+
+export function reconcileLegendSelection(
+    selected: string[],
+    previousSeries: PreparedSeries[],
+    nextSeries: PreparedSeries[],
+): string[] {
+    const selectedIds = new Set(selected);
+    const nextIds = new Set(
+        nextSeries.filter((series) => series.legend.enabled).map((series) => series.legend.groupId),
+    );
+    const previousIds = new Set<string>();
+    const previousByIdentity = new Map<string, IdentityQueue>();
+
+    for (const series of previousSeries) {
+        if (!series.legend.enabled) continue;
+        previousIds.add(series.legend.groupId);
+        // Reserve surviving groups before matching regenerated IDs by name.
+        if (nextIds.has(series.legend.groupId)) continue;
+        const identity = JSON.stringify([series.type, series.name]);
+        let queue = previousByIdentity.get(identity);
+        if (!queue) {
+            queue = {series: [], index: 0};
+            previousByIdentity.set(identity, queue);
+        }
+        queue.series.push(series);
+    }
+
+    const result = new Set<string>();
+    for (const series of nextSeries) {
+        if (!series.legend.enabled) continue;
+        let visible: boolean;
+        if (previousIds.has(series.legend.groupId)) {
+            visible = selectedIds.has(series.legend.groupId);
+        } else {
+            const queue = previousByIdentity.get(JSON.stringify([series.type, series.name]));
+            const previous = queue?.series[queue.index++];
+            visible = previous ? selectedIds.has(previous.legend.groupId) : series.visible;
+        }
+        if (visible) result.add(series.legend.groupId);
+    }
+    return [...result];
+}

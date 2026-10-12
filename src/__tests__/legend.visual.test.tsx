@@ -6,6 +6,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
 
+import {LegendLabelsExample} from '../../docs/examples/src/charts/legend/labels';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import {DEFAULT_PALETTE} from '../core/constants';
@@ -20,44 +21,25 @@ import type {
 import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
 
-test('legend selection survives a config update with generated group IDs', async ({mount}) => {
-    const data = {
-        series: {
-            data: ['Plan', 'Actual'].map((name) => ({
-                type: 'bar-x' as const,
-                name,
-                data: [{x: 'A', y: 40}],
-            })),
-        },
-        xAxis: {type: 'category', categories: ['A']},
-    } satisfies ChartData;
+test('legend selection survives updating data in the guide example', async ({mount}) => {
     const component = await mount(
-        <ChartTestStory data={data} styles={{width: 600, height: 360}} />,
+        <div style={{width: 600, height: 360}}>
+            <LegendLabelsExample />
+        </div>,
     );
-    const plan = component.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[0]}"]`);
-    const actual = component.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[1]}"]`);
-    await expect(plan).toHaveCount(1);
-    await expect(actual).toHaveCount(1);
-    const planLegend = component.locator('.gcharts-legend__item').filter({hasText: 'Plan'});
-    await planLegend.click({modifiers: ['Control']});
-    await expect(plan).toHaveCount(0);
-    await component.update(
-        <ChartTestStory
-            data={{
-                ...data,
-                series: {
-                    ...data.series,
-                    options: {'bar-x': {opacity: 0.5}},
-                },
-            }}
-            styles={{width: 600, height: 360}}
-        />,
-    );
-    await expect(actual).toHaveAttribute('opacity', '0.5');
-    await expect(plan).toHaveCount(0);
-    await planLegend.click({modifiers: ['Control']});
-    await expect(plan).toHaveCount(1);
-    await expect(actual).toHaveCount(1);
+    const lines = component.locator('.gcharts-line > path');
+    await expect(lines).toHaveCount(3);
+    const europe = component.locator('.gcharts-legend__item text').filter({hasText: 'EU'});
+    await europe.click();
+    await expect(lines).toHaveCount(1);
+    await expect(lines).toHaveAttribute('stroke', DEFAULT_PALETTE[1]);
+    const previousPath = await lines.getAttribute('d');
+    await component.getByRole('button', {name: 'Update data'}).click();
+    await expect(lines).toHaveCount(1);
+    await expect(lines).not.toHaveAttribute('d', previousPath ?? '');
+    await expect(lines).toHaveAttribute('stroke', DEFAULT_PALETTE[1]);
+    await europe.click();
+    await expect(lines).toHaveCount(3);
 });
 
 async function visitLegendPages(

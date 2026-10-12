@@ -169,6 +169,12 @@ export interface SeriesPlugin<
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
     /** Axis-domain contributions for a point; return [] to exclude it. Omitted axes use the default extraction. */
     getAxisDomainValues?: SeriesAxisDomainValues<T>;
+    /**
+     * Selects points contributing to stacked axis domains from a raw or prepared series.
+     * Defaults to all points. Use the same duplicate-point policy as shape preparation;
+     * contributions of each sign are summed separately. Must not mutate the series or its data.
+     */
+    getStackedDomainData?(series: T): T['data'];
     /** Computes shape data (geometry, labels, markers) once per render. */
     prepareShapeData(
         args: PrepareShapeDataArgs,

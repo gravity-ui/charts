@@ -3,14 +3,17 @@
 import {act, renderHook, waitFor} from '@testing-library/react';
 import {dispatch} from 'd3-dispatch';
 
+import type {PreparedAreaData} from '../../../core/shapes/area/types';
+import type {PreparedBarXData} from '../../../core/shapes/bar-x/types';
+import type {PreparedBarYData} from '../../../core/shapes/bar-y/types';
+import * as shapes from '../../../hooks/useShapes';
 import type {ChartData} from '../../../types';
 import * as gradientReference from '../prepareGradientReference';
 import {useChartInnerProps} from '../useChartInnerProps';
 
-test.each(['bar-x', 'pie'] as const)(
-    'preserves %s legend selection when config/data changes regenerate group IDs',
-    async (type) => {
-        const getContext = jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+describe('legend and domain updates', () => {
+    beforeEach(() => {
+        jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
             measureText: (text: string) => ({
                 width: text.length * 6,
                 fontBoundingBoxAscent: 10,
@@ -19,23 +22,11 @@ test.each(['bar-x', 'pie'] as const)(
                 actualBoundingBoxRight: text.length * 6,
             }),
         } as CanvasRenderingContext2D);
-        function makeData(names: string[], value: number): ChartData {
-            return {
-                legend: {enabled: true},
-                series: {
-                    data:
-                        type === 'pie'
-                            ? [{type, data: names.map((name) => ({name, value}))}]
-                            : names.map((name) => ({
-                                  type,
-                                  name,
-                                  data: [{x: 1, y: value}],
-                              })),
-                },
-            };
-        }
-        const data = makeData(['Plan', 'Actual'], 40);
-        const props: Parameters<typeof useChartInnerProps>[0] = {
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    function getProps(data: ChartData): Parameters<typeof useChartInnerProps>[0] {
+        return {
             data,
             width: 600,
             height: 400,
@@ -47,7 +38,166 @@ test.each(['bar-x', 'pie'] as const)(
             updateZoomState: jest.fn(),
             zoomState: {},
         };
-        try {
+    }
+
+    test.each([0, 1])(
+        'reserves stable IDs when duplicate names reorder (hidden index %i)',
+        async (hiddenIndex) => {
+            const generated = {type: 'bar-x' as const, name: 'Same', data: [{x: 1, y: 40}]};
+            const explicit = {...generated, legend: {groupId: 'stable'}};
+            const props = getProps({
+                legend: {enabled: true},
+                series: {data: [generated, explicit]},
+            });
+            const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            const id = result.current.preparedSeries[hiddenIndex].legend.groupId;
+            act(() => result.current.handleLegendItemClick({id, name: 'Same', metaKey: true}));
+            await waitFor(() =>
+                expect(result.current.preparedSeries[hiddenIndex].visible).toBe(false),
+            );
+            const previous = result.current.allPreparedSeries;
+            rerender({
+                ...props,
+                data: {legend: {enabled: true}, series: {data: [explicit, generated]}},
+            });
+            await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual(
+                hiddenIndex === 0 ? [true, false] : [false, true],
+            );
+        },
+    );
+
+    test('a new series without a legend item preserves restore-all clicks', async () => {
+        const a = {
+            type: 'bar-x' as const,
+            name: 'A',
+            legend: {groupId: 'a'},
+            data: [{x: 1, y: 40}],
+        };
+        const b = {...a, name: 'B', legend: {groupId: 'b'}};
+        const c = {...a, name: 'C', legend: {enabled: false}};
+        const props = getProps({legend: {enabled: true}, series: {data: [a, b]}});
+        const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+        await waitFor(() => expect(result.current.shapesReady).toBe(true));
+        act(() => result.current.handleLegendItemClick({id: 'b', name: 'B', metaKey: false}));
+        await waitFor(() => expect(result.current.activeLegendItems).toEqual(['b']));
+        const previous = result.current.allPreparedSeries;
+        rerender({...props, data: {legend: {enabled: true}, series: {data: [a, b, c]}}});
+        await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+        expect(result.current.activeLegendItems).toEqual(['b']);
+        act(() => result.current.handleLegendItemClick({id: 'b', name: 'B', metaKey: false}));
+        await waitFor(() =>
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+                true,
+                true,
+                true,
+            ]),
+        );
+    });
+
+    test('reconciling generated IDs prepares shapes once per config update', async () => {
+        const prepareShapes = jest.spyOn(shapes, 'getShapes');
+        const props = getProps({
+            series: {
+                data: ['A', 'B'].map((name) => ({type: 'bar-x', name, data: [{x: 1, y: 40}]})),
+            },
+        });
+        const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+        await waitFor(() => expect(result.current.shapesReady).toBe(true));
+        const id = result.current.preparedSeries[0].legend.groupId;
+        act(() => result.current.handleLegendItemClick({id, name: 'A', metaKey: true}));
+        await waitFor(() => expect(result.current.preparedSeries[0].visible).toBe(false));
+        prepareShapes.mockClear();
+        const previous = result.current.allPreparedSeries;
+        rerender({...props, data: {...props.data, legend: {enabled: true, position: 'top'}}});
+        await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        expect(prepareShapes).toHaveBeenCalledTimes(1);
+        expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+            false,
+            true,
+        ]);
+    });
+
+    test.each(['bar-x', 'bar-y'] as const)(
+        'duplicate %s segments fit inside the automatic domain',
+        async (type) => {
+            const props = getProps({
+                series: {
+                    data: [
+                        {
+                            type,
+                            name: 'Bars',
+                            stacking: 'normal',
+                            data: [-100, -75].map((value) =>
+                                type === 'bar-y' ? {x: value, y: 1} : {x: 1, y: value},
+                            ),
+                        },
+                    ],
+                },
+            });
+            const {result} = renderHook(useChartInnerProps, {initialProps: props});
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            expect(result.current.shapesData).toHaveLength(2);
+            for (const shape of result.current.shapesData as (
+                | PreparedBarXData
+                | PreparedBarYData
+            )[]) {
+                expect(shape.x).toBeGreaterThanOrEqual(0);
+                expect(shape.x + shape.width).toBeLessThanOrEqual(result.current.boundsWidth);
+                expect(shape.y).toBeGreaterThanOrEqual(0);
+                expect(shape.y + shape.height).toBeLessThanOrEqual(result.current.boundsHeight);
+            }
+        },
+    );
+
+    test('area domain excludes discarded duplicate points', async () => {
+        const props = getProps({
+            series: {
+                data: [
+                    {
+                        type: 'area',
+                        name: 'Area',
+                        data: [
+                            {x: 1, y: -100},
+                            {x: 1, y: -75},
+                        ],
+                    },
+                ],
+            },
+        });
+        const {result} = renderHook(useChartInnerProps, {initialProps: props});
+        await waitFor(() => expect(result.current.shapesReady).toBe(true));
+        expect(
+            Math.min(...(result.current.yScale?.[0]?.domain() ?? []).map(Number)),
+        ).toBeGreaterThan(-100);
+        const area = result.current.shapesData[0] as PreparedAreaData;
+        expect(area.points.map((point) => point.data.y)).toEqual([-75]);
+    });
+
+    test.each(['bar-x', 'pie'] as const)(
+        'preserves %s legend selection when config/data changes regenerate group IDs',
+        async (type) => {
+            function makeData(names: string[], value: number): ChartData {
+                return {
+                    legend: {enabled: true},
+                    series: {
+                        data:
+                            type === 'pie'
+                                ? [{type, data: names.map((name) => ({name, value}))}]
+                                : names.map((name) => ({
+                                      type,
+                                      name,
+                                      data: [{x: 1, y: value}],
+                                  })),
+                    },
+                };
+            }
+            const data = makeData(['Plan', 'Actual'], 40);
+            const props = getProps(data);
             const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
             await waitFor(() => expect(result.current.shapesReady).toBe(true));
             const original = result.current.allPreparedSeries ?? [];
@@ -80,11 +230,9 @@ test.each(['bar-x', 'pie'] as const)(
             await waitFor(() =>
                 expect(result.current.preparedSeries.every((series) => series.visible)).toBe(true),
             );
-        } finally {
-            getContext.mockRestore();
-        }
-    },
-);
+        },
+    );
+});
 
 test('preserves legend selection references across view updates and invalidates on selection changes', async () => {
     const getContext = jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({

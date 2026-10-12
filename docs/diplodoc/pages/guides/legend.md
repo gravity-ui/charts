@@ -76,7 +76,7 @@ Resize the example below to see SVG labels wrap with `width: 'auto'`, `maxWidth:
 
 By default, legend labels use the `name` of the series or individual data point, depending on the visualization type. Set `legend.itemText` on that series or point to override its legend label without changing its name elsewhere.
 
-The example uses abbreviated legend labels. Hover over the lines to see the full series names in the tooltip.
+The example uses abbreviated legend labels. Hover over the lines to see the full series names in the tooltip. Select a legend item and click **Update data** to see the selection persist.
 
 <div data-chart-example="legend/labels"></div>
 
@@ -98,3 +98,7 @@ legend: {
 ```
 
 The `id` is the legend group's ID. Set `series.legend.groupId` explicitly if the handler needs a stable ID; for pie and funnel items, set `data[].legend.groupId` instead.
+
+## Selection across updates
+
+The chart preserves legend selection when data or configuration changes. Items are matched by `groupId` first, then by series type and name in occurrence order. Set stable IDs when names repeat or change; for pie and funnel, set IDs on the data points. New items use their configured `visible` value (default `true`). Series with `legend.enabled: false` keep their configured visibility independently of legend selection.

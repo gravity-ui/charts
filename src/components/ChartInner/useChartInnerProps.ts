@@ -1,7 +1,6 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import groupBy from 'lodash/groupBy';
 import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE} from '~core/constants';
@@ -42,6 +41,7 @@ import type {GradientReferenceCacheEntry} from './gradientReferenceCache';
 import {isGradientReferenceCurrent} from './gradientReferenceCache';
 import {prepareAxisLayout} from './prepareAxisLayout';
 import {prepareGradientReference} from './prepareGradientReference';
+import {reconcileLegendSelection} from './reconcileLegendSelection';
 import type {ChartInnerProps} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
@@ -132,31 +132,6 @@ type ChartState = {
     preparedTitle: PreparedTitle | undefined;
 };
 
-function reconcileLegendSelection(
-    selected: string[],
-    previousSeries: PreparedSeries[],
-    nextSeries: PreparedSeries[],
-) {
-    const selectedIds = new Set(selected);
-    const previousIds = new Set(previousSeries.map((series) => series.legend.groupId));
-    const previousByIdentity = groupBy(previousSeries, (series) =>
-        JSON.stringify([series.type, series.name]),
-    );
-    return [
-        ...new Set(
-            nextSeries
-                .filter((series) => {
-                    const previous =
-                        previousByIdentity[JSON.stringify([series.type, series.name])]?.shift();
-                    if (previousIds.has(series.legend.groupId))
-                        return selectedIds.has(series.legend.groupId);
-                    return previous ? selectedIds.has(previous.legend.groupId) : series.visible;
-                })
-                .map((series) => series.legend.groupId),
-        ),
-    ];
-}
-
 export function useChartInnerProps(props: Props) {
     const {
         clipPathId,
@@ -172,7 +147,11 @@ export function useChartInnerProps(props: Props) {
         zoomState,
     } = props;
 
-    const [selectedLegendItems, setSelectedLegendItems] = React.useState<string[] | null>(null);
+    const selectedLegendItemsRef = React.useRef<string[] | null>(null);
+    const [legendSelectionVersion, updateLegendSelectionVersion] = React.useReducer(
+        (version: number) => version + 1,
+        0,
+    );
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
@@ -181,6 +160,7 @@ export function useChartInnerProps(props: Props) {
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const selectedLegendItems = selectedLegendItemsRef.current;
 
         (async function () {
             const chartDataChanged = !(
@@ -415,9 +395,7 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
-                if (!isEqual(selectedLegendItems, nextSelectedLegendItems)) {
-                    setSelectedLegendItems(nextSelectedLegendItems);
-                }
+                selectedLegendItemsRef.current = nextSelectedLegendItems;
                 gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);
@@ -430,7 +408,7 @@ export function useChartInnerProps(props: Props) {
         height,
         width,
         data,
-        selectedLegendItems,
+        legendSelectionVersion,
         zoomState,
         rangeSliderState,
         dispatcher,
@@ -459,7 +437,9 @@ export function useChartInnerProps(props: Props) {
         ({id, metaKey}) => {
             const allItems = getAllLegendItems(preparedSeries);
             const onlyItemSelected =
-                (selectedLegendItems ?? []).length === 1 && activeLegendItems.includes(id);
+                selectedLegendItemsRef.current !== null &&
+                activeLegendItems.length === 1 &&
+                activeLegendItems.includes(id);
             let nextActiveLegendItems: string[];
 
             if (metaKey && activeLegendItems.includes(id)) {
@@ -474,9 +454,11 @@ export function useChartInnerProps(props: Props) {
                 nextActiveLegendItems = [id];
             }
 
-            setSelectedLegendItems(nextActiveLegendItems);
+            currentRunRef.current++;
+            selectedLegendItemsRef.current = nextActiveLegendItems;
+            updateLegendSelectionVersion();
         },
-        [preparedSeries, selectedLegendItems, activeLegendItems],
+        [preparedSeries, activeLegendItems],
     );
 
     const handleAttemptToSetZoomState = React.useCallback(

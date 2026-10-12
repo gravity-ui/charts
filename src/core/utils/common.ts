@@ -29,12 +29,13 @@ function getDomainDataForStackedSeries(
     const acc: number[] = [];
     const stackedSeries = group(seriesList, getSeriesStackId);
     Array.from(stackedSeries).forEach(([_stackId, seriesStack]) => {
-        const positiveValues: Record<string, number> = {};
-        const negativeValues: Record<string, number> = {};
+        const positiveValues = new Map<string, number>();
+        const negativeValues = new Map<string, number>();
 
         seriesStack.forEach((singleSeries) => {
-            const data = new Map<string, {positive?: number; negative?: number}>();
-            singleSeries.data.forEach((point) => {
+            const data = (getSeriesPlugin(singleSeries.type).getStackedDomainData?.(singleSeries) ??
+                singleSeries.data) as StackedSeries['data'];
+            data.forEach((point) => {
                 const keyValue = point[keyAttr];
                 if (keyValue === null) {
                     return;
@@ -47,24 +48,16 @@ function getDomainDataForStackedSeries(
                     value = point[valueAttr] as number;
                 }
 
-                const extremes = data.get(key) ?? {};
-                if (value >= 0) extremes.positive = Math.max(value, extremes.positive ?? 0);
-                if (value < 0) extremes.negative = Math.min(value, extremes.negative ?? 0);
-                data.set(key, extremes);
-            });
-
-            Array.from(data).forEach(([key, {positive, negative}]) => {
-                if (positive !== undefined) {
-                    positiveValues[key] = (positiveValues[key] || 0) + positive;
+                if (value >= 0) {
+                    positiveValues.set(key, (positiveValues.get(key) ?? 0) + value);
                 }
-
-                if (negative !== undefined) {
-                    negativeValues[key] = (negativeValues[key] || 0) + negative;
+                if (value < 0) {
+                    negativeValues.set(key, (negativeValues.get(key) ?? 0) + value);
                 }
             });
         });
 
-        acc.push(...Object.values(negativeValues), ...Object.values(positiveValues));
+        acc.push(...negativeValues.values(), ...positiveValues.values());
     });
 
     return acc;
