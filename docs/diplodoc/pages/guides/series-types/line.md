@@ -22,6 +22,29 @@ series: {
 
 See the complete configuration in the [LineSeries API reference](../../api/Series/Line/interfaces/LineSeries.md).
 
+## Markers
+
+Set `marker.enabled: true` to keep point markers visible. Configure their radius and border on hover through `series.options.line.states.hover.marker`:
+
+```javascript
+series: {
+  options: {
+    line: {
+      marker: {enabled: true, radius: 3},
+      states: {
+        hover: {
+          marker: {radius: 8, borderColor: '#ffffff', borderWidth: 2},
+        },
+      },
+    },
+  },
+}
+```
+
+Hover styles apply to both always-visible and hover-only markers. The normal appearance returns when hover moves to another point or leaves the chart. Set `states.hover.enabled: false` or `states.hover.marker.enabled: false` to keep normal markers unchanged on hover. Area and area-range series support the same options under their respective series keys.
+
+<div data-chart-example="series-types/line"></div>
+
 ## Line interpolation
 
 By default, line series connect data points with straight segments. The `interpolation` option enables smooth curve rendering while keeping markers, tooltips, and interactions attached to the original data points.

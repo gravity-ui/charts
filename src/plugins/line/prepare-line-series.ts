@@ -101,11 +101,13 @@ function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
         borderColor: '#ffffff',
         halo: DEFAULT_HALO_OPTIONS,
     };
+    const hoverMarker = merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker);
+    hoverMarker.enabled = seriesHoverState?.enabled !== false && hoverMarker.enabled;
 
     return {
         states: {
             normal: markerNormalState,
-            hover: merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker),
+            hover: hoverMarker,
         },
     };
 }

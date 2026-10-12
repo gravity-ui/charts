@@ -62,6 +62,8 @@ export function prepareAreaRangeSeries(
             },
             seriesOptions?.['area-range']?.states?.hover?.marker,
         );
+        hoverMarker.enabled =
+            seriesOptions?.['area-range']?.states?.hover?.enabled !== false && hoverMarker.enabled;
 
         return {
             type: series.type,

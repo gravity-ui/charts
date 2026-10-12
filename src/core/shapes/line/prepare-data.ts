@@ -170,7 +170,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
                 data: point.data,
             });
         }
-        item.getHoverMarkers = buildHoverMarkerGetter(points, s);
+        item.getHoverMarkers = buildHoverMarkerGetter(points, s, isOutsideBounds);
     }
 
     const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);

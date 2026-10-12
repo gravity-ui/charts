@@ -9,7 +9,6 @@ import type {SeriesShapeData, SvgLabel} from '~core/shapes/types';
 import {block} from '../../utils';
 
 import {AnnotationLayer} from './AnnotationLayer';
-import {HoverMarkerLayer} from './HoverMarkerLayer';
 import {HtmlLayer} from './HtmlLayer';
 import {MarkerLayer} from './MarkerLayer';
 
@@ -56,7 +55,6 @@ export const SeriesShapes = ({
         );
     }, [boundsHeight, boundsWidth, dispatcher, plugin, preparedData, labels, seriesOptions]);
 
-    const markers = React.useMemo(() => preparedData.flatMap((d) => d.markers), [preparedData]);
     const annotations = React.useMemo(
         () => preparedData.flatMap((d) => d.annotations),
         [preparedData],
@@ -73,8 +71,7 @@ export const SeriesShapes = ({
                 className={b()}
                 clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
             />
-            <MarkerLayer markers={markers} />
-            <HoverMarkerLayer
+            <MarkerLayer
                 preparedData={preparedData}
                 dispatcher={dispatcher}
                 namespace={namespace}
