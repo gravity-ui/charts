@@ -32,7 +32,7 @@ export interface LabelCandidate {
 
 interface PreparedLabelCandidate extends LabelCandidate {
     rectangles: LabelRectangle[];
-    useRowBounds: boolean;
+    hasOrientedRows: boolean;
 }
 
 interface SvgLabel {
@@ -61,23 +61,25 @@ export function getSvgLabelCandidate(
         top: Infinity,
         bottom: -Infinity,
     };
-    const rectangles: LabelRectangle[] = [];
+    const rectangles: LabelRectangle[] | undefined = label.angle % 180 === 0 ? undefined : [];
 
     for (const row of label.content) {
         if (!row.text.trim()) {
             continue;
         }
 
-        const centerX = row.x + row.size.width / 2;
-        const centerY = row.y + row.size.height / 2;
-        rectangles.push({
-            centerX: label.x + centerX * cos - centerY * sin,
-            centerY: label.y + centerX * sin + centerY * cos,
-            halfWidth: Math.abs(row.size.width) / 2,
-            halfHeight: Math.abs(row.size.height) / 2,
-            cos,
-            sin,
-        });
+        if (rectangles) {
+            const centerX = row.x + row.size.width / 2;
+            const centerY = row.y + row.size.height / 2;
+            rectangles.push({
+                centerX: label.x + centerX * cos - centerY * sin,
+                centerY: label.y + centerX * sin + centerY * cos,
+                halfWidth: Math.abs(row.size.width) / 2,
+                halfHeight: Math.abs(row.size.height) / 2,
+                cos,
+                sin,
+            });
+        }
 
         for (const x of [row.x, row.x + row.size.width]) {
             for (const y of [row.y, row.y + row.size.height]) {
@@ -96,7 +98,7 @@ export function getSvgLabelCandidate(
               index,
               position,
               bounds,
-              rectangles: label.angle % 180 === 0 ? undefined : rectangles,
+              rectangles,
           }
         : undefined;
 }
@@ -180,7 +182,7 @@ function overlaps(
         return false;
     }
 
-    if (!left.useRowBounds && !right.useRowBounds) {
+    if (!left.hasOrientedRows && !right.hasOrientedRows) {
         return true;
     }
 
@@ -196,7 +198,7 @@ export function getVisibleLabelIndexes(candidates: LabelCandidate[], padding: nu
         .map((candidate) => ({
             ...candidate,
             rectangles: candidate.rectangles ?? [getBoundsRectangle(candidate.bounds)],
-            useRowBounds: candidate.rectangles !== undefined,
+            hasOrientedRows: candidate.rectangles !== undefined,
         }))
         .sort((left, right) => left.position - right.position);
     const prioritized =

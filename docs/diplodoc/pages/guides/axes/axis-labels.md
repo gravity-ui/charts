@@ -33,7 +33,7 @@ The following example applies custom font sizes to both axes:
 
 Use `ticks.values` to choose the tick positions. On a datetime axis, provide Unix timestamps in milliseconds. Explicit ticks are not thinned automatically. Collision detection can hide overlapping labels while keeping their tick marks and grid lines; the first and last labels take priority.
 
-Configure `labels.rotation` to keep a fixed angle, or enable `labels.autoRotation` to let the X axis choose between horizontal labels and −45°. Rotation does not disable collision detection. For rotated SVG labels, the check uses the text rows at their actual angle rather than their enclosing horizontal rectangles. `labels.padding` controls the extra space between labels.
+Configure `labels.rotation` to keep a fixed angle, or enable `labels.autoRotation` to let the X axis choose between horizontal labels and −45°. Rotation does not disable collision detection. `labels.padding` reserves space on each side of a label when checking for overlaps.
 
 ```javascript
 xAxis: {
@@ -42,7 +42,6 @@ xAxis: {
   labels: {
     dateFormat: 'D MMMM',
     rotation: -45,
-    style: { fontSize: '11px' },
   },
 }
 ```

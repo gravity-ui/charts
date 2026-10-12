@@ -48,11 +48,26 @@ export async function getAxes(props: UseAxesProps) {
     const axesWidth = getWidthOccupiedByYAxis({preparedAxis: estimatedPreparedYAxis});
     const estimatedBoundsWidth =
         width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right);
+    const leftOverflow =
+        getWidthOccupiedByYAxis({
+            preparedAxis: estimatedPreparedYAxis.filter((axis) => axis.position === 'left'),
+        }) +
+        (preparedLegend?.enabled && preparedLegend.position === 'left'
+            ? (legendConfig?.width ?? 0) + preparedLegend.margin
+            : 0);
+    const rightOverflow =
+        getWidthOccupiedByYAxis({
+            preparedAxis: estimatedPreparedYAxis.filter((axis) => axis.position === 'right'),
+        }) +
+        (preparedLegend?.enabled && preparedLegend.position === 'right'
+            ? (legendConfig?.width ?? 0) + preparedLegend.margin
+            : 0);
     const preparedXAxis = await getPreparedXAxis({
         xAxis,
         width,
         boundsWidth: estimatedBoundsWidth,
         seriesData,
+        labelBounds: {leftOverflow, rightOverflow},
     });
 
     let estimatedBoundsHeight = boundsHeight ?? height;

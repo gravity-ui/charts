@@ -9,7 +9,6 @@ const tickValues = Array.from(
 );
 
 const data: ChartData = {
-    legend: {enabled: false},
     series: {
         data: [
             {
@@ -21,15 +20,10 @@ const data: ChartData = {
     },
     xAxis: {
         type: 'datetime',
-        min: tickValues[0],
-        max: tickValues[tickValues.length - 1],
-        startOnTick: false,
-        endOnTick: false,
         ticks: {values: tickValues},
         labels: {
             dateFormat: 'D MMMM',
             rotation: -45,
-            style: {fontSize: '11px'},
         },
     },
     yAxis: [{title: {text: 'Value'}}],
