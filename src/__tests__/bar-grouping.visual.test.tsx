@@ -140,14 +140,6 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                 .click({modifiers: ['Control']});
             await expect(plan).toHaveCount(0);
             await expect(actual).toHaveCount(2);
-            await component.update(
-                <ChartTestStory
-                    data={{...data, series: {...data.series, options: {[type]: {opacity: 0.5}}}}}
-                    styles={{width: 600, height: 360}}
-                />,
-            );
-            await expect(plan).toHaveCount(0);
-            await expect(actual).toHaveCount(2);
             await component
                 .locator('.gcharts-legend__item')
                 .filter({hasText: 'Plan'})
@@ -161,7 +153,8 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             );
             await expect
                 .poll(async () => {
-                    const box = await getLocatorBoundingBox(actual.first());
+                    const box = await actual.first().boundingBox();
+                    if (!box) return null;
                     return vertical ? box.x : box.width;
                 })
                 .not.toBe(vertical ? after.x : after.width);

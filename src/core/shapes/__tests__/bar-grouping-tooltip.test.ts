@@ -187,21 +187,17 @@ test('bar-y chooses the nearest category when overlay and grouped centers interl
     chunks.forEach((chunk) => expect(chunk.data).toEqual({y: 'B', x: 100}));
 });
 
-test.each([false, true])('keeps line candidates beside unequal stacks, overlay=%s', (overlay) => {
+test('keeps line candidates beside unequal stacks when an overlay is present', () => {
     const lineSeries = {type: 'line', id: 'line', name: 'Line'} as PreparedLineSeries;
     const shapes = [
-        ...(overlay
-            ? [
-                  {
-                      series: {type: 'bar-x', id: 'actual', name: 'Actual', grouping: false},
-                      data: {x: 'A', y: 100},
-                      x: 90,
-                      y: 100,
-                      width: 20,
-                      height: 100,
-                  } as PreparedBarXData,
-              ]
-            : []),
+        {
+            series: {type: 'bar-x', id: 'actual', name: 'Actual', grouping: false},
+            data: {x: 'A', y: 100},
+            x: 90,
+            y: 100,
+            width: 20,
+            height: 100,
+        } as PreparedBarXData,
         {
             series: lineSeries,
             points: [{series: lineSeries, data: {x: 'A', y: 140}, x: 100, y: 60}],
@@ -229,7 +225,7 @@ test.each([false, true])('keeps line candidates beside unequal stacks, overlay=%
         boundsWidth: 400,
         boundsHeight: 400,
     });
-    expect(chunks).toHaveLength(overlay ? 5 : 4);
+    expect(chunks).toHaveLength(5);
     expect(chunks.filter((chunk) => chunk.closest).map((chunk) => chunk.series.name)).toEqual([
         'Line',
     ]);

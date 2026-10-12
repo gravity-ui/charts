@@ -1,7 +1,6 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import groupBy from 'lodash/groupBy';
 import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE} from '~core/constants';
@@ -132,31 +131,6 @@ type ChartState = {
     preparedTitle: PreparedTitle | undefined;
 };
 
-function reconcileLegendSelection(
-    selected: string[],
-    previousSeries: PreparedSeries[],
-    nextSeries: PreparedSeries[],
-) {
-    const selectedIds = new Set(selected);
-    const previousIds = new Set(previousSeries.map((series) => series.legend.groupId));
-    const previousByIdentity = groupBy(previousSeries, (series) =>
-        JSON.stringify([series.type, series.name]),
-    );
-    return [
-        ...new Set(
-            nextSeries
-                .filter((series) => {
-                    const previous =
-                        previousByIdentity[JSON.stringify([series.type, series.name])]?.shift();
-                    if (previousIds.has(series.legend.groupId))
-                        return selectedIds.has(series.legend.groupId);
-                    return previous ? selectedIds.has(previous.legend.groupId) : series.visible;
-                })
-                .map((series) => series.legend.groupId),
-        ),
-    ];
-}
-
 export function useChartInnerProps(props: Props) {
     const {
         clipPathId,
@@ -237,16 +211,8 @@ export function useChartInnerProps(props: Props) {
                 allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];
             }
 
-            const nextSelectedLegendItems =
-                chartDataChanged && selectedLegendItems !== null
-                    ? reconcileLegendSelection(
-                          selectedLegendItems,
-                          prevStateValue.current?.allPreparedSeries ?? [],
-                          allPreparedSeries,
-                      )
-                    : selectedLegendItems;
             const nextActiveLegendItems =
-                nextSelectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
+                selectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
             const previousActiveLegendItems = prevStateValue.current?.activeLegendItems;
             const activeLegendItems =
                 previousActiveLegendItems &&
@@ -415,9 +381,6 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
-                if (!isEqual(selectedLegendItems, nextSelectedLegendItems)) {
-                    setSelectedLegendItems(nextSelectedLegendItems);
-                }
                 gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);

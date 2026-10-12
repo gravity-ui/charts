@@ -33,7 +33,7 @@ function getDomainDataForStackedSeries(
         const negativeValues: Record<string, number> = {};
 
         seriesStack.forEach((singleSeries) => {
-            const data = new Map<string, {positive?: number; negative?: number}>();
+            const data = new Map();
             singleSeries.data.forEach((point) => {
                 const keyValue = point[keyAttr];
                 if (keyValue === null) {
@@ -47,19 +47,20 @@ function getDomainDataForStackedSeries(
                     value = point[valueAttr] as number;
                 }
 
-                const extremes = data.get(key) ?? {};
-                if (value >= 0) extremes.positive = Math.max(value, extremes.positive ?? 0);
-                if (value < 0) extremes.negative = Math.min(value, extremes.negative ?? 0);
-                data.set(key, extremes);
-            });
-
-            Array.from(data).forEach(([key, {positive, negative}]) => {
-                if (positive !== undefined) {
-                    positiveValues[key] = (positiveValues[key] || 0) + positive;
+                if (data.has(key)) {
+                    value = Math.max(value, data.get(key));
                 }
 
-                if (negative !== undefined) {
-                    negativeValues[key] = (negativeValues[key] || 0) + negative;
+                data.set(key, value);
+            });
+
+            Array.from(data).forEach(([key, value]) => {
+                if (value >= 0) {
+                    positiveValues[key] = (positiveValues[key] || 0) + value;
+                }
+
+                if (value < 0) {
+                    negativeValues[key] = (negativeValues[key] || 0) + value;
                 }
             });
         });
