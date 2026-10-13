@@ -17,6 +17,7 @@ export interface PointData {
     series: PreparedLineSeries;
     x: number | null;
     y: number | null;
+    clipped?: boolean;
 }
 export type MarkerPointData = PointData & {y: number; x: number};
 

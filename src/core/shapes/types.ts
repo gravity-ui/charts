@@ -1,6 +1,6 @@
 import type {HtmlItem, LabelData} from '../../types';
 import type {SymbolType} from '../constants';
-import type {AnnotationAnchor} from '../series/types';
+import type {AnnotationAnchor, PreparedHaloOptions} from '../series/types';
 import type {GradientBBox, GradientCoords} from '../utils/gradient';
 
 /** SVG label data without a required series reference. */
@@ -34,6 +34,8 @@ export interface MarkerItem {
     clipped: boolean;
     series: {id: string};
     data: unknown;
+    halo?: PreparedHaloOptions;
+    renderSymbol?: boolean;
 }
 
 export interface HoveredShapeData {
