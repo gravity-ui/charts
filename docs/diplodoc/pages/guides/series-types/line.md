@@ -41,9 +41,9 @@ series: {
 }
 ```
 
-Hover styles apply to both always-visible and hover-only markers. The normal appearance returns when hover moves to another point or leaves the chart. Set `states.hover.enabled: false` or `states.hover.marker.enabled: false` to keep normal markers unchanged on hover. Area and area-range series support the same options under their respective series keys.
+Hover styles apply to both always-visible and hover-only markers. The normal appearance returns when hover moves to another point or leaves the chart. Set `states.hover.enabled: false` to keep always-visible markers unchanged while retaining hover-only markers. Set `states.hover.marker.enabled: false` to disable both marker hover styles and hover-only markers. Area and area-range series support the same options under their respective series keys.
 
-<div data-chart-example="series-types/line"></div>
+<div data-chart-example="series-types/line-markers"></div>
 
 ## Line interpolation
 

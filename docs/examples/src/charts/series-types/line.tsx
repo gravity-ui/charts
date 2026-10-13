@@ -6,15 +6,6 @@ import type {ChartData} from '@gravity-ui/charts';
 const data: ChartData = {
     chart: {zoom: {enabled: true, type: 'x'}},
     series: {
-        options: {
-            line: {
-                states: {
-                    hover: {
-                        marker: {radius: 8, borderColor: '#ffffff', borderWidth: 2},
-                    },
-                },
-            },
-        },
         data: [
             {
                 type: 'line',

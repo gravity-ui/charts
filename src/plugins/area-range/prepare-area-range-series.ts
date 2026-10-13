@@ -55,6 +55,7 @@ export function prepareAreaRangeSeries(
         const hoverMarker = merge(
             {
                 enabled: true,
+                enabledForNormal: seriesOptions?.['area-range']?.states?.hover?.enabled !== false,
                 radius: marker.radius,
                 borderWidth: 1,
                 borderColor: '#ffffff',
@@ -62,8 +63,6 @@ export function prepareAreaRangeSeries(
             },
             seriesOptions?.['area-range']?.states?.hover?.marker,
         );
-        hoverMarker.enabled =
-            seriesOptions?.['area-range']?.states?.hover?.enabled !== false && hoverMarker.enabled;
 
         return {
             type: series.type,

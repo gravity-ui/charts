@@ -209,7 +209,13 @@ interface HoverMarkerSeries {
     marker: {
         states: {
             normal: {enabled: boolean; symbol: `${SymbolType}`};
-            hover: {enabled: boolean; radius: number; borderColor: string; borderWidth: number};
+            hover: {
+                enabled: boolean;
+                enabledForNormal?: boolean;
+                radius: number;
+                borderColor: string;
+                borderWidth: number;
+            };
         };
     };
 }
@@ -221,10 +227,18 @@ export function buildHoverMarkerGetter(
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
-    if (!hoverState.enabled) return () => [];
+    if (!hoverState.enabled || (normalState.enabled && hoverState.enabledForNormal === false)) {
+        return () => [];
+    }
 
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
+        if (
+            hoverState.enabledForNormal === false &&
+            get(p.data, 'marker.states.normal.enabled', false)
+        ) {
+            continue;
+        }
         if (p.x !== null && p.y !== null && !p.hiddenInLine && !isOutsideBounds?.(p.x, p.y)) {
             const dataPoints = pointsByData.get(p.data) ?? [];
             dataPoints.push(p);

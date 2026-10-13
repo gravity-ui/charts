@@ -148,6 +148,44 @@ test.describe('Marker hover styles', () => {
             await expect(symbols).toHaveCount(normalCount);
         });
 
+        test(`${type}: disabled hover preserves point-enabled markers and still shows hover-only markers`, async ({
+            mount,
+            page,
+        }) => {
+            const data = createData(type, {hoverEnabled: false});
+            const options = data.series.options?.[type];
+            if (options) delete options.marker;
+            for (const series of data.series.data) {
+                if (
+                    series.type === 'line' ||
+                    series.type === 'area' ||
+                    series.type === 'area-range'
+                ) {
+                    series.data[0].marker = {states: {normal: {enabled: true}}};
+                    series.data[2].marker = {states: {normal: {enabled: true}}};
+                }
+            }
+            data.tooltip = {enabled: true};
+            const component = await mount(<ChartTestStory data={data} />);
+            const normal = component.locator('.gcharts-marker__symbol[fill="#FF3D64"]');
+            const normalCount = type === 'area-range' ? 8 : 4;
+            const hoverCount = type === 'area-range' ? 4 : 2;
+            const symbols = component.locator('.gcharts-marker__wrapper:visible > path');
+            await expect(symbols).toHaveCount(normalCount);
+            const first = await getLocatorBoundingBox(normal.first());
+            const last = await getLocatorBoundingBox(normal.nth(1));
+            const active = component.locator('.gcharts-marker__symbol[stroke="#ffffff"]');
+
+            await page.mouse.move((first.x + last.x + first.width) / 2, first.y + first.height / 2);
+            await expect(active).toHaveCount(hoverCount);
+            await expect(symbols).toHaveCount(normalCount + hoverCount);
+
+            await page.mouse.move(first.x + first.width / 2, first.y + first.height / 2);
+            await expect(page.locator('.gcharts-tooltip')).toBeVisible();
+            await expect(active).toHaveCount(0);
+            await expect(symbols).toHaveCount(normalCount);
+        });
+
         for (const disabled of ['hover', 'marker'] as const) {
             test(`${type}: disabled ${disabled} preserves permanent markers`, async ({
                 mount,

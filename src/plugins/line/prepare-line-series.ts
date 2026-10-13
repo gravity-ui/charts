@@ -96,13 +96,13 @@ function prepareMarker(series: LineSeries, seriesOptions?: ChartSeriesOptions) {
     );
     const hoveredMarkerDefaultOptions = {
         enabled: true,
+        enabledForNormal: seriesHoverState?.enabled !== false,
         radius: markerNormalState.radius,
         borderWidth: 1,
         borderColor: '#ffffff',
-        halo: DEFAULT_HALO_OPTIONS,
+        halo: {...DEFAULT_HALO_OPTIONS},
     };
     const hoverMarker = merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker);
-    hoverMarker.enabled = seriesHoverState?.enabled !== false && hoverMarker.enabled;
 
     return {
         states: {
