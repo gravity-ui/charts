@@ -59,6 +59,7 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                     ? prepareLegendSymbol(dataItem)
                     : prepareLegendSymbol(series),
                 groupId: dataItem.legend?.groupId ?? getUniqId(),
+                source: dataItem.legend,
                 itemText: dataItem.legend?.itemText ?? dataItem.name,
             },
             cursor: get(series, 'cursor', null),

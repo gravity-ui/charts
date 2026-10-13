@@ -11,6 +11,7 @@ import type {
     BarYSeriesData,
     BarYValueFormat,
     BaseSeries,
+    BaseSeriesLegend,
     BaseTextStyle,
     ChartLegend,
     ChartSeriesRangeSliderOptions,
@@ -192,6 +193,8 @@ type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
     legend: {
         color?: string;
         groupId: string;
+        /** Original series or point legend config, before defaults and ID generation. */
+        source?: Readonly<BaseSeriesLegend>;
         itemText: string;
         enabled: boolean;
         symbol: PreparedLegendSymbol;

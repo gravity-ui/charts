@@ -40,6 +40,115 @@ describe('legend and domain updates', () => {
         };
     }
 
+    test.each([
+        {type: 'bar-x', previousId: 'old', nextId: 'new'},
+        {type: 'pie', previousId: 'old', nextId: 'new'},
+        {type: 'funnel', previousId: 'old', nextId: 'new'},
+        {type: 'bar-x', previousId: 'old', nextId: undefined},
+        {type: 'bar-x', previousId: undefined, nextId: 'new'},
+    ] as const)(
+        '$type legend ID change from $previousId to $nextId creates a new visible item',
+        async ({type, previousId, nextId}) => {
+            function makeData(groupId: string | undefined): ChartData {
+                const item = {name: 'Same', legend: {groupId}};
+                return {
+                    legend: {enabled: true},
+                    series: {
+                        data:
+                            type === 'bar-x'
+                                ? [{type, ...item, data: [{x: 1, y: 40}]}]
+                                : [{type, data: [{...item, value: 40}]}],
+                    },
+                };
+            }
+            const props = getProps(makeData(previousId));
+            const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            const id = result.current.preparedSeries[0].legend.groupId;
+            act(() => result.current.handleLegendItemClick({id, name: 'Same', metaKey: true}));
+            await waitFor(() => expect(result.current.activeLegendItems).toEqual([]));
+
+            const previous = result.current.allPreparedSeries;
+            rerender({...props, data: makeData(nextId)});
+            await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+            expect(result.current.activeLegendItems).toEqual([
+                result.current.preparedSeries[0].legend.groupId,
+            ]);
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([true]);
+        },
+    );
+
+    test('removes stale IDs, preserves surviving selection and uses visibility for new items', async () => {
+        const a = {
+            type: 'bar-x' as const,
+            name: 'A',
+            legend: {groupId: 'a'},
+            data: [{x: 1, y: 40}],
+        };
+        const b = {...a, name: 'B', legend: {groupId: 'b'}};
+        const c = {...a, name: 'C', legend: {groupId: 'c'}};
+        const props = getProps({legend: {enabled: true}, series: {data: [a, b, c]}});
+        const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+        await waitFor(() => expect(result.current.shapesReady).toBe(true));
+        act(() => result.current.handleLegendItemClick({id: 'b', name: 'B', metaKey: true}));
+        await waitFor(() => expect(result.current.activeLegendItems).toEqual(['a', 'c']));
+
+        const previous = result.current.allPreparedSeries;
+        rerender({
+            ...props,
+            data: {
+                legend: {enabled: true},
+                series: {
+                    data: [
+                        {...c, name: 'Renamed C'},
+                        b,
+                        {...a, name: 'D', legend: {groupId: 'd'}},
+                        {...a, name: 'E', legend: {groupId: 'e'}, visible: false},
+                    ],
+                },
+            },
+        });
+        await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+        expect(result.current.activeLegendItems).toEqual(['c', 'd']);
+        expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+            true,
+            false,
+            true,
+            false,
+        ]);
+    });
+
+    test('a completely new dataset is visible after hiding every previous legend item', async () => {
+        const a = {
+            type: 'bar-x' as const,
+            name: 'A',
+            legend: {groupId: 'a'},
+            data: [{x: 1, y: 40}],
+        };
+        const props = getProps({legend: {enabled: true}, series: {data: [a]}});
+        const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+        await waitFor(() => expect(result.current.shapesReady).toBe(true));
+        act(() => result.current.handleLegendItemClick({id: 'a', name: 'A', metaKey: true}));
+        await waitFor(() => expect(result.current.activeLegendItems).toEqual([]));
+
+        const previous = result.current.allPreparedSeries;
+        rerender({
+            ...props,
+            data: {
+                legend: {enabled: true},
+                series: {
+                    data: [
+                        {...a, name: 'B', legend: {groupId: 'b'}},
+                        {...a, name: 'C', legend: {groupId: 'c'}},
+                    ],
+                },
+            },
+        });
+        await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+        expect(result.current.activeLegendItems).toEqual(['b', 'c']);
+        expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([true, true]);
+    });
+
     test.each([0, 1])(
         'reserves stable IDs when duplicate names reorder (hidden index %i)',
         async (hiddenIndex) => {
@@ -178,7 +287,7 @@ describe('legend and domain updates', () => {
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
     });
 
-    test.each(['bar-x', 'pie'] as const)(
+    test.each(['bar-x', 'pie', 'funnel'] as const)(
         'preserves %s legend selection when config/data changes regenerate group IDs',
         async (type) => {
             function makeData(names: string[], value: number): ChartData {
@@ -186,13 +295,13 @@ describe('legend and domain updates', () => {
                     legend: {enabled: true},
                     series: {
                         data:
-                            type === 'pie'
-                                ? [{type, data: names.map((name) => ({name, value}))}]
-                                : names.map((name) => ({
+                            type === 'bar-x'
+                                ? names.map((name) => ({
                                       type,
                                       name,
                                       data: [{x: 1, y: value}],
-                                  })),
+                                  }))
+                                : [{type, data: names.map((name) => ({name, value}))}],
                     },
                 };
             }

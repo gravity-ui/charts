@@ -151,6 +151,7 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLineLegendSymbol(series, seriesOptions),
                 groupId: series.legend?.groupId ?? getUniqId(),
+                source: series.legend,
                 itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),

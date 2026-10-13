@@ -101,4 +101,4 @@ The `id` is the legend group's ID. Set `series.legend.groupId` explicitly if the
 
 ## Selection across updates
 
-The chart preserves legend selection when data or configuration changes. Items are matched by `groupId` first, then by series type and name in occurrence order. Set stable IDs when names repeat or change; for pie and funnel, set IDs on the data points. New items use their configured `visible` value (default `true`). Series with `legend.enabled: false` keep their configured visibility independently of legend selection.
+The chart preserves legend selection when data or configuration changes. Items with an explicit `groupId` are matched only by that ID; changing it creates a new legend item. Items without an explicit ID are matched by series type and name in occurrence order. Set stable IDs when names repeat or change; for pie and funnel, set IDs on the data points. Removed items are discarded from the selection. New items use their configured `visible` value (default `true`). Series with `legend.enabled: false` keep their configured visibility independently of legend selection.

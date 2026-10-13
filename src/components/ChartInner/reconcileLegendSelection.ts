@@ -1,3 +1,5 @@
+import isNil from 'lodash/isNil';
+
 import type {PreparedSeries} from '~core/series/types';
 
 interface IdentityQueue {
@@ -21,7 +23,7 @@ export function reconcileLegendSelection(
         if (!series.legend.enabled) continue;
         previousIds.add(series.legend.groupId);
         // Reserve surviving groups before matching regenerated IDs by name.
-        if (nextIds.has(series.legend.groupId)) continue;
+        if (nextIds.has(series.legend.groupId) || !isNil(series.legend.source?.groupId)) continue;
         const identity = JSON.stringify([series.type, series.name]);
         let queue = previousByIdentity.get(identity);
         if (!queue) {
@@ -37,10 +39,12 @@ export function reconcileLegendSelection(
         let visible: boolean;
         if (previousIds.has(series.legend.groupId)) {
             visible = selectedIds.has(series.legend.groupId);
-        } else {
+        } else if (isNil(series.legend.source?.groupId)) {
             const queue = previousByIdentity.get(JSON.stringify([series.type, series.name]));
             const previous = queue?.series[queue.index++];
             visible = previous ? selectedIds.has(previous.legend.groupId) : series.visible;
+        } else {
+            visible = series.visible;
         }
         if (visible) result.add(series.legend.groupId);
     }
