@@ -116,7 +116,6 @@ test.describe('Y-axis', () => {
     test('rotated explicit Y labels preserve separate text near the top edge', async ({mount}) => {
         const chartData: ChartData = {
             chart: {margin: {top: 40}},
-            legend: {enabled: false},
             series: {
                 data: [
                     {

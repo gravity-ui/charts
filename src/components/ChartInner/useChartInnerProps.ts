@@ -4,6 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE} from '~core/constants';
+import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import {getPreparedSeries} from '~core/series';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
@@ -14,7 +15,6 @@ import {
     getEffectiveXRange,
     getOnlyVisibleSeries,
     getSortedSeriesData,
-    getYAxisWidth,
     getZoomedSeriesData,
 } from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
@@ -71,40 +71,6 @@ function getBoundsOffsetTop({
             ? (legendConfig?.height ?? 0) + preparedLegend.margin
             : 0)
     );
-}
-
-function getBoundsOffsetLeft(args: {
-    chartMarginLeft: number;
-    preparedLegend: PreparedLegend | null;
-    yAxis: PreparedYAxis[];
-    getYAxisWidth: (axis: PreparedYAxis) => number;
-    legendConfig: LegendConfig | undefined;
-}): number {
-    const {
-        chartMarginLeft,
-        preparedLegend,
-        yAxis,
-        getYAxisWidth: getAxisWidth,
-        legendConfig,
-    } = args;
-
-    const legendOffset =
-        preparedLegend?.enabled && preparedLegend.position === 'left'
-            ? (legendConfig?.width ?? 0) + preparedLegend.margin
-            : 0;
-
-    const leftAxisWidth = yAxis.reduce((acc, axis) => {
-        if (axis.position !== 'left') {
-            return acc;
-        }
-        const axisWidth = getAxisWidth(axis);
-        if (acc < axisWidth) {
-            acc = axisWidth;
-        }
-        return acc;
-    }, 0);
-
-    return chartMarginLeft + legendOffset + leftAxisWidth;
 }
 
 type ChartState = {
@@ -343,13 +309,9 @@ export function useChartInnerProps(props: Props) {
             });
 
             // We need to calculate the width of each left axis because the first axis can be hidden
-            const boundsOffsetLeft = getBoundsOffsetLeft({
-                chartMarginLeft: preparedChart.margin.left,
-                preparedLegend,
-                yAxis,
-                getYAxisWidth,
-                legendConfig,
-            });
+            const boundsOffsetLeft =
+                preparedChart.margin.left +
+                getHorizontalAxisOffsets({preparedYAxis: yAxis, preparedLegend, legendConfig}).left;
 
             const hasVisibleGradient =
                 getOnlyVisibleSeries(visiblePreparedSeries).some(hasGradient);
