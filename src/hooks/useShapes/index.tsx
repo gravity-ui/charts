@@ -155,7 +155,7 @@ export async function getShapes(args: Args) {
     } = args;
 
     if (boundsWidth <= 0 || boundsHeight <= 0) {
-        return {shapes: [], shapesData: []};
+        return {shapes: [], shapesData: [], layerIndexes: new Map<string, number>()};
     }
 
     let visibleSeries = getOnlyVisibleSeries(series);
@@ -172,6 +172,11 @@ export async function getShapes(args: Args) {
         });
     }
     const seriesLayers = getSeriesLayers(visibleSeries, (item) => item.id);
+    const layerIndexes = new Map(
+        seriesLayers.flatMap(({series: items}, index) =>
+            items.map((item) => [item.id, index] as const),
+        ),
+    );
 
     const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
@@ -247,7 +252,7 @@ export async function getShapes(args: Args) {
             );
         }
     }
-    return {shapes, shapesData};
+    return {shapes, shapesData, layerIndexes};
 }
 
 export const useShapes = (args: Args) => {

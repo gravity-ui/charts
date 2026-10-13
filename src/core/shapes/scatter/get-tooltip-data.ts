@@ -2,6 +2,7 @@ import {Delaunay} from 'd3-delaunay';
 
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
+import {getMarkerBounds} from './cluster';
 import type {PreparedScatterData} from './types';
 
 export function getTooltipData(
@@ -21,6 +22,14 @@ export function getTooltipData(
         return {chunks: []};
     }
 
+    // Delaunay finds the nearest marker center, which matches the nearest edge
+    // up to the difference of marker sizes.
+    const {x, y} = closestPoint.point;
+    const distance = Math.max(
+        0,
+        Math.hypot(pointerX - x, pointerY - y) - getMarkerBounds(closestPoint).radius,
+    );
+
     return {
         chunks: [
             {
@@ -29,6 +38,7 @@ export function getTooltipData(
                 displayPosition: [closestPoint.point.x, closestPoint.point.y],
                 series: closestPoint.point.series,
                 closest: true,
+                distance,
             },
         ],
     };

@@ -1,8 +1,12 @@
 import {bisector, sort} from 'd3-array';
 
-import type {TooltipDataChunk} from '../../../types';
-import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
-import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
+import type {BarYSeries} from '../../../types';
+import {getDistanceToRect, isPointTooltipEnabled} from '../../utils/tooltip-helpers';
+import type {
+    GetTooltipDataArgs,
+    GetTooltipDataResult,
+    TooltipCandidate,
+} from '../../utils/tooltip-helpers';
 
 import type {PreparedBarYData} from './types';
 
@@ -44,11 +48,12 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     }
 
     return {
-        chunks: selectedPoints.map((p) => ({
+        chunks: selectedPoints.map<TooltipCandidate>((p) => ({
             data: p.data,
             percentage: p.percentage,
-            series: p.series,
+            series: p.series as BarYSeries,
             closest: p.x === closestPointXValue && p.y === closestYPoint.y,
-        })) as TooltipDataChunk[],
+            distance: getDistanceToRect({point: position, ...p}),
+        })),
     };
 }

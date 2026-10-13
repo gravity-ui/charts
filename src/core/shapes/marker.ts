@@ -21,6 +21,19 @@ export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): stri
     return point.fill ?? point.color ?? seriesColor;
 }
 
+/** Pixel distance from the pointer to the nearest visible marker; `Infinity` without markers. */
+export function getDistanceToMarkers(markers: MarkerItem[], point: [number, number]): number {
+    const [pointerX, pointerY] = point;
+    let distance = Infinity;
+    for (const m of markers) {
+        if (!m.clipped) {
+            const radius = m.radius + m.strokeWidth / 2;
+            distance = Math.min(distance, Math.hypot(pointerX - m.cx, pointerY - m.cy) - radius);
+        }
+    }
+    return Math.max(0, distance);
+}
+
 export interface BaseMarkerData {
     point: {
         x: number;

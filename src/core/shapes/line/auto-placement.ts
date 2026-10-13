@@ -84,7 +84,7 @@ export interface PlacementSegment {
 }
 
 /** Mirrors the d3 line `defined()` predicate from the line renderer */
-function isDrawnPoint(p: PointData): p is PointData & {x: number; y: number} {
+export function isDrawnPoint(p: PointData): p is PointData & {x: number; y: number} {
     return p.x !== null && p.y !== null && !p.hiddenInLine;
 }
 

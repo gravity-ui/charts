@@ -31,6 +31,8 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedXRangeData>): Ge
             data: d.data,
             series: d.series as unknown as XRangeSeries,
             closest: d === closestByX,
+            // All chunks contain the pointer.
+            distance: 0,
         })),
     };
 }

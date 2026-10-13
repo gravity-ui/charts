@@ -73,6 +73,8 @@ function getBoundsOffsetTop({
     );
 }
 
+const EMPTY_LAYER_INDEXES = new Map<string, number>();
+
 type ChartState = {
     gradientReference?: GradientLayoutReference;
     allPreparedSeries: PreparedSeries[];
@@ -80,6 +82,7 @@ type ChartState = {
     boundsOffsetLeft: number;
     boundsOffsetTop: number;
     boundsWidth: number;
+    layerIndexes: Map<string, number>;
     legendConfig: LegendConfig;
     legendItems: LegendItem[][];
     preparedLegend: PreparedLegend;
@@ -284,7 +287,7 @@ export function useChartInnerProps(props: Props) {
                 return gradientReference.data;
             };
 
-            const {shapes, shapesData} = await getShapes({
+            const {shapes, shapesData, layerIndexes} = await getShapes({
                 boundsWidth,
                 boundsHeight,
                 dispatcher,
@@ -325,6 +328,7 @@ export function useChartInnerProps(props: Props) {
                 boundsOffsetLeft,
                 boundsOffsetTop,
                 boundsWidth,
+                layerIndexes,
                 legendConfig,
                 legendItems,
                 preparedLegend,
@@ -448,6 +452,7 @@ export function useChartInnerProps(props: Props) {
         xAxis,
         yAxis,
         shapesData: chartState?.shapesData ?? [],
+        layerIndexes: chartState?.layerIndexes ?? EMPTY_LAYER_INDEXES,
         shapesReady: Boolean(chartState),
         handleLegendItemClick,
         preparedTitle: chartState?.preparedTitle,

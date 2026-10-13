@@ -30,6 +30,8 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTo
                 percentage: closestPoint.data.percentage,
                 series: closestPoint.data.series,
                 closest: true,
+                // The chunk is found only when the pointer is inside the shape.
+                distance: 0,
             },
         ],
     };

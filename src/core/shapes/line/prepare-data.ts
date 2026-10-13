@@ -25,6 +25,15 @@ function isLabeledLineLayer(layer: ShapeLabels): boolean {
     return layerSeries?.type === 'line' && layerSeries.dataLabels.enabled;
 }
 
+function getLineCurveFactory(
+    series: PreparedLineSeries,
+    getCurveFactory: Args['getCurveFactory'],
+): CurveFactory | undefined {
+    return series.interpolation && series.interpolation.type !== 'linear'
+        ? getCurveFactory?.(series.interpolation)
+        : undefined;
+}
+
 interface Args {
     series: PreparedLineSeries[];
     seriesOptions?: PreparedSeriesOptions;
@@ -78,6 +87,7 @@ export function projectLineData(args: Args): PreparedLineData[] {
             points,
             gradientBBox: s.gradient ? getGradientBBox(points) : null,
             markers: [],
+            segments: [],
             annotations: [],
             getHoverMarkers: () => [],
             svgLabels: [],
@@ -171,6 +181,15 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
             });
         }
         item.getHoverMarkers = buildHoverMarkerGetter(points, s);
+        if (!isRangeSlider) {
+            item.segments = getLineSegments([
+                {
+                    curveFactory: getLineCurveFactory(s, getCurveFactory),
+                    lineWidth: item.lineWidth,
+                    points,
+                },
+            ]);
+        }
     }
 
     const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);
@@ -234,15 +253,16 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
             }
 
             if (needSegments) {
-                segments = getLineSegments(
-                    seriesWithPoints.map((d) => ({
-                        curveFactory:
-                            d.series.interpolation && d.series.interpolation.type !== 'linear'
-                                ? getCurveFactory?.(d.series.interpolation)
-                                : undefined,
-                        lineWidth: d.series.lineWidth,
-                        points: d.points,
-                    })),
+                segments = seriesWithPoints.flatMap(
+                    (d) =>
+                        ownData.get(d.series.id)?.segments ??
+                        getLineSegments([
+                            {
+                                curveFactory: getLineCurveFactory(d.series, getCurveFactory),
+                                lineWidth: d.series.lineWidth,
+                                points: d.points,
+                            },
+                        ]),
                 );
             }
 

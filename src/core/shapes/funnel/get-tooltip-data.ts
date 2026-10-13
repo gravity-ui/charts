@@ -1,3 +1,4 @@
+import {getDistanceToPolygon} from '../../utils/tooltip-helpers';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
 import type {PreparedFunnelData} from './types';
@@ -22,5 +23,14 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedFunnelData>): Ge
         }
     }
 
-    return {chunks: [{data: nearest.data, series: nearest.series, closest: true}]};
+    return {
+        chunks: [
+            {
+                data: nearest.data,
+                series: nearest.series,
+                closest: true,
+                distance: getDistanceToPolygon({point: position, vertices: nearest.points}),
+            },
+        ],
+    };
 }

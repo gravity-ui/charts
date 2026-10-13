@@ -40,7 +40,7 @@ function getStrokeOutset(symbolType: `${SymbolType}`, borderWidth: number) {
     }
 }
 
-function getMarkerBounds(marker: PreparedScatterData) {
+export function getMarkerBounds(marker: PreparedScatterData) {
     const {data, series} = marker.point;
     const radius = data.radius ?? series.marker.states.normal.radius;
     const borderWidth = series.marker.states.normal.borderWidth;
