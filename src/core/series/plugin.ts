@@ -171,8 +171,9 @@ export interface SeriesPlugin<
     getAxisDomainValues?: SeriesAxisDomainValues<T>;
     /**
      * Selects points contributing to stacked axis domains from a raw or prepared series.
-     * Defaults to all points. Use the same duplicate-point policy as shape preparation;
-     * contributions of each sign are summed separately. Must not mutate the series or its data.
+     * Defaults to all points; contributions of each sign are summed separately.
+     * Receives no axis context, so duplicate detection uses raw coordinates and cannot
+     * match category indices to category names. Must not mutate the series or its data.
      */
     getStackedDomainData?(series: T): T['data'];
     /** Computes shape data (geometry, labels, markers) once per render. */

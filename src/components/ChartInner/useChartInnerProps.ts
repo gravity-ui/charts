@@ -225,8 +225,10 @@ export function useChartInnerProps(props: Props) {
                           allPreparedSeries,
                       )
                     : selectedLegendItems;
+            const enabledLegendItems = new Set(getAllLegendItems(allPreparedSeries));
             const nextActiveLegendItems =
-                nextSelectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
+                nextSelectedLegendItems?.filter((id) => enabledLegendItems.has(id)) ??
+                getActiveLegendItems(allPreparedSeries);
             const previousActiveLegendItems = prevStateValue.current?.activeLegendItems;
             const activeLegendItems =
                 previousActiveLegendItems &&
@@ -455,7 +457,19 @@ export function useChartInnerProps(props: Props) {
             }
 
             currentRunRef.current++;
-            selectedLegendItemsRef.current = nextActiveLegendItems;
+            // Keep disabled items' selection while clicks affect only the displayed legend.
+            const selected = selectedLegendItemsRef.current;
+            const disabledSelectedItems = preparedSeries
+                .filter(
+                    (series) =>
+                        !series.legend.enabled &&
+                        !allItems.includes(series.legend.groupId) &&
+                        (selected ? selected.includes(series.legend.groupId) : series.visible),
+                )
+                .map((series) => series.legend.groupId);
+            selectedLegendItemsRef.current = [
+                ...new Set([...nextActiveLegendItems, ...disabledSelectedItems]),
+            ];
             updateLegendSelectionVersion();
         },
         [preparedSeries, activeLegendItems],

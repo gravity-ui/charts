@@ -13,14 +13,11 @@ export function reconcileLegendSelection(
     nextSeries: PreparedSeries[],
 ): string[] {
     const selectedIds = new Set(selected);
-    const nextIds = new Set(
-        nextSeries.filter((series) => series.legend.enabled).map((series) => series.legend.groupId),
-    );
+    const nextIds = new Set(nextSeries.map((series) => series.legend.groupId));
     const previousIds = new Set<string>();
     const previousByIdentity = new Map<string, IdentityQueue>();
 
     for (const series of previousSeries) {
-        if (!series.legend.enabled) continue;
         previousIds.add(series.legend.groupId);
         // Reserve surviving groups before matching regenerated IDs by name.
         if (nextIds.has(series.legend.groupId) || !isNil(series.legend.source?.groupId)) continue;
@@ -35,7 +32,6 @@ export function reconcileLegendSelection(
 
     const result = new Set<string>();
     for (const series of nextSeries) {
-        if (!series.legend.enabled) continue;
         let visible: boolean;
         if (previousIds.has(series.legend.groupId)) {
             visible = selectedIds.has(series.legend.groupId);

@@ -40,6 +40,103 @@ describe('legend and domain updates', () => {
         };
     }
 
+    test.each([true, false])(
+        'legend interaction overrides later visibility changes (explicit IDs: %s)',
+        async (explicitIds) => {
+            function makeData(visible: boolean): ChartData {
+                return {
+                    legend: {enabled: true},
+                    series: {
+                        data: ['A', 'B'].map((name) => ({
+                            type: 'bar-x',
+                            name,
+                            visible,
+                            legend: explicitIds ? {groupId: name} : undefined,
+                            data: [{x: 1, y: 40}],
+                        })),
+                    },
+                };
+            }
+            const props = getProps(makeData(true));
+            const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+
+            async function update(visible: boolean) {
+                const previous = result.current.allPreparedSeries;
+                rerender({...props, data: makeData(visible)});
+                await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+            }
+
+            await update(false);
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+                false,
+                false,
+            ]);
+            const id = result.current.preparedSeries[0].legend.groupId;
+            act(() => result.current.handleLegendItemClick({id, name: 'A', metaKey: true}));
+            await waitFor(() => expect(result.current.activeLegendItems).toEqual([id]));
+            await update(true);
+            await update(false);
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+                true,
+                false,
+            ]);
+        },
+    );
+
+    test.each(['global', 'series'] as const)(
+        'restores selection after disabling the %s legend and updating data',
+        async (scope) => {
+            function makeData(enabled: boolean, value: number): ChartData {
+                return {
+                    legend: {enabled: scope === 'global' ? enabled : true},
+                    series: {
+                        data: ['A', 'B'].map((name) => ({
+                            type: 'bar-x',
+                            name,
+                            legend: {
+                                groupId: scope === 'global' ? name : undefined,
+                                enabled: scope === 'series' && name === 'A' ? enabled : undefined,
+                            },
+                            data: [{x: 1, y: value}],
+                        })),
+                    },
+                };
+            }
+            const props = getProps(makeData(true, 40));
+            const {result, rerender} = renderHook(useChartInnerProps, {initialProps: props});
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            const id = result.current.preparedSeries[0].legend.groupId;
+            act(() => result.current.handleLegendItemClick({id, name: 'A', metaKey: true}));
+            await waitFor(() => expect(result.current.preparedSeries[0].visible).toBe(false));
+
+            async function update(enabled: boolean, value: number) {
+                const previous = result.current.allPreparedSeries;
+                rerender({...props, data: makeData(enabled, value)});
+                await waitFor(() => expect(result.current.allPreparedSeries).not.toBe(previous));
+            }
+
+            await update(false, 40);
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+                true,
+                true,
+            ]);
+            await update(false, 50);
+            if (scope === 'series') {
+                const bId = result.current.preparedSeries[1].legend.groupId;
+                act(() =>
+                    result.current.handleLegendItemClick({id: bId, name: 'B', metaKey: true}),
+                );
+                await waitFor(() => expect(result.current.activeLegendItems).toEqual([]));
+            }
+            await update(true, 50);
+            expect(result.current.preparedSeries.map((series) => series.visible)).toEqual([
+                false,
+                scope === 'global',
+            ]);
+        },
+    );
+
     test.each([
         {type: 'bar-x', previousId: 'old', nextId: 'new'},
         {type: 'pie', previousId: 'old', nextId: 'new'},
