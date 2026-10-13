@@ -231,6 +231,8 @@ export const prepareBarXData = async (args: {
         yAxis.filter((axis) => axis.visible && axis.grid.enabled).map((axis) => axis.plotIndex),
     );
 
+    const categoryDomain =
+        xAxis.type === 'category' ? new Set((xScale as ScaleBand<string>).domain()) : undefined;
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
         const data = dataByPlots.get(plotIndexes[plotDataIndex]) ?? {};
@@ -238,6 +240,21 @@ export const prepareBarXData = async (args: {
 
         for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
             const [xValue, val] = groupedData[groupedDataIndex];
+            let xCenter;
+
+            if (xAxis.type === 'category') {
+                const xBandScale = xScale as ScaleBand<string>;
+
+                if (!categoryDomain?.has(xValue)) {
+                    continue;
+                }
+
+                xCenter = (xBandScale(xValue) || 0) + bandSize / 2;
+            } else {
+                const scale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+                xCenter = scale(Number(xValue));
+            }
+
             const stacks = Object.values(val);
             const groupedCount = stacks.filter((items) =>
                 items.some((item) => item.series.grouping !== false),
@@ -281,24 +298,6 @@ export const prepareBarXData = async (args: {
 
                     const seriesYAxis = yAxis[yAxisIndex];
                     const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
-
-                    let xCenter;
-
-                    if (xAxis.type === 'category') {
-                        const xBandScale = xScale as ScaleBand<string>;
-                        const xBandScaleDomain = xBandScale.domain();
-
-                        if (xBandScaleDomain.indexOf(xValue as string) === -1) {
-                            continue;
-                        }
-
-                        xCenter = (xBandScale(xValue as string) || 0) + bandSize / 2;
-                    } else {
-                        const scale = xScale as
-                            | ScaleLinear<number, number>
-                            | ScaleTime<number, number>;
-                        xCenter = scale(Number(xValue));
-                    }
 
                     const x = overlay
                         ? xCenter - width / 2

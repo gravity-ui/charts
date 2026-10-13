@@ -12,11 +12,7 @@ Set `grouping: false` to overlay bars at the category center without taking up g
 
 Later series in `series.data` cover earlier ones, including their borders. The example places Plan before Actual to draw Actual on top.
 
-{% note warning "Bar thickness" %}
-
-Thickness is controlled by the shared `series.options['bar-y'].barPadding` and `barMaxWidth` options, so Plan and Actual have the same thickness. Independent thickness requires [per-series padding (#761)](https://github.com/gravity-ui/charts/issues/761); this example will then be updated to show a wider Plan behind a narrower Actual.
-
-{% endnote %}
+Bar thickness is shared through `series.options['bar-y'].barPadding` and `barMaxWidth`. Per-series thickness is tracked in [#761](https://github.com/gravity-ui/charts/issues/761).
 
 <div data-chart-example="series-types/bar-y-overlay"></div>
 

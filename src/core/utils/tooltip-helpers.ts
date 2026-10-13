@@ -14,8 +14,8 @@ export interface ShapePoint {
     series: ChartSeries;
     subTotal?: number;
     sourceX?: number;
-    /** X bounds and paint order for rectangle hit testing; Y bounds are y0/y1. */
-    hitTest?: {x0: number; x1: number; priority: number};
+    /** Distance to the painted contour and paint order among these shapes. */
+    hitTest?: {distance: number; priority: number};
 }
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
@@ -54,25 +54,35 @@ export function getClosestYIndex(items: ShapePoint[], y: number) {
 }
 
 function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
-    let winner: ShapePoint | undefined;
+    let shapeWinner: ShapePoint | undefined;
+    let candidates: ShapePoint[] = [];
     let closestDistance = Infinity;
     for (const point of points) {
-        const x0 = point.hitTest?.x0 ?? point.sourceX ?? point.x;
-        const x1 = point.hitTest?.x1 ?? point.sourceX ?? point.x;
-        const distance = Math.hypot(
-            Math.max(x0 - x, x - x1, 0),
-            Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
-        );
-        if (
-            distance < closestDistance ||
-            (distance === closestDistance &&
-                (point.hitTest?.priority ?? -1) > (winner?.hitTest?.priority ?? -1))
-        ) {
-            winner = point;
+        const distance =
+            point.hitTest?.distance ??
+            Math.hypot(
+                (point.sourceX ?? point.x) - x,
+                Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
+            );
+        if (distance < closestDistance) {
+            candidates = [];
+            shapeWinner = undefined;
             closestDistance = distance;
         }
+        if (distance !== closestDistance) continue;
+        if (point.hitTest) {
+            if (point.hitTest.priority > (shapeWinner?.hitTest?.priority ?? -Infinity)) {
+                shapeWinner = point;
+            }
+        } else {
+            candidates.push(point);
+        }
     }
-    return winner ?? points[0];
+    if (shapeWinner) candidates.push(shapeWinner);
+    // Paint order is comparable only among hit-tested shapes. Preserve Y selection
+    // for mixed candidates, including a line point at the edge of a bar.
+    const sorted = sort(candidates, (point) => point.y0);
+    return sorted[getClosestYIndex(sorted, y)] ?? points[0];
 }
 
 export function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {

@@ -351,3 +351,107 @@ for (const type of ['bar-x', 'bar-y'] as const) {
         });
     });
 }
+
+test('line marker at the overlay top stays selectable', async ({mount, page}) => {
+    const component = await mount(
+        <ChartTestStory
+            styles={{width: 600, height: 360}}
+            data={{
+                series: {
+                    data: [
+                        {type: 'bar-x', name: 'Bar', grouping: false, data: [{x: 'A', y: 100}]},
+                        {
+                            type: 'line',
+                            name: 'Line',
+                            marker: {enabled: true, radius: 6},
+                            data: [{x: 'A', y: 100}],
+                        },
+                    ],
+                },
+                xAxis: {type: 'category', categories: ['A']},
+                yAxis: [{min: 0, max: 150}],
+            }}
+        />,
+    );
+    const bar = await getLocatorBoundingBox(component.locator('.gcharts-bar-x__segment'));
+    await page.mouse.move(bar.x + bar.width / 2, bar.y);
+    await expect(page.locator('.gcharts-tooltip__content-row_active')).toContainText('Line');
+});
+
+for (const type of ['bar-x', 'bar-y'] as const) {
+    for (const {radius, borderWidth, sign} of [
+        {radius: 20, borderWidth: 0, sign: 1},
+        {radius: 20, borderWidth: 4, sign: -1},
+        {radius: 1000, borderWidth: 0, sign: 1},
+    ]) {
+        test(`${type} rounded contour, radius=${radius}, border=${borderWidth}, sign=${sign}`, async ({
+            mount,
+            page,
+        }) => {
+            const vertical = type === 'bar-x';
+            const valueAxis = sign > 0 ? {min: 0, max: 120} : {min: -120, max: 0};
+            const component = await mount(
+                <ChartTestStory
+                    styles={{width: 600, height: 360}}
+                    data={{
+                        series: {
+                            data: [100, 75].map((value, index) => ({
+                                type,
+                                name: index ? 'Actual' : 'Plan',
+                                grouping: false,
+                                borderRadius: index ? radius : 0,
+                                borderWidth,
+                                data: [
+                                    vertical
+                                        ? {x: 'A', y: sign * value}
+                                        : {y: 'A', x: sign * value},
+                                ],
+                            })),
+                        },
+                        xAxis: vertical ? {type: 'category', categories: ['A']} : valueAxis,
+                        yAxis: vertical ? [valueAxis] : [{type: 'category', categories: ['A']}],
+                    }}
+                />,
+            );
+            const bars = component.locator(`.gcharts-${type}__segment`);
+            await expect(bars).toHaveCount(2);
+            const box = await getLocatorBoundingBox(bars.nth(1));
+            const points = vertical
+                ? [{x: box.x + 1, y: sign > 0 ? box.y + 1 : box.y + box.height - 1}]
+                : [
+                      {x: box.x + box.width - 1, y: box.y + 1},
+                      {x: box.x + box.width - 10, y: box.y + box.height * 0.2},
+                      {x: box.x + box.width - 10, y: box.y + box.height * 0.8},
+                      {x: box.x + box.width - 0.5, y: box.y + box.height * 0.2},
+                  ];
+            const paths = component.locator(
+                `.gcharts-${type}__segment, .gcharts-${type}__segment-border`,
+            );
+            for (const point of points) {
+                const contains = await paths.evaluateAll(
+                    (elements, position) =>
+                        elements.map((element) => {
+                            const path = element as SVGGeometryElement;
+                            const matrix = path.getScreenCTM();
+                            if (!matrix) throw new Error('Expected a rendered SVG path');
+                            return path.isPointInFill(
+                                new DOMPoint(position.x, position.y).matrixTransform(
+                                    matrix.inverse(),
+                                ),
+                            );
+                        }),
+                    point,
+                );
+                const pathsPerBar = borderWidth ? 2 : 1;
+                expect(contains.slice(0, pathsPerBar).some(Boolean)).toBe(true);
+                if (point === points[0]) {
+                    expect(contains.slice(pathsPerBar).some(Boolean)).toBe(false);
+                }
+                await page.mouse.move(point.x, point.y);
+                await expect(page.locator('.gcharts-tooltip__content-row_active')).toContainText(
+                    contains.slice(pathsPerBar).some(Boolean) ? 'Actual' : 'Plan',
+                );
+            }
+        });
+    }
+}

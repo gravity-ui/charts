@@ -1,10 +1,12 @@
 import {bisector, sort} from 'd3-array';
 
 import type {TooltipDataChunk} from '../../../types';
+import {getRectDistance} from '../../utils/rect-distance';
 import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
 import type {PreparedBarYData} from './types';
+import {getBarYRect} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
     const {data, position} = args;
@@ -33,19 +35,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
         let closestDistance = Infinity;
         // selectedPoints retains paint order, so the later bar wins overlapping hits.
         for (const point of selectedPoints) {
-            const halfBorder = (point.borderWidth ?? 0) / 2;
-            const distance = Math.hypot(
-                Math.max(
-                    point.x - halfBorder - pointerX,
-                    pointerX - point.x - point.width - halfBorder,
-                    0,
-                ),
-                Math.max(
-                    point.y - halfBorder - pointerY,
-                    pointerY - point.y - point.height - halfBorder,
-                    0,
-                ),
-            );
+            const distance = getRectDistance(getBarYRect(point), pointerX, pointerY);
             if (distance <= closestDistance) {
                 closestPoint = point;
                 closestDistance = distance;

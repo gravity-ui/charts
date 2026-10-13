@@ -79,8 +79,25 @@ export async function prepareBarYData(args: {
         scale: yScale,
     });
 
+    const categoryDomain =
+        yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
     const result: PreparedBarYData[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
+        let center;
+
+        if (yAxis[0].type === 'category') {
+            const bandScale = yScale as ScaleBand<string>;
+
+            if (!categoryDomain?.has(yValue)) {
+                return;
+            }
+
+            center = (bandScale(yValue) || 0) + bandSize / 2;
+        } else {
+            const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+            center = scale(Number(yValue));
+        }
+
         const stacks = Object.values(val);
         const groupedCount = stacks.filter((items) =>
             items.some((item) => item.series.grouping !== false),
@@ -124,22 +141,6 @@ export async function prepareBarYData(args: {
                 }
                 const overlay = s.grouping === false;
                 const height = overlay ? overlaySize : barSize;
-                let center;
-
-                if (yAxis[0].type === 'category') {
-                    const bandScale = yScale as ScaleBand<string>;
-                    const bandScaleDomain = bandScale.domain();
-
-                    if (bandScaleDomain.indexOf(yValue as string) === -1) {
-                        return;
-                    }
-
-                    center = (bandScale(yValue as string) || 0) + bandSize / 2;
-                } else {
-                    const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
-                    center = scale(Number(yValue));
-                }
-
                 const y = overlay
                     ? center - height / 2
                     : center - currentBarHeight / 2 + (barSize + barGap) * slotIndex;
@@ -149,10 +150,6 @@ export async function prepareBarYData(args: {
                 let shapeWidth = width - (!independent && stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
-                }
-
-                if (shapeWidth < 0) {
-                    return;
                 }
 
                 const itemStackGap = width - shapeWidth;

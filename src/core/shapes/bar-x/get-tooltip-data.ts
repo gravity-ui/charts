@@ -2,6 +2,7 @@ import {max, min} from 'd3-array';
 import groupBy from 'lodash/groupBy';
 
 import type {BarXSeries} from '../../../types';
+import {getRectDistance} from '../../utils/rect-distance';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -9,9 +10,10 @@ import type {
 } from '../../utils/tooltip-helpers';
 
 import type {PreparedBarXData} from './types';
+import {getBarXRect} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetTooltipDataResult {
-    const {data} = args;
+    const {data, position} = args;
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
     const centers: Record<string, number> = Object.fromEntries(
@@ -32,7 +34,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
         y0: d.y,
         y1: d.y + d.height,
         sourceX: d.x + d.width / 2,
-        hitTest: hasOverlays ? {x0: d.x, x1: d.x + d.width, priority} : undefined,
+        hitTest: hasOverlays
+            ? {distance: getRectDistance(getBarXRect(d), ...position), priority}
+            : undefined,
     }));
 
     return {chunks: [], xLookupPoints};
