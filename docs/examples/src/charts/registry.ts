@@ -18,6 +18,8 @@ import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
 import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
 import {StackLabelsExample} from './data-labels/stack-labels';
 import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
+import {ClickTargetsExample} from './interactions/click-targets';
+import clickTargetsRaw from './interactions/click-targets.tsx?raw';
 import {ContentBasedLegendExample} from './legend/content-based-width';
 import contentBasedLegendRaw from './legend/content-based-width.tsx?raw';
 import {LegendLabelsExample} from './legend/labels';
@@ -64,6 +66,10 @@ type ExampleModule = {
 };
 
 export const registry: Record<string, ExampleModule> = {
+    'interactions/click-targets': {
+        code: extractDisplayCode(clickTargetsRaw),
+        Component: ClickTargetsExample,
+    },
     'tooltip/waterfall-header': {
         code: extractDisplayCode(waterfallHeaderTooltipRaw),
         Component: WaterfallHeaderTooltipExample,

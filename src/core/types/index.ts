@@ -12,6 +12,7 @@ export * from './chart/annotation';
 export * from './chart/axis';
 export * from './chart/base';
 export * from './chart/chart';
+export * from './chart/interaction';
 export * from './chart/legend';
 export * from './chart/pie';
 export * from './chart/scatter';
@@ -40,7 +41,7 @@ export interface ChartData<T = MeaningfulAny> {
     /**
      * General options for the chart.
      */
-    chart?: ChartOptions;
+    chart?: ChartOptions<T>;
     /**
      * The color list of palette.
      * If no color is set in series, the colors would be adopted sequentially and circularly from this list as the colors of series.

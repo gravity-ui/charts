@@ -7,7 +7,7 @@ import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';
 
 import '../plugins';
-import type {ChartData} from '../types';
+import type {ChartApi, ChartData, MeaningfulAny} from '../types';
 
 import {ChartInner} from './ChartInner';
 
@@ -18,7 +18,7 @@ export interface ChartReflowOptions {
     immediate?: boolean;
 }
 
-export interface ChartRef {
+export interface ChartRef<T = MeaningfulAny> extends ChartApi<T> {
     reflow: (options?: ChartReflowOptions) => void;
 }
 
@@ -42,6 +42,7 @@ export interface ChartProps {
 
 export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props, forwardedRef) {
     const {data, lang, onResize, onReady} = props;
+    const innerRef = React.useRef<ChartApi>(null);
     const validatedData = React.useRef<ChartData>();
     const ref = React.useRef<HTMLDivElement>(null);
     const debounced = React.useRef<
@@ -83,9 +84,10 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         return debounced.current;
     }, [handleResize]);
 
-    React.useImperativeHandle(
-        forwardedRef,
+    const chartApi = React.useMemo<ChartRef>(
         () => ({
+            getClosest: (position, options) =>
+                innerRef.current?.getClosest(position, options) ?? null,
             reflow(options?: ChartReflowOptions) {
                 if (options?.immediate) {
                     handleResize({force: true});
@@ -96,6 +98,8 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         }),
         [debuncedHandleResize, handleResize],
     );
+
+    React.useImperativeHandle(forwardedRef, () => chartApi, [chartApi]);
 
     React.useEffect(() => {
         // dimensions initialize
@@ -141,6 +145,8 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         >
             {Boolean(dimensions?.height && dimensions?.width) && (
                 <ChartInner
+                    ref={innerRef}
+                    chartApi={chartApi}
                     height={dimensions?.height ?? 0}
                     width={dimensions?.width ?? 0}
                     data={data}

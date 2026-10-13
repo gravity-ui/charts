@@ -1,19 +1,20 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {TooltipDataChunk} from '../../types';
+import type {ChartInteractionItem, TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
+import {getNearestItem} from './chart-interaction';
 import {getClosestPointsByXValue, isPointTooltipEnabled} from './tooltip-helpers';
 import type {ShapePoint} from './tooltip-helpers';
 
-type GetClosestPointsArgs = {
+interface GetClosestPointsArgs {
     position: [number, number];
     shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
-};
+}
 
 function getSeriesType(shapeData: TooltipItemData) {
     return (
@@ -48,7 +49,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             boundsHeight,
         });
 
-        result.push(...chunks.filter((c) => isPointTooltipEnabled(c)));
+        result.push(...chunks.filter(isPointTooltipEnabled));
         if (seriesXLookupPoints) {
             for (const p of seriesXLookupPoints) {
                 if (isPointTooltipEnabled(p)) {
@@ -65,4 +66,32 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     }
 
     return result;
+}
+
+interface GetChartClosestArgs extends GetClosestPointsArgs {
+    mode: 'chart' | 'tooltip';
+    seriesOrder: string[];
+}
+
+export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem | null {
+    if (args.mode === 'chart') {
+        const candidates = Object.entries(groupBy(args.shapesData, getSeriesType)).flatMap(
+            ([seriesType, data]) => {
+                const plugin = getSeriesPlugin(seriesType);
+                return plugin.interaction?.prepareNearestData({data}) ?? [];
+            },
+        );
+        return getNearestItem(args.position, candidates, args.seriesOrder);
+    }
+    // Preserve the legacy tooltip candidate priority and eligibility in this mode.
+    const selected = getClosestPoints(args).find((item) => item.closest);
+    if (!selected) return null;
+    const plugin = getSeriesPlugin(selected.series.type);
+    return (
+        plugin.interaction?.getClosestItem?.(selected) ??
+        ({
+            point: selected.data,
+            series: selected.series,
+        } as ChartInteractionItem)
+    );
 }

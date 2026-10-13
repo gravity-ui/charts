@@ -1,5 +1,6 @@
 import type {MeaningfulAny} from '../misc';
 
+import type {ChartClickData} from './interaction';
 import type {ChartTooltipRendererArgs} from './tooltip';
 import type {ChartZoom} from './zoom';
 
@@ -10,10 +11,14 @@ export interface ChartMargin {
     left: number;
 }
 
-export interface ChartOptions {
+export interface ChartOptions<T = MeaningfulAny> {
     margin?: Partial<ChartMargin>;
     events?: {
-        click?: (data: {point: MeaningfulAny; series: MeaningfulAny}, event: PointerEvent) => void;
+        /**
+         * Called for clicks in the plot, including empty space, independently of tooltip settings.
+         * @param legacyEvent Deprecated second argument; use data.event for the native event.
+         */
+        click?: (data: ChartClickData<T>, legacyEvent: PointerEvent) => void;
         pointermove?: (data: ChartTooltipRendererArgs | undefined, event: PointerEvent) => void;
     };
     /**

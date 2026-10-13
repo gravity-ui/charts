@@ -7,18 +7,26 @@ import throttle from 'lodash/throttle';
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
 import {EventType} from '~core/utils';
+import {getChartTargets} from '~core/utils/chart-interaction';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {useHoverResetKey} from '../../hooks/useHoverResetKey';
-import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
+import type {
+    ChartApi,
+    ChartClickData,
+    ChartTooltipRendererArgs,
+    ChartYAxis,
+    PointPosition,
+} from '../../types';
 
 import type {useChartInnerState} from './useChartInnerState';
 
 type ChartInnerState = ReturnType<typeof useChartInnerState>;
 
-type Props = {
+interface Props {
+    chartApi: ChartApi;
     resetKey: ReturnType<typeof useHoverResetKey>;
     boundsHeight: number;
     boundsOffsetLeft: number;
@@ -35,10 +43,11 @@ type Props = {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
     tooltipThrottle: number;
-};
+}
 
 export function useChartInnerHandlers(props: Props) {
     const {
+        chartApi,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
@@ -184,7 +193,7 @@ export function useChartInnerHandlers(props: Props) {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
 
-        if (isOutsideBounds(x, y)) {
+        if (boundsWidth <= 0 || boundsHeight <= 0 || isOutsideBounds(x, y)) {
             return;
         }
 
@@ -194,21 +203,29 @@ export function useChartInnerHandlers(props: Props) {
             boundsHeight,
             boundsWidth,
         });
-        const selected = items?.find((item) => item.closest);
-        if (!selected) {
-            if (tooltipPinned) {
-                unpinTooltip?.();
-            }
-
-            return;
+        const selected = items.find((item) => item.closest);
+        if (dispatcher.on(EventType.CLICK_CHART)) {
+            dispatcher.call(
+                EventType.CLICK_CHART,
+                undefined,
+                {
+                    position: [x, y],
+                    targets: svgContainer
+                        ? getChartTargets(svgContainer, [event.clientX, event.clientY])
+                        : [],
+                    chart: chartApi,
+                    event: event.nativeEvent,
+                    point: selected?.data,
+                    series: selected?.series,
+                } satisfies ChartClickData,
+                event,
+            );
         }
 
-        dispatcher.call(
-            EventType.CLICK_CHART,
-            undefined,
-            {point: selected.data, series: selected.series},
-            event,
-        );
+        if (!selected) {
+            if (tooltipPinned) unpinTooltip?.();
+            return;
+        }
 
         const nextTooltipFixed = !tooltipPinned;
 

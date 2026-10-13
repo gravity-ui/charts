@@ -20,6 +20,7 @@ import {
 
 import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
 import {validateInterpolation} from './validation';
@@ -98,6 +99,10 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

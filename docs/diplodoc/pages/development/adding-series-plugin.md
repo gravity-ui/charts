@@ -34,7 +34,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ## 3. Implement the pipeline
 
-- Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) in `src/plugins/<type>/`: validation, series/shape preparation, rendering, and tooltip lookup/rows. Geometry currently lives in `src/core/shapes/<type>/`.
+- Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) in `src/plugins/<type>/`: validation, series/shape preparation, rendering, interaction lookup, and tooltip rows. Geometry currently lives in `src/core/shapes/<type>/`.
 - Reuse shared helpers; preserve raw data and callback payloads, cache measurements, and clean up subscriptions.
 - Implement domain/baseline rules, clipping, plot offsets, and layer/category order; define fill/stroke behavior where applicable.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
@@ -55,6 +55,14 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - A missing header value differs from an omitted `header`: a custom formatter can replace missing continuous or non-axis values with a placeholder, but unresolved categories and headerless plugins omit the header. Explicit `headerFormat` overrides automatic formatting and is passed to custom renderers together with the original chunks.
 - Keep tooltip row values, custom formatter context, and renderer payloads independent of the sorting/totals value. Shared code sorts the plugin values and sums only numeric values.
 - Use `source: 'color'` for swatches; format labels/endpoints once. Preserve renderer precedence and keep plugin formatting hooks internal.
+
+### Interaction lookup
+
+Keep series-specific interaction adapters in `src/plugins/<type>/interaction.ts` and connect them in the plugin's `index.ts`. Declare `interaction.prepareNearestData` and `interaction.getTargetElements({plot, markers, preparedData})` for exact click targets and tooltip-independent nearest selection. `prepareNearestData({data})` accepts only prepared data and returns all eligible `{position, item}` candidates in plot-relative pixels, without tooltip filtering, X-first selection, or containment-based preselection. Core compares their Euclidean distances, with ties resolved by series/layer order and then candidate order. Reuse existing prepared geometry and unfiltered point collectors; do not implement a separate distance comparison per plugin. `tooltip.prepareData` retains its own legacy selection policy. Omitting `interaction` preserves tooltip lookup but yields no independent chart candidates or exact targets.
+
+Define the series-specific public item payload in `src/plugins/<type>/interaction-types.ts` and include it in the built-in union in `src/plugins/interaction-types.ts`. Do not add a series-to-payload map to core.
+
+Enumerate relevant `SVGGeometryElement` nodes and their `{point, series}` items using `getInteractionElements` from `src/core/utils/chart-interaction.ts`. Read existing D3 data; renderers do not need extra handlers or per-shape registration. Include normal markers, and exclude labels, halos, hover markers, grids, and connectors. Core handles built-in rectangular clipping, effective visibility, paint order, and deduplication. Parts of one logical element must share their point reference and series ID. Paths representing whole shapes can use `getShapePoint`; multi-part selections can define `interaction.getClosestItem`, as Sankey links do.
 
 ## 6. Integrate
 

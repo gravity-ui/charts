@@ -35,7 +35,7 @@
     "ChartBrush",
     "ChartConfig",
     "ChartLegend",
-    "ChartOptions",
+    "ChartOptions<JsonValue>",
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",
     "ChartSeriesOptions",
@@ -330,7 +330,7 @@
       "verticalAlign",
       "width"
     ],
-    "ChartOptions": ["margin", "zoom"],
+    "ChartOptions<JsonValue>": ["margin", "zoom"],
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",

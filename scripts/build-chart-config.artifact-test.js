@@ -123,6 +123,63 @@ describe('chart config artifacts', () => {
         );
     });
 
+    test('click queries are typed in declarations and excluded from JSON configuration', () => {
+        const usage = `
+            const options: ChartOptions = {events: {click: ({targets, position, chart, event, point, series}, legacyEvent) => {
+                const coordinates: [number, number] = position;
+                const nativeEvent: MouseEvent = event;
+                const hits: ChartInteractionItem[] = targets;
+                const nearest: ChartInteractionItem | null = chart.getClosest(position);
+                const legacySelection = chart.getClosest(position, {mode: 'tooltip'});
+                // @ts-expect-error Only documented selection modes are supported.
+                chart.getClosest(position, {mode: 'exact'});
+                void [coordinates, nativeEvent, hits, nearest, legacySelection, point, series, legacyEvent];
+            }}};
+            void options;
+            interface IssueMetadata {issueId: string}
+            function isBar(item: ChartInteractionItem<IssueMetadata>): item is ChartInteractionItem<IssueMetadata, 'bar-x'> {
+                return item.series.type === 'bar-x';
+            }
+            const typedData: ChartData<IssueMetadata> = {
+                series: {data: []},
+                chart: {events: {click: ({targets, chart, position}) => {
+                    const api: ChartApi<IssueMetadata> = chart;
+                    const item = targets[0];
+                    if (item && isBar(item) && item.point.custom) {
+                        const id: string = item.point.custom.issueId;
+                        // @ts-expect-error Custom metadata must retain the chart's generic type.
+                        const wrong: boolean = item.point.custom.issueId;
+                        void [id, wrong];
+                    }
+                    // @ts-expect-error Queries require explicit coordinates.
+                    api.getClosest();
+                    void api.getClosest(position);
+                }}},
+            };
+            const radar: ChartInteractionItem<IssueMetadata, 'radar'> = {
+                series: {type: 'radar', id: 'radar', name: 'Radar'},
+                point: {kind: 'shape', points: [{value: 1, custom: {issueId: 'A'}}]},
+            };
+            const link: ChartSankeyLinkPoint<IssueMetadata> = {
+                kind: 'link', source: {name: 'A', links: []}, target: {name: 'B', links: []}, value: 1,
+            };
+            void [typedData, radar, link];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'click-query-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions['ChartOptions<JsonValue>'].properties).not.toHaveProperty(
+            'events',
+        );
+        expect(
+            Object.keys(schema.definitions).some((name) => name.startsWith('ChartInteraction')),
+        ).toBe(false);
+        expect(declaration).toContain('@deprecated Use chart.getClosest');
+    });
+
     test('standalone declarations support automatic legend width and size limits', () => {
         const usage = `
             const autoLegend: ChartLegend = {position: 'left', width: 'auto', maxWidth: '30.5%'};

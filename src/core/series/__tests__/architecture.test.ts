@@ -24,7 +24,8 @@ function getSeriesDependencies(source: string): string[] {
     const visit = (node: ts.Node) => {
         if (
             ts.isTypeNode(node) ||
-            (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly)
+            (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
+            (ts.isExportDeclaration(node) && node.isTypeOnly)
         ) {
             return;
         }
@@ -82,6 +83,24 @@ it('keeps migrated grouping and clipping independent of built-in series implemen
     expect(violations).toEqual([]);
 });
 
+it('keeps chart interaction coordination independent of built-in series implementations', () => {
+    const files = [
+        'core/utils/chart-interaction.ts',
+        'core/utils/get-closest-data.ts',
+        'core/types/chart/interaction.ts',
+        'components/ChartInner/index.tsx',
+        'components/ChartInner/useChartInnerHandlers.ts',
+        'hooks/useShapes/SeriesShapes.tsx',
+        'hooks/useShapes/MarkerLayer.tsx',
+    ];
+    const violations = files.flatMap((file) =>
+        getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
+            (dependency) => `${file}: ${dependency}`,
+        ),
+    );
+    expect(violations).toEqual([]);
+});
+
 it.each([
     "switch (series.type) { case 'line': break; }",
     "const types = new Set(['radar', 'bar-y']);",
@@ -96,6 +115,7 @@ it('allows type-only dependencies and reusable shape primitives', () => {
     expect(
         getSeriesDependencies(`
             import type {LineSeries} from '../../../plugins/line/types';
+            export type {LineSeries} from '../../../plugins/line/types';
             import {getRectPath} from '~core/shapes/utils';
             type SeriesName = 'line' | 'radar';
         `),

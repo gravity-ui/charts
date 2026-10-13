@@ -7,10 +7,12 @@ import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {getVisibleSeries} from '~core/series/utils';
 import {prepareTooltipHeaderFormat} from '~core/tooltip/header';
 import {EventType, getDispatcher, isBandScale} from '~core/utils';
+import {getChartClosest} from '~core/utils/get-closest-data';
 
 import {useCrosshair, usePrevious} from '../../hooks';
 import {useHoverResetKey} from '../../hooks/useHoverResetKey';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
+import type {ChartApi} from '../../types';
 import {block} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
@@ -45,8 +47,8 @@ const b = block('chart');
 
 const DEBOUNCED_VALUE_DELAY = 10;
 
-export const ChartInner = (props: ChartInnerProps) => {
-    const {width, height, data, onReady} = props;
+function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.ForwardedRef<ChartApi>) {
+    const {width, height, data, onReady, chartApi} = props;
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const resetZoomButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
@@ -138,7 +140,11 @@ export const ChartInner = (props: ChartInnerProps) => {
             preparedTooltip.dateTimeLabelFormats,
         ],
     );
-    const hoverResetKey = useHoverResetKey({seriesData: allPreparedSeries, xAxis, yAxes: yAxis});
+    const hoverResetKey = useHoverResetKey({
+        seriesData: allPreparedSeries,
+        xAxis,
+        yAxes: yAxis,
+    });
     const previousHoverResetKey = usePrevious(hoverResetKey);
     const prevWidth = usePrevious(width);
     const prevHeight = usePrevious(height);
@@ -157,6 +163,7 @@ export const ChartInner = (props: ChartInnerProps) => {
         throttledHandlePointerMove,
         throttledHandleTouchMove,
     } = useChartInnerHandlers({
+        chartApi,
         resetKey: hoverResetKey,
         boundsHeight,
         boundsOffsetLeft,
@@ -174,6 +181,35 @@ export const ChartInner = (props: ChartInnerProps) => {
         yScale,
         tooltipThrottle: preparedTooltip.throttle,
     });
+    React.useImperativeHandle(
+        forwardedRef,
+        () => ({
+            getClosest: (position, options) => {
+                const [x, y] = position;
+                if (
+                    !shapesReady ||
+                    !hasPlotArea ||
+                    !Number.isFinite(x) ||
+                    !Number.isFinite(y) ||
+                    x < 0 ||
+                    x > boundsWidth ||
+                    y < 0 ||
+                    y > boundsHeight
+                ) {
+                    return null;
+                }
+                return getChartClosest({
+                    position,
+                    shapesData,
+                    boundsWidth,
+                    boundsHeight,
+                    mode: options?.mode ?? 'chart',
+                    seriesOrder: preparedSeries.map((series) => series.id),
+                });
+            },
+        }),
+        [shapesReady, hasPlotArea, shapesData, boundsWidth, boundsHeight, preparedSeries],
+    );
     useHoverGeometryRefresh({
         resetKey: hoverResetKey,
         dispatcher,
@@ -548,4 +584,6 @@ export const ChartInner = (props: ChartInnerProps) => {
             )}
         </div>
     );
-};
+}
+
+export const ChartInner = React.forwardRef(ChartInnerComponent);

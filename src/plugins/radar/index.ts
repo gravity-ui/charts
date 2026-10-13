@@ -14,6 +14,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareRadarSeries} from './prepare-radar-series';
 
 async function prepareShapeData({
@@ -73,6 +74,10 @@ export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
         prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,

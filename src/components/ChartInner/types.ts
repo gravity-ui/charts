@@ -1,8 +1,9 @@
-import type {ChartData} from '../../types';
+import type {ChartApi, ChartData} from '../../types';
 
-export type ChartInnerProps = {
+export interface ChartInnerProps {
+    chartApi: ChartApi;
     width: number;
     height: number;
     data: ChartData;
     onReady?: (args: {dimensions: {width: number; height: number}}) => void;
-};
+}

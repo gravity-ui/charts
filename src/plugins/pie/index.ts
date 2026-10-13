@@ -15,6 +15,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {PieFormatContext, PieSeries, TooltipDataChunkPie} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {preparePieSeries} from './prepare-pie-series';
 
 async function prepareShapeData({
@@ -52,6 +53,10 @@ export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatCo
     getColorValue: (d) => d.value,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,

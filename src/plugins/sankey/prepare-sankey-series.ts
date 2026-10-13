@@ -26,6 +26,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
         const preparedSeries: PreparedSankeySeries = {
             color,
             data: s.data.map((d) => ({
+                custom: d.custom,
                 name: d.name,
                 color: d.color ?? colorScale(d.name),
                 links: d.links,

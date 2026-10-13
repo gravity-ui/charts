@@ -2,11 +2,13 @@ import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
+    ChartInteractionItem,
     ChartSeries,
     ChartSeriesOptions,
     ChartXAxis,
     ChartYAxis,
     CustomFormatContext,
+    MeaningfulAny,
     TooltipDataChunk,
     TooltipRowCellItem,
     ValueFormat,
@@ -16,6 +18,12 @@ import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
+import type {
+    InteractionElement,
+    InteractionElementsArgs,
+    NearestCandidate,
+    PrepareNearestDataArgs,
+} from '../utils/chart-interaction';
 import type {GradientGeometry} from '../utils/gradient-reference';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 import type {ZoomState} from '../zoom/types';
@@ -183,6 +191,17 @@ export interface SeriesPlugin<
 
     /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
+
+    // --- Interaction ---
+
+    interaction?: {
+        /** All eligible reference positions, without tooltip filtering or per-plugin selection. */
+        prepareNearestData(args: PrepareNearestDataArgs<MeaningfulAny>): NearestCandidate[];
+        /** Enumerates series geometry and data, excluding labels, halos and connectors. */
+        getTargetElements(args: InteractionElementsArgs): InteractionElement[];
+        /** Converts a selection containing multiple data parts into its public item. */
+        getClosestItem?(item: TooltipDataChunk): ChartInteractionItem;
+    };
 
     // --- Tooltip ---
 

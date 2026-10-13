@@ -56,9 +56,7 @@ describe('area-range plugin', () => {
         test('shows both hover boundaries by default for a real tooltip selection', async () => {
             const args = createArgs([{x: 1, y0: 5, y1: 10}]);
             const data = await prepareAreaRangeData(args);
-            const selected =
-                getTooltipData({data, position: [100, 160], boundsWidth: 400, boundsHeight: 200})
-                    .xLookupPoints ?? [];
+            const selected = getTooltipData({data}).xLookupPoints ?? [];
             expect(data[0].markers).toEqual([]);
             expect(
                 data[0].getHoverMarkers(
@@ -274,14 +272,9 @@ describe('area-range plugin', () => {
             const path = plot.querySelector('.gcharts-area-range__region')?.getAttribute('d');
             expect(path?.match(/M/g)).toHaveLength(nullMode === 'skip' ? 2 : 1);
             expect(path).not.toContain('NaN');
-            expect(
-                getTooltipData({
-                    data,
-                    position: [200, 100],
-                    boundsWidth: 400,
-                    boundsHeight: 200,
-                }).xLookupPoints?.map((point) => point.data),
-            ).toEqual(args.series[0].data.filter((point) => point.y1 !== null));
+            expect(getTooltipData({data}).xLookupPoints?.map((point) => point.data)).toEqual(
+                args.series[0].data.filter((point) => point.y1 !== null),
+            );
         },
     );
 
@@ -366,12 +359,9 @@ describe('area-range plugin', () => {
             false,
         ]);
         expect(
-            getTooltipData({
-                data,
-                position: [200, 100],
-                boundsWidth: 400,
-                boundsHeight: 200,
-            }).xLookupPoints?.map((point) => (point.data as AreaRangeSeriesData).x),
+            getTooltipData({data}).xLookupPoints?.map(
+                (point) => (point.data as AreaRangeSeriesData).x,
+            ),
         ).toEqual([2, 3]);
     });
 
@@ -383,10 +373,7 @@ describe('area-range plugin', () => {
         Object.assign(args.yAxis[0], {min: 0, max: 40});
         args.yScale[0].clamp(true);
         const data = await prepareAreaRangeData(args);
-        expect(
-            getTooltipData({data, position: [200, 100], boundsWidth: 400, boundsHeight: 200})
-                .xLookupPoints,
-        ).toEqual([]);
+        expect(getTooltipData({data}).xLookupPoints).toEqual([]);
         expect(data[0].points.map((point) => point.hiddenInLine)).toEqual([false, false]);
     });
 

@@ -13,6 +13,7 @@ import {getTooltipColorSymbol} from '~core/tooltip/utils';
 
 import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareSankeySeries} from './prepare-sankey-series';
 
 function getLinkValue({target, data: source}: TooltipDataChunkSankey) {
@@ -43,6 +44,22 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
         prepareSankeySeries({series: series as SankeySeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+        getClosestItem: (chunk) => {
+            const item = chunk as TooltipDataChunkSankey;
+            return {
+                series: item.series as PreparedSankeySeries,
+                point: {
+                    kind: 'link',
+                    source: item.data,
+                    target: item.target!,
+                    value: getLinkValue(item)!,
+                },
+            };
+        },
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: ({item}) => getLinkValue(item),

@@ -1,4 +1,3 @@
-import type {AreaRangeSeries} from '../../../types';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -8,7 +7,7 @@ import type {
 import type {PreparedAreaRangeData} from './types';
 
 export function getTooltipData(
-    args: GetTooltipDataArgs<PreparedAreaRangeData>,
+    args: Pick<GetTooltipDataArgs<PreparedAreaRangeData>, 'data'>,
 ): GetTooltipDataResult {
     const xLookupPoints = args.data.reduce<ShapePoint[]>((acc, item) => {
         item.points.forEach((point) => {
@@ -19,7 +18,7 @@ export function getTooltipData(
             acc.push({
                 color: point.fill ?? point.color ?? point.series.color,
                 data: point.data,
-                series: point.series as unknown as AreaRangeSeries,
+                series: point.series,
                 x: point.x,
                 y0: Math.min(point.y0, point.y1),
                 y1: Math.max(point.y0, point.y1),

@@ -1,6 +1,5 @@
 import groupBy from 'lodash/groupBy';
 
-import type {BarXSeries} from '../../../types';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -21,7 +20,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
             xLookupPoints.push({
                 data: d.data,
                 percentage: d.percentage,
-                series: d.series as BarXSeries,
+                series: d.series,
                 x: groupCenterX,
                 y0: d.y,
                 y1: d.y + d.height,

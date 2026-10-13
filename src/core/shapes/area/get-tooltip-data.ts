@@ -1,4 +1,3 @@
-import type {AreaSeries} from '../../../types';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -8,7 +7,9 @@ import {getMarkerFill} from '../marker';
 
 import type {PreparedAreaData} from './types';
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: Pick<GetTooltipDataArgs<PreparedAreaData>, 'data'>,
+): GetTooltipDataResult {
     const {data} = args;
 
     const xLookupPoints = data.reduce<ShapePoint[]>((acc, d) => {
@@ -20,7 +21,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
                 color: getMarkerFill(p, p.series.color),
                 data: p.data,
                 percentage: p.percentage,
-                series: p.series as AreaSeries,
+                series: p.series,
                 x: p.x,
                 y0: p.y0,
                 y1: p.y,

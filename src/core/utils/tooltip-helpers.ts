@@ -2,7 +2,8 @@ import {bisector, sort} from 'd3-array';
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {ChartSeries, ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
+import type {ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
+import type {PreparedSeries} from '../series/types';
 
 export interface ShapePoint {
     x: number;
@@ -11,7 +12,7 @@ export interface ShapePoint {
     color?: string;
     percentage?: number;
     data: ChartSeriesData;
-    series: ChartSeries;
+    series: PreparedSeries;
     subTotal?: number;
     sourceX?: number;
 }

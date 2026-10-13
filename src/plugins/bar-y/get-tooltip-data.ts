@@ -1,10 +1,10 @@
 import {bisector, sort} from 'd3-array';
 
-import type {TooltipDataChunk} from '../../../types';
-import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
-import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
+import type {PreparedBarYData} from '~core/shapes/bar-y/types';
+import {isPointTooltipEnabled} from '~core/utils/tooltip-helpers';
+import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 
-import type {PreparedBarYData} from './types';
+import type {TooltipDataChunk} from '../../types';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
     const {data, position} = args;
