@@ -4,6 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
 import {DEFAULT_PALETTE} from '~core/constants';
+import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import {getPreparedSeries} from '~core/series';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
@@ -14,7 +15,6 @@ import {
     getEffectiveXRange,
     getOnlyVisibleSeries,
     getSortedSeriesData,
-    getYAxisWidth,
     getZoomedSeriesData,
 } from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
@@ -41,6 +41,7 @@ import type {GradientReferenceCacheEntry} from './gradientReferenceCache';
 import {isGradientReferenceCurrent} from './gradientReferenceCache';
 import {prepareAxisLayout} from './prepareAxisLayout';
 import {prepareGradientReference} from './prepareGradientReference';
+import {reconcileLegendSelection} from './reconcileLegendSelection';
 import type {ChartInnerProps} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
@@ -71,40 +72,6 @@ function getBoundsOffsetTop({
             ? (legendConfig?.height ?? 0) + preparedLegend.margin
             : 0)
     );
-}
-
-function getBoundsOffsetLeft(args: {
-    chartMarginLeft: number;
-    preparedLegend: PreparedLegend | null;
-    yAxis: PreparedYAxis[];
-    getYAxisWidth: (axis: PreparedYAxis) => number;
-    legendConfig: LegendConfig | undefined;
-}): number {
-    const {
-        chartMarginLeft,
-        preparedLegend,
-        yAxis,
-        getYAxisWidth: getAxisWidth,
-        legendConfig,
-    } = args;
-
-    const legendOffset =
-        preparedLegend?.enabled && preparedLegend.position === 'left'
-            ? (legendConfig?.width ?? 0) + preparedLegend.margin
-            : 0;
-
-    const leftAxisWidth = yAxis.reduce((acc, axis) => {
-        if (axis.position !== 'left') {
-            return acc;
-        }
-        const axisWidth = getAxisWidth(axis);
-        if (acc < axisWidth) {
-            acc = axisWidth;
-        }
-        return acc;
-    }, 0);
-
-    return chartMarginLeft + legendOffset + leftAxisWidth;
 }
 
 type ChartState = {
@@ -146,7 +113,11 @@ export function useChartInnerProps(props: Props) {
         zoomState,
     } = props;
 
-    const [selectedLegendItems, setSelectedLegendItems] = React.useState<string[] | null>(null);
+    const selectedLegendItemsRef = React.useRef<string[] | null>(null);
+    const [legendSelectionVersion, updateLegendSelectionVersion] = React.useReducer(
+        (version: number) => version + 1,
+        0,
+    );
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
@@ -155,6 +126,7 @@ export function useChartInnerProps(props: Props) {
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const selectedLegendItems = selectedLegendItemsRef.current;
 
         (async function () {
             const chartDataChanged = !(
@@ -211,8 +183,18 @@ export function useChartInnerProps(props: Props) {
                 allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];
             }
 
+            const nextSelectedLegendItems =
+                chartDataChanged && selectedLegendItems !== null
+                    ? reconcileLegendSelection(
+                          selectedLegendItems,
+                          prevStateValue.current?.allPreparedSeries ?? [],
+                          allPreparedSeries,
+                      )
+                    : selectedLegendItems;
+            const enabledLegendItems = new Set(getAllLegendItems(allPreparedSeries));
             const nextActiveLegendItems =
-                selectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
+                nextSelectedLegendItems?.filter((id) => enabledLegendItems.has(id)) ??
+                getActiveLegendItems(allPreparedSeries);
             const previousActiveLegendItems = prevStateValue.current?.activeLegendItems;
             const activeLegendItems =
                 previousActiveLegendItems &&
@@ -343,13 +325,9 @@ export function useChartInnerProps(props: Props) {
             });
 
             // We need to calculate the width of each left axis because the first axis can be hidden
-            const boundsOffsetLeft = getBoundsOffsetLeft({
-                chartMarginLeft: preparedChart.margin.left,
-                preparedLegend,
-                yAxis,
-                getYAxisWidth,
-                legendConfig,
-            });
+            const boundsOffsetLeft =
+                preparedChart.margin.left +
+                getHorizontalAxisOffsets({preparedYAxis: yAxis, preparedLegend, legendConfig}).left;
 
             const hasVisibleGradient =
                 getOnlyVisibleSeries(visiblePreparedSeries).some(hasGradient);
@@ -381,6 +359,7 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
+                selectedLegendItemsRef.current = nextSelectedLegendItems;
                 gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);
@@ -393,7 +372,7 @@ export function useChartInnerProps(props: Props) {
         height,
         width,
         data,
-        selectedLegendItems,
+        legendSelectionVersion,
         zoomState,
         rangeSliderState,
         dispatcher,
@@ -422,7 +401,9 @@ export function useChartInnerProps(props: Props) {
         ({id, metaKey}) => {
             const allItems = getAllLegendItems(preparedSeries);
             const onlyItemSelected =
-                (selectedLegendItems ?? []).length === 1 && activeLegendItems.includes(id);
+                selectedLegendItemsRef.current !== null &&
+                activeLegendItems.length === 1 &&
+                activeLegendItems.includes(id);
             let nextActiveLegendItems: string[];
 
             if (metaKey && activeLegendItems.includes(id)) {
@@ -437,9 +418,23 @@ export function useChartInnerProps(props: Props) {
                 nextActiveLegendItems = [id];
             }
 
-            setSelectedLegendItems(nextActiveLegendItems);
+            currentRunRef.current++;
+            // Keep disabled items' selection while clicks affect only the displayed legend.
+            const selected = selectedLegendItemsRef.current;
+            const disabledSelectedItems = preparedSeries
+                .filter(
+                    (series) =>
+                        !series.legend.enabled &&
+                        !allItems.includes(series.legend.groupId) &&
+                        (selected ? selected.includes(series.legend.groupId) : series.visible),
+                )
+                .map((series) => series.legend.groupId);
+            selectedLegendItemsRef.current = [
+                ...new Set([...nextActiveLegendItems, ...disabledSelectedItems]),
+            ];
+            updateLegendSelectionVersion();
         },
-        [preparedSeries, selectedLegendItems, activeLegendItems],
+        [preparedSeries, activeLegendItems],
     );
 
     const handleAttemptToSetZoomState = React.useCallback(

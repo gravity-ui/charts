@@ -10,7 +10,7 @@ import {scatterBasicData} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
 import {lineDualAxesSplitData} from './__data__/line-dual-axes-split';
-import {getOverlappingLabelPairs} from './utils';
+import {getOverlappingLabelPairs, getRotatedLabelGaps} from './utils';
 
 const CHART_MARGIN: ChartMargin = {
     top: 20,
@@ -95,6 +95,7 @@ test.describe('Y-axis', () => {
         const lastLabel = ticks.nth(3).locator('text tspan');
 
         await expect(ticks).toHaveCount(4);
+        await expect(ticks.locator('text tspan')).toHaveCount(3);
         await expect(firstLabel).toHaveText('0');
         await expect(lastLabel).toHaveText('100');
         const chartBounds = await component.locator('svg').boundingBox();
@@ -110,6 +111,59 @@ test.describe('Y-axis', () => {
             chartBounds.y + chartBounds.height + 1,
         );
         expect(await getOverlappingLabelPairs(ticks.locator('text tspan'))).toEqual([]);
+    });
+
+    test('rotated explicit Y labels preserve separate text near the top edge', async ({mount}) => {
+        const chartData: ChartData = {
+            chart: {margin: {top: 40}},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 100, y: 100},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    min: 0,
+                    max: 100,
+                    ticks: {values: [0, 20, 35, 50, 51, 70, 85, 100]},
+                    labels: {rotation: 45, numberFormat: {precision: 10}},
+                },
+            ],
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 600, height: 350}} />,
+        );
+        const ticks = component.locator('.gcharts-y-axis__tick');
+        const labels = ticks.locator('text tspan');
+
+        await expect(ticks).toHaveCount(8);
+        await expect(labels).toHaveCount(7);
+        await expect(
+            ticks.nth(3).locator('text tspan').or(ticks.nth(4).locator('text tspan')),
+        ).toHaveCount(1);
+        await expect(ticks.last().locator('text title')).toHaveText(/^100[,.]0{10}$/);
+        expect(await labels.allTextContents()).not.toContain('');
+        expect(await getOverlappingLabelPairs(labels)).not.toEqual([]);
+        expect(Math.min(...(await getRotatedLabelGaps(labels, 45)))).toBeGreaterThanOrEqual(0);
+        const firstBounds = await ticks.first().locator('text tspan').boundingBox();
+        const lastBounds = await ticks.last().locator('text tspan').boundingBox();
+        const chartBounds = await component.locator('svg').boundingBox();
+        if (!chartBounds || !firstBounds || !lastBounds) {
+            throw new Error('Axis label geometry is unavailable');
+        }
+        expect(firstBounds.height).toBeGreaterThan(0);
+        expect(lastBounds.height).toBeGreaterThan(0);
+        expect(lastBounds.y).toBeGreaterThanOrEqual(chartBounds.y - 1);
+        expect(firstBounds.y + firstBounds.height).toBeLessThanOrEqual(
+            chartBounds.y + chartBounds.height + 1,
+        );
     });
 
     test('nearby explicit ticks do not overlap default Y labels', async ({mount}) => {

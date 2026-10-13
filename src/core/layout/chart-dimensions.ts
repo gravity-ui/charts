@@ -135,6 +135,35 @@ const getLeftOffset = ({
     return 0;
 };
 
+interface HorizontalAxisOffsetsOptions {
+    preparedYAxis: PreparedYAxis[] | null;
+    preparedLegend: PreparedLegend | null;
+    legendConfig: LegendConfig | undefined;
+}
+
+export function getHorizontalAxisOffsets({
+    preparedYAxis,
+    preparedLegend,
+    legendConfig,
+}: HorizontalAxisOffsetsOptions) {
+    let leftAxisWidth = 0;
+    let rightAxisWidth = 0;
+
+    preparedYAxis?.forEach((axis) => {
+        const axisWidth = getYAxisWidth(axis);
+        if (axis.position === 'left') {
+            leftAxisWidth = Math.max(leftAxisWidth, axisWidth);
+        } else if (axis.position === 'right') {
+            rightAxisWidth = Math.max(rightAxisWidth, axisWidth);
+        }
+    });
+
+    return {
+        left: leftAxisWidth + getLeftOffset({preparedLegend, legendConfig}),
+        right: rightAxisWidth + getRightOffset({preparedLegend, legendConfig}),
+    };
+}
+
 export function getChartDimensions({
     height,
     margin,

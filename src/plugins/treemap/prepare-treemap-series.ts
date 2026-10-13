@@ -44,6 +44,7 @@ export function prepareTreemap(args: PrepareTreemapSeriesArgs) {
                 enabled: get(s, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(s),
                 groupId: s.legend?.groupId ?? getUniqId(),
+                source: s.legend,
                 itemText: s.legend?.itemText ?? name,
             },
             levels: s.levels ?? [],

@@ -5,6 +5,7 @@ import isEqual from 'lodash/isEqual';
 import type {AxesState} from '~core/axes/types';
 import {getPreparedXAxis} from '~core/axes/x-axis';
 import {getPreparedYAxis} from '~core/axes/y-axis';
+import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getWidthOccupiedByYAxis} from '~core/utils';
 
@@ -48,11 +49,17 @@ export async function getAxes(props: UseAxesProps) {
     const axesWidth = getWidthOccupiedByYAxis({preparedAxis: estimatedPreparedYAxis});
     const estimatedBoundsWidth =
         width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right);
+    const axisOffsets = getHorizontalAxisOffsets({
+        preparedYAxis: estimatedPreparedYAxis,
+        preparedLegend,
+        legendConfig,
+    });
     const preparedXAxis = await getPreparedXAxis({
         xAxis,
         width,
         boundsWidth: estimatedBoundsWidth,
         seriesData,
+        labelBounds: {leftOverflow: axisOffsets.left, rightOverflow: axisOffsets.right},
     });
 
     let estimatedBoundsHeight = boundsHeight ?? height;

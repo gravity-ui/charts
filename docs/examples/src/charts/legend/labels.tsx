@@ -2,8 +2,9 @@ import React from 'react';
 
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
+import {Button} from '@gravity-ui/uikit';
 
-const data: ChartData = {
+const data = {
     legend: {enabled: true},
     series: {
         data: [
@@ -17,12 +18,25 @@ const data: ChartData = {
             data: values.map((y, x) => ({x, y})),
         })),
     },
-};
+} satisfies ChartData;
 
 export function LegendLabelsExample() {
+    const [updated, setUpdated] = React.useState(false);
+    const chartData: ChartData = {
+        ...data,
+        series: {
+            data: data.series.data.map((series) => ({
+                ...series,
+                data: series.data.map(({x, y}) => ({x, y: updated ? y + x * 2 : y})),
+            })),
+        },
+    };
     return (
-        <div style={{height: '100%'}}>
-            <Chart data={data} />
+        <div style={{height: '100%', display: 'flex', flexDirection: 'column', gap: 8}}>
+            <Button onClick={() => setUpdated((value) => !value)}>Update data</Button>
+            <div style={{flex: 1, minHeight: 0}}>
+                <Chart data={chartData} />
+            </div>
         </div>
     );
 }

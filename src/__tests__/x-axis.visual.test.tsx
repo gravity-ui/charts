@@ -12,7 +12,7 @@ import {barYBasicData} from '../__stories__/__data__';
 import type {ChartData, ChartMargin} from '../types';
 
 import {generateHourlyDatetimeSeries} from './__data__/utils';
-import {getOverlappingLabelPairs} from './utils';
+import {getOverlappingLabelPairs, getRotatedLabelGaps} from './utils';
 
 const CHART_MARGIN: ChartMargin = {
     top: 20,
@@ -139,6 +139,141 @@ test.describe('X-axis', () => {
         await expect(lastLabel).toHaveText('100');
         expect((await firstLabel.boundingBox())?.width).toBeGreaterThan(0);
         expect((await lastLabel.boundingBox())?.width).toBeGreaterThan(0);
+    });
+
+    test('rotated explicit datetime labels keep separate text visible', async ({mount}) => {
+        const start = Date.UTC(2024, 0, 1);
+        const dates = Array.from({length: 14}, (_, index) => start + index * 60 * DAY);
+        const expectedLabels = [
+            '1 January',
+            '1 March',
+            '30 April',
+            '29 June',
+            '28 August',
+            '27 October',
+            '26 December',
+            '24 February',
+            '25 April',
+            '24 June',
+            '23 August',
+            '22 October',
+            '21 December',
+            '19 February',
+        ];
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: dates.map((x, index) => ({x, y: index + 1})),
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'datetime',
+                ticks: {values: dates},
+                labels: {
+                    dateFormat: 'D MMMM',
+                    rotation: -45,
+                },
+            },
+            yAxis: [{title: {text: 'Value'}}],
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 575, height: 320}} />,
+        );
+        const ticks = component.locator('.gcharts-x-axis__tick');
+        const labels = ticks.locator('text tspan');
+
+        await expect(ticks).toHaveCount(dates.length);
+        await expect(labels).toHaveText(expectedLabels);
+        expect(await getOverlappingLabelPairs(labels)).not.toEqual([]);
+        expect(Math.min(...(await getRotatedLabelGaps(labels, -45)))).toBeGreaterThanOrEqual(0);
+
+        await component.update(
+            <ChartTestStory
+                data={{
+                    ...chartData,
+                    xAxis: {
+                        ...chartData.xAxis,
+                        ticks: {
+                            values: [...dates.slice(0, 7), dates[6] + DAY, ...dates.slice(7)],
+                        },
+                    },
+                }}
+                styles={{width: 575, height: 320}}
+            />,
+        );
+
+        await expect(ticks).toHaveCount(dates.length + 1);
+        await expect(labels).toHaveText(expectedLabels);
+    });
+
+    test('automatic rotation preserves explicit category labels', async ({mount}) => {
+        const categories = Array.from({length: 8}, (_, index) => `Category name ${index + 1}`);
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: categories.map((_, x) => ({x, y: x + 1})),
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories,
+                ticks: {values: categories.map((_, index) => index)},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 575, height: 320}} />,
+        );
+        const labels = component.locator('.gcharts-x-axis__tick text tspan');
+
+        await expect(labels).toHaveCount(8);
+        for (const text of await component.locator('.gcharts-x-axis__tick text').all()) {
+            await expect(text).toHaveAttribute('transform', /rotate\(-45\)/);
+        }
+        expect(await labels.allTextContents()).not.toContain('');
+        expect(Math.min(...(await getRotatedLabelGaps(labels, -45)))).toBeGreaterThanOrEqual(0);
+    });
+
+    test('automatic rotation respects truncated explicit category labels', async ({mount}) => {
+        const categories = Array.from(
+            {length: 6},
+            (_, index) => `Long category name number ${index + 1}`,
+        );
+        const chartData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Series 1',
+                        data: categories.map((_, x) => ({x, y: x + 1})),
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories,
+                ticks: {values: categories.map((_, index) => index)},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={chartData} styles={{width: 575, height: 320}} />,
+        );
+        const labels = component.locator('.gcharts-x-axis__tick text tspan');
+
+        await expect(labels).toHaveCount(6);
+        for (const text of await component.locator('.gcharts-x-axis__tick text').all()) {
+            await expect(text).not.toHaveAttribute('transform', /rotate\(/);
+        }
+        await expect(component.locator('.gcharts-x-axis__tick text title')).toHaveText(categories);
+        expect(await labels.allTextContents()).not.toContain('');
+        expect(await getOverlappingLabelPairs(labels)).toEqual([]);
     });
 
     test('nearby explicit ticks do not overlap with automatic X rotation', async ({mount}) => {

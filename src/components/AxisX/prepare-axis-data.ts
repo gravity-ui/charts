@@ -3,9 +3,7 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import {select} from 'd3-selection';
 
 import {
-    calculateCos,
     calculateNumericProperty,
-    calculateSin,
     formatAxisTickLabel,
     getBandsPosition,
     getLabelsSize,
@@ -15,6 +13,7 @@ import {
 } from '~core/utils';
 import {hideOverlappingTickLabels} from '~core/utils/axis/label-collision';
 import {getXAxisTickValues} from '~core/utils/axis/x-axis';
+import {getXAxisLabelGeometry} from '~core/utils/axis/x-axis-label';
 
 import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
@@ -27,117 +26,12 @@ import type {
     AxisPlotLineData,
     AxisPlotLineLabel,
     AxisPlotShapeData,
-    AxisSvgLabelData,
     AxisTickData,
     AxisTickLine,
     AxisTickMarkData,
     AxisTitleData,
     AxisXData,
 } from './types';
-
-async function getSvgAxisLabel({
-    getTextSize,
-    text,
-    axis,
-    top,
-    left,
-    labelMaxWidth,
-    axisWidth,
-    boundsOffsetLeft,
-    boundsOffsetRight,
-    chartMarginLeft,
-    chartMarginRight,
-}: {
-    getTextSize: (str: string) => Promise<{width: number; height: number; hangingOffset: number}>;
-    text: string;
-    axis: PreparedAxis;
-    top: number;
-    left: number;
-    labelMaxWidth: number;
-    axisWidth: number;
-    boundsOffsetLeft: number;
-    boundsOffsetRight: number;
-    chartMarginLeft: number;
-    chartMarginRight: number;
-}) {
-    const rotation = axis.labels.rotation;
-    const content: AxisSvgLabelData['content'] = [];
-
-    let rowText = text;
-    let textSize = await getTextSize(text);
-    const a = (360 + rotation) % 90;
-
-    let textMaxWidth = Infinity;
-    if (a === 0) {
-        textMaxWidth = Math.min(
-            labelMaxWidth,
-            // rightmost label: may extend into the right Y-axis area but not into the right margin
-            labelMaxWidth / 2 + axisWidth + (boundsOffsetRight - chartMarginRight) - left,
-            // leftmost label: when clamped at the margin boundary, don't bleed into next-tick territory
-            left + (boundsOffsetLeft - chartMarginLeft) + labelMaxWidth / 2,
-        );
-    } else if (rotation > 0) {
-        textMaxWidth = Math.min(
-            axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
-            // rightmost label
-            (axisWidth - left) / calculateSin(a),
-        );
-    } else {
-        textMaxWidth = Math.min(
-            axis.labels.height / calculateSin(a) - textSize.height * calculateSin(90 - a),
-            // leftmost label: may extend into the left Y-axis area but not into the left margin
-            // subtract textSize.height / 2 to account for the height component in the x calculation
-            (boundsOffsetLeft - chartMarginLeft + left) / calculateSin(a) - textSize.height / 2,
-        );
-    }
-
-    if (textSize.width > textMaxWidth) {
-        rowText = await getTextWithElipsis({
-            text: rowText,
-            getTextWidth: async (str) => (await getTextSize(str)).width,
-            maxWidth: textMaxWidth,
-        });
-        textSize = await getTextSize(rowText);
-    }
-
-    content.push({
-        text: rowText,
-        x: 0,
-        y: 0,
-        size: textSize,
-    });
-
-    const actualTextWidth = a
-        ? textSize.width * calculateSin(90 - a) + textSize.height * calculateSin(a)
-        : textSize.width;
-    let x = 0;
-    if (rotation === 0) {
-        x = Math.min(left - actualTextWidth / 2, axisWidth - actualTextWidth);
-    } else if (rotation < 0) {
-        const xOffset = (textSize.width * calculateSin(90 - a)) / 2;
-        x = left - actualTextWidth / 2 - xOffset;
-        x = Math.min(x, axisWidth - actualTextWidth);
-    } else {
-        const xOffset = (textSize.width * calculateSin(90 - a)) / 2;
-        x = left + actualTextWidth / 2 - xOffset;
-    }
-    const yOffset = rotation <= 0 ? textSize.width * calculateSin(a) : 0;
-    const hOffset = textSize.hangingOffset;
-    const y = top + yOffset + axis.labels.margin + hOffset * calculateCos(rotation);
-    x -= hOffset * calculateSin(rotation);
-
-    const svgLabel: AxisSvgLabelData = {
-        title: content[0]?.text === text ? undefined : text,
-        content,
-        style: axis.labels.style,
-        size: textSize,
-        x: Math.max(-(boundsOffsetLeft - chartMarginLeft), x),
-        y,
-        angle: rotation,
-    };
-
-    return svgLabel;
-}
 
 export async function prepareXAxisData({
     axis,
@@ -235,7 +129,7 @@ export async function prepareXAxisData({
         for (let i = 0; i < values.length; i++) {
             const tickValue = values[i];
 
-            let svgLabel: AxisSvgLabelData | null = null;
+            let svgLabel: AxisTickData['svgLabel'] = null;
             let htmlLabel: HtmlItem | null = null;
 
             if (isBottomPlot && axis.labels.enabled) {
@@ -272,19 +166,22 @@ export async function prepareXAxisData({
                     if (axis.ticks.values !== undefined) {
                         labelMaxWidth = Math.min(axisWidth, axis.labels.maxWidth);
                     }
-                    svgLabel = await getSvgAxisLabel({
-                        getTextSize,
-                        text,
-                        axis,
-                        top: height,
-                        left: tickValue.x,
-                        labelMaxWidth,
-                        axisWidth,
-                        boundsOffsetLeft,
-                        boundsOffsetRight,
-                        chartMarginLeft,
-                        chartMarginRight,
-                    });
+                    svgLabel = {
+                        ...(await getXAxisLabelGeometry({
+                            getTextSize,
+                            text,
+                            rotation: axis.labels.rotation,
+                            labelHeight: axis.labels.height,
+                            labelMargin: axis.labels.margin,
+                            top: height,
+                            left: tickValue.x,
+                            labelMaxWidth,
+                            axisWidth,
+                            leftOverflow: boundsOffsetLeft - chartMarginLeft,
+                            rightOverflow: boundsOffsetRight - chartMarginRight,
+                        })),
+                        style: axis.labels.style,
+                    };
                 }
             }
 

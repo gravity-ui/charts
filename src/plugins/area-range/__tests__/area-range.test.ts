@@ -114,8 +114,14 @@ describe('area-range plugin', () => {
                     (marker) => marker.radius === 5 && marker.symbolType === 'square',
                 ),
             ).toBe(true);
-            expect(result.getHoverMarkers([{data: points[0]}])).toEqual([]);
-            expect(result.getHoverMarkers([{data: points[1]}])).toEqual([]);
+            expect(result.getHoverMarkers([{data: points[0]}])).toEqual([
+                expect.objectContaining({cx: 0, cy: 175, fill: 'green', symbolType: 'square'}),
+                expect.objectContaining({cx: 0, cy: 150, fill: 'green', symbolType: 'square'}),
+            ]);
+            expect(result.getHoverMarkers([{data: points[1]}])).toEqual([
+                expect.objectContaining({fill: 'red'}),
+                expect.objectContaining({fill: 'red'}),
+            ]);
             expect(options).toEqual(originalOptions);
         });
 

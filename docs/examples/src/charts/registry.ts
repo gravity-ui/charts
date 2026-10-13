@@ -45,6 +45,8 @@ import {BarYOverlayExample} from './series-types/bar-y-overlay';
 import barYOverlayRaw from './series-types/bar-y-overlay.tsx?raw';
 import barYSeriesRaw from './series-types/bar-y.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
+import {LineMarkersExample} from './series-types/line-markers';
+import lineMarkersRaw from './series-types/line-markers.tsx?raw';
 import lineSeriesRaw from './series-types/line.tsx?raw';
 import {ScatterSeriesExample} from './series-types/scatter';
 import scatterSeriesRaw from './series-types/scatter.tsx?raw';
@@ -133,6 +135,10 @@ export const registry: Record<string, ExampleModule> = {
     'series-types/line': {
         code: extractDisplayCode(lineSeriesRaw),
         Component: LineSeriesExample,
+    },
+    'series-types/line-markers': {
+        code: extractDisplayCode(lineMarkersRaw),
+        Component: LineMarkersExample,
     },
     'series-types/scatter': {
         code: extractDisplayCode(scatterSeriesRaw),
