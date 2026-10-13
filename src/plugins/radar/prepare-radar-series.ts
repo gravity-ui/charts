@@ -75,6 +75,7 @@ export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
                 groupId: series.legend?.groupId ?? getUniqId(),
+                source: series.legend,
                 itemText: series.legend?.itemText ?? name,
             },
             borderColor: series.borderColor || color,

@@ -27,6 +27,7 @@ export function prepareXRangeSeries(args: PrepareSeriesArgs<XRangeSeries>): Prep
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
                 groupId: series.legend?.groupId ?? getUniqId(),
+                source: series.legend,
                 itemText: series.legend?.itemText ?? name,
             },
             data: series.data,

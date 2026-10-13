@@ -41,6 +41,7 @@ import type {GradientReferenceCacheEntry} from './gradientReferenceCache';
 import {isGradientReferenceCurrent} from './gradientReferenceCache';
 import {prepareAxisLayout} from './prepareAxisLayout';
 import {prepareGradientReference} from './prepareGradientReference';
+import {reconcileLegendSelection} from './reconcileLegendSelection';
 import type {ChartInnerProps} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
@@ -112,7 +113,11 @@ export function useChartInnerProps(props: Props) {
         zoomState,
     } = props;
 
-    const [selectedLegendItems, setSelectedLegendItems] = React.useState<string[] | null>(null);
+    const selectedLegendItemsRef = React.useRef<string[] | null>(null);
+    const [legendSelectionVersion, updateLegendSelectionVersion] = React.useReducer(
+        (version: number) => version + 1,
+        0,
+    );
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
@@ -121,6 +126,7 @@ export function useChartInnerProps(props: Props) {
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const selectedLegendItems = selectedLegendItemsRef.current;
 
         (async function () {
             const chartDataChanged = !(
@@ -177,8 +183,18 @@ export function useChartInnerProps(props: Props) {
                 allPreparedSeries = prevStateValue.current?.allPreparedSeries ?? [];
             }
 
+            const nextSelectedLegendItems =
+                chartDataChanged && selectedLegendItems !== null
+                    ? reconcileLegendSelection(
+                          selectedLegendItems,
+                          prevStateValue.current?.allPreparedSeries ?? [],
+                          allPreparedSeries,
+                      )
+                    : selectedLegendItems;
+            const enabledLegendItems = new Set(getAllLegendItems(allPreparedSeries));
             const nextActiveLegendItems =
-                selectedLegendItems ?? getActiveLegendItems(allPreparedSeries);
+                nextSelectedLegendItems?.filter((id) => enabledLegendItems.has(id)) ??
+                getActiveLegendItems(allPreparedSeries);
             const previousActiveLegendItems = prevStateValue.current?.activeLegendItems;
             const activeLegendItems =
                 previousActiveLegendItems &&
@@ -343,6 +359,7 @@ export function useChartInnerProps(props: Props) {
             };
 
             if (currentRunRef.current === currentRun) {
+                selectedLegendItemsRef.current = nextSelectedLegendItems;
                 gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
                 if (!isEqual(prevStateValue.current, newStateValue)) {
                     setState(newStateValue);
@@ -355,7 +372,7 @@ export function useChartInnerProps(props: Props) {
         height,
         width,
         data,
-        selectedLegendItems,
+        legendSelectionVersion,
         zoomState,
         rangeSliderState,
         dispatcher,
@@ -384,7 +401,9 @@ export function useChartInnerProps(props: Props) {
         ({id, metaKey}) => {
             const allItems = getAllLegendItems(preparedSeries);
             const onlyItemSelected =
-                (selectedLegendItems ?? []).length === 1 && activeLegendItems.includes(id);
+                selectedLegendItemsRef.current !== null &&
+                activeLegendItems.length === 1 &&
+                activeLegendItems.includes(id);
             let nextActiveLegendItems: string[];
 
             if (metaKey && activeLegendItems.includes(id)) {
@@ -399,9 +418,23 @@ export function useChartInnerProps(props: Props) {
                 nextActiveLegendItems = [id];
             }
 
-            setSelectedLegendItems(nextActiveLegendItems);
+            currentRunRef.current++;
+            // Keep disabled items' selection while clicks affect only the displayed legend.
+            const selected = selectedLegendItemsRef.current;
+            const disabledSelectedItems = preparedSeries
+                .filter(
+                    (series) =>
+                        !series.legend.enabled &&
+                        !allItems.includes(series.legend.groupId) &&
+                        (selected ? selected.includes(series.legend.groupId) : series.visible),
+                )
+                .map((series) => series.legend.groupId);
+            selectedLegendItemsRef.current = [
+                ...new Set([...nextActiveLegendItems, ...disabledSelectedItems]),
+            ];
+            updateLegendSelectionVersion();
         },
-        [preparedSeries, selectedLegendItems, activeLegendItems],
+        [preparedSeries, activeLegendItems],
     );
 
     const handleAttemptToSetZoomState = React.useCallback(
