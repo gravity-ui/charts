@@ -1,10 +1,7 @@
 import type {PreparedTreemapData} from '~core/shapes/treemap/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
-import type {
-    InteractionElementsArgs,
-    NearestCandidate,
-    PrepareNearestDataArgs,
-} from '~core/utils/chart-interaction';
+import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
+import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 export function getTargetElements({plot, preparedData}: InteractionElementsArgs) {
     const {series} = preparedData[0] as PreparedTreemapData;

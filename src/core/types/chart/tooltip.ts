@@ -113,6 +113,8 @@ export interface TooltipDataChunkTreemap<T = MeaningfulAny> {
 export interface TooltipDataChunkSankey<T = MeaningfulAny> {
     data: SankeySeriesData<T>;
     target?: SankeySeriesData<T>;
+    /** Value of the selected link, including when several links share the same endpoints. */
+    value?: number;
     series: SankeySeries<T>;
 }
 

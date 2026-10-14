@@ -25,7 +25,7 @@ export type ChartInteractionItem<
     TType extends ChartSeries['type'] = ChartSeries['type'],
 > = Extract<BuiltInInteractionItem<T>, {series: {type: TType}}>;
 
-/** Stable public queries over the chart's current rendered data. Also available through ChartRef. */
+/** Stable queries over the chart's current rendered data, available in event payloads. */
 export interface ChartApi<T = MeaningfulAny> {
     /**
      * Select the nearest plugin reference position by Euclidean distance in plot-relative pixels.
@@ -52,7 +52,7 @@ export interface ChartClickData<T = MeaningfulAny> {
     position: [number, number];
     /** All exact hits, including covered elements, ordered from uppermost to lowest. */
     targets: ChartInteractionItem<T>[];
-    /** The same stable public API exposed through the component ref. */
+    /** Stable query API. Retained references use the current chart state. */
     chart: ChartApi<T>;
     /** Native click event. A tap produces the same payload as a mouse click. */
     event: MouseEvent;

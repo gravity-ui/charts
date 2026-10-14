@@ -7,7 +7,7 @@ import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';
 
 import '../plugins';
-import type {ChartApi, ChartData, MeaningfulAny} from '../types';
+import type {ChartApi, ChartData} from '../types';
 
 import {ChartInner} from './ChartInner';
 
@@ -18,7 +18,7 @@ export interface ChartReflowOptions {
     immediate?: boolean;
 }
 
-export interface ChartRef<T = MeaningfulAny> extends ChartApi<T> {
+export interface ChartRef {
     reflow: (options?: ChartReflowOptions) => void;
 }
 
@@ -84,10 +84,17 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         return debounced.current;
     }, [handleResize]);
 
-    const chartApi = React.useMemo<ChartRef>(
+    const chartApi = React.useMemo<ChartApi>(
         () => ({
             getClosest: (position, options) =>
                 innerRef.current?.getClosest(position, options) ?? null,
+        }),
+        [],
+    );
+
+    React.useImperativeHandle(
+        forwardedRef,
+        () => ({
             reflow(options?: ChartReflowOptions) {
                 if (options?.immediate) {
                     handleResize({force: true});
@@ -98,8 +105,6 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         }),
         [debuncedHandleResize, handleResize],
     );
-
-    React.useImperativeHandle(forwardedRef, () => chartApi, [chartApi]);
 
     React.useEffect(() => {
         // dimensions initialize

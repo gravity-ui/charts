@@ -4,8 +4,8 @@ import type {ChartInteractionItem} from '../../../types';
 import {registerSeriesPlugin} from '../../series/seriesRegistry';
 import type {PreparedLineData} from '../../shapes/line/types';
 import type {PreparedScatterData} from '../../shapes/scatter/types';
-import {getNearestItem} from '../chart-interaction';
 import {getChartClosest} from '../get-closest-data';
+import {getNearestItem} from '../nearest-point';
 
 beforeAll(() => {
     registerSeriesPlugin(linePlugin);

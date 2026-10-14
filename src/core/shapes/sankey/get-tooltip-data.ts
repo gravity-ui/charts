@@ -32,6 +32,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedSankeyData>): Ge
             {
                 data: closestLink.source as SankeySeriesData,
                 target: closestLink.target,
+                value: closestLink.value,
                 series: sankeyData.series as SankeySeries,
                 closest: true,
             },

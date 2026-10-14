@@ -86,6 +86,8 @@ it('keeps migrated grouping and clipping independent of built-in series implemen
 it('keeps chart interaction coordination independent of built-in series implementations', () => {
     const files = [
         'core/utils/chart-interaction.ts',
+        'core/utils/nearest-point.ts',
+        'core/utils/svg-hit-test.ts',
         'core/utils/get-closest-data.ts',
         'core/types/chart/interaction.ts',
         'components/ChartInner/index.tsx',

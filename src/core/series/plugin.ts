@@ -18,13 +18,9 @@ import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
-import type {
-    InteractionElement,
-    InteractionElementsArgs,
-    NearestCandidate,
-    PrepareNearestDataArgs,
-} from '../utils/chart-interaction';
+import type {InteractionElement, InteractionElementsArgs} from '../utils/chart-interaction';
 import type {GradientGeometry} from '../utils/gradient-reference';
+import type {NearestCandidate, PrepareNearestDataArgs} from '../utils/nearest-point';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 import type {ZoomState} from '../zoom/types';
 
@@ -207,7 +203,7 @@ export interface SeriesPlugin<
         /** Enumerates series geometry and data, excluding labels, halos and connectors. */
         getTargetElements(args: InteractionElementsArgs): InteractionElement[];
         /** Converts a selection containing multiple data parts into its public item. */
-        getClosestItem?(item: TooltipDataChunk): ChartInteractionItem;
+        getClosestItem?(item: TTooltipChunk): ChartInteractionItem;
     };
 
     // --- Tooltip ---

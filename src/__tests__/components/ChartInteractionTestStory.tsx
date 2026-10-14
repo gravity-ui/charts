@@ -60,6 +60,7 @@ export function ChartInteractionTestStory({
                     ...data.chart?.events,
                     click: (payload) => {
                         const {targets, chart, event, position, point, series} = payload;
+                        const sameApi = savedChart.current === chart;
                         savedChart.current = chart;
                         lastPosition.current = position;
                         const closest =
@@ -82,7 +83,9 @@ export function ChartInteractionTestStory({
                                           name: series.name,
                                       }
                                     : null,
-                                sameApi: chart === chartRef.current,
+                                sameApi,
+                                apiMethods: Object.keys(chart),
+                                refMethods: Object.keys(chartRef.current ?? {}),
                                 position,
                                 native: event instanceof MouseEvent,
                             }),
@@ -97,20 +100,8 @@ export function ChartInteractionTestStory({
     return (
         <React.Fragment>
             <div style={chartSize}>{showChart && <Chart ref={chartRef} data={chartData} />}</div>
-            <button
-                onClick={() =>
-                    setQueryResult(
-                        JSON.stringify(
-                            serializeItem(
-                                chartRef.current?.getClosest(
-                                    queryPosition ?? lastPosition.current,
-                                ) ?? null,
-                            ),
-                        ),
-                    )
-                }
-            >
-                Query chart
+            <button onClick={() => chartRef.current?.reflow({immediate: true})}>
+                Reflow chart
             </button>
             <button
                 onClick={() =>

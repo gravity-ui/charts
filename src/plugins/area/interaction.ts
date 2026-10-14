@@ -1,22 +1,16 @@
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import type {PreparedAreaData} from '~core/shapes/area/types';
-import type {MarkerItem} from '~core/shapes/types';
 import {
     getInteractionElements,
-    getPointCandidates,
+    getMarkerInteractionElements,
     getShapePoint,
 } from '~core/utils/chart-interaction';
-import type {
-    InteractionElementsArgs,
-    NearestCandidate,
-    PrepareNearestDataArgs,
-} from '~core/utils/chart-interaction';
-
-import type {AreaSeriesData} from '../../types';
+import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
+import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
+import {getPointCandidates} from '~core/utils/nearest-point';
 
 export function getTargetElements({plot, markers, preparedData}: InteractionElementsArgs) {
     const shapes = preparedData as PreparedAreaData[];
-    const seriesById = new Map(shapes.map((shape) => [shape.series.id, shape.series]));
     return [
         ...getInteractionElements<PreparedAreaData>(
             plot,
@@ -26,12 +20,7 @@ export function getTargetElements({plot, markers, preparedData}: InteractionElem
                 series: shape.series,
             }),
         ),
-        ...getInteractionElements<MarkerItem>(markers, '.gcharts-marker__symbol', (marker) => {
-            const series = seriesById.get(marker.series.id);
-            return series && !marker.clipped
-                ? {point: marker.data as AreaSeriesData, series}
-                : undefined;
-        }),
+        ...getMarkerInteractionElements(markers, shapes),
     ];
 }
 

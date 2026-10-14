@@ -64,7 +64,7 @@ items:
         href: ./pages/guides/legend.md
       - name: Theming
         href: ./pages/guides/theming.md
-      - name: Chart interactions
+      - name: Events and interactions
         href: ./pages/guides/chart-interactions.md
       - name: Tooltip
         href: ./pages/guides/tooltip.md

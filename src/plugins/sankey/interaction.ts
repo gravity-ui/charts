@@ -1,10 +1,7 @@
 import type {PreparedSankeyData, SankeyLink, SankeyNode} from '~core/shapes/sankey/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
-import type {
-    InteractionElementsArgs,
-    NearestCandidate,
-    PrepareNearestDataArgs,
-} from '~core/utils/chart-interaction';
+import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
+import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {ChartSankeyLinkPoint, PointPosition} from '../../types';
 

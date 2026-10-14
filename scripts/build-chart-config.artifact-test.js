@@ -133,6 +133,8 @@ describe('chart config artifacts', () => {
                 const legacySelection = chart.getClosest(position, {mode: 'tooltip'});
                 // @ts-expect-error Only documented selection modes are supported.
                 chart.getClosest(position, {mode: 'exact'});
+                // @ts-expect-error Resizing belongs to ChartRef, not the event query API.
+                chart.reflow();
                 void [coordinates, nativeEvent, hits, nearest, legacySelection, point, series, legacyEvent];
             }}};
             void options;
@@ -163,7 +165,10 @@ describe('chart config artifacts', () => {
             const link: ChartSankeyLinkPoint<IssueMetadata> = {
                 kind: 'link', source: {name: 'A', links: []}, target: {name: 'B', links: []}, value: 1,
             };
-            void [typedData, radar, link];
+            function readLinkValue(item: TooltipDataChunkSankey): number | undefined {
+                return item.value;
+            }
+            void [typedData, radar, link, readLinkValue];
         `;
         expect(() =>
             validateDeclaration(

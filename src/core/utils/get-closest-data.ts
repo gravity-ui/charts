@@ -5,7 +5,7 @@ import type {ChartInteractionItem, TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
-import {getNearestItem} from './chart-interaction';
+import {getNearestItem} from './nearest-point';
 import {getClosestPointsByXValue, isPointTooltipEnabled} from './tooltip-helpers';
 import type {ShapePoint} from './tooltip-helpers';
 

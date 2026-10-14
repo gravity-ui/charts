@@ -374,7 +374,6 @@ test.describe('Chart interaction queries', () => {
                 expect(point.custom).toEqual(custom);
             }
             expect(result.native).toBe(true);
-            expect(result.sameApi).toBe(true);
             expect(result).not.toHaveProperty('chart');
             expect(result).not.toHaveProperty('tooltip');
             await component.getByRole('button', {name: 'Query saved chart'}).click();
@@ -643,6 +642,39 @@ test.describe('Chart interaction queries', () => {
         expect(result.legacy.point.name).toBe('Open');
     });
 
+    test('Parallel Sankey links retain the selected link value in tooltip queries', async ({
+        mount,
+        page,
+    }) => {
+        const data = chart([
+            {
+                type: 'sankey',
+                name: 'Flow',
+                data: [
+                    {
+                        name: 'A',
+                        links: [
+                            {name: 'B', value: 10},
+                            {name: 'B', value: 30},
+                        ],
+                    },
+                    {name: 'B', links: []},
+                ],
+            },
+        ]);
+        const component = await mount(<ChartInteractionTestStory data={data} />);
+        const link = component.locator('.gcharts-sankey path').nth(1);
+        await expect(link).toHaveAttribute('d', /^M/);
+        const {x, y} = await paintedPosition(link);
+        await page.mouse.click(x, y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('1');
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent()) ?? '',
+        );
+        expect(result.targets[0].point.value).toBe(30);
+        expect(result.tooltip.point.value).toBe(30);
+    });
+
     test('Queries use replacement data and only the main plot, not preview geometry', async ({
         mount,
     }) => {
@@ -771,6 +803,60 @@ test('Normal line markers remain exact point targets with hover markers disabled
     expect(result.targets[0].point).toMatchObject(point);
 });
 
+for (const type of ['line', 'area', 'area-range'] as const) {
+    test(`${type}: a permanent marker remains an exact target while hovered`, async ({
+        mount,
+        page,
+    }) => {
+        const point = {x: 1, y: 5, y0: 3, y1: 5, custom};
+        const data: ChartData = {
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            xAxis: {min: 0, max: 2},
+            yAxis: [{min: 0, max: 10}],
+            series: {
+                data: [{type, name: 'Markers', marker: {enabled: true, radius: 8}, data: [point]}],
+            },
+        };
+        const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+        const marker = component.locator('.gcharts-marker__symbol').first();
+        await expect(marker).toBeVisible();
+        const position = await paintedPosition(marker);
+        await page.mouse.move(position.x, position.y);
+        await expect(
+            component.locator('.gcharts-marker__wrapper[visibility="hidden"]'),
+        ).not.toHaveCount(0);
+        await page.mouse.click(position.x, position.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('1');
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent()) ?? '',
+        );
+        expect(result.targets[0]?.point).toMatchObject(point);
+
+        await page.mouse.move(0, 0);
+        const hoverOnlyData: ChartData = {
+            ...data,
+            series: {
+                data: data.series.data.map((series) => ({...series, marker: {enabled: false}})),
+            },
+        };
+        await component.update(<ChartInteractionTestStory data={hoverOnlyData} query="none" />);
+        await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(0);
+        await page.mouse.move(position.x, position.y);
+        await expect(component.locator('.gcharts-marker__symbol').first()).toBeVisible();
+        await page.mouse.click(position.x, position.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('2');
+        const hoverOnlyResult = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent()) ?? '',
+        );
+        expect(
+            hoverOnlyResult.targets.filter(
+                (item: {point: {kind?: string}}) => item.point.kind !== 'shape',
+            ),
+        ).toEqual([]);
+    });
+}
+
 test('radar hover-only markers do not become exact point targets', async ({mount, page}) => {
     const data: ChartData = {
         legend: {enabled: false},
@@ -854,27 +940,20 @@ test('preserving Sankey custom does not change legacy tooltip eligibility', asyn
     expect(result.legacy?.point.name).toBe('A');
 });
 
-test('Public ref can query a position before any chart click', async ({mount}) => {
-    const data = cases[0].data;
-    const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+test('Component ref exposes resizing separately from the event query API', async ({mount}) => {
+    const component = await mount(<ChartInteractionTestStory data={cases[0].data} />);
     const bar = component.locator('.gcharts-bar-x__segment').first();
     await expect(bar).toBeVisible();
-    const position = await bar.evaluate((node) => {
-        const element = node as SVGGraphicsElement;
-        const plot = element.closest('.gcharts-chart__content') as SVGGraphicsElement;
-        const box = element.getBBox();
-        const point = new DOMPoint(box.x + box.width / 2, box.y + box.height / 2)
-            .matrixTransform(element.getScreenCTM()!)
-            .matrixTransform(plot.getScreenCTM()!.inverse());
-        return [point.x, point.y] as [number, number];
-    });
-    await component.update(
-        <ChartInteractionTestStory data={data} query="none" queryPosition={position} />,
-    );
-    await component.getByRole('button', {name: 'Query chart', exact: true}).click();
-    const result = JSON.parse((await component.getByTestId('chart-query-result').textContent())!);
-    expect(result.point.custom).toEqual(custom);
-    await expect(component.getByTestId('interaction-count')).toHaveText('0');
+    await bar.click();
+    const result = JSON.parse((await component.getByTestId('interaction-result').textContent())!);
+    expect(result.refMethods).toEqual(['reflow']);
+    expect(result.apiMethods).toEqual(['getClosest']);
+    await component.getByRole('button', {name: 'Reflow chart'}).click();
+    await bar.click();
+    await expect(component.getByTestId('interaction-count')).toHaveText('2');
+    const next = JSON.parse((await component.getByTestId('interaction-result').textContent())!);
+    expect(next.sameApi).toBe(true);
+    expect(next.chart.point.custom).toEqual(custom);
 });
 
 test('API retained from a click uses current data after replacement', async ({mount}) => {
@@ -885,7 +964,6 @@ test('API retained from a click uses current data after replacement', async ({mo
     await bar.click();
     await expect(component.getByTestId('interaction-count')).toHaveText('1');
     const snapshot = JSON.parse((await component.getByTestId('interaction-result').textContent())!);
-    expect(snapshot.sameApi).toBe(true);
     const updated: ChartData = {
         ...data,
         series: {
@@ -909,9 +987,11 @@ test('API retained from a click uses current data after replacement', async ({mo
     await expect(component.getByTestId('chart-query-result')).toHaveText('null');
 });
 
-test('Public queries validate plot boundaries and finite coordinates', async ({mount}) => {
+test('Event queries validate plot boundaries and finite coordinates', async ({mount}) => {
     const component = await mount(<ChartInteractionTestStory data={cases[0].data} />);
-    await expect(component.locator('.gcharts-bar-x__segment').first()).toBeVisible();
+    const bar = component.locator('.gcharts-bar-x__segment').first();
+    await expect(bar).toBeVisible();
+    await bar.click();
     for (const position of [
         [-1, 0],
         [0, -1],
@@ -923,20 +1003,37 @@ test('Public queries validate plot boundaries and finite coordinates', async ({m
         await component.update(
             <ChartInteractionTestStory data={cases[0].data} queryPosition={position} />,
         );
-        await component.getByRole('button', {name: 'Query chart', exact: true}).click();
+        await component.getByRole('button', {name: 'Query saved chart', exact: true}).click();
         await expect(component.getByTestId('chart-query-result')).toHaveText('null');
     }
 });
 
-test('Public queries return null when the container has no available plot', async ({mount}) => {
-    const component = await mount(
-        <ChartInteractionTestStory data={cases[0].data} chartSize={{width: 0, height: 0}} />,
-    );
-    await component.getByRole('button', {name: 'Query chart', exact: true}).click();
-    await expect(component.getByTestId('chart-query-result')).toHaveText('null');
-    await component.update(
-        <ChartInteractionTestStory data={cases[0].data} chartSize={{width: 1, height: 1}} />,
-    );
-    await component.getByRole('button', {name: 'Query chart', exact: true}).click();
-    await expect(component.getByTestId('chart-query-result')).toHaveText('null');
+test('Retained event API handles a missing plot and recovers after resize', async ({mount}) => {
+    const data = cases[0].data;
+    const component = await mount(<ChartInteractionTestStory data={data} />);
+    const bar = component.locator('.gcharts-bar-x__segment').first();
+    await expect(bar).toBeVisible();
+    await bar.click();
+    for (const size of [0, 1]) {
+        await component.update(
+            <ChartInteractionTestStory data={data} chartSize={{width: size, height: size}} />,
+        );
+        await component.getByRole('button', {name: 'Reflow chart'}).click();
+        await expect
+            .poll(async () => {
+                await component
+                    .getByRole('button', {name: 'Query saved chart', exact: true})
+                    .click();
+                return component.getByTestId('chart-query-result').textContent();
+            })
+            .toBe('null');
+    }
+    await component.update(<ChartInteractionTestStory data={data} />);
+    await component.getByRole('button', {name: 'Reflow chart'}).click();
+    await expect
+        .poll(async () => {
+            await component.getByRole('button', {name: 'Query saved chart', exact: true}).click();
+            return component.getByTestId('chart-query-result').textContent();
+        })
+        .toContain('ISSUE-1');
 });

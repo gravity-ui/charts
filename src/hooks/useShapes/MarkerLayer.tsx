@@ -14,8 +14,7 @@ interface Props {
 }
 
 export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: Props) => {
-    const ownRef = React.useRef<SVGGElement>(null);
-    const ref = elementRef ?? ownRef;
+    const ref = React.useRef<SVGGElement>(null);
     const hoverRef = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
@@ -62,12 +61,12 @@ export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: P
         return () => {
             dispatcher?.on(`hover-shape.${namespace}`, null);
         };
-    }, [preparedData, dispatcher, namespace, ref]);
+    }, [preparedData, dispatcher, namespace]);
 
     return (
-        <React.Fragment>
+        <g ref={elementRef}>
             <g ref={ref} />
             <g ref={hoverRef} />
-        </React.Fragment>
+        </g>
     );
 };

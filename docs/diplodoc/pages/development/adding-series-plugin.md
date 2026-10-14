@@ -58,11 +58,9 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ### Interaction lookup
 
-Keep series-specific interaction adapters in `src/plugins/<type>/interaction.ts` and connect them in the plugin's `index.ts`. Declare `interaction.prepareNearestData` and `interaction.getTargetElements({plot, markers, preparedData})` for exact click targets and tooltip-independent nearest selection. `prepareNearestData({data})` accepts only prepared data and returns all eligible `{position, item}` candidates in plot-relative pixels, without tooltip filtering, X-first selection, or containment-based preselection. Core compares their Euclidean distances, with ties resolved by series/layer order and then candidate order. Reuse existing prepared geometry and unfiltered point collectors; do not implement a separate distance comparison per plugin. `tooltip.prepareData` retains its own legacy selection policy. Omitting `interaction` preserves tooltip lookup but yields no independent chart candidates or exact targets.
+Implement `interaction.prepareNearestData` for unfiltered `{position, item}` candidates and `interaction.getTargetElements` for painted SVG elements. Reuse prepared geometry; shared utilities handle distance comparison, hit testing, clipping, and ordering. Keep tooltip selection in `tooltip.prepareData`; use `interaction.getClosestItem` only when its result needs conversion (for example, a Sankey link).
 
-Define the series-specific public item payload in `src/plugins/<type>/interaction-types.ts` and include it in the built-in union in `src/plugins/interaction-types.ts`. Do not add a series-to-payload map to core.
-
-Enumerate relevant `SVGGeometryElement` nodes and their `{point, series}` items using `getInteractionElements` from `src/core/utils/chart-interaction.ts`. Read existing D3 data; renderers do not need extra handlers or per-shape registration. Include normal markers, and exclude labels, halos, hover markers, grids, and connectors. Core handles built-in rectangular clipping, effective visibility, paint order, and deduplication. Parts of one logical element must share their point reference and series ID. Paths representing whole shapes can use `getShapePoint`; multi-part selections can define `interaction.getClosestItem`, as Sankey links do.
+Keep adapters and payload types in the plugin's `interaction.ts` and `interaction-types.ts`; add the public item to `src/plugins/interaction-types.ts`. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
 
 ## 6. Integrate
 
