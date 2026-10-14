@@ -18,16 +18,26 @@ test('unequal grouped stacks keep bar and line rows in the same tooltip category
         y: index === 1 ? 100 : 150,
         width: 20,
         height: 50,
+        valueEndPadding: 0,
+        borderWidth: 0,
+        isStackEnd: false,
+        extendsUp: true,
     })) as PreparedBarXData[];
+    // A single point drawn as a round dot, so the pointer on it hits the line.
     const line = {
         series: lineSeries,
         points: [{series: lineSeries, data: {x: 'A', y: 140}, x: 100, y: 60}],
-    } as PreparedLineData;
+        markers: [],
+        getSegments: () => [],
+        lineWidth: 2,
+        linecap: 'round',
+    } as unknown as PreparedLineData;
     const chunks = getClosestPoints({
         shapesData: [...bars, line],
         position: [100, 60],
         boundsWidth: 400,
         boundsHeight: 400,
+        layerIndexes: new Map(),
     });
     expect(new Set(chunks.map((chunk) => chunk.series.name))).toEqual(
         new Set(['Bar 0', 'Bar 1', 'Bar 2', 'Line']),

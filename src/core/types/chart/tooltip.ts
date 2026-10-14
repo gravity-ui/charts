@@ -164,7 +164,10 @@ export type TooltipDataChunk<T = MeaningfulAny> = (
     | TooltipDataChunkHeatmap<T>
     | TooltipDataChunkFunnel<T>
     | TooltipDataChunkXRange<T>
-) & {closest?: boolean};
+) & {
+    /** Marks the chunk nearest to the pointer. At most one chunk in `hovered` has it set to `true`. */
+    closest?: boolean;
+};
 
 export interface ChartTooltipRendererArgs<T = MeaningfulAny> {
     hovered: TooltipDataChunk<T>[];

@@ -57,8 +57,13 @@ describe('area-range plugin', () => {
             const args = createArgs([{x: 1, y0: 5, y1: 10}]);
             const data = await prepareAreaRangeData(args);
             const selected =
-                getTooltipData({data, position: [100, 160], boundsWidth: 400, boundsHeight: 200})
-                    .xLookupPoints ?? [];
+                getTooltipData({
+                    data,
+                    position: [100, 160],
+                    boundsWidth: 400,
+                    boundsHeight: 200,
+                    measureDistance: false,
+                }).xLookupPoints ?? [];
             expect(data[0].markers).toEqual([]);
             expect(
                 data[0].getHoverMarkers(
@@ -286,6 +291,7 @@ describe('area-range plugin', () => {
                     position: [200, 100],
                     boundsWidth: 400,
                     boundsHeight: 200,
+                    measureDistance: false,
                 }).xLookupPoints?.map((point) => point.data),
             ).toEqual(args.series[0].data.filter((point) => point.y1 !== null));
         },
@@ -377,6 +383,7 @@ describe('area-range plugin', () => {
                 position: [200, 100],
                 boundsWidth: 400,
                 boundsHeight: 200,
+                measureDistance: false,
             }).xLookupPoints?.map((point) => (point.data as AreaRangeSeriesData).x),
         ).toEqual([2, 3]);
     });
@@ -390,8 +397,13 @@ describe('area-range plugin', () => {
         args.yScale[0].clamp(true);
         const data = await prepareAreaRangeData(args);
         expect(
-            getTooltipData({data, position: [200, 100], boundsWidth: 400, boundsHeight: 200})
-                .xLookupPoints,
+            getTooltipData({
+                data,
+                position: [200, 100],
+                boundsWidth: 400,
+                boundsHeight: 200,
+                measureDistance: false,
+            }).xLookupPoints,
         ).toEqual([]);
         expect(data[0].points.map((point) => point.hiddenInLine)).toEqual([false, false]);
     });

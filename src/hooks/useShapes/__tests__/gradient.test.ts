@@ -376,7 +376,13 @@ test.each([true, false])(
               );
         expect(fills(markers)).toEqual(fills(after.points));
         const tooltipPoints = required(
-            getTooltipData({data: [after]} as Parameters<typeof getTooltipData>[0]).xLookupPoints,
+            getTooltipData({
+                data: [after],
+                position: [0, 0],
+                boundsWidth: 0,
+                boundsHeight: 0,
+                measureDistance: false,
+            }).xLookupPoints,
         );
         expect(tooltipPoints.map((point) => rgb(point.color))).toEqual(fills(after.points));
     },

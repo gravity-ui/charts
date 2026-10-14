@@ -27,6 +27,8 @@ export function getTooltipData(
                 data: closestPoint.data,
                 series: data[0].series as unknown as HeatmapSeries,
                 closest: true,
+                // The chunk is found only when the pointer is inside the shape.
+                distance: 0,
             },
         ],
     };

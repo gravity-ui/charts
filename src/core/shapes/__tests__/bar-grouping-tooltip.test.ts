@@ -212,10 +212,15 @@ test('keeps line candidates beside unequal stacks when an overlay is present', (
             width: 20,
             height: 100,
         } as PreparedBarXData,
+        // A single point drawn as a round dot under the pointer.
         {
             series: lineSeries,
             points: [{series: lineSeries, data: {x: 'A', y: 140}, x: 100, y: 60}],
-        } as PreparedLineData,
+            markers: [],
+            getSegments: () => [],
+            lineWidth: 2,
+            linecap: 'round',
+        } as unknown as PreparedLineData,
         ...[78, 78, 102].map(
             (x, index) =>
                 ({
@@ -263,7 +268,9 @@ test('overlay hit testing keeps area candidates above the bar', () => {
         {
             series: areaSeries,
             points: [{series: areaSeries, data: {x: 'A', y: 150}, x: 100, y: 50, y0: 200}],
-        } as PreparedAreaData,
+            markers: [],
+            width: 1,
+        } as unknown as PreparedAreaData,
     ];
     const chunks = getClosestPoints({
         shapesData: shapes,

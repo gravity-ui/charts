@@ -14,19 +14,41 @@ export interface ShapePoint {
     series: ChartSeries;
     subTotal?: number;
     sourceX?: number;
-    /** Distance to the painted contour and paint order among these shapes. */
+    /**
+     * Pixel distance from the pointer to the drawn shape of the series this point belongs to;
+     * `0` when the pointer is inside it, `undefined` when it was not measured.
+     */
+    distance?: number;
+    /**
+     * Distance to the painted contour of this point and its paint order among the points of
+     * its group; set by plugins whose shapes of one X column overlap (bar overlays).
+     */
     hitTest?: {distance: number; priority: number};
 }
+
+/**
+ * Tooltip chunk produced by a series plugin, together with the pixel distance from the
+ * pointer to the drawn shape of the chunk: `0` when the pointer is inside the shape,
+ * `undefined` when it was not measured. Only the `closest` chunk needs a distance. It is used
+ * to pick a single active chunk across series types and is stripped before the chunks reach
+ * public callbacks.
+ */
+export type TooltipCandidate = TooltipDataChunk & {distance?: number};
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
     data: TShapeData[];
     position: [number, number];
     boundsWidth: number;
     boundsHeight: number;
+    /**
+     * `false` when no other series type competes for the pointer, so `distance` is not
+     * compared and the plugin must skip measuring it.
+     */
+    measureDistance: boolean;
 }
 
 export interface GetTooltipDataResult {
-    chunks: TooltipDataChunk[];
+    chunks: TooltipCandidate[];
     xLookupPoints?: ShapePoint[];
 }
 
@@ -53,6 +75,41 @@ export function getClosestYIndex(items: ShapePoint[], y: number) {
     return closestYIndex;
 }
 
+/** Index of the render layer of each series by series id; a higher index is drawn above. */
+export type LayerIndexes = Map<string, number>;
+
+export function getSeriesLayer(layerIndexes: LayerIndexes | undefined, series: object) {
+    return layerIndexes?.get(get(series, 'id', '')) ?? -1;
+}
+
+/**
+ * Picks the active point among the candidates of one X column. When the distances to the
+ * drawn shapes are measured, the nearest shape wins, then the series drawn in the upper
+ * layer; the remaining ties and unmeasured candidates are resolved by the Y rule of
+ * `getClosestYIndex`.
+ */
+function pickClosestPoint(points: ShapePoint[], y: number, layerIndexes?: LayerIndexes) {
+    let candidates = points;
+    const measured = points.filter((p) => p.distance !== undefined);
+    if (measured.length > 0) {
+        const min = Math.min(...measured.map((p) => p.distance as number));
+        candidates = measured.filter((p) => p.distance === min);
+        if (candidates.length > 1 && layerIndexes) {
+            const layers = candidates.map((p) => getSeriesLayer(layerIndexes, p.series));
+            const top = Math.max(...layers);
+            candidates = candidates.filter((_p, index) => layers[index] === top);
+        }
+    }
+    const sorted = sort(candidates, (p) => p.y0);
+    const index = getClosestYIndex(sorted, y);
+    return sorted[index === -1 ? 0 : index];
+}
+
+/**
+ * Picks the active point among candidates with per-point hit tests (overlapping bars):
+ * the nearest contour wins, then the later painted one. Points without a hit test use the
+ * measured distance of their series or the distance to their point.
+ */
 function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
     let shapeWinner: ShapePoint | undefined;
     let candidates: ShapePoint[] = [];
@@ -60,6 +117,7 @@ function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
     for (const point of points) {
         const distance =
             point.hitTest?.distance ??
+            point.distance ??
             Math.hypot(
                 (point.sourceX ?? point.x) - x,
                 Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
@@ -85,7 +143,12 @@ function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
     return sorted[getClosestYIndex(sorted, y)] ?? points[0];
 }
 
-export function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
+export function getClosestPointsByXValue(
+    x: number,
+    y: number,
+    points: ShapePoint[],
+    layerIndexes?: LayerIndexes,
+): Array<ShapePoint & {closest: boolean}> {
     const sorted = sort(points, (p) => p.x);
     const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
 
@@ -128,9 +191,7 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
         const candidates = closestPoints.filter(
             (p) => p.sourceX === undefined || p.sourceX === closestSourceX,
         );
-        const sortedCandidates = sort(candidates, (p) => p.y0);
-        const winnerIdx = getClosestYIndex(sortedCandidates, y);
-        const winner = sortedCandidates[winnerIdx === -1 ? 0 : winnerIdx];
+        const winner = pickClosestPoint(candidates, y, layerIndexes);
 
         return closestPoints.map((p) => ({
             ...p,
@@ -138,10 +199,10 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
         }));
     }
 
-    const closestYIndex = getClosestYIndex(closestPoints, y);
-    return closestPoints.map((p, i) => ({
+    const winner = pickClosestPoint(closestPoints, y, layerIndexes);
+    return closestPoints.map((p) => ({
         ...p,
-        closest: i === closestYIndex,
+        closest: p === winner,
     }));
 }
 
@@ -181,6 +242,25 @@ export function isInsidePath(args: {
     }
 
     return null;
+}
+
+let hitTestContext: CanvasRenderingContext2D | null | undefined;
+
+/**
+ * Whether the point lies inside the fill of the SVG path. Falls back to `true` where the
+ * canvas is unavailable (for example, in jsdom).
+ */
+export function isPointInFill(path: string, point: [number, number]) {
+    if (hitTestContext === undefined) {
+        hitTestContext =
+            typeof document === 'undefined'
+                ? null
+                : document.createElement('canvas').getContext('2d');
+    }
+    if (!hitTestContext) {
+        return true;
+    }
+    return hitTestContext.isPointInPath(new Path2D(path), point[0], point[1]);
 }
 
 export function getRadius(args: {pointer: [number, number]; center: [number, number]}) {

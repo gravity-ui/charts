@@ -64,7 +64,7 @@ it('preserves independent lines and one bar group across interleaved raw series'
     expect(rawSeries).toEqual(original);
 });
 
-it('prepares upper layers first and preserves rendered keys and tooltip order', async () => {
+it('prepares upper layers first and preserves rendered keys, tooltip and layer order', async () => {
     const series = await prepare();
     const calls: {names: string[]; obstacles: string[]}[] = [];
     const shapeIds = new Map<ShapeLabels, string>();
@@ -85,7 +85,7 @@ it('prepares upper layers first and preserves rendered keys and tooltip order', 
             };
         });
     }
-    const {shapes, shapesData} = await getShapes(getShapeArgs(series));
+    const {shapes, shapesData, layerIndexes} = await getShapes(getShapeArgs(series));
     expect(calls).toEqual([
         {names: ['line2'], obstacles: []},
         {names: ['bar1.1', 'bar1.2', 'bar2'], obstacles: [series[4].id]},
@@ -104,6 +104,13 @@ it('prepares upper layers first and preserves rendered keys and tooltip order', 
         series[2],
         series[3],
     ]);
+    expect(Object.fromEntries(layerIndexes)).toEqual({
+        [series[0].id]: 0,
+        [series[1].id]: 1,
+        [series[2].id]: 1,
+        [series[3].id]: 1,
+        [series[4].id]: 2,
+    });
 });
 
 interface ClipCase {
@@ -167,7 +174,7 @@ it.each([
             boundsWidth,
             boundsHeight,
         });
-        expect(result).toEqual({shapes: [], shapesData: []});
+        expect(result).toEqual({shapes: [], shapesData: [], layerIndexes: new Map()});
         expect(line).not.toHaveBeenCalled();
         expect(bars).not.toHaveBeenCalled();
     },

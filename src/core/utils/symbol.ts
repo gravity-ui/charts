@@ -2,6 +2,9 @@ import {symbolCircle, symbolDiamond2, symbolSquare, symbolTriangle2} from 'd3-sh
 
 import {SymbolType} from '../constants';
 
+import {getDistanceToPolygon, offsetConvexPolygon} from './geometry';
+import type {Point} from './geometry';
+
 export const getSymbolType = (index: number) => {
     const scatterStyles = Object.values(SymbolType);
 
@@ -78,4 +81,80 @@ export function getSymbolSize({symbolSize, symbolType}: SymbolSizeOptions) {
 
 export function getSymbolBBoxWidth(options: SymbolSizeOptions) {
     return getSymbolSize(options).width;
+}
+
+/** Vertices of a non-circular symbol drawn around the origin, as `getSymbol` draws it. */
+function getSymbolVertices(symbolType: `${SymbolType}`, symbolSize: number): Point[] {
+    const size = Math.sqrt(symbolSize);
+    switch (symbolType) {
+        case SymbolType.Square: {
+            const half = size / 2;
+            return [
+                [-half, -half],
+                [half, -half],
+                [half, half],
+                [-half, half],
+            ];
+        }
+        case SymbolType.Diamond: {
+            const r = size * diamondRadiusFactor;
+            return [
+                [0, -r],
+                [r, 0],
+                [0, r],
+                [-r, 0],
+            ];
+        }
+        case SymbolType.Triangle: {
+            const s = size * triangleRadiusFactor;
+            return [
+                [0, -s],
+                [(s * sqrt3) / 2, s / 2],
+                [-(s * sqrt3) / 2, s / 2],
+            ];
+        }
+        case SymbolType.TriangleDown: {
+            const s = size * triangleRadiusFactor;
+            return [
+                [0, s],
+                [(s * sqrt3) / 2, -s / 2],
+                [-(s * sqrt3) / 2, -s / 2],
+            ];
+        }
+        default:
+            return [];
+    }
+}
+
+/**
+ * Distance from the pointer to the painted contour of a marker symbol; `0` when the
+ * pointer is inside it. `radius` is the symbol radius passed to `getMarkerSymbol`, the
+ * stroke of `strokeWidth` is painted centered on the symbol outline, so the contour lies
+ * `strokeWidth / 2` outside it.
+ */
+export function getDistanceToSymbol(args: {
+    point: Point;
+    center: Point;
+    symbolType: `${SymbolType}`;
+    radius: number;
+    strokeWidth: number;
+}) {
+    const {point, center, symbolType, radius, strokeWidth} = args;
+    const outset = strokeWidth / 2;
+    const dx = point[0] - center[0];
+    const dy = point[1] - center[1];
+
+    if (symbolType === SymbolType.Circle) {
+        return Math.max(0, Math.hypot(dx, dy) - radius - outset);
+    }
+
+    const vertices = getSymbolVertices(symbolType, Math.PI * radius ** 2);
+    if (vertices.length === 0) {
+        return Math.max(0, Math.hypot(dx, dy) - radius - outset);
+    }
+
+    return getDistanceToPolygon({
+        point: [dx, dy],
+        vertices: offsetConvexPolygon(vertices, outset),
+    });
 }
