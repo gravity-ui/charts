@@ -248,31 +248,6 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         },
     );
 
-    test.each([0, 1])(
-        'grouping is resolved per series within a stack, overlay index=%s',
-        async (overlayIndex) => {
-            const inputs = [20, 40, 60].map((value, index) => ({
-                value,
-                stacking: 'normal' as const,
-                stackId: index < 2 ? 'plan' : 'actual',
-            }));
-            const plain = await prepare(inputs);
-            const mixed = await prepare(
-                inputs.map((s, index) => ({
-                    ...s,
-                    grouping: index === overlayIndex ? false : undefined,
-                })),
-            );
-            expect(mixed.bars[overlayIndex].center).toBe(100);
-            expect(mixed.bars.filter((_, index) => index !== overlayIndex)).toEqual(
-                plain.bars.filter((_, index) => index !== overlayIndex),
-            );
-            expect(mixed.bars.map((bar) => [bar.start, bar.end])).toEqual(
-                plain.bars.map((bar) => [bar.start, bar.end]),
-            );
-        },
-    );
-
     test.each([0, 10, 400])(
         'renders borders only when both dimensions fit (%s)',
         async (valueSize) => {

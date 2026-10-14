@@ -200,30 +200,6 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             await expectAligned();
         });
 
-        test('partial stack grouping keeps one total', async ({mount}) => {
-            const component = await mount(
-                <ChartTestStory
-                    data={{
-                        series: {
-                            data: [20, 40, 10].map((value, index) => ({
-                                type,
-                                name: String(index),
-                                stacking: 'normal',
-                                grouping: index !== 1,
-                                stackId: index < 2 ? 'shared' : 'other',
-                                stackLabels: {enabled: index < 2},
-                                data: [vertical ? {x: 'A', y: value} : {y: 'A', x: value}],
-                            })),
-                        },
-                        xAxis: vertical ? {type: 'category', categories: ['A']} : undefined,
-                        yAxis: vertical ? undefined : [{type: 'category', categories: ['A']}],
-                    }}
-                    styles={{width: 600, height: 360}}
-                />,
-            );
-            await expect(component.locator('.gcharts-stack-labels__label')).toHaveText(['60']);
-        });
-
         for (const stacking of [undefined, 'normal'] as const) {
             test(`later series cover earlier borders, stacking=${stacking ?? 'none'}`, async ({
                 mount,

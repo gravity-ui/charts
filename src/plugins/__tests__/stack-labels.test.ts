@@ -309,7 +309,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
     });
 });
 
-describe.each([barXPlugin, barYPlugin])('$type partial stack overlays', (plugin) => {
+describe.each([barXPlugin, barYPlugin])('$type stack overlays', (plugin) => {
     test.each([false, true])(
         'keeps one total at the outer segment, reversed=%s',
         async (reversed) => {
@@ -318,7 +318,7 @@ describe.each([barXPlugin, barYPlugin])('$type partial stack overlays', (plugin)
                 [40, -40],
                 [10, -10],
             ]);
-            Object.assign(args.series[0], {stackId: 'shared'});
+            Object.assign(args.series[0], {stackId: 'shared', grouping: false});
             Object.assign(args.series[1], {stackId: 'shared', grouping: false});
             Object.assign(args.series[2], {stackId: 'other', stackLabels: {enabled: false}});
             const horizontal = plugin.type === 'bar-y';

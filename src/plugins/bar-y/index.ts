@@ -19,6 +19,7 @@ import {
 
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
 import {getBarDomainData} from '../bar-domain';
+import {validateBarGrouping} from '../bar-grouping';
 import {validateBarOpacity} from '../bar-opacity';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
@@ -86,6 +87,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validateBarGrouping({series, allSeries});
         validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
     getStackedDomainData: (series) => getBarDomainData(series, 'y', 'x'),
