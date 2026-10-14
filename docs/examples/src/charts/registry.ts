@@ -30,26 +30,54 @@ import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
 import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
 import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
+import {OverviewDashboardExample} from './overview/dashboard';
+import overviewDashboardRaw from './overview/dashboard.tsx?raw';
 import {AreaSeriesExample} from './series-types/area';
+import {AreaBasicExample} from './series-types/area-basic';
+import areaBasicExampleRaw from './series-types/area-basic.tsx?raw';
 import {AreaRangeSeriesExample} from './series-types/area-range';
 import {AreaRangeWithLineExample} from './series-types/area-range-with-line';
 import areaRangeWithLineRaw from './series-types/area-range-with-line.tsx?raw';
 import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
 import {BarXSeriesExample} from './series-types/bar-x';
+import {BarXBasicExample} from './series-types/bar-x-basic';
+import barXBasicExampleRaw from './series-types/bar-x-basic.tsx?raw';
 import {BarXOverlayExample} from './series-types/bar-x-overlay';
 import barXOverlayRaw from './series-types/bar-x-overlay.tsx?raw';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {BarYSeriesExample} from './series-types/bar-y';
+import {BarYBasicExample} from './series-types/bar-y-basic';
+import barYBasicExampleRaw from './series-types/bar-y-basic.tsx?raw';
 import {BarYOverlayExample} from './series-types/bar-y-overlay';
 import barYOverlayRaw from './series-types/bar-y-overlay.tsx?raw';
 import barYSeriesRaw from './series-types/bar-y.tsx?raw';
+import {FunnelExample} from './series-types/funnel';
+import funnelExampleRaw from './series-types/funnel.tsx?raw';
+import {HeatmapExample} from './series-types/heatmap';
+import heatmapExampleRaw from './series-types/heatmap.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
+import {LineBasicExample} from './series-types/line-basic';
+import lineBasicExampleRaw from './series-types/line-basic.tsx?raw';
 import {LineMarkersExample} from './series-types/line-markers';
 import lineMarkersRaw from './series-types/line-markers.tsx?raw';
 import lineSeriesRaw from './series-types/line.tsx?raw';
+import {PieExample} from './series-types/pie';
+import pieExampleRaw from './series-types/pie.tsx?raw';
+import {RadarExample} from './series-types/radar';
+import radarExampleRaw from './series-types/radar.tsx?raw';
+import {SankeyExample} from './series-types/sankey';
+import sankeyExampleRaw from './series-types/sankey.tsx?raw';
 import {ScatterSeriesExample} from './series-types/scatter';
+import {ScatterBasicExample} from './series-types/scatter-basic';
+import scatterBasicExampleRaw from './series-types/scatter-basic.tsx?raw';
 import scatterSeriesRaw from './series-types/scatter.tsx?raw';
+import {TreemapExample} from './series-types/treemap';
+import treemapExampleRaw from './series-types/treemap.tsx?raw';
+import {WaterfallExample} from './series-types/waterfall';
+import waterfallExampleRaw from './series-types/waterfall.tsx?raw';
+import {XRangeExample} from './series-types/x-range';
+import xRangeExampleRaw from './series-types/x-range.tsx?raw';
 import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
 import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
 import {WaterfallHeaderTooltipExample} from './tooltip/waterfall-header';
@@ -64,12 +92,55 @@ function extractDisplayCode(raw: string): string {
     return raw.replace(/^import\s+React\s+from\s+['"]react['"];\n/m, '').trim();
 }
 
-type ExampleModule = {
+interface ExampleModule {
     code: string;
     Component: () => React.ReactElement;
-};
+    height?: number | 'auto';
+}
 
 export const registry: Record<string, ExampleModule> = {
+    'overview/dashboard': {
+        code: extractDisplayCode(overviewDashboardRaw),
+        Component: OverviewDashboardExample,
+        height: 'auto',
+    },
+    'series-types/line-basic': {
+        code: extractDisplayCode(lineBasicExampleRaw),
+        Component: LineBasicExample,
+    },
+    'series-types/area-basic': {
+        code: extractDisplayCode(areaBasicExampleRaw),
+        Component: AreaBasicExample,
+    },
+    'series-types/bar-x-basic': {
+        code: extractDisplayCode(barXBasicExampleRaw),
+        Component: BarXBasicExample,
+    },
+    'series-types/bar-y-basic': {
+        code: extractDisplayCode(barYBasicExampleRaw),
+        Component: BarYBasicExample,
+    },
+    'series-types/scatter-basic': {
+        code: extractDisplayCode(scatterBasicExampleRaw),
+        Component: ScatterBasicExample,
+    },
+    'series-types/pie': {code: extractDisplayCode(pieExampleRaw), Component: PieExample},
+    'series-types/funnel': {code: extractDisplayCode(funnelExampleRaw), Component: FunnelExample},
+    'series-types/waterfall': {
+        code: extractDisplayCode(waterfallExampleRaw),
+        Component: WaterfallExample,
+    },
+    'series-types/x-range': {code: extractDisplayCode(xRangeExampleRaw), Component: XRangeExample},
+    'series-types/radar': {code: extractDisplayCode(radarExampleRaw), Component: RadarExample},
+    'series-types/treemap': {
+        code: extractDisplayCode(treemapExampleRaw),
+        Component: TreemapExample,
+    },
+    'series-types/sankey': {code: extractDisplayCode(sankeyExampleRaw), Component: SankeyExample},
+    'series-types/heatmap': {
+        code: extractDisplayCode(heatmapExampleRaw),
+        Component: HeatmapExample,
+    },
     'tooltip/waterfall-header': {
         code: extractDisplayCode(waterfallHeaderTooltipRaw),
         Component: WaterfallHeaderTooltipExample,

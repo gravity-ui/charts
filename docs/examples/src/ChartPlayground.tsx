@@ -29,10 +29,11 @@ function initMonaco() {
 
 type View = 'chart' | 'code';
 
-type Props = {
+interface Props {
     code: string;
     Component: () => React.ReactElement;
-};
+    height?: number | 'auto';
+}
 
 // --- Singleton theme manager ---
 
@@ -60,7 +61,7 @@ function initGlobalObserver() {
     });
 }
 
-export function ChartPlayground({code, Component}: Props) {
+export function ChartPlayground({code, Component, height = 320}: Props) {
     const [view, setView] = React.useState<View>('chart');
     const [isDark, setIsDark] = React.useState(detectDarkTheme);
     const [highlighted, setHighlighted] = React.useState('');
@@ -109,7 +110,7 @@ export function ChartPlayground({code, Component}: Props) {
                     </TabList>
 
                     <TabPanel value="chart">
-                        <div style={{height: '320px', padding: '16px'}}>
+                        <div style={{height, padding: '16px'}}>
                             <Component />
                         </div>
                     </TabPanel>

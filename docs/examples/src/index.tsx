@@ -28,7 +28,9 @@ function mountExamples() {
         }
         const root = createRoot(el);
         mountedRoots.set(el, root);
-        root.render(<ChartPlayground code={mod.code} Component={mod.Component} />);
+        root.render(
+            <ChartPlayground code={mod.code} Component={mod.Component} height={mod.height} />,
+        );
     });
 }
 

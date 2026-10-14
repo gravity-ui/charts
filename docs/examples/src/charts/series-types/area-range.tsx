@@ -5,19 +5,11 @@ import type {ChartData} from '@gravity-ui/charts';
 
 const data: ChartData = {
     series: {
-        options: {
-            'area-range': {
-                states: {hover: {marker: {radius: 6}}},
-            },
-        },
         data: [
             {
                 type: 'area-range',
                 name: 'Expected range',
-                color: '#5282ff',
-                fillColor: '#5282ff',
                 opacity: 0.35,
-                lineWidth: 2,
                 data: [
                     {x: 0, y0: 18, y1: 26},
                     {x: 1, y0: 20, y1: 29},
