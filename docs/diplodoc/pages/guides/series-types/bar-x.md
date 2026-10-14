@@ -18,7 +18,7 @@ Bar thickness is shared through `series.options['bar-x'].barPadding` and `barMax
 
 <div data-chart-example="series-types/bar-x-overlay"></div>
 
-To overlay complete stacks, set `grouping: false` on every series in each `stackId`.
+To overlay complete stacks, give each stack a distinct `stackId` and set `grouping: false` on every series in those stacks.
 
 ## Appearance
 

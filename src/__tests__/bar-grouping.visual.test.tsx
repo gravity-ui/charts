@@ -40,7 +40,7 @@ test('bar-x overlay tooltip selects the last painted duplicate point', async ({m
     await expect(rows).toContainText('75');
 });
 
-test('bar-y overlay tooltip selects the visible border over a negative bar', async ({
+test('bar-y overlay tooltip selects the visible border at the value-axis baseline', async ({
     mount,
     page,
 }) => {
@@ -72,6 +72,45 @@ test('bar-y overlay tooltip selects the visible border over a negative bar', asy
     await page.mouse.move(box.x + 1, box.y + box.height / 2);
     await expect(page.locator('.gcharts-tooltip__content-row_active')).toContainText('Actual');
 });
+
+for (const order of [undefined, 'reverse'] as const) {
+    test(`bar-y overlay borders preserve value and baseline, order=${order ?? 'normal'}`, async ({
+        mount,
+    }) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    series: {
+                        data: [0, 3].map((borderWidth) => ({
+                            type: 'bar-y',
+                            name: `Border ${borderWidth}`,
+                            grouping: false,
+                            borderWidth,
+                            borderColor: DEFAULT_PALETTE[2],
+                            data: [
+                                {y: 'A', x: 50},
+                                {y: 'B', x: -50},
+                            ],
+                        })),
+                    },
+                    xAxis: {min: -100, max: 100, order},
+                    yAxis: [{type: 'category', categories: ['A', 'B']}],
+                }}
+                styles={{width: 600, height: 360}}
+            />,
+        );
+        const bars = component.locator('.gcharts-bar-y__segment');
+        const borders = component.locator('.gcharts-bar-y__segment-border');
+        await expect(bars).toHaveCount(4);
+        await expect(borders).toHaveCount(2);
+        for (const index of [0, 1]) {
+            const plain = await getLocatorBoundingBox(bars.nth(index));
+            const bordered = await getLocatorBoundingBox(borders.nth(index));
+            expect(bordered.x).toBeCloseTo(plain.x, 1);
+            expect(bordered.x + bordered.width).toBeCloseTo(plain.x + plain.width, 1);
+        }
+    });
+}
 
 for (const type of ['bar-x', 'bar-y'] as const) {
     test.describe(`${type} overlays`, () => {

@@ -163,16 +163,19 @@ export async function prepareBarYData(args: {
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
                 let itemX = extendsRight ? positiveStack : negativeStack - width;
-                if (independent) itemX = Math.min(base, xPixel);
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
-                if (!independent && isFirstInStack && extendsRight) {
+                if (independent) {
+                    // Keep the outer contour at the baseline and value, including on reversed axes.
+                    itemX = Math.min(baseValue, xPixel) + halfBorder;
+                    shapeWidth -= borderWidth;
+                } else if (isFirstInStack && extendsRight) {
                     // Bar extends right from base, border extends outward to the
                     // left → shift left by halfBorder to keep the visual left
                     // edge at the zero line.
                     itemX -= halfBorder;
-                } else if (!independent && isFirstInStack && !extendsRight && xValue !== 0) {
+                } else if (isFirstInStack && !extendsRight && xValue !== 0) {
                     // Bar extends left from base, border extends outward to the
                     // right → shift right by halfBorder to keep the visual
                     // right edge at the zero line.

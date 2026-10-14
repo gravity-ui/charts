@@ -1,6 +1,6 @@
 import get from 'lodash/get';
 
-import type {BaseTextStyle, ChartAxisLabels, ChartSeries, ChartXAxis} from '../../types';
+import type {BaseTextStyle, ChartAxisLabels, ChartXAxis} from '../../types';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
@@ -12,6 +12,7 @@ import {
     xAxisTitleDefaults,
 } from '../constants';
 import {createXScale} from '../scales/x-scale';
+import type {PreparedSeries} from '../series/types';
 import {
     TIME_UNITS,
     calculateCos,
@@ -47,7 +48,7 @@ async function setLabelSettings({
     labelBounds = {leftOverflow: 0, rightOverflow: 0},
 }: {
     axis: PreparedXAxis;
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     width: number;
     axisLabels?: ChartAxisLabels;
     labelBounds?: XAxisLabelBounds;
@@ -171,7 +172,7 @@ async function setLabelSettings({
     axis.labels.rotation = rotation;
 }
 
-function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
+function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
     if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
         return 0;
     }
@@ -187,7 +188,7 @@ export const getPreparedXAxis = async ({
     labelBounds,
 }: {
     xAxis?: ChartXAxis;
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     width: number;
     boundsWidth: number;
     labelBounds?: XAxisLabelBounds;

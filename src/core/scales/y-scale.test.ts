@@ -1,8 +1,8 @@
 import {scaleOrdinal} from 'd3-scale';
 
 import {createScales} from '../../hooks/useAxisScales';
+import {prepareLineSeries} from '../../plugins/line/prepare-line-series';
 import {prepareWaterfallSeries} from '../../plugins/waterfall/prepare-waterfall-series';
-import type {ChartSeries} from '../../types';
 import type {PreparedAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from '../series/types';
 
@@ -16,16 +16,21 @@ interface AxisOptions {
     values?: number[];
 }
 
-const SERIES: ChartSeries[] = [
-    {
-        data: [
-            {x: 0, y: 0},
-            {x: 1, y: 100},
-        ],
-        name: 'Series',
-        type: 'line',
-    },
-];
+const SERIES = prepareLineSeries({
+    series: [
+        {
+            data: [
+                {x: 0, y: 0},
+                {x: 1, y: 100},
+            ],
+            name: 'Series',
+            type: 'line',
+        },
+    ],
+    colorScale: scaleOrdinal<string, string>().range(['#000']),
+    colors: [],
+    legend: {enabled: false} as PreparedLegend,
+});
 
 function getAxis(options: AxisOptions): PreparedAxis {
     return {

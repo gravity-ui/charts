@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 
 import {getTickValues} from '../../components/AxisY/utils';
-import type {BaseTextStyle, ChartAxisTitleRotation, ChartSeries, ChartYAxis} from '../../types';
+import type {BaseTextStyle, ChartAxisTitleRotation, ChartYAxis} from '../../types';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
@@ -34,7 +34,7 @@ import {prepareAxisPlotLabel} from './utils';
 
 export const getYAxisLabelMaxWidth = async (args: {
     axis: PreparedYAxis;
-    seriesData: PreparedSeries[] | ChartSeries[];
+    seriesData: PreparedSeries[];
     scale?: ChartScale;
 }) => {
     const {axis, scale, seriesData} = args;
@@ -70,7 +70,7 @@ export const getYAxisLabelMaxWidth = async (args: {
     return {height: size.maxHeight, width: size.maxWidth};
 };
 
-function getMaxPaddingBySeries({series}: {series: ChartSeries[]}) {
+function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
     if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
         return 0;
     }
@@ -100,7 +100,7 @@ export const getPreparedYAxis = ({
     height: number;
     boundsHeight: number;
     width: number;
-    seriesData: ChartSeries[];
+    seriesData: PreparedSeries[];
     yAxis: ChartYAxis[] | undefined;
 }): Promise<PreparedYAxis[]> => {
     const axisByPlot: ChartYAxis[][] = [];
