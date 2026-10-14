@@ -1,5 +1,6 @@
 import type {WaterfallSeries, WaterfallSeriesData} from '../../../types';
-import {getClosestPointsByXValue, getDistanceToRect} from '../../utils/tooltip-helpers';
+import {getDistanceToRect} from '../../utils/geometry';
+import {getClosestPointsByXValue} from '../../utils/tooltip-helpers';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -12,12 +13,12 @@ import type {PreparedWaterfallData} from './types';
 export function getTooltipData(
     args: GetTooltipDataArgs<PreparedWaterfallData>,
 ): GetTooltipDataResult {
-    const {data, position} = args;
+    const {data, position, measureDistance} = args;
     const [pointerX, pointerY] = position;
 
     const points = data.map<ShapePoint>((d) => ({
         data: d.data as WaterfallSeriesData,
-        distance: getDistanceToRect({point: position, ...d}),
+        distance: measureDistance ? getDistanceToRect({point: position, ...d}) : undefined,
         series: d.series as WaterfallSeries,
         x: d.x + d.width / 2,
         y0: d.y,

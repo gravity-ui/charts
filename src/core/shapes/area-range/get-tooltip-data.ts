@@ -1,25 +1,53 @@
 import type {AreaRangeSeries} from '../../../types';
-import {getDistanceToBand} from '../../utils/tooltip-helpers';
+import {getDistanceToStrokedPolyline} from '../../utils/geometry';
+import type {Point} from '../../utils/geometry';
 import type {
-    BandColumn,
     GetTooltipDataArgs,
     GetTooltipDataResult,
     ShapePoint,
 } from '../../utils/tooltip-helpers';
+import {getBandBoundaries, getDistanceToBand} from '../area/band';
+import type {BandColumn} from '../area/band';
 
 import type {PreparedAreaRangeData} from './types';
 
-const bandColumns = new WeakMap<PreparedAreaRangeData, BandColumn[]>();
+interface AreaRangeGeometry {
+    columns: BandColumn[];
+    /** Runs of the stroked upper and lower lines. */
+    boundaries: Point[][];
+}
 
-function getBandColumns(item: PreparedAreaRangeData) {
-    let columns = bandColumns.get(item);
-    if (!columns) {
-        columns = item.points.map((p) =>
+const geometryCache = new WeakMap<PreparedAreaRangeData, AreaRangeGeometry>();
+
+function getAreaRangeGeometry(item: PreparedAreaRangeData): AreaRangeGeometry {
+    let geometry = geometryCache.get(item);
+    if (!geometry) {
+        const columns = item.points.map<BandColumn>((p) =>
             p.hiddenInLine || p.y0 === null || p.y1 === null ? null : {x: p.x, y0: p.y0, y1: p.y1},
         );
-        bandColumns.set(item, columns);
+        const {upper, lower} = getBandBoundaries(columns);
+        geometry = {columns, boundaries: [...upper, ...lower]};
+        geometryCache.set(item, geometry);
     }
-    return columns;
+    return geometry;
+}
+
+/** Distance to the filled band and its stroked boundary lines (round caps and joins). */
+function getDistanceToAreaRange(item: PreparedAreaRangeData, point: Point) {
+    const {columns, boundaries} = getAreaRangeGeometry(item);
+    let distance = getDistanceToBand({point, columns});
+    for (let i = 0; i < boundaries.length && distance > 0; i++) {
+        distance = Math.min(
+            distance,
+            getDistanceToStrokedPolyline({
+                point,
+                vertices: boundaries[i],
+                halfWidth: item.width / 2,
+                linecap: 'round',
+            }),
+        );
+    }
+    return distance;
 }
 
 export function getTooltipData(
@@ -27,12 +55,8 @@ export function getTooltipData(
 ): GetTooltipDataResult {
     const xLookupPoints = args.data.reduce<ShapePoint[]>((acc, item) => {
         const distance = args.measureDistance
-            ? Math.max(
-                  0,
-                  getDistanceToBand({point: args.position, columns: getBandColumns(item)}) -
-                      item.width / 2,
-              )
-            : 0;
+            ? getDistanceToAreaRange(item, args.position)
+            : undefined;
         item.points.forEach((point) => {
             if (point.hiddenInTooltip || point.y0 === null || point.y1 === null) {
                 return;

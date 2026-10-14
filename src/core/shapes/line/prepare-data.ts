@@ -34,6 +34,23 @@ function getLineCurveFactory(
         : undefined;
 }
 
+function buildSegmentGetter(
+    series: PreparedLineSeries,
+    points: PointData[],
+    lineWidth: number,
+    getCurveFactory: Args['getCurveFactory'],
+) {
+    let segments: PlacementSegment[] | undefined;
+    return () => {
+        if (!segments) {
+            segments = getLineSegments([
+                {curveFactory: getLineCurveFactory(series, getCurveFactory), lineWidth, points},
+            ]);
+        }
+        return segments;
+    };
+}
+
 interface Args {
     series: PreparedLineSeries[];
     seriesOptions?: PreparedSeriesOptions;
@@ -87,7 +104,7 @@ export function projectLineData(args: Args): PreparedLineData[] {
             points,
             gradientBBox: s.gradient ? getGradientBBox(points) : null,
             markers: [],
-            segments: [],
+            getSegments: () => [],
             annotations: [],
             getHoverMarkers: () => [],
             svgLabels: [],
@@ -181,15 +198,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
             });
         }
         item.getHoverMarkers = buildHoverMarkerGetter(points, s);
-        if (!isRangeSlider) {
-            item.segments = getLineSegments([
-                {
-                    curveFactory: getLineCurveFactory(s, getCurveFactory),
-                    lineWidth: item.lineWidth,
-                    points,
-                },
-            ]);
-        }
+        item.getSegments = buildSegmentGetter(s, points, item.lineWidth, getCurveFactory);
     }
 
     const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);
@@ -255,14 +264,13 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
             if (needSegments) {
                 segments = seriesWithPoints.flatMap(
                     (d) =>
-                        ownData.get(d.series.id)?.segments ??
-                        getLineSegments([
-                            {
-                                curveFactory: getLineCurveFactory(d.series, getCurveFactory),
-                                lineWidth: d.series.lineWidth,
-                                points: d.points,
-                            },
-                        ]),
+                        ownData.get(d.series.id)?.getSegments() ??
+                        buildSegmentGetter(
+                            d.series,
+                            d.points,
+                            d.series.lineWidth,
+                            getCurveFactory,
+                        )(),
                 );
             }
 

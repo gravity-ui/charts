@@ -1,6 +1,5 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
-import omit from 'lodash/omit';
 
 import type {TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
@@ -20,6 +19,7 @@ type GetClosestPointsArgs = {
 
 interface Contender {
     chunk: TooltipCandidate;
+    /** Distance to the drawn shape; `Infinity` when the plugin did not measure it. */
     distance: number;
     layer: number;
 }
@@ -38,25 +38,36 @@ function getLayer(layerIndexes: Map<string, number>, series: object) {
     return layerIndexes.get(get(series, 'id', '')) ?? -1;
 }
 
-function isCloser(distance: number, layer: number, other: Contender) {
-    return distance < other.distance || (distance === other.distance && layer > other.layer);
+function getContender(
+    chunk: TooltipCandidate,
+    distance: number | undefined,
+    layerIndexes: Map<string, number>,
+): Contender {
+    return {chunk, distance: distance ?? Infinity, layer: getLayer(layerIndexes, chunk.series)};
+}
+
+function isCloser(contender: Contender, other: Contender) {
+    return (
+        contender.distance < other.distance ||
+        (contender.distance === other.distance && contender.layer > other.layer)
+    );
 }
 
 /**
  * Keeps a single active chunk: every series type marks its own closest chunk, so the one
- * whose shape is nearest to the pointer wins. On equal distance the series drawn in the upper
- * layer wins, then the first one.
+ * whose shape is nearest to the pointer wins. An unmeasured distance loses to any measured
+ * one. On equal distance the series drawn in the upper layer wins, then the first one.
  */
 function resolveClosest(candidates: TooltipCandidate[], contenders: Contender[]) {
     let winner: Contender | undefined;
     for (const contender of contenders) {
-        if (!winner || isCloser(contender.distance, contender.layer, winner)) {
+        if (!winner || isCloser(contender, winner)) {
             winner = contender;
         }
     }
 
-    return candidates.map((candidate) => {
-        const chunk = omit(candidate, 'distance') as TooltipDataChunk;
+    return candidates.map((candidate): TooltipDataChunk => {
+        const {distance: _distance, ...chunk} = candidate;
         return candidate.closest && candidate !== winner?.chunk
             ? {...chunk, closest: false}
             : chunk;
@@ -96,11 +107,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             }
             result.push(chunk);
             if (chunk.closest) {
-                contenders.push({
-                    chunk,
-                    distance: chunk.distance,
-                    layer: getLayer(layerIndexes, chunk.series),
-                });
+                contenders.push(getContender(chunk, chunk.distance, layerIndexes));
             }
         }
         if (seriesXLookupPoints) {
@@ -113,25 +120,15 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     }
 
     if (xLookupPoints.length) {
+        // The lookup picks the point of the nearest shape in the X column (see
+        // `getClosestPointsByXValue`), so it competes with the distance of its own series.
         const chunks = getClosestPointsByXValue(pointerX, pointerY, xLookupPoints);
-        result.push(...(chunks as TooltipCandidate[]));
-        const closest = chunks.find((chunk) => chunk.closest);
-        if (closest) {
-            // The lookup picks a point by its X column, not by the shape under the pointer,
-            // so it competes with the nearest lookup shape.
-            const nearest: Contender = {
-                chunk: closest as TooltipCandidate,
-                distance: Infinity,
-                layer: -1,
-            };
-            for (const p of xLookupPoints) {
-                const layer = getLayer(layerIndexes, p.series);
-                if (isCloser(p.distance, layer, nearest)) {
-                    nearest.distance = p.distance;
-                    nearest.layer = layer;
-                }
+        for (const chunk of chunks) {
+            const candidate = chunk as TooltipCandidate;
+            result.push(candidate);
+            if (chunk.closest) {
+                contenders.push(getContender(candidate, chunk.distance, layerIndexes));
             }
-            contenders.push(nearest);
         }
     }
 

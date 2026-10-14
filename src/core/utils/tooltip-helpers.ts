@@ -14,17 +14,21 @@ export interface ShapePoint {
     series: ChartSeries;
     subTotal?: number;
     sourceX?: number;
-    /** Pixel distance from the pointer to the drawn shape of this point; `0` when the pointer is inside it. */
-    distance: number;
+    /**
+     * Pixel distance from the pointer to the drawn shape of the series this point belongs to;
+     * `0` when the pointer is inside it, `undefined` when it was not measured.
+     */
+    distance?: number;
 }
 
 /**
  * Tooltip chunk produced by a series plugin, together with the pixel distance from the
- * pointer to the drawn shape of the chunk (`0` when the pointer is inside the shape).
- * The distance is used to pick a single active chunk across series types and is stripped
- * before the chunks reach public callbacks.
+ * pointer to the drawn shape of the chunk: `0` when the pointer is inside the shape,
+ * `undefined` when it was not measured. Only the `closest` chunk needs a distance. It is used
+ * to pick a single active chunk across series types and is stripped before the chunks reach
+ * public callbacks.
  */
-export type TooltipCandidate = TooltipDataChunk & {distance: number};
+export type TooltipCandidate = TooltipDataChunk & {distance?: number};
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
     data: TShapeData[];
@@ -33,7 +37,7 @@ export interface GetTooltipDataArgs<TShapeData = unknown> {
     boundsHeight: number;
     /**
      * `false` when no other series type competes for the pointer, so `distance` is not
-     * compared and the plugin may skip measuring it and report `0`.
+     * compared and the plugin must skip measuring it.
      */
     measureDistance: boolean;
 }
@@ -64,6 +68,23 @@ export function getClosestYIndex(items: ShapePoint[], y: number) {
     }
 
     return closestYIndex;
+}
+
+/**
+ * Picks the active point among the candidates of one X column. When the distances to the
+ * drawn shapes are measured, the nearest shape wins; ties and unmeasured candidates are
+ * resolved by the Y rule of `getClosestYIndex`.
+ */
+function pickClosestPoint(points: ShapePoint[], y: number) {
+    let candidates = points;
+    const measured = points.filter((p) => p.distance !== undefined);
+    if (measured.length > 0) {
+        const min = Math.min(...measured.map((p) => p.distance as number));
+        candidates = measured.filter((p) => p.distance === min);
+    }
+    const sorted = sort(candidates, (p) => p.y0);
+    const index = getClosestYIndex(sorted, y);
+    return sorted[index === -1 ? 0 : index];
 }
 
 export function getClosestPointsByXValue(
@@ -105,9 +126,7 @@ export function getClosestPointsByXValue(
         const candidates = closestPoints.filter(
             (p) => p.sourceX === undefined || p.sourceX === closestSourceX,
         );
-        const sortedCandidates = sort(candidates, (p) => p.y0);
-        const winnerIdx = getClosestYIndex(sortedCandidates, y);
-        const winner = sortedCandidates[winnerIdx === -1 ? 0 : winnerIdx];
+        const winner = pickClosestPoint(candidates, y);
 
         return closestPoints.map((p) => ({
             ...p,
@@ -115,10 +134,10 @@ export function getClosestPointsByXValue(
         }));
     }
 
-    const closestYIndex = getClosestYIndex(closestPoints, y);
-    return closestPoints.map((p, i) => ({
+    const winner = pickClosestPoint(closestPoints, y);
+    return closestPoints.map((p) => ({
         ...p,
-        closest: i === closestYIndex,
+        closest: p === winner,
     }));
 }
 
@@ -165,108 +184,4 @@ export function getRadius(args: {pointer: [number, number]; center: [number, num
     const x = pointer[0] - center[0];
     const y = pointer[1] - center[1];
     return Math.sqrt(x * x + y * y);
-}
-
-export function getDistanceToSegment(args: {
-    point: [number, number];
-    start: [number, number];
-    end: [number, number];
-}) {
-    const {
-        point: [px, py],
-        start: [x1, y1],
-        end: [x2, y2],
-    } = args;
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const lengthSquared = dx * dx + dy * dy;
-    const t =
-        lengthSquared === 0
-            ? 0
-            : Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSquared));
-    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
-}
-
-export function getDistanceToRect(args: {
-    point: [number, number];
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}) {
-    const {
-        point: [px, py],
-        x,
-        y,
-        width,
-        height,
-    } = args;
-    const dx = Math.max(Math.min(x, x + width) - px, 0, px - Math.max(x, x + width));
-    const dy = Math.max(Math.min(y, y + height) - py, 0, py - Math.max(y, y + height));
-    return Math.hypot(dx, dy);
-}
-
-/** Distance to a simple polygon given by its vertices; `0` when the point is inside. */
-export function getDistanceToPolygon(args: {
-    point: [number, number];
-    vertices: [number, number][];
-}) {
-    const {point, vertices} = args;
-    const [px, py] = point;
-    let inside = false;
-    let distance = Infinity;
-
-    for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-        const [xi, yi] = vertices[i];
-        const [xj, yj] = vertices[j];
-        if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
-            inside = !inside;
-        }
-        distance = Math.min(
-            distance,
-            getDistanceToSegment({point, start: vertices[j], end: vertices[i]}),
-        );
-    }
-
-    return inside ? 0 : distance;
-}
-
-/** A column of a filled band; `null` breaks the band. */
-export type BandColumn = {x: number; y0: number; y1: number} | null;
-
-/**
- * Distance to a band filled between `y0` and `y1` and linearly interpolated between
- * adjacent columns; `null` columns break the band. `0` when the point is inside.
- */
-export function getDistanceToBand(args: {point: [number, number]; columns: BandColumn[]}) {
-    const {point, columns} = args;
-    let distance = Infinity;
-
-    for (let i = 0; i < columns.length && distance > 0; i++) {
-        const column = columns[i];
-        if (!column) {
-            continue;
-        }
-        distance = Math.min(
-            distance,
-            getDistanceToSegment({point, start: [column.x, column.y0], end: [column.x, column.y1]}),
-        );
-        const prev = columns[i - 1];
-        if (prev) {
-            distance = Math.min(
-                distance,
-                getDistanceToPolygon({
-                    point,
-                    vertices: [
-                        [prev.x, prev.y0],
-                        [column.x, column.y0],
-                        [column.x, column.y1],
-                        [prev.x, prev.y1],
-                    ],
-                }),
-            );
-        }
-    }
-
-    return distance;
 }

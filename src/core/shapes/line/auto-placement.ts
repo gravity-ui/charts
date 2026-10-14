@@ -184,7 +184,10 @@ export function getLineSegments(
                 .y((p) => p.y as number)
                 .curve(d.curveFactory)
                 .context(collector as unknown as CanvasRenderingContext2D)(d.points);
-            segments.push(...collector.segments);
+            // Pushed one by one: spreading tens of thousands of segments overflows the stack.
+            for (const segment of collector.segments) {
+                segments.push(segment);
+            }
             continue;
         }
         for (let i = 1; i < d.points.length; i++) {

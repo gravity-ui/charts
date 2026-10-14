@@ -8,6 +8,9 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {otherLineAndBarData} from '../__stories__/__data__/other/line-and-bar';
 import type {ChartData} from '../types';
 
+import {ActiveSeriesTestStory} from './components/ActiveSeriesTestStory';
+import {getLocatorBoundingBox} from './utils';
+
 test.describe('Multiple types of series on same chart', () => {
     test.beforeEach(async ({page}) => {
         // Cancel test with error when an uncaught exception happens within the page
@@ -258,5 +261,72 @@ test.describe('Multiple types of series on same chart', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+});
+
+test.describe('Active series in mixed charts', () => {
+    const data: ChartData = {
+        chart: {margin: {left: 50, right: 20, top: 20, bottom: 40}},
+        xAxis: {type: 'linear', min: 0, max: 9, startOnTick: false, endOnTick: false},
+        yAxis: [{type: 'linear', min: 0, max: 7, startOnTick: false, endOnTick: false}],
+        legend: {enabled: false},
+        series: {
+            data: [
+                {
+                    type: 'line',
+                    name: 'Summary',
+                    lineWidth: 3,
+                    marker: {enabled: false},
+                    data: [
+                        {x: 0, y: 1},
+                        {x: 9, y: 1},
+                    ],
+                },
+                {
+                    type: 'scatter',
+                    name: 'Tasks',
+                    cluster: {
+                        enabled: true,
+                        layoutAlgorithm: {type: 'grid', gridSize: 50},
+                        minimumClusterSize: 2,
+                        marker: {radius: 10},
+                    },
+                    data: [
+                        {x: 1, y: 6, custom: {id: 'a'}},
+                        {x: 1.12, y: 6.08, custom: {id: 'b'}},
+                        {x: 8, y: 5, custom: {id: 'c'}},
+                    ],
+                },
+            ],
+        },
+    };
+
+    test('The line under the pointer wins over a distant scatter cluster', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(<ActiveSeriesTestStory data={data} />);
+        const line = component.locator('.gcharts-line path').first();
+        const box = await getLocatorBoundingBox(line);
+        const x = Math.round(box.x + box.width / 2);
+        const y = Math.round(box.y + box.height / 2);
+
+        await page.mouse.move(x, y);
+        await expect(page.locator('[data-qa="hovered-active"]')).toHaveText('Summary');
+        await page.mouse.click(x, y);
+        await expect(component.locator('[data-qa="clicked-active"]')).toHaveText('Summary');
+    });
+
+    test('A hovered scatter cluster wins and keeps its members', async ({mount, page}) => {
+        const component = await mount(<ActiveSeriesTestStory data={data} />);
+        const cluster = component.locator('.gcharts-scatter__cluster-label').first();
+        const box = await getLocatorBoundingBox(cluster);
+        const x = Math.round(box.x + box.width / 2);
+        const y = Math.round(box.y + box.height / 2);
+
+        await page.mouse.move(x, y);
+        await expect(page.locator('[data-qa="hovered-active"]')).toHaveText('Tasks:a,b');
+        await page.mouse.click(x, y);
+        await expect(component.locator('[data-qa="clicked-active"]')).toHaveText('Tasks:a,b');
     });
 });

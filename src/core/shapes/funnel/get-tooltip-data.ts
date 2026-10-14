@@ -1,10 +1,10 @@
-import {getDistanceToPolygon} from '../../utils/tooltip-helpers';
+import {getDistanceToPolygon} from '../../utils/geometry';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
 import type {PreparedFunnelData} from './types';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedFunnelData>): GetTooltipDataResult {
-    const {data, position} = args;
+    const {data, position, measureDistance} = args;
     const [, pointerY] = position;
     const items = data[0]?.items;
 
@@ -29,7 +29,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedFunnelData>): Ge
                 data: nearest.data,
                 series: nearest.series,
                 closest: true,
-                distance: getDistanceToPolygon({point: position, vertices: nearest.points}),
+                distance: measureDistance
+                    ? getDistanceToPolygon({point: position, vertices: nearest.points})
+                    : undefined,
             },
         ],
     };

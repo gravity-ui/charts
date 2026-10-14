@@ -5,6 +5,7 @@ import get from 'lodash/get';
 import {block} from '../../utils';
 import {SymbolType} from '../constants';
 import {getSymbol} from '../utils';
+import {getDistanceToSymbol} from '../utils/symbol';
 
 import type {HoveredShapeData, MarkerItem} from './types';
 
@@ -23,15 +24,23 @@ export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): stri
 
 /** Pixel distance from the pointer to the nearest visible marker; `Infinity` without markers. */
 export function getDistanceToMarkers(markers: MarkerItem[], point: [number, number]): number {
-    const [pointerX, pointerY] = point;
     let distance = Infinity;
     for (const m of markers) {
         if (!m.clipped) {
-            const radius = m.radius + m.strokeWidth / 2;
-            distance = Math.min(distance, Math.hypot(pointerX - m.cx, pointerY - m.cy) - radius);
+            distance = Math.min(
+                distance,
+                getDistanceToSymbol({
+                    point,
+                    center: [m.cx, m.cy],
+                    symbolType: m.symbolType,
+                    // `renderMarkers` draws the symbol with `radius + strokeWidth` and strokes it.
+                    radius: m.radius + m.strokeWidth,
+                    strokeWidth: m.strokeWidth,
+                }),
+            );
         }
     }
-    return Math.max(0, distance);
+    return distance;
 }
 
 export interface BaseMarkerData {

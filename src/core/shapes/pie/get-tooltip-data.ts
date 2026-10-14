@@ -16,7 +16,12 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTo
         angle = angle < 0 ? Math.PI * 2 + angle : angle;
         const polarRadius = getRadius({center, pointer: [pointerX, pointerY]});
 
-        return angle >= p.startAngle && angle <= p.endAngle && polarRadius < p.data.radius;
+        return (
+            angle >= p.startAngle &&
+            angle <= p.endAngle &&
+            polarRadius < p.data.radius &&
+            polarRadius >= p.data.pie.innerRadius
+        );
     });
 
     if (!closestPoint) {

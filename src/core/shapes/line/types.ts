@@ -28,8 +28,11 @@ export interface PreparedLineData
     id: string;
     points: PointData[];
     markers: MarkerItem[];
-    /** Straight pieces of the drawn line (curves flattened); used to measure the pointer distance. */
-    segments: PlacementSegment[];
+    /**
+     * Straight pieces of the drawn line (curves flattened), built on first use and cached.
+     * Shared by data label placement and the pointer distance measurement.
+     */
+    getSegments: () => PlacementSegment[];
     series: PreparedLineSeries;
     hovered: boolean;
     active: boolean;

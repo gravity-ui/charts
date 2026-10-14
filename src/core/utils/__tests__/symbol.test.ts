@@ -1,37 +1,53 @@
-import {SymbolType} from '../../constants';
-import {getSymbol, getSymbolBBoxWidth, getSymbolSize} from '../symbol';
+import {getDistanceToSymbol, getSymbolSize} from '../symbol';
 
-describe.each(['diamond', 'triangle', 'triangle-down'] as const)('%s height', (symbolType) => {
-    test.each([0, 400, 6400])('match the rendered vertices for area %s', (symbolSize) => {
-        const moveTo = jest.fn();
-        const lineTo = jest.fn();
-        const context = {moveTo, lineTo, closePath: jest.fn()} as unknown as CanvasPath;
-        getSymbol(symbolType).draw(context, symbolSize);
-        const vertices = [...moveTo.mock.calls, ...lineTo.mock.calls];
-        const ys = vertices.map(([, y]) => Math.abs(y));
-        const dimensions = getSymbolSize({symbolType, symbolSize});
+const radius = 10;
+const center: [number, number] = [100, 100];
+const diameter = (symbolType: 'circle' | 'square' | 'diamond' | 'triangle' | 'triangle-down') =>
+    getSymbolSize({symbolType, symbolSize: Math.PI * radius ** 2});
 
-        expect(dimensions.height).toBeCloseTo(2 * Math.max(...ys));
+describe('getDistanceToSymbol', () => {
+    test('circle', () => {
+        const args = {center, symbolType: 'circle' as const, radius, strokeWidth: 4};
+        expect(getDistanceToSymbol({...args, point: [112, 100]})).toBe(0);
+        expect(getDistanceToSymbol({...args, point: [115, 100]})).toBeCloseTo(3);
     });
-});
 
-describe.each(Object.values(SymbolType))('%s width', (symbolType) => {
-    test.each([0, 0.25, 64, 400])('matches the rendered bounds for area %s', (symbolSize) => {
-        const moveTo = jest.fn();
-        const lineTo = jest.fn();
-        const arc = jest.fn();
-        const rect = jest.fn();
-        const context = {moveTo, lineTo, arc, rect, closePath: jest.fn()} as unknown as CanvasPath;
-        getSymbol(symbolType).draw(context, symbolSize);
-        const xs = [
-            ...[...moveTo.mock.calls, ...lineTo.mock.calls].map(([x]) => x),
-            // Circle symbols draw a full arc, so both horizontal extrema are included.
-            ...arc.mock.calls.flatMap(([x, , radius]) => [x - radius, x + radius]),
-            ...rect.mock.calls.flatMap(([x, , width]) => [x, x + width]),
-        ];
+    test('square', () => {
+        const half = diameter('square').width / 2;
+        const args = {center, symbolType: 'square' as const, radius, strokeWidth: 0};
+        expect(getDistanceToSymbol({...args, point: [100 + half - 0.1, 100 + half - 0.1]})).toBe(0);
+        expect(getDistanceToSymbol({...args, point: [100 + half + 2, 100]})).toBeCloseTo(2);
+    });
 
-        expect(getSymbolBBoxWidth({symbolType, symbolSize})).toBeCloseTo(
-            Math.max(...xs) - Math.min(...xs),
+    test('diamond', () => {
+        const half = diameter('diamond').width / 2;
+        const args = {center, symbolType: 'diamond' as const, radius, strokeWidth: 0};
+        expect(getDistanceToSymbol({...args, point: [100, 100 - half + 0.1]})).toBe(0);
+        // The corner of the bounding box lies outside the diamond.
+        expect(getDistanceToSymbol({...args, point: [100 + half, 100 - half]})).toBeCloseTo(
+            half / Math.SQRT2,
         );
+    });
+
+    test.each([
+        ['triangle', -1],
+        ['triangle-down', 1],
+    ] as const)('%s', (symbolType, direction) => {
+        const {height} = diameter(symbolType);
+        const apex = height / 2;
+        const args = {center, symbolType, radius, strokeWidth: 0};
+        expect(getDistanceToSymbol({...args, point: [100, 100 + direction * (apex - 0.1)]})).toBe(
+            0,
+        );
+        expect(getDistanceToSymbol({...args, point: [100, 100 - direction * apex]})).toBeCloseTo(
+            apex / 2,
+        );
+    });
+
+    test('offsets the contour by half of the stroke width with mitered corners', () => {
+        const half = diameter('square').width / 2;
+        const args = {center, symbolType: 'square' as const, radius, strokeWidth: 2};
+        expect(getDistanceToSymbol({...args, point: [100 + half + 0.9, 100 + half + 0.9]})).toBe(0);
+        expect(getDistanceToSymbol({...args, point: [100 + half + 3, 100]})).toBeCloseTo(2);
     });
 });

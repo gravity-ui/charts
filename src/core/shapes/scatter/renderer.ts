@@ -54,8 +54,10 @@ export function renderScatter(
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;
 
-    function handleShapeHover(data?: Array<TooltipDataChunkScatter & TooltipDataChunk>) {
-        const selected = data?.find((d) => d.series.type === 'scatter' && d.closest);
+    function handleShapeHover(data?: TooltipDataChunk[]) {
+        const selected = data?.find(
+            (d): d is TooltipDataChunkScatter => d.series.type === 'scatter' && Boolean(d.closest),
+        );
         const selectedDataItem = selected?.data;
         const selectedSeriesId = selected?.series?.id;
 
