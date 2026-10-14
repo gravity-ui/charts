@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -54,3 +56,13 @@ export default function SankeyExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Sankey',
+    title: 'Basic Sankey diagram',
+    description: 'Basic Sankey configuration with named nodes and weighted links.',
+    docsUrl: 'pages/guides/series-types/sankey.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

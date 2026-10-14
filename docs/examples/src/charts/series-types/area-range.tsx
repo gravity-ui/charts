@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -35,3 +37,13 @@ export default function AreaRangeSeriesExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Area range',
+    title: 'Basic area range chart',
+    description: 'Basic range configuration with lower and upper bounds for each point.',
+    docsUrl: 'pages/guides/series-types/area-range.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

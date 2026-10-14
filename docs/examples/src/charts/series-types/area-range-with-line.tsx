@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -47,3 +49,10 @@ export default function AreaRangeWithLineExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Area range',
+    title: 'Range with a line',
+    description: 'Combine area-range and line series on shared axes.',
+    docsUrl: 'pages/guides/series-types/area-range.html#combining-with-a-line',
+} satisfies ExampleMeta;

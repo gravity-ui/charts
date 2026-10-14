@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -38,3 +40,13 @@ export default function DataLabelsPlacementAutoExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Automatic label placement',
+    description: 'Find label positions that avoid lines and other labels.',
+    docsUrl: 'pages/guides/series-types/line.html#automatic-placement',
+    gallery: {
+        group: 'data-labels',
+    },
+} satisfies ExampleMeta;

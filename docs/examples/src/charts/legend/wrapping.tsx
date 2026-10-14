@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     legend: {
         enabled: true,
@@ -51,3 +53,13 @@ export default function LegendWrappingExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Pie',
+    title: 'Wrapping legend labels',
+    description: 'Wrap long legend labels within a limited width.',
+    docsUrl: 'pages/guides/legend.html#wrapping-long-labels',
+    gallery: {
+        group: 'legend',
+    },
+} satisfies ExampleMeta;

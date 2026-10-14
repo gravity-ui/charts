@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const {verifyExamples, verifyExampleFiles} = require('./verify-examples');
+const {verifyExamples} = require('./verify-examples');
 
 describe('documentation example catalog', () => {
     let buildDir;
@@ -41,27 +41,6 @@ describe('documentation example catalog', () => {
         expect(() => verifyExamples({}, [html], buildDir)).toThrow('missing gallery metadata');
     });
 
-    it('rejects a component file without registration', () => {
-        fs.writeFileSync(
-            path.join(buildDir, 'new-example.tsx'),
-            'export default function Example() {}',
-        );
-        expect(() => verifyExampleFiles({}, buildDir)).toThrow('missing gallery metadata');
-    });
-
-    it('rejects registration without a component file', () => {
-        expect(() => verifyExampleFiles(meta, buildDir)).toThrow('has no component file');
-    });
-
-    it('matches nested component paths to registration IDs', () => {
-        fs.mkdirSync(path.join(buildDir, 'line'));
-        fs.writeFileSync(
-            path.join(buildDir, 'line/labels.tsx'),
-            'export default function Example() {}',
-        );
-        expect(() => verifyExampleFiles(meta, buildDir)).not.toThrow();
-    });
-
     it('rejects examples without descriptions', () => {
         expect(() =>
             verifyExamples(
@@ -81,6 +60,19 @@ describe('documentation example catalog', () => {
             'missing documentation anchor',
         );
     });
+
+    it.each([{group: 'unknown'}, {group: 1}, {order: -1}, {order: '0'}])(
+        'rejects invalid gallery options %j',
+        (gallery) => {
+            expect(() =>
+                verifyExamples(
+                    {'line/labels': {...meta['line/labels'], gallery}},
+                    [html],
+                    buildDir,
+                ),
+            ).toThrow('invalid gallery.');
+        },
+    );
 
     it('allows catalog examples linking to the section that explains their feature', () => {
         fs.writeFileSync(path.join(buildDir, 'line.html'), '<h2 id="labels">Labels</h2>');

@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     xAxis: {type: 'category', categories: ['January', 'February', 'March']},
     series: {
@@ -58,3 +60,13 @@ export default function StackLabelsExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Area',
+    title: 'Stack total labels',
+    description: 'Display formatted totals above stacked areas.',
+    docsUrl: 'pages/guides/data-labels.html#stack-total-labels',
+    gallery: {
+        group: 'data-labels',
+    },
+} satisfies ExampleMeta;

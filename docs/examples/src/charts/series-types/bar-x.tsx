@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         options: {'bar-x': {borderWidth: 1, borderRadius: 4, opacity: 0.6}},
@@ -37,3 +39,10 @@ export default function BarXSeriesExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-X',
+    title: 'Column appearance',
+    description: 'Style grouped columns with rounded borders and opacity.',
+    docsUrl: 'pages/guides/series-types/bar-x.html#opacity',
+} satisfies ExampleMeta;

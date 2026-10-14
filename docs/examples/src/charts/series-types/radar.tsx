@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -34,3 +36,13 @@ export default function RadarExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Radar',
+    title: 'Basic radar chart',
+    description: 'Two radar series with shared categories and axis limits.',
+    docsUrl: 'pages/guides/series-types/radar.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

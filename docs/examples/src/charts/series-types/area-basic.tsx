@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -39,3 +41,13 @@ export default function AreaBasicExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Area',
+    title: 'Basic area chart',
+    description: 'Basic area configuration with a categorical X axis and a zero baseline.',
+    docsUrl: 'pages/guides/series-types/area.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

@@ -4,6 +4,8 @@ import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 import {scaleLinear} from 'd3-scale';
 
+import type {ExampleMeta} from '../gallery';
+
 const colors = ['#e6f2ff', '#1769aa'];
 const domain = [0, 100];
 const colorScale = scaleLinear<string>().domain(domain).range(colors);
@@ -37,3 +39,13 @@ export default function HeatmapExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Heatmap',
+    title: 'Basic heatmap',
+    description: 'Heatmap configuration with categorical axes and a continuous color legend.',
+    docsUrl: 'pages/guides/series-types/heatmap.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

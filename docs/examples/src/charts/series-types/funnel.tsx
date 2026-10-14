@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -29,3 +31,13 @@ export default function FunnelExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Funnel',
+    title: 'Basic funnel chart',
+    description: 'Basic funnel configuration with labels inside segments.',
+    docsUrl: 'pages/guides/series-types/funnel.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

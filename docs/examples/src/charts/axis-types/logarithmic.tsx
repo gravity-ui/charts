@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -34,3 +36,13 @@ export default function LogarithmicAxisExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Logarithmic axis',
+    description: 'Configure a logarithmic scale on the Y axis.',
+    docsUrl: 'pages/guides/axes/axis-types.html#logarithmic-axis',
+    gallery: {
+        group: 'axes',
+    },
+} satisfies ExampleMeta;

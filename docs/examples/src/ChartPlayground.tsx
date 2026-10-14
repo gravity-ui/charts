@@ -32,7 +32,6 @@ type View = 'chart' | 'code';
 interface Props {
     code?: string;
     Component: () => React.ReactElement;
-    compact?: boolean;
 }
 
 // --- Singleton theme manager ---
@@ -61,7 +60,7 @@ function initGlobalObserver() {
     });
 }
 
-export function ChartPlayground({code, Component, compact = false}: Props) {
+export function ChartPlayground({code, Component}: Props) {
     const [view, setView] = React.useState<View>('chart');
     const [isDark, setIsDark] = React.useState(detectDarkTheme);
     const [highlighted, setHighlighted] = React.useState('');
@@ -101,10 +100,10 @@ export function ChartPlayground({code, Component, compact = false}: Props) {
             ) : (
                 <div
                     style={{
-                        border: compact ? undefined : '1px solid var(--g-color-line-generic)',
-                        borderRadius: compact ? undefined : '8px',
+                        border: '1px solid var(--g-color-line-generic)',
+                        borderRadius: '8px',
                         overflow: 'hidden',
-                        margin: compact ? 0 : '24px 0',
+                        margin: '24px 0',
                     }}
                 >
                     <TabProvider value={view} onUpdate={(v) => setView(v as View)}>
@@ -116,8 +115,8 @@ export function ChartPlayground({code, Component, compact = false}: Props) {
                         <TabPanel value="chart">
                             <div
                                 style={{
-                                    height: compact ? 240 : 320,
-                                    padding: compact ? '8px' : '16px',
+                                    height: 320,
+                                    padding: '16px',
                                 }}
                             >
                                 <Component />
@@ -133,8 +132,6 @@ export function ChartPlayground({code, Component, compact = false}: Props) {
                                     fontSize: '13px',
                                     lineHeight: '1.6',
                                     backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                                    height: compact ? 256 : undefined,
-                                    boxSizing: 'border-box',
                                 }}
                                 // Monaco's colorize() escapes HTML entities in the code
                                 // content, so its output is safe to inject.

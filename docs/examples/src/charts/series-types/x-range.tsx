@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -37,3 +39,13 @@ export default function XRangeExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'X-Range',
+    title: 'Basic interval chart',
+    description: 'Intervals defined by start and end values on a categorical Y axis.',
+    docsUrl: 'pages/guides/series-types/x-range.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

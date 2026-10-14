@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -37,3 +39,13 @@ export default function BarYBasicExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-Y',
+    title: 'Basic bar chart',
+    description: 'Basic horizontal bar configuration with categories on the Y axis.',
+    docsUrl: 'pages/guides/series-types/bar-y.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

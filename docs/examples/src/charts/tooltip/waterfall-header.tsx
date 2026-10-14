@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -33,3 +35,13 @@ export default function WaterfallHeaderTooltipExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Waterfall',
+    title: 'Date headers in tooltips',
+    description: 'Format waterfall tooltip headers as dates.',
+    docsUrl: 'pages/guides/tooltip.html#value-formatting',
+    gallery: {
+        group: 'tooltip',
+    },
+} satisfies ExampleMeta;

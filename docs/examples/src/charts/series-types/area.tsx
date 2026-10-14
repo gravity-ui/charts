@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -45,3 +47,10 @@ export default function AreaSeriesExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Area',
+    title: 'Gradient fill',
+    description: 'Give an area a gradient fill and a separate line color.',
+    docsUrl: 'pages/guides/series-types/area.html#colors',
+} satisfies ExampleMeta;

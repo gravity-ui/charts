@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     legend: {
         enabled: false,
@@ -48,3 +50,13 @@ export default function AxisLabelFontSizeExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Axis label font size',
+    description: 'Adjust X and Y axis label sizes independently.',
+    docsUrl: 'pages/guides/axes/axis-labels.html#font-size',
+    gallery: {
+        group: 'axes',
+    },
+} satisfies ExampleMeta;

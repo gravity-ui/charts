@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -38,3 +40,13 @@ export default function LineBasicExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Basic line chart',
+    description: 'Basic line configuration with a categorical X axis.',
+    docsUrl: 'pages/guides/series-types/line.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

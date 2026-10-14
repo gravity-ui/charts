@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -39,3 +41,13 @@ export default function ScatterBasicExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Scatter',
+    title: 'Basic scatter chart',
+    description: 'Basic scatter configuration with numeric X and Y axes.',
+    docsUrl: 'pages/guides/series-types/scatter.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

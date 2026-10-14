@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -37,3 +39,13 @@ export default function BarXBasicExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-X',
+    title: 'Basic column chart',
+    description: 'Basic vertical bar configuration with categories on the X axis.',
+    docsUrl: 'pages/guides/series-types/bar-x.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

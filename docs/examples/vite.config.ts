@@ -3,17 +3,18 @@ import {resolve} from 'path';
 import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 
-import {verifyExampleFiles} from '../scripts/verify-examples';
-
-import meta from './src/charts/meta.json';
+import {readExample} from './read-examples';
 
 export default defineConfig({
     plugins: [
         react(),
         {
-            name: 'verify-example-files',
-            buildStart() {
-                verifyExampleFiles(meta, resolve(__dirname, 'src/charts'));
+            name: 'example-source',
+            load(id) {
+                if (!id.endsWith('?example-source')) return undefined;
+                const file = id.slice(0, -'?example-source'.length);
+                this.addWatchFile(file);
+                return `export default ${JSON.stringify(readExample(file).code)};`;
             },
         },
     ],

@@ -1,27 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-function verifyExampleFiles(meta, sourceDir) {
-    const ids = new Set();
-    function visit(dir) {
-        for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
-            const file = path.join(dir, entry.name);
-            if (entry.isDirectory()) {
-                visit(file);
-            } else if (entry.name.endsWith('.tsx')) {
-                ids.add(path.relative(sourceDir, file).split(path.sep).join('/').slice(0, -4));
-            }
-        }
-    }
-    visit(sourceDir);
-    for (const id of ids) {
-        if (!Object.hasOwn(meta, id))
-            throw new Error(`Example "${id}" is missing gallery metadata`);
-    }
-    for (const id of Object.keys(meta)) {
-        if (!ids.has(id)) throw new Error(`Example "${id}" has no component file`);
-    }
-}
+const galleryGroups = require('../examples/src/charts/gallery-groups.json');
 
 function verifyExamples(meta, pages, buildDir) {
     const usedIds = new Set();
@@ -38,6 +18,24 @@ function verifyExamples(meta, pages, buildDir) {
     }
 
     for (const [id, example] of Object.entries(meta)) {
+        const gallery = example.gallery;
+        if (gallery !== undefined) {
+            if (!gallery || typeof gallery !== 'object' || Array.isArray(gallery)) {
+                throw new Error(`Example "${id}" has invalid gallery options`);
+            }
+            if (
+                gallery.group !== undefined &&
+                !galleryGroups.some((group) => group.id === gallery.group)
+            ) {
+                throw new Error(`Example "${id}" has invalid gallery.group`);
+            }
+            if (
+                gallery.order !== undefined &&
+                (!Number.isFinite(gallery.order) || gallery.order < 0)
+            ) {
+                throw new Error(`Example "${id}" has invalid gallery.order`);
+            }
+        }
         for (const field of ['title', 'description', 'seriesType', 'docsUrl']) {
             if (typeof example[field] !== 'string' || !example[field].trim()) {
                 throw new Error(`Example "${id}" is missing ${field}`);
@@ -53,4 +51,4 @@ function verifyExamples(meta, pages, buildDir) {
     }
 }
 
-module.exports = {verifyExamples, verifyExampleFiles};
+module.exports = {verifyExamples};

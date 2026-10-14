@@ -1,9 +1,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const {readExamples} = require('../examples/read-examples');
+
 const {verifyExamples} = require('./verify-examples');
 
-const meta = require('../examples/src/charts/meta.json');
+const meta = readExamples(path.resolve(__dirname, '../examples/src/charts'));
 
 const buildDir = path.resolve(process.argv[2] || '../dist-docs');
 

@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -37,3 +39,13 @@ export default function WaterfallExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Waterfall',
+    title: 'Basic waterfall chart',
+    description: 'Positive and negative increments, a total column, and data labels.',
+    docsUrl: 'pages/guides/series-types/waterfall.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -42,3 +44,13 @@ export default function QuarterlyXAxisExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Quarterly date labels',
+    description: 'Format axis labels and tooltip headers with quarter and year.',
+    docsUrl: 'pages/guides/value-formatting.html#datetime-format-tokens',
+    gallery: {
+        group: 'axes',
+    },
+} satisfies ExampleMeta;

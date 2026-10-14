@@ -4,6 +4,8 @@ import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 import {Button} from '@gravity-ui/uikit';
 
+import type {ExampleMeta} from '../gallery';
+
 const data = {
     legend: {enabled: true},
     series: {
@@ -40,3 +42,13 @@ export default function LegendLabelsExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Custom legend labels',
+    description: 'Use short legend labels and preserve selection when data changes.',
+    docsUrl: 'pages/guides/legend.html#overriding-legend-labels',
+    gallery: {
+        group: 'legend',
+    },
+} satisfies ExampleMeta;

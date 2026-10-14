@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -34,3 +36,13 @@ export default function TreemapExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Treemap',
+    title: 'Basic treemap',
+    description: 'Hierarchical data with a squarified layout and padding between groups.',
+    docsUrl: 'pages/guides/series-types/treemap.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;
