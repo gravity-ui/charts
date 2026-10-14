@@ -16,49 +16,6 @@ for (const {hash, title} of [
     });
 }
 
-test('shows the source of the selected example and returns focus when closed', async ({page}) => {
-    await page.goto('pages/examples.html');
-
-    for (const {title, option} of [
-        {
-            title: 'Cardinal interpolation',
-            option: "interpolation: {type: 'cardinal', tension: 0.5}",
-        },
-        {title: 'Fixed label placement', option: "placement: ['bottom']"},
-        {title: 'Hide labels that do not fit', option: "placementFallback: 'hide'"},
-    ]) {
-        const button = page.getByRole('button', {name: `Code for ${title}`, exact: true});
-        await button.click();
-        const dialog = page.getByRole('dialog', {name: title, exact: true});
-        await expect(dialog.locator('code')).toContainText(option);
-        await expect(dialog.locator('code')).toContainText('export default function');
-        await page.keyboard.press('Escape');
-        await expect(dialog).not.toBeVisible();
-        await expect(button).toBeFocused();
-    }
-});
-
-test('keeps the source dialog and its close button accessible on mobile', async ({page}) => {
-    await page.setViewportSize({width: 375, height: 812});
-    await page.goto('pages/examples.html');
-    await page.getByRole('button', {name: 'Code for Cardinal interpolation'}).click();
-    const dialog = page.getByRole('dialog', {name: 'Cardinal interpolation', exact: true});
-    await expect(dialog).toBeVisible();
-    await expect(async () => {
-        const bounds = await dialog.boundingBox();
-        if (!bounds) throw new Error('The code dialog has no bounds');
-        expect(bounds.x).toBeGreaterThanOrEqual(0);
-        expect(bounds.x + bounds.width).toBeLessThanOrEqual(375);
-        expect(bounds.y).toBeGreaterThanOrEqual(0);
-        expect(bounds.y + bounds.height).toBeLessThanOrEqual(812);
-    }).toPass();
-    await expect(dialog.locator('code')).toContainText("interpolation: {type: 'cardinal'");
-    const close = dialog.getByRole('button', {name: 'Close dialog', exact: true});
-    await expect(close).toBeInViewport();
-    await close.click();
-    await expect(dialog).not.toBeVisible();
-});
-
 test('shows highlighted guide source and restores the chart preview', async ({page}) => {
     await page.goto('pages/guides/series-types/line.html');
     const example = page.locator('[data-chart-example="series-types/line-basic"]');

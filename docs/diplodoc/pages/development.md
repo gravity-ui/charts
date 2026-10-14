@@ -63,11 +63,11 @@ Use card titles and descriptions to explain the demonstrated configuration (for 
 
 Embed it in a guide using `<div data-chart-example="your/example-id"></div>`. The [Examples catalog](./examples.md) automatically reuses the same component. An example combining series types belongs to one primary group.
 
-Set `gallery.order: 0` for the basic example of each series; other examples default to `100`, with title as the tie-breaker. Set `gallery.group` to `axes`, `legend`, `tooltip`, or `data-labels` to place a cross-cutting example in a topic group instead of its series group. Each example appears once. Topic names and their display order are defined in `docs/examples/src/charts/gallery-groups.json`; series groups come first, in alphabetical order. Unknown topic IDs fail the documentation build. Gallery cards show the chart and description, with a Code button for the complete example source. Guides can embed a focused selection of examples.
+Set `gallery.order: 0` for the basic example of each series; other examples default to `100`, with title as the tie-breaker. Set `gallery.group` to `axes`, `legend`, `tooltip`, or `data-labels` to place a cross-cutting example in a topic group instead of its series group. Each example appears once. Topic names and their display order are defined in `docs/examples/src/charts/gallery-groups.json`; series groups come first, in alphabetical order. Unknown topic IDs fail the documentation build. Gallery cards show the chart, description, and a Learn more link to the guide. Guides embed a focused selection of examples with Preview and Code tabs.
 
 Run `npm run docs:build` to check registration, documentation coverage, and guide links.
 
-After building, check gallery navigation and source-code viewing in Docker:
+After building, check gallery navigation and the guide code tabs in Docker:
 
 ```shell
 ./scripts/playwright-docker.sh 'npm run test:docs-examples'
