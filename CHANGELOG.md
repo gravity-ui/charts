@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.67.1](https://github.com/gravity-ui/charts/compare/v1.67.0...v1.67.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* respect grouping option for bar series ([#764](https://github.com/gravity-ui/charts/issues/764)) ([1d7239b](https://github.com/gravity-ui/charts/commit/1d7239b9f95afeb2c3c3bfda84e1b9ee5561bf91))
+* select the nearest shape across series types for tooltip and click ([#772](https://github.com/gravity-ui/charts/issues/772)) ([924afc0](https://github.com/gravity-ui/charts/commit/924afc0e889431976bba06c1360c4333a6e35bd8))
+
 ## [1.67.0](https://github.com/gravity-ui/charts/compare/v1.66.0...v1.67.0) (2026-10-13)
 
 
