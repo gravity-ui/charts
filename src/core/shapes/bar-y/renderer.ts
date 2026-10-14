@@ -25,7 +25,7 @@ export function renderBarY(
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
     const segmentSelection = svgElement
-        .selectAll(`path.${b('segment')}`)
+        .selectAll<SVGPathElement, PreparedBarYData>(`path.${b('segment')}`)
         .data(shapes)
         .join('path')
         .attr('d', (d) => getAdjustedRectPath(d))
@@ -39,7 +39,7 @@ export function renderBarY(
         .attr('cursor', (d) => d.series.cursor);
 
     const borderSelection = svgElement
-        .selectAll(`path.${b('segment-border')}`)
+        .selectAll<SVGPathElement, PreparedBarYData>(`path.${b('segment-border')}`)
         .data(shapes.filter((d) => d.borderWidth > 0))
         .join('path')
         .attr('d', (d) => getAdjustedRectBorderPath(d))
@@ -48,6 +48,18 @@ export function renderBarY(
         .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.opacity)
         .attr('pointer-events', 'none');
+
+    if (shapes.some((d) => d.series.grouping === false)) {
+        // Keep each border next to its fill so later series cover both together.
+        const borders = new Map<PreparedBarYData, SVGPathElement>();
+        borderSelection.each(function (d) {
+            borders.set(d, this);
+        });
+        segmentSelection.each(function (d) {
+            const border = borders.get(d);
+            if (border) this.after(border);
+        });
+    }
 
     const labelSelection = renderDataLabels({
         container: svgElement,

@@ -9,7 +9,7 @@ import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getWidthOccupiedByYAxis} from '~core/utils';
 
-import type {ChartSeries, ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
+import type {ChartXAxis, ChartYAxis, LegendConfig} from '../../types';
 import type {PreparedChart} from '../types';
 
 interface UseAxesProps {
@@ -37,7 +37,7 @@ export async function getAxes(props: UseAxesProps) {
         xAxis,
         yAxis,
     } = props;
-    const seriesData = preparedSeries.filter((s) => s.visible) as ChartSeries[];
+    const seriesData = preparedSeries.filter((s) => s.visible);
 
     const estimatedPreparedYAxis = await getPreparedYAxis({
         height,

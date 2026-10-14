@@ -14,6 +14,8 @@ export interface ShapePoint {
     series: ChartSeries;
     subTotal?: number;
     sourceX?: number;
+    /** Distance to the painted contour and paint order among these shapes. */
+    hitTest?: {distance: number; priority: number};
 }
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
@@ -51,6 +53,38 @@ export function getClosestYIndex(items: ShapePoint[], y: number) {
     return closestYIndex;
 }
 
+function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
+    let shapeWinner: ShapePoint | undefined;
+    let candidates: ShapePoint[] = [];
+    let closestDistance = Infinity;
+    for (const point of points) {
+        const distance =
+            point.hitTest?.distance ??
+            Math.hypot(
+                (point.sourceX ?? point.x) - x,
+                Math.max(Math.min(point.y0, point.y1) - y, y - Math.max(point.y0, point.y1), 0),
+            );
+        if (distance < closestDistance) {
+            candidates = [];
+            shapeWinner = undefined;
+            closestDistance = distance;
+        }
+        if (distance !== closestDistance) continue;
+        if (point.hitTest) {
+            if (point.hitTest.priority > (shapeWinner?.hitTest?.priority ?? -Infinity)) {
+                shapeWinner = point;
+            }
+        } else {
+            candidates.push(point);
+        }
+    }
+    if (shapeWinner) candidates.push(shapeWinner);
+    // Paint order is comparable only among hit-tested shapes. Preserve Y selection
+    // for mixed candidates, including a line point at the edge of a bar.
+    const sorted = sort(candidates, (point) => point.y0);
+    return sorted[getClosestYIndex(sorted, y)] ?? points[0];
+}
+
 export function getClosestPointsByXValue(x: number, y: number, points: ShapePoint[]) {
     const sorted = sort(points, (p) => p.x);
     const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
@@ -64,6 +98,9 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
 
     const groupedBySeries = Object.values(groupBy(filtered, (p) => get(p.series, 'id'))).map(
         (items) => {
+            if (items.some((point) => point.hitTest)) {
+                return getClosestHitTestPoint(items, x, y);
+            }
             const sortedByY = sort(items, (p) => p.y0);
             const index = getClosestYIndex(sortedByY, y);
             return sortedByY[index === -1 ? 0 : index];
@@ -71,6 +108,11 @@ export function getClosestPointsByXValue(x: number, y: number, points: ShapePoin
     );
 
     const closestPoints = sort(groupedBySeries, (p) => p.y0);
+
+    if (closestPoints.some((p) => p.hitTest)) {
+        const winner = getClosestHitTestPoint(closestPoints, x, y);
+        return closestPoints.map((point) => ({...point, closest: point === winner}));
+    }
 
     const pointsWithSourceX = closestPoints.filter((p) => p.sourceX !== undefined);
     const uniqueSourceX = new Set(pointsWithSourceX.map((p) => p.sourceX));

@@ -19,6 +19,8 @@ import {
 } from '~core/validation/helpers';
 
 import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
+import {getBarDomainData} from '../bar-domain';
+import {validateBarGrouping} from '../bar-grouping';
 import {validateBarOpacity} from '../bar-opacity';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
@@ -105,12 +107,14 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validateBarGrouping({series, allSeries});
         validatePercentStackingValues({
             series,
             valueKey: 'y',
             valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
         });
     },
+    getStackedDomainData: (series) => getBarDomainData(series, 'x', 'y'),
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,

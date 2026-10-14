@@ -18,6 +18,8 @@ import {
 } from '~core/validation/helpers';
 
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
+import {getBarDomainData} from '../bar-domain';
+import {validateBarGrouping} from '../bar-grouping';
 import {validateBarOpacity} from '../bar-opacity';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
@@ -47,7 +49,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         ...args,
         anchors: args.isRangeSlider
             ? []
-            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions}),
+            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions, yAxis}),
         otherLayers: [
             ...(args.otherLayers ?? []),
             {svgLabels: data.labels, htmlLabels: data.htmlLabels},
@@ -85,8 +87,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
+        validateBarGrouping({series, allSeries});
         validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
+    getStackedDomainData: (series) => getBarDomainData(series, 'y', 'x'),
     getColorValue: (d) => d.x,
     prepareShapeData,
     renderShapes,

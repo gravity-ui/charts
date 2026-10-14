@@ -30,7 +30,7 @@ export function renderBarX(
     svgElement.selectAll('*').remove();
     const shapes = preparedData.map((datum) => ({datum, paths: getBarXPaths(datum)}));
     const rectSelection = svgElement
-        .selectAll(`path.${b('segment')}`)
+        .selectAll<SVGPathElement, PreparedBarXData>(`path.${b('segment')}`)
         .data(shapes)
         .join('path')
         .attr('d', ({paths}) => paths.fill)
@@ -41,7 +41,7 @@ export function renderBarX(
         .attr('cursor', (d) => d.series.cursor);
 
     const borderSelection = svgElement
-        .selectAll(`path.${b('segment-border')}`)
+        .selectAll<SVGPathElement, PreparedBarXData>(`path.${b('segment-border')}`)
         .data(shapes.filter(({paths}) => paths.border))
         .join('path')
         .attr('d', ({paths}) => paths.border)
@@ -51,6 +51,18 @@ export function renderBarX(
         .attr('fill-rule', 'evenodd')
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
+
+    if (preparedData.some((d) => d.series.grouping === false)) {
+        // Keep each border next to its fill so later series cover both together.
+        const borders = new Map<PreparedBarXData, SVGPathElement>();
+        borderSelection.each(function (d) {
+            borders.set(d, this);
+        });
+        rectSelection.each(function (d) {
+            const border = borders.get(d);
+            if (border) this.after(border);
+        });
+    }
 
     let dataLabels = preparedData.map((d) => d.svgLabels).flat();
     if (!allowOverlapDataLabels) {
