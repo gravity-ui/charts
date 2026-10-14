@@ -5,7 +5,11 @@ import type {PreparedBarXData} from '../types';
 
 test('unequal grouped stacks keep bar and line rows in the same tooltip category', () => {
     const lineSeries = {type: 'line', id: 'line', name: 'Line'} as PreparedLineSeries;
-    const bars = [78, 78, 102].map((x, index) => ({
+    const bars = [
+        {center: 88, width: 20},
+        {center: 88, width: 20},
+        {center: 112, width: 4},
+    ].map(({center, width}, index) => ({
         series: {
             type: 'bar-x',
             id: `bar-${index}`,
@@ -14,9 +18,9 @@ test('unequal grouped stacks keep bar and line rows in the same tooltip category
             stackId: index < 2 ? 'left' : 'right',
         } as PreparedBarXSeries,
         data: {x: 'A', y: 50},
-        x,
+        x: center - width / 2,
         y: index === 1 ? 100 : 150,
-        width: 20,
+        width,
         height: 50,
     })) as PreparedBarXData[];
     const line = {

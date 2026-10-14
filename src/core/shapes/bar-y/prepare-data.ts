@@ -86,6 +86,12 @@ export async function prepareBarYData(args: {
         groupSize,
         seriesOptions['bar-y'].barMaxWidth,
     );
+    const borderWidthBySeries = new Map(
+        series.map((s) => [
+            s,
+            (widthBySeries.get(s) ?? barSize) > s.borderWidth * 2 ? s.borderWidth : 0,
+        ]),
+    );
 
     const categoryDomain =
         yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
@@ -119,7 +125,9 @@ export async function prepareBarYData(args: {
                 ? groupedIndex++
                 : 0;
             const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
-            const base = independent ? baseValue : baseValue - measureValues[0].series.borderWidth;
+            const base = independent
+                ? baseValue
+                : baseValue - (borderWidthBySeries.get(measureValues[0].series) ?? 0);
             let positiveStack = base;
             let negativeStack = base;
 
@@ -164,10 +172,9 @@ export async function prepareBarYData(args: {
                 }
 
                 const itemStackGap = width - shapeWidth;
+                const seriesBorderWidth = borderWidthBySeries.get(s) ?? 0;
                 const borderWidth =
-                    height > s.borderWidth * 2 && (!overlay || shapeWidth > s.borderWidth * 2)
-                        ? s.borderWidth
-                        : 0;
+                    !overlay || shapeWidth > seriesBorderWidth * 2 ? seriesBorderWidth : 0;
                 const isFirstInStack = xValueIndex === 0;
                 const isLastStackItem = independent || xValueIndex === sortedData.length - 1;
                 const extendsRight = xPixel > baseValue;

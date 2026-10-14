@@ -12,6 +12,68 @@ import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+test('different grouped bar widths keep line and bar rows in one tooltip', async ({
+    mount,
+    page,
+}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                series: {
+                    options: {'bar-x': {barMaxWidth: 1000}},
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Plan',
+                            barPadding: 0.1,
+                            data: [
+                                {x: 'Q1', y: 80},
+                                {x: 'Q2', y: 60},
+                            ],
+                        },
+                        {
+                            type: 'bar-x',
+                            name: 'Actual',
+                            barPadding: 0.8,
+                            data: [
+                                {x: 'Q1', y: 60},
+                                {x: 'Q2', y: 40},
+                            ],
+                        },
+                        {
+                            type: 'line',
+                            name: 'Target',
+                            marker: {enabled: true},
+                            data: [
+                                {x: 'Q1', y: 90},
+                                {x: 'Q2', y: 90},
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {type: 'category', categories: ['Q1', 'Q2']},
+                yAxis: [{min: 0, max: 100}],
+            }}
+            styles={{width: 700, height: 400}}
+        />,
+    );
+    const rows = page.locator('.gcharts-tooltip__content-row');
+    const active = page.locator('.gcharts-tooltip__content-row_active');
+    await component.locator('.gcharts-bar-x__segment').first().hover();
+    await expect(rows).toHaveCount(3);
+    await expect(rows.filter({hasText: 'Target'})).toContainText('90');
+    await expect(active).toContainText('Plan');
+
+    const marker = await getLocatorBoundingBox(
+        component.locator('.gcharts-marker__symbol').first(),
+    );
+    await page.mouse.move(marker.x + marker.width / 2, marker.y + marker.height / 2);
+    await expect(active).toContainText('Target');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.filter({hasText: 'Plan'})).toContainText('80');
+    await expect(rows.filter({hasText: 'Actual'})).toContainText('60');
+});
+
 test('bar-x overlay tooltip selects the last painted duplicate point', async ({mount, page}) => {
     const component = await mount(
         <ChartTestStory
