@@ -42,11 +42,7 @@
     }
 
     & &__card &__link {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 4px 12px;
+        display: block;
 
         text-decoration: none;
 
@@ -69,13 +65,6 @@
         font-size: 15px;
         font-weight: 600;
         line-height: 20px;
-    }
-
-    &__type {
-        font-size: 12px;
-        white-space: nowrap;
-
-        color: var(--g-color-text-link);
     }
 
     &__caption {

@@ -4,7 +4,7 @@ A treemap divides an area into rectangles sized by value and grouped by a hierar
 
 ## When to use
 
-Use it to show how many items contribute to a total within groups, such as storage by folder. Use [bars](bar-y.md) for precise rankings: similar rectangle areas are harder to compare.
+Use it to show how many items contribute to a total within groups, such as storage by folder. Use [Bar-Y](bar-y.md) for precise rankings: similar rectangle areas are harder to compare.
 
 ## Example
 

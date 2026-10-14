@@ -1,5 +1,7 @@
 import React from 'react';
 
+import {AreaBasicExample} from '../series-types/area-basic';
+import {BarXBasicExample} from '../series-types/bar-x-basic';
 import {BarYBasicExample} from '../series-types/bar-y-basic';
 import {FunnelExample} from '../series-types/funnel';
 import {HeatmapExample} from '../series-types/heatmap';
@@ -38,20 +40,20 @@ const cards: DashboardCard[] = [
         Component: PieExample,
     },
     {
-        title: 'Orders by category',
-        caption: 'Product category comparison',
-        series: 'bar-y',
-        seriesName: 'Bar-Y',
+        title: 'Quarterly orders',
+        caption: 'Orders by quarter',
+        series: 'bar-x',
+        seriesName: 'Bar-X',
         size: 'narrow',
-        Component: BarYBasicExample,
+        Component: BarXBasicExample,
     },
     {
-        title: 'Checkout journey',
-        caption: 'From product view to purchase',
-        series: 'funnel',
-        seriesName: 'Funnel',
+        title: 'Active subscriptions',
+        caption: 'January–June',
+        series: 'area',
+        seriesName: 'Area',
         size: 'wide',
-        Component: FunnelExample,
+        Component: AreaBasicExample,
     },
     {
         title: 'Customer activity',
@@ -68,6 +70,22 @@ const cards: DashboardCard[] = [
         seriesName: 'Treemap',
         size: 'narrow',
         Component: TreemapExample,
+    },
+    {
+        title: 'Orders by category',
+        caption: 'Product category comparison',
+        series: 'bar-y',
+        seriesName: 'Bar-Y',
+        size: 'narrow',
+        Component: BarYBasicExample,
+    },
+    {
+        title: 'Checkout journey',
+        caption: 'From product view to purchase',
+        series: 'funnel',
+        seriesName: 'Funnel',
+        size: 'wide',
+        Component: FunnelExample,
     },
     {
         title: 'Delivery performance',
@@ -92,7 +110,10 @@ export function OverviewDashboardExample() {
         <div className="docs-dashboard">
             <div className="docs-dashboard__heading">
                 <div className="docs-dashboard__title">Store overview</div>
-                <div className="docs-dashboard__subtitle">Sales and operations · Sample data</div>
+                <div className="docs-dashboard__subtitle">
+                    A selection of chart types with sample data.{' '}
+                    <a href="pages/overview.html#chart-types">See all chart types.</a>
+                </div>
             </div>
             <div className="docs-dashboard__grid">
                 {cards.map(({title, caption, series, seriesName, size, Component}) => (
@@ -107,9 +128,6 @@ export function OverviewDashboardExample() {
                             aria-label={`${title}: ${seriesName} series guide and example`}
                         >
                             <span className="docs-dashboard__card-title">{title}</span>
-                            <span className="docs-dashboard__type">
-                                {seriesName} <span aria-hidden="true">↗</span>
-                            </span>
                         </a>
                         <div className="docs-dashboard__caption">{caption}</div>
                         <div className="docs-dashboard__chart">

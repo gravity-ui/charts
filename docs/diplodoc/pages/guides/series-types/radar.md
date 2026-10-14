@@ -4,7 +4,7 @@ A radar series places values on radial axes and connects them into a profile.
 
 ## When to use
 
-Use it to compare a few profiles across the same small set of metrics, such as product ratings. Use comparable scales and keep category order fixed: reordering axes changes the polygon shape. Use [bars](bar-y.md) for precise comparisons.
+Use it to compare a few profiles across the same small set of metrics, such as product ratings. Use comparable scales and keep category order fixed: reordering axes changes the polygon shape. Use [Bar-Y](bar-y.md) for precise comparisons.
 
 ## Example
 

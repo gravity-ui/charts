@@ -4,7 +4,7 @@ A waterfall series shows how positive and negative changes build a running total
 
 ## When to use
 
-Use it to explain a balance from opening to closing, such as cash flow, customer growth, or budget variance. Use ordinary [bars](bar-x.md) for independent values.
+Use it to explain a balance from opening to closing, such as cash flow, customer growth, or budget variance. Use [Bar-X](bar-x.md) for independent values.
 
 ## Example
 
