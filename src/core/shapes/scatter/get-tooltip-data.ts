@@ -23,7 +23,10 @@ export function getTooltipData(
     const [pointerX, pointerY] = position;
 
     // The nearest marker contour; among equally distant markers the one with the nearest
-    // center wins, so markers of the same size are still picked by their centers.
+    // center wins, so markers of the same size are still picked by their centers. The contours
+    // are measured regardless of `measureDistance`: the plugin needs them to pick its own
+    // candidate (a large marker containing the pointer beats a nearer center), and the linear
+    // scan is cheaper than the Delaunay triangulation it replaced.
     let closestPoint: PreparedScatterData | undefined;
     let distance = Infinity;
     let centerDistance = Infinity;

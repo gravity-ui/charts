@@ -242,8 +242,38 @@ describe('getClosestPoints with mixed series types', () => {
         expect(active.data).toBe(a.points[0].data);
     });
 
+    test('keeps the line under the pointer when the nearest X column belongs to another series', async () => {
+        // The area and the line have different X grids: the nearest column belongs to the area,
+        // the line has no point there but is drawn under the pointer.
+        const area = getArea(
+            [
+                [100, 350],
+                [150, 350],
+                [200, 350],
+            ],
+            400,
+        );
+        const [line] = await prepareLine([
+            [0, 150],
+            [250, 150],
+        ]);
+        const scatter = await prepareScatter([{x: 150, y: 160, radius: 1}]);
+        const hovered = getClosestPoints({
+            position: [150, 150],
+            shapesData: [area, ...scatter, line],
+            layerIndexes: getLayers('area', scatter[0].point.series.id, line.series.id),
+            ...BOUNDS,
+        });
+        const closest = hovered.filter((item) => item.closest);
+        expect(closest).toHaveLength(1);
+        expect(getId(closest[0])).toBe(line.series.id);
+        // The nearest point of the line on its own grid.
+        expect(closest[0].data).toBe(line.points[1].data);
+        // The area rows of the column stay in the tooltip.
+        expect(hovered.filter((item) => getId(item) === 'area')).toHaveLength(1);
+    });
+
     test('does not let a distant lookup series inherit the hit of another lookup series', async () => {
-        // The area and the line have different X grids: the nearest column belongs to the area.
         const area = getArea(
             [
                 [148, 100],
@@ -255,10 +285,41 @@ describe('getClosestPoints with mixed series types', () => {
             [0, 300],
             [300, 300],
         ]);
-        const scatter = await prepareScatter([{x: 150, y: 290}]);
-        const active = getActive([area, line, ...scatter], [150, 300]);
+        // The pointer is 2px outside the line stroke and 1px outside the scatter marker.
+        const scatter = await prepareScatter([{x: 150, y: 290, radius: 1}]);
+        const active = getActive([area, line, ...scatter], [150, 292]);
         expect(getId(active)).toBe(scatter[0].point.series.id);
         expect(active.data).toBe(scatter[0].point.data);
+    });
+
+    test('prefers the upper layer among lookup series containing the pointer', async () => {
+        const area = getArea(
+            [
+                [0, 200],
+                [300, 200],
+            ],
+            400,
+        );
+        const [line] = await prepareLine(
+            [
+                [0, 250],
+                [300, 250],
+            ],
+            {lineWidth: 4},
+        );
+        const scatter = await prepareScatter([{x: 150, y: 250, radius: 3}]);
+        const scatterId = scatter[0].point.series.id;
+        const position: [number, number] = [150, 251];
+        const data = [area, ...scatter, line];
+        expect(getId(getActive(data, position, getLayers('area', scatterId, line.series.id)))).toBe(
+            line.series.id,
+        );
+        expect(getId(getActive(data, position, getLayers('area', line.series.id, scatterId)))).toBe(
+            scatterId,
+        );
+        expect(getId(getActive(data, position, getLayers(line.series.id, scatterId, 'area')))).toBe(
+            'area',
+        );
     });
 
     test('ignores a nearer chunk with a disabled tooltip', async () => {
@@ -485,6 +546,15 @@ describe('getClosestPoints with a single series type', () => {
         const spy = jest.spyOn(getSeriesPlugin('scatter').tooltip, 'prepareData');
         getActive(await prepareScatter([{x: 10, y: 10}]), [20, 20]);
         expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
+    });
+
+    test('scatter still picks the marker containing the pointer over a nearer center', async () => {
+        // The contour measurement is the exception to `measureDistance: false`.
+        const scatter = await prepareScatter([
+            {x: 150, y: 152, radius: 1},
+            {x: 155, y: 150, radius: 10},
+        ]);
+        expect(getActive(scatter, [150, 150]).data).toBe(scatter[1].point.data);
     });
 
     test('keeps the first of several closest chunks', () => {

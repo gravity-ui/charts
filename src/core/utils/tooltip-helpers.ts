@@ -70,17 +70,30 @@ export function getClosestYIndex(items: ShapePoint[], y: number) {
     return closestYIndex;
 }
 
+/** Index of the render layer of each series by series id; a higher index is drawn above. */
+export type LayerIndexes = Map<string, number>;
+
+export function getSeriesLayer(layerIndexes: LayerIndexes | undefined, series: object) {
+    return layerIndexes?.get(get(series, 'id', '')) ?? -1;
+}
+
 /**
  * Picks the active point among the candidates of one X column. When the distances to the
- * drawn shapes are measured, the nearest shape wins; ties and unmeasured candidates are
- * resolved by the Y rule of `getClosestYIndex`.
+ * drawn shapes are measured, the nearest shape wins, then the series drawn in the upper
+ * layer; the remaining ties and unmeasured candidates are resolved by the Y rule of
+ * `getClosestYIndex`.
  */
-function pickClosestPoint(points: ShapePoint[], y: number) {
+function pickClosestPoint(points: ShapePoint[], y: number, layerIndexes?: LayerIndexes) {
     let candidates = points;
     const measured = points.filter((p) => p.distance !== undefined);
     if (measured.length > 0) {
         const min = Math.min(...measured.map((p) => p.distance as number));
         candidates = measured.filter((p) => p.distance === min);
+        if (candidates.length > 1 && layerIndexes) {
+            const layers = candidates.map((p) => getSeriesLayer(layerIndexes, p.series));
+            const top = Math.max(...layers);
+            candidates = candidates.filter((_p, index) => layers[index] === top);
+        }
     }
     const sorted = sort(candidates, (p) => p.y0);
     const index = getClosestYIndex(sorted, y);
@@ -91,6 +104,7 @@ export function getClosestPointsByXValue(
     x: number,
     y: number,
     points: ShapePoint[],
+    layerIndexes?: LayerIndexes,
 ): Array<ShapePoint & {closest: boolean}> {
     const sorted = sort(points, (p) => p.x);
     const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
@@ -126,7 +140,7 @@ export function getClosestPointsByXValue(
         const candidates = closestPoints.filter(
             (p) => p.sourceX === undefined || p.sourceX === closestSourceX,
         );
-        const winner = pickClosestPoint(candidates, y);
+        const winner = pickClosestPoint(candidates, y, layerIndexes);
 
         return closestPoints.map((p) => ({
             ...p,
@@ -134,7 +148,7 @@ export function getClosestPointsByXValue(
         }));
     }
 
-    const winner = pickClosestPoint(closestPoints, y);
+    const winner = pickClosestPoint(closestPoints, y, layerIndexes);
     return closestPoints.map((p) => ({
         ...p,
         closest: p === winner,
@@ -177,6 +191,25 @@ export function isInsidePath(args: {
     }
 
     return null;
+}
+
+let hitTestContext: CanvasRenderingContext2D | null | undefined;
+
+/**
+ * Whether the point lies inside the fill of the SVG path. Falls back to `true` where the
+ * canvas is unavailable (for example, in jsdom).
+ */
+export function isPointInFill(path: string, point: [number, number]) {
+    if (hitTestContext === undefined) {
+        hitTestContext =
+            typeof document === 'undefined'
+                ? null
+                : document.createElement('canvas').getContext('2d');
+    }
+    if (!hitTestContext) {
+        return true;
+    }
+    return hitTestContext.isPointInPath(new Path2D(path), point[0], point[1]);
 }
 
 export function getRadius(args: {pointer: [number, number]; center: [number, number]}) {

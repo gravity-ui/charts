@@ -5,16 +5,15 @@ import type {TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
-import {getClosestPointsByXValue, isPointTooltipEnabled} from './tooltip-helpers';
-import type {ShapePoint, TooltipCandidate} from './tooltip-helpers';
+import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
+import type {LayerIndexes, ShapePoint, TooltipCandidate} from './tooltip-helpers';
 
 type GetClosestPointsArgs = {
     position: [number, number];
     shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
-    /** Index of the render layer of each series by series id; a higher index is drawn above. */
-    layerIndexes: Map<string, number>;
+    layerIndexes: LayerIndexes;
 };
 
 interface Contender {
@@ -34,16 +33,16 @@ function getSeriesType(shapeData: TooltipItemData) {
 
 export type {ShapePoint} from './tooltip-helpers';
 
-function getLayer(layerIndexes: Map<string, number>, series: object) {
-    return layerIndexes.get(get(series, 'id', '')) ?? -1;
-}
-
 function getContender(
     chunk: TooltipCandidate,
     distance: number | undefined,
-    layerIndexes: Map<string, number>,
+    layerIndexes: LayerIndexes,
 ): Contender {
-    return {chunk, distance: distance ?? Infinity, layer: getLayer(layerIndexes, chunk.series)};
+    return {
+        chunk,
+        distance: distance ?? Infinity,
+        layer: getSeriesLayer(layerIndexes, chunk.series),
+    };
 }
 
 function isCloser(contender: Contender, other: Contender) {
@@ -122,13 +121,44 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     if (xLookupPoints.length) {
         // The lookup picks the point of the nearest shape in the X column (see
         // `getClosestPointsByXValue`), so it competes with the distance of its own series.
-        const chunks = getClosestPointsByXValue(pointerX, pointerY, xLookupPoints);
-        for (const chunk of chunks) {
-            const candidate = chunk as TooltipCandidate;
-            result.push(candidate);
-            if (chunk.closest) {
-                contenders.push(getContender(candidate, chunk.distance, layerIndexes));
+        const chunks = getClosestPointsByXValue(pointerX, pointerY, xLookupPoints, layerIndexes);
+        let winner = chunks.find((chunk) => chunk.closest);
+        let contender = winner
+            ? getContender(winner as TooltipCandidate, winner.distance, layerIndexes)
+            : undefined;
+
+        // A series on another X grid has no point in the column, but its shape may still be
+        // the nearest one: it then joins with the point nearest to the pointer on its own grid.
+        const columnSeries = new Set<string>(chunks.map((chunk) => get(chunk.series, 'id', '')));
+        for (const [id, points] of Object.entries(
+            groupBy(xLookupPoints, (p) => get(p.series, 'id', '')),
+        )) {
+            const {distance} = points[0];
+            if (columnSeries.has(id) || distance === undefined) {
+                continue;
             }
+            const layer = getSeriesLayer(layerIndexes, points[0].series);
+            if (contender && !isCloser({chunk: contender.chunk, distance, layer}, contender)) {
+                continue;
+            }
+            const own = getClosestPointsByXValue(pointerX, pointerY, points).find((p) => p.closest);
+            if (own) {
+                winner = own;
+                contender = getContender(own as TooltipCandidate, distance, layerIndexes);
+            }
+        }
+
+        // The chunks are fresh copies, so the flag can be set in place and the contender
+        // keeps pointing at the same object.
+        for (const chunk of chunks) {
+            chunk.closest = chunk === winner;
+            result.push(chunk as TooltipCandidate);
+        }
+        if (winner && !chunks.includes(winner)) {
+            result.push(winner as TooltipCandidate);
+        }
+        if (contender) {
+            contenders.push(contender);
         }
     }
 

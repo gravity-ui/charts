@@ -7,6 +7,7 @@ import type {ChartData, ScatterClusterData} from '../../types';
 
 interface Props {
     data: ChartData;
+    styles?: React.CSSProperties;
 }
 
 function describePoint(series: unknown, point: unknown) {
@@ -16,7 +17,7 @@ function describePoint(series: unknown, point: unknown) {
 }
 
 /** Shows the active (closest) series of the tooltip and of the last click, with cluster members. */
-export const ActiveSeriesTestStory = ({data}: Props) => {
+export const ActiveSeriesTestStory = ({data, styles}: Props) => {
     const [clicked, setClicked] = React.useState('');
     const chartData = React.useMemo<ChartData>(
         () => ({
@@ -45,7 +46,7 @@ export const ActiveSeriesTestStory = ({data}: Props) => {
 
     return (
         <React.Fragment>
-            <ChartTestStory data={chartData} />
+            <ChartTestStory data={chartData} styles={styles} />
             <output data-qa="clicked-active">{clicked}</output>
         </React.Fragment>
     );

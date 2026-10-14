@@ -1,7 +1,8 @@
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
-import {getRadius} from '../../utils/tooltip-helpers';
+import {getRadius, isPointInFill} from '../../utils/tooltip-helpers';
 
 import type {PreparedPieData} from './types';
+import {getPieArcPath} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTooltipDataResult {
     const {data, position} = args;
@@ -16,12 +17,21 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTo
         angle = angle < 0 ? Math.PI * 2 + angle : angle;
         const polarRadius = getRadius({center, pointer: [pointerX, pointerY]});
 
-        return (
-            angle >= p.startAngle &&
-            angle <= p.endAngle &&
-            polarRadius < p.data.radius &&
-            polarRadius >= p.data.pie.innerRadius
-        );
+        if (
+            angle < p.startAngle ||
+            angle > p.endAngle ||
+            polarRadius >= p.data.radius ||
+            polarRadius < p.data.pie.innerRadius
+        ) {
+            return false;
+        }
+
+        // Rounded corners cut the slice inside its angular and radial bounds.
+        if (p.data.pie.borderRadius > 0) {
+            const path = getPieArcPath(p, p.data.radius);
+            return !path || isPointInFill(path, [x, y]);
+        }
+        return true;
     });
 
     if (!closestPoint) {

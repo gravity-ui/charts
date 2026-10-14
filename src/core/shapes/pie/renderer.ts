@@ -3,7 +3,6 @@ import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 import type {BaseType} from 'd3-selection';
 import type {PieArcDatum} from 'd3-shape';
-import {arc} from 'd3-shape';
 import get from 'lodash/get';
 
 import type {TooltipDataChunkPie} from '../../../types';
@@ -13,26 +12,9 @@ import {setActiveState} from '../../shapes/utils';
 import {setEllipsisForOverflowTexts} from '../../utils';
 
 import type {PieSvgLabelData, PreparedPieData, SegmentData} from './types';
+import {getPieArcPath} from './utils';
 
 const b = block('pie');
-// D3's default 3-digit rounding can make near-full arc endpoints identical.
-// Six digits keeps them distinct for all visually meaningful chart radii.
-const ARC_PATH_DIGITS = 6;
-
-interface ArcGeneratorWithDigits {
-    digits(digits: number): unknown;
-}
-
-function getPieArcPath(d: PieArcDatum<SegmentData>, outerRadius: number) {
-    const arcGenerator = arc<PieArcDatum<SegmentData>>()
-        .innerRadius(d.data.pie.innerRadius)
-        .outerRadius(outerRadius)
-        .cornerRadius(d.data.pie.borderRadius);
-    (arcGenerator as typeof arcGenerator & ArcGeneratorWithDigits).digits(ARC_PATH_DIGITS);
-
-    return arcGenerator(d);
-}
-
 export function getHaloVisibility(d: PieArcDatum<SegmentData>) {
     const enabled = d.data.pie.halo.enabled && d.data.hovered;
     return enabled ? '' : 'hidden';
