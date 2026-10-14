@@ -1,6 +1,6 @@
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import {DEFAULT_DATALABELS_STYLE, seriesOptionsDefaults} from '~core/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedBarYSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
@@ -87,6 +87,13 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                 data: prepareSeriesData(series),
                 stacking: series.stacking,
                 grouping: series.grouping ?? true,
+                barPadding:
+                    series.barPadding ??
+                    get(
+                        seriesOptions,
+                        'bar-y.barPadding',
+                        seriesOptionsDefaults['bar-y'].barPadding,
+                    ),
                 stackLabels: series.stackLabels,
                 // Non-stacked overlays need independent domains even with a stackId.
                 stackId: getSeriesStackId(series),

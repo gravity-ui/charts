@@ -16,6 +16,7 @@ import {
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
+import {getBarWidthBySeries} from '../bar-width';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
@@ -73,11 +74,18 @@ export async function prepareBarYData(args: {
     })();
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
-    const {bandSize, barGap, barSize, overlaySize} = getBarYLayout({
+    const {bandSize, barGap, barSize, barSlotSize, groupSize} = getBarYLayout({
         groupedData,
         seriesOptions,
         scale: yScale,
     });
+
+    const widthBySeries = getBarWidthBySeries(
+        series,
+        barSlotSize,
+        groupSize,
+        seriesOptions['bar-y'].barMaxWidth,
+    );
 
     const categoryDomain =
         yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
@@ -140,10 +148,13 @@ export async function prepareBarYData(args: {
                     return;
                 }
                 const overlay = s.grouping === false;
-                const height = overlay ? overlaySize : barSize;
+                const height = widthBySeries.get(s) ?? barSize;
                 const y = overlay
                     ? center - height / 2
-                    : center - currentBarHeight / 2 + (barSize + barGap) * slotIndex;
+                    : center -
+                      currentBarHeight / 2 +
+                      (barSize + barGap) * slotIndex +
+                      (barSize - height) / 2;
                 const xValue = Number(data.x);
                 const xPixel = xLinearScale(xValue);
                 const width = Math.abs(xPixel * ratio - base);

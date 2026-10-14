@@ -90,6 +90,46 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('per-series bar padding is declared and constrained without changing shared options', () => {
+        const usage = `
+            const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', barPadding: 0.2, data: []};
+            const horizontal: BarYSeries = {type: 'bar-y', name: 'Actual', barPadding: 0.6, data: []};
+            // @ts-expect-error Padding is numeric.
+            vertical.barPadding = '0.2';
+            // @ts-expect-error Padding cannot be null.
+            horizontal.barPadding = null;
+            // @ts-expect-error Padding is not supported by all series.
+            const base: BaseSeries = {barPadding: 0.2};
+            void [vertical, horizontal, base];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'bar-padding-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const type of ['bar-x', 'bar-y']) {
+            for (const barPadding of [undefined, 0, 0.2, 1, -0.1, 1.1, null, '0.2']) {
+                expect(
+                    validateConfig({
+                        series: {
+                            data: [{type, name: 'Plan', barPadding, data: []}],
+                        },
+                    }),
+                ).toBe([undefined, 0, 0.2, 1].includes(barPadding));
+            }
+            expect(
+                validateConfig({
+                    series: {
+                        data: [{type, name: 'Plan', data: []}],
+                        options: {[type]: {barPadding: 2}},
+                    },
+                }),
+            ).toBe(true);
+        }
+    });
+
     test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
         const usage = `
             const tooltip: ChartTooltip = {

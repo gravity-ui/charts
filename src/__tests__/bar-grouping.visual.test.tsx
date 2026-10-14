@@ -116,10 +116,9 @@ for (const type of ['bar-x', 'bar-y'] as const) {
     test.describe(`${type} overlays`, () => {
         const vertical = type === 'bar-x';
         const categories = ['A', 'B'];
-        // Per-series thickness is tracked in https://github.com/gravity-ui/charts/issues/761.
-        // Update the examples and snapshots to show a wider Plan and narrower Actual once supported.
         const data = {
             series: {
+                options: {[type]: {barMaxWidth: 1000}},
                 data: [
                     {name: 'Plan', values: [100, 80]},
                     {name: 'Actual', values: [75, 50]},
@@ -127,7 +126,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                     type,
                     name,
                     grouping: false,
-                    opacity: 0.6,
+                    barPadding: name === 'Plan' ? 0.2 : 0.6,
                     dataLabels: {enabled: name === 'Actual', inside: true},
                     data: values.map((value, index) =>
                         vertical
@@ -155,6 +154,9 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             async function expectAligned() {
                 const p = await getLocatorBoundingBox(plan.first());
                 const a = await getLocatorBoundingBox(actual.first());
+                expect(vertical ? p.width : p.height).toBeGreaterThan(
+                    vertical ? a.width : a.height,
+                );
                 expect(vertical ? p.x + p.width / 2 : p.y + p.height / 2).toBeCloseTo(
                     vertical ? a.x + a.width / 2 : a.y + a.height / 2,
                     1,
@@ -314,9 +316,17 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             );
             const bars = component.locator(`.gcharts-${type}__segment`);
             await expect(bars).toHaveCount(4);
+            await expect(bars.nth(0)).toHaveCSS('opacity', '0.6');
+            await expect(bars.nth(2)).toHaveCSS('opacity', '1');
             const first = await getLocatorBoundingBox(bars.nth(0));
             const third = await getLocatorBoundingBox(bars.nth(2));
-            expect(vertical ? first.x : first.y).toBeCloseTo(vertical ? third.x : third.y);
+            expect(vertical ? first.x + first.width / 2 : first.y + first.height / 2).toBeCloseTo(
+                vertical ? third.x + third.width / 2 : third.y + third.height / 2,
+            );
+            expect(vertical ? first.width : first.height).toBeGreaterThan(
+                vertical ? third.width : third.height,
+            );
+            await expect(component).toHaveScreenshot();
             await expect(component.locator(`.gcharts-${type}__label`)).toHaveCount(2);
         });
 

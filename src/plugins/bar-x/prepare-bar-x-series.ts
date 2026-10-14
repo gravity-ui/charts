@@ -1,6 +1,10 @@
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
+import {
+    DEFAULT_DATALABELS_STYLE,
+    seriesOptionsDefaults,
+    seriesRangeSliderOptionsDefaults,
+} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
@@ -50,6 +54,9 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             data: prepareSeriesData(series),
             stacking: series.stacking,
             grouping: series.grouping ?? true,
+            barPadding:
+                series.barPadding ??
+                get(seriesOptions, 'bar-x.barPadding', seriesOptionsDefaults['bar-x'].barPadding),
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
             stackId: getSeriesStackId(series),

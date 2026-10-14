@@ -2,6 +2,7 @@ import type {ChartData} from '../../../types';
 
 export const barXStackedOverlayData: ChartData = {
     series: {
+        options: {'bar-x': {barMaxWidth: 1000}},
         data: [
             {stackId: 'Plan', segments: [60, 40]},
             {stackId: 'Actual', segments: [40, 35]},
@@ -12,8 +13,8 @@ export const barXStackedOverlayData: ChartData = {
                 stackId,
                 stacking: 'normal',
                 grouping: false,
-                opacity: 0.6,
-                dataLabels: {enabled: true, inside: true},
+                barPadding: stackId === 'Plan' ? 0.2 : 0.6,
+                dataLabels: {enabled: stackId === 'Actual', inside: true},
                 data: [{x: 'A', y: value}],
             })),
         ),
