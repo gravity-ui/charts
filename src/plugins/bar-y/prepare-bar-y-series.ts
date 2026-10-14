@@ -81,6 +81,7 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                     enabled: get(series, 'legend.enabled', legend.enabled),
                     symbol: {...prepareLegendSymbol(series), opacity},
                     groupId: series.legend?.groupId ?? getUniqId(),
+                    source: series.legend,
                     itemText: series.legend?.itemText ?? name,
                 },
                 data: prepareSeriesData(series),

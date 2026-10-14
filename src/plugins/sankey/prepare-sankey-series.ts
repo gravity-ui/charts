@@ -44,6 +44,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
                 enabled: get(s, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(s),
                 groupId: s.legend?.groupId ?? getUniqId(),
+                source: s.legend,
                 itemText: s.legend?.itemText ?? name,
             },
             cursor: get(s, 'cursor', null),

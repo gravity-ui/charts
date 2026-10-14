@@ -63,6 +63,10 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         }
     },
     getColorValue: (d) => d.y,
+    getStackedDomainData: (series) => {
+        // Area projection keeps the last point at each X, including an explicit null.
+        return [...new Map(series.data.map((point) => [String(point.x), point])).values()];
+    },
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
         const {
             series,

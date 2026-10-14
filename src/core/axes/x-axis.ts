@@ -26,23 +26,31 @@ import {
     isAxisRelatedSeries,
     wrapText,
 } from '../utils';
-import {getVisibleLabelIndexes} from '../utils/axis/label-collision';
+import {getSvgLabelCandidate, getVisibleLabelIndexes} from '../utils/axis/label-collision';
 import {getXAxisTickValues} from '../utils/axis/x-axis';
+import {getXAxisLabelGeometry} from '../utils/axis/x-axis-label';
 
 import {getPreparedRangeSlider} from './range-slider';
 import type {PreparedXAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
+
+interface XAxisLabelBounds {
+    leftOverflow: number;
+    rightOverflow: number;
+}
 
 async function setLabelSettings({
     axis,
     seriesData,
     width,
     axisLabels,
+    labelBounds = {leftOverflow: 0, rightOverflow: 0},
 }: {
     axis: PreparedXAxis;
     seriesData: ChartSeries[];
     width: number;
     axisLabels?: ChartAxisLabels;
+    labelBounds?: XAxisLabelBounds;
 }) {
     const scale = createXScale({axis, series: seriesData, boundsWidth: width});
 
@@ -52,7 +60,16 @@ async function setLabelSettings({
         return;
     }
 
-    const getTextSize = getTextSizeFn({style: axis.labels.style});
+    const measureText = getTextSizeFn({style: axis.labels.style});
+    const textSizes = new Map<string, ReturnType<typeof measureText>>();
+    const getTextSize = (text: string) => {
+        let size = textSizes.get(text);
+        if (!size) {
+            size = measureText(text);
+            textSizes.set(text, size);
+        }
+        return size;
+    };
     const labelLineHeight = (await getTextSize('Tmp')).height;
     const tickValues = getXAxisTickValues({axis, scale, labelLineHeight, series: seriesData});
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
@@ -81,6 +98,34 @@ async function setLabelSettings({
         return false;
     };
 
+    const labelHeights = new Map<number, Promise<number>>();
+    const getLabelHeight = (rotation: number) => {
+        let height = labelHeights.get(rotation);
+        if (!height) {
+            height = (async () => {
+                const labelsHeight =
+                    rotation || axis.labels.html
+                        ? (
+                              await getLabelsSize({
+                                  labels,
+                                  style: axis.labels.style,
+                                  rotation,
+                                  html: axis.labels.html,
+                              })
+                          ).maxHeight
+                        : axis.labels.lineHeight;
+                const maxHeight = rotation
+                    ? Math.abs(calculateSin(rotation)) * axis.labels.maxWidth +
+                      Math.abs(calculateCos(rotation)) * axis.labels.lineHeight
+                    : labelsHeight;
+
+                return Math.min(maxHeight, labelsHeight);
+            })();
+            labelHeights.set(rotation, height);
+        }
+        return height;
+    };
+
     const autoRotation = axisLabels?.autoRotation ?? axis.type !== 'datetime';
     const overlapping =
         axis.labels.html || axis.ticks.values !== undefined ? false : await hasOverlappingLabels();
@@ -91,45 +136,38 @@ async function setLabelSettings({
         axisLabels?.rotation === undefined &&
         axis.ticks.values !== undefined
     ) {
-        const sizes = await Promise.all(labels.map(getTextSize));
-        const visibleCount = (angle: number) => {
-            const cos = Math.abs(calculateCos(angle));
-            const sin = Math.abs(calculateSin(angle));
-            const candidates = tickValues.map((tick, index) => {
-                const projectedWidth = sizes[index].width * cos + sizes[index].height * sin;
-                return {
-                    index,
-                    position: tick.x,
-                    bounds: {
-                        left: tick.x - projectedWidth / 2,
-                        right: tick.x + projectedWidth / 2,
-                        top: 0,
-                        bottom: 1,
-                    },
-                };
+        const visibleCount = async (angle: 0 | -45) => {
+            const labelHeight = await getLabelHeight(angle);
+            const renderedLabels = await Promise.all(
+                tickValues.map((tick, index) =>
+                    getXAxisLabelGeometry({
+                        getTextSize,
+                        text: labels[index],
+                        rotation: angle,
+                        labelHeight,
+                        labelMargin: axis.labels.margin,
+                        left: tick.x,
+                        labelMaxWidth: Math.min(width, axis.labels.maxWidth),
+                        axisWidth: width,
+                        ...labelBounds,
+                    }),
+                ),
+            );
+            const candidates = renderedLabels.flatMap((label, index) => {
+                const candidate = getSvgLabelCandidate(label, index, tickValues[index].x);
+                return candidate ? [candidate] : [];
             });
             return getVisibleLabelIndexes(candidates, axis.labels.padding * 2).size;
         };
-        defaultRotation = visibleCount(-45) > visibleCount(0) ? -45 : 0;
+        const [rotatedCount, horizontalCount] = await Promise.all([
+            visibleCount(-45),
+            visibleCount(0),
+        ]);
+        defaultRotation = rotatedCount > horizontalCount ? -45 : 0;
     }
     const rotation = axis.labels.html ? 0 : (axisLabels?.rotation ?? defaultRotation);
-    const labelsHeight =
-        rotation || axis.labels.html
-            ? (
-                  await getLabelsSize({
-                      labels,
-                      style: axis.labels.style,
-                      rotation,
-                      html: axis.labels.html,
-                  })
-              ).maxHeight
-            : axis.labels.lineHeight;
-    const maxHeight = rotation
-        ? Math.abs(calculateSin(rotation)) * axis.labels.maxWidth +
-          Math.abs(calculateCos(rotation)) * axis.labels.lineHeight
-        : labelsHeight;
 
-    axis.labels.height = Math.min(maxHeight, labelsHeight);
+    axis.labels.height = await getLabelHeight(rotation);
     axis.labels.rotation = rotation;
 }
 
@@ -146,11 +184,13 @@ export const getPreparedXAxis = async ({
     seriesData,
     width,
     boundsWidth,
+    labelBounds,
 }: {
     xAxis?: ChartXAxis;
     seriesData: ChartSeries[];
     width: number;
     boundsWidth: number;
+    labelBounds?: XAxisLabelBounds;
 }): Promise<PreparedXAxis | null> => {
     const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
     if (!hasAxisRelatedSeries) {
@@ -313,6 +353,7 @@ export const getPreparedXAxis = async ({
             seriesData,
             width: boundsWidth,
             axisLabels: xAxis?.labels,
+            labelBounds,
         });
     }
 

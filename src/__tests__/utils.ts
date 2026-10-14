@@ -68,6 +68,37 @@ export async function getOverlappingLabelPairs(labels: Locator) {
     });
 }
 
+export async function getRotatedLabelGaps(labels: Locator, angle: number) {
+    return labels.evaluateAll((elements, rotation) => {
+        const radians = (rotation * Math.PI) / 180;
+        const cos = Math.cos(radians);
+        const sin = Math.sin(radians);
+        const intervals = elements
+            .filter((element) => element.textContent?.trim())
+            .map((element) => {
+                const label = element as SVGGraphicsElement;
+                const box = label.getBBox();
+                const matrix = label.getScreenCTM();
+                if (!matrix) throw new Error('Label transform is unavailable');
+                const projections = [
+                    [box.x, box.y],
+                    [box.x + box.width, box.y],
+                    [box.x + box.width, box.y + box.height],
+                    [box.x, box.y + box.height],
+                ].map(([x, y]) => {
+                    const point = new DOMPoint(x, y).matrixTransform(matrix);
+
+                    return -point.x * sin + point.y * cos;
+                });
+
+                return {min: Math.min(...projections), max: Math.max(...projections)};
+            })
+            .sort((first, second) => first.min - second.min);
+
+        return intervals.slice(1).map((interval, index) => interval.min - intervals[index].max);
+    }, angle);
+}
+
 async function simulateDrag(args: {from: [number, number]; page: Page; to: [number, number]}) {
     const {from, page, to} = args;
     const [fromX, fromY] = from;

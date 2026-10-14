@@ -33,16 +33,18 @@ function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
     );
     const hoveredMarkerDefaultOptions = {
         enabled: true,
+        enabledForNormal: seriesHoverState?.enabled !== false,
         radius: markerNormalState.radius,
         borderWidth: 1,
         borderColor: '#ffffff',
-        halo: DEFAULT_HALO_OPTIONS,
+        halo: {...DEFAULT_HALO_OPTIONS},
     };
+    const hoverMarker = merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker);
 
     return {
         states: {
             normal: markerNormalState,
-            hover: merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker),
+            hover: hoverMarker,
         },
     };
 }
@@ -90,6 +92,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
                 groupId: series.legend?.groupId ?? getUniqId(),
+                source: series.legend,
                 itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series),

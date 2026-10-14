@@ -10,7 +10,6 @@ import {registerInteractionLayer} from '~core/utils/chart-interaction';
 import {block} from '../../utils';
 
 import {AnnotationLayer} from './AnnotationLayer';
-import {HoverMarkerLayer} from './HoverMarkerLayer';
 import {HtmlLayer} from './HtmlLayer';
 import {MarkerLayer} from './MarkerLayer';
 
@@ -80,7 +79,6 @@ export const SeriesShapes = ({
         isRangeSlider,
     ]);
 
-    const markers = React.useMemo(() => preparedData.flatMap((d) => d.markers), [preparedData]);
     const annotations = React.useMemo(
         () => preparedData.flatMap((d) => d.annotations),
         [preparedData],
@@ -97,11 +95,11 @@ export const SeriesShapes = ({
                 className={b()}
                 clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
             />
-            <MarkerLayer markers={markers} elementRef={markerRef} />
-            <HoverMarkerLayer
+            <MarkerLayer
                 preparedData={preparedData}
                 dispatcher={dispatcher}
                 namespace={namespace}
+                elementRef={markerRef}
             />
             <AnnotationLayer
                 annotations={annotations}

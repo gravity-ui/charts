@@ -9,17 +9,15 @@ import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './const
 import type {PathLegendSymbol, PreparedLegendSymbol, PreparedSeries, StackedSeries} from './types';
 
 export const getActiveLegendItems = (series: PreparedSeries[]) => {
-    return series.reduce<string[]>((acc, s) => {
-        if (s.legend.enabled && s.visible) {
-            acc.push(s.legend.groupId);
-        }
-
-        return acc;
-    }, []);
+    return [
+        ...new Set(
+            series.filter((s) => s.legend.enabled && s.visible).map((s) => s.legend.groupId),
+        ),
+    ];
 };
 
 export const getAllLegendItems = (series: PreparedSeries[]) => {
-    return series.map((s) => s.legend.groupId);
+    return [...new Set(series.filter((s) => s.legend.enabled).map((s) => s.legend.groupId))];
 };
 
 export function prepareLegendSymbol(

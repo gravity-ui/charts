@@ -67,6 +67,7 @@ export function preparePieSeries(args: PreparePieSeriesArgs): PreparedSeries[] {
                         ? prepareLegendSymbol(dataItem)
                         : prepareLegendSymbol(series),
                     groupId: dataItem.legend?.groupId ?? getUniqId(),
+                    source: dataItem.legend,
                     itemText: dataItem.legend?.itemText ?? dataItem.name,
                 },
                 center: series.center || ['50%', '50%'],

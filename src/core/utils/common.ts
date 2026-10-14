@@ -29,12 +29,13 @@ function getDomainDataForStackedSeries(
     const acc: number[] = [];
     const stackedSeries = group(seriesList, getSeriesStackId);
     Array.from(stackedSeries).forEach(([_stackId, seriesStack]) => {
-        const positiveValues: Record<string, number> = {};
-        const negativeValues: Record<string, number> = {};
+        const positiveValues = new Map<string, number>();
+        const negativeValues = new Map<string, number>();
 
         seriesStack.forEach((singleSeries) => {
-            const data = new Map();
-            singleSeries.data.forEach((point) => {
+            const data = (getSeriesPlugin(singleSeries.type).getStackedDomainData?.(singleSeries) ??
+                singleSeries.data) as StackedSeries['data'];
+            data.forEach((point) => {
                 const keyValue = point[keyAttr];
                 if (keyValue === null) {
                     return;
@@ -47,25 +48,16 @@ function getDomainDataForStackedSeries(
                     value = point[valueAttr] as number;
                 }
 
-                if (data.has(key)) {
-                    value = Math.max(value, data.get(key));
-                }
-
-                data.set(key, value);
-            });
-
-            Array.from(data).forEach(([key, value]) => {
                 if (value >= 0) {
-                    positiveValues[key] = (positiveValues[key] || 0) + value;
+                    positiveValues.set(key, (positiveValues.get(key) ?? 0) + value);
                 }
-
                 if (value < 0) {
-                    negativeValues[key] = (negativeValues[key] || 0) + value;
+                    negativeValues.set(key, (negativeValues.get(key) ?? 0) + value);
                 }
             });
         });
 
-        acc.push(...Object.values(negativeValues), ...Object.values(positiveValues));
+        acc.push(...negativeValues.values(), ...positiveValues.values());
     });
 
     return acc;

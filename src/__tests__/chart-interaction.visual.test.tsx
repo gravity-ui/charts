@@ -736,6 +736,41 @@ test.describe('Chart interaction queries', () => {
     });
 });
 
+test('Normal line markers remain exact point targets with hover markers disabled', async ({
+    mount,
+    page,
+}) => {
+    const point = {x: 1, y: 5, custom};
+    const data = chart(
+        [
+            {
+                type: 'line',
+                name: 'Line',
+                marker: {enabled: true, radius: 8},
+                lineWidth: 0,
+                data: [point],
+            },
+        ],
+        {
+            xAxis: {min: 0, max: 2},
+            yAxis: [{min: 0, max: 10}],
+        },
+    );
+    data.series.options = {line: {states: {hover: {marker: {enabled: false}}}}};
+    const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+    const marker = component.locator('.gcharts-marker__symbol');
+    await expect(marker).toBeVisible();
+    const position = await paintedPosition(marker);
+    await page.mouse.move(position.x, position.y);
+    await page.mouse.click(position.x, position.y);
+    await expect(component.getByTestId('interaction-count')).toHaveText('1');
+    const result = JSON.parse(
+        (await component.getByTestId('interaction-result').textContent()) ?? '',
+    );
+    expect(result.targets).toHaveLength(1);
+    expect(result.targets[0].point).toMatchObject(point);
+});
+
 test('radar hover-only markers do not become exact point targets', async ({mount, page}) => {
     const data: ChartData = {
         legend: {enabled: false},
