@@ -16,21 +16,11 @@ Set `type: 'x-range'`. Each point contains `x0` (start), `x1` (end), and a `y` r
 
 ## Series options
 
-### Borders and opacity
-
 Use `borderRadius`, `borderWidth`, `borderColor`, and `borderDashStyle` for bar borders. Set `opacity` on a series or point to control transparency.
-
-## Colors
-
-Series use the chart palette by default. Set `color` on a series or point to override it. See [Colors](../colors.md).
 
 ## Data labels
 
 Set `dataLabels.enabled: true` to show text inside intervals. Labels use the series name by default; set a point’s `label` to show a task name.
-
-## Legend
-
-The discrete legend shows one item per series, using its `name`. Set `legend.itemText` on a series to change the legend text. See [Legend](../legend.md) for layout and selection.
 
 ## Tooltip
 

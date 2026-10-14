@@ -8,6 +8,8 @@
 
 See [Series types](guides/series-types/index.md) for configuring and combining series.
 
+<div class="docs-series-types">
+
 - [Line](guides/series-types/line.md)
 - [Area](guides/series-types/area.md)
 - [Area range](guides/series-types/area-range.md)
@@ -23,8 +25,10 @@ See [Series types](guides/series-types/index.md) for configuring and combining s
 - [Radar](guides/series-types/radar.md)
 - [X-Range](guides/series-types/x-range.md)
 
+</div>
+
 ## Dashboard example
 
-Eight chart types in one dashboard. Hover over a chart to explore its values, or open **Code** to see the configuration.
+Select a chart title to open its series guide and runnable example.
 
 <div data-chart-example="overview/dashboard"></div>

@@ -1,0 +1,115 @@
+.docs-dashboard {
+    container-type: inline-size;
+
+    padding: 16px;
+
+    border-radius: 16px;
+    background: var(--g-color-base-generic);
+
+    &__heading {
+        margin-block-end: 20px;
+    }
+
+    &__title {
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 28px;
+    }
+
+    &__subtitle {
+        margin-block-start: 4px;
+
+        font-size: 13px;
+
+        color: var(--g-color-text-secondary);
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+
+        min-width: 0;
+        padding: 16px;
+
+        border-radius: 10px;
+        background: var(--g-color-base-background);
+    }
+
+    & &__card &__link {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 4px 12px;
+
+        text-decoration: none;
+
+        color: var(--g-color-text-primary);
+        border-radius: 4px;
+
+        &:hover {
+            text-decoration: none;
+
+            color: var(--g-color-text-link);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--g-color-line-focus);
+            outline-offset: 4px;
+        }
+    }
+
+    &__card-title {
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 20px;
+    }
+
+    &__type {
+        font-size: 12px;
+        white-space: nowrap;
+
+        color: var(--g-color-text-link);
+    }
+
+    &__caption {
+        margin-block: 4px 16px;
+
+        font-size: 12px;
+
+        color: var(--g-color-text-secondary);
+    }
+
+    &__chart {
+        flex: 1 0 auto;
+
+        min-width: 0;
+        height: 240px;
+    }
+}
+
+@container (min-width: 620px) {
+    .docs-dashboard {
+        &__grid {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+
+        &__card_wide {
+            grid-column: span 7;
+        }
+
+        &__card_narrow {
+            grid-column: span 5;
+        }
+
+        &__card:first-child &__chart {
+            height: 280px;
+        }
+    }
+}

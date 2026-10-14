@@ -30,9 +30,8 @@ function initMonaco() {
 type View = 'chart' | 'code';
 
 interface Props {
-    code: string;
+    code?: string;
     Component: () => React.ReactElement;
-    height?: number | 'auto';
 }
 
 // --- Singleton theme manager ---
@@ -61,29 +60,30 @@ function initGlobalObserver() {
     });
 }
 
-export function ChartPlayground({code, Component, height = 320}: Props) {
+export function ChartPlayground({code, Component}: Props) {
     const [view, setView] = React.useState<View>('chart');
     const [isDark, setIsDark] = React.useState(detectDarkTheme);
     const [highlighted, setHighlighted] = React.useState('');
 
     // Mount: initialise Monaco, start listening for theme changes
     React.useEffect(() => {
-        initMonaco();
+        if (code !== undefined) initMonaco();
         initGlobalObserver();
         const listener = (dark: boolean) => setIsDark(dark);
         themeListeners.add(listener);
         return () => {
             themeListeners.delete(listener);
         };
-    }, []);
+    }, [code]);
 
     // Theme: update Monaco theme — colourisation uses CSS classes, so no re-colorize needed
     React.useEffect(() => {
-        monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
-    }, [isDark]);
+        if (code !== undefined) monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
+    }, [code, isDark]);
 
     // Colorize: only re-run when code changes, not on every theme toggle
     React.useEffect(() => {
+        if (code === undefined) return undefined;
         let cancelled = false;
         monaco.editor.colorize(code, 'typescript', {}).then((html: string) => {
             if (!cancelled) setHighlighted(html);
@@ -95,48 +95,52 @@ export function ChartPlayground({code, Component, height = 320}: Props) {
 
     return (
         <ThemeProvider theme={isDark ? 'dark' : 'light'}>
-            <div
-                style={{
-                    border: '1px solid var(--g-color-line-generic)',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    margin: '24px 0',
-                }}
-            >
-                <TabProvider value={view} onUpdate={(v) => setView(v as View)}>
-                    <TabList style={{padding: '0 8px'}}>
-                        <Tab value="chart">Preview</Tab>
-                        <Tab value="code">Code</Tab>
-                    </TabList>
+            {code === undefined ? (
+                <Component />
+            ) : (
+                <div
+                    style={{
+                        border: '1px solid var(--g-color-line-generic)',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        margin: '24px 0',
+                    }}
+                >
+                    <TabProvider value={view} onUpdate={(v) => setView(v as View)}>
+                        <TabList style={{padding: '0 8px'}}>
+                            <Tab value="chart">Preview</Tab>
+                            <Tab value="code">Code</Tab>
+                        </TabList>
 
-                    <TabPanel value="chart">
-                        <div style={{height, padding: '16px'}}>
-                            <Component />
-                        </div>
-                    </TabPanel>
+                        <TabPanel value="chart">
+                            <div style={{height: 320, padding: '16px'}}>
+                                <Component />
+                            </div>
+                        </TabPanel>
 
-                    <TabPanel value="code">
-                        <pre
-                            style={{
-                                margin: 0,
-                                padding: '16px',
-                                overflow: 'auto',
-                                fontSize: '13px',
-                                lineHeight: '1.6',
-                                backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                            }}
-                            // Monaco's colorize() escapes HTML entities in the code
-                            // content, so its output is safe to inject.
-                            // IMPORTANT: when runtime editing is added, the code
-                            // string will come from user input — verify that Monaco
-                            // still escapes it before removing this note or consider
-                            // running the output through DOMPurify.
+                        <TabPanel value="code">
+                            <pre
+                                style={{
+                                    margin: 0,
+                                    padding: '16px',
+                                    overflow: 'auto',
+                                    fontSize: '13px',
+                                    lineHeight: '1.6',
+                                    backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+                                }}
+                                // Monaco's colorize() escapes HTML entities in the code
+                                // content, so its output is safe to inject.
+                                // IMPORTANT: when runtime editing is added, the code
+                                // string will come from user input — verify that Monaco
+                                // still escapes it before removing this note or consider
+                                // running the output through DOMPurify.
 
-                            dangerouslySetInnerHTML={{__html: highlighted}}
-                        />
-                    </TabPanel>
-                </TabProvider>
-            </div>
+                                dangerouslySetInnerHTML={{__html: highlighted}}
+                            />
+                        </TabPanel>
+                    </TabProvider>
+                </div>
+            )}
         </ThemeProvider>
     );
 }

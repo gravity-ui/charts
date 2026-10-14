@@ -16,13 +16,7 @@ Set `type: 'pie'`. Each point contains `name` and `value`. Null values are skipp
 
 ## Series options
 
-### Donut and size
-
 Set `innerRadius`, for example `'50%'`, to make a donut. Use `radius` and `center` to control its size and position. `borderWidth`, `borderColor`, and `borderRadius` control slice borders.
-
-## Colors
-
-Slices use the chart palette by name. Set `color` on an individual point to override its slice color. See [Colors](../colors.md).
 
 ## Data labels
 
@@ -34,7 +28,7 @@ Each slice has a legend item using its point `name`. Set `data[].legend.itemText
 
 ## Tooltip
 
-The tooltip shows the slice name and value. Custom `tooltip.valueFormat` formatters can access its percentage of the visible total. See [Tooltip](../tooltip.md).
+Custom `tooltip.valueFormat` formatters can access the slice’s percentage of the visible total; see [Value formatting](../value-formatting.md).
 
 ## API reference
 

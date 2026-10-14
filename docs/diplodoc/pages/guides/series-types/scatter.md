@@ -51,23 +51,7 @@ By default, `overlapMode: 'allow'` leaves cluster markers at their centroids. Wi
 
 `cluster.marker` supports `enabled`, `radius`, `symbol`, `color`, `borderColor`, and `borderWidth`. `cluster.dataLabels` supports `enabled`, `style`, `format`, and `allowOverlap`. The count is shown by default in the center of each cluster marker and remains visible on hover. Marker overlap and label overlap are configured separately.
 
-## Colors
-
-Series use the chart palette by default. Set `color` on a series or point to override it. See [Colors](../colors.md). For markers, `data[].marker.color` takes precedence over point and series colors.
-
-## Data labels
-
-Set `dataLabels.enabled: true` on the series to show point values. Use `dataLabels.format` to format them or a point’s `label` to supply custom text. See [Data labels](../data-labels.md). Cluster counts are controlled separately through `cluster.dataLabels`.
-
-## Legend
-
-The discrete legend shows one item per series, using its `name`. Set `legend.itemText` on a series to change the legend text. See [Legend](../legend.md) for layout and selection.
-
 ## Tooltip
-
-For an ordinary point, the tooltip shows its Y value and the axis header identifies its X position. Set `tooltip.valueFormat` on the series to format the value; see [Tooltip](../tooltip.md).
-
-### Cluster data
 
 A clustered point supplies `cluster: {size, points}` to tooltip renderers and chart click callbacks. `size` equals `points.length`; each member retains its original coordinates and `custom` fields. Ordinary points have no `cluster` field:
 

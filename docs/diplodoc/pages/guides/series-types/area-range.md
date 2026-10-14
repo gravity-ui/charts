@@ -67,15 +67,11 @@ Area range supports `x`, `y`, and `xy` zoom (`x` by default). Y filtering retain
 
 The `color` property controls both boundary lines and, by default, the range fill. Use `fillColor` for a different fill and `opacity` to change its opacity. Both colors support solid values and [gradients](../colors.md#gradients).
 
-Line and fill gradient bounds include both boundaries.
+Line and fill gradient bounds include both boundaries. The legend uses the fill color.
 
 ## Data labels
 
 Set `dataLabels.enabled: true` to show each interval as `lower — upper`. Use `dataLabels.format` to format the values; see [Data labels](../data-labels.md) and [Value formatting](../value-formatting.md).
-
-## Legend
-
-The discrete legend shows one item per series, using its `name`. Set `legend.itemText` on a series to change the legend text. See [Legend](../legend.md) for layout and selection. The symbol uses the range fill color.
 
 ## Tooltip
 

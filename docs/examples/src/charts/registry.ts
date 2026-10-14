@@ -31,7 +31,6 @@ import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw'
 import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
 import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
 import {OverviewDashboardExample} from './overview/dashboard';
-import overviewDashboardRaw from './overview/dashboard.tsx?raw';
 import {AreaSeriesExample} from './series-types/area';
 import {AreaBasicExample} from './series-types/area-basic';
 import areaBasicExampleRaw from './series-types/area-basic.tsx?raw';
@@ -93,16 +92,13 @@ function extractDisplayCode(raw: string): string {
 }
 
 interface ExampleModule {
-    code: string;
+    code?: string;
     Component: () => React.ReactElement;
-    height?: number | 'auto';
 }
 
 export const registry: Record<string, ExampleModule> = {
     'overview/dashboard': {
-        code: extractDisplayCode(overviewDashboardRaw),
         Component: OverviewDashboardExample,
-        height: 'auto',
     },
     'series-types/line-basic': {
         code: extractDisplayCode(lineBasicExampleRaw),

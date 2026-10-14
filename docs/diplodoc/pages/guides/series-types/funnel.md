@@ -16,15 +16,9 @@ Set `type: 'funnel'`. Each stage contains `name` and `value`. Supply one funnel 
 
 ## Series options
 
-### Shape and connectors
-
 The default `shape: 'rectangle'` makes segment widths proportional to values. `shape: 'trapezoid'` gives a connected funnel silhouette. Rectangles make stage-to-stage comparisons easier.
 
 Use `connectors` to control the lines and areas between stages. `connectors.height` accepts pixels or a percentage of the segment band height.
-
-## Colors
-
-Stages use the chart palette by name. Set `color` or `opacity` on a point to override a stage. See [Colors](../colors.md).
 
 ## Data labels
 
@@ -33,10 +27,6 @@ Labels are enabled by default. Set a point’s `label` to show its stage name an
 ## Legend
 
 Each stage has a legend item using its point `name`; override it with `data[].legend.itemText`. Hide the legend when stage names are already in the labels. See [Legend](../legend.md).
-
-## Tooltip
-
-The tooltip shows the stage name and value. Set `tooltip.valueFormat` on the series or an individual stage to format values. See [Tooltip](../tooltip.md).
 
 ## API reference
 

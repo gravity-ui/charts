@@ -16,25 +16,15 @@ Set `type: 'heatmap'`. Each cell contains `x`, `y`, and `value`. With category a
 
 ## Series options
 
-### Missing values and borders
-
 Null values leave gaps by default; set `nullMode: 'zero'` to treat them as zero. Use `borderWidth` and `borderColor` to separate cells.
 
 ## Colors
 
 Assign each point’s `color` from its numeric value, as in the example. The chart does not derive cell colors from `value` or the legend scale; cells without a point color use the series color. Use the same color mapping for the cells and legend.
 
-## Data labels
-
-Set `dataLabels.enabled: true` to show cell values. A point’s `label` overrides its text; `dataLabels.format` formats numeric values. Leave labels disabled for dense grids and use the tooltip for details.
-
 ## Legend
 
 Use `legend.type: 'continuous'` with `legend.colorScale.colors`, `domain`, and `stops` to explain the cell colors. For a two-color scale spanning the full domain, set `stops: [0, 1]`. This configures only the legend, so keep it in sync with the mapping that assigns point colors. See [Continuous legend](../legend.md#continuous-legend).
-
-## Tooltip
-
-The tooltip shows the cell value at the hovered position. Use `tooltip.valueFormat` for its units; see [Tooltip](../tooltip.md).
 
 ## API reference
 

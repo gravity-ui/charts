@@ -12,6 +12,25 @@ const styleToAdd = `
             color: inherit !important;
             background-color: unset !important;
         }
+        .yfm .docs-series-types ul {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px 16px;
+            padding: 0;
+            list-style: none;
+        }
+        .yfm .docs-series-types li {
+            margin: 0;
+        }
+        @media (max-width: 600px) {
+            .yfm .docs-series-types ul {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        /* The mobile aside is inside a sticky parent and needs no desktop offset. */
+        .mobile .dc-doc-page__aside {
+            top: 0;
+        }
     </style>
 `;
 

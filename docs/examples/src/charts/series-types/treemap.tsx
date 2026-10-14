@@ -9,13 +9,17 @@ const data: ChartData = {
             {
                 type: 'treemap',
                 name: 'Storage',
+                layoutAlgorithm: 'squarify',
+                levels: [{index: 1, padding: 8}],
                 data: [
                     {id: 'documents', name: 'Documents'},
                     {name: 'Reports', parentId: 'documents', value: 35},
                     {name: 'Presentations', parentId: 'documents', value: 20},
+                    {name: 'Spreadsheets', parentId: 'documents', value: 15},
                     {id: 'media', name: 'Media'},
                     {name: 'Photos', parentId: 'media', value: 30},
                     {name: 'Videos', parentId: 'media', value: 15},
+                    {name: 'Audio', parentId: 'media', value: 10},
                 ],
             },
         ],

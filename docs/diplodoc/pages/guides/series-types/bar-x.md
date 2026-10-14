@@ -18,7 +18,7 @@ Set `type: 'bar-x'`. Each point supplies an `x` coordinate or category and a num
 
 ### Grouping and stacking
 
-Multiple series are grouped by default. Use `stacking: 'normal'` to stack their values or `stacking: 'percent'` to show their proportions. Percent stacking supports only non-negative values. Use `stackId` to create separate stacks and `series.options['bar-x'].stackGap` to set the gap between segments in pixels.
+Multiple series are grouped by default. Use `stacking: 'normal'` to stack their values or `stacking: 'percent'` to show their proportions. Percent stacking supports only non-negative values. Use `stackId` to create separate stacks and `series.options['bar-x'].stackGap` to set the gap between segments in pixels. Enable `stackLabels` to show [stack totals](../data-labels.md#stack-total-labels).
 
 In percent stacks, the available plot height is shared between the segments and their gaps. The outer column edge aligns with the visible edge of the 100% grid line. Zero and skipped null values do not add gaps. If the requested gaps exceed the plot height, they are reduced to fit and segment heights become zero.
 
@@ -42,6 +42,8 @@ Borders are drawn inside the column bounds and follow rounded corners. For stack
 
 Set `opacity` from `0` to `1` in `series.options['bar-x']`, and override it on individual series or points. Omitted or `null` values inherit the next level, defaulting to `1`. Opacity affects the fill and border, including the bar-x range slider, and leaves normal data labels opaque.
 
+Legend symbols follow series opacity; tooltip markers follow point opacity, falling back to series opacity.
+
 The example uses the default palette with rounded borders and a shared opacity of `0.6`.
 
 <div data-chart-example="series-types/bar-x"></div>
@@ -49,22 +51,6 @@ The example uses the default palette with rounded borders and a shared opacity o
 ### States
 
 Hover changes the fill color; the border retains its configured color. The inactive state multiplies the resolved fill and border opacity by `states.inactive.opacity`, so transparent bars stay transparent. SVG data labels use the inactive opacity directly. When it ends, bars restore their point or series opacity.
-
-## Colors
-
-Series use the chart palette by default. Set `color` on a series or point to override it. See [Colors](../colors.md).
-
-## Data labels
-
-Set `dataLabels.enabled: true` on the series to show point values. Use `dataLabels.format` to format them or a point’s `label` to supply custom text. See [Data labels](../data-labels.md). Enable `stackLabels` for [stack totals](../data-labels.md#stack-total-labels).
-
-## Legend
-
-The discrete legend shows one item per series, using its `name`. Set `legend.itemText` on a series to change the legend text. See [Legend](../legend.md) for layout and selection. The symbol follows series opacity; text remains opaque.
-
-## Tooltip
-
-The tooltip shows the point value. Set `tooltip.valueFormat` on the series to format it; see [Tooltip](../tooltip.md) and [Value formatting](../value-formatting.md). Tooltip markers follow point opacity, falling back to series opacity.
 
 ## API reference
 

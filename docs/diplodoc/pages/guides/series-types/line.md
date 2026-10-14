@@ -18,22 +18,7 @@ Set `type: 'line'`. Each point contains `x` and `y`. For a category axis, use a 
 
 ### Markers
 
-Set `marker.enabled: true` to keep point markers visible. Configure their radius and border on hover through `series.options.line.states.hover.marker`:
-
-```javascript
-series: {
-  options: {
-    line: {
-      marker: {enabled: true, radius: 3},
-      states: {
-        hover: {
-          marker: {radius: 8, borderColor: '#ffffff', borderWidth: 2},
-        },
-      },
-    },
-  },
-}
-```
+Set `marker.enabled: true` to keep point markers visible. Configure their hover radius, border color, and border width through `series.options.line.states.hover.marker`.
 
 Hover styles apply to both always-visible and hover-only markers. The normal appearance returns when hover moves to another point or leaves the chart. Set `states.hover.enabled: false` to keep always-visible markers unchanged while retaining hover-only markers. Set `states.hover.marker.enabled: false` to disable both marker hover styles and hover-only markers. Area and area-range series support the same options under their respective series keys.
 
@@ -41,41 +26,13 @@ Hover styles apply to both always-visible and hover-only markers. The normal app
 
 ### Line interpolation
 
-By default, line series connect data points with straight segments. The `interpolation` option enables smooth curve rendering while keeping markers, tooltips, and interactions attached to the original data points.
-
-#### Monotone
-
-`monotone` uses a cubic spline that is monotone in x. The curve passes through every data point without introducing artificial extrema between adjacent points — a good default choice for most smooth line charts.
-
-```javascript
-{
-    type: 'line',
-    interpolation: {type: 'monotone'},
-}
-```
+By default, lines connect points with straight segments. Set `interpolation: {type: 'monotone'}` to draw a smooth curve through the points without introducing new extrema. Order points monotonically by X. Markers, tooltips, and interactions stay attached to the original points.
 
 <div data-chart-example="line-interpolation/monotone"></div>
 
-#### Cardinal
+For a cardinal spline, set `interpolation: {type: 'cardinal', tension: 0.5}`. The `tension` ranges from `0` (default, a loose curve) to `1` (straight segments). Below `1`, the curve can overshoot the data extrema and be clipped at the plot boundary.
 
-`cardinal` produces a cardinal spline. The `tension` parameter (0–1, default `0`) controls how tightly the curve follows the control points: `0` gives a loose curve, `1` collapses it to straight segments.
-
-```javascript
-{
-    type: 'line',
-    interpolation: {type: 'cardinal', tension: 0.5},
-}
-```
-
-<div data-chart-example="line-interpolation/cardinal"></div>
-
-#### Notes
-
-- Curves pass through every original data point.
-- `monotone` requires data points to be ordered monotonically by their x values.
-- With `cardinal` and `tension < 1`, the curve can overshoot the data extrema between points. Such portions may be clipped at the plot boundary. Use `monotone` when preserving extrema is important.
-- `nullMode` behavior is preserved: gaps and zero-fills are applied before interpolation.
-- To disable interpolation explicitly, set `interpolation: {type: 'linear'}` or omit the option entirely.
+Both curves preserve `nullMode`: gaps and zero-fills are applied before interpolation. Omit `interpolation` or set `{type: 'linear'}` to restore straight segments.
 
 ## Colors
 
@@ -83,41 +40,19 @@ The `color` property accepts a solid color or a [gradient](../colors.md#gradient
 
 ## Data labels
 
-Set `dataLabels.enabled: true` on the series to show point values. Use `dataLabels.format` to format them or a point’s `label` to supply custom text. See [Data labels](../data-labels.md).
+<a id="data-label-placement"></a>
 
-### Data label placement
+By default, labels appear above their points and shift into the plot when they do not fit. Use `dataLabels.placement` to choose other positions.
 
-By default, a label is drawn above its point and shifted into the plot area when it does not fit. Line series can try several positions instead and decide what to do when none of them fits.
+### Automatic placement
 
-#### Automatic placement
-
-`placement: 'auto'` tries the positions top, bottom, left and right in order and takes the first one where the label box does not cross a line of any line series and does not overlap already placed labels. When labels of several series compete for the same spot, the series listed first in `series.data` wins.
-
-```javascript
-{
-  type: 'line',
-  dataLabels: {enabled: true, placement: 'auto'},
-}
-```
+Set `placement: 'auto'` to try top, bottom, left, and right in that order. The first position that avoids all line series and already placed labels is used. When labels compete for space, the series listed first in `series.data` wins.
 
 <div data-chart-example="data-labels/placement-auto"></div>
 
-#### Custom order and fixed position
+### Fixed positions and fallback
 
-An array sets the exact positions to try. A single position pins the label there:
-
-```javascript
-{
-  type: 'line',
-  dataLabels: {enabled: true, placement: ['bottom']},
-}
-```
-
-<div data-chart-example="data-labels/placement-fixed"></div>
-
-#### Fallback
-
-`placementFallback` decides what happens when none of the positions fits: `show` (default) draws the label at the first position anyway, `hide` hides it.
+An array sets the positions to try, for example `placement: ['bottom', 'top']`. A single entry fixes the position. Use `placementFallback: 'hide'` to hide labels that do not fit; the default `'show'` draws them at the first position anyway:
 
 ```javascript
 {
@@ -126,23 +61,9 @@ An array sets the exact positions to try. A single position pins the label there
 }
 ```
 
-<div data-chart-example="data-labels/placement-fallback-hide"></div>
+`allowOverlap: true` permits overlap with other labels; lines are still avoided. Placement works with SVG and HTML labels (`html: true`), and collision checks follow interpolated curves.
 
-Notes:
-
-- `allowOverlap: true` lets the label be placed over other labels; lines are still avoided.
-- Both SVG and HTML labels (`html: true`) support placement.
-- With [line interpolation](#line-interpolation) the collision check follows the rendered curve.
-
-See [LineSeriesDataLabels](../../api/Series/Line/interfaces/LineSeriesDataLabels.md) for the complete data label configuration.
-
-## Legend
-
-The discrete legend shows one item per series, using its `name`. Set `legend.itemText` on a series to change the legend text. See [Legend](../legend.md) for layout and selection. The symbol uses the line color.
-
-## Tooltip
-
-The tooltip shows the point value. Set `tooltip.valueFormat` on the series to format it; see [Tooltip](../tooltip.md) and [Value formatting](../value-formatting.md).
+See [LineSeriesDataLabels](../../api/Series/Line/interfaces/LineSeriesDataLabels.md) for the complete configuration.
 
 ## API reference
 
