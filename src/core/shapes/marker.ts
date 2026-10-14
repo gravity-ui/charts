@@ -173,7 +173,7 @@ export function selectMarkerSymbol<T>(parentSelection: Selection<BaseType, T, nu
 export function renderMarkers(
     container: Selection<SVGGElement, unknown, null, undefined>,
     markers: MarkerItem[],
-): void {
+) {
     container.selectAll('*').remove();
 
     const selection = container
@@ -192,6 +192,8 @@ export function renderMarkers(
         .attr('fill', (d) => d.fill)
         .attr('stroke', (d) => d.stroke)
         .attr('stroke-width', (d) => d.strokeWidth);
+
+    return selection;
 }
 
 export function renderHoverMarkers(
@@ -229,7 +231,13 @@ interface HoverMarkerSeries {
     marker: {
         states: {
             normal: {enabled: boolean; symbol: `${SymbolType}`};
-            hover: {enabled: boolean; radius: number; borderColor: string; borderWidth: number};
+            hover: {
+                enabled: boolean;
+                enabledForNormal?: boolean;
+                radius: number;
+                borderColor: string;
+                borderWidth: number;
+            };
         };
     };
 }
@@ -237,14 +245,23 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
+    isOutsideBounds?: (x: number, y: number) => boolean,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
-    if (normalState.enabled || !hoverState.enabled) return () => [];
+    if (!hoverState.enabled || (normalState.enabled && hoverState.enabledForNormal === false)) {
+        return () => [];
+    }
 
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
-        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
+        if (
+            hoverState.enabledForNormal === false &&
+            get(p.data, 'marker.states.normal.enabled', false)
+        ) {
+            continue;
+        }
+        if (p.x !== null && p.y !== null && !p.hiddenInLine && !isOutsideBounds?.(p.x, p.y)) {
             const dataPoints = pointsByData.get(p.data) ?? [];
             dataPoints.push(p);
             pointsByData.set(p.data, dataPoints);

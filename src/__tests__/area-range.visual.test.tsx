@@ -84,19 +84,17 @@ test.describe('Area range series', () => {
                 component.locator('.gcharts-area-range__region'),
             );
             await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-            await expect(symbols).toHaveCount(permanent ? 6 : 2);
+            await expect(symbols).toHaveCount(permanent ? 8 : 2);
             const active = component.locator('.gcharts-marker__symbol[stroke="#00ff00"]');
-            await expect(active).toHaveCount(permanent ? 0 : 2);
-            if (!permanent) {
-                const bounds = await active.evaluateAll((elements) =>
-                    elements.map((element) => {
-                        const rect = element.getBoundingClientRect();
-                        return {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2};
-                    }),
-                );
-                expect(bounds[0].x).toBeCloseTo(bounds[1].x, 1);
-                expect(Math.abs(bounds[0].y - bounds[1].y)).toBeCloseTo(box.height, 0);
-            }
+            await expect(active).toHaveCount(2);
+            const bounds = await active.evaluateAll((elements) =>
+                elements.map((element) => {
+                    const rect = element.getBoundingClientRect();
+                    return {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2};
+                }),
+            );
+            expect(bounds[0].x).toBeCloseTo(bounds[1].x, 1);
+            expect(Math.abs(bounds[0].y - bounds[1].y)).toBeCloseTo(box.height, 0);
             await page.mouse.move(0, 0);
             await expect(symbols).toHaveCount(permanent ? 6 : 0);
             await expect(active).toHaveCount(0);

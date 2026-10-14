@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.67.0](https://github.com/gravity-ui/charts/compare/v1.66.0...v1.67.0) (2026-10-13)
+
+
+### Features
+
+* support opacity for bar series ([#762](https://github.com/gravity-ui/charts/issues/762)) ([a057dd7](https://github.com/gravity-ui/charts/commit/a057dd7e002ef6692c23be9c32fd3393b65e3221))
+
+
+### Bug Fixes
+
+* apply hover styles to permanent point markers ([#770](https://github.com/gravity-ui/charts/issues/770)) ([213cfe3](https://github.com/gravity-ui/charts/commit/213cfe37ba04db2bfc724a1aec2c1895d06515fb))
+* **axis:** preserve separated rotated tick labels ([#765](https://github.com/gravity-ui/charts/issues/765)) ([0e48ff1](https://github.com/gravity-ui/charts/commit/0e48ff1783a4a4d561fd4dbcb0487b7bbb8cada6))
+* correct tooltip header formatting and scatter cluster label bounds ([#743](https://github.com/gravity-ui/charts/issues/743)) ([2cf9675](https://github.com/gravity-ui/charts/commit/2cf96757e8ad44290666f76c2edf4d9fbfb8c274))
+* preserve legend selection and correct axis domains and tooltips ([#768](https://github.com/gravity-ui/charts/issues/768)) ([1ef645e](https://github.com/gravity-ui/charts/commit/1ef645ec158a19a63b735891e617abb9a719987b))
+
 ## [1.66.0](https://github.com/gravity-ui/charts/compare/v1.65.0...v1.66.0) (2026-10-07)
 
 

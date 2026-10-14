@@ -99,6 +99,7 @@ export function prepareScatterSeries(
                 enabled: s.legend?.enabled ?? legend.enabled,
                 symbol: prepareLegendSymbol(s, symbolType),
                 groupId: s.legend?.groupId ?? getUniqId(),
+                source: s.legend,
                 itemText: s.legend?.itemText ?? name,
             },
             data: prepareSeriesData(s, sourceData),

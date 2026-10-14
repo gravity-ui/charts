@@ -2,7 +2,7 @@ import {SymbolType} from '../../constants';
 import {buildHoverMarkerGetter} from '../marker';
 
 describe('buildHoverMarkerGetter', () => {
-    test('prefers the resolved fill without overwriting the configured color', () => {
+    test('preserves the resolved fill for permanent markers without overwriting the configured color', () => {
         const data = {x: 1, y: 20};
         const point = {data, x: 10, y: 20, color: 'red', fill: 'purple'};
         const series = {
@@ -10,7 +10,7 @@ describe('buildHoverMarkerGetter', () => {
             color: 'black',
             marker: {
                 states: {
-                    normal: {enabled: false, symbol: SymbolType.Circle},
+                    normal: {enabled: true, symbol: SymbolType.Circle},
                     hover: {
                         enabled: true,
                         radius: 4,

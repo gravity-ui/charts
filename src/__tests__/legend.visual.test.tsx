@@ -6,8 +6,10 @@ import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
 
+import {LegendLabelsExample} from '../../docs/examples/src/charts/legend/labels';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
+import {DEFAULT_PALETTE} from '../core/constants';
 import type {
     ChartData,
     ChartLegend,
@@ -18,6 +20,27 @@ import type {
 
 import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
+
+test('legend selection survives updating data in the guide example', async ({mount}) => {
+    const component = await mount(
+        <div style={{width: 600, height: 360}}>
+            <LegendLabelsExample />
+        </div>,
+    );
+    const lines = component.locator('.gcharts-line > path');
+    await expect(lines).toHaveCount(3);
+    const europe = component.locator('.gcharts-legend__item text').filter({hasText: 'EU'});
+    await europe.click();
+    await expect(lines).toHaveCount(1);
+    await expect(lines).toHaveAttribute('stroke', DEFAULT_PALETTE[1]);
+    const previousPath = await lines.getAttribute('d');
+    await component.getByRole('button', {name: 'Update data'}).click();
+    await expect(lines).toHaveCount(1);
+    await expect(lines).not.toHaveAttribute('d', previousPath ?? '');
+    await expect(lines).toHaveAttribute('stroke', DEFAULT_PALETTE[1]);
+    await europe.click();
+    await expect(lines).toHaveCount(3);
+});
 
 async function visitLegendPages(
     component: Locator,

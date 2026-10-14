@@ -55,6 +55,7 @@ export function prepareAreaRangeSeries(
         const hoverMarker = merge(
             {
                 enabled: true,
+                enabledForNormal: seriesOptions?.['area-range']?.states?.hover?.enabled !== false,
                 radius: marker.radius,
                 borderWidth: 1,
                 borderColor: '#ffffff',
@@ -74,6 +75,7 @@ export function prepareAreaRangeSeries(
                 enabled: get(series, 'legend.enabled', legend.enabled),
                 symbol: prepareLegendSymbol(series),
                 groupId: series.legend?.groupId ?? getUniqId(),
+                source: series.legend,
                 itemText: series.legend?.itemText ?? name,
             },
             data: prepareSeriesData(series, xAxis),
