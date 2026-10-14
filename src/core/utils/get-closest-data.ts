@@ -13,7 +13,8 @@ type GetClosestPointsArgs = {
     shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
-    layerIndexes: LayerIndexes;
+    /** Render layer of each series; without it the ties are resolved by the first candidate. */
+    layerIndexes?: LayerIndexes;
 };
 
 interface Contender {
@@ -74,7 +75,7 @@ function resolveClosest(candidates: TooltipCandidate[], contenders: Contender[])
 }
 
 export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[] {
-    const {position, shapesData, boundsHeight, boundsWidth, layerIndexes} = args;
+    const {position, shapesData, boundsHeight, boundsWidth, layerIndexes = new Map()} = args;
     const [pointerX, pointerY] = position;
 
     const result: TooltipCandidate[] = [];

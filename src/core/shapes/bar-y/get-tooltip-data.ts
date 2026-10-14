@@ -1,7 +1,7 @@
 import {bisector, sort} from 'd3-array';
 
 import type {BarYSeries} from '../../../types';
-import {getDistanceToRoundedRect} from '../../utils/geometry';
+import {getRectDistance} from '../../utils/geometry';
 import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
 import type {
     GetTooltipDataArgs,
@@ -10,7 +10,7 @@ import type {
 } from '../../utils/tooltip-helpers';
 
 import type {PreparedBarYData} from './types';
-import {getBarYContour} from './utils';
+import {getBarYRect} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
     const {data, position, measureDistance} = args;
@@ -18,7 +18,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
 
     const visibleData = data.filter((p) => isPointTooltipEnabled({data: p.data, series: p.series}));
 
-    const sorted = sort(visibleData, (p) => p.y);
+    const sorted = sort(visibleData, (p) => p.y + p.height / 2);
     const closestYIndex = bisector<PreparedBarYData, number>((p) => p.y + p.height / 2).center(
         sorted,
         pointerY,
@@ -32,26 +32,41 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
 
     const selectedPoints = visibleData.filter((p) => p.data.y === closestYPoint.data.y);
 
-    const closestPoints = sort(
-        selectedPoints.filter((p) => p.y === closestYPoint.y),
-        (p) => p.x,
-    );
-
+    const hasOverlays = selectedPoints.some((p) => p.series.grouping === false);
+    let closestPoint: PreparedBarYData | undefined;
     let closestPointXValue: number | undefined;
-    const lastPoint = closestPoints[closestPoints.length - 1];
-    if (pointerX < closestPoints[0]?.x) {
-        closestPointXValue = closestPoints[0].x;
-    } else if (lastPoint && pointerX > lastPoint.x + lastPoint.width) {
-        closestPointXValue = lastPoint.x;
+    if (hasOverlays) {
+        let closestDistance = Infinity;
+        // selectedPoints retains paint order, so the later bar wins overlapping hits.
+        for (const point of selectedPoints) {
+            const distance = getRectDistance(getBarYRect(point), pointerX, pointerY);
+            if (distance <= closestDistance) {
+                closestPoint = point;
+                closestDistance = distance;
+            }
+        }
     } else {
-        closestPointXValue = closestPoints.find(
-            (p) => pointerX > p.x && pointerX < p.x + p.width,
-        )?.x;
+        const closestPoints = sort(
+            selectedPoints.filter((p) => p.y === closestYPoint.y),
+            (p) => p.x,
+        );
+        const lastPoint = closestPoints[closestPoints.length - 1];
+        if (pointerX < closestPoints[0]?.x) {
+            closestPointXValue = closestPoints[0].x;
+        } else if (lastPoint && pointerX > lastPoint.x + lastPoint.width) {
+            closestPointXValue = lastPoint.x;
+        } else {
+            closestPointXValue = closestPoints.find(
+                (p) => pointerX > p.x && pointerX < p.x + p.width,
+            )?.x;
+        }
     }
 
     return {
         chunks: selectedPoints.map<TooltipCandidate>((p) => {
-            const closest = p.x === closestPointXValue && p.y === closestYPoint.y;
+            const closest = hasOverlays
+                ? p === closestPoint
+                : p.x === closestPointXValue && p.y === closestYPoint.y;
             return {
                 data: p.data,
                 percentage: p.percentage,
@@ -59,7 +74,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
                 closest,
                 distance:
                     closest && measureDistance
-                        ? getDistanceToRoundedRect({point: position, ...getBarYContour(p)})
+                        ? getRectDistance(getBarYRect(p), pointerX, pointerY)
                         : undefined,
             };
         }),

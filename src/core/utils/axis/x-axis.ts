@@ -1,5 +1,4 @@
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../../hooks';
-import type {ChartSeries} from '../../../types';
 import {getMinSpaceBetween} from '../array';
 import {isSeriesWithNumericalXValues} from '../series-type-guards';
 import {getScaleTicks} from '../ticks';
@@ -15,11 +14,7 @@ const DEFAULT_TICKS_COUNT = 10;
 
 type TickValue = {x: number; value: number | string | Date};
 
-function getTicksCount(args: {
-    axis: PreparedAxis;
-    axisWidth: number;
-    series?: ChartSeries[] | PreparedSeries[];
-}) {
+function getTicksCount(args: {axis: PreparedAxis; axisWidth: number; series?: PreparedSeries[]}) {
     const {axis, axisWidth, series} = args;
     const result = getTicksCountByPixelInterval({axis, axisWidth});
 
@@ -59,7 +54,7 @@ export function getAutomaticXAxisTickValues({
     axis: PreparedAxis;
     labelLineHeight: number;
     scale: ChartScale;
-    series?: ChartSeries[] | PreparedSeries[];
+    series?: PreparedSeries[];
 }): TickValue[] {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();

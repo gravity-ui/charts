@@ -105,56 +105,53 @@ export function getDistanceToRect(args: {
     return Math.hypot(dx, dy);
 }
 
-/** Number of straight pieces a corner arc is flattened into. */
-const ARC_STEPS = 12;
-
-/**
- * Distance to a rectangle with rounded corners; `0` when the point is inside. The contour is
- * built like `getRectPath` draws it: the corner arcs are flattened and the radii are used as
- * given, so pass the radii the renderer resolved.
- */
-export function getDistanceToRoundedRect(args: {
-    point: Point;
+export interface RoundedRect {
     x: number;
     y: number;
     width: number;
     height: number;
-    borderRadius: CornerRadii;
-}) {
-    const {point, borderRadius} = args;
-    const left = Math.min(args.x, args.x + args.width);
-    const top = Math.min(args.y, args.y + args.height);
-    const right = left + Math.abs(args.width);
-    const bottom = top + Math.abs(args.height);
-    const [topLeft, topRight, bottomRight, bottomLeft] = borderRadius;
+    /** Clockwise from the top left, matching getRectPath. */
+    borderRadius?: number[];
+}
 
-    if (!topLeft && !topRight && !bottomRight && !bottomLeft) {
-        return getDistanceToRect({
-            point,
-            x: left,
-            y: top,
-            width: right - left,
-            height: bottom - top,
-        });
+const CORNER_DIRECTIONS = [
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+] as const;
+
+/** Distance to the filled contour of a rectangle with rounded corners; zero inside or on its boundary. */
+export function getRectDistance(rect: RoundedRect, x: number, y: number) {
+    const {borderRadius = []} = rect;
+    const left = Math.min(rect.x, rect.x + rect.width);
+    const top = Math.min(rect.y, rect.y + rect.height);
+    const right = left + Math.abs(rect.width);
+    const bottom = top + Math.abs(rect.height);
+    let outsideCorners = 0;
+    let cornerDistance = Infinity;
+    for (let index = 0; index < CORNER_DIRECTIONS.length; index++) {
+        const radius = borderRadius[index] ?? 0;
+        if (!radius) continue;
+        const [dx, dy] = CORNER_DIRECTIONS[index];
+        const cx = (dx === 1 ? left : right) + dx * radius;
+        const cy = (dy === 1 ? top : bottom) + dy * radius;
+        if ((x - cx) * dx < 0 && (y - cy) * dy < 0) {
+            const distance = Math.hypot(x - cx, y - cy) - radius;
+            if (distance > 0) outsideCorners++;
+            cornerDistance = Math.min(cornerDistance, Math.abs(distance));
+        }
     }
+    // Large radii can overlap. Match the path's nonzero fill rule: crossing
+    // one corner removes the fill, while crossing two restores it.
+    if (outsideCorners === 1) return cornerDistance;
+    return Math.hypot(Math.max(left - x, x - right, 0), Math.max(top - y, y - bottom, 0));
+}
 
-    const vertices: Point[] = [];
-    const addCorner = (cx: number, cy: number, radius: number, startAngle: number) => {
-        if (!radius) {
-            vertices.push([cx, cy]);
-            return;
-        }
-        for (let i = 0; i <= ARC_STEPS; i++) {
-            const angle = startAngle + ((Math.PI / 2) * i) / ARC_STEPS;
-            vertices.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
-        }
-    };
-    addCorner(right - topRight, top + topRight, topRight, -Math.PI / 2);
-    addCorner(right - bottomRight, bottom - bottomRight, bottomRight, 0);
-    addCorner(left + bottomLeft, bottom - bottomLeft, bottomLeft, Math.PI / 2);
-    addCorner(left + topLeft, top + topLeft, topLeft, Math.PI);
-
-    return getDistanceToPolygon({point, vertices});
+/** `getRectDistance` with the pointer passed as a point. */
+export function getDistanceToRoundedRect(args: RoundedRect & {point: Point}) {
+    const {point, ...rect} = args;
+    return getRectDistance(rect, point[0], point[1]);
 }
 
 /** Distance to a simple polygon given by its vertices; `0` when the point is inside. */
