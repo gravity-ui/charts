@@ -18,6 +18,7 @@ jobs:
       github.event.workflow_run.conclusion == 'failure')
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       pull-requests: read
     steps:
       - name: Generate token
@@ -50,9 +51,27 @@ jobs:
           echo "number=${number}" >> "$GITHUB_OUTPUT"
         shell: bash
 
+      # A test failure must not prevent publishing a successfully built preview.
+      # Include older attempts: rerunning only failed tests does not rerun Build.
+      - name: Check docs build
+        id: build
+        if: steps.pr.outputs.number
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          conclusion=$(
+            gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?filter=all&per_page=100" |
+              jq -r --argjson attempt "${RUN_ATTEMPT}" \
+                '[.[].jobs[] | select(.name == "Build" and .run_attempt <= $attempt)] | max_by(.id).conclusion // "missing"'
+          )
+          echo "conclusion=${conclusion}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
       # Installed before the download so that nothing from the PR is on disk yet.
       - name: Install AWS CLI
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.pr.outputs.number && steps.build.outputs.conclusion == 'success'
         uses: unfor19/install-aws-cli-action@v1
         with:
           version: 2.22.35
@@ -61,7 +80,7 @@ jobs:
       # Not v4: its bundled extractor is affected by GHSA-6jrj-vc65-c983 (files
       # written outside the target directory), and this archive is untrusted.
       - name: Download docs artifact
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.pr.outputs.number && steps.build.outputs.conclusion == 'success'
         uses: actions/download-artifact@v7
         with:
           name: docs-preview
@@ -70,7 +89,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: Upload to S3
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.pr.outputs.number && steps.build.outputs.conclusion == 'success'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.STORYBOOK_S3_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
@@ -83,7 +102,7 @@ jobs:
         shell: bash
 
       - name: Comment on PR (success)
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.pr.outputs.number && steps.build.outputs.conclusion == 'success'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -93,7 +112,7 @@ jobs:
             📖 [Docs Preview](https://storage.yandexcloud.net/playwright-reports/charts/pulls/${{ steps.pr.outputs.number }}/docs/index.html) is ready.
 
       - name: Comment on PR (build failure)
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'failure'
+        if: steps.pr.outputs.number && steps.build.outputs.conclusion != 'success'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}

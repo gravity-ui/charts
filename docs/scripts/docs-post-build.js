@@ -41,12 +41,9 @@ function buildExamplesAssets() {
     }
 
     fs.mkdirSync(examplesOutDir, {recursive: true});
-    fs.copyFileSync(examplesJsPath, path.join(examplesOutDir, 'chart-examples.js'));
+    fs.cpSync(path.dirname(examplesJsPath), examplesOutDir, {recursive: true});
 
     const hasCss = fs.existsSync(examplesCssPath);
-    if (hasCss) {
-        fs.copyFileSync(examplesCssPath, path.join(examplesOutDir, 'chart-examples.css'));
-    }
 
     return {hasJs: true, hasCss};
 }

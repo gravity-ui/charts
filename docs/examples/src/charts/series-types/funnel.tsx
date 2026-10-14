@@ -15,7 +15,7 @@ const data: ChartData = {
                 data: [
                     {name: 'Product viewed', value: 1200, label: 'Product viewed: 1200'},
                     {name: 'Added to cart', value: 720, label: 'Added to cart: 720'},
-                    {name: 'Checkout started', value: 450, label: 'Checkout started: 450'},
+                    {name: 'Checkout started', value: 450, label: 'Checkout: 450'},
                     {name: 'Purchased', value: 360, label: 'Purchased: 360'},
                 ],
             },

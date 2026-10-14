@@ -63,9 +63,25 @@ Use card titles and descriptions to explain the demonstrated configuration (for 
 
 Embed it in a guide using `<div data-chart-example="your/example-id"></div>`. The [Examples catalog](./examples.md) automatically reuses the same component. An example combining series types belongs to one primary group.
 
-Set `gallery.order: 0` for the basic example of each series; other examples default to `100`, with title as the tie-breaker. Set `gallery.group` to `axes`, `legend`, `tooltip`, or `data-labels` to place a cross-cutting example in a topic group instead of its series group. Each example appears once. Topic names and their display order are defined in `docs/examples/src/charts/gallery-groups.json`; series groups come first, in alphabetical order. Unknown topic IDs fail the documentation build. Gallery cards show the chart and description; source code remains available in guides.
+Set `gallery.order: 0` for the basic example of each series; other examples default to `100`, with title as the tie-breaker. Set `gallery.group` to `axes`, `legend`, `tooltip`, or `data-labels` to place a cross-cutting example in a topic group instead of its series group. Each example appears once. Topic names and their display order are defined in `docs/examples/src/charts/gallery-groups.json`; series groups come first, in alphabetical order. Unknown topic IDs fail the documentation build. Gallery cards show the chart and description, with a Code button for the complete example source. Guides can embed a focused selection of examples.
 
 Run `npm run docs:build` to check registration, documentation coverage, and guide links.
+
+After building, check gallery navigation and source-code viewing in Docker:
+
+```shell
+./scripts/playwright-docker.sh 'npm run test:docs-examples'
+```
+
+The tests serve `dist-docs` temporarily on Vite's default preview port, `4173`, under `/docs-preview/` to check deployment-relative paths. To test an already published preview, pass its documentation root URL; no local build or server is needed:
+
+```shell
+./scripts/playwright-docker.sh 'DOCS_BASE_URL=https://storage.yandexcloud.net/playwright-reports/charts/pulls/776/docs/ npm run test:docs-examples'
+```
+
+Replace `776` with the pull request number.
+
+In CI, the `Docs examples` job tests the same build artifact that is published as the PR preview. A test failure produces a separate failing check and preserves the preview for investigation; the test report includes failure screenshots and traces. Chart behavior and visual regressions remain covered by the component tests in `playwright/playwright.config.ts`.
 
 ## Contributing
 

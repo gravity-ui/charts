@@ -20,7 +20,7 @@ Use `borderRadius`, `borderWidth`, `borderColor`, and `borderDashStyle` for bar 
 
 ## Data labels
 
-Set `dataLabels.enabled: true` to show text inside intervals. Labels use the series name by default; set a point’s `label` to show a task name.
+Set `dataLabels.enabled: true` to show text inside intervals. Provide a `label` on each point, for example a task name; the series name is not used as a fallback.
 
 ## Tooltip
 

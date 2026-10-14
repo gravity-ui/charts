@@ -49,10 +49,19 @@
     padding: 0 8px;
 }
 
-.chart-example-card__link {
-    align-self: flex-start;
+.chart-example-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     margin: 12px 16px 16px;
+}
+
+.chart-example-card__link {
     font-size: 13px;
+}
+
+.chart-examples-gallery__code-dialog {
+    max-width: calc(100vw - 40px);
 }
 
 .chart-examples-gallery h2 {

@@ -6,6 +6,7 @@ import {defineConfig} from 'vite';
 import {readExample} from './read-examples';
 
 export default defineConfig({
+    base: './',
     plugins: [
         react(),
         {
@@ -27,7 +28,6 @@ export default defineConfig({
                 entryFileNames: 'chart-examples.js',
                 assetFileNames: 'chart-examples[extname]',
                 format: 'es',
-                inlineDynamicImports: true,
             },
         },
     },

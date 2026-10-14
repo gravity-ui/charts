@@ -4,6 +4,7 @@ import {createRoot} from 'react-dom/client';
 import type {Root} from 'react-dom/client';
 
 import {ChartPlayground} from './ChartPlayground';
+import {DocsTheme} from './DocsTheme';
 import {ExamplesGallery} from './ExamplesGallery';
 import {registry} from './charts/registry';
 import {OverviewDashboardExample} from './overview/dashboard';
@@ -23,14 +24,22 @@ function mountExamples() {
         el.setAttribute(MOUNTED_ATTR, 'true');
         const root = createRoot(el);
         mountedRoots.set(el, root);
-        root.render(<ChartPlayground Component={OverviewDashboardExample} />);
+        root.render(
+            <DocsTheme>
+                <OverviewDashboardExample />
+            </DocsTheme>,
+        );
     });
     document.querySelectorAll<HTMLElement>('[data-chart-examples]').forEach((el) => {
         if (el.getAttribute(MOUNTED_ATTR)) return;
         el.setAttribute(MOUNTED_ATTR, 'true');
         const root = createRoot(el);
         mountedRoots.set(el, root);
-        root.render(<ExamplesGallery />);
+        root.render(
+            <DocsTheme>
+                <ExamplesGallery />
+            </DocsTheme>,
+        );
     });
     document.querySelectorAll<HTMLElement>('[data-chart-example]').forEach((el) => {
         if (el.getAttribute(MOUNTED_ATTR)) return;
