@@ -14,10 +14,10 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
-import {getBarYLayout, groupBarYDataByYValue} from '../../utils/bar-y';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
 
+import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 export async function prepareBarYData(args: {
@@ -73,19 +73,45 @@ export async function prepareBarYData(args: {
     })();
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
-    const {bandSize, barGap, barSize} = getBarYLayout({
+    const {bandSize, barGap, barSize, overlaySize} = getBarYLayout({
         groupedData,
         seriesOptions,
         scale: yScale,
     });
 
+    const categoryDomain =
+        yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
     const result: PreparedBarYData[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
+        let center;
+
+        if (yAxis[0].type === 'category') {
+            const bandScale = yScale as ScaleBand<string>;
+
+            if (!categoryDomain?.has(yValue)) {
+                return;
+            }
+
+            center = (bandScale(yValue) || 0) + bandSize / 2;
+        } else {
+            const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+            center = scale(Number(yValue));
+        }
+
         const stacks = Object.values(val);
-        const currentBarHeight = barSize * stacks.length + barGap * (stacks.length - 1);
-        stacks.forEach((measureValues, groupItemIndex) => {
+        const groupedCount = stacks.filter((items) =>
+            items.some((item) => item.series.grouping !== false),
+        ).length;
+        const currentBarHeight = barSize * groupedCount + barGap * Math.max(0, groupedCount - 1);
+        let groupedIndex = 0;
+        stacks.forEach((measureValues) => {
+            const independent =
+                measureValues[0].series.grouping === false && !measureValues[0].series.stacking;
+            const slotIndex = measureValues.some((item) => item.series.grouping !== false)
+                ? groupedIndex++
+                : 0;
             const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
-            const base = baseValue - measureValues[0].series.borderWidth;
+            const base = independent ? baseValue : baseValue - measureValues[0].series.borderWidth;
             let positiveStack = base;
             let negativeStack = base;
 
@@ -113,46 +139,38 @@ export async function prepareBarYData(args: {
                 if (data.x === null) {
                     return;
                 }
-                let center;
-
-                if (yAxis[0].type === 'category') {
-                    const bandScale = yScale as ScaleBand<string>;
-                    const bandScaleDomain = bandScale.domain();
-
-                    if (bandScaleDomain.indexOf(yValue as string) === -1) {
-                        return;
-                    }
-
-                    center = (bandScale(yValue as string) || 0) + bandSize / 2;
-                } else {
-                    const scale = yScale as ScaleLinear<number, number> | ScaleTime<number, number>;
-                    center = scale(Number(yValue));
-                }
-
-                const y = center - currentBarHeight / 2 + (barSize + barGap) * groupItemIndex;
+                const overlay = s.grouping === false;
+                const height = overlay ? overlaySize : barSize;
+                const y = overlay
+                    ? center - height / 2
+                    : center - currentBarHeight / 2 + (barSize + barGap) * slotIndex;
                 const xValue = Number(data.x);
-                const width = Math.abs(xLinearScale(xValue) * ratio - base);
-                let shapeWidth = width - (stackItems.length ? stackGap : 0);
+                const xPixel = xLinearScale(xValue);
+                const width = Math.abs(xPixel * ratio - base);
+                let shapeWidth = width - (!independent && stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
                 }
 
-                if (shapeWidth < 0) {
-                    return;
-                }
-
                 const itemStackGap = width - shapeWidth;
-                const borderWidth = barSize > s.borderWidth * 2 ? s.borderWidth : 0;
+                const borderWidth =
+                    height > s.borderWidth * 2 && (!overlay || shapeWidth > s.borderWidth * 2)
+                        ? s.borderWidth
+                        : 0;
                 const isFirstInStack = xValueIndex === 0;
-                const isLastStackItem = xValueIndex === sortedData.length - 1;
-                const extendsRight = xLinearScale(xValue) > baseValue;
+                const isLastStackItem = independent || xValueIndex === sortedData.length - 1;
+                const extendsRight = xPixel > baseValue;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
                 let itemX = extendsRight ? positiveStack : negativeStack - width;
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
-                if (isFirstInStack && extendsRight) {
+                if (independent) {
+                    // Keep the outer contour at the baseline and value, including on reversed axes.
+                    itemX = Math.min(baseValue, xPixel) + halfBorder;
+                    shapeWidth -= borderWidth;
+                } else if (isFirstInStack && extendsRight) {
                     // Bar extends right from base, border extends outward to the
                     // left → shift left by halfBorder to keep the visual left
                     // edge at the zero line.
@@ -168,7 +186,7 @@ export async function prepareBarYData(args: {
                     x: itemX,
                     y: y,
                     width: shapeWidth,
-                    height: barSize,
+                    height,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
                     borderWidth,
@@ -194,6 +212,11 @@ export async function prepareBarYData(args: {
             result.push(...stackItems);
         });
     });
+
+    if (series.some((s) => s.grouping === false)) {
+        const seriesOrder = new Map(series.map((s, index) => [s, index]));
+        result.sort((a, b) => (seriesOrder.get(a.series) ?? 0) - (seriesOrder.get(b.series) ?? 0));
+    }
 
     let labels: LabelData[] = [];
     let htmlLabels: HtmlItem[] = [];

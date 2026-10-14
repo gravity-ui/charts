@@ -1,5 +1,5 @@
-import type {CurveFactory} from 'd3-shape';
-import {curveBasis, curveLinear, pie} from 'd3-shape';
+import type {CurveFactory, PieArcDatum} from 'd3-shape';
+import {arc, curveBasis, curveLinear, pie} from 'd3-shape';
 
 import type {PointPosition} from '../../../types';
 
@@ -39,4 +39,23 @@ export function getInscribedAngle(a: PointPosition, b: PointPosition, c: PointPo
     const radians = Math.atan2(Math.abs(cross), dot);
 
     return (radians * 180) / Math.PI;
+}
+
+// D3's default 3-digit rounding can make near-full arc endpoints identical.
+// Six digits keeps them distinct for all visually meaningful chart radii.
+const ARC_PATH_DIGITS = 6;
+
+interface ArcGeneratorWithDigits {
+    digits(digits: number): unknown;
+}
+
+/** The slice path as the renderer draws it, relative to the pie center. */
+export function getPieArcPath(d: PieArcDatum<SegmentData>, outerRadius: number) {
+    const arcGenerator = arc<PieArcDatum<SegmentData>>()
+        .innerRadius(d.data.pie.innerRadius)
+        .outerRadius(outerRadius)
+        .cornerRadius(d.data.pie.borderRadius);
+    (arcGenerator as typeof arcGenerator & ArcGeneratorWithDigits).digits(ARC_PATH_DIGITS);
+
+    return arcGenerator(d);
 }

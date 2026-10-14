@@ -39,8 +39,12 @@ import areaRangeWithLineRaw from './series-types/area-range-with-line.tsx?raw';
 import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
 import areaSeriesRaw from './series-types/area.tsx?raw';
 import {BarXSeriesExample} from './series-types/bar-x';
+import {BarXOverlayExample} from './series-types/bar-x-overlay';
+import barXOverlayRaw from './series-types/bar-x-overlay.tsx?raw';
 import barXSeriesRaw from './series-types/bar-x.tsx?raw';
 import {BarYSeriesExample} from './series-types/bar-y';
+import {BarYOverlayExample} from './series-types/bar-y-overlay';
+import barYOverlayRaw from './series-types/bar-y-overlay.tsx?raw';
 import barYSeriesRaw from './series-types/bar-y.tsx?raw';
 import {LineSeriesExample} from './series-types/line';
 import {LineMarkersExample} from './series-types/line-markers';
@@ -117,6 +121,14 @@ export const registry: Record<string, ExampleModule> = {
     'axis-types/category': {
         code: extractDisplayCode(categoryRaw),
         Component: CategoryAxisExample,
+    },
+    'series-types/bar-x-overlay': {
+        Component: BarXOverlayExample,
+        code: extractDisplayCode(barXOverlayRaw),
+    },
+    'series-types/bar-y-overlay': {
+        Component: BarYOverlayExample,
+        code: extractDisplayCode(barYOverlayRaw),
     },
     'series-types/bar-x': {
         code: extractDisplayCode(barXSeriesRaw),

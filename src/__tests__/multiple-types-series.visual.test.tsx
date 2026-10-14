@@ -1,12 +1,16 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Page} from '@playwright/test';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {otherLineAndBarData} from '../__stories__/__data__/other/line-and-bar';
 import type {ChartData} from '../types';
+
+import {ActiveSeriesTestStory} from './components/ActiveSeriesTestStory';
+import {getLocatorBoundingBox} from './utils';
 
 test.describe('Multiple types of series on same chart', () => {
     test.beforeEach(async ({page}) => {
@@ -258,5 +262,222 @@ test.describe('Multiple types of series on same chart', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+});
+
+test.describe('Active series in mixed charts', () => {
+    const data: ChartData = {
+        chart: {margin: {left: 50, right: 20, top: 20, bottom: 40}},
+        xAxis: {type: 'linear', min: 0, max: 9, startOnTick: false, endOnTick: false},
+        yAxis: [{type: 'linear', min: 0, max: 7, startOnTick: false, endOnTick: false}],
+        legend: {enabled: false},
+        series: {
+            data: [
+                {
+                    type: 'line',
+                    name: 'Summary',
+                    lineWidth: 3,
+                    marker: {enabled: false},
+                    data: [
+                        {x: 0, y: 1},
+                        {x: 9, y: 1},
+                    ],
+                },
+                {
+                    type: 'scatter',
+                    name: 'Tasks',
+                    cluster: {
+                        enabled: true,
+                        layoutAlgorithm: {type: 'grid', gridSize: 50},
+                        minimumClusterSize: 2,
+                        marker: {radius: 10},
+                    },
+                    data: [
+                        {x: 1, y: 6, custom: {id: 'a'}},
+                        {x: 1.12, y: 6.08, custom: {id: 'b'}},
+                        {x: 8, y: 5, custom: {id: 'c'}},
+                    ],
+                },
+            ],
+        },
+    };
+
+    test('The line under the pointer wins over a distant scatter cluster', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(<ActiveSeriesTestStory data={data} />);
+        const line = component.locator('.gcharts-line path').first();
+        const box = await getLocatorBoundingBox(line);
+        const x = Math.round(box.x + box.width / 2);
+        const y = Math.round(box.y + box.height / 2);
+
+        await page.mouse.move(x, y);
+        await expect(page.locator('[data-qa="hovered-active"]')).toHaveText('Summary');
+        await page.mouse.click(x, y);
+        await expect(component.locator('[data-qa="clicked-active"]')).toHaveText('Summary');
+    });
+
+    test('A hovered scatter cluster wins and keeps its members', async ({mount, page}) => {
+        const component = await mount(<ActiveSeriesTestStory data={data} />);
+        const cluster = component.locator('.gcharts-scatter__cluster-label').first();
+        const box = await getLocatorBoundingBox(cluster);
+        const x = Math.round(box.x + box.width / 2);
+        const y = Math.round(box.y + box.height / 2);
+
+        await page.mouse.move(x, y);
+        await expect(page.locator('[data-qa="hovered-active"]')).toHaveText('Tasks:a,b');
+        await page.mouse.click(x, y);
+        await expect(component.locator('[data-qa="clicked-active"]')).toHaveText('Tasks:a,b');
+    });
+
+    test.describe('Painted contours', () => {
+        const axis = {
+            type: 'linear' as const,
+            min: 0,
+            max: 300,
+            startOnTick: false,
+            endOnTick: false,
+            visible: false,
+        };
+        const base: Omit<ChartData, 'series'> = {
+            chart: {margin: {left: 50, right: 50, top: 50, bottom: 50}},
+            xAxis: axis,
+            yAxis: [axis],
+            legend: {enabled: false},
+        };
+        const scatter: ChartData['series']['data'][number] = {
+            type: 'scatter',
+            name: 'Scatter',
+            symbolType: 'circle',
+            data: [],
+        };
+
+        /** Hovers and clicks the plot pixel and checks the active series of both. */
+        async function expectActive(
+            args: {mount: Parameters<Parameters<typeof test>[2]>[0]['mount']; page: Page},
+            series: ChartData['series']['data'],
+            plot: [number, number],
+            expected: string,
+        ) {
+            const component = await args.mount(
+                <ActiveSeriesTestStory
+                    data={{...base, series: {data: series}}}
+                    styles={{width: 400, height: 400}}
+                />,
+            );
+            const box = await getLocatorBoundingBox(component.locator('svg').first());
+            const x = box.x + 50 + plot[0];
+            const y = box.y + 50 + plot[1];
+
+            await args.page.mouse.move(x, y);
+            await expect(args.page.locator('[data-qa="hovered-active"]')).toHaveText(expected);
+            await args.page.mouse.click(x, y);
+            await expect(component.locator('[data-qa="clicked-active"]')).toHaveText(expected);
+        }
+
+        test('rounded x-range corners are not hits', async ({mount, page}) => {
+            await expectActive(
+                {mount, page},
+                [
+                    {...scatter, data: [{x: 101, y: 269, radius: 1}]},
+                    {
+                        type: 'x-range',
+                        name: 'Range',
+                        borderRadius: 20,
+                        borderWidth: 0,
+                        dataLabels: {enabled: false},
+                        data: [{x0: 100, x1: 200, y: 150}],
+                    },
+                ],
+                [101, 31],
+                'Scatter',
+            );
+        });
+
+        test('rounded pie corners are not hits', async ({mount, page}) => {
+            await expectActive(
+                {mount, page},
+                [
+                    {...scatter, data: [{x: 151, y: 289, radius: 1}]},
+                    {
+                        type: 'pie',
+                        borderRadius: 20,
+                        borderWidth: 0,
+                        dataLabels: {enabled: false},
+                        data: [
+                            {name: 'Slice1', value: 1},
+                            {name: 'Slice2', value: 1},
+                        ],
+                    },
+                ],
+                [151, 11],
+                'Scatter',
+            );
+        });
+
+        test('the line under the pointer wins when the nearest X column belongs to another series', async ({
+            mount,
+            page,
+        }) => {
+            await expectActive(
+                {mount, page},
+                [
+                    {
+                        type: 'area',
+                        name: 'Area',
+                        data: [
+                            {x: 100, y: 50},
+                            {x: 150, y: 50},
+                            {x: 200, y: 50},
+                        ],
+                    },
+                    {...scatter, data: [{x: 150, y: 240, radius: 1}]},
+                    {
+                        type: 'line',
+                        name: 'Line',
+                        marker: {enabled: false},
+                        data: [
+                            {x: 0, y: 250},
+                            {x: 300, y: 250},
+                        ],
+                    },
+                ],
+                [150, 50],
+                'Line',
+            );
+        });
+
+        test('the upper layer wins among lookup series containing the pointer', async ({
+            mount,
+            page,
+        }) => {
+            await expectActive(
+                {mount, page},
+                [
+                    {
+                        type: 'area',
+                        name: 'Area',
+                        data: [
+                            {x: 0, y: 150},
+                            {x: 300, y: 150},
+                        ],
+                    },
+                    {...scatter, data: [{x: 150, y: 100, radius: 3}]},
+                    {
+                        type: 'line',
+                        name: 'Line',
+                        lineWidth: 4,
+                        marker: {enabled: false},
+                        data: [
+                            {x: 0, y: 100},
+                            {x: 300, y: 100},
+                        ],
+                    },
+                ],
+                [150, 201],
+                'Line',
+            );
+        });
     });
 });

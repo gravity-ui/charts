@@ -4,6 +4,9 @@ import type {ShapePoint} from './tooltip-helpers';
 
 export interface PrepareNearestDataArgs<TShapeData = unknown> {
     data: TShapeData[];
+    position: PointPosition;
+    boundsWidth: number;
+    boundsHeight: number;
 }
 
 /** A plugin-owned reference position in plot-relative pixels. */

@@ -344,10 +344,42 @@ test.describe('Chart interaction queries', () => {
             await expect(output).not.toHaveText('');
             const result = JSON.parse((await output.textContent())!);
             expect(result.chart.point.custom).toBe('near');
-            expect(result.tooltip.point.custom).toBe('far');
-            expect(result.legacy.point.custom).toBe('far');
+            expect(result.tooltip.point.custom).toBe('near');
+            expect(result.legacy.point.custom).toBe('near');
         });
     }
+
+    test('Tooltip queries and click payloads select the same topmost overlapping series', async ({
+        mount,
+        page,
+    }) => {
+        const data = chart(
+            [
+                {type: 'scatter', name: 'Scatter', data: [{x: 5, y: 5}]},
+                {
+                    type: 'line',
+                    name: 'Line',
+                    lineWidth: 10,
+                    data: [
+                        {x: 4, y: 5},
+                        {x: 6, y: 5},
+                    ],
+                },
+            ],
+            {xAxis: {min: 0, max: 10}, yAxis: [{min: 0, max: 10}]},
+        );
+        const component = await mount(<ChartInteractionTestStory data={data} />);
+        const {x, y} = await paintedPosition(
+            component.locator('.gcharts-scatter .gcharts-marker__symbol'),
+        );
+        await page.mouse.click(x, y);
+        const output = component.getByTestId('interaction-result');
+        await expect(output).not.toHaveText('');
+        const result = JSON.parse((await output.textContent())!);
+        expect(result.targets).toHaveLength(2);
+        expect(result.tooltip.name).toBe(result.targets[0].name);
+        expect(result.legacy.name).toBe(result.targets[0].name);
+    });
 
     for (const sample of cases) {
         test(`Exact ${sample.type} hits carry series-specific data without tooltips`, async ({

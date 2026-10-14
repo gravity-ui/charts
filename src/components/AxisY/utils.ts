@@ -8,7 +8,6 @@ import {
 } from '~core/utils';
 
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../hooks';
-import type {ChartSeries} from '../../types';
 
 export function getAutomaticTickValues({
     scale,
@@ -19,7 +18,7 @@ export function getAutomaticTickValues({
     scale: ChartScale;
     axis: PreparedAxis;
     labelLineHeight: number;
-    series: PreparedSeries[] | ChartSeries[];
+    series: PreparedSeries[];
 }) {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();

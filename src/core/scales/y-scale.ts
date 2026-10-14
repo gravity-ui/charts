@@ -4,7 +4,6 @@ import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'lodash/get';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
-import type {ChartSeries} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
 import type {PreparedSeries} from '../series';
@@ -50,7 +49,7 @@ function getYScaleRange(args: {axis: PreparedAxis; boundsHeight: number}): [numb
     }
 }
 
-function isSeriesWithYAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
+function isSeriesWithYAxisOffset(series: PreparedSeries[]) {
     const types = [SERIES_TYPE.BarY, SERIES_TYPE.Heatmap] as string[];
     return series.some((s) => types.includes(s.type));
 }
@@ -149,7 +148,7 @@ function getDomainMinAlignedToStartTick(args: {
     axis: PreparedAxis;
     range: [number, number];
     scale: ChartScaleLinear;
-    series: PreparedSeries[] | ChartSeries[];
+    series: PreparedSeries[];
 }) {
     const {axis, range, scale, series} = args;
     const [dMin, dMax] = scale.domain();
@@ -198,7 +197,7 @@ function getDomainMaxAlignedToEndTick(args: {
     axis: PreparedAxis;
     range: [number, number];
     scale: ChartScaleLinear;
-    series: PreparedSeries[] | ChartSeries[];
+    series: PreparedSeries[];
 }) {
     const {axis, range, scale, series} = args;
     const [dMin, dMax] = scale.domain();
@@ -244,7 +243,7 @@ function getDomainMaxAlignedToEndTick(args: {
 export function createYScale(args: {
     axis: PreparedAxis;
     boundsHeight: number;
-    series: PreparedSeries[] | ChartSeries[];
+    series: PreparedSeries[];
     primaryAxis?: PreparedAxis;
     primaryTicksCount?: number;
     zoomStateY?: [number, number];

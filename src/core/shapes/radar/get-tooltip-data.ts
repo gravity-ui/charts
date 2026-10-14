@@ -48,6 +48,8 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedRadarData>): Get
             series: shape.series as RadarSeries,
             category: shape.series.categories[closestPoint.index],
             closest: shape.series === closestPoint.series,
+            // The closest shape is one of those containing the pointer.
+            distance: shape.series === closestPoint.series ? 0 : undefined,
         })),
     };
 }

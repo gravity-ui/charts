@@ -7,7 +7,7 @@ import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
-import type {ChartAxis, ChartAxisType, ChartSeries} from '../types';
+import type {ChartAxis, ChartAxisType} from '../types';
 import {
     getDefaultMaxXAxisValue,
     getDefaultMinXAxisValue,
@@ -26,7 +26,7 @@ import {
 
 const X_AXIS_ZOOM_PADDING = 0.02;
 
-function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
+function calculateXAxisPadding(series: PreparedSeries[]) {
     let result = 0;
 
     series.forEach((s) => {
@@ -48,7 +48,7 @@ function calculateXAxisPadding(series: (PreparedSeries | ChartSeries)[]) {
     return result;
 }
 
-function isSeriesWithXAxisOffset(series: (PreparedSeries | ChartSeries)[]) {
+function isSeriesWithXAxisOffset(series: PreparedSeries[]) {
     const types = [SERIES_TYPE.Heatmap, SERIES_TYPE.BarX] as string[];
     return series.some((s) => types.includes(s.type));
 }
@@ -65,7 +65,7 @@ function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?
 export function createXScale(args: {
     axis: PreparedAxis | ChartAxis;
     boundsWidth: number;
-    series: (PreparedSeries | ChartSeries)[];
+    series: PreparedSeries[];
     rangeSliderState?: RangeSliderState;
     zoomStateX?: [number, number];
 }) {

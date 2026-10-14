@@ -27,5 +27,7 @@ export function getTargetElements({plot, markers, preparedData}: InteractionElem
 export function prepareNearestData(
     args: PrepareNearestDataArgs<PreparedAreaData>,
 ): NearestCandidate[] {
-    return getPointCandidates(getTooltipData(args).xLookupPoints ?? []);
+    return getPointCandidates(
+        getTooltipData({...args, measureDistance: false}).xLookupPoints ?? [],
+    );
 }

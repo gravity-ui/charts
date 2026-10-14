@@ -1,5 +1,6 @@
 {
   "error": {
+    "label_inconsistent-stack-grouping": "У серий «{{firstSeries}}» и «{{secondSeries}}» одного стека должно совпадать значение grouping. Если grouping не указан, используется true.",
     "label_inconsistent-stack-labels-options": "Настройки style, format, padding и allowOverlap итоговых лейблов должны совпадать у участвующих в расчёте серий «{{firstSeries}}» и «{{secondSeries}}» одного стека.",
     "label_invalid-area-range-bounds": "Нижняя граница не должна превышать верхнюю в серии area-range «{{seriesName}}»",
     "label_no-data": "Нет данных",

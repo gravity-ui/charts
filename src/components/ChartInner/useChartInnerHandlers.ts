@@ -33,6 +33,7 @@ interface Props {
     boundsOffsetTop: number;
     boundsWidth: number;
     dispatcher: Dispatch<object>;
+    layerIndexes: Map<string, number>;
     shapesData: TooltipItemData[];
     svgContainer: SVGSVGElement | null;
     togglePinTooltip: ChartInnerState['togglePinTooltip'];
@@ -53,6 +54,7 @@ export function useChartInnerHandlers(props: Props) {
         boundsOffsetTop,
         boundsWidth,
         dispatcher,
+        layerIndexes,
         shapesData,
         svgContainer,
         togglePinTooltip,
@@ -91,6 +93,7 @@ export function useChartInnerHandlers(props: Props) {
 
             const closest = getClosestPoints({
                 position: [x, y],
+                layerIndexes,
                 shapesData,
                 boundsHeight,
                 boundsWidth,
@@ -130,6 +133,7 @@ export function useChartInnerHandlers(props: Props) {
             boundsOffsetTop,
             isOutsideBounds,
             dispatcher,
+            layerIndexes,
             shapesData,
             boundsHeight,
             boundsWidth,
@@ -199,6 +203,7 @@ export function useChartInnerHandlers(props: Props) {
 
         const items = getClosestPoints({
             position: [x, y],
+            layerIndexes,
             shapesData,
             boundsHeight,
             boundsWidth,
