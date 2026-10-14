@@ -1,0 +1,254 @@
+{
+  "tooltip/waterfall-header": {
+    "seriesType": "Waterfall",
+    "title": "Date headers in tooltips",
+    "description": "Format waterfall tooltip headers as dates.",
+    "docsUrl": "pages/guides/tooltip.html#value-formatting"
+  },
+  "tooltip/x-range-values": {
+    "seriesType": "X-Range",
+    "title": "Interval values and totals",
+    "description": "Show interval lengths, sort tooltip rows, and display their total.",
+    "docsUrl": "pages/guides/tooltip.html#totals-and-sorting-for-interval-series"
+  },
+  "tooltip/multiple-y-axes": {
+    "seriesType": "Line",
+    "title": "Tooltips across multiple axes",
+    "description": "Customize tooltip content for numeric and categorical Y axes.",
+    "docsUrl": "pages/guides/tooltip.html#multiple-y-axes-and-custom-content"
+  },
+  "legend/wrapping": {
+    "seriesType": "Pie",
+    "title": "Wrapping legend labels",
+    "description": "Wrap long legend labels within a limited width.",
+    "docsUrl": "pages/guides/legend.html#wrapping-long-labels"
+  },
+  "legend/content-based-width": {
+    "seriesType": "Line",
+    "title": "Content-based legend width",
+    "description": "Fit the legend to its labels while reserving space for the chart.",
+    "docsUrl": "pages/guides/legend.html#maximum-width"
+  },
+  "legend/vertical": {
+    "seriesType": "Pie",
+    "title": "Vertical legend",
+    "description": "Arrange legend items in a column beside a pie chart.",
+    "docsUrl": "pages/guides/legend.html#item-layout"
+  },
+  "legend/labels": {
+    "seriesType": "Line",
+    "title": "Custom legend labels",
+    "description": "Use short legend labels and preserve selection when data changes.",
+    "docsUrl": "pages/guides/legend.html#overriding-legend-labels"
+  },
+  "data-labels/stack-labels": {
+    "seriesType": "Area",
+    "title": "Stack total labels",
+    "description": "Display formatted totals above stacked areas.",
+    "docsUrl": "pages/guides/data-labels.html#stack-total-labels"
+  },
+  "axis-labels/font-size": {
+    "seriesType": "Line",
+    "title": "Axis label font size",
+    "description": "Adjust X and Y axis label sizes independently.",
+    "docsUrl": "pages/guides/axes/axis-labels.html#font-size"
+  },
+  "axis-types/linear": {
+    "seriesType": "Line",
+    "title": "Linear axis",
+    "description": "Plot values on an evenly spaced numeric axis.",
+    "docsUrl": "pages/guides/axes/axis-types.html#linear-axis"
+  },
+  "axis-types/logarithmic": {
+    "seriesType": "Line",
+    "title": "Logarithmic axis",
+    "description": "Compare values spanning several orders of magnitude.",
+    "docsUrl": "pages/guides/axes/axis-types.html#logarithmic-axis"
+  },
+  "axis-types/datetime": {
+    "seriesType": "Line",
+    "title": "Datetime axis",
+    "description": "Plot a time series with date labels on the X axis.",
+    "docsUrl": "pages/guides/axes/axis-types.html#datetime-axis"
+  },
+  "axis-types/category": {
+    "seriesType": "Bar-X",
+    "title": "Category axis",
+    "description": "Compare values across named categories.",
+    "docsUrl": "pages/guides/axes/axis-types.html#category-axis"
+  },
+  "series-types/bar-x-overlay": {
+    "seriesType": "Bar-X",
+    "title": "Overlapping columns",
+    "description": "Compare columns with grouping disabled and partial opacity.",
+    "docsUrl": "pages/guides/series-types/bar-x.html#grouping-and-stacking"
+  },
+  "series-types/bar-y-overlay": {
+    "seriesType": "Bar-Y",
+    "title": "Overlapping bars",
+    "description": "Compare horizontal bars with grouping disabled and partial opacity.",
+    "docsUrl": "pages/guides/series-types/bar-y.html#grouping-and-stacking"
+  },
+  "series-types/bar-x": {
+    "seriesType": "Bar-X",
+    "title": "Column appearance",
+    "description": "Style grouped columns with rounded borders and opacity.",
+    "docsUrl": "pages/guides/series-types/bar-x.html#opacity"
+  },
+  "series-types/bar-y": {
+    "seriesType": "Bar-Y",
+    "title": "Bar appearance",
+    "description": "Style grouped horizontal bars with rounded borders and opacity.",
+    "docsUrl": "pages/guides/series-types/bar-y.html#opacity"
+  },
+  "series-types/line": {
+    "seriesType": "Line",
+    "title": "Gradient line",
+    "description": "Apply a gradient to a line and explore it with zoom and a range slider.",
+    "docsUrl": "pages/guides/colors.html#gradients"
+  },
+  "series-types/line-markers": {
+    "seriesType": "Line",
+    "title": "Point markers",
+    "description": "Show point markers and customize their appearance on hover.",
+    "docsUrl": "pages/guides/series-types/line.html#markers"
+  },
+  "series-types/scatter": {
+    "seriesType": "Scatter",
+    "title": "Point clustering",
+    "description": "Group nearby observations into clusters and inspect them on hover.",
+    "docsUrl": "pages/guides/series-types/scatter.html#point-clustering"
+  },
+  "series-types/area": {
+    "seriesType": "Area",
+    "title": "Gradient fill",
+    "description": "Give an area a gradient fill and a separate line color.",
+    "docsUrl": "pages/guides/series-types/area.html#colors"
+  },
+  "series-types/area-range": {
+    "seriesType": "Area range",
+    "title": "Expected value range",
+    "description": "Show the lower and upper bounds of an expected value over time.",
+    "docsUrl": "pages/guides/series-types/area-range.html#example"
+  },
+  "series-types/area-range-with-line": {
+    "seriesType": "Area range",
+    "title": "Range with a forecast line",
+    "description": "Combine an expected range with a line showing the forecast.",
+    "docsUrl": "pages/guides/series-types/area-range.html#combining-with-a-line"
+  },
+  "value-formatting/quarterly-x-axis": {
+    "seriesType": "Line",
+    "title": "Quarterly date labels",
+    "description": "Format axis labels and tooltip headers with quarter and year.",
+    "docsUrl": "pages/guides/value-formatting.html#datetime-format-tokens"
+  },
+  "line-interpolation/monotone": {
+    "seriesType": "Line",
+    "title": "Monotone interpolation",
+    "description": "Smooth a line without introducing extra peaks between points.",
+    "docsUrl": "pages/guides/series-types/line.html#line-interpolation"
+  },
+  "line-interpolation/cardinal": {
+    "seriesType": "Line",
+    "title": "Cardinal interpolation",
+    "description": "Compare how tension changes the shape of a smooth curve.",
+    "docsUrl": "pages/guides/series-types/line.html#line-interpolation"
+  },
+  "data-labels/placement-auto": {
+    "seriesType": "Line",
+    "title": "Automatic label placement",
+    "description": "Find label positions that avoid lines and other labels.",
+    "docsUrl": "pages/guides/series-types/line.html#automatic-placement"
+  },
+  "data-labels/placement-fixed": {
+    "seriesType": "Line",
+    "title": "Fixed label placement",
+    "description": "Place point labels consistently below the line.",
+    "docsUrl": "pages/guides/series-types/line.html#fixed-positions-and-fallback"
+  },
+  "data-labels/placement-fallback-hide": {
+    "seriesType": "Line",
+    "title": "Hide labels that do not fit",
+    "description": "Hide labels when the requested position has no free space.",
+    "docsUrl": "pages/guides/series-types/line.html#fixed-positions-and-fallback"
+  },
+  "series-types/line-basic": {
+    "seriesType": "Line",
+    "title": "Orders over time",
+    "description": "Follow monthly orders with a simple line chart.",
+    "docsUrl": "pages/guides/series-types/line.html#example"
+  },
+  "series-types/area-basic": {
+    "seriesType": "Area",
+    "title": "Active subscriptions",
+    "description": "Show how subscriptions grow over time with a filled area.",
+    "docsUrl": "pages/guides/series-types/area.html#example"
+  },
+  "series-types/bar-x-basic": {
+    "seriesType": "Bar-X",
+    "title": "Quarterly orders",
+    "description": "Compare order counts across quarters.",
+    "docsUrl": "pages/guides/series-types/bar-x.html#example"
+  },
+  "series-types/bar-y-basic": {
+    "seriesType": "Bar-Y",
+    "title": "Orders by category",
+    "description": "Compare product categories using horizontal bars.",
+    "docsUrl": "pages/guides/series-types/bar-y.html#example"
+  },
+  "series-types/scatter-basic": {
+    "seriesType": "Scatter",
+    "title": "Delivery performance",
+    "description": "Explore the relationship between distance and delivery time.",
+    "docsUrl": "pages/guides/series-types/scatter.html#example"
+  },
+  "series-types/heatmap": {
+    "seriesType": "Heatmap",
+    "title": "Customer activity",
+    "description": "Compare activity by weekday and time of day using color.",
+    "docsUrl": "pages/guides/series-types/heatmap.html#example"
+  },
+  "series-types/pie": {
+    "seriesType": "Pie",
+    "title": "Sales channels",
+    "description": "Show each sales channel as a share of the total.",
+    "docsUrl": "pages/guides/series-types/pie.html#example"
+  },
+  "series-types/treemap": {
+    "seriesType": "Treemap",
+    "title": "Storage usage",
+    "description": "Compare hierarchical storage categories by rectangle area.",
+    "docsUrl": "pages/guides/series-types/treemap.html#example"
+  },
+  "series-types/waterfall": {
+    "seriesType": "Waterfall",
+    "title": "Customer growth",
+    "description": "Follow gains and losses in the customer count.",
+    "docsUrl": "pages/guides/series-types/waterfall.html#example"
+  },
+  "series-types/funnel": {
+    "seriesType": "Funnel",
+    "title": "Checkout journey",
+    "description": "Compare how many customers reach each checkout stage.",
+    "docsUrl": "pages/guides/series-types/funnel.html#example"
+  },
+  "series-types/sankey": {
+    "seriesType": "Sankey",
+    "title": "Traffic flow",
+    "description": "Follow the volume moving between connected stages.",
+    "docsUrl": "pages/guides/series-types/sankey.html#example"
+  },
+  "series-types/radar": {
+    "seriesType": "Radar",
+    "title": "Performance comparison",
+    "description": "Compare several metrics on a shared radial chart.",
+    "docsUrl": "pages/guides/series-types/radar.html#example"
+  },
+  "series-types/x-range": {
+    "seriesType": "X-Range",
+    "title": "Project schedule",
+    "description": "Display project tasks as time intervals.",
+    "docsUrl": "pages/guides/series-types/x-range.html#example"
+  }
+}

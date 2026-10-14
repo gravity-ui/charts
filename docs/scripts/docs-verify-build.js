@@ -1,6 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const {verifyExamples} = require('./verify-examples');
+
+const meta = require('../examples/src/charts/meta.json');
+
 const buildDir = path.resolve(process.argv[2] || '../dist-docs');
 
 function getHtmlFiles(dir, files = []) {
@@ -31,9 +35,11 @@ if (!fs.existsSync(buildDir)) {
 
 const missing = new Set();
 let checked = 0;
+const pages = [];
 
 for (const htmlPath of getHtmlFiles(buildDir)) {
     const html = fs.readFileSync(htmlPath, 'utf8');
+    pages.push(html);
     const htmlUrl = new URL(path.relative(buildDir, htmlPath), 'https://docs.local/');
     const baseTag = html.match(/<base\b[^>]*>/i)?.[0];
     const baseUrl = new URL(getAttribute(baseTag || '', 'href') || htmlUrl.href, htmlUrl);
@@ -55,6 +61,8 @@ for (const htmlPath of getHtmlFiles(buildDir)) {
         }
     }
 }
+
+verifyExamples(meta, pages, buildDir);
 
 if (missing.size) {
     console.error(`[docs-verify-build] Missing ${missing.size} local asset(s):`);

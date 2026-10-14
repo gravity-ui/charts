@@ -32,7 +32,7 @@ const data: ChartData = {
     xAxis: {type: 'category', categories: ['A', 'B']},
 };
 
-export function BarXOverlayExample() {
+export default function BarXOverlayExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

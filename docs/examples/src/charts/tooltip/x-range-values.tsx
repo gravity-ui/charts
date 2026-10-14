@@ -20,7 +20,7 @@ const data: ChartData = {
     defaultState: {hoveredPosition: {x: '50%', y: '50%'}},
 };
 
-export function XRangeTooltipValuesExample() {
+export default function XRangeTooltipValuesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

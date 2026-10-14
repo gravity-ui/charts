@@ -31,7 +31,7 @@ const data: ChartData = {
     },
 };
 
-export function DatetimeAxisExample() {
+export default function DatetimeAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

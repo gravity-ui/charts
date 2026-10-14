@@ -30,7 +30,7 @@ const data: ChartData = {
     xAxis: {type: 'category', categories: ['Jan', 'Feb', 'Mar']},
 };
 
-export function BarXSeriesExample() {
+export default function BarXSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -30,7 +30,7 @@ const data: ChartData = {
     ],
 };
 
-export function WaterfallExample() {
+export default function WaterfallExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -30,7 +30,7 @@ const data: ChartData = {
     ],
 };
 
-export function BarYBasicExample() {
+export default function BarYBasicExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

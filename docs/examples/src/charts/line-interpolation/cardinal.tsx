@@ -45,7 +45,7 @@ const data: ChartData = {
     xAxis: {type: 'linear'},
 };
 
-export function LineInterpolationCardinalExample() {
+export default function LineInterpolationCardinalExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

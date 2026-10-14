@@ -28,7 +28,7 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Value'}}],
 };
 
-export function AreaRangeSeriesExample() {
+export default function AreaRangeSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -30,7 +30,7 @@ const data: ChartData = {
     yAxis: [{type: 'linear', min: 0, max: 100}],
 };
 
-export function ScatterSeriesExample() {
+export default function ScatterSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

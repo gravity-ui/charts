@@ -35,7 +35,7 @@ const data: ChartData = {
     },
 };
 
-export function QuarterlyXAxisExample() {
+export default function QuarterlyXAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

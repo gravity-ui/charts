@@ -19,7 +19,7 @@ const data: ChartData = {
     },
 };
 
-export function PieExample() {
+export default function PieExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

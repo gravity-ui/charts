@@ -27,7 +27,7 @@ const data: ChartData = {
     },
 };
 
-export function LinearAxisExample() {
+export default function LinearAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

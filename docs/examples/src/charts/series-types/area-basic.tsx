@@ -32,7 +32,7 @@ const data: ChartData = {
     ],
 };
 
-export function AreaBasicExample() {
+export default function AreaBasicExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

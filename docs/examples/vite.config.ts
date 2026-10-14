@@ -3,8 +3,20 @@ import {resolve} from 'path';
 import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 
+import {verifyExampleFiles} from '../scripts/verify-examples';
+
+import meta from './src/charts/meta.json';
+
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        {
+            name: 'verify-example-files',
+            buildStart() {
+                verifyExampleFiles(meta, resolve(__dirname, 'src/charts'));
+            },
+        },
+    ],
     build: {
         outDir: resolve(__dirname, 'dist'),
         cssCodeSplit: false,

@@ -30,7 +30,7 @@ const data: ChartData = {
     ],
 };
 
-export function BarXBasicExample() {
+export default function BarXBasicExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

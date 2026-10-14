@@ -37,7 +37,7 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Revenue'}}],
 };
 
-export function LineMarkersExample() {
+export default function LineMarkersExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

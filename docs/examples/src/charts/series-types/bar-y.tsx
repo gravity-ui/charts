@@ -30,7 +30,7 @@ const data: ChartData = {
     yAxis: [{type: 'category', categories: ['Jan', 'Feb', 'Mar']}],
 };
 
-export function BarYSeriesExample() {
+export default function BarYSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -4,7 +4,9 @@ import {createRoot} from 'react-dom/client';
 import type {Root} from 'react-dom/client';
 
 import {ChartPlayground} from './ChartPlayground';
+import {ExamplesGallery} from './ExamplesGallery';
 import {registry} from './charts/registry';
+import {OverviewDashboardExample} from './overview/dashboard';
 
 import '@gravity-ui/uikit/styles/fonts.scss';
 import '@gravity-ui/uikit/styles/styles.scss';
@@ -16,6 +18,20 @@ const MOUNTED_ATTR = 'data-chart-mounted';
 const mountedRoots = new Map<HTMLElement, Root>();
 
 function mountExamples() {
+    document.querySelectorAll<HTMLElement>('[data-chart-dashboard]').forEach((el) => {
+        if (el.getAttribute(MOUNTED_ATTR)) return;
+        el.setAttribute(MOUNTED_ATTR, 'true');
+        const root = createRoot(el);
+        mountedRoots.set(el, root);
+        root.render(<ChartPlayground Component={OverviewDashboardExample} />);
+    });
+    document.querySelectorAll<HTMLElement>('[data-chart-examples]').forEach((el) => {
+        if (el.getAttribute(MOUNTED_ATTR)) return;
+        el.setAttribute(MOUNTED_ATTR, 'true');
+        const root = createRoot(el);
+        mountedRoots.set(el, root);
+        root.render(<ExamplesGallery />);
+    });
     document.querySelectorAll<HTMLElement>('[data-chart-example]').forEach((el) => {
         if (el.getAttribute(MOUNTED_ATTR)) return;
         el.setAttribute(MOUNTED_ATTR, 'true');

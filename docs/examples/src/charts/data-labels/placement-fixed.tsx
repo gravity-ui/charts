@@ -21,7 +21,7 @@ const data: ChartData = {
     },
 };
 
-export function DataLabelsPlacementFixedExample() {
+export default function DataLabelsPlacementFixedExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

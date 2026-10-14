@@ -32,6 +32,7 @@ type View = 'chart' | 'code';
 interface Props {
     code?: string;
     Component: () => React.ReactElement;
+    compact?: boolean;
 }
 
 // --- Singleton theme manager ---
@@ -60,7 +61,7 @@ function initGlobalObserver() {
     });
 }
 
-export function ChartPlayground({code, Component}: Props) {
+export function ChartPlayground({code, Component, compact = false}: Props) {
     const [view, setView] = React.useState<View>('chart');
     const [isDark, setIsDark] = React.useState(detectDarkTheme);
     const [highlighted, setHighlighted] = React.useState('');
@@ -81,9 +82,9 @@ export function ChartPlayground({code, Component}: Props) {
         if (code !== undefined) monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
     }, [code, isDark]);
 
-    // Colorize: only re-run when code changes, not on every theme toggle
+    // Only highlight code when its tab is opened, not while browsing chart previews.
     React.useEffect(() => {
-        if (code === undefined) return undefined;
+        if (code === undefined || view !== 'code') return undefined;
         let cancelled = false;
         monaco.editor.colorize(code, 'typescript', {}).then((html: string) => {
             if (!cancelled) setHighlighted(html);
@@ -91,7 +92,7 @@ export function ChartPlayground({code, Component}: Props) {
         return () => {
             cancelled = true;
         };
-    }, [code]);
+    }, [code, view]);
 
     return (
         <ThemeProvider theme={isDark ? 'dark' : 'light'}>
@@ -100,10 +101,10 @@ export function ChartPlayground({code, Component}: Props) {
             ) : (
                 <div
                     style={{
-                        border: '1px solid var(--g-color-line-generic)',
-                        borderRadius: '8px',
+                        border: compact ? undefined : '1px solid var(--g-color-line-generic)',
+                        borderRadius: compact ? undefined : '8px',
                         overflow: 'hidden',
-                        margin: '24px 0',
+                        margin: compact ? 0 : '24px 0',
                     }}
                 >
                     <TabProvider value={view} onUpdate={(v) => setView(v as View)}>
@@ -113,7 +114,12 @@ export function ChartPlayground({code, Component}: Props) {
                         </TabList>
 
                         <TabPanel value="chart">
-                            <div style={{height: 320, padding: '16px'}}>
+                            <div
+                                style={{
+                                    height: compact ? 240 : 320,
+                                    padding: compact ? '8px' : '16px',
+                                }}
+                            >
                                 <Component />
                             </div>
                         </TabPanel>
@@ -127,6 +133,8 @@ export function ChartPlayground({code, Component}: Props) {
                                     fontSize: '13px',
                                     lineHeight: '1.6',
                                     backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+                                    height: compact ? 256 : undefined,
+                                    boxSizing: 'border-box',
                                 }}
                                 // Monaco's colorize() escapes HTML entities in the code
                                 // content, so its output is safe to inject.

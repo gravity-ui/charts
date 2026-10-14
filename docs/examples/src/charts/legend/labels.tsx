@@ -20,7 +20,7 @@ const data = {
     },
 } satisfies ChartData;
 
-export function LegendLabelsExample() {
+export default function LegendLabelsExample() {
     const [updated, setUpdated] = React.useState(false);
     const chartData: ChartData = {
         ...data,

@@ -31,4 +31,4 @@ See [Series types](guides/series-types/index.md) for configuring and combining s
 
 Select a chart title to open its series guide and runnable example.
 
-<div data-chart-example="overview/dashboard"></div>
+<div data-chart-dashboard></div>

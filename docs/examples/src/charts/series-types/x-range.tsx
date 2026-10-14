@@ -30,7 +30,7 @@ const data: ChartData = {
     ],
 };
 
-export function XRangeExample() {
+export default function XRangeExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

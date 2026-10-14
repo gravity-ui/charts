@@ -32,7 +32,7 @@ const data: ChartData = {
     yAxis: [{type: 'category', categories: ['A', 'B']}],
 };
 
-export function BarYOverlayExample() {
+export default function BarYOverlayExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

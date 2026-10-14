@@ -31,7 +31,7 @@ const data: ChartData = {
     ],
 };
 
-export function LineBasicExample() {
+export default function LineBasicExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

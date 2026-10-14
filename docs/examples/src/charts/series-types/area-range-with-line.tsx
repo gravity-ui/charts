@@ -40,7 +40,7 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Value'}}],
 };
 
-export function AreaRangeWithLineExample() {
+export default function AreaRangeWithLineExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -27,7 +27,7 @@ const data: ChartData = {
     },
 };
 
-export function RadarExample() {
+export default function RadarExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -38,7 +38,7 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Revenue'}}],
 };
 
-export function AreaSeriesExample() {
+export default function AreaSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

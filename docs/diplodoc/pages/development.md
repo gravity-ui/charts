@@ -53,6 +53,14 @@ If you need to update the reference screenshots (e.g. after intentional UI chang
 npm run playwright:docker:update
 ```
 
+## Documentation examples
+
+Add a live example as a `.tsx` file under `docs/examples/src/charts`, exporting its component as the default export. Register it once in `docs/examples/src/charts/meta.json`, using the file path without `.tsx` as its ID. Provide a title, short description, primary series type for grouping, and a `docsUrl` pointing to the built guide page and section anchor, such as `pages/guides/legend.html#item-layout`.
+
+Embed it in a guide using `<div data-chart-example="your/example-id"></div>`. The [Examples catalog](./examples.md) automatically reuses the same component and source code. An example combining series types belongs to one primary group.
+
+Run `npm run docs:build` to check registration, documentation coverage, and guide links.
+
 ## Contributing
 
 Please refer to the [contributing document](https://github.com/gravity-ui/charts/blob/main/CONTRIBUTING.md) before submitting a pull request.

@@ -35,7 +35,7 @@ const data: ChartData = {
     },
 };
 
-export function LegendWrappingExample() {
+export default function LegendWrappingExample() {
     return (
         <div
             style={{

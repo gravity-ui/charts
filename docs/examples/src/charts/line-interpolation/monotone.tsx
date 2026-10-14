@@ -36,7 +36,7 @@ const data: ChartData = {
     xAxis: {type: 'linear'},
 };
 
-export function LineInterpolationMonotoneExample() {
+export default function LineInterpolationMonotoneExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

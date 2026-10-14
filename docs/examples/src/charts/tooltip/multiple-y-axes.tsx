@@ -40,7 +40,7 @@ const data: ChartData = {
     },
 };
 
-export function MultipleYAxesTooltipExample() {
+export default function MultipleYAxesTooltipExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

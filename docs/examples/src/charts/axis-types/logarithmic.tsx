@@ -27,7 +27,7 @@ const data: ChartData = {
     ],
 };
 
-export function LogarithmicAxisExample() {
+export default function LogarithmicAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

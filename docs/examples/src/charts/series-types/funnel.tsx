@@ -22,7 +22,7 @@ const data: ChartData = {
     legend: {enabled: false},
 };
 
-export function FunnelExample() {
+export default function FunnelExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

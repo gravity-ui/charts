@@ -31,7 +31,7 @@ const data: ChartData = {
     yAxis: [{min: 0, max: 80}],
 };
 
-export function DataLabelsPlacementAutoExample() {
+export default function DataLabelsPlacementAutoExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

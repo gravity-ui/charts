@@ -1,15 +1,15 @@
 import React from 'react';
 
-import {AreaBasicExample} from '../series-types/area-basic';
-import {BarXBasicExample} from '../series-types/bar-x-basic';
-import {BarYBasicExample} from '../series-types/bar-y-basic';
-import {FunnelExample} from '../series-types/funnel';
-import {HeatmapExample} from '../series-types/heatmap';
-import {LineBasicExample} from '../series-types/line-basic';
-import {PieExample} from '../series-types/pie';
-import {ScatterBasicExample} from '../series-types/scatter-basic';
-import {TreemapExample} from '../series-types/treemap';
-import {XRangeExample} from '../series-types/x-range';
+import AreaBasicExample from '../charts/series-types/area-basic';
+import BarXBasicExample from '../charts/series-types/bar-x-basic';
+import BarYBasicExample from '../charts/series-types/bar-y-basic';
+import FunnelExample from '../charts/series-types/funnel';
+import HeatmapExample from '../charts/series-types/heatmap';
+import LineBasicExample from '../charts/series-types/line-basic';
+import PieExample from '../charts/series-types/pie';
+import ScatterBasicExample from '../charts/series-types/scatter-basic';
+import TreemapExample from '../charts/series-types/treemap';
+import XRangeExample from '../charts/series-types/x-range';
 
 import './dashboard.scss';
 
@@ -112,7 +112,7 @@ export function OverviewDashboardExample() {
                 <div className="docs-dashboard__title">Store overview</div>
                 <div className="docs-dashboard__subtitle">
                     A selection of chart types with sample data.{' '}
-                    <a href="pages/overview.html#chart-types">See all chart types.</a>
+                    <a href="pages/examples.html">See all examples.</a>
                 </div>
             </div>
             <div className="docs-dashboard__grid">

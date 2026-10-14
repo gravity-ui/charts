@@ -41,7 +41,7 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Revenue'}}],
 };
 
-export function LineSeriesExample() {
+export default function LineSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

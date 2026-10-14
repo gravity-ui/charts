@@ -2,7 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {WaterfallHeaderTooltipExample} from '../../docs/examples/src/charts/tooltip/waterfall-header';
+import WaterfallHeaderTooltipExample from '../../docs/examples/src/charts/tooltip/waterfall-header';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     waterfallBasicData,

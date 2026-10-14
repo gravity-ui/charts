@@ -29,7 +29,7 @@ const data: ChartData = {
     },
 };
 
-export function VerticalLegendExample() {
+export default function VerticalLegendExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

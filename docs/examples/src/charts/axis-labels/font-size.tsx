@@ -41,7 +41,7 @@ const data: ChartData = {
     ],
 };
 
-export function AxisLabelFontSizeExample() {
+export default function AxisLabelFontSizeExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

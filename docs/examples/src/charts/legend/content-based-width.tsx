@@ -24,7 +24,7 @@ const data: ChartData = {
     },
 };
 
-export function ContentBasedLegendExample() {
+export default function ContentBasedLegendExample() {
     return (
         <div
             style={{

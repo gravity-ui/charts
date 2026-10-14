@@ -27,7 +27,7 @@ const data: ChartData = {
     legend: {enabled: false},
 };
 
-export function TreemapExample() {
+export default function TreemapExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

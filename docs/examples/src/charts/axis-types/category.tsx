@@ -27,7 +27,7 @@ const data: ChartData = {
     },
 };
 
-export function CategoryAxisExample() {
+export default function CategoryAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

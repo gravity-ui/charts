@@ -26,7 +26,7 @@ const data: ChartData = {
     defaultState: {hoveredPosition: {x: '20%', y: '50%'}},
 };
 
-export function WaterfallHeaderTooltipExample() {
+export default function WaterfallHeaderTooltipExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

@@ -21,7 +21,7 @@ const data: ChartData = {
     },
 };
 
-export function DataLabelsPlacementFallbackHideExample() {
+export default function DataLabelsPlacementFallbackHideExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

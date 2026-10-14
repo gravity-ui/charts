@@ -32,7 +32,7 @@ const data: ChartData = {
     ],
 };
 
-export function ScatterBasicExample() {
+export default function ScatterBasicExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

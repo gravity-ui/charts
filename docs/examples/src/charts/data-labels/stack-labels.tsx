@@ -51,7 +51,7 @@ const data: ChartData = {
     },
 };
 
-export function StackLabelsExample() {
+export default function StackLabelsExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

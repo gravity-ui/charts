@@ -47,7 +47,7 @@ const data: ChartData = {
     legend: {enabled: false},
 };
 
-export function SankeyExample() {
+export default function SankeyExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />

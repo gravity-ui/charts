@@ -30,7 +30,7 @@ const data: ChartData = {
     legend: {enabled: true, type: 'continuous', colorScale: {colors, domain, stops: [0, 1]}},
 };
 
-export function HeatmapExample() {
+export default function HeatmapExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
