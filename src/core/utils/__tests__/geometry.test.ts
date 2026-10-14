@@ -3,7 +3,7 @@ import {
     getDistanceToPolygon,
     getDistanceToRect,
     getDistanceToSegment,
-} from '../tooltip-helpers';
+} from '../geometry';
 
 describe('getDistanceToSegment', () => {
     test.each<[[number, number], number]>([
@@ -70,7 +70,19 @@ describe('getDistanceToBand', () => {
         expect(getDistanceToBand({point: [20, 80], columns})).toBe(10);
     });
 
-    test('measures a single column without neighbours', () => {
-        expect(getDistanceToBand({point: [34, 50], columns: [columns[3]]})).toBe(4);
+    test('does not fill an isolated column', () => {
+        expect(getDistanceToBand({point: [30, 50], columns: [columns[3]]})).toBe(Infinity);
+    });
+
+    test('does not fill a band with zero height', () => {
+        expect(
+            getDistanceToBand({
+                point: [5, 0],
+                columns: [
+                    {x: 0, y0: 0, y1: 0},
+                    {x: 10, y0: 0, y1: 0},
+                ],
+            }),
+        ).toBe(Infinity);
     });
 });

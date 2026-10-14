@@ -1,34 +1,50 @@
 import {Delaunay} from 'd3-delaunay';
 
+import {getDistanceToSymbol} from '../../utils/symbol-geometry';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
-import {getMarkerBounds} from './cluster';
 import type {PreparedScatterData} from './types';
 
 export function getTooltipData(
     args: GetTooltipDataArgs<PreparedScatterData>,
 ): GetTooltipDataResult {
-    const {data, position} = args;
-    const [pointerX, pointerY] = position;
+    const {data, position, measureDistance} = args;
+    let closestPoint: PreparedScatterData | undefined;
+    let distance: number | undefined;
 
-    const delaunay = Delaunay.from(
-        data,
-        (d) => d.point.x,
-        (d) => d.point.y,
-    );
-    const closestPoint = data[delaunay.find(pointerX, pointerY)];
+    if (measureDistance) {
+        let closestDistance = Infinity;
+        for (const marker of data) {
+            if (marker.clipped) {
+                continue;
+            }
+            const {point} = marker;
+            const normal = point.series.marker.states.normal;
+            const markerDistance = getDistanceToSymbol({
+                point: position,
+                center: [point.x, point.y],
+                symbolType: normal.symbol,
+                radius: (point.data.radius ?? normal.radius) + normal.borderWidth,
+                strokeWidth: normal.borderWidth,
+            });
+            if (markerDistance < closestDistance) {
+                closestDistance = markerDistance;
+                closestPoint = marker;
+            }
+        }
+        distance = closestDistance;
+    } else {
+        const delaunay = Delaunay.from(
+            data,
+            (d) => d.point.x,
+            (d) => d.point.y,
+        );
+        closestPoint = data[delaunay.find(...position)];
+    }
 
     if (!closestPoint) {
         return {chunks: []};
     }
-
-    // Delaunay finds the nearest marker center, which matches the nearest edge
-    // up to the difference of marker sizes.
-    const {x, y} = closestPoint.point;
-    const distance = Math.max(
-        0,
-        Math.hypot(pointerX - x, pointerY - y) - getMarkerBounds(closestPoint).radius,
-    );
 
     return {
         chunks: [

@@ -1,6 +1,5 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
-import omit from 'lodash/omit';
 
 import type {TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
@@ -9,18 +8,18 @@ import type {TooltipItemData} from '../shapes/types';
 import {getClosestPointsByXValue, isPointTooltipEnabled} from './tooltip-helpers';
 import type {ShapePoint, TooltipCandidate} from './tooltip-helpers';
 
-type GetClosestPointsArgs = {
+interface GetClosestPointsArgs {
     position: [number, number];
     shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
     /** Index of the render layer of each series by series id; a higher index is drawn above. */
     layerIndexes: Map<string, number>;
-};
+}
 
 interface Contender {
     chunk: TooltipCandidate;
-    distance: number;
+    distance?: number;
     layer: number;
 }
 
@@ -38,7 +37,13 @@ function getLayer(layerIndexes: Map<string, number>, series: object) {
     return layerIndexes.get(get(series, 'id', '')) ?? -1;
 }
 
-function isCloser(distance: number, layer: number, other: Contender) {
+function isCloser(distance: number | undefined, layer: number, other: Contender) {
+    if (distance === undefined) {
+        return false;
+    }
+    if (other.distance === undefined) {
+        return true;
+    }
     return distance < other.distance || (distance === other.distance && layer > other.layer);
 }
 
@@ -55,11 +60,20 @@ function resolveClosest(candidates: TooltipCandidate[], contenders: Contender[])
         }
     }
 
+    if (winner && !candidates.includes(winner.chunk)) {
+        const index = candidates.findIndex(
+            (chunk) => get(chunk.series, 'id') === get(winner.chunk.series, 'id'),
+        );
+        if (index === -1) {
+            candidates.push(winner.chunk);
+        } else {
+            candidates[index] = winner.chunk;
+        }
+    }
+
     return candidates.map((candidate) => {
-        const chunk = omit(candidate, 'distance') as TooltipDataChunk;
-        return candidate.closest && candidate !== winner?.chunk
-            ? {...chunk, closest: false}
-            : chunk;
+        const {distance: _distance, ...chunk} = candidate;
+        return {...chunk, closest: candidate === winner?.chunk};
     });
 }
 
@@ -114,24 +128,21 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
     if (xLookupPoints.length) {
         const chunks = getClosestPointsByXValue(pointerX, pointerY, xLookupPoints);
-        result.push(...(chunks as TooltipCandidate[]));
-        const closest = chunks.find((chunk) => chunk.closest);
-        if (closest) {
-            // The lookup picks a point by its X column, not by the shape under the pointer,
-            // so it competes with the nearest lookup shape.
-            const nearest: Contender = {
-                chunk: closest as TooltipCandidate,
-                distance: Infinity,
-                layer: -1,
-            };
-            for (const p of xLookupPoints) {
-                const layer = getLayer(layerIndexes, p.series);
-                if (isCloser(p.distance, layer, nearest)) {
-                    nearest.distance = p.distance;
-                    nearest.layer = layer;
-                }
+        result.push(...chunks);
+        const lookupGroups = measureDistance
+            ? Object.values(groupBy(xLookupPoints, (point) => get(point.series, 'id')))
+            : [xLookupPoints];
+        for (const points of lookupGroups) {
+            const closest = getClosestPointsByXValue(pointerX, pointerY, points).find(
+                (chunk) => chunk.closest,
+            );
+            if (closest) {
+                contenders.push({
+                    chunk: closest,
+                    distance: closest.distance,
+                    layer: getLayer(layerIndexes, closest.series),
+                });
             }
-            contenders.push(nearest);
         }
     }
 

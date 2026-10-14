@@ -8,7 +8,7 @@ import type {DashStyle, LineCap, LineJoin} from '../../constants';
 import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '../../series/types';
 import type {GradientShapeData, MarkerItem, SeriesShapeData} from '../types';
 
-import type {PlacementSegment} from './auto-placement';
+import type {LineGeometry} from './geometry';
 
 export interface PointData {
     annotation?: PreparedAnnotation;
@@ -28,8 +28,7 @@ export interface PreparedLineData
     id: string;
     points: PointData[];
     markers: MarkerItem[];
-    /** Straight pieces of the drawn line (curves flattened); used to measure the pointer distance. */
-    segments: PlacementSegment[];
+    getGeometry: () => LineGeometry;
     series: PreparedLineSeries;
     hovered: boolean;
     active: boolean;

@@ -3,7 +3,7 @@ import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
 
-import type {TooltipDataChunk, TooltipDataChunkScatter} from '../../../types';
+import type {TooltipDataChunk} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
 import {
@@ -54,10 +54,11 @@ export function renderScatter(
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;
 
-    function handleShapeHover(data?: Array<TooltipDataChunkScatter & TooltipDataChunk>) {
+    function handleShapeHover(data?: TooltipDataChunk[]) {
         const selected = data?.find((d) => d.series.type === 'scatter' && d.closest);
         const selectedDataItem = selected?.data;
-        const selectedSeriesId = selected?.series?.id;
+        const selectedSeriesId =
+            selected?.series.type === 'scatter' ? selected.series.id : undefined;
 
         selection.datum((d, index, list) => {
             const elementSelection = select<BaseType, MarkerData>(list[index]);

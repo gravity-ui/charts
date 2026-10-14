@@ -1,27 +1,32 @@
+import {max, min} from 'd3-array';
 import groupBy from 'lodash/groupBy';
 
 import type {BarXSeries} from '../../../types';
-import {getDistanceToRect} from '../../utils/tooltip-helpers';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
     ShapePoint,
 } from '../../utils/tooltip-helpers';
+import {getDistanceToRoundedRect} from '../rect-geometry';
 
 import type {PreparedBarXData} from './types';
+import {getBarXRect} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetTooltipDataResult {
-    const {data, position} = args;
+    const {data, position, measureDistance} = args;
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
     const xLookupPoints: ShapePoint[] = [];
 
     for (const group of Object.values(barXGroups)) {
-        const groupCenterX = group.reduce((sum, d) => sum + d.x + d.width / 2, 0) / group.length;
+        const groupCenterX =
+            ((min(group, (d) => d.x) ?? 0) + (max(group, (d) => d.x + d.width) ?? 0)) / 2;
         for (const d of group) {
             xLookupPoints.push({
                 data: d.data,
-                distance: getDistanceToRect({point: position, ...d}),
+                distance: measureDistance
+                    ? getDistanceToRoundedRect({point: position, ...getBarXRect(d)})
+                    : undefined,
                 percentage: d.percentage,
                 series: d.series as BarXSeries,
                 x: groupCenterX,

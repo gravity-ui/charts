@@ -5,6 +5,7 @@ import get from 'lodash/get';
 import {block} from '../../utils';
 import {SymbolType} from '../constants';
 import {getSymbol} from '../utils';
+import {getDistanceToSymbol} from '../utils/symbol-geometry';
 
 import type {HoveredShapeData, MarkerItem} from './types';
 
@@ -21,14 +22,20 @@ export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): stri
     return point.fill ?? point.color ?? seriesColor;
 }
 
-/** Pixel distance from the pointer to the nearest visible marker; `Infinity` without markers. */
 export function getDistanceToMarkers(markers: MarkerItem[], point: [number, number]): number {
-    const [pointerX, pointerY] = point;
     let distance = Infinity;
     for (const m of markers) {
         if (!m.clipped) {
-            const radius = m.radius + m.strokeWidth / 2;
-            distance = Math.min(distance, Math.hypot(pointerX - m.cx, pointerY - m.cy) - radius);
+            distance = Math.min(
+                distance,
+                getDistanceToSymbol({
+                    point,
+                    center: [m.cx, m.cy],
+                    symbolType: m.symbolType,
+                    radius: m.radius + m.strokeWidth,
+                    strokeWidth: m.strokeWidth,
+                }),
+            );
         }
     }
     return Math.max(0, distance);
@@ -164,7 +171,7 @@ export function selectMarkerSymbol<T>(parentSelection: Selection<BaseType, T, nu
 export function renderMarkers(
     container: Selection<SVGGElement, unknown, null, undefined>,
     markers: MarkerItem[],
-): void {
+) {
     container.selectAll('*').remove();
 
     const selection = container
@@ -183,6 +190,8 @@ export function renderMarkers(
         .attr('fill', (d) => d.fill)
         .attr('stroke', (d) => d.stroke)
         .attr('stroke-width', (d) => d.strokeWidth);
+
+    return selection;
 }
 
 export function renderHoverMarkers(
@@ -220,7 +229,13 @@ interface HoverMarkerSeries {
     marker: {
         states: {
             normal: {enabled: boolean; symbol: `${SymbolType}`};
-            hover: {enabled: boolean; radius: number; borderColor: string; borderWidth: number};
+            hover: {
+                enabled: boolean;
+                enabledForNormal?: boolean;
+                radius: number;
+                borderColor: string;
+                borderWidth: number;
+            };
         };
     };
 }
@@ -228,14 +243,23 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
+    isOutsideBounds?: (x: number, y: number) => boolean,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
-    if (normalState.enabled || !hoverState.enabled) return () => [];
+    if (!hoverState.enabled || (normalState.enabled && hoverState.enabledForNormal === false)) {
+        return () => [];
+    }
 
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
-        if (p.x !== null && p.y !== null && !p.hiddenInLine) {
+        if (
+            hoverState.enabledForNormal === false &&
+            get(p.data, 'marker.states.normal.enabled', false)
+        ) {
+            continue;
+        }
+        if (p.x !== null && p.y !== null && !p.hiddenInLine && !isOutsideBounds?.(p.x, p.y)) {
             const dataPoints = pointsByData.get(p.data) ?? [];
             dataPoints.push(p);
             pointsByData.set(p.data, dataPoints);

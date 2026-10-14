@@ -594,7 +594,7 @@ export async function prepareAreaData(
                 data: point.data,
             });
         }
-        item.getHoverMarkers = buildHoverMarkerGetter(points, s);
+        item.getHoverMarkers = buildHoverMarkerGetter(points, s, isOutsideBounds);
         if (!isRangeSlider && shouldPrepareSeriesDataLabels(s)) {
             const labels = await preparePointDataLabels({
                 series: s,

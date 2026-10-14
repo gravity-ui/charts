@@ -2,21 +2,17 @@ import {bisector, sort} from 'd3-array';
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {ChartSeries, ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
+import type {MeaningfulAny, TooltipDataChunk} from '../../types';
 
-export interface ShapePoint {
+interface LookupGeometry {
     x: number;
     y0: number;
     y1: number;
-    color?: string;
-    percentage?: number;
-    data: ChartSeriesData;
-    series: ChartSeries;
-    subTotal?: number;
     sourceX?: number;
-    /** Pixel distance from the pointer to the drawn shape of this point; `0` when the pointer is inside it. */
-    distance: number;
+    color?: string;
 }
+
+export type ShapePoint = TooltipCandidate & LookupGeometry;
 
 /**
  * Tooltip chunk produced by a series plugin, together with the pixel distance from the
@@ -24,7 +20,7 @@ export interface ShapePoint {
  * The distance is used to pick a single active chunk across series types and is stripped
  * before the chunks reach public callbacks.
  */
-export type TooltipCandidate = TooltipDataChunk & {distance: number};
+export type TooltipCandidate = TooltipDataChunk & {distance?: number};
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
     data: TShapeData[];
@@ -33,7 +29,7 @@ export interface GetTooltipDataArgs<TShapeData = unknown> {
     boundsHeight: number;
     /**
      * `false` when no other series type competes for the pointer, so `distance` is not
-     * compared and the plugin may skip measuring it and report `0`.
+     * compared and the plugin may skip measuring it and leave it undefined.
      */
     measureDistance: boolean;
 }
@@ -165,108 +161,4 @@ export function getRadius(args: {pointer: [number, number]; center: [number, num
     const x = pointer[0] - center[0];
     const y = pointer[1] - center[1];
     return Math.sqrt(x * x + y * y);
-}
-
-export function getDistanceToSegment(args: {
-    point: [number, number];
-    start: [number, number];
-    end: [number, number];
-}) {
-    const {
-        point: [px, py],
-        start: [x1, y1],
-        end: [x2, y2],
-    } = args;
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const lengthSquared = dx * dx + dy * dy;
-    const t =
-        lengthSquared === 0
-            ? 0
-            : Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSquared));
-    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
-}
-
-export function getDistanceToRect(args: {
-    point: [number, number];
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}) {
-    const {
-        point: [px, py],
-        x,
-        y,
-        width,
-        height,
-    } = args;
-    const dx = Math.max(Math.min(x, x + width) - px, 0, px - Math.max(x, x + width));
-    const dy = Math.max(Math.min(y, y + height) - py, 0, py - Math.max(y, y + height));
-    return Math.hypot(dx, dy);
-}
-
-/** Distance to a simple polygon given by its vertices; `0` when the point is inside. */
-export function getDistanceToPolygon(args: {
-    point: [number, number];
-    vertices: [number, number][];
-}) {
-    const {point, vertices} = args;
-    const [px, py] = point;
-    let inside = false;
-    let distance = Infinity;
-
-    for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-        const [xi, yi] = vertices[i];
-        const [xj, yj] = vertices[j];
-        if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
-            inside = !inside;
-        }
-        distance = Math.min(
-            distance,
-            getDistanceToSegment({point, start: vertices[j], end: vertices[i]}),
-        );
-    }
-
-    return inside ? 0 : distance;
-}
-
-/** A column of a filled band; `null` breaks the band. */
-export type BandColumn = {x: number; y0: number; y1: number} | null;
-
-/**
- * Distance to a band filled between `y0` and `y1` and linearly interpolated between
- * adjacent columns; `null` columns break the band. `0` when the point is inside.
- */
-export function getDistanceToBand(args: {point: [number, number]; columns: BandColumn[]}) {
-    const {point, columns} = args;
-    let distance = Infinity;
-
-    for (let i = 0; i < columns.length && distance > 0; i++) {
-        const column = columns[i];
-        if (!column) {
-            continue;
-        }
-        distance = Math.min(
-            distance,
-            getDistanceToSegment({point, start: [column.x, column.y0], end: [column.x, column.y1]}),
-        );
-        const prev = columns[i - 1];
-        if (prev) {
-            distance = Math.min(
-                distance,
-                getDistanceToPolygon({
-                    point,
-                    vertices: [
-                        [prev.x, prev.y0],
-                        [column.x, column.y0],
-                        [column.x, column.y1],
-                        [prev.x, prev.y1],
-                    ],
-                }),
-            );
-        }
-    }
-
-    return distance;
 }

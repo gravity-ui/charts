@@ -169,6 +169,13 @@ export interface SeriesPlugin<
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
     /** Axis-domain contributions for a point; return [] to exclude it. Omitted axes use the default extraction. */
     getAxisDomainValues?: SeriesAxisDomainValues<T>;
+    /**
+     * Selects points contributing to stacked axis domains from a raw or prepared series.
+     * Defaults to all points; contributions of each sign are summed separately.
+     * Receives no axis context, so duplicate detection uses raw coordinates and cannot
+     * match category indices to category names. Must not mutate the series or its data.
+     */
+    getStackedDomainData?(series: T): T['data'];
     /** Computes shape data (geometry, labels, markers) once per render. */
     prepareShapeData(
         args: PrepareShapeDataArgs,
@@ -189,10 +196,11 @@ export interface SeriesPlugin<
     tooltip: {
         /**
          * Returns tooltip data for a given pointer position and prepared series.
-         * Every returned chunk and lookup point must set `distance`: the pixel distance from
-         * the pointer to its drawn shape, `0` when the pointer is inside it. In mixed charts
-         * only the `closest` chunk with the smallest distance stays `closest`. When
-         * `measureDistance` is `false`, the distance is not compared and may be `0`.
+         * A closest chunk or lookup contender supplies `distance`: the pixel distance from
+         * the pointer to its drawn shape, `0` when the pointer is inside it. Other rows may
+         * omit it. In mixed charts only the contender with the smallest distance stays
+         * `closest`. When
+         * `measureDistance` is `false`, the distance is not compared and may be undefined.
          */
         prepareData: GetTooltipDataFn;
         /**

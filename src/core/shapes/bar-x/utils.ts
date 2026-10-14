@@ -2,17 +2,29 @@ import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
 
-export function getBarXPaths(d: PreparedBarXData) {
+export function getBarXRect(
+    d: Pick<
+        PreparedBarXData,
+        'x' | 'y' | 'width' | 'height' | 'extendsUp' | 'valueEndPadding' | 'isStackEnd'
+    > & {series: Pick<PreparedBarXData['series'], 'borderRadius'>},
+) {
     const y = d.y - (d.extendsUp ? d.valueEndPadding : 0);
     const height = d.height + d.valueEndPadding;
     const radius = d.isStackEnd ? Math.min(height, d.width / 2, d.series.borderRadius) : 0;
-    const outer = getRectPath({
+    return {
         x: d.x,
         y,
         width: d.width,
         height,
         borderRadius: d.extendsUp ? [radius, radius, 0, 0] : [0, 0, radius, radius],
-    }).toString();
+    };
+}
+
+export function getBarXPaths(d: PreparedBarXData) {
+    const rect = getBarXRect(d);
+    const {y, height} = rect;
+    const radius = Math.max(...rect.borderRadius);
+    const outer = getRectPath(rect).toString();
 
     if (!d.borderWidth || d.height <= 2 * d.borderWidth) {
         return {fill: outer, border: ''};

@@ -13,11 +13,11 @@ import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '../utils';
 
 import type {PlacementRect, PlacementSegment} from './auto-placement';
 import {
-    getLineSegments,
     getObstacleRectsFromLayers,
     needsPlacementChecks,
     placeLineDataLabels,
 } from './auto-placement';
+import {createLineGeometryGetter, getLineSegments} from './geometry';
 import type {PointData, PreparedLineData} from './types';
 
 function isLabeledLineLayer(layer: ShapeLabels): boolean {
@@ -87,7 +87,11 @@ export function projectLineData(args: Args): PreparedLineData[] {
             points,
             gradientBBox: s.gradient ? getGradientBBox(points) : null,
             markers: [],
-            segments: [],
+            getGeometry: createLineGeometryGetter({
+                points,
+                lineWidth: (isRangeSlider ? s.rangeSlider.lineWidth : undefined) ?? s.lineWidth,
+                curveFactory: getLineCurveFactory(s, args.getCurveFactory),
+            }),
             annotations: [],
             getHoverMarkers: () => [],
             svgLabels: [],
@@ -180,16 +184,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
                 data: point.data,
             });
         }
-        item.getHoverMarkers = buildHoverMarkerGetter(points, s);
-        if (!isRangeSlider) {
-            item.segments = getLineSegments([
-                {
-                    curveFactory: getLineCurveFactory(s, getCurveFactory),
-                    lineWidth: item.lineWidth,
-                    points,
-                },
-            ]);
-        }
+        item.getHoverMarkers = buildHoverMarkerGetter(points, s, isOutsideBounds);
     }
 
     const labeled = isRangeSlider ? [] : acc.filter((d) => d.series.dataLabels.enabled);
@@ -255,7 +250,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
             if (needSegments) {
                 segments = seriesWithPoints.flatMap(
                     (d) =>
-                        ownData.get(d.series.id)?.segments ??
+                        ownData.get(d.series.id)?.getGeometry().segments ??
                         getLineSegments([
                             {
                                 curveFactory: getLineCurveFactory(d.series, getCurveFactory),

@@ -1,17 +1,19 @@
 import {bisector, sort} from 'd3-array';
 
 import type {BarYSeries} from '../../../types';
-import {getDistanceToRect, isPointTooltipEnabled} from '../../utils/tooltip-helpers';
+import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
     TooltipCandidate,
 } from '../../utils/tooltip-helpers';
+import {getDistanceToRoundedRect} from '../rect-geometry';
 
 import type {PreparedBarYData} from './types';
+import {getBarYOuterRect} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
-    const {data, position} = args;
+    const {data, position, measureDistance} = args;
     const [pointerX, pointerY] = position;
 
     const visibleData = data.filter((p) => isPointTooltipEnabled({data: p.data, series: p.series}));
@@ -53,7 +55,9 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
             percentage: p.percentage,
             series: p.series as BarYSeries,
             closest: p.x === closestPointXValue && p.y === closestYPoint.y,
-            distance: getDistanceToRect({point: position, ...p}),
+            distance: measureDistance
+                ? getDistanceToRoundedRect({point: position, ...getBarYOuterRect(p)})
+                : undefined,
         })),
     };
 }

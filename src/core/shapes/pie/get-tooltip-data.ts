@@ -4,7 +4,7 @@ import {getRadius} from '../../utils/tooltip-helpers';
 import type {PreparedPieData} from './types';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTooltipDataResult {
-    const {data, position} = args;
+    const {data, position, measureDistance} = args;
     const [pointerX, pointerY] = position;
 
     const points = data.flatMap((d) => d.segments);
@@ -16,7 +16,12 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTo
         angle = angle < 0 ? Math.PI * 2 + angle : angle;
         const polarRadius = getRadius({center, pointer: [pointerX, pointerY]});
 
-        return angle >= p.startAngle && angle <= p.endAngle && polarRadius < p.data.radius;
+        return (
+            angle >= p.startAngle &&
+            angle <= p.endAngle &&
+            polarRadius < p.data.radius &&
+            polarRadius >= p.data.pie.innerRadius
+        );
     });
 
     if (!closestPoint) {
@@ -30,8 +35,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTo
                 percentage: closestPoint.data.percentage,
                 series: closestPoint.data.series,
                 closest: true,
-                // The chunk is found only when the pointer is inside the shape.
-                distance: 0,
+                distance: measureDistance ? 0 : undefined,
             },
         ],
     };

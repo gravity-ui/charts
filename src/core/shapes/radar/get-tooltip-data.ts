@@ -1,7 +1,7 @@
 import {Delaunay} from 'd3-delaunay';
 
 import type {RadarSeries} from '../../../types';
-import {getDistanceToPolygon, getRadius, isInsidePath} from '../../utils/tooltip-helpers';
+import {getRadius, isInsidePath} from '../../utils/tooltip-helpers';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
 import type {PreparedRadarData} from './types';
@@ -48,12 +48,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedRadarData>): Get
             series: shape.series as RadarSeries,
             category: shape.series.categories[closestPoint.index],
             closest: shape.series === closestPoint.series,
-            distance: radarShapes.includes(shape)
-                ? 0
-                : getDistanceToPolygon({
-                      point: position,
-                      vertices: shape.points.map((p) => p.position),
-                  }),
+            distance: args.measureDistance && shape.series === closestPoint.series ? 0 : undefined,
         })),
     };
 }

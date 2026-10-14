@@ -151,6 +151,7 @@ export interface BaseSeriesLegend extends ChartLegendItem {
     /**
      * For multiple series with the same groupId, only one label in the legend will be displayed.
      * The legend element uses the name and symbol from the first series of the group.
+     * Set a stable ID to preserve the group's selection across data updates and renaming.
      */
     groupId?: string;
     /** The text is displayed in the legend instead of the series name. */

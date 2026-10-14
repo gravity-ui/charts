@@ -1,6 +1,3 @@
-import type {CurveFactory} from 'd3-shape';
-import {line as lineGenerator} from 'd3-shape';
-
 import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../../types';
 import type {PreparedLineSeries} from '../../series/types';
 import {
@@ -13,6 +10,8 @@ import {
 import type {ShapeLabels} from '../types';
 
 import type {PointData} from './types';
+
+export {getLineSegments} from './geometry';
 
 export const DEFAULT_PLACEMENT_ORDER: readonly LineSeriesDataLabelPlacementPosition[] = [
     'top',
@@ -86,117 +85,6 @@ export interface PlacementSegment {
 /** Mirrors the d3 line `defined()` predicate from the line renderer */
 export function isDrawnPoint(p: PointData): p is PointData & {x: number; y: number} {
     return p.x !== null && p.y !== null && !p.hiddenInLine;
-}
-
-function makeSegment(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    halfWidth: number,
-): PlacementSegment {
-    return {
-        halfWidth,
-        x1,
-        x2,
-        xMax: Math.max(x1, x2),
-        xMin: Math.min(x1, x2),
-        y1,
-        y2,
-        yMax: Math.max(y1, y2),
-        yMin: Math.min(y1, y2),
-    };
-}
-
-/** Number of straight pieces a Bézier curve is flattened into */
-const CURVE_STEPS = 8;
-
-/**
- * Drawing context for d3 curves that records the drawn path as straight segments,
- * flattening Bézier curves by sampling. Lets the obstacles follow the rendered
- * interpolated line instead of the chords between the data points.
- */
-class SegmentCollector {
-    readonly segments: PlacementSegment[] = [];
-    private readonly halfWidth: number;
-    private x = 0;
-    private y = 0;
-
-    constructor(halfWidth: number) {
-        this.halfWidth = halfWidth;
-    }
-
-    moveTo(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-
-    lineTo(x: number, y: number) {
-        this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
-        this.x = x;
-        this.y = y;
-    }
-
-    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
-        const {x: x0, y: y0} = this;
-        for (let i = 1; i <= CURVE_STEPS; i++) {
-            const t = i / CURVE_STEPS;
-            const mt = 1 - t;
-            this.lineTo(
-                mt * mt * x0 + 2 * mt * t * cpx + t * t * x,
-                mt * mt * y0 + 2 * mt * t * cpy + t * t * y,
-            );
-        }
-    }
-
-    bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
-        const {x: x0, y: y0} = this;
-        for (let i = 1; i <= CURVE_STEPS; i++) {
-            const t = i / CURVE_STEPS;
-            const mt = 1 - t;
-            const a = mt * mt * mt;
-            const b = 3 * mt * mt * t;
-            const c = 3 * mt * t * t;
-            const d = t * t * t;
-            this.lineTo(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
-        }
-    }
-
-    closePath() {}
-}
-
-/**
- * Segments of all visible lines in the layer. Without a curve factory these are the
- * chords between array-adjacent drawn points; with one, the line is drawn through the
- * curve exactly as the renderer does and flattened into segments.
- */
-export function getLineSegments(
-    data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: PointData[]}>,
-): PlacementSegment[] {
-    const segments: PlacementSegment[] = [];
-    for (const d of data) {
-        const halfWidth = d.lineWidth / 2;
-        if (d.curveFactory) {
-            const collector = new SegmentCollector(halfWidth);
-            lineGenerator<PointData>()
-                .defined(isDrawnPoint)
-                .x((p) => p.x as number)
-                .y((p) => p.y as number)
-                .curve(d.curveFactory)
-                .context(collector as unknown as CanvasRenderingContext2D)(d.points);
-            segments.push(...collector.segments);
-            continue;
-        }
-        for (let i = 1; i < d.points.length; i++) {
-            const p1 = d.points[i - 1];
-            const p2 = d.points[i];
-            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
-                segments.push(makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth));
-            }
-        }
-    }
-
-    return segments;
 }
 
 function getCandidateRect(

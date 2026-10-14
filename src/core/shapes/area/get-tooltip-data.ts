@@ -1,16 +1,18 @@
-import type {AreaSeries} from '../../../types';
-import {getDistanceToBand} from '../../utils/tooltip-helpers';
+import {getDistanceToBand} from '../../utils/geometry';
+import type {BandColumn} from '../../utils/geometry';
 import type {
-    BandColumn,
     GetTooltipDataArgs,
     GetTooltipDataResult,
     ShapePoint,
 } from '../../utils/tooltip-helpers';
+import {createLineGeometryGetter, getDistanceToLineStroke} from '../line/geometry';
+import type {LineGeometry} from '../line/geometry';
 import {getDistanceToMarkers, getMarkerFill} from '../marker';
 
 import type {PreparedAreaData} from './types';
 
 const bandColumns = new WeakMap<PreparedAreaData, BandColumn[]>();
+const lineGeometry = new WeakMap<PreparedAreaData, LineGeometry>();
 
 function getBandColumns(item: PreparedAreaData) {
     let columns = bandColumns.get(item);
@@ -24,9 +26,20 @@ function getBandColumns(item: PreparedAreaData) {
 }
 
 function getDistanceToArea(item: PreparedAreaData, point: [number, number]) {
+    let geometry = lineGeometry.get(item);
+    if (!geometry) {
+        geometry = createLineGeometryGetter({points: item.points, lineWidth: item.width})();
+        lineGeometry.set(item, geometry);
+    }
     const fillDistance = getDistanceToBand({point, columns: getBandColumns(item)});
     return Math.min(
-        Math.max(0, fillDistance - item.width / 2),
+        fillDistance,
+        getDistanceToLineStroke(geometry, point, {
+            lineWidth: item.width,
+            linecap: 'round',
+            linejoin: 'round',
+            dashStyle: 'Solid',
+        }),
         getDistanceToMarkers(item.markers, point),
     );
 }
@@ -35,7 +48,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
     const {data, position, measureDistance} = args;
 
     const xLookupPoints = data.reduce<ShapePoint[]>((acc, d) => {
-        const distance = measureDistance ? getDistanceToArea(d, position) : 0;
+        const distance = measureDistance ? getDistanceToArea(d, position) : undefined;
         for (const p of d.points) {
             if (p.y === null || p.hiddenInLine) {
                 continue;
@@ -45,7 +58,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
                 data: p.data,
                 distance,
                 percentage: p.percentage,
-                series: p.series as AreaSeries,
+                series: p.series,
                 x: p.x,
                 y0: p.y0,
                 y1: p.y,

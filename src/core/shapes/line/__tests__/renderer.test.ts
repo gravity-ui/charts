@@ -2,6 +2,7 @@
 
 import {curveLinear} from 'd3-shape';
 
+import {prepareTooltipShapes} from '../../../../__tests__/utils/prepare-tooltip-shapes';
 import type {PreparedLineSeries, PreparedSeriesOptions} from '../../../series/types';
 import type {LinearGradient} from '../../../types';
 import {renderLine} from '../renderer';
@@ -122,4 +123,23 @@ describe('renderLine gradient', () => {
             `url(#${secondGradientId})`,
         );
     });
+});
+
+test('prepares a 30000-point monotone line and caches its geometry only when requested', async () => {
+    const data = await prepareTooltipShapes([
+        {
+            type: 'line',
+            name: 'Large',
+            interpolation: {type: 'monotone'},
+            marker: {enabled: false},
+            data: Array.from({length: 30000}, (_, x) => ({x, y: x % 10})),
+        },
+    ]);
+    const line = data.shapesData.find(
+        (item): item is PreparedLineData => item.series?.type === 'line',
+    );
+    expect(line?.points).toHaveLength(30000);
+    const geometry = line?.getGeometry();
+    expect(geometry?.segments).toHaveLength(29999 * 8);
+    expect(line?.getGeometry()).toBe(geometry);
 });
