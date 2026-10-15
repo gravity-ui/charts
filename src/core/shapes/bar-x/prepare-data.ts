@@ -9,7 +9,6 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../series/types';
-import {getSeriesStackId} from '../../series/utils';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP} from '../../shapes/bar-constants';
 import {
     getDataCategoryValue,
@@ -23,6 +22,7 @@ import {getPositiveShare} from '../../utils/percentage';
 import {getBarWidth, getBarWidthBySeries} from '../bar-width';
 
 import type {PreparedBarXData} from './types';
+import {getBarXStackKey} from './utils';
 
 /**
  * BarX always filters out data with null or replace null by zero.
@@ -154,7 +154,7 @@ export const prepareBarXData = async (args: {
         }
         const data = dataByPlots.get(plotIndex) ?? {};
 
-        const stackId = JSON.stringify([s.yAxis, getSeriesStackId(s)]);
+        const stackId = getBarXStackKey(s);
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;

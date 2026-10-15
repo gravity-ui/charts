@@ -9,6 +9,7 @@ import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import {getBarXStackKey} from '~core/shapes/bar-x/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
@@ -92,7 +93,5 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         };
     }, []);
 
-    return resolveStackBarPadding(preparedSeries, (s) =>
-        JSON.stringify([s.yAxis, getSeriesStackId(s)]),
-    );
+    return resolveStackBarPadding(preparedSeries, getBarXStackKey);
 }
