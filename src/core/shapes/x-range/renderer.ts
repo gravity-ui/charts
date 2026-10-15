@@ -25,8 +25,6 @@ export function renderXRange(
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
 
     const segmentSelection = svgElement
         .selectAll(`path.${b('segment')}`)
@@ -71,7 +69,7 @@ export function renderXRange(
 
     const svgLabels = preparedData.flatMap((d) => d.svgLabels);
     renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: svgLabels,
         className: b('label'),
     })

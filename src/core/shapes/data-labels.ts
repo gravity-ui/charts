@@ -1,8 +1,8 @@
-import type {Selection} from 'd3-selection';
+import type {BaseType, Selection, ValueFn} from 'd3-selection';
 
 import type {BaseTextStyle} from '../types/chart/base';
 
-type RenderableLabelData = {
+interface RenderableLabelData {
     text: string;
     lines?: string[];
     lineHeight?: number;
@@ -10,14 +10,17 @@ type RenderableLabelData = {
     y: number;
     textAnchor: 'start' | 'end' | 'middle';
     style: BaseTextStyle;
-};
+}
 
-export function renderDataLabels<T extends RenderableLabelData>(args: {
-    container: Selection<SVGGElement, unknown, null, undefined>;
-    data: T[];
+export function renderDataLabels<T extends RenderableLabelData, Datum>(args: {
+    /** Dedicated label groups whose contents are replaced on each render. */
+    container: Selection<SVGGElement, Datum, BaseType, unknown>;
+    data: T[] | ValueFn<SVGGElement, Datum, T[]>;
     className: string;
-}): Selection<SVGTextElement, T, SVGGElement, unknown> {
+}): Selection<SVGTextElement, T, SVGGElement, Datum> {
     const {container, data, className} = args;
+
+    container.selectAll('*').remove();
 
     return container
         .selectAll<SVGTextElement, T>('text')

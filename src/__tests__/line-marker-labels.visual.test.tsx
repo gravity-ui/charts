@@ -65,7 +65,7 @@ test.describe('Line marker labels', () => {
                 });
                 const direction = directions[i % 4];
                 const symbol = symbols[Math.floor(i / 4)];
-                // Browser path bounds exclude the stroke. Include its mitered corners.
+                // getBBox() excludes the stroke, including its mitered corners.
                 let stroke = borderWidth / 2;
                 if (symbol === 'diamond') stroke *= Math.SQRT2;
                 if (symbol === 'triangle' || symbol === 'triangle-down') {

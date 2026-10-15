@@ -425,7 +425,7 @@ export async function placeLineDataLabels(args: {
         series.dataLabels.anchor === 'marker-edge'
             ? getSymbolBounds({
                   symbolType: normal.symbol,
-                  // Match renderMarkers: the path radius includes the configured border width.
+                  // Use the same path radius as renderMarkers.
                   radius: normal.radius + normal.borderWidth,
                   strokeWidth: normal.borderWidth,
               })

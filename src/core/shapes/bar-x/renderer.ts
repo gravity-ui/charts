@@ -29,8 +29,6 @@ export function renderBarX(
     const hoverOptions = get(seriesOptions, 'bar-x.states.hover');
     const inactiveOptions = get(seriesOptions, 'bar-x.states.inactive');
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
     const shapes = preparedData.map((datum) => ({datum, paths: getBarXPaths(datum)}));
     const rectSelection = svgElement
         .selectAll<SVGPathElement, PreparedBarXData>(`path.${b('segment')}`)
@@ -73,7 +71,7 @@ export function renderBarX(
     }
 
     const labelSelection = renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

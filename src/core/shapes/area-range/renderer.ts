@@ -80,8 +80,6 @@ export function renderAreaRange(
         .y1((point) => point.y1 as number);
 
     plotSvgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
     const shapeSelection = plotSvgElement
         .selectAll('shape')
         .data(preparedData)
@@ -119,7 +117,7 @@ export function renderAreaRange(
         dataLabels = filterOverlappingLabels(dataLabels);
     }
     const labelsSelection = renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

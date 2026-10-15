@@ -160,7 +160,7 @@ describe('renderLine labels', () => {
             },
         ];
         const dispatcher = dispatch('hover-shape');
-        // eslint-disable-next-line testing-library/render-result-naming-convention -- D3 returns a cleanup function.
+        // eslint-disable-next-line testing-library/render-result-naming-convention -- renderLine returns a cleanup function.
         const cleanup = renderLine(
             {plot, labelsPlot, getCurveFactory: () => curveLinear},
             [data],

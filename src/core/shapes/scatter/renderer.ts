@@ -34,8 +34,6 @@ export function renderScatter(
     const inactiveOptions = get(seriesOptions, 'scatter.states.inactive');
 
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
 
     const selection = svgElement
         .selectAll('path')
@@ -46,7 +44,7 @@ export function renderScatter(
         .attr('cursor', (d) => d.point.series.cursor);
 
     renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.svgLabels,
         className: b('label'),
     })

@@ -43,8 +43,6 @@ export function renderLine(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
     const bounds = new Map(
         preparedData.map((data) => [
@@ -83,7 +81,7 @@ export function renderLine(
     const dataLabels = preparedData.flatMap((d) => d.svgLabels);
 
     const labelsSelection = renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

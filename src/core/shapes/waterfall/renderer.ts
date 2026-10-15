@@ -30,8 +30,6 @@ export function renderWaterfall(
     const hoverOptions = get(seriesOptions, 'waterfall.states.hover');
     const inactiveOptions = get(seriesOptions, 'waterfall.states.inactive');
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
     const rectSelection = svgElement
         .selectAll('allRects')
         .data(preparedData)
@@ -51,7 +49,7 @@ export function renderWaterfall(
     }
 
     const labelSelection = renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

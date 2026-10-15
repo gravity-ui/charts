@@ -24,8 +24,6 @@ export function renderFunnel(
     const svgElement = select(elements.plot);
     const hoverOptions = seriesOptions.funnel?.states?.hover;
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
 
     // funnel levels
     const cellsSelection = svgElement
@@ -65,7 +63,7 @@ export function renderFunnel(
 
     // dataLabels
     renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.svgLabels,
         className: b('label'),
     });

@@ -49,7 +49,7 @@ describe('chart config artifacts', () => {
                 labels.anchor = 'center';
                 // @ts-expect-error Unknown anchor.
                 labels.anchor = 'edge';
-                // @ts-expect-error Marker anchors are not shared by all series.
+                // @ts-expect-error Only line labels support anchor.
                 const base: BaseDataLabels = {anchor: 'marker-edge'};
                 void [labels, base];
             `,

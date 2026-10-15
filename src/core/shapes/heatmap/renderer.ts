@@ -23,8 +23,6 @@ export function renderHeatmap(
     const svgElement = select(elements.plot);
     const hoverOptions = seriesOptions.heatmap?.states?.hover;
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
 
     // heatmap cells
     const cellsSelection = svgElement
@@ -41,7 +39,7 @@ export function renderHeatmap(
 
     // dataLabels
     renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.labels,
         className: b('label'),
     });

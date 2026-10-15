@@ -8,6 +8,7 @@ import get from 'lodash/get';
 import type {TooltipDataChunkPie} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
+import {renderDataLabels} from '../../shapes/data-labels';
 import {setActiveState} from '../../shapes/utils';
 import {setEllipsisForOverflowTexts} from '../../utils';
 
@@ -78,7 +79,7 @@ export function renderPie(
         .attr('opacity', (d) => d.data.opacity);
 
     const labelGroups = labelsSvgElement
-        .selectAll('g')
+        .selectAll<SVGGElement, PreparedPieData>('g')
         .data(preparedData)
         .join('g')
         .attr('transform', (pieData) => {
@@ -89,21 +90,13 @@ export function renderPie(
         .attr('cursor', (pieData) => pieData.series.cursor);
 
     // render Labels
-    labelGroups
-        .selectAll<SVGTextElement, PieSvgLabelData>('text')
-        .data((pieData) => pieData.labels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null)
-        .call(setEllipsisForOverflowTexts, (d) =>
-            d.size.width > d.maxWidth ? d.maxWidth : Infinity,
-        );
+    renderDataLabels({
+        container: labelGroups,
+        data: (pieData) => pieData.labels,
+        className: b('label'),
+    }).call(setEllipsisForOverflowTexts, (d) =>
+        d.size.width > d.maxWidth ? d.maxWidth : Infinity,
+    );
 
     // Add the polyline between chart and labels
     labelGroups

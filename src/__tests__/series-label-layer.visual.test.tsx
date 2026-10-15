@@ -12,7 +12,7 @@ function labelIsOnTop(label: Locator) {
     return label.evaluate((element) => {
         const text = element as SVGTextElement;
         const previous = text.style.pointerEvents;
-        // Labels normally ignore pointer events. Enable hit-testing to check paint order.
+        // Enable hit-testing on labels to check paint order.
         text.style.pointerEvents = 'bounding-box';
         const bounds = text.getBoundingClientRect();
         const hit = document.elementFromPoint(

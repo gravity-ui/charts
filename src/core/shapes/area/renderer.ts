@@ -42,8 +42,6 @@ export function renderArea(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
     const lineBounds = new Map(
         preparedData.map((data) => [
@@ -124,7 +122,7 @@ export function renderArea(
     }
 
     const labelsSelection = renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

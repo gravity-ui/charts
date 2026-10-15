@@ -21,8 +21,6 @@ export function renderSankey(
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
-    const labelsSvgElement = select(elements.labelsPlot);
-    labelsSvgElement.selectAll('*').remove();
 
     // nodes
     svgElement
@@ -51,7 +49,7 @@ export function renderSankey(
 
     // dataLabels
     renderDataLabels({
-        container: labelsSvgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.labels,
         className: b('label'),
     }).attr('dy', '0.35em');

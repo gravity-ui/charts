@@ -101,8 +101,9 @@ export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
 }
 
 export interface RenderShapesArgs {
+    /** SVG container for series geometry, such as lines, areas, bars, and sectors. */
     plot: SVGGElement;
-    /** SVG labels above the layer's shapes and markers, with the same clipping as `plot`. */
+    /** SVG container for labels above the layer's shapes and markers, clipped like `plot`. */
     labelsPlot: SVGGElement;
     preparedData: SeriesShapeData[];
     labels?: SvgLabel[];

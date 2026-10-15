@@ -1,7 +1,7 @@
 import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
-import type {BaseType, Selection} from 'd3-selection';
+import type {BaseType} from 'd3-selection';
 import {line} from 'd3-shape';
 import get from 'lodash/get';
 
@@ -93,18 +93,16 @@ export function renderRadar(
         .call(renderMarker);
 
     // Render labels
-    labelsSvgElement
-        .selectAll('g')
+    const labelGroups = labelsSvgElement
+        .selectAll<SVGGElement, PreparedRadarData>('g')
         .data(preparedData)
         .join('g')
-        .attr('cursor', (radarData) => radarData.cursor)
-        .each(function (radarData) {
-            renderDataLabels({
-                container: select(this) as Selection<SVGGElement, unknown, null, undefined>,
-                data: radarData.labels,
-                className: b('label'),
-            });
-        });
+        .attr('cursor', (radarData) => radarData.cursor);
+    renderDataLabels({
+        container: labelGroups,
+        data: (radarData) => radarData.labels,
+        className: b('label'),
+    });
 
     // Handle hover events
     const eventName = `hover-shape.radar`;
