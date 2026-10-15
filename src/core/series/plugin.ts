@@ -190,6 +190,8 @@ export interface SeriesPlugin<
 
     /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
+    /** Optional SVG label renderer, placed above normal and hover markers with the same clipping as shapes. */
+    renderLabels?(args: RenderShapesArgs): (() => void) | void;
 
     // --- Tooltip ---
 

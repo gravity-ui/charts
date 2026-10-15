@@ -25,6 +25,7 @@ import type {
     LineSeriesData,
     LineSeriesDataLabelPlacementFallback,
     LineSeriesDataLabelPlacementPosition,
+    LineSeriesDataLabels,
     LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     LinearGradient,
@@ -371,6 +372,7 @@ export type PreparedLineSeries = {
         format?: ValueFormat;
         placement: 'auto' | LineSeriesDataLabelPlacementPosition[];
         placementFallback: LineSeriesDataLabelPlacementFallback;
+        anchor: NonNullable<LineSeriesDataLabels['anchor']>;
     };
     marker: {
         states: {

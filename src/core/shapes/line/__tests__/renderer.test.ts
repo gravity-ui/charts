@@ -1,10 +1,12 @@
 /** @jest-environment jsdom */
 
+import {dispatch} from 'd3-dispatch';
 import {curveLinear} from 'd3-shape';
 
+import {getPreparedOptions} from '../../../series/prepare-options';
 import type {PreparedLineSeries, PreparedSeriesOptions} from '../../../series/types';
 import type {LinearGradient} from '../../../types';
-import {renderLine} from '../renderer';
+import {renderLine, renderLineLabels} from '../renderer';
 import type {PointData, PreparedLineData} from '../types';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
@@ -121,5 +123,48 @@ describe('renderLine gradient', () => {
         expect(secondPlot.querySelector('path')?.getAttribute('stroke')).toBe(
             `url(#${secondGradientId})`,
         );
+    });
+});
+
+describe('renderLineLabels', () => {
+    afterEach(() => document.body.replaceChildren());
+
+    test('preserves inactive styling and cleans up the hover listener', () => {
+        const plot = createPlot();
+        const data = createPreparedData([]);
+        data.svgLabels = [
+            {
+                active: true,
+                series: data.series,
+                text: '50',
+                x: 10,
+                y: 10,
+                size: {width: 20, height: 12},
+                style: {fontSize: '12px'},
+                textAnchor: 'start',
+            },
+        ];
+        const dispatcher = dispatch('hover-shape');
+        // eslint-disable-next-line testing-library/render-result-naming-convention -- D3 returns a cleanup function.
+        const cleanup = renderLineLabels(
+            plot,
+            [data],
+            getPreparedOptions({
+                line: {states: {inactive: {enabled: true, opacity: 0.2}}},
+            }),
+            dispatcher,
+        );
+        const label = plot.querySelector('text');
+        const otherSeries = [{series: {type: 'line', id: 'other'}}];
+        dispatcher.call('hover-shape', undefined, otherSeries);
+        expect(label?.getAttribute('opacity')).toBe('0.2');
+        dispatcher.call('hover-shape', undefined, [{series: data.series}]);
+        expect(label?.getAttribute('opacity')).toBeNull();
+        dispatcher.call('hover-shape', undefined, otherSeries);
+        dispatcher.call('hover-shape', undefined, []);
+        expect(label?.getAttribute('opacity')).toBeNull();
+        cleanup();
+        dispatcher.call('hover-shape', undefined, otherSeries);
+        expect(label?.getAttribute('opacity')).toBeNull();
     });
 });

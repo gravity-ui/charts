@@ -43,6 +43,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 - Optional `getLayerKey({series, seriesKey})` selects a layer for one raw or prepared series occurrence. By default, core uses `series.type`, so all series of a plugin share one layer. Equal returned keys share a layer; use stable, chart-unique keys. Core throws `ChartError` if different series types return the same key. `seriesKey` identifies this occurrence: core supplies a type/index key for raw input and the series ID for prepared input. The line plugin returns `seriesKey` for independent layers, including when the same raw object occurs twice.
 - Core retains series references and member order, orders layers by their first occurrence, prepares shapes in reverse order to reserve label space through `otherLayers`, and renders in forward order. Bars retain one layer per type; see the TODO on `SeriesPlugin.getLayerKey` for future layer splitting.
+- Optional `renderLabels(args)` renders SVG labels above the layer's normal and hover markers, using the same clipping as shapes. Use it when markers must not cover data labels.
 - Optional `getClipPath({isRangeSlider, yAxis, zoomState})` returns `'bounds'` (default), `'horizontal'` (X bounds with an expanded vertical region), or `false`. Core owns SVG IDs and geometry. Clipping affects the shape group and its SVG labels; separate marker, annotation, and HTML-label layers are unaffected.
 - Line previews use `'bounds'` in the range slider. Main-plot lines use `'horizontal'` unless explicit Y limits or zoom require `'bounds'`.
 

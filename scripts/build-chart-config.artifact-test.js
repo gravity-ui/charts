@@ -39,6 +39,46 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('line marker label anchors are exposed only on line data labels', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'line-label-anchor-usage.ts'),
+                declaration +
+                    `
+                const labels: LineSeriesDataLabels = {anchor: 'marker-edge', placement: 'auto'};
+                labels.anchor = 'center';
+                // @ts-expect-error Unknown anchor.
+                labels.anchor = 'edge';
+                // @ts-expect-error Marker anchors are not shared by all series.
+                const base: BaseDataLabels = {anchor: 'marker-edge'};
+                void [labels, base];
+            `,
+            ),
+        ).not.toThrow();
+        const anchor = schema.definitions.LineSeriesDataLabels.properties.anchor;
+        expect(anchor.enum).toEqual(['center', 'marker-edge']);
+        expect(anchor.default).toBe('center');
+        expect(anchor.enumDescriptions).toHaveLength(2);
+        expect(schema.definitions.BaseDataLabels.properties).not.toHaveProperty('anchor');
+        const validate = createSchemaValidator().compile(schema);
+        for (const value of [undefined, 'center', 'marker-edge', 'edge', null]) {
+            expect(
+                validate({
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Line',
+                                data: [{x: 1, y: 2}],
+                                dataLabels: {anchor: value},
+                            },
+                        ],
+                    },
+                }),
+            ).toBe(value === undefined || value === 'center' || value === 'marker-edge');
+        }
+    });
+
     test('bar series opacity is available in declarations and constrained in schema', () => {
         const usage = `
             const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', opacity: 0, data: [{x: 0, y: 10, opacity: null}]};

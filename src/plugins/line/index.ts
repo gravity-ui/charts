@@ -7,7 +7,7 @@ import type {
 import type {PreparedLineSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
 import {prepareLineData, projectLineData} from '~core/shapes/line/prepare-data';
-import {renderLine} from '~core/shapes/line/renderer';
+import {renderLine, renderLineLabels} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
@@ -22,7 +22,7 @@ import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
-import {validateInterpolation} from './validation';
+import {validateInterpolation, validateLabelAnchor} from './validation';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -92,12 +92,15 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateInterpolation({series});
+        validateLabelAnchor({series});
         validateSeriesColor({color: series.color, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
     },
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    renderLabels: ({plot, preparedData, seriesOptions, dispatcher}) =>
+        renderLineLabels(plot, preparedData as PreparedLineData[], seriesOptions, dispatcher),
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

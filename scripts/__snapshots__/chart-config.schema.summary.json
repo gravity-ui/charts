@@ -568,6 +568,7 @@
     ],
     "LineSeriesDataLabels": [
       "allowOverlap",
+      "anchor",
       "enabled",
       "format",
       "html",

@@ -76,6 +76,17 @@ export type LineSeriesDataLabelPlacementFallback = 'show' | 'hide';
 
 export interface LineSeriesDataLabels extends BaseDataLabels {
     /**
+     * Origin from which `padding` is measured in the selected placement direction.
+     * - `'center'`: Measure from the data point coordinates.
+     * - `'marker-edge'`: Measure from the normal marker's outer bounds, including its
+     *   shape and border. Use the point coordinates when no normal marker is visible.
+     *
+     * Applies to SVG and HTML labels and automatic placement. Hover does not move labels.
+     * Candidates are still shifted into the plot area and follow `placementFallback`.
+     * @default 'center'
+     */
+    anchor?: 'center' | 'marker-edge';
+    /**
      * Candidate positions relative to the point, tried in order: `auto` tries the
      * built-in order (top, bottom, left, right), an array sets the exact order to try.
      * The label box of every candidate is shifted into the plot area first; a position
