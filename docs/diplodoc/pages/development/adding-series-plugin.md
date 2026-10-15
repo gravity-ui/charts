@@ -65,6 +65,8 @@ Implement `interaction.prepareNearestData` for unfiltered `{position, item}` can
 
 Keep adapters and payload types in the plugin's `interaction.ts` and `interaction-types.ts`; add the public item to `src/plugins/interaction-types.ts`. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
 
+The core public types use type-only imports of this aggregation. Like `ChartSeries`, it describes the built-in series; plugin registration is internal. These imports do not introduce runtime dependencies on plugin implementations.
+
 When preparing a copy of a source point, register it with `withSourcePoint` from `core/utils/source-point`. Public interaction results then resolve the original object without changing the data used by rendering or legacy callbacks. Resolve nested source points in composite payloads with `getSourcePoint`.
 
 ## 6. Integrate

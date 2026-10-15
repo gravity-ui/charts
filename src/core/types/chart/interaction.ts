@@ -42,8 +42,9 @@ export interface ChartApi<T = MeaningfulAny> {
 
 export interface ChartClosestOptions {
     /**
-     * - `'chart'`: Select the nearest reference position across all series, ignoring tooltip enablement (default).
+     * - `'chart'`: Select the nearest reference position across all series, ignoring tooltip enablement.
      * - `'tooltip'`: Use the same selection and eligibility rules as the legacy click handler.
+     * @default 'chart'
      */
     mode?: 'chart' | 'tooltip';
 }
@@ -52,7 +53,11 @@ export interface ChartClosestOptions {
 export interface ChartClickData<T = MeaningfulAny> {
     /** Click coordinates in pixels relative to the main plot's top-left corner. */
     position: [number, number];
-    /** All exact hits, including covered elements, ordered from uppermost to lowest. */
+    /**
+     * All exact hits, including covered elements, ordered from uppermost to lowest.
+     * Computed synchronously on first access using current geometry, then cached for this payload.
+     * Read inside the click handler before deferring work or updating the chart.
+     */
     targets: ChartInteractionItem<T>[];
     /** Stable query API. Retained references use the current chart state. */
     chart: ChartApi<T>;

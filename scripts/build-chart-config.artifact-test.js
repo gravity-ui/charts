@@ -293,6 +293,17 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
     });
 
+    test('published ChartOptions references remain usable after adding generic parameters', () => {
+        const ajv = createSchemaValidator();
+        ajv.addSchema(schema, 'chart');
+        const validate = ajv.compile({$ref: 'chart#/definitions/ChartOptions'});
+        expect(validate({events: {clickMode: 'plot'}})).toBe(true);
+        expect(validate({events: {clickMode: 'tooltip'}})).toBe(true);
+        expect(validate({events: {clickMode: 'invalid'}})).toBe(false);
+        expect(validate({unknown: true})).toBe(false);
+        expect(normalizeSchema(JSON.parse(JSON.stringify(schema)))).toEqual(schema);
+    });
+
     test('documents every series type', () => {
         const series = schema.definitions['ChartSeries<JsonValue>'].anyOf;
         const descriptions = new Map(

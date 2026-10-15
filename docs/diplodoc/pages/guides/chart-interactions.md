@@ -12,6 +12,8 @@ See [Legend](legend.md) and [Tooltip](tooltip.md) for their configuration.
 
 `targets` contains exact hits from uppermost to lowest, including covered elements. Use `targets[0]` for the element under the pointer; an empty array means no hit. Labels, grids, connectors, halos, hover-only markers, and range-slider previews are excluded. Hits respect painted contours, visibility, and built-in clipping.
 
+`targets` is computed synchronously on first access and cached for that click payload. Read it inside the click handler before updating the chart or awaiting asynchronous work. A delayed first read uses the geometry available at that time. Destructuring `targets` or spreading the payload also reads it; handlers that never read it skip exact hit testing.
+
 Each item contains `series` metadata (`type`, `id`, `name`, optional `custom`) and its `point`. Most elements return point data; whole lines, areas, area ranges, and radar polygons return `{kind: 'shape', points}`. Sankey links return `{kind: 'link', source, target, value}`. Scatter clusters expose their members in `point.cluster.points`.
 
 Point payloads preserve the original objects and values, including `null` when `nullMode: 'zero'` draws a zero. This applies to `targets` and both `getClosest` modes. The deprecated top-level `point` retains its previous, potentially normalized values.

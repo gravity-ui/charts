@@ -9,7 +9,9 @@ import type {ChartSankeyLinkPoint, PointPosition} from '../../types';
 const linkPoints = new WeakMap<SankeyLink, ChartSankeyLinkPoint>();
 
 export function getTargetElements({plot, preparedData}: InteractionElementsArgs) {
-    const {series} = preparedData[0] as PreparedSankeyData;
+    const shape = preparedData[0] as PreparedSankeyData | undefined;
+    if (!shape) return [];
+    const {series} = shape;
     return [
         ...getInteractionElements<SankeyNode>(plot, 'rect', (node) => ({
             point: getSourcePoint(node.data),

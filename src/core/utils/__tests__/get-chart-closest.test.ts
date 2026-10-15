@@ -111,3 +111,18 @@ test('empty and non-finite candidate positions have no nearest item', () => {
         ),
     ).toBeNull();
 });
+
+test.each(['chart', 'tooltip'] as const)('ignores unregistered shapes in %s queries', (mode) => {
+    const args = {
+        mode,
+        position: [60, 10] as [number, number],
+        boundsWidth: 100,
+        boundsHeight: 100,
+        seriesOrder: ['line'],
+    };
+    const unknown = {series: {type: 'unregistered'}};
+    expect(getChartClosest({...args, shapesData: [unknown]})).toBeNull();
+    expect(getChartClosest({...args, shapesData: [unknown, line]})).toEqual(
+        getChartClosest({...args, shapesData: [line]}),
+    );
+});

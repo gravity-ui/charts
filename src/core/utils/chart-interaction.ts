@@ -22,16 +22,24 @@ export interface InteractionElementsArgs {
     preparedData: SeriesShapeData[];
 }
 
-const layers = new WeakMap<SVGGElement, () => InteractionElement[]>();
+const layers = new WeakMap<SVGSVGElement, Map<SVGGElement, () => InteractionElement[]>>();
 
 /** Shared render pipeline registration; series renderers do not bind interaction handlers. */
 export function registerInteractionLayer(
     plot: SVGGElement,
     getElements: () => InteractionElement[],
 ) {
-    layers.set(plot, getElements);
+    const svg = plot.ownerSVGElement;
+    if (!svg) return () => {};
+    let svgLayers = layers.get(svg);
+    if (!svgLayers) {
+        svgLayers = new Map();
+        layers.set(svg, svgLayers);
+    }
+    svgLayers.set(plot, getElements);
     return () => {
-        layers.delete(plot);
+        svgLayers.delete(plot);
+        if (!svgLayers.size) layers.delete(svg);
     };
 }
 
@@ -118,8 +126,8 @@ export function getChartTargets(
     svg: SVGSVGElement,
     position: PointPosition,
 ): ChartInteractionItem[] {
-    const elements = Array.from(svg.querySelectorAll<SVGGElement>('g')).flatMap(
-        (plot) => layers.get(plot)?.() ?? [],
+    const elements = Array.from(layers.get(svg)?.values() ?? []).flatMap((getElements) =>
+        getElements(),
     );
     const isHit = createSvgHitTest(svg, position);
     const hits: InteractionElement[] = [];

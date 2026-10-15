@@ -35,6 +35,7 @@
     "ChartBrush",
     "ChartConfig",
     "ChartLegend",
+    "ChartOptions",
     "ChartOptions<JsonValue>",
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",

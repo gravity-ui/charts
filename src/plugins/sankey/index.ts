@@ -49,13 +49,19 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
         prepareNearestData,
         getTargetElements,
         getClosestItem: (item) => {
+            const series = item.series as PreparedSankeySeries;
+            const source = getSourcePoint(item.data);
+            const value = getLinkValue(item);
+            if (!item.target || value === undefined) {
+                return {series, point: source};
+            }
             return {
-                series: item.series as PreparedSankeySeries,
+                series,
                 point: {
                     kind: 'link',
-                    source: getSourcePoint(item.data),
-                    target: getSourcePoint(item.target!),
-                    value: getLinkValue(item)!,
+                    source,
+                    target: getSourcePoint(item.target),
+                    value,
                 },
             };
         },

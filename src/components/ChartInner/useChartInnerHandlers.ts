@@ -212,11 +212,14 @@ export function useChartInnerHandlers(props: Props) {
         });
         const selected = items.find((item) => item.closest);
         if (dispatcher.on(EventType.CLICK_CHART) && (clickMode === 'plot' || selected)) {
+            const screenPosition: PointPosition = [event.clientX, event.clientY];
+            let targets: Required<ChartLegacyClickData>['targets'] | undefined;
             const payload: Required<ChartLegacyClickData> = {
                 position: [x, y],
-                targets: svgContainer
-                    ? getChartTargets(svgContainer, [event.clientX, event.clientY])
-                    : [],
+                get targets() {
+                    targets ??= svgContainer ? getChartTargets(svgContainer, screenPosition) : [];
+                    return targets;
+                },
                 chart: chartApi,
                 event: event.nativeEvent,
                 point: selected?.data,

@@ -2,7 +2,7 @@ import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
 import type {ChartInteractionItem, TooltipDataChunk} from '../../types';
-import {getSeriesPlugin} from '../series/seriesRegistry';
+import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
 import {toPublicInteractionItem} from './chart-interaction';
@@ -88,12 +88,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const measureDistance = Object.keys(groups).length > 1;
 
     for (const [seriesType, list] of Object.entries(groups)) {
-        let plugin;
-        try {
-            plugin = getSeriesPlugin(seriesType);
-        } catch {
+        if (!hasSeriesPlugin(seriesType)) {
             continue;
         }
+        const plugin = getSeriesPlugin(seriesType);
 
         const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
             data: list,
@@ -177,6 +175,7 @@ export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem
     if (args.mode === 'chart') {
         const candidates = Object.entries(groupBy(args.shapesData, getSeriesType)).flatMap(
             ([seriesType, data]) => {
+                if (!hasSeriesPlugin(seriesType)) return [];
                 const plugin = getSeriesPlugin(seriesType);
                 return (
                     plugin.interaction?.prepareNearestData({

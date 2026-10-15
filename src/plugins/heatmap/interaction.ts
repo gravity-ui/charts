@@ -4,7 +4,9 @@ import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 export function getTargetElements({plot, preparedData}: InteractionElementsArgs) {
-    const {series} = preparedData[0] as PreparedHeatmapData;
+    const shape = preparedData[0] as PreparedHeatmapData | undefined;
+    if (!shape) return [];
+    const {series} = shape;
     return getInteractionElements<HeatmapItem>(plot, 'rect', (datum) => ({
         point: datum.data,
         series,

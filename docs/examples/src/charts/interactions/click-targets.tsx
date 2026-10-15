@@ -29,7 +29,6 @@ export default function ClickTargetsExample() {
                     type: 'bar-y',
                     name: 'Issues',
                     custom: {navigation: 'issues'},
-                    tooltip: {enabled: false},
                     data: [
                         {x: 12, y: 0, custom: {label: 'Open issues', status: 'open'}},
                         {x: 8, y: 1, custom: {label: 'Closed issues', status: 'closed'}},
