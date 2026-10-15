@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -32,10 +34,17 @@ const data: ChartData = {
     yAxis: [{type: 'category', categories: ['A', 'B']}],
 };
 
-export function BarYOverlayExample() {
+export default function BarYOverlayExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-Y',
+    title: 'Overlapping bars',
+    description: 'Compare horizontal bars with grouping disabled and partial opacity.',
+    docsUrl: 'pages/guides/series-types/bar-y.html#grouping-and-stacking',
+} satisfies ExampleMeta;

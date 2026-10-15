@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -27,10 +29,20 @@ const data: ChartData = {
     },
 };
 
-export function CategoryAxisExample() {
+export default function CategoryAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-X',
+    title: 'Category axis',
+    description: 'Configure a categorical X axis with explicit category labels.',
+    docsUrl: 'pages/guides/axes/axis-types.html#category-axis',
+    gallery: {
+        group: 'axes',
+    },
+} satisfies ExampleMeta;

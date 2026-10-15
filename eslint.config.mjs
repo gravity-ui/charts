@@ -18,6 +18,7 @@ export default [
             'playwright/.cache-docker/**',
             'playwright-report/**',
             'playwright-report-docker/**',
+            'playwright-report-docs/**',
             'test-results/**',
         ],
     },
@@ -141,6 +142,17 @@ export default [
     // Visual test files
     {
         files: ['**/*.visual.test.[jt]s?(x)'],
+        rules: {
+            'testing-library/prefer-screen-queries': 'off',
+        },
+    },
+
+    // Documentation browser tests
+    {
+        files: ['docs/examples/tests/**/*.spec.ts'],
+        languageOptions: {
+            globals: {expect: 'off', test: 'off'},
+        },
         rules: {
             'testing-library/prefer-screen-queries': 'off',
         },

@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     legend: {
         enabled: true,
@@ -29,10 +31,20 @@ const data: ChartData = {
     },
 };
 
-export function VerticalLegendExample() {
+export default function VerticalLegendExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Pie',
+    title: 'Vertical legend',
+    description: 'Arrange legend items in a column beside a pie chart.',
+    docsUrl: 'pages/guides/legend.html#item-layout',
+    gallery: {
+        group: 'legend',
+    },
+} satisfies ExampleMeta;

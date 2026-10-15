@@ -2,32 +2,33 @@
 
 ## About Gravity UI Charts
 
-**Gravity UI Charts** is a React charting library built on [D3](https://d3js.org/), designed as part of the [Gravity UI](https://gravity-ui.com/) ecosystem. Charts are configured through plain JavaScript objects, making it easy to integrate into any React application.
+**Gravity UI Charts** is a React charting library built on D3, designed as part of the Gravity UI ecosystem. Charts are configured through plain JavaScript objects, making it easy to integrate into any React application.
 
 ## Chart types
 
-- `Area`
+See [Series types](guides/series-types/index.md) for configuring and combining series.
+
+<div class="docs-series-types">
+
+- [Line](guides/series-types/line.md)
+- [Area](guides/series-types/area.md)
 - [Area range](guides/series-types/area-range.md)
-- `Bar-X`
-- `Bar-Y`
-- `Line`
-- `Pie`
-- `Scatter`
-- `Treemap`
-- `Waterfall`
-- `Funnel`
-- `Heatmap`
-- `Radar`
-- `X-Range`
+- [Bar-X](guides/series-types/bar-x.md)
+- [Bar-Y](guides/series-types/bar-y.md)
+- [Scatter](guides/series-types/scatter.md)
+- [Heatmap](guides/series-types/heatmap.md)
+- [Pie](guides/series-types/pie.md)
+- [Treemap](guides/series-types/treemap.md)
+- [Waterfall](guides/series-types/waterfall.md)
+- [Funnel](guides/series-types/funnel.md)
+- [Sankey](guides/series-types/sankey.md)
+- [Radar](guides/series-types/radar.md)
+- [X-Range](guides/series-types/x-range.md)
 
-<details>
-<summary>Examples from Storybook</summary>
+</div>
 
-<iframe
-    src="https://preview.gravity-ui.com/charts/iframe.html?args=&globals=&id=showcase--g-charts-showcase-story&viewMode=story"
-    width="100%"
-    height="400"
-    style="border-width: 1px;"
-    ></iframe>
+## Dashboard example
 
-</details>
+Select a chart title to open its series guide and runnable example.
+
+<div data-chart-dashboard></div>

@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart, ChartTooltipContent} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     split: {enable: true, plots: [{}, {}]},
     xAxis: {type: 'category', categories: ['Jan', 'Feb', 'Mar']},
@@ -40,10 +42,20 @@ const data: ChartData = {
     },
 };
 
-export function MultipleYAxesTooltipExample() {
+export default function MultipleYAxesTooltipExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Tooltips across multiple axes',
+    description: 'Customize tooltip content for numeric and categorical Y axes.',
+    docsUrl: 'pages/guides/tooltip.html#multiple-y-axes-and-custom-content',
+    gallery: {
+        group: 'tooltip',
+    },
+} satisfies ExampleMeta;

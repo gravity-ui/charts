@@ -6,7 +6,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import range from 'lodash/range';
 import set from 'lodash/set';
 
-import {LegendLabelsExample} from '../../docs/examples/src/charts/legend/labels';
+import LegendLabelsExample from '../../docs/examples/src/charts/legend/labels';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {groupedLegend, pieHtmlLegendData} from '../__stories__/__data__';
 import {DEFAULT_PALETTE} from '../core/constants';

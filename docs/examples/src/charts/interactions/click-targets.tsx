@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData, ChartInteractionItem} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 interface IssueFilter {
     label: string;
     status: string;
@@ -14,7 +16,7 @@ function isIssueTarget(
     return item.series.type === 'bar-y' && item.series.custom?.navigation === 'issues';
 }
 
-export function ClickTargetsExample() {
+export default function ClickTargetsExample() {
     const [selected, setSelected] = React.useState('Click a bar to select its issue filter.');
     const data: ChartData<IssueFilter> = {
         legend: {enabled: false},
@@ -66,3 +68,11 @@ export function ClickTargetsExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-Y',
+    title: 'Click targets and nearest points',
+    description:
+        'Select an issue filter by clicking a bar or find the nearest category in the plot.',
+    docsUrl: 'pages/guides/chart-interactions.html#click-selection',
+} satisfies ExampleMeta;

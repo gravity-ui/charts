@@ -3,7 +3,7 @@ import React from 'react';
 import {expect, test} from '@playwright/experimental-ct-react';
 import type {Locator} from '@playwright/test';
 
-import {ClickTargetsExample} from '../../docs/examples/src/charts/interactions/click-targets';
+import ClickTargetsExample from '../../docs/examples/src/charts/interactions/click-targets';
 import type {ChartData, ChartSeries, SeriesColor} from '../types';
 
 import {ChartInteractionTestStory} from './components/ChartInteractionTestStory';

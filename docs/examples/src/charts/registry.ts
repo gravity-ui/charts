@@ -1,189 +1,35 @@
 import type React from 'react';
 
-import {AxisLabelFontSizeExample} from './axis-labels/font-size';
-import axisLabelFontSizeRaw from './axis-labels/font-size.tsx?raw';
-import {CategoryAxisExample} from './axis-types/category';
-import categoryRaw from './axis-types/category.tsx?raw';
-import {DatetimeAxisExample} from './axis-types/datetime';
-import datetimeRaw from './axis-types/datetime.tsx?raw';
-import {LinearAxisExample} from './axis-types/linear';
-import linearRaw from './axis-types/linear.tsx?raw';
-import {LogarithmicAxisExample} from './axis-types/logarithmic';
-import logarithmicRaw from './axis-types/logarithmic.tsx?raw';
-import {DataLabelsPlacementAutoExample} from './data-labels/placement-auto';
-import dataLabelsPlacementAutoRaw from './data-labels/placement-auto.tsx?raw';
-import {DataLabelsPlacementFallbackHideExample} from './data-labels/placement-fallback-hide';
-import dataLabelsPlacementFallbackHideRaw from './data-labels/placement-fallback-hide.tsx?raw';
-import {DataLabelsPlacementFixedExample} from './data-labels/placement-fixed';
-import dataLabelsPlacementFixedRaw from './data-labels/placement-fixed.tsx?raw';
-import {StackLabelsExample} from './data-labels/stack-labels';
-import stackLabelsRaw from './data-labels/stack-labels.tsx?raw';
-import {ClickTargetsExample} from './interactions/click-targets';
-import clickTargetsRaw from './interactions/click-targets.tsx?raw';
-import {ContentBasedLegendExample} from './legend/content-based-width';
-import contentBasedLegendRaw from './legend/content-based-width.tsx?raw';
-import {LegendLabelsExample} from './legend/labels';
-import legendLabelsRaw from './legend/labels.tsx?raw';
-import {VerticalLegendExample} from './legend/vertical';
-import verticalLegendRaw from './legend/vertical.tsx?raw';
-import {LegendWrappingExample} from './legend/wrapping';
-import legendWrappingRaw from './legend/wrapping.tsx?raw';
-import {LineInterpolationCardinalExample} from './line-interpolation/cardinal';
-import lineInterpolationCardinalRaw from './line-interpolation/cardinal.tsx?raw';
-import {LineInterpolationMonotoneExample} from './line-interpolation/monotone';
-import lineInterpolationMonotoneRaw from './line-interpolation/monotone.tsx?raw';
-import {AreaSeriesExample} from './series-types/area';
-import {AreaRangeSeriesExample} from './series-types/area-range';
-import {AreaRangeWithLineExample} from './series-types/area-range-with-line';
-import areaRangeWithLineRaw from './series-types/area-range-with-line.tsx?raw';
-import areaRangeSeriesRaw from './series-types/area-range.tsx?raw';
-import areaSeriesRaw from './series-types/area.tsx?raw';
-import {BarXSeriesExample} from './series-types/bar-x';
-import {BarXOverlayExample} from './series-types/bar-x-overlay';
-import barXOverlayRaw from './series-types/bar-x-overlay.tsx?raw';
-import barXSeriesRaw from './series-types/bar-x.tsx?raw';
-import {BarYSeriesExample} from './series-types/bar-y';
-import {BarYOverlayExample} from './series-types/bar-y-overlay';
-import barYOverlayRaw from './series-types/bar-y-overlay.tsx?raw';
-import barYSeriesRaw from './series-types/bar-y.tsx?raw';
-import {LineSeriesExample} from './series-types/line';
-import {LineMarkersExample} from './series-types/line-markers';
-import lineMarkersRaw from './series-types/line-markers.tsx?raw';
-import lineSeriesRaw from './series-types/line.tsx?raw';
-import {ScatterSeriesExample} from './series-types/scatter';
-import scatterSeriesRaw from './series-types/scatter.tsx?raw';
-import {MultipleYAxesTooltipExample} from './tooltip/multiple-y-axes';
-import multipleYAxesTooltipRaw from './tooltip/multiple-y-axes.tsx?raw';
-import {WaterfallHeaderTooltipExample} from './tooltip/waterfall-header';
-import waterfallHeaderTooltipRaw from './tooltip/waterfall-header.tsx?raw';
-import {XRangeTooltipValuesExample} from './tooltip/x-range-values';
-import xRangeTooltipValuesRaw from './tooltip/x-range-values.tsx?raw';
-import {QuarterlyXAxisExample} from './value-formatting/quarterly-x-axis';
-import quarterlyXAxisRaw from './value-formatting/quarterly-x-axis.tsx?raw';
+import {getGalleryGroups} from './gallery';
+import type {ExampleMeta} from './gallery';
 
-// Strip "import React from 'react';" — not needed in display code (JSX transform handles it)
-function extractDisplayCode(raw: string): string {
-    return raw.replace(/^import\s+React\s+from\s+['"]react['"];\n/m, '').trim();
-}
-
-type ExampleModule = {
+interface ExampleModule {
     code: string;
     Component: () => React.ReactElement;
-};
+    meta: ExampleMeta;
+}
 
-export const registry: Record<string, ExampleModule> = {
-    'interactions/click-targets': {
-        code: extractDisplayCode(clickTargetsRaw),
-        Component: ClickTargetsExample,
-    },
-    'tooltip/waterfall-header': {
-        code: extractDisplayCode(waterfallHeaderTooltipRaw),
-        Component: WaterfallHeaderTooltipExample,
-    },
-    'tooltip/x-range-values': {
-        code: extractDisplayCode(xRangeTooltipValuesRaw),
-        Component: XRangeTooltipValuesExample,
-    },
-    'tooltip/multiple-y-axes': {
-        code: extractDisplayCode(multipleYAxesTooltipRaw),
-        Component: MultipleYAxesTooltipExample,
-    },
-    'legend/wrapping': {
-        code: extractDisplayCode(legendWrappingRaw),
-        Component: LegendWrappingExample,
-    },
-    'legend/content-based-width': {
-        code: extractDisplayCode(contentBasedLegendRaw),
-        Component: ContentBasedLegendExample,
-    },
-    'legend/vertical': {
-        code: extractDisplayCode(verticalLegendRaw),
-        Component: VerticalLegendExample,
-    },
-    'legend/labels': {
-        code: extractDisplayCode(legendLabelsRaw),
-        Component: LegendLabelsExample,
-    },
-    'data-labels/stack-labels': {
-        code: extractDisplayCode(stackLabelsRaw),
-        Component: StackLabelsExample,
-    },
-    'axis-labels/font-size': {
-        code: extractDisplayCode(axisLabelFontSizeRaw),
-        Component: AxisLabelFontSizeExample,
-    },
-    'axis-types/linear': {code: extractDisplayCode(linearRaw), Component: LinearAxisExample},
-    'axis-types/logarithmic': {
-        code: extractDisplayCode(logarithmicRaw),
-        Component: LogarithmicAxisExample,
-    },
-    'axis-types/datetime': {code: extractDisplayCode(datetimeRaw), Component: DatetimeAxisExample},
-    'axis-types/category': {
-        code: extractDisplayCode(categoryRaw),
-        Component: CategoryAxisExample,
-    },
-    'series-types/bar-x-overlay': {
-        Component: BarXOverlayExample,
-        code: extractDisplayCode(barXOverlayRaw),
-    },
-    'series-types/bar-y-overlay': {
-        Component: BarYOverlayExample,
-        code: extractDisplayCode(barYOverlayRaw),
-    },
-    'series-types/bar-x': {
-        code: extractDisplayCode(barXSeriesRaw),
-        Component: BarXSeriesExample,
-    },
-    'series-types/bar-y': {
-        code: extractDisplayCode(barYSeriesRaw),
-        Component: BarYSeriesExample,
-    },
-    'series-types/line': {
-        code: extractDisplayCode(lineSeriesRaw),
-        Component: LineSeriesExample,
-    },
-    'series-types/line-markers': {
-        code: extractDisplayCode(lineMarkersRaw),
-        Component: LineMarkersExample,
-    },
-    'series-types/scatter': {
-        code: extractDisplayCode(scatterSeriesRaw),
-        Component: ScatterSeriesExample,
-    },
-    'series-types/area': {
-        code: extractDisplayCode(areaSeriesRaw),
-        Component: AreaSeriesExample,
-    },
-    'series-types/area-range': {
-        code: extractDisplayCode(areaRangeSeriesRaw),
-        Component: AreaRangeSeriesExample,
-    },
-    'series-types/area-range-with-line': {
-        code: extractDisplayCode(areaRangeWithLineRaw),
-        Component: AreaRangeWithLineExample,
-    },
-    'value-formatting/quarterly-x-axis': {
-        code: extractDisplayCode(quarterlyXAxisRaw),
-        Component: QuarterlyXAxisExample,
-    },
-    'line-interpolation/monotone': {
-        code: extractDisplayCode(lineInterpolationMonotoneRaw),
-        Component: LineInterpolationMonotoneExample,
-    },
-    'line-interpolation/cardinal': {
-        code: extractDisplayCode(lineInterpolationCardinalRaw),
-        Component: LineInterpolationCardinalExample,
-    },
-    'data-labels/placement-auto': {
-        code: extractDisplayCode(dataLabelsPlacementAutoRaw),
-        Component: DataLabelsPlacementAutoExample,
-    },
-    'data-labels/placement-fixed': {
-        code: extractDisplayCode(dataLabelsPlacementFixedRaw),
-        Component: DataLabelsPlacementFixedExample,
-    },
-    'data-labels/placement-fallback-hide': {
-        code: extractDisplayCode(dataLabelsPlacementFallbackHideRaw),
-        Component: DataLabelsPlacementFallbackHideExample,
-    },
-};
+const components = import.meta.glob<ExampleModule['Component']>('./**/*.tsx', {
+    eager: true,
+    import: 'default',
+});
+const metadata = import.meta.glob<ExampleMeta>('./**/*.tsx', {
+    eager: true,
+    import: 'meta',
+});
+const sources = import.meta.glob<string>('./**/*.tsx', {
+    eager: true,
+    query: '?example-source',
+    import: 'default',
+});
+
+export const registry: Record<string, ExampleModule> = Object.fromEntries(
+    Object.entries(components).map(([path, Component]) => [
+        path.slice(2, -4),
+        {Component, code: sources[path], meta: metadata[path]},
+    ]),
+);
+
+export const galleryGroups = getGalleryGroups(
+    Object.fromEntries(Object.entries(registry).map(([id, example]) => [id, example.meta])),
+);

@@ -53,6 +53,36 @@ If you need to update the reference screenshots (e.g. after intentional UI chang
 npm run playwright:docker:update
 ```
 
+## Documentation examples
+
+Add a live example as a `.tsx` file under `docs/examples/src/charts`, exporting its component as the default export and its metadata as `export const meta = {...} satisfies ExampleMeta`. Import `ExampleMeta` from `../gallery` for examples in a subdirectory. Use literal strings, numbers, and objects in metadata so the build can validate it without running the component.
+
+Provide a title, short description, primary series type, and a `docsUrl` pointing to the built guide page and section anchor, such as `pages/guides/legend.html#item-layout`. The file path without `.tsx` becomes the example ID. Registration is automatic; there is no separate list to update. The displayed source code omits the metadata export and its type import.
+
+Use card titles and descriptions to explain the demonstrated configuration (for example, a basic chart, label formatting, or stacking), rather than the business meaning of the sample data.
+
+Embed it in a guide using `<div data-chart-example="your/example-id"></div>`. The [Examples catalog](./examples.md) automatically reuses the same component. An example combining series types belongs to one primary group.
+
+Set `gallery.order: 0` for the basic example of each series; other examples default to `100`, with title as the tie-breaker. Set `gallery.group` to `axes`, `legend`, `tooltip`, or `data-labels` to place a cross-cutting example in a topic group instead of its series group. Each example appears once. Topic names and their display order are defined in `docs/examples/src/charts/gallery-groups.json`; series groups come first, in alphabetical order. Unknown topic IDs fail the documentation build. Gallery cards show the chart, description, and a Learn more link to the guide. Guides embed a focused selection of examples with Preview and Code tabs.
+
+Run `npm run docs:build` to check registration, documentation coverage, and guide links.
+
+After building, check gallery navigation and the guide code tabs in Docker:
+
+```shell
+./scripts/playwright-docker.sh 'npm run test:docs-examples'
+```
+
+The tests serve `dist-docs` temporarily on Vite's default preview port, `4173`, under `/docs-preview/` to check deployment-relative paths. To test an already published preview, pass its documentation root URL; no local build or server is needed:
+
+```shell
+./scripts/playwright-docker.sh 'DOCS_BASE_URL=https://storage.yandexcloud.net/playwright-reports/charts/pulls/<number>/docs/ npm run test:docs-examples'
+```
+
+Replace `<number>` with the pull request number.
+
+In CI, the `Docs examples` job tests the same build artifact that is published as the PR preview. A test failure produces a separate failing check and preserves the preview for investigation; the test report includes failure screenshots and traces. Chart behavior and visual regressions remain covered by the component tests in `playwright/playwright.config.ts`.
+
 ## Contributing
 
 Please refer to the [contributing document](https://github.com/gravity-ui/charts/blob/main/CONTRIBUTING.md) before submitting a pull request.
