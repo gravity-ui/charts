@@ -2,6 +2,7 @@ import type {PreparedSankeyData, SankeyLink, SankeyNode} from '~core/shapes/sank
 import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
+import {getSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSankeyLinkPoint, PointPosition} from '../../types';
 
@@ -10,7 +11,10 @@ const linkPoints = new WeakMap<SankeyLink, ChartSankeyLinkPoint>();
 export function getTargetElements({plot, preparedData}: InteractionElementsArgs) {
     const {series} = preparedData[0] as PreparedSankeyData;
     return [
-        ...getInteractionElements<SankeyNode>(plot, 'rect', (node) => ({point: node.data, series})),
+        ...getInteractionElements<SankeyNode>(plot, 'rect', (node) => ({
+            point: getSourcePoint(node.data),
+            series,
+        })),
         ...getInteractionElements<SankeyLink>(plot, 'path', (link) => {
             const point = getLinkPoint(link);
             return {point, series};
@@ -21,7 +25,12 @@ export function getTargetElements({plot, preparedData}: InteractionElementsArgs)
 function getLinkPoint(link: SankeyLink): ChartSankeyLinkPoint {
     let point = linkPoints.get(link);
     if (!point) {
-        point = {kind: 'link', source: link.source, target: link.target, value: link.value};
+        point = {
+            kind: 'link',
+            source: getSourcePoint(link.source),
+            target: getSourcePoint(link.target),
+            value: link.value,
+        };
         linkPoints.set(link, point);
     }
     return point;
@@ -36,7 +45,7 @@ export function prepareNearestData({
     if (!shape) return [];
     const candidates: NearestCandidate[] = shape.nodes.map((node) => ({
         position: [(node.x0 + node.x1) / 2, (node.y0 + node.y1) / 2],
-        item: {point: node.data, series: shape.series},
+        item: {point: getSourcePoint(node.data), series: shape.series},
     }));
     // Prepared links are replaced on geometry updates. Measure each path only once.
     let path: SVGPathElement | undefined;

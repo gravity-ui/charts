@@ -85,6 +85,14 @@ export function validateData(data?: ChartData) {
         });
     }
 
+    const clickMode = data.chart?.events?.clickMode;
+    if (clickMode !== undefined && clickMode !== 'plot' && clickMode !== 'tooltip') {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: 'chart.events.clickMode must be "plot" or "tooltip"',
+        });
+    }
+
     validateAxes({xAxis: data.xAxis, yAxis: data.yAxis});
     validateTooltip({tooltip: data.tooltip});
 

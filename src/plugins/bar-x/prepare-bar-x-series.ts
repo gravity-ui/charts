@@ -7,6 +7,7 @@ import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
 
@@ -15,7 +16,7 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, y: p.y ?? 0}));
+            return data.map((p) => withSourcePoint(p, {...p, y: p.y ?? 0}));
         case 'skip':
         default:
             return data;

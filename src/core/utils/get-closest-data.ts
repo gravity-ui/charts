@@ -5,6 +5,7 @@ import type {ChartInteractionItem, TooltipDataChunk} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
+import {toPublicInteractionItem} from './chart-interaction';
 import {getNearestItem} from './nearest-point';
 import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
 import type {LayerIndexes, ShapePoint, TooltipCandidate} from './tooltip-helpers';
@@ -187,17 +188,18 @@ export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem
                 );
             },
         );
-        return getNearestItem(args.position, candidates, args.seriesOrder);
+        const nearest = getNearestItem(args.position, candidates, args.seriesOrder);
+        return nearest ? toPublicInteractionItem(nearest) : null;
     }
     // Use the same candidate selection and eligibility as the tooltip in this mode.
     const selected = getClosestPoints(args).find((item) => item.closest);
     if (!selected) return null;
     const plugin = getSeriesPlugin(selected.series.type);
-    return (
+    return toPublicInteractionItem(
         plugin.interaction?.getClosestItem?.(selected) ??
-        ({
-            point: selected.data,
-            series: selected.series,
-        } as ChartInteractionItem)
+            ({
+                point: selected.data,
+                series: selected.series,
+            } as ChartInteractionItem),
     );
 }

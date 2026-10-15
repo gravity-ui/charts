@@ -10,6 +10,7 @@ import {prepareSankeyData} from '~core/shapes/sankey/prepare-data';
 import {renderSankey} from '~core/shapes/sankey/renderer';
 import type {PreparedSankeyData} from '~core/shapes/sankey/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getSourcePoint} from '~core/utils/source-point';
 
 import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
@@ -52,8 +53,8 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
                 series: item.series as PreparedSankeySeries,
                 point: {
                     kind: 'link',
-                    source: item.data,
-                    target: item.target!,
+                    source: getSourcePoint(item.data),
+                    target: getSourcePoint(item.target!),
                     value: getLinkValue(item)!,
                 },
             };

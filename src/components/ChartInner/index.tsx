@@ -165,6 +165,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
         throttledHandleTouchMove,
     } = useChartInnerHandlers({
         chartApi,
+        clickMode: data.chart?.events?.clickMode ?? 'tooltip',
         resetKey: hoverResetKey,
         boundsHeight,
         boundsOffsetLeft,

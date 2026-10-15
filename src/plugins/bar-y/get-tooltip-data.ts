@@ -10,6 +10,8 @@ import type {
     TooltipCandidate,
 } from '~core/utils/tooltip-helpers';
 
+import type {BarYSeries} from '../../types';
+
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
     const {data, position, measureDistance} = args;
     const [pointerX, pointerY] = position;
@@ -61,20 +63,20 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     }
 
     return {
-        chunks: selectedPoints.map((p) => {
+        chunks: selectedPoints.map<TooltipCandidate>((p) => {
             const closest = hasOverlays
                 ? p === closestPoint
                 : p.x === closestPointXValue && p.y === closestYPoint.y;
             return {
                 data: p.data,
                 percentage: p.percentage,
-                series: p.series,
+                series: p.series as BarYSeries,
                 closest,
                 distance:
                     closest && measureDistance
                         ? getRectDistance(getBarYRect(p), pointerX, pointerY)
                         : undefined,
             };
-        }) as TooltipCandidate[],
+        }),
     };
 }

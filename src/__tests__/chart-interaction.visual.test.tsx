@@ -50,10 +50,268 @@ async function paintedPosition(locator: Locator) {
 }
 
 function chart(series: ChartSeries[], extra: Partial<ChartData> = {}): ChartData {
-    return {legend: {enabled: false}, tooltip: {enabled: false}, series: {data: series}, ...extra};
+    return {
+        chart: {events: {clickMode: 'plot'}},
+        legend: {enabled: false},
+        tooltip: {enabled: false},
+        series: {data: series},
+        ...extra,
+    };
 }
 
 const custom = {issues: ['ISSUE-1']};
+
+for (const clickMode of [undefined, 'tooltip'] as const) {
+    test(`Legacy click mode (${clickMode ?? 'default'}) skips missing selections and preserves arguments`, async ({
+        mount,
+        page,
+    }) => {
+        const data = chart([{type: 'pie', data: [{name: 'Open', value: 10}]}], {
+            chart: {events: {clickMode}},
+        });
+        const component = await mount(<ChartInteractionTestStory data={data} />);
+        const pie = component.locator('.gcharts-pie__segment');
+        await expect(pie).toBeVisible();
+        const corner = await component.locator('.gcharts-chart__content').evaluate((node) => {
+            const p = new DOMPoint(2, 2).matrixTransform(
+                (node as SVGGraphicsElement).getScreenCTM()!,
+            );
+            return {x: p.x, y: p.y};
+        });
+        await page.mouse.click(corner.x, corner.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('0');
+        const position = await paintedPosition(pie);
+        await page.mouse.click(position.x, position.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('1');
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent())!,
+        );
+        expect(result.legacy.point).toEqual({name: 'Open', value: 10});
+        expect(result.hasLegacyEvent).toBe(true);
+
+        await component.update(
+            <ChartInteractionTestStory
+                data={{
+                    ...data,
+                    series: {
+                        data: [
+                            {
+                                type: 'pie',
+                                tooltip: {enabled: false},
+                                data: [{name: 'Open', value: 10}],
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+        await expect(pie).toBeVisible();
+        await page.mouse.click(position.x, position.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('1');
+    });
+}
+
+for (const type of ['line', 'area', 'scatter'] as const) {
+    test(`${type}: zero-mode interactions preserve source values and legacy selection`, async ({
+        mount,
+        page,
+    }) => {
+        const source = {x: 1, y: null, custom: 'null-source'};
+        const data = chart(
+            [
+                {
+                    type,
+                    name: 'Values',
+                    nullMode: 'zero',
+                    ...(type === 'scatter' ? {} : {marker: {enabled: true, radius: 8}}),
+                    data: [{x: 0, y: 5}, source, {x: 2, y: 5}],
+                },
+            ],
+            {xAxis: {min: 0, max: 2}, yAxis: [{min: -1, max: 6}]},
+        );
+        const component = await mount(<ChartInteractionTestStory data={data} />);
+        await expect(component.locator(`.gcharts-${type}`)).toBeVisible();
+        const position = await component.locator('.gcharts-chart__content').evaluate((node) => {
+            const plot = node as SVGGraphicsElement;
+            const point = new DOMPoint(
+                Number(plot.getAttribute('width')) / 2,
+                (Number(plot.getAttribute('height')) * 6) / 7,
+            ).matrixTransform(plot.getScreenCTM()!);
+            return {x: point.x, y: point.y};
+        });
+        await page.mouse.click(position.x, position.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('1');
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent())!,
+        );
+        expect(result.chart.point).toEqual(source);
+        expect(result.tooltip.point).toEqual(source);
+        expect(result.targets).toEqual(
+            expect.arrayContaining([expect.objectContaining({point: source})]),
+        );
+        for (const item of result.targets) {
+            if (item.point.kind === 'shape') {
+                expect(item.point.points).toContainEqual(source);
+            }
+        }
+        expect(result.legacy.point).toEqual({...source, y: 0});
+    });
+}
+
+for (const duplicateVertices of [false, true]) {
+    test(`Stacked area returns source points without synthetic zeros or geometry duplicates (${duplicateVertices})`, async ({
+        mount,
+        page,
+    }) => {
+        const points = duplicateVertices
+            ? [
+                  {x: 0, y: 5, custom: 'a'},
+                  {x: 1, y: 5, custom: 'b'},
+                  {x: 2, y: 5, custom: 'c'},
+              ]
+            : [
+                  {x: 0, y: 5, custom: 'a'},
+                  {x: 2, y: 5, custom: 'c'},
+              ];
+        const data = chart(
+            [
+                {type: 'area', name: 'Top', stacking: 'normal', data: points},
+                {
+                    type: 'area',
+                    name: 'Bottom',
+                    stacking: 'normal',
+                    data: [
+                        {x: 0, y: duplicateVertices ? 5 : null},
+                        {x: 1, y: 5, custom: 'real', tooltip: {enabled: false}},
+                        {x: 2, y: null},
+                    ],
+                },
+            ],
+            {xAxis: {min: 0, max: 2}, yAxis: [{min: 0, max: 20}]},
+        );
+        const component = await mount(<ChartInteractionTestStory data={data} />);
+        const area = component.locator('.gcharts-area__region').last();
+        const position = await paintedPosition(area);
+        await page.mouse.click(position.x, position.y);
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent())!,
+        );
+        expect(
+            result.targets.find((item: {name: string}) => item.name === 'Top').point.points,
+        ).toEqual(points);
+        if (!duplicateVertices) {
+            const gap = await component.locator('.gcharts-chart__content').evaluate((node) => {
+                const plot = node as SVGGraphicsElement;
+                const p = new DOMPoint(
+                    Number(plot.getAttribute('width')) / 2,
+                    Number(plot.getAttribute('height')) * 0.75,
+                ).matrixTransform(plot.getScreenCTM()!);
+                return {x: p.x, y: p.y};
+            });
+            await page.mouse.click(gap.x, gap.y);
+            await expect(component.getByTestId('interaction-count')).toHaveText('2');
+            const nearest = JSON.parse(
+                (await component.getByTestId('interaction-result').textContent())!,
+            );
+            expect(nearest.chart.point).toEqual({
+                x: 1,
+                y: 5,
+                custom: 'real',
+                tooltip: {enabled: false},
+            });
+        }
+    });
+}
+
+for (const color of ['transparent-gradient', 'color(srgb 1 0 0 / 0)', 'color(srgb 1 0 0 / 0.5)']) {
+    test(`Exact hits respect paint alpha: ${color}`, async ({mount, page}) => {
+        const points = [
+            {x: 2, y: 10},
+            {x: 8, y: 10},
+        ];
+        const fillColor: SeriesColor =
+            color === 'transparent-gradient'
+                ? {
+                      type: 'linear-gradient',
+                      stops: [
+                          {offset: 0, color: 'rgba(255,0,0,0)'},
+                          {offset: 1, color: 'rgba(0,0,255,0)'},
+                      ],
+                  }
+                : color;
+        const data = chart(
+            [
+                {type: 'area', name: 'Base', data: points},
+                {type: 'area', name: 'Overlay', data: points, fillColor},
+            ],
+            {xAxis: {min: 0, max: 10}, yAxis: [{min: 0, max: 20}]},
+        );
+        const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+        const position = await paintedPosition(component.locator('.gcharts-area__region').last());
+        await page.mouse.click(position.x, position.y);
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent())!,
+        );
+        expect(result.targets.map((item: {name: string}) => item.name)).toEqual(
+            color.endsWith('0.5)') ? ['Overlay', 'Base'] : ['Base'],
+        );
+    });
+}
+
+test('Transparent portions of a gradient do not mask underlying exact targets', async ({
+    mount,
+    page,
+}) => {
+    const points = [
+        {x: 0, y: 10},
+        {x: 10, y: 10},
+    ];
+    const data = chart(
+        [
+            {type: 'area', name: 'Base', data: points},
+            {
+                type: 'area',
+                name: 'Overlay',
+                data: points,
+                fillColor: {
+                    type: 'linear-gradient',
+                    angle: 90,
+                    stops: [
+                        {offset: 0, color: 'transparent'},
+                        {offset: 0.5, color: 'transparent'},
+                        {offset: 1, color: '#f00'},
+                    ],
+                },
+            },
+        ],
+        {xAxis: {min: 0, max: 10}, yAxis: [{min: 0, max: 20}]},
+    );
+    const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+    const area = component.locator('.gcharts-area__region').last();
+    await expect(area).toBeVisible();
+    const positions = await area.evaluate((node) => {
+        const element = node as SVGGraphicsElement;
+        const box = element.getBBox();
+        return [0.25, 0.75].map((fraction) => {
+            const p = new DOMPoint(
+                box.x + box.width * fraction,
+                box.y + box.height / 2,
+            ).matrixTransform(element.getScreenCTM()!);
+            return {x: p.x, y: p.y};
+        });
+    });
+    for (const [index, position] of positions.entries()) {
+        await page.mouse.click(position.x, position.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText(String(index + 1));
+        const result = JSON.parse(
+            (await component.getByTestId('interaction-result').textContent())!,
+        );
+        expect(result.targets.map((item: {name: string}) => item.name)).toEqual(
+            index ? ['Overlay', 'Base'] : ['Base'],
+        );
+    }
+});
+
 const cases: {type: ChartSeries['type']; selector: string; data: ChartData; shape?: boolean}[] = [
     {
         type: 'bar-x',
@@ -334,6 +592,7 @@ test.describe('Chart interaction queries', () => {
                 {type: 'scatter', name: 'Far', data: [{x: 5, y: 8, custom: 'far'}]},
             ];
             const data = chart(reverse ? series.reverse() : series, {
+                chart: {events: {}},
                 xAxis: {min: 0, max: 10},
                 yAxis: [{min: 0, max: 10}],
             });
@@ -366,7 +625,7 @@ test.describe('Chart interaction queries', () => {
                     ],
                 },
             ],
-            {xAxis: {min: 0, max: 10}, yAxis: [{min: 0, max: 10}]},
+            {chart: {events: {}}, xAxis: {min: 0, max: 10}, yAxis: [{min: 0, max: 10}]},
         );
         const component = await mount(<ChartInteractionTestStory data={data} />);
         const {x, y} = await paintedPosition(
@@ -445,6 +704,9 @@ test.describe('Chart interaction queries', () => {
             expect(result.chart.point.custom).toEqual(custom);
             expect(result.tooltip).toBeNull();
             expect(result.legacy).toBeNull();
+            expect(result.hasLegacyEvent).toBe(true);
+            expect(result.payloadKeys).toContain('point');
+            expect(result.payloadKeys).toContain('series');
             expect(result.targets).toHaveLength(1);
         });
     }
@@ -476,7 +738,17 @@ test.describe('Chart interaction queries', () => {
         );
         expect(result.targets).toEqual([]);
         expect(result.chart).not.toBeNull();
+        expect(result.tooltip).not.toBeNull();
+        expect(result.payloadKeys).toEqual([
+            'chart',
+            'event',
+            'point',
+            'position',
+            'series',
+            'targets',
+        ]);
         expect(result.legacy.point).toEqual(result.tooltip.point);
+        expect(result.hasLegacyEvent).toBe(true);
     });
 
     test('Chart and tooltip nearest modes can select different points', async ({mount, page}) => {
@@ -575,10 +847,11 @@ test.describe('Chart interaction queries', () => {
         expect(result.targets.map((item: {type: string}) => item.type)).toEqual(['line', 'bar-x']);
     });
 
-    test('Donut holes have no exact hits but support both nearest modes', async ({mount, page}) => {
-        const data = chart([{type: 'pie', data: [{name: 'Open', value: 10}]}], {
-            series: {data: [{type: 'pie', innerRadius: '70%', data: [{name: 'Open', value: 10}]}]},
-        });
+    test('Donut holes have a chart candidate but no exact or tooltip selection', async ({
+        mount,
+        page,
+    }) => {
+        const data = chart([{type: 'pie', innerRadius: '70%', data: [{name: 'Open', value: 10}]}]);
         const component = await mount(<ChartInteractionTestStory data={data} />);
         const pie = component.locator('.gcharts-pie__segment');
         await expect(pie).toBeVisible();
@@ -589,8 +862,8 @@ test.describe('Chart interaction queries', () => {
             (await component.getByTestId('interaction-result').textContent())!,
         );
         expect(result.targets).toEqual([]);
-        // The existing pie lookup uses radial candidates even in a donut hole.
         expect(result.chart).not.toBeNull();
+        expect(result.tooltip).toBeNull();
     });
 
     test('Covered targets follow current paint order and preserve series metadata', async ({
@@ -621,6 +894,12 @@ test.describe('Chart interaction queries', () => {
         );
         expect(result.targets.map((item: {name: string}) => item.name)).toEqual(['Upper', 'Lower']);
         expect(result.targets[0].custom).toEqual({filter: 'upper'});
+        expect(result.targets[0].series).toEqual({
+            type: 'x-range',
+            id: expect.any(String),
+            name: 'Upper',
+            custom: {filter: 'upper'},
+        });
     });
 
     test('Rounded corners and borders use paint contours and yield one logical hit', async ({
@@ -671,7 +950,7 @@ test.describe('Chart interaction queries', () => {
             target: {name: 'Closed'},
         });
         expect(result.chart.point).toMatchObject({kind: 'link', value: 10});
-        expect(result.legacy.point.name).toBe('Open');
+        expect(result.tooltip.point.source).toEqual(result.targets[0].point.source);
     });
 
     test('Parallel Sankey links retain the selected link value in tooltip queries', async ({
@@ -707,7 +986,7 @@ test.describe('Chart interaction queries', () => {
         expect(result.tooltip.point.value).toBe(30);
     });
 
-    test('Queries use replacement data and only the main plot, not preview geometry', async ({
+    test('Queries and exact targets use replacement data with a range-slider preview', async ({
         mount,
     }) => {
         const data = chart(
@@ -722,22 +1001,10 @@ test.describe('Chart interaction queries', () => {
                 },
             ],
             {
-                series: {
-                    data: [
-                        {
-                            type: 'bar-x',
-                            name: 'Issues',
-                            data: [
-                                {x: 0, y: 10, custom: 'old'},
-                                {x: 1, y: 20},
-                            ],
-                        },
-                    ],
-                },
                 xAxis: {rangeSlider: {enabled: true}},
             },
         );
-        const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+        const component = await mount(<ChartInteractionTestStory data={data} query="all" />);
         const bar = component.locator('.gcharts-chart__content .gcharts-bar-x__segment').first();
         await expect(bar).toBeVisible();
         await bar.click();
@@ -758,7 +1025,7 @@ test.describe('Chart interaction queries', () => {
                 ],
             },
         };
-        await component.update(<ChartInteractionTestStory data={updated} query="none" />);
+        await component.update(<ChartInteractionTestStory data={updated} query="all" />);
         await expect
             .poll(async () => {
                 await bar.click();
@@ -769,6 +1036,12 @@ test.describe('Chart interaction queries', () => {
             (await component.getByTestId('interaction-result').textContent())!,
         );
         expect(result.targets).toHaveLength(1);
+        expect(result.chart.point.custom).toBe('new');
+        await component.getByRole('button', {name: 'Query saved chart'}).click();
+        const nearest = JSON.parse(
+            (await component.getByTestId('chart-query-result').textContent())!,
+        );
+        expect(nearest.point.custom).toBe('new');
     });
 
     test('Documentation example supports exact clicks with disabled tooltips', async ({
@@ -798,6 +1071,46 @@ test.describe('Chart interaction queries', () => {
         expect(result.targets[0].point.custom).toEqual(custom);
         expect(result.native).toBe(true);
     });
+});
+
+test('Exact hit testing skips paint resolution for distant shapes', async ({mount}) => {
+    const data = chart(
+        [
+            {
+                type: 'scatter',
+                name: 'Scatter',
+                data: Array.from({length: 100}, (_, index) => ({
+                    x: 2 + (index % 5),
+                    y: 2 + Math.floor(index / 5) / 5,
+                })),
+            },
+        ],
+        {xAxis: {min: 0, max: 10}, yAxis: [{min: 0, max: 10}]},
+    );
+    const component = await mount(<ChartInteractionTestStory data={data} query="none" />);
+    await expect(component.locator('.gcharts-scatter .gcharts-marker__symbol')).toHaveCount(100);
+    const styleReads = await component.locator('.gcharts-chart__content').evaluate((node) => {
+        const plot = node as SVGGraphicsElement;
+        const point = new DOMPoint(5, 5).matrixTransform(plot.getScreenCTM()!);
+        const original = window.getComputedStyle;
+        let count = 0;
+        window.getComputedStyle = (element, pseudoElement) => {
+            if (element.matches('.gcharts-scatter .gcharts-marker__symbol')) count++;
+            return original.call(window, element, pseudoElement);
+        };
+        try {
+            plot.dispatchEvent(
+                new MouseEvent('click', {bubbles: true, clientX: point.x, clientY: point.y}),
+            );
+        } finally {
+            window.getComputedStyle = original;
+        }
+        return count;
+    });
+    expect(styleReads).toBe(0);
+    await expect(component.getByTestId('interaction-count')).toHaveText('1');
+    const result = JSON.parse((await component.getByTestId('interaction-result').textContent())!);
+    expect(result.targets).toEqual([]);
 });
 
 test('Normal line markers remain exact point targets with hover markers disabled', async ({
@@ -842,6 +1155,7 @@ for (const type of ['line', 'area', 'area-range'] as const) {
     }) => {
         const point = {x: 1, y: 5, y0: 3, y1: 5, custom};
         const data: ChartData = {
+            chart: {events: {clickMode: 'plot'}},
             legend: {enabled: false},
             tooltip: {enabled: false},
             xAxis: {min: 0, max: 2},
@@ -891,6 +1205,7 @@ for (const type of ['line', 'area', 'area-range'] as const) {
 
 test('radar hover-only markers do not become exact point targets', async ({mount, page}) => {
     const data: ChartData = {
+        chart: {events: {clickMode: 'plot'}},
         legend: {enabled: false},
         tooltip: {enabled: false},
         series: {
@@ -969,7 +1284,48 @@ test('preserving Sankey custom does not change legacy tooltip eligibility', asyn
         (await component.getByTestId('interaction-result').textContent()) ?? '',
     );
     expect(result.targets[0].point.source.custom).toBe('source');
+    expect(result.targets[0].point.source).toEqual(data.series.data[0].data[0]);
+    expect(result.targets[0].point.target).toEqual(data.series.data[0].data[1]);
+    expect(result.tooltip.point).toEqual(result.targets[0].point);
     expect(result.legacy?.point.name).toBe('A');
+});
+
+test('Retained queries follow range changes and exclude preview points', async ({mount}) => {
+    const data = chart(
+        [
+            {
+                type: 'bar-x',
+                name: 'Values',
+                data: [
+                    {x: 0, y: 10, custom: 'preview-only'},
+                    {x: 5, y: 10, custom: 'middle'},
+                    {x: 10, y: 10, custom: 'last'},
+                ],
+            },
+        ],
+        {xAxis: {min: 0, max: 10, rangeSlider: {enabled: true}}},
+    );
+    const component = await mount(<ChartInteractionTestStory data={data} queryPosition={[0, 1]} />);
+    const mainBars = component.locator('.gcharts-chart__content .gcharts-bar-x__segment');
+    await expect(mainBars).toHaveCount(3);
+    await mainBars.first().click();
+    await component.getByRole('button', {name: 'Query saved chart'}).click();
+    await expect(component.getByTestId('chart-query-result')).toContainText('preview-only');
+
+    await component.update(
+        <ChartInteractionTestStory
+            data={{
+                ...data,
+                xAxis: {...data.xAxis, rangeSlider: {enabled: true, defaultRange: {size: 2}}},
+            }}
+            queryPosition={[0, 1]}
+        />,
+    );
+    await expect(mainBars).toHaveCount(1);
+    // Query the API retained before the range update, without a new plot click.
+    await component.getByRole('button', {name: 'Query saved chart'}).click();
+    const result = JSON.parse((await component.getByTestId('chart-query-result').textContent())!);
+    expect(result.point.custom).toBe('last');
 });
 
 test('Component ref exposes resizing separately from the event query API', async ({mount}) => {

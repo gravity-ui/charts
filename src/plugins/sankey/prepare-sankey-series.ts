@@ -5,6 +5,7 @@ import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import type {PreparedLegendOptions, PreparedSankeySeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, SankeySeries} from '../../types';
 
@@ -25,12 +26,14 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
 
         const preparedSeries: PreparedSankeySeries = {
             color,
-            data: s.data.map((d) => ({
-                custom: d.custom,
-                name: d.name,
-                color: d.color ?? colorScale(d.name),
-                links: d.links,
-            })),
+            data: s.data.map((d) =>
+                withSourcePoint(d, {
+                    custom: d.custom,
+                    name: d.name,
+                    color: d.color ?? colorScale(d.name),
+                    links: d.links,
+                }),
+            ),
             dataLabels: {
                 enabled: get(s, 'dataLabels.enabled', true),
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, s.dataLabels?.style),

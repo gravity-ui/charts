@@ -8,6 +8,7 @@ import type {
 } from '../../types';
 import type {MarkerItem, SeriesShapeData} from '../shapes/types';
 
+import {getSourcePoint} from './source-point';
 import {createSvgHitTest} from './svg-hit-test';
 
 export interface InteractionElement {
@@ -50,18 +51,24 @@ interface MarkerShapeData extends SeriesShapeData {
     series: ChartInteractionSeries;
 }
 
+const markerIndexes = new WeakMap<
+    MarkerShapeData[],
+    Map<unknown, {marker: MarkerItem; series: ChartInteractionSeries}[]>
+>();
+
 /** Includes the current symbol of a permanent marker, excluding hover-only decorations. */
 export function getMarkerInteractionElements(root: SVGGElement, shapes: MarkerShapeData[]) {
-    const normalMarkers = new Map<
-        unknown,
-        {marker: MarkerItem; series: ChartInteractionSeries}[]
-    >();
-    for (const shape of shapes) {
-        for (const marker of shape.markers) {
-            const entries = normalMarkers.get(marker.data) ?? [];
-            entries.push({marker, series: shape.series});
-            normalMarkers.set(marker.data, entries);
+    let normalMarkers = markerIndexes.get(shapes);
+    if (!normalMarkers) {
+        normalMarkers = new Map();
+        for (const shape of shapes) {
+            for (const marker of shape.markers) {
+                const entries = normalMarkers.get(marker.data) ?? [];
+                entries.push({marker, series: shape.series});
+                normalMarkers.set(marker.data, entries);
+            }
         }
+        markerIndexes.set(shapes, normalMarkers);
     }
     return getInteractionElements<MarkerItem>(root, '.gcharts-marker__symbol', (item) => {
         const normal = normalMarkers
@@ -80,10 +87,27 @@ export function getMarkerInteractionElements(root: SVGGElement, shapes: MarkerSh
 
 const shapePoints = new WeakMap<object, ChartShapePoint<unknown>>();
 
-export function getShapePoint<T>(shape: object, points: {data: T}[]): ChartShapePoint<T> {
+const seriesMetadata = new WeakMap<ChartInteractionSeries, ChartInteractionSeries>();
+
+/** Keep prepared configuration and layout graphs out of public interaction results. */
+export function toPublicInteractionItem(item: ChartInteractionItem): ChartInteractionItem {
+    let series = seriesMetadata.get(item.series);
+    if (!series) {
+        const {type, id, name, custom} = item.series;
+        series = {type, id, name, custom};
+        seriesMetadata.set(item.series, series);
+    }
+    // The metadata projection preserves the series type and its corresponding point type.
+    return {...item, point: getSourcePoint(item.point), series} as ChartInteractionItem;
+}
+
+export function getShapePoint<T extends object>(
+    shape: object,
+    points: {data: T}[],
+): ChartShapePoint<T> {
     let point = shapePoints.get(shape);
     if (!point) {
-        point = {kind: 'shape', points: points.map((p) => p.data)};
+        point = {kind: 'shape', points: points.map((p) => getSourcePoint(p.data))};
         shapePoints.set(shape, point);
     }
     return point as ChartShapePoint<T>;
@@ -113,13 +137,14 @@ export function getChartTargets(
     });
     const seen = new Map<string, Set<ChartInteractionItem['point']>>();
     return hits.flatMap(({item}) => {
-        let points = seen.get(item.series.id);
+        const result = toPublicInteractionItem(item);
+        let points = seen.get(result.series.id);
         if (!points) {
             points = new Set();
-            seen.set(item.series.id, points);
+            seen.set(result.series.id, points);
         }
-        if (points.has(item.point)) return [];
-        points.add(item.point);
-        return [item];
+        if (points.has(result.point)) return [];
+        points.add(result.point);
+        return [result];
     });
 }

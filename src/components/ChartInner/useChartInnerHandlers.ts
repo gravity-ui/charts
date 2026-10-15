@@ -15,7 +15,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {useHoverResetKey} from '../../hooks/useHoverResetKey';
 import type {
     ChartApi,
-    ChartClickData,
+    ChartLegacyClickData,
     ChartTooltipRendererArgs,
     ChartYAxis,
     PointPosition,
@@ -27,6 +27,7 @@ type ChartInnerState = ReturnType<typeof useChartInnerState>;
 
 interface Props {
     chartApi: ChartApi;
+    clickMode: 'plot' | 'tooltip';
     resetKey: ReturnType<typeof useHoverResetKey>;
     boundsHeight: number;
     boundsOffsetLeft: number;
@@ -49,6 +50,7 @@ interface Props {
 export function useChartInnerHandlers(props: Props) {
     const {
         chartApi,
+        clickMode,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
@@ -209,22 +211,18 @@ export function useChartInnerHandlers(props: Props) {
             boundsWidth,
         });
         const selected = items.find((item) => item.closest);
-        if (dispatcher.on(EventType.CLICK_CHART)) {
-            dispatcher.call(
-                EventType.CLICK_CHART,
-                undefined,
-                {
-                    position: [x, y],
-                    targets: svgContainer
-                        ? getChartTargets(svgContainer, [event.clientX, event.clientY])
-                        : [],
-                    chart: chartApi,
-                    event: event.nativeEvent,
-                    point: selected?.data,
-                    series: selected?.series,
-                } satisfies ChartClickData,
-                event,
-            );
+        if (dispatcher.on(EventType.CLICK_CHART) && (clickMode === 'plot' || selected)) {
+            const payload: Required<ChartLegacyClickData> = {
+                position: [x, y],
+                targets: svgContainer
+                    ? getChartTargets(svgContainer, [event.clientX, event.clientY])
+                    : [],
+                chart: chartApi,
+                event: event.nativeEvent,
+                point: selected?.data,
+                series: selected?.series,
+            };
+            dispatcher.call(EventType.CLICK_CHART, undefined, payload, event);
         }
 
         if (!selected) {

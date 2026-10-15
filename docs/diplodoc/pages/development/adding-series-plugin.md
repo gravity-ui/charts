@@ -65,6 +65,8 @@ Implement `interaction.prepareNearestData` for unfiltered `{position, item}` can
 
 Keep adapters and payload types in the plugin's `interaction.ts` and `interaction-types.ts`; add the public item to `src/plugins/interaction-types.ts`. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
 
+When preparing a copy of a source point, register it with `withSourcePoint` from `core/utils/source-point`. Public interaction results then resolve the original object without changing the data used by rendering or legacy callbacks. Resolve nested source points in composite payloads with `getSourcePoint`.
+
 ## 6. Integrate
 
 - Register in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts); add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).

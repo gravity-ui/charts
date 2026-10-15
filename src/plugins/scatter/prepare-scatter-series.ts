@@ -13,6 +13,7 @@ import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getSymbolType, getUniqId} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
 
@@ -53,20 +54,13 @@ function prepareMarker(
     };
 }
 
-function prepareSeriesData(
-    series: ScatterSeries,
-    sourceData?: WeakMap<ScatterSeriesData, ScatterSeriesData>,
-): ScatterSeriesData[] {
+function prepareSeriesData(series: ScatterSeries): ScatterSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
     const data = series.data;
 
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => {
-                const resolvedPoint = {...p, x: p.x ?? 0, y: p.y ?? 0};
-                sourceData?.set(resolvedPoint, p);
-                return resolvedPoint;
-            });
+            return data.map((p) => withSourcePoint(p, {...p, x: p.x ?? 0, y: p.y ?? 0}));
         case 'skip':
         default:
             return data.filter((p) => p.y !== null && p.x !== null);
@@ -84,10 +78,6 @@ export function prepareScatterSeries(
         const symbolType = (s as ScatterSeries).symbolType || getSymbolType(index);
         const yAxisIndex = get(s, 'yAxis', 0);
         const marker = prepareMarker(s, seriesOptions, index);
-        const sourceData =
-            s.cluster?.enabled && s.nullMode === 'zero'
-                ? new WeakMap<ScatterSeriesData, ScatterSeriesData>()
-                : undefined;
 
         const prepared: PreparedScatterSeries = {
             id,
@@ -102,8 +92,7 @@ export function prepareScatterSeries(
                 source: s.legend,
                 itemText: s.legend?.itemText ?? name,
             },
-            data: prepareSeriesData(s, sourceData),
-            sourceData,
+            data: prepareSeriesData(s),
             cluster: {
                 enabled: s.cluster?.enabled ?? false,
                 layoutAlgorithm: {

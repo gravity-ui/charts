@@ -13,13 +13,13 @@ export interface ChartInteractionSeries<TType extends ChartSeries['type'] = Char
     custom?: MeaningfulAny;
 }
 
-/** Data represented by an entire line or filled shape, rather than one of its vertices. */
+/** Data represented by an entire line or filled shape, with its original source points. */
 export interface ChartShapePoint<TPoint> {
     kind: 'shape';
     points: TPoint[];
 }
 
-/** Selected element data, with a payload owned by its series plugin. */
+/** Selected element data, preserving source point values; composite payloads are owned by the plugin. */
 export type ChartInteractionItem<
     T = MeaningfulAny,
     TType extends ChartSeries['type'] = ChartSeries['type'],
@@ -28,8 +28,9 @@ export type ChartInteractionItem<
 /** Stable queries over the chart's current rendered data, available in event payloads. */
 export interface ChartApi<T = MeaningfulAny> {
     /**
-     * Select the nearest plugin reference position by Euclidean distance in plot-relative pixels.
-     * Ties follow series/layer order, then candidate order. Exact contours are queried via targets.
+     * By default, select the nearest plugin reference position by Euclidean distance in plot-relative pixels.
+     * In chart mode, ties follow prepared series order, then candidate order.
+     * Tooltip mode preserves tooltip selection and layer priority. Use targets for exact contours.
      * Computes on request; returns null outside the plot or while no plot is available.
      * Results describe the data at query time. Later queries use the current chart state.
      */
@@ -47,6 +48,7 @@ export interface ChartClosestOptions {
     mode?: 'chart' | 'tooltip';
 }
 
+/** Complete modern event data emitted by the chart. Legacy wrappers may forward only part of it. */
 export interface ChartClickData<T = MeaningfulAny> {
     /** Click coordinates in pixels relative to the main plot's top-left corner. */
     position: [number, number];
@@ -56,8 +58,19 @@ export interface ChartClickData<T = MeaningfulAny> {
     chart: ChartApi<T>;
     /** Native click event. A tap produces the same payload as a mouse click. */
     event: MouseEvent;
+}
+
+// Mapping the modern fields preserves the indexability of the original inline callback payload.
+/**
+ * Compatible callback payload in both click modes. The chart supplies all modern fields;
+ * they are optional here because legacy wrappers may forward only point and series.
+ * Legacy selection may be absent in plot mode.
+ */
+export type ChartLegacyClickData<T = MeaningfulAny> = {
+    [K in keyof ChartClickData<T>]?: ChartClickData<T>[K];
+} & {
     /** @deprecated Use chart.getClosest(position, {mode: 'tooltip'})?.point, or targets for exact hits. */
     point: MeaningfulAny;
     /** @deprecated Use chart.getClosest(position, {mode: 'tooltip'})?.series, or targets for exact hits. */
     series: MeaningfulAny;
-}
+};

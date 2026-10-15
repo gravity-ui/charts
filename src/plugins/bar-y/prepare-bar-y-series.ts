@@ -7,6 +7,7 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
 
@@ -17,7 +18,7 @@ function prepareSeriesData(series: BarYSeries): BarYSeriesData[] {
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, x: p.x ?? 0}));
+            return data.map((p) => withSourcePoint(p, {...p, x: p.x ?? 0}));
         case 'skip':
         default:
             return data;

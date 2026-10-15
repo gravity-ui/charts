@@ -42,7 +42,10 @@ test('chart lookup compares both axes before discarding any line vertices', () =
         shapesData: [line],
         seriesOrder: ['line'],
     };
-    expect(getChartClosest({...args, mode: 'chart'})).toEqual(near);
+    expect(getChartClosest({...args, mode: 'chart'})).toEqual({
+        point: near.point,
+        series: {type: 'line', id: 'line', name: 'Line'},
+    });
     expect(getChartClosest({...args, mode: 'tooltip'})?.point).toEqual({x: 4.9, y: 9});
 });
 
@@ -61,8 +64,14 @@ test.each([false, true])(
             shapesData,
             seriesOrder: reverse ? ['scatter', 'line'] : ['line', 'scatter'],
         };
-        expect(getChartClosest({...args, mode: 'chart'})).toEqual(near);
-        expect(getChartClosest({...args, mode: 'tooltip'})).toEqual(near);
+        expect(getChartClosest({...args, mode: 'chart'})).toEqual({
+            point: near.point,
+            series: {type: 'line', id: 'line', name: 'Line'},
+        });
+        expect(getChartClosest({...args, mode: 'tooltip'})).toEqual({
+            point: near.point,
+            series: {type: 'line', id: 'line', name: 'Line'},
+        });
     },
 );
 

@@ -19,6 +19,7 @@ import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {
     ChartSeriesOptions,
@@ -117,7 +118,7 @@ function prepareSeriesData(series: LineSeries): LineSeriesData[] {
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, y: p.y ?? 0}));
+            return data.map((p) => withSourcePoint(p, {...p, y: p.y ?? 0}));
         case 'connect':
             return data.filter((p) => p.y !== null);
         case 'skip':

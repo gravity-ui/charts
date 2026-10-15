@@ -330,7 +330,7 @@
       "verticalAlign",
       "width"
     ],
-    "ChartOptions<JsonValue>": ["margin", "zoom"],
+    "ChartOptions<JsonValue>": ["events", "margin", "zoom"],
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",

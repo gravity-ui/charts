@@ -2,13 +2,7 @@ import React from 'react';
 
 import {Chart} from '../../components';
 import type {ChartRef} from '../../components';
-import type {
-    ChartApi,
-    ChartData,
-    ChartInteractionItem,
-    ChartSankeyLinkPoint,
-    SankeySeriesData,
-} from '../../types';
+import type {ChartApi, ChartData, ChartInteractionItem} from '../../types';
 
 interface Props {
     data: ChartData;
@@ -20,22 +14,13 @@ interface Props {
 
 function serializeItem(item: ChartInteractionItem | null) {
     if (!item) return null;
-    let point = item.point;
-    if (item.series.type === 'sankey') {
-        // Sankey layout nodes contain graph references. Assert public data without serializing the graph.
-        const data = point as SankeySeriesData | ChartSankeyLinkPoint;
-        const node = (value: SankeySeriesData) => ({name: value.name, custom: value.custom});
-        point =
-            'kind' in data && data.kind === 'link'
-                ? ({
-                      kind: 'link',
-                      source: node(data.source),
-                      target: node(data.target),
-                      value: data.value,
-                  } as ChartSankeyLinkPoint)
-                : (node(data as SankeySeriesData) as SankeySeriesData);
-    }
-    return {type: item.series.type, name: item.series.name, custom: item.series.custom, point};
+    return {
+        type: item.series.type,
+        name: item.series.name,
+        custom: item.series.custom,
+        point: item.point,
+        series: item.series,
+    };
 }
 
 export function ChartInteractionTestStory({
@@ -58,8 +43,11 @@ export function ChartInteractionTestStory({
                 ...data.chart,
                 events: {
                     ...data.chart?.events,
-                    click: (payload) => {
+                    click: (payload, legacyEvent) => {
                         const {targets, chart, event, position, point, series} = payload;
+                        if (!targets || !chart || !event || !position) {
+                            throw new Error('The chart must emit all modern click fields');
+                        }
                         const sameApi = savedChart.current === chart;
                         savedChart.current = chart;
                         lastPosition.current = position;
@@ -83,6 +71,8 @@ export function ChartInteractionTestStory({
                                           name: series.name,
                                       }
                                     : null,
+                                payloadKeys: Object.keys(payload).sort(),
+                                hasLegacyEvent: Boolean(legacyEvent),
                                 sameApi,
                                 apiMethods: Object.keys(chart),
                                 refMethods: Object.keys(chartRef.current ?? {}),

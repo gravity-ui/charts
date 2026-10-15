@@ -37,7 +37,11 @@ export function ClickTargetsExample() {
         },
         chart: {
             events: {
+                clickMode: 'plot',
                 click: ({targets, chart, position}) => {
+                    if (!targets || !chart || !position) {
+                        return;
+                    }
                     const target = targets[0];
                     if (target && isIssueTarget(target) && target.point.custom) {
                         setSelected(`Selected: ${target.point.custom.label}`);
