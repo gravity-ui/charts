@@ -10,6 +10,7 @@ import {getLineDashArray} from '../../utils';
 import {renderDataLabels} from '../data-labels';
 
 import type {PreparedXRangeData} from './types';
+import {getXRangeBorderRadius} from './utils';
 
 const b = block('x-range');
 
@@ -29,13 +30,12 @@ export function renderXRange(
         .data(preparedData)
         .join('path')
         .attr('d', (d) => {
-            const borderRadius = Math.min(d.height / 2, d.width / 2, d.series.borderRadius);
             return getRectPath({
                 x: d.x,
                 y: d.y,
                 width: d.width,
                 height: d.height,
-                borderRadius,
+                borderRadius: getXRangeBorderRadius(d),
             }).toString();
         })
         .attr('class', b('segment'))
@@ -48,13 +48,12 @@ export function renderXRange(
         .data(preparedData.filter((d) => d.series.borderWidth > 0))
         .join('path')
         .attr('d', (d) => {
-            const borderRadius = Math.min(d.height / 2, d.width / 2, d.series.borderRadius);
             return getRectPath({
                 x: d.x,
                 y: d.y,
                 width: d.width,
                 height: d.height,
-                borderRadius,
+                borderRadius: getXRangeBorderRadius(d),
             }).toString();
         })
         .attr('class', b('segment-border'))

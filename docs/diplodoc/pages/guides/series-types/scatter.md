@@ -1,8 +1,26 @@
 # Scatter series
 
-A scatter series plots points with numeric X and Y values. Set `type: 'scatter'` and provide each point's `x` and `y` values.
+A scatter series places independent observations by their X and Y values.
 
-## Point clustering
+## When to use
+
+Use it to examine relationships between two numeric variables, clusters, and outliers. Each point should represent one observation. A pattern suggests association, not causation.
+
+## Example
+
+<div data-chart-example="series-types/scatter-basic"></div>
+
+## Data
+
+Set `type: 'scatter'`. Each point contains `x` and `y`. For a category axis, use a category name or its zero-based index in `categories`; for a datetime axis, use a timestamp in milliseconds. See [Axis types](../axes/axis-types.md).
+
+## Series options
+
+### Markers
+
+Use `marker` to set point size and symbol.
+
+### Point clustering
 
 Clustering is disabled by default. Enable it on a scatter series to group visible points into square grid cells:
 
@@ -33,7 +51,7 @@ By default, `overlapMode: 'allow'` leaves cluster markers at their centroids. Wi
 
 `cluster.marker` supports `enabled`, `radius`, `symbol`, `color`, `borderColor`, and `borderWidth`. `cluster.dataLabels` supports `enabled`, `style`, `format`, and `allowOverlap`. The count is shown by default in the center of each cluster marker and remains visible on hover. Marker overlap and label overlap are configured separately.
 
-## Tooltip and click data
+## Tooltip
 
 A clustered point supplies `cluster: {size, points}` to tooltip renderers and chart click callbacks. `size` equals `points.length`; each member retains its original coordinates and `custom` fields. Ordinary points have no `cluster` field:
 
@@ -54,3 +72,7 @@ The default tooltip displays the cluster count independently of the series Y-val
 Scatter tooltip chunks also include `displayPosition` in plot pixels. Crosshairs snap to that rendered position when a cluster marker has shifted; the data centroid and original member coordinates remain unchanged.
 
 The range-slider overview remains unclustered. `cluster` controls the main chart; `rangeSlider.visible` still controls whether the series appears in the overview.
+
+## API reference
+
+[ScatterSeries](../../api/Series/Scatter/interfaces/ScatterSeries.md) · [ChartSeriesOptions](../../api/Series/General/interfaces/ChartSeriesOptions.md)

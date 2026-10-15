@@ -1,20 +1,19 @@
 import {sort} from 'd3-array';
 
 import type {XRangeSeries} from '../../../types';
+import {getDistanceToRoundedRect} from '../../utils/geometry';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '../../utils/tooltip-helpers';
 
 import type {PreparedXRangeData} from './types';
+import {getXRangeContour} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedXRangeData>): GetTooltipDataResult {
     const {data, position} = args;
-    const [pointerX, pointerY] = position;
+    const [pointerX] = position;
 
+    // The painted contour: rounded corners and the border drawn outside the rect.
     const pointsInRange = data.filter(
-        (d) =>
-            pointerX >= d.x &&
-            pointerX <= d.x + d.width &&
-            pointerY >= d.y &&
-            pointerY <= d.y + d.height,
+        (d) => getDistanceToRoundedRect({point: position, ...getXRangeContour(d)}) === 0,
     );
 
     if (pointsInRange.length === 0) {
@@ -31,6 +30,8 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedXRangeData>): Ge
             data: d.data,
             series: d.series as unknown as XRangeSeries,
             closest: d === closestByX,
+            // All chunks contain the pointer.
+            distance: 0,
         })),
     };
 }

@@ -2,7 +2,7 @@ import {max, min} from 'd3-array';
 import groupBy from 'lodash/groupBy';
 
 import type {BarXSeries} from '../../../types';
-import {getRectDistance} from '../../utils/rect-distance';
+import {getRectDistance} from '../../utils/geometry';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -13,7 +13,7 @@ import type {PreparedBarXData} from './types';
 import {getBarXRect} from './utils';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetTooltipDataResult {
-    const {data, position} = args;
+    const {data, position, measureDistance} = args;
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
     const centers: Record<string, number> = Object.fromEntries(
@@ -29,18 +29,24 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
         }),
     );
     const hasOverlays = data.some((d) => d.series.grouping === false);
-    const xLookupPoints: ShapePoint[] = data.map((d, priority) => ({
-        data: d.data,
-        percentage: d.percentage,
-        series: d.series as BarXSeries,
-        x: centers[String(d.data.x)],
-        y0: d.y,
-        y1: d.y + d.height,
-        sourceX: d.x + d.width / 2,
-        hitTest: hasOverlays
-            ? {distance: getRectDistance(getBarXRect(d), ...position), priority}
-            : undefined,
-    }));
+    const xLookupPoints: ShapePoint[] = data.map((d, priority) => {
+        const distance =
+            hasOverlays || measureDistance
+                ? getRectDistance(getBarXRect(d), ...position)
+                : undefined;
+        return {
+            data: d.data,
+            // Set only for the own candidate; all points of a series share one value.
+            distance: measureDistance ? distance : undefined,
+            percentage: d.percentage,
+            series: d.series as BarXSeries,
+            x: centers[String(d.data.x)],
+            y0: d.y,
+            y1: d.y + d.height,
+            sourceX: d.x + d.width / 2,
+            hitTest: hasOverlays && distance !== undefined ? {distance, priority} : undefined,
+        };
+    });
 
     return {chunks: [], xLookupPoints};
 }

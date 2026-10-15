@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -26,10 +28,20 @@ const data: ChartData = {
     defaultState: {hoveredPosition: {x: '20%', y: '50%'}},
 };
 
-export function WaterfallHeaderTooltipExample() {
+export default function WaterfallHeaderTooltipExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Waterfall',
+    title: 'Date headers in tooltips',
+    description: 'Format waterfall tooltip headers as dates.',
+    docsUrl: 'pages/guides/tooltip.html#value-formatting',
+    gallery: {
+        group: 'tooltip',
+    },
+} satisfies ExampleMeta;

@@ -3,21 +3,15 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
-        options: {
-            'area-range': {
-                states: {hover: {marker: {radius: 6}}},
-            },
-        },
         data: [
             {
                 type: 'area-range',
                 name: 'Expected range',
-                color: '#5282ff',
-                fillColor: '#5282ff',
                 opacity: 0.35,
-                lineWidth: 2,
                 data: [
                     {x: 0, y0: 18, y1: 26},
                     {x: 1, y0: 20, y1: 29},
@@ -36,10 +30,20 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Value'}}],
 };
 
-export function AreaRangeSeriesExample() {
+export default function AreaRangeSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Area range',
+    title: 'Basic area range chart',
+    description: 'Basic range configuration with lower and upper bounds for each point.',
+    docsUrl: 'pages/guides/series-types/area-range.html#example',
+    gallery: {
+        order: 0,
+    },
+} satisfies ExampleMeta;

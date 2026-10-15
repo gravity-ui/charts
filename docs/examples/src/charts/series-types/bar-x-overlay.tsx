@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         options: {'bar-x': {barMaxWidth: 1000}},
@@ -34,10 +36,17 @@ const data: ChartData = {
     xAxis: {type: 'category', categories: ['Q1', 'Q2']},
 };
 
-export function BarXOverlayExample() {
+export default function BarXOverlayExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Bar-X',
+    title: 'Overlapping columns',
+    description: 'Compare columns with grouping disabled and partial opacity.',
+    docsUrl: 'pages/guides/series-types/bar-x.html#grouping-and-stacking',
+} satisfies ExampleMeta;

@@ -2,8 +2,8 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {BarXOverlayExample} from '../../docs/examples/src/charts/series-types/bar-x-overlay';
-import {BarYOverlayExample} from '../../docs/examples/src/charts/series-types/bar-y-overlay';
+import BarXOverlayExample from '../../docs/examples/src/charts/series-types/bar-x-overlay';
+import BarYOverlayExample from '../../docs/examples/src/charts/series-types/bar-y-overlay';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barXStackedOverlayData} from '../__stories__/__data__/bar-x/stacked-overlay';
 import {barYStackedOverlayData} from '../__stories__/__data__/bar-y/stacked-overlay';

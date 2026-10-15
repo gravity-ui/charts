@@ -20,6 +20,7 @@ type Props = {
     boundsWidth: number;
     defaultState?: {hoveredPosition?: {x: number | string; y: number | string}};
     dispatcher: Dispatch<object>;
+    layerIndexes: Map<string, number>;
     shapesData: TooltipItemData[];
     shapesReady: boolean;
     svgRef: React.RefObject<SVGSVGElement | null>;
@@ -37,6 +38,7 @@ export function useDefaultState(props: Props) {
         boundsWidth,
         defaultState,
         dispatcher,
+        layerIndexes,
         shapesData,
         shapesReady,
         svgRef,
@@ -73,6 +75,7 @@ export function useDefaultState(props: Props) {
 
             const closest = getClosestPoints({
                 position: [x, y],
+                layerIndexes,
                 shapesData: shapesDataWithTooltipEnabled,
                 boundsHeight,
                 boundsWidth,
@@ -133,6 +136,7 @@ export function useDefaultState(props: Props) {
         boundsWidth,
         defaultState,
         dispatcher,
+        layerIndexes,
         shapesData,
         shapesReady,
         svgRef,

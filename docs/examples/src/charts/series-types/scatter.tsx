@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -30,10 +32,17 @@ const data: ChartData = {
     yAxis: [{type: 'linear', min: 0, max: 100}],
 };
 
-export function ScatterSeriesExample() {
+export default function ScatterSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Scatter',
+    title: 'Point clustering',
+    description: 'Enable grid-based point clustering and customize cluster markers.',
+    docsUrl: 'pages/guides/series-types/scatter.html#point-clustering',
+} satisfies ExampleMeta;

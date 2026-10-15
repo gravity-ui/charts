@@ -194,7 +194,15 @@ export interface SeriesPlugin<
     // --- Tooltip ---
 
     tooltip: {
-        /** Returns tooltip data for a given pointer position and prepared series. */
+        /**
+         * Returns tooltip data for a given pointer position and prepared series.
+         * When `measureDistance` is `true`, the `closest` chunk and every lookup point must set
+         * `distance`: the pixel distance from the pointer to the drawn shape of its series, `0`
+         * when the pointer is inside it. In mixed charts only the `closest` chunk with the
+         * smallest distance stays `closest`. When `measureDistance` is `false`, the distance
+         * is not compared: skip measuring it unless the plugin needs the measurement to pick its
+         * own candidate (scatter does); a constant `0` of hit-test plugins is fine.
+         */
         prepareData: GetTooltipDataFn;
         /**
          * Unformatted value used by built-in sorting and totals. Resolve category indices to names.

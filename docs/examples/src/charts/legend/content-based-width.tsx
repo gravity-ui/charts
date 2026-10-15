@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     legend: {
         enabled: true,
@@ -24,7 +26,7 @@ const data: ChartData = {
     },
 };
 
-export function ContentBasedLegendExample() {
+export default function ContentBasedLegendExample() {
     return (
         <div
             style={{
@@ -40,3 +42,13 @@ export function ContentBasedLegendExample() {
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Content-based legend width',
+    description: 'Fit the legend to its labels while reserving space for the chart.',
+    docsUrl: 'pages/guides/legend.html#maximum-width',
+    gallery: {
+        group: 'legend',
+    },
+} satisfies ExampleMeta;

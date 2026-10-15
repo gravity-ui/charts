@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     chart: {zoom: {enabled: true, type: 'x'}},
     series: {
@@ -41,10 +43,17 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Revenue'}}],
 };
 
-export function LineSeriesExample() {
+export default function LineSeriesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Gradient line',
+    description: 'Apply a gradient to a line and explore it with zoom.',
+    docsUrl: 'pages/guides/colors.html#gradients',
+} satisfies ExampleMeta;

@@ -16,6 +16,7 @@ import type {PointPosition, TooltipDataChunk} from '../../types';
 interface Props {
     resetKey: ReturnType<typeof useHoverResetKey>;
     dispatcher: Dispatch<object>;
+    layerIndexes: Map<string, number>;
     shapesData: TooltipItemData[];
     boundsWidth: number;
     boundsHeight: number;
@@ -38,6 +39,7 @@ interface HoverState {
 export function useHoverGeometryRefresh({
     resetKey,
     dispatcher,
+    layerIndexes,
     shapesData,
     boundsWidth,
     boundsHeight,
@@ -110,6 +112,7 @@ export function useHoverGeometryRefresh({
 
             const chunks = getClosestPoints({
                 position: [x, y],
+                layerIndexes,
                 shapesData,
                 boundsWidth,
                 boundsHeight,
@@ -150,6 +153,7 @@ export function useHoverGeometryRefresh({
     }, [
         resetKey,
         dispatcher,
+        layerIndexes,
         shapesData,
         boundsWidth,
         boundsHeight,

@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -20,10 +22,20 @@ const data: ChartData = {
     defaultState: {hoveredPosition: {x: '50%', y: '50%'}},
 };
 
-export function XRangeTooltipValuesExample() {
+export default function XRangeTooltipValuesExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'X-Range',
+    title: 'Interval values and totals',
+    description: 'Show interval lengths, sort tooltip rows, and display their total.',
+    docsUrl: 'pages/guides/tooltip.html#totals-and-sorting-for-interval-series',
+    gallery: {
+        group: 'tooltip',
+    },
+} satisfies ExampleMeta;

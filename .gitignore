@@ -15,6 +15,7 @@ storybook-static
 .tmp
 playwright-report
 playwright-report-docker
+playwright-report-docs
 playwright/.cache-docker
 test-results
 *.log

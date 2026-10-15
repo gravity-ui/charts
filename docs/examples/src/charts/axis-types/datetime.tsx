@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         data: [
@@ -31,10 +33,20 @@ const data: ChartData = {
     },
 };
 
-export function DatetimeAxisExample() {
+export default function DatetimeAxisExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Datetime axis',
+    description: 'Plot a time series with date labels on the X axis.',
+    docsUrl: 'pages/guides/axes/axis-types.html#datetime-axis',
+    gallery: {
+        group: 'axes',
+    },
+} satisfies ExampleMeta;
