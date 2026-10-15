@@ -9,7 +9,8 @@ import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types
 import {getSeriesStackId} from '../../series/utils';
 import {getDataCategoryValue} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../bar-constants';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP} from '../bar-constants';
+import {getBarWidth} from '../bar-width';
 
 /**
  * BarY always filters out data with null or replace null by zero.
@@ -81,9 +82,7 @@ export function getBarYLayout(args: {
     const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
     const barGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
-    const barSize = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - barGap, barMaxWidth));
-
-    const overlayGap = Math.max(groupSize * barPadding, MIN_BAR_GAP);
-    const overlaySize = Math.max(MIN_BAR_WIDTH, Math.min(groupSize - overlayGap, barMaxWidth));
-    return {bandSize, barGap, barSize, overlaySize};
+    // Keep the type-level layout as the reference for slot centers, including its width cap.
+    const barSize = getBarWidth(barSlotSize, barPadding, barMaxWidth);
+    return {bandSize, barGap, barSize, barSlotSize, groupSize};
 }

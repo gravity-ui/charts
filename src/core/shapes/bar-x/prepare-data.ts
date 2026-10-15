@@ -9,8 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../series/types';
-import {getSeriesStackId} from '../../series/utils';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
+import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP} from '../../shapes/bar-constants';
 import {
     getDataCategoryValue,
     getLabelsSize,
@@ -20,8 +19,10 @@ import {
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
+import {getBarWidth, getBarWidthBySeries} from '../bar-width';
 
 import type {PreparedBarXData} from './types';
+import {getBarXStackKey} from './utils';
 
 /**
  * BarX always filters out data with null or replace null by zero.
@@ -153,7 +154,7 @@ export const prepareBarXData = async (args: {
         }
         const data = dataByPlots.get(plotIndex) ?? {};
 
-        const stackId = JSON.stringify([s.yAxis, getSeriesStackId(s)]);
+        const stackId = getBarXStackKey(s);
         s.data.forEach((d) => {
             if (!isSeriesDataValid(d)) {
                 return;
@@ -204,15 +205,12 @@ export const prepareBarXData = async (args: {
     const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
     const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
-    const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(barSlotSize - rectGap, barMaxWidth));
-    const overlayRectGap = Math.max(groupSize * barPadding, MIN_BAR_GAP);
-    const overlayRectWidth = Math.max(
-        MIN_BAR_WIDTH,
-        Math.min(groupSize - overlayRectGap, barMaxWidth),
-    );
+    // Keep the type-level layout as the reference for slot centers, including its width cap.
+    const rectWidth = getBarWidth(barSlotSize, barPadding, barMaxWidth);
+    const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize, barMaxWidth);
     const borderWidthBySeries = new Map(
         series.map((s) => {
-            const width = s.grouping === false ? overlayRectWidth : rectWidth;
+            const width = widthBySeries.get(s) ?? rectWidth;
             const borderWidth =
                 !isRangeSlider &&
                 Number.isFinite(s.borderWidth) &&
@@ -287,7 +285,7 @@ export const prepareBarXData = async (args: {
                     const yValue = sortedData[yValueIndex];
                     const overlay = yValue.series.grouping === false;
                     const independent = overlay && !yValue.series.stacking;
-                    const width = overlay ? overlayRectWidth : rectWidth;
+                    const width = widthBySeries.get(yValue.series) ?? rectWidth;
                     const yAxisIndex = yValue.series.yAxis;
                     const seriesYScale = yScale[yAxisIndex] as
                         | ScaleLinear<number, number>
@@ -301,7 +299,10 @@ export const prepareBarXData = async (args: {
 
                     const x = overlay
                         ? xCenter - width / 2
-                        : xCenter - currentGroupWidth / 2 + (rectWidth + rectGap) * slotIndex;
+                        : xCenter -
+                          currentGroupWidth / 2 +
+                          (rectWidth + rectGap) * slotIndex +
+                          (rectWidth - width) / 2;
 
                     const yDataValue = (yValue.data.y ?? 0) as number;
 

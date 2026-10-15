@@ -1,5 +1,6 @@
 import {i18n} from '~core/i18n';
 import {getSeriesStackId} from '~core/series/utils';
+import {getBarXStackKey} from '~core/shapes/bar-x/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {BarXSeries, BarYSeries, ChartSeries} from '../types';
@@ -20,8 +21,7 @@ export function validateBarGrouping(args: {
         // Non-stacked overlays have independent layout keys even with an explicit stackId.
         if (!bar.stacking && (!bar.stackId || !grouping)) continue;
 
-        const axis = bar.type === 'bar-x' ? (bar.yAxis ?? 0) : 0;
-        const key = JSON.stringify([axis, getSeriesStackId(bar)]);
+        const key = bar.type === 'bar-x' ? getBarXStackKey(bar) : getSeriesStackId(bar);
         const previous = stacks.get(key);
         if (previous && (previous.grouping ?? true) !== grouping) {
             throw new ChartError({

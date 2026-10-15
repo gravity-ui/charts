@@ -166,6 +166,27 @@ describe('bar-x borders', () => {
 });
 
 describe('bar-x stack geometry', () => {
+    test('resolves stack padding within each value axis, with omitted yAxis meaning zero', () => {
+        const series = prepareBarXSeries({
+            series: [
+                {barPadding: 0.2},
+                {barPadding: 0.6, yAxis: 0},
+                {barPadding: 0.8, yAxis: 1},
+            ].map((options) => ({
+                type: 'bar-x',
+                name: 'Actual',
+                stackId: 'shared',
+                stacking: 'normal',
+                data: [{x: 1, y: 20}],
+                ...options,
+            })),
+            colorScale: scaleOrdinal([] as string[], ['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        }) as PreparedBarXSeries[];
+        expect(series.map((s) => s.stackBarPadding)).toEqual([0.6, 0.6, 0.8]);
+    });
+
     test('aligns with a grid drawn by another axis in the same plot', async () => {
         const items = await prepare([1, 3], 'percent', 100, {
             yAxis: [

@@ -264,6 +264,9 @@ export type PreparedBarXSeries = {
     resolvedStackId?: string;
     stacking: BarXSeries['stacking'];
     grouping: boolean;
+    barPadding: number;
+    /** Largest resolved padding in the stack, including hidden series. */
+    stackBarPadding: number;
     stackLabels?: BarXSeries['stackLabels'];
     valueAxis: 'y';
     dataLabels: {
@@ -291,6 +294,9 @@ export type PreparedBarYSeries = {
     resolvedStackId?: string;
     stacking: BarYSeries['stacking'];
     grouping: boolean;
+    barPadding: number;
+    /** Largest resolved padding in the stack, including hidden series. */
+    stackBarPadding: number;
     stackLabels?: BarYSeries['stackLabels'];
     valueAxis: 'x';
     dataLabels: {

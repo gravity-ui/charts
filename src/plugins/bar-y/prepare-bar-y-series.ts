@@ -1,6 +1,6 @@
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import {DEFAULT_DATALABELS_STYLE, seriesOptionsDefaults} from '~core/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedBarYSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
@@ -9,6 +9,7 @@ import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
+import {resolveStackBarPadding} from '../bar-padding';
 
 const DEFAULT_LABEL_PADDING = 7;
 
@@ -61,11 +62,11 @@ async function prepareDataLabels(series: BarYSeries) {
     };
 }
 
-export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
+export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
     const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;
 
-    return Promise.all(
-        seriesList.map<Promise<PreparedBarYSeries>>(async (series) => {
+    const preparedSeries = await Promise.all(
+        seriesList.map<Promise<Omit<PreparedBarYSeries, 'stackBarPadding'>>>(async (series) => {
             const name = series.name || '';
             const color = series.color || colorScale(name);
             const opacity = series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1;
@@ -87,6 +88,13 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                 data: prepareSeriesData(series),
                 stacking: series.stacking,
                 grouping: series.grouping ?? true,
+                barPadding:
+                    series.barPadding ??
+                    get(
+                        seriesOptions,
+                        'bar-y.barPadding',
+                        seriesOptionsDefaults['bar-y'].barPadding,
+                    ),
                 stackLabels: series.stackLabels,
                 // Non-stacked overlays need independent domains even with a stackId.
                 stackId: getSeriesStackId(series),
@@ -111,4 +119,6 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
             };
         }),
     );
+
+    return resolveStackBarPadding(preparedSeries, getSeriesStackId);
 }

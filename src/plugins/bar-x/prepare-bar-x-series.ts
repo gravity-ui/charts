@@ -1,14 +1,20 @@
 import get from 'lodash/get';
 
-import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
+import {
+    DEFAULT_DATALABELS_STYLE,
+    seriesOptionsDefaults,
+    seriesRangeSliderOptionsDefaults,
+} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
+import {getBarXStackKey} from '~core/shapes/bar-x/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
+import {resolveStackBarPadding} from '../bar-padding';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -25,7 +31,7 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
 export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
-    return seriesList.map<PreparedBarXSeries>((series) => {
+    const preparedSeries = seriesList.map<Omit<PreparedBarXSeries, 'stackBarPadding'>>((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
         const opacity = series.opacity ?? seriesOptions?.['bar-x']?.opacity ?? 1;
@@ -50,6 +56,9 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             data: prepareSeriesData(series),
             stacking: series.stacking,
             grouping: series.grouping ?? true,
+            barPadding:
+                series.barPadding ??
+                get(seriesOptions, 'bar-x.barPadding', seriesOptionsDefaults['bar-x'].barPadding),
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
             stackId: getSeriesStackId(series),
@@ -83,4 +92,6 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             custom: series.custom,
         };
     }, []);
+
+    return resolveStackBarPadding(preparedSeries, getBarXStackKey);
 }

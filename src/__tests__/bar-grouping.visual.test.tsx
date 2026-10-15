@@ -12,6 +12,112 @@ import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+test('range slider preserves stack padding when a series is excluded', async ({mount}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                series: {
+                    options: {'bar-x': {barMaxWidth: 1000}},
+                    data: [
+                        {name: 'Plan', stackId: 'Plan', value: 100},
+                        {name: 'Actual 1', stackId: 'Actual', value: 40},
+                        {
+                            name: 'Actual 2',
+                            stackId: 'Actual',
+                            value: 35,
+                            barPadding: 0.6,
+                            rangeSlider: {visible: false},
+                        },
+                    ].map(({value, ...series}) => ({
+                        ...series,
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        grouping: false,
+                        data: [
+                            {x: 1, y: value},
+                            {x: 2, y: value},
+                        ],
+                    })),
+                },
+                xAxis: {type: 'linear', min: 0, max: 3, rangeSlider: {enabled: true}},
+                yAxis: [{min: 0, max: 120}],
+            }}
+            styles={{width: 600, height: 400}}
+        />,
+    );
+    const slider = component.locator('.gcharts-range-slider');
+    const actual = component.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[1]}"]`);
+    await expect(slider.locator('.gcharts-bar-x__segment')).toHaveCount(4);
+    await expect(actual).toHaveCount(4);
+    const mainBar = await getLocatorBoundingBox(actual.first());
+    const sliderBar = await getLocatorBoundingBox(
+        slider.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[1]}"]`).first(),
+    );
+    expect(sliderBar.width).toBeCloseTo(mainBar.width);
+});
+
+test('different grouped bar widths keep line and bar rows in one tooltip', async ({
+    mount,
+    page,
+}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                series: {
+                    options: {'bar-x': {barMaxWidth: 1000}},
+                    data: [
+                        {
+                            type: 'bar-x',
+                            name: 'Plan',
+                            barPadding: 0.1,
+                            data: [
+                                {x: 'Q1', y: 80},
+                                {x: 'Q2', y: 60},
+                            ],
+                        },
+                        {
+                            type: 'bar-x',
+                            name: 'Actual',
+                            barPadding: 0.8,
+                            data: [
+                                {x: 'Q1', y: 60},
+                                {x: 'Q2', y: 40},
+                            ],
+                        },
+                        {
+                            type: 'line',
+                            name: 'Target',
+                            marker: {enabled: true},
+                            data: [
+                                {x: 'Q1', y: 90},
+                                {x: 'Q2', y: 90},
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {type: 'category', categories: ['Q1', 'Q2']},
+                yAxis: [{min: 0, max: 100}],
+            }}
+            styles={{width: 700, height: 400}}
+        />,
+    );
+    const rows = page.locator('.gcharts-tooltip__content-row');
+    const active = page.locator('.gcharts-tooltip__content-row_active');
+    await component.locator('.gcharts-bar-x__segment').first().hover();
+    await expect(rows).toHaveCount(3);
+    await expect(rows.filter({hasText: 'Target'})).toContainText('90');
+    await expect(active).toContainText('Plan');
+
+    const marker = await getLocatorBoundingBox(
+        component.locator('.gcharts-marker__symbol').first(),
+    );
+    await page.mouse.move(marker.x + marker.width / 2, marker.y + marker.height / 2);
+    await expect(active).toContainText('Target');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.filter({hasText: 'Plan'})).toContainText('80');
+    await expect(rows.filter({hasText: 'Actual'})).toContainText('60');
+});
+
 test('bar-x overlay tooltip selects the last painted duplicate point', async ({mount, page}) => {
     const component = await mount(
         <ChartTestStory
@@ -116,10 +222,9 @@ for (const type of ['bar-x', 'bar-y'] as const) {
     test.describe(`${type} overlays`, () => {
         const vertical = type === 'bar-x';
         const categories = ['A', 'B'];
-        // Per-series thickness is tracked in https://github.com/gravity-ui/charts/issues/761.
-        // Update the examples and snapshots to show a wider Plan and narrower Actual once supported.
         const data = {
             series: {
+                options: {[type]: {barMaxWidth: 1000}},
                 data: [
                     {name: 'Plan', values: [100, 80]},
                     {name: 'Actual', values: [75, 50]},
@@ -127,7 +232,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                     type,
                     name,
                     grouping: false,
-                    opacity: 0.6,
+                    barPadding: name === 'Plan' ? 0.2 : 0.6,
                     dataLabels: {enabled: name === 'Actual', inside: true},
                     data: values.map((value, index) =>
                         vertical
@@ -155,6 +260,9 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             async function expectAligned() {
                 const p = await getLocatorBoundingBox(plan.first());
                 const a = await getLocatorBoundingBox(actual.first());
+                expect(vertical ? p.width : p.height).toBeGreaterThan(
+                    vertical ? a.width : a.height,
+                );
                 expect(vertical ? p.x + p.width / 2 : p.y + p.height / 2).toBeCloseTo(
                     vertical ? a.x + a.width / 2 : a.y + a.height / 2,
                     1,
@@ -314,16 +422,35 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             );
             const bars = component.locator(`.gcharts-${type}__segment`);
             await expect(bars).toHaveCount(4);
+            await expect(bars.nth(0)).toHaveCSS('opacity', '0.6');
+            await expect(bars.nth(2)).toHaveCSS('opacity', '1');
             const first = await getLocatorBoundingBox(bars.nth(0));
             const third = await getLocatorBoundingBox(bars.nth(2));
-            expect(vertical ? first.x : first.y).toBeCloseTo(vertical ? third.x : third.y);
+            expect(vertical ? first.x + first.width / 2 : first.y + first.height / 2).toBeCloseTo(
+                vertical ? third.x + third.width / 2 : third.y + third.height / 2,
+            );
+            expect(vertical ? first.width : first.height).toBeGreaterThan(
+                vertical ? third.width : third.height,
+            );
+            await expect(component).toHaveScreenshot();
             await expect(component.locator(`.gcharts-${type}__label`)).toHaveCount(2);
         });
 
         test('stacked overlays, tooltip and visibility', async ({mount, page}) => {
+            const stackedData = vertical ? barXStackedOverlayData : barYStackedOverlayData;
             const component = await mount(
                 <ChartTestStory
-                    data={vertical ? barXStackedOverlayData : barYStackedOverlayData}
+                    data={{
+                        ...stackedData,
+                        series: {
+                            ...stackedData.series,
+                            data: stackedData.series.data.map((s) =>
+                                (s.type === 'bar-x' || s.type === 'bar-y') && s.name === 'Actual 1'
+                                    ? {...s, barPadding: undefined}
+                                    : s,
+                            ),
+                        },
+                    }}
                     styles={{width: 600, height: 360}}
                 />,
             );
@@ -363,6 +490,18 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             await actualBaseLegend.click({modifiers: ['Control']});
             await expect(bars).toHaveCount(4);
             expect(await getLocatorBoundingBox(bars.nth(3))).toEqual(boxes[3]);
+            const actualTopLegend = component
+                .locator('.gcharts-legend__item')
+                .filter({hasText: 'Actual 2'});
+            await actualTopLegend.click({modifiers: ['Control']});
+            await expect(bars).toHaveCount(3);
+            const remaining = await getLocatorBoundingBox(bars.nth(2));
+            expect(vertical ? remaining.width : remaining.height).toBeCloseTo(
+                vertical ? boxes[2].width : boxes[2].height,
+            );
+            await actualTopLegend.click({modifiers: ['Control']});
+            await expect(bars).toHaveCount(4);
+            expect(await getLocatorBoundingBox(bars.nth(2))).toEqual(boxes[2]);
         });
     });
 }

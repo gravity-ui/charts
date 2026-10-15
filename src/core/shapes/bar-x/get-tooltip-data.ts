@@ -19,9 +19,12 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
     const centers: Record<string, number> = Object.fromEntries(
         Object.entries(barXGroups).map(([key, group]) => {
             const overlay = group.find((d) => d.series.grouping === false);
+            // Slot centers stay symmetric around the category even when bar widths differ.
             const center = overlay
                 ? overlay.x + overlay.width / 2
-                : ((min(group, (d) => d.x) ?? 0) + (max(group, (d) => d.x + d.width) ?? 0)) / 2;
+                : ((min(group, (d) => d.x + d.width / 2) ?? 0) +
+                      (max(group, (d) => d.x + d.width / 2) ?? 0)) /
+                  2;
             return [key, center];
         }),
     );
