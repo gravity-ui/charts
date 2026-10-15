@@ -42,7 +42,11 @@ function verifyExamples(meta, pages, buildDir) {
             }
         }
         const [page, anchor] = example.docsUrl.split('#');
-        const html = fs.readFileSync(path.join(buildDir, page), 'utf8');
+        const pagePath = path.join(buildDir, page);
+        if (!fs.existsSync(pagePath)) {
+            throw new Error(`Example "${id}" has a missing documentation page: ${page}`);
+        }
+        const html = fs.readFileSync(pagePath, 'utf8');
         if (!anchor || !html.includes(`id="${anchor}"`)) {
             throw new Error(
                 `Example "${id}" has a missing documentation anchor: ${example.docsUrl}`,

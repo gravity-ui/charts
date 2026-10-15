@@ -61,6 +61,16 @@ describe('documentation example catalog', () => {
         );
     });
 
+    it('identifies the example with a missing documentation page', () => {
+        expect(() =>
+            verifyExamples(
+                {'line/labels': {...meta['line/labels'], docsUrl: 'missing.html#labels'}},
+                [html],
+                buildDir,
+            ),
+        ).toThrow('Example "line/labels" has a missing documentation page: missing.html');
+    });
+
     it.each([{group: 'unknown'}, {group: 1}, {order: -1}, {order: '0'}])(
         'rejects invalid gallery options %j',
         (gallery) => {

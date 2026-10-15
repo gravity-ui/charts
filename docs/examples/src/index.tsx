@@ -18,24 +18,26 @@ const MOUNTED_ATTR = 'data-chart-mounted';
 // (e.g. on theme switch), avoiding React root leaks.
 const mountedRoots = new Map<HTMLElement, Root>();
 
+function mount(el: HTMLElement, element: React.ReactNode) {
+    if (el.getAttribute(MOUNTED_ATTR)) return;
+    el.setAttribute(MOUNTED_ATTR, 'true');
+    const root = createRoot(el);
+    mountedRoots.set(el, root);
+    root.render(element);
+}
+
 function mountExamples() {
     document.querySelectorAll<HTMLElement>('[data-chart-dashboard]').forEach((el) => {
-        if (el.getAttribute(MOUNTED_ATTR)) return;
-        el.setAttribute(MOUNTED_ATTR, 'true');
-        const root = createRoot(el);
-        mountedRoots.set(el, root);
-        root.render(
+        mount(
+            el,
             <DocsTheme>
                 <OverviewDashboardExample />
             </DocsTheme>,
         );
     });
     document.querySelectorAll<HTMLElement>('[data-chart-examples]').forEach((el) => {
-        if (el.getAttribute(MOUNTED_ATTR)) return;
-        el.setAttribute(MOUNTED_ATTR, 'true');
-        const root = createRoot(el);
-        mountedRoots.set(el, root);
-        root.render(
+        mount(
+            el,
             <DocsTheme>
                 <ExamplesGallery />
             </DocsTheme>,
@@ -43,17 +45,15 @@ function mountExamples() {
     });
     document.querySelectorAll<HTMLElement>('[data-chart-example]').forEach((el) => {
         if (el.getAttribute(MOUNTED_ATTR)) return;
-        el.setAttribute(MOUNTED_ATTR, 'true');
 
         const id = el.getAttribute('data-chart-example') ?? '';
         const mod = registry[id];
         if (!mod) {
+            el.setAttribute(MOUNTED_ATTR, 'true');
             console.warn(`[chart-examples] Unknown example: "${id}"`);
             return;
         }
-        const root = createRoot(el);
-        mountedRoots.set(el, root);
-        root.render(<ChartPlayground code={mod.code} Component={mod.Component} />);
+        mount(el, <ChartPlayground code={mod.code} Component={mod.Component} />);
     });
 }
 

@@ -76,10 +76,10 @@ After building, check gallery navigation and the guide code tabs in Docker:
 The tests serve `dist-docs` temporarily on Vite's default preview port, `4173`, under `/docs-preview/` to check deployment-relative paths. To test an already published preview, pass its documentation root URL; no local build or server is needed:
 
 ```shell
-./scripts/playwright-docker.sh 'DOCS_BASE_URL=https://storage.yandexcloud.net/playwright-reports/charts/pulls/776/docs/ npm run test:docs-examples'
+./scripts/playwright-docker.sh 'DOCS_BASE_URL=https://storage.yandexcloud.net/playwright-reports/charts/pulls/<number>/docs/ npm run test:docs-examples'
 ```
 
-Replace `776` with the pull request number.
+Replace `<number>` with the pull request number.
 
 In CI, the `Docs examples` job tests the same build artifact that is published as the PR preview. A test failure produces a separate failing check and preserves the preview for investigation; the test report includes failure screenshots and traces. Chart behavior and visual regressions remain covered by the component tests in `playwright/playwright.config.ts`.
 

@@ -72,7 +72,7 @@ function processHtmlFiles(dir, assets, tags) {
             content = content.replace('</head>', `${styleToAdd}\n</head>`);
             if (
                 assets.hasJs &&
-                (content.includes('data-chart-example') || content.includes('data-chart-dashboard'))
+                /<div\b[^>]*\bdata-chart-(example="|examples\b|dashboard\b)/.test(content)
             ) {
                 if (tags.linkTag) {
                     content = content.replace('</head>', `${tags.linkTag}\n</head>`);
