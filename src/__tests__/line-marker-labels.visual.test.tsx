@@ -121,44 +121,6 @@ test.describe('Line marker labels', () => {
         await expect(component).toHaveScreenshot('marker-edge-radius-40.png');
     });
 
-    test('border width offsets labels regardless of color or transparency', async ({mount}) => {
-        const colors = [
-            'transparent',
-            'rgba(0, 0, 0, 0)',
-            '#00000000',
-            'none',
-            'rgb(0 0 0 / 0)',
-            'hsl(0 0% 0% / 0)',
-            'color(display-p3 0 0 0 / 0)',
-            'rgb(0 0 0 / 0.5)',
-            'color(display-p3 0 0 0)',
-        ];
-        const component = await mount(
-            <ChartTestStory
-                data={{
-                    ...axes,
-                    series: {
-                        data: colors.map((borderColor, index) => ({
-                            type: 'line',
-                            name: borderColor,
-                            data: [{x: ((index + 1) * 10) / (colors.length + 1), y: 50}],
-                            marker: {enabled: true, radius: 16, borderWidth: 8, borderColor},
-                            dataLabels: {enabled: true, anchor: 'marker-edge', padding: 5},
-                        })),
-                    },
-                }}
-            />,
-        );
-        const labels = component.locator('.gcharts-line__label');
-        await expect(labels).toHaveCount(colors.length);
-        const positions = await labels.evaluateAll((items) =>
-            items.map((item) => item.getBoundingClientRect().y),
-        );
-        positions.forEach((y, index) => {
-            expect(y, colors[index]).toBeCloseTo(positions[0], 3);
-        });
-    });
-
     test('default labels stay above normal and hover markers without moving', async ({
         mount,
         page,

@@ -1,11 +1,28 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
+
+function labelIsOnTop(label: Locator) {
+    return label.evaluate((element) => {
+        const text = element as SVGTextElement;
+        const previous = text.style.pointerEvents;
+        // Labels normally ignore pointer events. Enable hit-testing to check paint order.
+        text.style.pointerEvents = 'bounding-box';
+        const bounds = text.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+            bounds.x + bounds.width / 2,
+            bounds.y + bounds.height / 2,
+        );
+        text.style.pointerEvents = previous;
+        return hit === text || (hit !== null && text.contains(hit));
+    });
+}
 
 const marker = {enabled: true, radius: 30, borderWidth: 0};
 const dataLabels = {enabled: true};
@@ -82,22 +99,7 @@ for (const {name, series} of cases) {
             y: labelBounds.y + labelBounds.height / 2,
         };
 
-        const labelIsOnTop = () =>
-            label.evaluate((element) => {
-                const text = element as SVGTextElement;
-                const previous = text.style.pointerEvents;
-                // Labels normally ignore pointer events. Enable hit-testing to check paint order.
-                text.style.pointerEvents = 'bounding-box';
-                const bounds = text.getBoundingClientRect();
-                const hit = document.elementFromPoint(
-                    bounds.x + bounds.width / 2,
-                    bounds.y + bounds.height / 2,
-                );
-                text.style.pointerEvents = previous;
-                return hit === text || (hit !== null && text.contains(hit));
-            });
-
-        expect(await labelIsOnTop()).toBe(true);
+        expect(await labelIsOnTop(label)).toBe(true);
         await page.mouse.move(
             markerBounds.x + markerBounds.width / 2,
             markerBounds.y + markerBounds.height / 2,
@@ -123,7 +125,7 @@ for (const {name, series} of cases) {
         expect(labelCenter.x).toBeLessThan(hoverBounds.x + hoverBounds.width);
         expect(labelCenter.y).toBeGreaterThan(hoverBounds.y);
         expect(labelCenter.y).toBeLessThan(hoverBounds.y + hoverBounds.height);
-        expect(await labelIsOnTop()).toBe(true);
+        expect(await labelIsOnTop(label)).toBe(true);
         expect(await getLocatorBoundingBox(label)).toEqual(labelBounds);
 
         await component.update(
@@ -143,3 +145,42 @@ for (const {name, series} of cases) {
         await expect(labels).toHaveCount(0);
     });
 }
+
+test('line labels stay below an overlapping area in a higher layer', async ({mount}) => {
+    const data: ChartData = {
+        legend: {enabled: false},
+        tooltip: {enabled: false},
+        xAxis: {min: 0, max: 10},
+        yAxis: [{min: 0, max: 100}],
+        series: {
+            data: [
+                {
+                    type: 'line',
+                    name: 'Line',
+                    data: [{x: 5, y: 50}],
+                    marker,
+                    dataLabels,
+                },
+                {
+                    type: 'area',
+                    name: 'Area',
+                    data: [
+                        {x: 0, y: 80},
+                        {x: 10, y: 80},
+                    ],
+                    opacity: 1,
+                },
+            ],
+        },
+    };
+    const component = await mount(<ChartTestStory data={data} />);
+    const label = component.locator('.gcharts-line__label');
+    await expect(label).toBeVisible();
+    await expect(component.locator('.gcharts-area__region')).toBeVisible();
+    expect(await labelIsOnTop(label)).toBe(false);
+
+    await component.update(
+        <ChartTestStory data={{...data, series: {data: [...data.series.data].reverse()}}} />,
+    );
+    await expect.poll(() => labelIsOnTop(label)).toBe(true);
+});
