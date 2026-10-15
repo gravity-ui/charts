@@ -13,6 +13,7 @@ import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
+import {resolveStackBarPadding} from '../bar-padding';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -29,7 +30,7 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
 export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
-    return seriesList.map<PreparedBarXSeries>((series) => {
+    const preparedSeries = seriesList.map<Omit<PreparedBarXSeries, 'stackBarPadding'>>((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
         const opacity = series.opacity ?? seriesOptions?.['bar-x']?.opacity ?? 1;
@@ -90,4 +91,8 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             custom: series.custom,
         };
     }, []);
+
+    return resolveStackBarPadding(preparedSeries, (s) =>
+        JSON.stringify([s.yAxis, getSeriesStackId(s)]),
+    );
 }

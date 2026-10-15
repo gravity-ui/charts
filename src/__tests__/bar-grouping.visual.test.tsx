@@ -12,6 +12,50 @@ import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+test('range slider preserves stack padding when a series is excluded', async ({mount}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                series: {
+                    options: {'bar-x': {barMaxWidth: 1000}},
+                    data: [
+                        {name: 'Plan', stackId: 'Plan', value: 100},
+                        {name: 'Actual 1', stackId: 'Actual', value: 40},
+                        {
+                            name: 'Actual 2',
+                            stackId: 'Actual',
+                            value: 35,
+                            barPadding: 0.6,
+                            rangeSlider: {visible: false},
+                        },
+                    ].map(({value, ...series}) => ({
+                        ...series,
+                        type: 'bar-x',
+                        stacking: 'normal',
+                        grouping: false,
+                        data: [
+                            {x: 1, y: value},
+                            {x: 2, y: value},
+                        ],
+                    })),
+                },
+                xAxis: {type: 'linear', min: 0, max: 3, rangeSlider: {enabled: true}},
+                yAxis: [{min: 0, max: 120}],
+            }}
+            styles={{width: 600, height: 400}}
+        />,
+    );
+    const slider = component.locator('.gcharts-range-slider');
+    const actual = component.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[1]}"]`);
+    await expect(slider.locator('.gcharts-bar-x__segment')).toHaveCount(4);
+    await expect(actual).toHaveCount(4);
+    const mainBar = await getLocatorBoundingBox(actual.first());
+    const sliderBar = await getLocatorBoundingBox(
+        slider.locator(`.gcharts-bar-x__segment[fill="${DEFAULT_PALETTE[1]}"]`).first(),
+    );
+    expect(sliderBar.width).toBeCloseTo(mainBar.width);
+});
+
 test('different grouped bar widths keep line and bar rows in one tooltip', async ({
     mount,
     page,
@@ -393,9 +437,20 @@ for (const type of ['bar-x', 'bar-y'] as const) {
         });
 
         test('stacked overlays, tooltip and visibility', async ({mount, page}) => {
+            const stackedData = vertical ? barXStackedOverlayData : barYStackedOverlayData;
             const component = await mount(
                 <ChartTestStory
-                    data={vertical ? barXStackedOverlayData : barYStackedOverlayData}
+                    data={{
+                        ...stackedData,
+                        series: {
+                            ...stackedData.series,
+                            data: stackedData.series.data.map((s) =>
+                                (s.type === 'bar-x' || s.type === 'bar-y') && s.name === 'Actual 1'
+                                    ? {...s, barPadding: undefined}
+                                    : s,
+                            ),
+                        },
+                    }}
                     styles={{width: 600, height: 360}}
                 />,
             );
@@ -435,6 +490,18 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             await actualBaseLegend.click({modifiers: ['Control']});
             await expect(bars).toHaveCount(4);
             expect(await getLocatorBoundingBox(bars.nth(3))).toEqual(boxes[3]);
+            const actualTopLegend = component
+                .locator('.gcharts-legend__item')
+                .filter({hasText: 'Actual 2'});
+            await actualTopLegend.click({modifiers: ['Control']});
+            await expect(bars).toHaveCount(3);
+            const remaining = await getLocatorBoundingBox(bars.nth(2));
+            expect(vertical ? remaining.width : remaining.height).toBeCloseTo(
+                vertical ? boxes[2].width : boxes[2].height,
+            );
+            await actualTopLegend.click({modifiers: ['Control']});
+            await expect(bars).toHaveCount(4);
+            expect(await getLocatorBoundingBox(bars.nth(2))).toEqual(boxes[2]);
         });
     });
 }

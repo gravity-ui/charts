@@ -1,6 +1,26 @@
+import {group} from 'd3-array';
+
 import {i18n} from '~core/i18n';
 
 import {CHART_ERROR_CODE, ChartError} from '../libs';
+
+export function resolveStackBarPadding<T extends {barPadding: number}>(
+    series: T[],
+    getStackKey: (series: T) => string,
+) {
+    const preparedSeries = series.map((s) => ({...s, stackBarPadding: s.barPadding}));
+    for (const stack of group(preparedSeries, getStackKey).values()) {
+        const padding = stack.reduce(
+            (value, s) => Math.max(value, s.barPadding),
+            stack[0].barPadding,
+        );
+        stack.forEach((s) => {
+            s.stackBarPadding = padding;
+        });
+    }
+
+    return preparedSeries;
+}
 
 export function validateBarPadding(padding: number | undefined) {
     if (padding === undefined) return;

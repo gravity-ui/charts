@@ -115,7 +115,7 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
      * Padding as a fraction of the allocated bar slot. Larger values make thinner bars,
      * centered in the same slot. Must be a finite number in [0, 1].
      * Inherits `series.options['bar-x'].barPadding` (default 0.2).
-     * Stacks use the largest resolved padding among their series.
+     * Stacks use the largest resolved padding among all their series, including hidden ones.
      * Padding is applied before the shared barMaxWidth and minimum thickness limits.
      * @minimum 0
      * @maximum 1

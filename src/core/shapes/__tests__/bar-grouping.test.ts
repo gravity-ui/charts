@@ -17,6 +17,7 @@ import {prepareBarYData} from '../bar-y/prepare-data';
 
 interface SeriesInput {
     value: number;
+    visible?: boolean;
     category?: string;
     barPadding?: number;
     grouping?: boolean;
@@ -75,7 +76,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             const series = prepareBarXSeries({...common, series: raw}) as PreparedBarXSeries[];
             domainValues = getDomainDataYBySeries(series);
             const bars = await prepareBarXData({
-                series,
+                series: series.filter((s) => s.visible),
                 seriesOptions,
                 xAxis: {type: 'category', categories} as PreparedXAxis,
                 xScale: categoryScale,
@@ -111,7 +112,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             const series = await prepareBarYSeries({...common, series: raw});
             domainValues = getDomainDataXBySeries(series);
             const {shapes} = await prepareBarYData({
-                series,
+                series: series.filter((s) => s.visible),
                 seriesOptions,
                 xAxis: {type: 'linear'} as PreparedXAxis,
                 xScale: valueScale,
@@ -198,6 +199,31 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             }
         },
     );
+
+    test('includes initially hidden series when resolving stack padding', async () => {
+        const inputs: SeriesInput[] = [
+            {value: 80, grouping: false, stackId: 'plan'},
+            {value: 40, grouping: false, stacking: 'normal', stackId: 'actual'},
+            {
+                value: 20,
+                grouping: false,
+                stacking: 'normal',
+                stackId: 'actual',
+                barPadding: 0.6,
+            },
+        ];
+        const options = {barMaxWidth: 1000};
+        const {bars: visible} = await prepare(inputs, 200, false, options);
+        const {bars: hidden} = await prepare(
+            inputs.map((s, index) => ({...s, visible: index !== 2})),
+            200,
+            false,
+            options,
+        );
+        expect(hidden).toHaveLength(2);
+        expect(hidden[1].thickness).toBe(visible[1].thickness);
+        expect(hidden[1].thickness).toBeLessThan(hidden[0].thickness);
+    });
 
     test('keeps stack thickness consistent across sparse categories', async () => {
         const {bars} = await prepare(

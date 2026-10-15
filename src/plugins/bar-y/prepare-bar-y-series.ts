@@ -9,6 +9,7 @@ import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
+import {resolveStackBarPadding} from '../bar-padding';
 
 const DEFAULT_LABEL_PADDING = 7;
 
@@ -61,11 +62,11 @@ async function prepareDataLabels(series: BarYSeries) {
     };
 }
 
-export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
+export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
     const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;
 
-    return Promise.all(
-        seriesList.map<Promise<PreparedBarYSeries>>(async (series) => {
+    const preparedSeries = await Promise.all(
+        seriesList.map<Promise<Omit<PreparedBarYSeries, 'stackBarPadding'>>>(async (series) => {
             const name = series.name || '';
             const color = series.color || colorScale(name);
             const opacity = series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1;
@@ -118,4 +119,6 @@ export function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
             };
         }),
     );
+
+    return resolveStackBarPadding(preparedSeries, getSeriesStackId);
 }
