@@ -16,6 +16,7 @@ const b = block('treemap');
 export function renderTreemap(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedTreemapData,
     seriesOptions: PreparedSeriesOptions,
@@ -23,6 +24,8 @@ export function renderTreemap(
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
     const {labelData, leaves, series} = preparedData;
     const leaf = svgElement
         .selectAll('g')
@@ -43,7 +46,7 @@ export function renderTreemap(
         })
         .attr('width', (d) => d.x1 - d.x0)
         .attr('height', (d) => d.y1 - d.y0);
-    const labelSelection = svgElement
+    const labelSelection = labelsSvgElement
         .selectAll<SVGTextElement, typeof labelData>('tspan')
         .data(labelData)
         .join('text')

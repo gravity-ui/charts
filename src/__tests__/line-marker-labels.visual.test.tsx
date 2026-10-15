@@ -121,8 +121,8 @@ test.describe('Line marker labels', () => {
         await expect(component).toHaveScreenshot('marker-edge-radius-40.png');
     });
 
-    test('border visibility is consistent across CSS color formats', async ({mount}) => {
-        const transparentColors = [
+    test('border width offsets labels regardless of color or transparency', async ({mount}) => {
+        const colors = [
             'transparent',
             'rgba(0, 0, 0, 0)',
             '#00000000',
@@ -130,8 +130,9 @@ test.describe('Line marker labels', () => {
             'rgb(0 0 0 / 0)',
             'hsl(0 0% 0% / 0)',
             'color(display-p3 0 0 0 / 0)',
+            'rgb(0 0 0 / 0.5)',
+            'color(display-p3 0 0 0)',
         ];
-        const colors = [...transparentColors, 'rgb(0 0 0 / 0.5)', 'color(display-p3 0 0 0)'];
         const component = await mount(
             <ChartTestStory
                 data={{
@@ -154,8 +155,7 @@ test.describe('Line marker labels', () => {
             items.map((item) => item.getBoundingClientRect().y),
         );
         positions.forEach((y, index) => {
-            const strokeExtent = index < transparentColors.length ? 0 : 4;
-            expect(y, colors[index]).toBeCloseTo(positions[0] - strokeExtent, 3);
+            expect(y, colors[index]).toBeCloseTo(positions[0], 3);
         });
     });
 

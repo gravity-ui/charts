@@ -25,6 +25,7 @@ const b = block('line');
 interface RenderLineElements {
     getCurveFactory: (interpolation?: PreparedLineData['interpolation']) => CurveFactory;
     plot: SVGGElement;
+    labelsPlot: SVGGElement;
 }
 
 export function renderLine(
@@ -42,6 +43,8 @@ export function renderLine(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
     const bounds = new Map(
         preparedData.map((data) => [
@@ -76,6 +79,14 @@ export function renderLine(
         .attr('stroke-dasharray', (d) => getLineDashArray(d.dashStyle, d.lineWidth))
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
+
+    const dataLabels = preparedData.flatMap((d) => d.svgLabels);
+
+    const labelsSelection = renderDataLabels({
+        container: labelsSvgElement,
+        data: dataLabels,
+        className: b('label'),
+    });
 
     const hoverEnabled = hoverOptions?.enabled;
     const inactiveEnabled = inactiveOptions?.enabled;
@@ -116,39 +127,7 @@ export function renderLine(
                 datum: d,
             });
         });
-    }
 
-    const eventName = `hover-shape.line-${preparedData[0]?.id ?? 'unknown'}`;
-    dispatcher?.on(eventName, handleShapeHover);
-
-    return () => {
-        dispatcher?.on(eventName, null);
-    };
-}
-
-/** Line labels stay above both permanent and hover markers. */
-export function renderLineLabels(
-    plot: SVGGElement,
-    preparedData: PreparedLineData[],
-    seriesOptions: PreparedSeriesOptions,
-    dispatcher?: Dispatch<object>,
-): () => void {
-    const plotSvgElement = select(plot);
-    plotSvgElement.selectAll('*').remove();
-    const inactiveOptions = get(seriesOptions, 'line.states.inactive');
-    const inactiveEnabled = inactiveOptions?.enabled;
-
-    const dataLabels = preparedData.flatMap((d) => d.svgLabels);
-
-    const labelsSelection = renderDataLabels({
-        container: plotSvgElement,
-        data: dataLabels,
-        className: b('label'),
-    });
-
-    function handleShapeHover(data?: TooltipDataChunkLine[]) {
-        const selectedSeriesIds =
-            data?.filter((d) => d.series.type === 'line').map((d) => d.series.id) ?? [];
         labelsSelection.datum((d, index, list) => {
             return setActiveState<LabelData>({
                 element: list[index],
@@ -163,8 +142,9 @@ export function renderLineLabels(
         });
     }
 
-    const eventName = `hover-shape.line-labels-${preparedData[0]?.id ?? 'unknown'}`;
+    const eventName = `hover-shape.line-${preparedData[0]?.id ?? 'unknown'}`;
     dispatcher?.on(eventName, handleShapeHover);
+
     return () => {
         dispatcher?.on(eventName, null);
     };

@@ -23,6 +23,7 @@ const b = block('scatter');
 export function renderScatter(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedScatterShapeData,
     seriesOptions: PreparedSeriesOptions,
@@ -33,6 +34,8 @@ export function renderScatter(
     const inactiveOptions = get(seriesOptions, 'scatter.states.inactive');
 
     svgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
 
     const selection = svgElement
         .selectAll('path')
@@ -43,7 +46,7 @@ export function renderScatter(
         .attr('cursor', (d) => d.point.series.cursor);
 
     renderDataLabels({
-        container: svgElement,
+        container: labelsSvgElement,
         data: preparedData.svgLabels,
         className: b('label'),
     })
@@ -89,7 +92,6 @@ export function renderScatter(
             }
             return d;
         });
-        svgElement.selectAll(`.${b('cluster-label')}`).raise();
     }
 
     dispatcher?.on('hover-shape.scatter', handleShapeHover);

@@ -25,6 +25,7 @@ const b = block('area');
 export function renderArea(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedAreaData[],
     seriesOptions: PreparedSeriesOptions,
@@ -41,6 +42,8 @@ export function renderArea(
         .y((d) => d.y as number);
 
     plotSvgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
     const lineBounds = new Map(
         preparedData.map((data) => [
@@ -121,7 +124,7 @@ export function renderArea(
     }
 
     const labelsSelection = renderDataLabels({
-        container: plotSvgElement,
+        container: labelsSvgElement,
         data: dataLabels,
         className: b('label'),
     });

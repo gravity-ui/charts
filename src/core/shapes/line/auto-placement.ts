@@ -10,7 +10,6 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
-import {isColorVisible} from '../../utils/color';
 import {getSymbolBounds} from '../../utils/symbol';
 import type {SymbolBounds} from '../../utils/symbol';
 import type {ShapeLabels} from '../types';
@@ -428,7 +427,7 @@ export async function placeLineDataLabels(args: {
                   symbolType: normal.symbol,
                   // Match renderMarkers: the path radius includes the configured border width.
                   radius: normal.radius + normal.borderWidth,
-                  strokeWidth: isColorVisible(normal.borderColor) ? normal.borderWidth : 0,
+                  strokeWidth: normal.borderWidth,
               })
             : undefined;
 

@@ -26,6 +26,7 @@ const b = block('radar');
 export function renderRadar(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedRadarData[],
     seriesOptions: PreparedSeriesOptions,
@@ -33,6 +34,8 @@ export function renderRadar(
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
     const areaSelector = `.${b('area')}`;
 
     const radarSelection = svgElement
@@ -90,13 +93,18 @@ export function renderRadar(
         .call(renderMarker);
 
     // Render labels
-    radarSelection.each(function (radarData) {
-        renderDataLabels({
-            container: select(this) as Selection<SVGGElement, unknown, null, undefined>,
-            data: radarData.labels,
-            className: b('label'),
+    labelsSvgElement
+        .selectAll('g')
+        .data(preparedData)
+        .join('g')
+        .attr('cursor', (radarData) => radarData.cursor)
+        .each(function (radarData) {
+            renderDataLabels({
+                container: select(this) as Selection<SVGGElement, unknown, null, undefined>,
+                data: radarData.labels,
+                className: b('label'),
+            });
         });
-    });
 
     // Handle hover events
     const eventName = `hover-shape.radar`;

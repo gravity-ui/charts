@@ -54,10 +54,16 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     prepareSeries: prepareWaterfallSeries,
     getColorValue: (d) => d.y,
     prepareShapeData,
-    renderShapes: function ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+    renderShapes: function ({
+        plot,
+        labelsPlot,
+        preparedData,
+        seriesOptions,
+        dispatcher,
+    }: RenderShapesArgs) {
         const data = preparedData as PreparedWaterfallData[];
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        return renderWaterfall({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        return renderWaterfall({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
     },
     tooltip: {
         prepareData: getTooltipData,

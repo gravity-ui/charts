@@ -16,6 +16,7 @@ const b = block('bar-y');
 export function renderBarY(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: BarYShapesArgs,
     seriesOptions: PreparedSeriesOptions,
@@ -24,6 +25,8 @@ export function renderBarY(
     const {shapes, labels: dataLabels} = preparedData;
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
     const segmentSelection = svgElement
         .selectAll<SVGPathElement, PreparedBarYData>(`path.${b('segment')}`)
         .data(shapes)
@@ -62,7 +65,7 @@ export function renderBarY(
     }
 
     const labelSelection = renderDataLabels({
-        container: svgElement,
+        container: labelsSvgElement,
         data: dataLabels,
         className: b('label'),
     });

@@ -60,8 +60,6 @@ Set `dataLabels.anchor: 'marker-edge'` to measure `padding` from the normal mark
 
 This works with every placement direction, automatic placement, and SVG or HTML labels. Hidden markers use the point coordinates; hover does not move labels. Labels are still shifted into the plot area and use the configured fallback, so overlaps can occur near the edges. Labels render above their series' markers regardless of the anchor.
 
-Transparent border colors do not add stroke padding. Context-dependent colors such as `var(...)` and `currentColor` reserve the border width because their transparency is not resolved during label layout.
-
 ### Automatic placement
 
 Set `placement: 'auto'` to try top, bottom, left, and right in that order. The first position that avoids all line series and already placed labels is used. When labels compete for space, the series listed first in `series.data` wins.

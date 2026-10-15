@@ -36,8 +36,19 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: data, tooltipItems: data};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderXRange({plot}, preparedData as PreparedXRangeData[], seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderXRange(
+        {plot, labelsPlot},
+        preparedData as PreparedXRangeData[],
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 function getXRangeWidth(data: XRangeSeriesData) {

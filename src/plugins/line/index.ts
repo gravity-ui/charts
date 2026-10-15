@@ -7,7 +7,7 @@ import type {
 import type {PreparedLineSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
 import {prepareLineData, projectLineData} from '~core/shapes/line/prepare-data';
-import {renderLine, renderLineLabels} from '~core/shapes/line/renderer';
+import {renderLine} from '~core/shapes/line/renderer';
 import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
@@ -66,9 +66,15 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     };
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
     return renderLine(
-        {plot, getCurveFactory},
+        {plot, labelsPlot, getCurveFactory},
         preparedData as PreparedLineData[],
         seriesOptions,
         dispatcher,
@@ -99,8 +105,6 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
-    renderLabels: ({plot, preparedData, seriesOptions, dispatcher}) =>
-        renderLineLabels(plot, preparedData as PreparedLineData[], seriesOptions, dispatcher),
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

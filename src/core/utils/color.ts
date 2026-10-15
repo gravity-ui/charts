@@ -1,32 +1,8 @@
 import {range} from 'd3-array';
-import {color as parseColor} from 'd3-color';
 import {scaleLinear} from 'd3-scale';
 
 import type {ChartData} from '../../types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
-
-let colorContext: CanvasRenderingContext2D | null | undefined;
-
-/** Whether a literal CSS color paints any pixels. Unresolved colors remain visible. */
-export function isColorVisible(value: string | undefined): boolean {
-    if (!value || value.trim().toLowerCase() === 'none') return false;
-    const parsed = parseColor(value);
-    if (parsed) return parsed.opacity > 0;
-
-    // D3 does not parse modern CSS colors such as rgb(0 0 0 / 0) or color(display-p3 ...).
-    if (colorContext === undefined && typeof document !== 'undefined') {
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 1;
-        colorContext = canvas.getContext('2d', {willReadFrequently: true});
-    }
-    if (!colorContext) return true;
-
-    colorContext.clearRect(0, 0, 1, 1);
-    colorContext.fillStyle = '#000';
-    colorContext.fillStyle = value;
-    colorContext.fillRect(0, 0, 1, 1);
-    return colorContext.getImageData(0, 0, 1, 1).data[3] > 0;
-}
 
 export function getDomainForContinuousColorScale(args: {
     series: ChartData['series']['data'];

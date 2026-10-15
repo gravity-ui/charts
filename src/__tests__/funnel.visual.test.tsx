@@ -11,6 +11,7 @@ import {
     funnelTrapezoidData,
     funnelTrapezoidWithConnectorsData,
 } from '../__stories__/__data__';
+import type {FunnelSeries} from '../types';
 
 import {FunnelTooltipValueFormatStory} from './components/FunnelTooltipValueFormatStory';
 import {getLocatorBoundingBox} from './utils';
@@ -35,14 +36,10 @@ test.describe('Funnel series', () => {
         const noPreserveData = {
             ...funnelMultilineLabelsData,
             series: {
-                data: funnelMultilineLabelsData.series.data.map((s) =>
-                    s.type === 'funnel'
-                        ? {
-                              ...s,
-                              dataLabels: {...s.dataLabels, preserveLineBreaks: false},
-                          }
-                        : s,
-                ),
+                data: (funnelMultilineLabelsData.series.data as FunnelSeries[]).map((s) => ({
+                    ...s,
+                    dataLabels: {...s.dataLabels, preserveLineBreaks: false},
+                })),
             },
         };
         const component = await mount(<ChartTestStory data={noPreserveData} />);
@@ -58,14 +55,10 @@ test.describe('Funnel series', () => {
         const htmlData = {
             ...funnelMultilineLabelsData,
             series: {
-                data: funnelMultilineLabelsData.series.data.map((s) =>
-                    s.type === 'funnel'
-                        ? {
-                              ...s,
-                              dataLabels: {...s.dataLabels, html: true},
-                          }
-                        : s,
-                ),
+                data: (funnelMultilineLabelsData.series.data as FunnelSeries[]).map((s) => ({
+                    ...s,
+                    dataLabels: {...s.dataLabels, html: true},
+                })),
             },
         };
         const component = await mount(<ChartTestStory data={htmlData} />);

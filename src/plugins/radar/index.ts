@@ -29,8 +29,19 @@ async function prepareShapeData({
     return {renderData: data, tooltipItems: data};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderRadar({plot}, preparedData as PreparedRadarData[], seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderRadar(
+        {plot, labelsPlot},
+        preparedData as PreparedRadarData[],
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {

@@ -102,6 +102,8 @@ export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
 
 export interface RenderShapesArgs {
     plot: SVGGElement;
+    /** SVG labels above the layer's shapes and markers, with the same clipping as `plot`. */
+    labelsPlot: SVGGElement;
     preparedData: SeriesShapeData[];
     labels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
@@ -188,10 +190,8 @@ export interface SeriesPlugin<
 
     // --- Rendering ---
 
-    /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
+    /** Renders shapes into `plot` and labels into `labelsPlot`. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
-    /** Optional SVG label renderer, placed above normal and hover markers with the same clipping as shapes. */
-    renderLabels?(args: RenderShapesArgs): (() => void) | void;
 
     // --- Tooltip ---
 

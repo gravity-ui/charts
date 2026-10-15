@@ -42,24 +42,19 @@ export const SeriesShapes = ({
     const labelsRef = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
-        if (!ref.current) return () => {};
-        const args = {
-            plot: ref.current,
-            preparedData,
-            labels,
-            seriesOptions,
-            boundsWidth,
-            boundsHeight,
-            dispatcher,
-        };
-        const cleanupShapes = plugin.renderShapes(args);
-        const cleanupLabels = labelsRef.current
-            ? plugin.renderLabels?.({...args, plot: labelsRef.current})
-            : undefined;
-        return () => {
-            cleanupShapes?.();
-            cleanupLabels?.();
-        };
+        if (!ref.current || !labelsRef.current) return () => {};
+        return (
+            plugin.renderShapes({
+                plot: ref.current,
+                labelsPlot: labelsRef.current,
+                preparedData,
+                labels,
+                seriesOptions,
+                boundsWidth,
+                boundsHeight,
+                dispatcher,
+            }) ?? undefined
+        );
     }, [boundsHeight, boundsWidth, dispatcher, plugin, preparedData, labels, seriesOptions]);
 
     const annotations = React.useMemo(
@@ -83,13 +78,11 @@ export const SeriesShapes = ({
                 dispatcher={dispatcher}
                 namespace={namespace}
             />
-            {plugin.renderLabels && (
-                <g
-                    ref={labelsRef}
-                    className={b('labels')}
-                    clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
-                />
-            )}
+            <g
+                ref={labelsRef}
+                className={b('labels')}
+                clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
+            />
             <AnnotationLayer
                 annotations={annotations}
                 boundsWidth={boundsWidth}

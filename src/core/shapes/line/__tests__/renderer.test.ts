@@ -6,7 +6,7 @@ import {curveLinear} from 'd3-shape';
 import {getPreparedOptions} from '../../../series/prepare-options';
 import type {PreparedLineSeries, PreparedSeriesOptions} from '../../../series/types';
 import type {LinearGradient} from '../../../types';
-import {renderLine, renderLineLabels} from '../renderer';
+import {renderLine} from '../renderer';
 import type {PointData, PreparedLineData} from '../types';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
@@ -61,13 +61,18 @@ describe('renderLine gradient', () => {
 
     test('creates a user-space gradient for the visible path bounds', () => {
         const plot = createPlot();
+        const labelsPlot = createPlot();
         const data = createPreparedData([
             {x: 0, y: 50},
             {x: 100, y: 0},
             {x: 1000, y: 1000, hiddenInLine: true},
         ]);
 
-        renderLine({plot, getCurveFactory: () => curveLinear}, [data], {} as PreparedSeriesOptions);
+        renderLine(
+            {plot, labelsPlot, getCurveFactory: () => curveLinear},
+            [data],
+            {} as PreparedSeriesOptions,
+        );
 
         const path = plot.querySelector('path');
         const gradientElement = plot.querySelector('linearGradient');
@@ -79,14 +84,23 @@ describe('renderLine gradient', () => {
 
     test('replaces stale gradient definitions on rerender', () => {
         const plot = createPlot();
+        const labelsPlot = createPlot();
         const data = createPreparedData([
             {x: 0, y: 50},
             {x: 100, y: 0},
         ]);
 
-        renderLine({plot, getCurveFactory: () => curveLinear}, [data], {} as PreparedSeriesOptions);
+        renderLine(
+            {plot, labelsPlot, getCurveFactory: () => curveLinear},
+            [data],
+            {} as PreparedSeriesOptions,
+        );
         const firstStroke = plot.querySelector('path')?.getAttribute('stroke');
-        renderLine({plot, getCurveFactory: () => curveLinear}, [data], {} as PreparedSeriesOptions);
+        renderLine(
+            {plot, labelsPlot, getCurveFactory: () => curveLinear},
+            [data],
+            {} as PreparedSeriesOptions,
+        );
         const secondStroke = plot.querySelector('path')?.getAttribute('stroke');
 
         expect(plot.querySelectorAll('defs.gradients')).toHaveLength(1);
@@ -104,12 +118,12 @@ describe('renderLine gradient', () => {
         ];
 
         renderLine(
-            {plot: firstPlot, getCurveFactory: () => curveLinear},
+            {plot: firstPlot, labelsPlot: createPlot(), getCurveFactory: () => curveLinear},
             [createPreparedData(points)],
             {} as PreparedSeriesOptions,
         );
         renderLine(
-            {plot: secondPlot, getCurveFactory: () => curveLinear},
+            {plot: secondPlot, labelsPlot: createPlot(), getCurveFactory: () => curveLinear},
             [createPreparedData(points)],
             {} as PreparedSeriesOptions,
         );
@@ -126,11 +140,12 @@ describe('renderLine gradient', () => {
     });
 });
 
-describe('renderLineLabels', () => {
+describe('renderLine labels', () => {
     afterEach(() => document.body.replaceChildren());
 
     test('preserves inactive styling and cleans up the hover listener', () => {
         const plot = createPlot();
+        const labelsPlot = createPlot();
         const data = createPreparedData([]);
         data.svgLabels = [
             {
@@ -146,15 +161,15 @@ describe('renderLineLabels', () => {
         ];
         const dispatcher = dispatch('hover-shape');
         // eslint-disable-next-line testing-library/render-result-naming-convention -- D3 returns a cleanup function.
-        const cleanup = renderLineLabels(
-            plot,
+        const cleanup = renderLine(
+            {plot, labelsPlot, getCurveFactory: () => curveLinear},
             [data],
             getPreparedOptions({
                 line: {states: {inactive: {enabled: true, opacity: 0.2}}},
             }),
             dispatcher,
         );
-        const label = plot.querySelector('text');
+        const label = labelsPlot.querySelector('text');
         const otherSeries = [{series: {type: 'line', id: 'other'}}];
         dispatcher.call('hover-shape', undefined, otherSeries);
         expect(label?.getAttribute('opacity')).toBe('0.2');

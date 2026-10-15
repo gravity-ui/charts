@@ -13,6 +13,7 @@ const b = block('sankey');
 export function renderSankey(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedSankeyData,
     _seriesOptions: PreparedSeriesOptions,
@@ -20,6 +21,8 @@ export function renderSankey(
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
 
     // nodes
     svgElement
@@ -48,7 +51,7 @@ export function renderSankey(
 
     // dataLabels
     renderDataLabels({
-        container: svgElement.append('g'),
+        container: labelsSvgElement,
         data: preparedData.labels,
         className: b('label'),
     }).attr('dy', '0.35em');

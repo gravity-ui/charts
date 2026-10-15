@@ -69,6 +69,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
 function renderShapes({
     plot,
+    labelsPlot,
     preparedData,
     labels,
     seriesOptions,
@@ -79,13 +80,13 @@ function renderShapes({
     const data = preparedData as PreparedBarXData[];
     const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
     const cleanup = renderBarX(
-        {plot, boundsWidth, boundsHeight},
+        {plot, labelsPlot, boundsWidth, boundsHeight},
         data,
         seriesOptions,
         allowOverlap,
         dispatcher,
     );
-    renderStackLabels(plot, labels);
+    renderStackLabels(labelsPlot, labels);
     return cleanup;
 }
 
