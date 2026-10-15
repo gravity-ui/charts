@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const data: ChartData = {
     series: {
         options: {
@@ -37,10 +39,17 @@ const data: ChartData = {
     yAxis: [{title: {text: 'Revenue'}}],
 };
 
-export function LineMarkersExample() {
+export default function LineMarkersExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Point markers',
+    description: 'Show point markers and customize their appearance on hover.',
+    docsUrl: 'pages/guides/series-types/line.html#markers',
+} satisfies ExampleMeta;

@@ -22,6 +22,8 @@ items:
     href: ./pages/overview.md
   - name: Get started
     href: ./pages/get-started.md
+  - name: Examples
+    href: ./pages/examples.md
   - name: Development
     items:
       - name: Local development
@@ -36,6 +38,8 @@ items:
     items:
       - name: Series types
         items:
+          - name: Introduction
+            href: ./pages/guides/series-types/index.md
           - name: Line
             href: ./pages/guides/series-types/line.md
           - name: Area
@@ -48,6 +52,22 @@ items:
             href: ./pages/guides/series-types/bar-y.md
           - name: Scatter
             href: ./pages/guides/series-types/scatter.md
+          - name: Heatmap
+            href: ./pages/guides/series-types/heatmap.md
+          - name: Pie
+            href: ./pages/guides/series-types/pie.md
+          - name: Treemap
+            href: ./pages/guides/series-types/treemap.md
+          - name: Waterfall
+            href: ./pages/guides/series-types/waterfall.md
+          - name: Funnel
+            href: ./pages/guides/series-types/funnel.md
+          - name: Sankey
+            href: ./pages/guides/series-types/sankey.md
+          - name: Radar
+            href: ./pages/guides/series-types/radar.md
+          - name: X-Range
+            href: ./pages/guides/series-types/x-range.md
       - name: Axes
         items:
           - name: Axis types

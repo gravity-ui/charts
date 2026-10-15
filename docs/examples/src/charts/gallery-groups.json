@@ -1,0 +1,18 @@
+[
+  {
+    "id": "axes",
+    "title": "Axes and formatting"
+  },
+  {
+    "id": "legend",
+    "title": "Legend"
+  },
+  {
+    "id": "tooltip",
+    "title": "Tooltips"
+  },
+  {
+    "id": "data-labels",
+    "title": "Data labels"
+  }
+]

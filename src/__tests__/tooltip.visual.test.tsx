@@ -4,7 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
 
-import {MultipleYAxesTooltipExample} from '../../docs/examples/src/charts/tooltip/multiple-y-axes';
+import MultipleYAxesTooltipExample from '../../docs/examples/src/charts/tooltip/multiple-y-axes';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
     areaStakingPercentData,

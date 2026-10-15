@@ -2,16 +2,16 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
-import {AxisLabelFontSizeExample} from '../../docs/examples/src/charts/axis-labels/font-size';
-import {CategoryAxisExample} from '../../docs/examples/src/charts/axis-types/category';
-import {DatetimeAxisExample} from '../../docs/examples/src/charts/axis-types/datetime';
-import {LinearAxisExample} from '../../docs/examples/src/charts/axis-types/linear';
-import {LogarithmicAxisExample} from '../../docs/examples/src/charts/axis-types/logarithmic';
-import {DataLabelsPlacementAutoExample} from '../../docs/examples/src/charts/data-labels/placement-auto';
-import {DataLabelsPlacementFallbackHideExample} from '../../docs/examples/src/charts/data-labels/placement-fallback-hide';
-import {DataLabelsPlacementFixedExample} from '../../docs/examples/src/charts/data-labels/placement-fixed';
-import {BarXSeriesExample} from '../../docs/examples/src/charts/series-types/bar-x';
-import {BarYSeriesExample} from '../../docs/examples/src/charts/series-types/bar-y';
+import AxisLabelFontSizeExample from '../../docs/examples/src/charts/axis-labels/font-size';
+import CategoryAxisExample from '../../docs/examples/src/charts/axis-types/category';
+import DatetimeAxisExample from '../../docs/examples/src/charts/axis-types/datetime';
+import LinearAxisExample from '../../docs/examples/src/charts/axis-types/linear';
+import LogarithmicAxisExample from '../../docs/examples/src/charts/axis-types/logarithmic';
+import DataLabelsPlacementAutoExample from '../../docs/examples/src/charts/data-labels/placement-auto';
+import DataLabelsPlacementFallbackHideExample from '../../docs/examples/src/charts/data-labels/placement-fallback-hide';
+import DataLabelsPlacementFixedExample from '../../docs/examples/src/charts/data-labels/placement-fixed';
+import BarXSeriesExample from '../../docs/examples/src/charts/series-types/bar-x';
+import BarYSeriesExample from '../../docs/examples/src/charts/series-types/bar-y';
 
 const CONTAINER_STYLE: React.CSSProperties = {
     width: 600,

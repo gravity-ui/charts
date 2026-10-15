@@ -12,6 +12,25 @@ const styleToAdd = `
             color: inherit !important;
             background-color: unset !important;
         }
+        .yfm .docs-series-types ul {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px 16px;
+            padding: 0;
+            list-style: none;
+        }
+        .yfm .docs-series-types li {
+            margin: 0;
+        }
+        @media (max-width: 600px) {
+            .yfm .docs-series-types ul {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        /* The mobile aside is inside a sticky parent and needs no desktop offset. */
+        .mobile .dc-doc-page__aside {
+            top: 0;
+        }
     </style>
 `;
 
@@ -22,12 +41,9 @@ function buildExamplesAssets() {
     }
 
     fs.mkdirSync(examplesOutDir, {recursive: true});
-    fs.copyFileSync(examplesJsPath, path.join(examplesOutDir, 'chart-examples.js'));
+    fs.cpSync(path.dirname(examplesJsPath), examplesOutDir, {recursive: true});
 
     const hasCss = fs.existsSync(examplesCssPath);
-    if (hasCss) {
-        fs.copyFileSync(examplesCssPath, path.join(examplesOutDir, 'chart-examples.css'));
-    }
 
     return {hasJs: true, hasCss};
 }
@@ -54,7 +70,10 @@ function processHtmlFiles(dir, assets, tags) {
         } else if (path.extname(file) === '.html') {
             let content = fs.readFileSync(filePath, 'utf8');
             content = content.replace('</head>', `${styleToAdd}\n</head>`);
-            if (assets.hasJs && content.includes('data-chart-example')) {
+            if (
+                assets.hasJs &&
+                /<div\b[^>]*\bdata-chart-(example="|examples\b|dashboard\b)/.test(content)
+            ) {
                 if (tags.linkTag) {
                     content = content.replace('</head>', `${tags.linkTag}\n</head>`);
                 }

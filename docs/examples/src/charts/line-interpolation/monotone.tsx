@@ -3,6 +3,8 @@ import React from 'react';
 import {Chart} from '@gravity-ui/charts';
 import type {ChartData} from '@gravity-ui/charts';
 
+import type {ExampleMeta} from '../gallery';
+
 const DATA = [
     {x: 0, y: 10},
     {x: 1, y: 60},
@@ -36,10 +38,17 @@ const data: ChartData = {
     xAxis: {type: 'linear'},
 };
 
-export function LineInterpolationMonotoneExample() {
+export default function LineInterpolationMonotoneExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
         </div>
     );
 }
+
+export const meta = {
+    seriesType: 'Line',
+    title: 'Monotone interpolation',
+    description: 'Smooth a line without introducing extra peaks between points.',
+    docsUrl: 'pages/guides/series-types/line.html#line-interpolation',
+} satisfies ExampleMeta;
