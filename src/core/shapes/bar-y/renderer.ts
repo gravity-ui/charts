@@ -16,6 +16,7 @@ const b = block('bar-y');
 export function renderBarY(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: BarYShapesArgs,
     seriesOptions: PreparedSeriesOptions,
@@ -62,7 +63,7 @@ export function renderBarY(
     }
 
     const labelSelection = renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

@@ -39,12 +39,14 @@ export const SeriesShapes = ({
 }: Props) => {
     const b = block(plugin.type);
     const ref = React.useRef<SVGGElement>(null);
+    const labelsRef = React.useRef<SVGGElement>(null);
 
     React.useEffect(() => {
-        if (!ref.current) return () => {};
+        if (!ref.current || !labelsRef.current) return () => {};
         return (
             plugin.renderShapes({
                 plot: ref.current,
+                labelsPlot: labelsRef.current,
                 preparedData,
                 labels,
                 seriesOptions,
@@ -75,6 +77,11 @@ export const SeriesShapes = ({
                 preparedData={preparedData}
                 dispatcher={dispatcher}
                 namespace={namespace}
+            />
+            <g
+                ref={labelsRef}
+                className={b('labels')}
+                clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
             />
             <AnnotationLayer
                 annotations={annotations}

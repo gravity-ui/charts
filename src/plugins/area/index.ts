@@ -111,6 +111,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     },
     renderShapes: function ({
         plot,
+        labelsPlot,
         preparedData,
         seriesOptions,
         dispatcher,
@@ -118,8 +119,14 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     }: RenderShapesArgs) {
         const data = preparedData as PreparedAreaData[];
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        const cleanup = renderArea({plot}, data, seriesOptions, allowOverlap, dispatcher);
-        renderStackLabels(plot, labels);
+        const cleanup = renderArea(
+            {plot, labelsPlot},
+            data,
+            seriesOptions,
+            allowOverlap,
+            dispatcher,
+        );
+        renderStackLabels(labelsPlot, labels);
         return cleanup;
     },
     tooltip: {

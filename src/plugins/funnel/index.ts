@@ -28,8 +28,19 @@ async function prepareShapeData({
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderFunnel({plot}, preparedData[0] as PreparedFunnelData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderFunnel(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedFunnelData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const funnelPlugin: SeriesPlugin<FunnelSeries, TooltipDataChunkFunnel> = {

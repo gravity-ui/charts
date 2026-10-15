@@ -30,8 +30,19 @@ async function prepareShapeData({
     return {renderData: data, tooltipItems: data};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderPie({plot}, preparedData as PreparedPieData[], seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderPie(
+        {plot, labelsPlot},
+        preparedData as PreparedPieData[],
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatContext> = {

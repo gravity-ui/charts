@@ -30,8 +30,19 @@ async function prepareShapeData({
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderTreemap({plot}, preparedData[0] as PreparedTreemapData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderTreemap(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedTreemapData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 function validateTreemapData(series: TreemapSeries) {

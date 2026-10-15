@@ -281,7 +281,8 @@ describe('area-range plugin', () => {
             args.series[0].nullMode = nullMode;
             const data = await prepareAreaRangeData(args);
             const plot = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            renderAreaRange({plot}, data, {} as PreparedSeriesOptions, false);
+            const labelsPlot = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            renderAreaRange({plot, labelsPlot}, data, {} as PreparedSeriesOptions, false);
             const path = plot.querySelector('.gcharts-area-range__region')?.getAttribute('d');
             expect(path?.match(/M/g)).toHaveLength(nullMode === 'skip' ? 2 : 1);
             expect(path).not.toContain('NaN');
