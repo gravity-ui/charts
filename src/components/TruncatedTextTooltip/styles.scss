@@ -1,0 +1,8 @@
+.gcharts-truncated-text-tooltip {
+    display: block;
+
+    max-width: min(360px, calc(100vw - 16px));
+    overflow-wrap: anywhere;
+
+    white-space: pre-wrap;
+}

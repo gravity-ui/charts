@@ -33,6 +33,7 @@ async function prepareSingleLineLegendItem(
     item.textWidth = width;
     if (width > maxWidth) {
         item.overflowed = true;
+        item.textTruncated = true;
         if (legend.html) {
             item.textWidth = maxWidth;
         } else {
@@ -58,6 +59,7 @@ export async function prepareLegendItems(args: {
         ...item,
         text: item.name,
         textWidth: 0,
+        textTruncated: false,
     }));
     const widths = preparedItems.map((item) =>
         Math.max(
@@ -80,6 +82,9 @@ export async function prepareLegendItems(args: {
             text: decodeHtmlEntities(item.text),
             width: widths[i],
             maxRowCount: legend.itemMaxRowCount,
+            onTruncate: () => {
+                item.textTruncated = true;
+            },
             getTextWidth,
         });
         item.textMaxWidth = widths[i];
@@ -102,6 +107,7 @@ export async function limitLegendItemRows(
         }
         item.height = maxRows * legend.lineHeight;
         item.overflowed = true;
+        item.textTruncated = true;
         item.textRows = item.textRows.slice(0, maxRows);
         item.textRows[maxRows - 1] = await getTextWithElipsis({
             text: item.textRows[maxRows - 1] + '…',

@@ -8,6 +8,13 @@ interface Props {
     itemClickAction?: ChartLegend['itemClickAction'];
     onItemClick?: (item: ChartLegendItemClickData) => void;
     preventDefault?: boolean;
+    legend?: ChartLegend;
+    onActivation?: (event: {
+        mouseEvent: boolean;
+        ctrlKey: boolean;
+        metaKey: boolean;
+        currentTargetLabel: string | null;
+    }) => void;
     seriesData?: ChartData['series']['data'];
 }
 
@@ -17,6 +24,8 @@ export const LegendItemClickTestStory = ({
     onItemClick,
     preventDefault = false,
     seriesData,
+    legend,
+    onActivation,
 }: Props) => {
     const data = React.useMemo<ChartData>(
         () => ({
@@ -24,9 +33,18 @@ export const LegendItemClickTestStory = ({
                 enabled: true,
                 html,
                 itemClickAction,
+                ...legend,
                 events: {
                     itemClick: (item, event) => {
                         onItemClick?.(item);
+                        onActivation?.({
+                            mouseEvent: event instanceof MouseEvent,
+                            ctrlKey: event.ctrlKey,
+                            metaKey: event.metaKey,
+                            currentTargetLabel: (event.currentTarget as Element).getAttribute(
+                                'aria-label',
+                            ),
+                        });
 
                         if (preventDefault) {
                             event.preventDefault();
@@ -57,7 +75,7 @@ export const LegendItemClickTestStory = ({
                 ],
             },
         }),
-        [html, itemClickAction, onItemClick, preventDefault, seriesData],
+        [html, itemClickAction, onItemClick, preventDefault, seriesData, legend, onActivation],
     );
 
     return <ChartTestStory data={data} />;

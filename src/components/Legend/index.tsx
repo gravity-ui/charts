@@ -2,38 +2,27 @@ import React from 'react';
 
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleLinear} from 'd3-scale';
-import type {BaseType, Selection} from 'd3-selection';
+import type {Selection} from 'd3-selection';
 import {select} from 'd3-selection';
-import {symbol} from 'd3-shape';
+import {createPortal} from 'react-dom';
 
 import {CONTINUOUS_LEGEND_SIZE} from '~core/constants';
-import {
-    createGradientRect,
-    createLineSymbol,
-    getContinuesColorFn,
-    getSymbol,
-    getTextSizeFn,
-    getUniqId,
-} from '~core/utils';
+import {createGradientRect, getContinuesColorFn, getTextSizeFn, getUniqId} from '~core/utils';
 import {axisBottom} from '~core/utils/axis-generators';
 
-import type {
-    LegendItem,
-    OnLegendItemClick,
-    PreparedLegend,
-    PreparedLegendRow,
-    PreparedSeries,
-    SymbolLegendSymbol,
-} from '../../hooks';
+import type {LegendItem, OnLegendItemClick, PreparedLegend, PreparedSeries} from '../../hooks';
 import {formatNumber} from '../../libs';
 import type {LegendConfig} from '../../types';
 import {block} from '../../utils';
+
+import {DiscreteLegendItem} from './LegendItem';
+import {LegendTitle} from './LegendTitle';
 
 import './styles.scss';
 
 const b = block('legend');
 
-type Props = {
+interface Props {
     chartSeries: PreparedSeries[];
     legend: PreparedLegend;
     items: LegendItem[][] | undefined;
@@ -41,7 +30,7 @@ type Props = {
     htmlLayout: HTMLElement | null;
     onItemClick: OnLegendItemClick;
     onUpdate?: () => void;
-};
+}
 
 const getLegendPosition = (args: {
     contentWidth: number;
@@ -130,74 +119,12 @@ async function appendPaginator(args: {
     return paginationLine;
 }
 
-function renderLegendSymbol(args: {
-    selection: Selection<SVGGElement, LegendItem, BaseType, unknown>;
-    row: PreparedLegendRow;
-}) {
-    const {selection, row} = args;
-    const legendLineHeight = row.height;
-    selection.each(function (d, i) {
-        const element = select(this);
-        const x = row.items[i].symbolLeft;
-        const className = b('item-symbol', {shape: d.symbol.shape, unselected: !d.visible});
-        const color = d.visible ? d.color : '';
-        const symbolType = (d.symbol as SymbolLegendSymbol).symbolType;
-        const scatterSymbol = getSymbol(symbolType);
-
-        switch (d.symbol.shape) {
-            case 'path': {
-                createLineSymbol({
-                    container: element.node(),
-                    x,
-                    height: legendLineHeight,
-                    width: d.symbol.bboxWidth,
-                    color,
-                    className,
-                    dashStyle: d.dashStyle,
-                    lineWidth: d.symbol.strokeWidth,
-                });
-
-                break;
-            }
-            case 'rect': {
-                const y = (legendLineHeight - d.symbol.height) / 2;
-                element
-                    .append('rect')
-                    .attr('x', x)
-                    .attr('y', y)
-                    .attr('width', d.symbol.bboxWidth)
-                    .attr('height', d.symbol.height)
-                    .attr('rx', d.symbol.radius)
-                    .attr('class', className)
-                    .style('fill', color);
-
-                break;
-            }
-            case 'symbol': {
-                const symbolAreaSize = Math.pow(d.symbol.width, 2);
-                const bboxWidth = d.symbol.bboxWidth;
-                const translateX = x + bboxWidth / 2;
-                const translateY = legendLineHeight / 2;
-
-                element
-                    .append('svg:path')
-                    .attr('d', () => symbol(scatterSymbol, symbolAreaSize)())
-                    .attr('transform', 'translate(' + translateX + ',' + translateY + ')')
-                    .attr('class', className)
-                    .style('fill', color);
-
-                break;
-            }
-        }
-        element
-            .selectAll(`.${b('item-symbol')}`)
-            .attr('opacity', d.visible ? (d.symbol.opacity ?? null) : null);
-    });
-}
-
 export const Legend = (props: Props) => {
-    const {chartSeries, legend, items = [], config, htmlLayout, onItemClick, onUpdate} = props;
+    const {chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
+    const focusedItemRef = React.useRef<string | null>(null);
+    const focusedTitleRef = React.useRef(false);
+    const [renderedContent, setRenderedContent] = React.useState<React.ReactPortal[]>([]);
     const pageCount = config.pagination?.pages.length ?? 1;
     const [paginationState, setPaginationState] = React.useState({
         pageIndex: 0,
@@ -215,14 +142,21 @@ export const Legend = (props: Props) => {
     }
 
     React.useEffect(() => {
+        let cancelled = false;
+        const svgNode = ref.current;
+        const focusedItem = focusedItemRef.current;
+        const focusedTitle = focusedTitleRef.current;
+        const portals: React.ReactPortal[] = [];
+        setRenderedContent([]);
         async function prepareLegend() {
             if (!ref.current || !htmlLayout) {
                 return;
             }
 
             const svgElement = select(ref.current);
-            svgElement.selectAll('*').remove();
-            svgElement.style('opacity', 0);
+            // Remove only D3-owned containers; React unmounts the portals inside them.
+            svgElement.selectChildren().remove();
+            svgElement.style('opacity', 0).attr('clip-path', null);
 
             const isMac = navigator.platform.toUpperCase().includes('MAC');
             const handleItemClick = (event: MouseEvent, item: LegendItem) => {
@@ -275,7 +209,8 @@ export const Legend = (props: Props) => {
             if (legend.type === 'discrete') {
                 const page = config.pagination?.pages[currentPageIndex];
                 const start = page?.start ?? 0;
-                const pageItems = page ? items.slice(start, page.end) : items;
+                const allItems = items ?? [];
+                const pageItems = page ? allItems.slice(start, page.end) : allItems;
                 const pageRows = page ? legend.rows.slice(start, page.end) : legend.rows;
                 const pageTop = page ? legend.rows[start].top : 0;
                 const {titleHeight} = legend;
@@ -297,100 +232,34 @@ export const Legend = (props: Props) => {
                 const svgItems = svgElement.append('g');
                 pageItems.forEach((line, lineIndex) => {
                     const row = legend.rows[start + lineIndex];
-                    const legendLine = svgItems.append('g').attr('class', b('line'));
+                    // Chromium otherwise puts SVG portal containers with React's focus listeners
+                    // into the tab order, ahead of the actual legend item.
+                    const legendLine = svgItems
+                        .append('g')
+                        .attr('class', b('line'))
+                        .attr('tabindex', -1);
                     const htmlLegendLine = htmlContainer
                         ?.append('div')
                         .style('position', 'absolute');
-                    const legendItemTemplate = legendLine
-                        .selectAll('legend-history')
-                        .data(line)
-                        .enter()
-                        .append('g')
-                        .attr('class', b('item'))
-                        .on('click', handleItemClick);
-
-                    const legendLineHeight = row.height;
-                    renderLegendSymbol({selection: legendItemTemplate, row});
-                    if (legend.multilineItems) {
-                        legendItemTemplate
-                            .append('rect')
-                            .attr('x', (_, i) => row.items[i].symbolLeft)
-                            .attr(
-                                'width',
-                                (d, i) =>
-                                    row.items[i].textLeft + d.textWidth - row.items[i].symbolLeft,
-                            )
-                            .attr('height', legendLineHeight)
-                            .attr('fill', 'transparent');
-                    }
-
-                    if (htmlLegendLine) {
-                        htmlLegendLine
-                            .selectAll('legend-item')
-                            .data(line)
-                            .enter()
-                            .append('div')
-                            .attr('class', function (d) {
-                                const mods = {
-                                    selected: d.visible,
-                                    unselected: !d.visible,
-                                };
-                                return b('item-text-html', mods);
-                            })
-                            .style('pointer-events', 'auto')
-                            .style('font-size', legend.itemStyle.fontSize)
-                            .style('position', 'absolute')
-                            .style('max-width', function (d) {
-                                return `${d.textWidth}px`;
-                            })
-                            .style('left', function (_d, i) {
-                                return `${row.items[i].textLeft}px`;
-                            })
-                            .style('top', function (d) {
-                                if (d.height < legendLineHeight) {
-                                    return `${(legendLineHeight - d.height) / 2}px`;
-                                }
-                                return '0px';
-                            })
-                            .on('click', handleItemClick)
-                            .html((d) => d.text);
-                    } else {
-                        const textSelection = legendItemTemplate
-                            .append('text')
-                            .attr('x', (_d, i) => row.items[i].textLeft)
-                            .attr(
-                                'y',
-                                (d) => legend.hangingOffset + (legendLineHeight - d.height) / 2,
-                            )
-                            .attr('height', legend.height)
-                            .attr('class', function (d) {
-                                const mods = {selected: d.visible, unselected: !d.visible};
-                                return b('item-text', mods);
-                            })
-                            .html((d) => (d.textRows ? '' : d.text))
-                            .style('font-size', legend.itemStyle.fontSize);
-                        textSelection
-                            .filter((d) => Boolean(d.textRows))
-                            .style('font-weight', () => legend.itemStyle.fontWeight ?? null)
-                            .each(function (d) {
-                                const label = select(this);
-                                label
-                                    .selectAll('tspan')
-                                    .data(d.textRows ?? [])
-                                    .enter()
-                                    .append('tspan')
-                                    // WebKit otherwise clips the first row instead of inheriting the text baseline.
-                                    .style('dominant-baseline', 'hanging')
-                                    .attr('x', label.attr('x'))
-                                    .attr(
-                                        'y',
-                                        (_, i) =>
-                                            legend.hangingOffset +
-                                            (legendLineHeight - d.height) / 2 +
-                                            i * legend.lineHeight,
-                                    )
-                                    .text((textRow) => textRow);
-                            });
+                    const container = legendLine.node();
+                    if (container) {
+                        line.forEach((item, index) => {
+                            portals.push(
+                                createPortal(
+                                    <DiscreteLegendItem
+                                        item={item}
+                                        legend={legend}
+                                        position={row.items[index]}
+                                        rowHeight={row.height}
+                                        htmlContainer={htmlLegendLine?.node() ?? null}
+                                        restoreFocus={focusedItem === item.id}
+                                        onClick={handleItemClick}
+                                    />,
+                                    container,
+                                    `item-${item.id}`,
+                                ),
+                            );
+                        });
                     }
 
                     const left = contentLeft + row.left;
@@ -412,6 +281,7 @@ export const Legend = (props: Props) => {
                         onArrowClick: (pageIndex) =>
                             setPaginationState((state) => ({...state, pageIndex})),
                     });
+                    if (cancelled) return;
                     // SVG's middle baseline is not the bounding-box center. Use the actual
                     // text bounds so a clipped row cannot touch the counter or arrows.
                     contentHeight = Math.max(
@@ -511,6 +381,7 @@ export const Legend = (props: Props) => {
                         labelsStyle: legend.ticks.style,
                     },
                 });
+                if (cancelled) return;
                 const tickTop = legend.title.height + legend.title.margin + rectHeight;
 
                 const legendAxisClassname = b('axis');
@@ -523,55 +394,66 @@ export const Legend = (props: Props) => {
                 legendWidth = legend.resolvedWidth;
             }
 
-            const legendTitleClassname = b('title');
-
             if (legend.title.enable) {
-                const titleWidth = legend.title.resolvedWidth;
-                let dx = 0;
-                switch (legend.title.align) {
-                    case 'center': {
-                        dx = legend.resolvedWidth / 2 - titleWidth / 2;
-                        break;
-                    }
-                    case 'right': {
-                        dx = legend.resolvedWidth - titleWidth;
-                        break;
-                    }
-                    case 'left':
-                    default: {
-                        dx = 0;
-                        break;
-                    }
-                }
-
-                svgElement.selectAll(`.${legendTitleClassname}`).remove();
-                svgElement
+                const container = svgElement
                     .append('g')
-                    .attr('class', legendTitleClassname)
-                    .append('text')
-                    .attr('dx', dx)
-                    .attr('y', legend.title.hangingOffset)
-                    .attr('font-weight', legend.title.style.fontWeight ?? null)
-                    .attr('font-size', legend.title.style.fontSize ?? null)
-                    .attr('fill', legend.title.style.fontColor ?? null)
-                    .style('dominant-baseline', 'hanging')
-                    .html(legend.title.resolvedText);
-            } else {
-                svgElement.selectAll(`.${legendTitleClassname}`).remove();
+                    .attr('class', b('title'))
+                    .attr('tabindex', -1)
+                    .node();
+                if (container) {
+                    portals.push(
+                        createPortal(
+                            <LegendTitle legend={legend} restoreFocus={focusedTitle} />,
+                            container,
+                            'legend-title',
+                        ),
+                    );
+                }
             }
 
             svgElement
                 .attr('transform', `translate(${[legendLeft, legendTop].join(',')})`)
                 .style('opacity', 1);
             htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
+            if (!cancelled) setRenderedContent(portals);
         }
 
         prepareLegend();
+        return () => {
+            cancelled = true;
+            const active = document.activeElement;
+            const focused =
+                active?.matches(':focus-visible') &&
+                (svgNode?.contains(active) ||
+                    htmlLayout?.querySelector('[data-legend]')?.contains(active));
+            focusedItemRef.current = focused
+                ? (active?.getAttribute('data-legend-item-id') ?? null)
+                : null;
+            focusedTitleRef.current = Boolean(focused && active?.hasAttribute('data-legend-title'));
+            select(htmlLayout).selectAll('[data-legend]').remove();
+        };
     }, [chartSeries, onItemClick, onUpdate, legend, items, config, currentPageIndex, htmlLayout]);
 
-    // due to asynchronous processing, we only need to work with the actual element
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const key = React.useMemo(() => getUniqId(), [legend, config]);
+    // Portal events follow the React tree even when the tooltip is outside the SVG.
+    const stopTooltipEvent = (event: React.SyntheticEvent) => {
+        if ((event.target as Element).closest('[role="tooltip"]')) {
+            event.stopPropagation();
+        }
+    };
 
-    return <g key={key} className={b()} ref={ref} width={config.maxWidth} height={legend.height} />;
+    return (
+        <g
+            className={b()}
+            ref={ref}
+            width={config.maxWidth}
+            height={legend.height}
+            onPointerMove={stopTooltipEvent}
+            onPointerLeave={stopTooltipEvent}
+            onTouchStart={stopTooltipEvent}
+            onTouchMove={stopTooltipEvent}
+            onClick={stopTooltipEvent}
+        >
+            {renderedContent}
+        </g>
+    );
 };
