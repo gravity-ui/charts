@@ -16,6 +16,7 @@ import type {LegendConfig} from '../../types';
 import {block} from '../../utils';
 
 import {DiscreteLegendItem} from './LegendItem';
+import {LegendTitle} from './LegendTitle';
 
 import './styles.scss';
 
@@ -122,7 +123,8 @@ export const Legend = (props: Props) => {
     const {chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
     const focusedItemRef = React.useRef<string | null>(null);
-    const [renderedItems, setRenderedItems] = React.useState<React.ReactPortal[]>([]);
+    const focusedTitleRef = React.useRef(false);
+    const [renderedContent, setRenderedContent] = React.useState<React.ReactPortal[]>([]);
     const pageCount = config.pagination?.pages.length ?? 1;
     const [paginationState, setPaginationState] = React.useState({
         pageIndex: 0,
@@ -143,15 +145,16 @@ export const Legend = (props: Props) => {
         let cancelled = false;
         const svgNode = ref.current;
         const focusedItem = focusedItemRef.current;
+        const focusedTitle = focusedTitleRef.current;
         const portals: React.ReactPortal[] = [];
-        setRenderedItems([]);
+        setRenderedContent([]);
         async function prepareLegend() {
             if (!ref.current || !htmlLayout) {
                 return;
             }
 
             const svgElement = select(ref.current);
-            // Remove only D3-owned containers; React unmounts the item portals inside them.
+            // Remove only D3-owned containers; React unmounts the portals inside them.
             svgElement.selectChildren().remove();
             svgElement.style('opacity', 0).attr('clip-path', null);
 
@@ -253,7 +256,7 @@ export const Legend = (props: Props) => {
                                         onClick={handleItemClick}
                                     />,
                                     container,
-                                    item.id,
+                                    `item-${item.id}`,
                                 ),
                             );
                         });
@@ -391,61 +394,42 @@ export const Legend = (props: Props) => {
                 legendWidth = legend.resolvedWidth;
             }
 
-            const legendTitleClassname = b('title');
-
             if (legend.title.enable) {
-                const titleWidth = legend.title.resolvedWidth;
-                let dx = 0;
-                switch (legend.title.align) {
-                    case 'center': {
-                        dx = legend.resolvedWidth / 2 - titleWidth / 2;
-                        break;
-                    }
-                    case 'right': {
-                        dx = legend.resolvedWidth - titleWidth;
-                        break;
-                    }
-                    case 'left':
-                    default: {
-                        dx = 0;
-                        break;
-                    }
-                }
-
-                svgElement.selectAll(`.${legendTitleClassname}`).remove();
-                svgElement
+                const container = svgElement
                     .append('g')
-                    .attr('class', legendTitleClassname)
-                    .append('text')
-                    .attr('dx', dx)
-                    .attr('y', legend.title.hangingOffset)
-                    .attr('font-weight', legend.title.style.fontWeight ?? null)
-                    .attr('font-size', legend.title.style.fontSize ?? null)
-                    .attr('fill', legend.title.style.fontColor ?? null)
-                    .style('dominant-baseline', 'hanging')
-                    .html(legend.title.resolvedText);
-            } else {
-                svgElement.selectAll(`.${legendTitleClassname}`).remove();
+                    .attr('class', b('title'))
+                    .attr('tabindex', -1)
+                    .node();
+                if (container) {
+                    portals.push(
+                        createPortal(
+                            <LegendTitle legend={legend} restoreFocus={focusedTitle} />,
+                            container,
+                            'legend-title',
+                        ),
+                    );
+                }
             }
 
             svgElement
                 .attr('transform', `translate(${[legendLeft, legendTop].join(',')})`)
                 .style('opacity', 1);
             htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
-            if (!cancelled) setRenderedItems(portals);
+            if (!cancelled) setRenderedContent(portals);
         }
 
         prepareLegend();
         return () => {
             cancelled = true;
             const active = document.activeElement;
-            focusedItemRef.current =
-                active &&
-                active.matches(':focus-visible') &&
+            const focused =
+                active?.matches(':focus-visible') &&
                 (svgNode?.contains(active) ||
-                    htmlLayout?.querySelector('[data-legend]')?.contains(active))
-                    ? active.getAttribute('data-legend-item-id')
-                    : null;
+                    htmlLayout?.querySelector('[data-legend]')?.contains(active));
+            focusedItemRef.current = focused
+                ? (active?.getAttribute('data-legend-item-id') ?? null)
+                : null;
+            focusedTitleRef.current = Boolean(focused && active?.hasAttribute('data-legend-title'));
             select(htmlLayout).selectAll('[data-legend]').remove();
         };
     }, [chartSeries, onItemClick, onUpdate, legend, items, config, currentPageIndex, htmlLayout]);
@@ -469,7 +453,7 @@ export const Legend = (props: Props) => {
             onTouchMove={stopTooltipEvent}
             onClick={stopTooltipEvent}
         >
-            {renderedItems}
+            {renderedContent}
         </g>
     );
 };

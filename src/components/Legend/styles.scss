@@ -93,17 +93,9 @@
         pointer-events: auto;
     }
 
+    &__title-text:focus-visible,
     &__item:focus-visible,
     &__item-html:focus-visible {
         outline: none;
-    }
-
-    &__tooltip {
-        display: block;
-
-        max-width: min(360px, calc(100vw - 16px));
-        overflow-wrap: anywhere;
-
-        white-space: pre-wrap;
     }
 }

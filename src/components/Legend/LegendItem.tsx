@@ -1,13 +1,14 @@
 import React from 'react';
 
-import {Tooltip} from '@gravity-ui/uikit';
 import {symbol} from 'd3-shape';
 import {createPortal} from 'react-dom';
 
 import type {LegendItem, PreparedLegend, PreparedLegendRowItem} from '~core/series/types';
 import {decodeHtmlEntities, getLineDashArray, getSymbol} from '~core/utils';
 
+import {useHtmlTextOverflow} from '../../hooks/useHtmlTextOverflow';
 import {block} from '../../utils';
+import {TruncatedTextTooltip} from '../TruncatedTextTooltip';
 
 const b = block('legend');
 
@@ -19,17 +20,6 @@ interface Props {
     htmlContainer: HTMLElement | null;
     restoreFocus: boolean;
     onClick: (event: MouseEvent, item: LegendItem) => void;
-}
-
-function getReadableText(html: string) {
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    template.content.querySelectorAll('script, style, template').forEach((node) => node.remove());
-    template.content.querySelectorAll('br, p, div, li').forEach((node) => {
-        node.before(' ');
-        node.after(' ');
-    });
-    return (template.content.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 function LegendSymbol({item, x, height}: {item: LegendItem; x: number; height: number}) {
@@ -93,14 +83,10 @@ export function DiscreteLegendItem({
     const setAnchorRef = React.useCallback((node: SVGGElement | HTMLDivElement | null) => {
         anchorRef.current = node;
     }, []);
-    const labelRef = React.useRef<HTMLDivElement>(null);
-    const [open, setOpen] = React.useState(false);
-    const [htmlTruncated, setHtmlTruncated] = React.useState(false);
-    const [htmlText, setHtmlText] = React.useState('');
+    const htmlLabel = useHtmlTextOverflow();
     const interactive = legend.itemClickAction !== 'none' || Boolean(legend.events?.itemClick);
-    const text = legend.html ? htmlText : decodeHtmlEntities(item.name);
-    const truncated = legend.html ? htmlTruncated : Boolean(item.textTruncated);
-    const tooltipEnabled = truncated && Boolean(text);
+    const text = legend.html ? htmlLabel.text : decodeHtmlEntities(item.name);
+    const truncated = legend.html ? htmlLabel.truncated : Boolean(item.textTruncated);
     const width = Math.max(0, position.textLeft + item.textWidth - position.symbolLeft);
     const y = legend.hangingOffset + (rowHeight - item.height) / 2;
 
@@ -119,70 +105,6 @@ export function DiscreteLegendItem({
             anchorRef.current?.focus({preventScroll: true});
         }
     }, [restoreFocus]);
-
-    React.useLayoutEffect(() => {
-        const anchor = anchorRef.current;
-        // Reconcile CSS truncation changes and focus restored when a portal mounts.
-        setOpen(
-            tooltipEnabled &&
-                Boolean(anchor && (anchor === document.activeElement || anchor.matches(':hover'))),
-        );
-    }, [tooltipEnabled]);
-
-    React.useLayoutEffect(() => {
-        const label = labelRef.current;
-        if (!label) return undefined;
-        let frame = 0;
-        let measuredHtml: string | undefined;
-        const measure = () => {
-            const nodes = [label, ...label.querySelectorAll<HTMLElement>('*')];
-            setHtmlTruncated(
-                nodes.some((node) => {
-                    const style = getComputedStyle(node);
-                    return (
-                        (/(hidden|clip|auto|scroll)/.test(style.overflowX) &&
-                            node.scrollWidth > node.clientWidth) ||
-                        (/(hidden|clip|auto|scroll)/.test(style.overflowY) &&
-                            node.scrollHeight > node.clientHeight)
-                    );
-                }),
-            );
-            const html = label.innerHTML;
-            if (html !== measuredHtml) {
-                measuredHtml = html;
-                setHtmlText(getReadableText(html));
-            }
-        };
-        const schedule = () => {
-            cancelAnimationFrame(frame);
-            frame = requestAnimationFrame(measure);
-        };
-        const resize = new ResizeObserver(schedule);
-        const observe = () => {
-            resize.disconnect();
-            resize.observe(label);
-            label.querySelectorAll('*').forEach((node) => resize.observe(node));
-        };
-        const mutation = new MutationObserver((records) => {
-            if (records.some((record) => record.type === 'childList')) observe();
-            schedule();
-        });
-        observe();
-        mutation.observe(label, {
-            subtree: true,
-            childList: true,
-            characterData: true,
-            attributes: true,
-        });
-        document.fonts?.addEventListener('loadingdone', schedule);
-        measure();
-        return () => {
-            cancelAnimationFrame(frame);
-            resize.disconnect();
-            mutation.disconnect();
-            document.fonts?.removeEventListener('loadingdone', schedule);
-        };
-    }, [item.text]);
 
     const activate = (event: React.KeyboardEvent) => {
         if (!interactive || event.target !== event.currentTarget) return;
@@ -209,34 +131,20 @@ export function DiscreteLegendItem({
         'aria-label': text,
         'aria-pressed': legend.itemClickAction === 'none' ? undefined : Boolean(item.visible),
         'data-legend-item-id': item.id,
-        onFocus: () => setOpen(tooltipEnabled),
         onKeyDown: activate,
         onKeyUp: (event: React.KeyboardEvent) => {
             if (event.key === ' ') activate(event);
         },
     };
     const withTooltip = (trigger: React.ReactElement) => (
-        <Tooltip
-            content={text}
-            open={open}
-            onOpenChange={(nextOpen, _event, reason) => {
-                if (
-                    !nextOpen &&
-                    (reason === 'hover' || reason === 'ancestor-scroll') &&
-                    anchorRef.current === document.activeElement
-                ) {
-                    return;
-                }
-                setOpen(nextOpen && tooltipEnabled);
-            }}
-            disabled={!tooltipEnabled}
-            openDelay={300}
-            closeDelay={150}
+        <TruncatedTextTooltip
+            text={text}
+            truncated={truncated}
+            anchorRef={anchorRef}
             placement={legend.layout === 'vertical' ? ['right', 'left'] : ['top', 'bottom']}
-            className={b('tooltip')}
         >
             {trigger}
-        </Tooltip>
+        </TruncatedTextTooltip>
     );
     const marker = <LegendSymbol item={item} x={position.symbolLeft} height={rowHeight} />;
     if (htmlContainer) {
@@ -258,7 +166,7 @@ export function DiscreteLegendItem({
                             }}
                         >
                             <div
-                                ref={labelRef}
+                                ref={htmlLabel.ref}
                                 className={b('item-text-html', {
                                     selected: item.visible,
                                     unselected: !item.visible,

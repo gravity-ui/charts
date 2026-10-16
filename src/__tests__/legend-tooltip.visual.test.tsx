@@ -278,3 +278,64 @@ test('noninteractive items expose full labels without button semantics', async (
     await page.keyboard.press('Space');
     await expect(component.locator('.gcharts-line > path')).toHaveCount(3);
 });
+
+for (const type of ['discrete', 'continuous'] as const) {
+    test(`reveals truncated ${type} legend title and updates on resize`, async ({mount, page}) => {
+        const chart = data();
+        const titleText = 'Annual enterprise subscription revenue & forecast';
+        chart.legend = {
+            ...chart.legend,
+            type,
+            position: 'bottom',
+            layout: 'horizontal',
+            width: 500,
+            maxWidth: 120,
+            title: {text: titleText.replace('&', '&amp;'), align: 'right'},
+            colorScale: {colors: ['#4DA2F1', '#FF3D64'], domain: [1, 4]},
+        };
+        const component = await mount(<ChartTestStory data={chart} styles={{width: 700}} />);
+        const title = component.getByRole('group', {name: titleText, exact: true});
+        const tooltip = page.getByRole('tooltip');
+        await expect(title).toHaveAttribute('tabindex', '0');
+        await expect(title).not.toHaveText(titleText);
+        const plot = component.locator('.gcharts-line').first();
+        const before = await plot.boundingBox();
+        await title.hover();
+        await expect(tooltip).toHaveText(titleText);
+        expect(await plot.boundingBox()).toEqual(before);
+        await page.keyboard.press('Escape');
+        await expect(tooltip).toHaveCount(0);
+        await page.mouse.move(0, 0);
+        await title.focus();
+        await expect(tooltip).toHaveText(titleText);
+        await expect(title).toHaveAttribute(
+            'aria-describedby',
+            (await tooltip.getAttribute('id')) ?? '',
+        );
+        await page.keyboard.press('Enter');
+        await expect(component.locator('.gcharts-line > path')).toHaveCount(3);
+
+        const wider = {...chart, legend: {...chart.legend, maxWidth: 500}};
+        await component.update(<ChartTestStory data={wider} styles={{width: 700}} />);
+        await expect(title).toHaveText(titleText);
+        await expect(title).toBeFocused();
+        await expect(title).toHaveAttribute('tabindex', '-1');
+        await expect(title).not.toHaveAttribute('aria-describedby');
+        await expect(tooltip).toHaveCount(0);
+
+        await component.update(<ChartTestStory data={chart} styles={{width: 700}} />);
+        await expect(title).toBeFocused();
+        await expect(tooltip).toHaveText(titleText);
+        await component.update(
+            <ChartTestStory
+                data={{...chart, legend: {...chart.legend, title: {text: 'Revenue…'}}}}
+                styles={{width: 700}}
+            />,
+        );
+        const shortTitle = component.getByRole('group', {name: 'Revenue…', exact: true});
+        await expect(shortTitle).toBeFocused();
+        await expect(tooltip).toHaveCount(0);
+        await component.unmount();
+        await expect(tooltip).toHaveCount(0);
+    });
+}
