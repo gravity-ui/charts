@@ -82,7 +82,7 @@ The example uses abbreviated legend labels. Hover over the lines to see the full
 
 ## Legend item clicks
 
-For a discrete legend, `legend.events.itemClick` receives the clicked item's `id`, full configured `name` before truncation, current `visible` state, and the native mouse event. The `name` may contain HTML: with `itemText: '<b>Created</b>'`, the callback receives `name: '<b>Created</b>'` even though the rendered label reads “Created”. By default, clicking applies the built-in visibility behavior: a regular click selects one item or restores all, while ⌘/Ctrl-click adds or removes an item from the visible set.
+For a discrete legend, `legend.events.itemClick` receives the clicked item's `id`, full configured `name` before truncation, current `visible` state, and a mouse event. Keyboard activation dispatches a click event with the pressed modifier keys. The `name` may contain HTML: with `itemText: '<b>Created</b>'`, the callback receives `name: '<b>Created</b>'` even though the rendered label reads “Created”. By default, clicking applies the built-in visibility behavior: a regular click selects one item or restores all, while ⌘/Ctrl-click adds or removes an item from the visible set.
 
 Set `legend.itemClickAction` to `'none'` to use a legend item for another action without changing series visibility. The callback still runs. Its return value and the mouse event's `defaultPrevented` flag do not control visibility.
 

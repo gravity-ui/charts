@@ -80,4 +80,30 @@
             fill: var(--g-color-base-brand-hover);
         }
     }
+
+    &__item-html {
+        position: absolute;
+
+        display: flex;
+        align-items: center;
+
+        box-sizing: border-box;
+
+        cursor: pointer;
+        pointer-events: auto;
+    }
+
+    &__item:focus-visible,
+    &__item-html:focus-visible {
+        outline: none;
+    }
+
+    &__tooltip {
+        display: block;
+
+        max-width: min(360px, calc(100vw - 16px));
+        overflow-wrap: anywhere;
+
+        white-space: pre-wrap;
+    }
 }

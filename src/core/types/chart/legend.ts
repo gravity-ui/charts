@@ -12,6 +12,7 @@ export interface ChartLegendItemClickData {
 export interface ChartLegendEvents {
     /**
      * Called when a discrete legend item is clicked, before the configured click action runs.
+     * Enter and Space on a focused item dispatch a click MouseEvent with the keyboard modifiers.
      * This callback is informational: its return value and `event.defaultPrevented` do not change series visibility.
      */
     itemClick?: (data: ChartLegendItemClickData, event: MouseEvent) => void;

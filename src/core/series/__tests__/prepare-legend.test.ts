@@ -1495,3 +1495,21 @@ test('a tall marker hides the multiline title only when a row and navigation can
     expect(preparedLegend.title.enable).toBe(false);
     expect(preparedLegend.titleHeight).toBe(0);
 });
+
+describe('legend tooltip truncation', () => {
+    test('distinguishes wrapped text from lost text without changing the configured label', async () => {
+        const names = ['Same prefix actual', 'Same prefix forecast revised', 'Fits', 'Ends in …'];
+        const {legendItems} = await prepareLegend(
+            {enabled: true, layout: 'vertical', width: 135, itemMaxRowCount: 2},
+            {names},
+        );
+        const items = legendItems.flat();
+        expect(items.map((item) => item.name)).toEqual(names);
+        expect(items.map((item) => item.textTruncated)).toEqual([false, true, false, false]);
+        const narrow = await prepareLegend(
+            {enabled: true, layout: 'vertical', width: 10, itemMaxRowCount: 2},
+            {names},
+        );
+        expect(narrow.legendItems.flat().every((item) => item.textTruncated)).toBe(true);
+    });
+});

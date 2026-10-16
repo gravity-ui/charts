@@ -1017,10 +1017,21 @@ test.describe('Legend', () => {
                             .map((point) => point.name),
                     );
                     // Click a marker on a later page; its paired text reflects the same selection.
-                    await component.locator('.gcharts-legend__item-symbol').first().click();
+                    const marker = component.locator('.gcharts-legend__item-symbol').first();
+                    const markerBox = await marker.boundingBox();
+                    const item = html
+                        ? component.locator('.gcharts-legend__item-html').first()
+                        : marker;
+                    const itemBox = await item.boundingBox();
+                    if (!markerBox || !itemBox) throw new Error('Legend marker is not visible');
+                    const markerPosition = {
+                        x: markerBox.x + markerBox.width / 2 - itemBox.x,
+                        y: markerBox.y + markerBox.height / 2 - itemBox.y,
+                    };
+                    await item.click({position: markerPosition});
                     await expect(labels.first()).not.toHaveClass(/unselected/);
                     await expect(labels.nth(1)).toHaveClass(/unselected/);
-                    await component.locator('.gcharts-legend__item-symbol').first().click();
+                    await item.click({position: markerPosition});
                     await expect(labels.nth(1)).not.toHaveClass(/unselected/);
 
                     // A taller container reduces page count even when width is unchanged.

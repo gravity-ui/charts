@@ -176,6 +176,8 @@ export interface LegendItem {
     textRows?: string[];
     dashStyle?: DashStyle;
     overflowed?: boolean;
+    /** Whether SVG label preparation removed any text, independent of row layout. */
+    textTruncated?: boolean;
     visible?: boolean;
 }
 
