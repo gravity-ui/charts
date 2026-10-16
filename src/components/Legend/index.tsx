@@ -21,7 +21,7 @@ import './styles.scss';
 
 const b = block('legend');
 
-type Props = {
+interface Props {
     chartSeries: PreparedSeries[];
     legend: PreparedLegend;
     items: LegendItem[][] | undefined;
@@ -29,7 +29,7 @@ type Props = {
     htmlLayout: HTMLElement | null;
     onItemClick: OnLegendItemClick;
     onUpdate?: () => void;
-};
+}
 
 const getLegendPosition = (args: {
     contentWidth: number;

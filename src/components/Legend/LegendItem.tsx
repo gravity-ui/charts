@@ -25,7 +25,10 @@ function getReadableText(html: string) {
     const template = document.createElement('template');
     template.innerHTML = html;
     template.content.querySelectorAll('script, style, template').forEach((node) => node.remove());
-    template.content.querySelectorAll('br, p, div, li').forEach((node) => node.append(' '));
+    template.content.querySelectorAll('br, p, div, li').forEach((node) => {
+        node.before(' ');
+        node.after(' ');
+    });
     return (template.content.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
@@ -93,27 +96,21 @@ export function DiscreteLegendItem({
     const labelRef = React.useRef<HTMLDivElement>(null);
     const [open, setOpen] = React.useState(false);
     const [htmlTruncated, setHtmlTruncated] = React.useState(false);
-    const [htmlText, setHtmlText] = React.useState(() =>
-        legend.html ? getReadableText(item.name) : '',
-    );
+    const [htmlText, setHtmlText] = React.useState('');
     const interactive = legend.itemClickAction !== 'none' || Boolean(legend.events?.itemClick);
     const text = legend.html ? htmlText : decodeHtmlEntities(item.name);
     const truncated = legend.html ? htmlTruncated : Boolean(item.textTruncated);
+    const tooltipEnabled = truncated && Boolean(text);
     const width = Math.max(0, position.textLeft + item.textWidth - position.symbolLeft);
     const y = legend.hangingOffset + (rowHeight - item.height) / 2;
 
     React.useLayoutEffect(() => {
         const anchor = anchorRef.current;
         const handleClick = (event: Event) => onClick(event as MouseEvent, item);
-        const handleFocus = () => setOpen(true);
         // Keep the native event's currentTarget on the item, as in the D3 renderer.
         anchor?.addEventListener('click', handleClick);
-        // Also handles focus restored during the portal's layout effects, before
-        // React's delegated focus handler is ready, and refocus after Escape.
-        anchor?.addEventListener('focus', handleFocus);
         return () => {
             anchor?.removeEventListener('click', handleClick);
-            anchor?.removeEventListener('focus', handleFocus);
         };
     }, [item, onClick]);
 
@@ -124,9 +121,19 @@ export function DiscreteLegendItem({
     }, [restoreFocus]);
 
     React.useLayoutEffect(() => {
+        const anchor = anchorRef.current;
+        // Reconcile CSS truncation changes and focus restored when a portal mounts.
+        setOpen(
+            tooltipEnabled &&
+                Boolean(anchor && (anchor === document.activeElement || anchor.matches(':hover'))),
+        );
+    }, [tooltipEnabled]);
+
+    React.useLayoutEffect(() => {
         const label = labelRef.current;
         if (!label) return undefined;
         let frame = 0;
+        let measuredHtml: string | undefined;
         const measure = () => {
             const nodes = [label, ...label.querySelectorAll<HTMLElement>('*')];
             setHtmlTruncated(
@@ -134,13 +141,17 @@ export function DiscreteLegendItem({
                     const style = getComputedStyle(node);
                     return (
                         (/(hidden|clip|auto|scroll)/.test(style.overflowX) &&
-                            node.scrollWidth > node.clientWidth + 1) ||
+                            node.scrollWidth > node.clientWidth) ||
                         (/(hidden|clip|auto|scroll)/.test(style.overflowY) &&
-                            node.scrollHeight > node.clientHeight + 1)
+                            node.scrollHeight > node.clientHeight)
                     );
                 }),
             );
-            setHtmlText(getReadableText(label.innerHTML));
+            const html = label.innerHTML;
+            if (html !== measuredHtml) {
+                measuredHtml = html;
+                setHtmlText(getReadableText(html));
+            }
         };
         const schedule = () => {
             cancelAnimationFrame(frame);
@@ -152,8 +163,8 @@ export function DiscreteLegendItem({
             resize.observe(label);
             label.querySelectorAll('*').forEach((node) => resize.observe(node));
         };
-        const mutation = new MutationObserver(() => {
-            observe();
+        const mutation = new MutationObserver((records) => {
+            if (records.some((record) => record.type === 'childList')) observe();
             schedule();
         });
         observe();
@@ -175,23 +186,21 @@ export function DiscreteLegendItem({
 
     const activate = (event: React.KeyboardEvent) => {
         if (!interactive || event.target !== event.currentTarget) return;
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            if (!event.repeat && (event.key === 'Enter' || event.type === 'keyup')) {
-                // Preserve the public MouseEvent callback contract for keyboard activation.
-                event.currentTarget.dispatchEvent(
-                    new MouseEvent('click', {
-                        bubbles: true,
-                        cancelable: true,
-                        ctrlKey: event.ctrlKey,
-                        metaKey: event.metaKey,
-                        altKey: event.altKey,
-                        shiftKey: event.shiftKey,
-                        view: window,
-                    }),
-                );
-            }
-        }
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        if (event.repeat || (event.key === ' ' && event.type !== 'keyup')) return;
+        // Preserve the public MouseEvent callback contract for keyboard activation.
+        event.currentTarget.dispatchEvent(
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                altKey: event.altKey,
+                shiftKey: event.shiftKey,
+                view: window,
+            }),
+        );
     };
     const triggerProps = {
         ref: setAnchorRef,
@@ -200,6 +209,7 @@ export function DiscreteLegendItem({
         'aria-label': text,
         'aria-pressed': legend.itemClickAction === 'none' ? undefined : Boolean(item.visible),
         'data-legend-item-id': item.id,
+        onFocus: () => setOpen(tooltipEnabled),
         onKeyDown: activate,
         onKeyUp: (event: React.KeyboardEvent) => {
             if (event.key === ' ') activate(event);
@@ -208,7 +218,7 @@ export function DiscreteLegendItem({
     const withTooltip = (trigger: React.ReactElement) => (
         <Tooltip
             content={text}
-            open={truncated && open}
+            open={open}
             onOpenChange={(nextOpen, _event, reason) => {
                 if (
                     !nextOpen &&
@@ -217,9 +227,9 @@ export function DiscreteLegendItem({
                 ) {
                     return;
                 }
-                setOpen(nextOpen);
+                setOpen(nextOpen && tooltipEnabled);
             }}
-            disabled={!truncated || !text}
+            disabled={!tooltipEnabled}
             openDelay={300}
             closeDelay={150}
             placement={legend.layout === 'vertical' ? ['right', 'left'] : ['top', 'bottom']}

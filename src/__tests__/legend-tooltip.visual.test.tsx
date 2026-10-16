@@ -135,6 +135,64 @@ test('detects nested CSS truncation and style updates in HTML', async ({mount, p
         node.style.fontSize = '10px';
     });
     await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await expect(item).not.toHaveAttribute('aria-describedby');
+    await item.locator('span').evaluate((node) => {
+        node.style.fontSize = '24px';
+    });
+    await expect(page.getByRole('tooltip')).toHaveText(actual);
+});
+
+test('reveals HTML text overflowing by one pixel', async ({mount, page}) => {
+    const chart = data(true);
+    chart.legend = {...chart.legend, maxWidth: 500};
+    chart.series.data[0].legend = {
+        itemText: `<span style="display:block;overflow:hidden;text-overflow:ellipsis">${actual}</span>`,
+    };
+    const component = await mount(<ChartTestStory data={chart} styles={{width: 900}} />);
+    const item = component.getByRole('button', {name: actual, exact: true});
+    const overflow = await item.locator('span').evaluate((node) => {
+        node.style.width = `${node.scrollWidth - 1}px`;
+        return node.scrollWidth - node.clientWidth;
+    });
+    expect(overflow).toBe(1);
+    await item.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(actual);
+});
+
+test('separates HTML blocks without splitting inline text', async ({mount, page}) => {
+    const chart = data(true);
+    chart.series.data[0].legend = {
+        itemText: 'Enter<b>prise</b><div>subscription revenue</div>— actual',
+    };
+    const component = await mount(<ChartTestStory data={chart} styles={{width: 600}} />);
+    const item = component.getByRole('button', {name: actual, exact: true});
+    await item.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(actual);
+});
+
+test('does not reopen HTML tooltip after hover ends and styles change', async ({mount, page}) => {
+    const chart = data(true);
+    chart.legend = {...chart.legend, maxWidth: 400};
+    chart.series.data[0].legend = {
+        itemText: `<span style="display:block;width:300px;font-size:10px;overflow:hidden;text-overflow:ellipsis">${actual}</span>`,
+    };
+    const component = await mount(<ChartTestStory data={chart} styles={{width: 900}} />);
+    const item = component.getByRole('button', {name: actual, exact: true});
+    await item.hover();
+    // Let Tooltip's hover delay elapse while the label still fits.
+    await page.waitForTimeout(400);
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await expect(item).not.toHaveAttribute('aria-describedby');
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(200);
+    await item.locator('span').evaluate((node) => {
+        node.style.fontSize = '24px';
+    });
+    // Allow the mutation observer and any delayed hover callback to run.
+    await page.waitForTimeout(400);
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await item.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(actual);
 });
 
 test('dismisses stale tooltips on pagination, hiding and unmount', async ({mount, page}) => {
