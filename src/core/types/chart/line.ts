@@ -77,9 +77,9 @@ export type LineSeriesDataLabelPlacementFallback = 'show' | 'hide';
 export interface LineSeriesDataLabels extends BaseDataLabels {
     /**
      * Reference point for positioning the label. The label's `padding` is measured from it.
+     * When the normal marker is disabled, `'marker-edge'` falls back to the point coordinates.
      * - `'center'`: The data point coordinates.
-     * - `'marker-edge'`: The normal marker's outer edge, including its border;
-     *   falls back to the point coordinates when the marker is disabled.
+     * - `'marker-edge'`: The normal marker's outer edge, including its border.
      * @default 'center'
      */
     anchor?: 'center' | 'marker-edge';

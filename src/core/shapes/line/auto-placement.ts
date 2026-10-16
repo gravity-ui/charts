@@ -14,6 +14,7 @@ import {getSymbolBounds} from '../../utils/symbol';
 import type {SymbolBounds} from '../../utils/symbol';
 import type {ShapeLabels} from '../types';
 
+import {hasNormalMarker} from './normal-marker';
 import type {PointData} from './types';
 
 export const DEFAULT_PLACEMENT_ORDER: readonly LineSeriesDataLabelPlacementPosition[] = [
@@ -441,10 +442,7 @@ export async function placeLineDataLabels(args: {
         }
 
         const anchor = {x: point.x, y: point.y};
-        const visibleMarkerBounds =
-            !point.hiddenInLine && (normal.enabled || point.data.marker?.states?.normal?.enabled)
-                ? markerBounds
-                : undefined;
+        const visibleMarkerBounds = hasNormalMarker(point) ? markerBounds : undefined;
 
         const text = getFormattedValue({
             value: point.data.label ?? point.data.y,

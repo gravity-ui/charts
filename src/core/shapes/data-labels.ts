@@ -12,6 +12,10 @@ interface RenderableLabelData {
     style: BaseTextStyle;
 }
 
+/**
+ * Replaces all contents of the label containers. Render stack labels into a shared
+ * container only after this call, otherwise they will be removed.
+ */
 export function renderDataLabels<T extends RenderableLabelData, Datum>(args: {
     /** Dedicated label groups whose contents are replaced on each render. */
     container: Selection<SVGGElement, Datum, BaseType, unknown>;

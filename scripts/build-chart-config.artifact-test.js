@@ -58,7 +58,10 @@ describe('chart config artifacts', () => {
         const anchor = schema.definitions.LineSeriesDataLabels.properties.anchor;
         expect(anchor.enum).toEqual(['center', 'marker-edge']);
         expect(anchor.default).toBe('center');
-        expect(anchor.enumDescriptions).toHaveLength(2);
+        expect(anchor.enumDescriptions).toEqual([
+            'The data point coordinates.',
+            "The normal marker's outer edge, including its border.",
+        ]);
         expect(schema.definitions.BaseDataLabels.properties).not.toHaveProperty('anchor');
         const validate = createSchemaValidator().compile(schema);
         for (const value of [undefined, 'center', 'marker-edge', 'edge', null]) {

@@ -6,6 +6,8 @@ Data Labels are a feature used to display textual or numeric information directl
 
 For more granular control over the positioning and appearance of data labels for a specific series type, refer to the detailed configuration options within the series' own type definition. For example, see the `dataLabels` options for the [PieSeries](../api/Series/Pie/interfaces/PieSeries.md#properties).
 
+For line labels, see [placement](./series-types/line.md#data-label-placement) and [marker boundary anchoring](./series-types/line.md#marker-boundary).
+
 ## Enabling and Disabling Data Labels
 
 Whether labels are displayed by default depends on the series type. However, this behavior can be manually overridden. For all series, the dataLabels configuration section contains an enabled property, which provides direct control over their visibility.
@@ -65,10 +67,6 @@ series: {
   ];
 }
 ```
-
-## Placement
-
-Line series can choose where a label goes and what to do when it does not fit — see [Data label placement](./series-types/line.md#data-label-placement) in the Line series guide.
 
 ## Stack total labels
 

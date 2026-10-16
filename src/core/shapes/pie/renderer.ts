@@ -12,7 +12,7 @@ import {renderDataLabels} from '../../shapes/data-labels';
 import {setActiveState} from '../../shapes/utils';
 import {setEllipsisForOverflowTexts} from '../../utils';
 
-import type {PieSvgLabelData, PreparedPieData, SegmentData} from './types';
+import type {PieConnectorData, PieSvgLabelData, PreparedPieData, SegmentData} from './types';
 import {getPieArcPath} from './utils';
 
 const b = block('pie');
@@ -180,14 +180,12 @@ export function renderPie(
                     return d;
                 });
             const pieLabels = select(labelNodes[index]);
-            const labelSelection = pieLabels.selectAll<BaseType, PieSvgLabelData>(
-                `.${b('label')} tspan`,
-            );
-            const connectorSelection = pieLabels.selectAll<BaseType, PieSvgLabelData>(
-                connectorSelector,
-            );
-            labelSelection.merge(connectorSelection).datum((d, i, elements) => {
-                return setActiveState<PieSvgLabelData>({
+            const labelSelection = pieLabels.selectAll<
+                BaseType,
+                PieSvgLabelData | PieConnectorData
+            >(`.${b('label')}, ${connectorSelector}`);
+            labelSelection.datum((d, i, elements) => {
+                return setActiveState<PieSvgLabelData | PieConnectorData>({
                     element: elements[i],
                     state: inactiveOptions,
                     active: Boolean(

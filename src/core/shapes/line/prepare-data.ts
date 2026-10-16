@@ -18,6 +18,7 @@ import {
     needsPlacementChecks,
     placeLineDataLabels,
 } from './auto-placement';
+import {hasNormalMarker} from './normal-marker';
 import type {PointData, PreparedLineData} from './types';
 
 function isLabeledLineLayer(layer: ShapeLabels): boolean {
@@ -174,12 +175,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
                     item.annotations.push({annotation: point.annotation, x: point.x, y: point.y});
                 }
             }
-            if (
-                point.x === null ||
-                point.y === null ||
-                point.hiddenInLine ||
-                !(normal.enabled || point.data.marker?.states?.normal?.enabled)
-            ) {
+            if (point.x === null || point.y === null || !hasNormalMarker(point)) {
                 continue;
             }
             item.markers.push({

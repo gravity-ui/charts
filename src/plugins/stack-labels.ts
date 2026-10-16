@@ -157,9 +157,13 @@ export async function prepareStackLabels(args: {
     return [...overlapping, ...filtered].map((candidate) => candidate.label);
 }
 
+/**
+ * Appends stack labels after the series data labels have been rendered.
+ * Calling renderDataLabels on the shared plot afterwards removes these labels too.
+ */
 export function renderStackLabels(plot: SVGGElement, labels: SvgLabel[] = []) {
     if (!labels.length) return;
-    // Keep a separate selection: renderDataLabels joins every text node in its container.
+    // Limit renderDataLabels' container clearing to the stack labels.
     const container = select(plot).append('g').attr('class', 'gcharts-stack-labels');
     const selection = renderDataLabels({
         container,

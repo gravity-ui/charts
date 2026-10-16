@@ -35,6 +35,58 @@ test.describe('Pie series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('inactive labels and connectors follow hover across two pies', async ({mount, page}) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            series: {
+                data: ['25%', '75%'].map((x, index) => ({
+                    type: 'pie',
+                    center: [x, '50%'],
+                    radius: 60,
+                    dataLabels: {enabled: true},
+                    data: [
+                        {name: `Pie ${index + 1} A`, value: 1},
+                        {name: `Pie ${index + 1} B`, value: 1},
+                    ],
+                })),
+                options: {pie: {states: {inactive: {enabled: true, opacity: 0.25}}}},
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 700, height: 300}} />,
+        );
+        const pies = component.locator('.gcharts-pie__item');
+        const labelGroups = component.locator('.gcharts-pie__labels > g');
+        await expect(pies).toHaveCount(2);
+        await expect(labelGroups).toHaveCount(2);
+
+        for (const hoveredIndex of [0, 1]) {
+            const segment = await getLocatorBoundingBox(
+                pies.nth(hoveredIndex).locator('.gcharts-pie__segment').first(),
+            );
+            await page.mouse.move(segment.x + segment.width / 2, segment.y + segment.height / 2);
+            await expect(
+                labelGroups.nth(hoveredIndex).locator('.gcharts-pie__label').first(),
+            ).toHaveCSS('opacity', '1');
+
+            const inactiveGroup = labelGroups.nth(1 - hoveredIndex);
+            for (const selector of ['.gcharts-pie__label', '.gcharts-pie__connector']) {
+                const elements = inactiveGroup.locator(selector);
+                await expect(elements).toHaveCount(2);
+                for (const element of await elements.all()) {
+                    await expect(element).toHaveCSS('opacity', '0.25');
+                }
+            }
+
+            await page.mouse.move(0, 0);
+            for (const element of await labelGroups
+                .locator('.gcharts-pie__label, .gcharts-pie__connector')
+                .all()) {
+                await expect(element).toHaveCSS('opacity', '1');
+            }
+        }
+    });
+
     test('Should render segments with very small fractional values', async ({mount}) => {
         const data: ChartData = {
             series: {

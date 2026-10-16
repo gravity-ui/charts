@@ -51,10 +51,12 @@ export function getPieLabelText(label: Partial<PieLabelData> | undefined): strin
     return '';
 }
 
-export type PieConnectorData = {
+export interface PieConnectorData {
     path: string | null;
     color: string;
-};
+    series: LabelData['series'];
+    active?: boolean;
+}
 
 export type PreparedPieData = {
     id: string;
