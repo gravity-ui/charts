@@ -14,6 +14,12 @@ const OUTPUT_DIR = path.resolve(ROOT_DIR, 'dist/config');
 const DECLARATION_PATH = path.resolve(OUTPUT_DIR, 'chart-config.d.ts');
 const SCHEMA_PATH = path.resolve(OUTPUT_DIR, 'chart-config.schema.json');
 
+// Preserve published definition anchors when generic parameters change their generated names.
+const DEFINITION_ALIASES = {
+    ChartOptions: 'ChartOptions<ChartInteractionItem>',
+    'ChartOptions<JsonValue>': 'ChartOptions<ChartInteractionItem>',
+};
+
 // A declaration bundle is standalone only while every package exposed by ChartConfig is inlined.
 // If validateDeclaration reports an external reference, find the package that exports that type
 // (starting from its import/module specifier) and add the package name here.
@@ -588,6 +594,12 @@ function normalizeSchema(schema) {
     } while (state.changed);
     removeInvalidDefaults(schema);
     addEnumValueDescriptions(schema);
+
+    for (const [alias, target] of Object.entries(DEFINITION_ALIASES)) {
+        if (schema.definitions?.[target] && !schema.definitions[alias]) {
+            schema.definitions[alias] = {$ref: `#/definitions/${encodeURIComponent(target)}`};
+        }
+    }
 
     schema.$id = `${PACKAGE_JSON.name}/chart-config.schema.json@${PACKAGE_JSON.version}`;
     schema.title = 'ChartConfig';

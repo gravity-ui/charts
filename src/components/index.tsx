@@ -7,7 +7,7 @@ import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';
 
 import '../plugins';
-import type {ChartData} from '../types';
+import type {ChartApi, ChartData, ChartInteractionItem, MeaningfulAny} from '../types';
 
 import {ChartInner} from './ChartInner';
 
@@ -33,15 +33,24 @@ interface HandleResizeOptions {
 
 export type ChartOnResize = (args: {dimensions?: ChartDimentions}) => void;
 
-export interface ChartProps {
-    data: ChartData;
+export interface ChartProps<TItem extends ChartInteractionItem = ChartInteractionItem> {
+    data: ChartData<MeaningfulAny, TItem>;
     lang?: string;
     onResize?: ChartOnResize;
     onReady?: ChartOnResize;
 }
 
+interface ChartComponent extends React.ForwardRefExoticComponent<
+    ChartProps & React.RefAttributes<ChartRef>
+> {
+    <TItem extends ChartInteractionItem>(
+        props: ChartProps<TItem> & React.RefAttributes<ChartRef>,
+    ): React.ReactNode;
+}
+
 export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props, forwardedRef) {
     const {data, lang, onResize, onReady} = props;
+    const innerRef = React.useRef<ChartApi>(null);
     const validatedData = React.useRef<ChartData>();
     const ref = React.useRef<HTMLDivElement>(null);
     const debounced = React.useRef<
@@ -82,6 +91,14 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         debounced.current = debounce(handleResize, 200);
         return debounced.current;
     }, [handleResize]);
+
+    const chartApi = React.useMemo<ChartApi>(
+        () => ({
+            getClosest: (position, options) =>
+                innerRef.current?.getClosest(position, options) ?? null,
+        }),
+        [],
+    );
 
     React.useImperativeHandle(
         forwardedRef,
@@ -141,6 +158,8 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         >
             {Boolean(dimensions?.height && dimensions?.width) && (
                 <ChartInner
+                    ref={innerRef}
+                    chartApi={chartApi}
                     height={dimensions?.height ?? 0}
                     width={dimensions?.width ?? 0}
                     data={data}
@@ -149,4 +168,4 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
             )}
         </div>
     );
-});
+}) as ChartComponent;

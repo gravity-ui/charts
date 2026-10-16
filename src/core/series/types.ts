@@ -211,7 +211,6 @@ type BasePreparedAxisRelatedSeries = {
 export type PreparedScatterSeries = {
     type: ScatterSeries['type'];
     data: ScatterSeriesData[];
-    sourceData?: WeakMap<ScatterSeriesData, ScatterSeriesData>;
     cluster: {
         enabled: boolean;
         layoutAlgorithm: {type: 'grid'; gridSize: number | string};

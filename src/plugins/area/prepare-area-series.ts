@@ -13,6 +13,7 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
 
@@ -54,7 +55,7 @@ function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, y: p.y ?? 0}));
+            return data.map((p) => withSourcePoint(p, {...p, y: p.y ?? 0}));
         case 'connect':
         case 'skip':
         default:

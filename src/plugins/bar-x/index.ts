@@ -26,6 +26,7 @@ import {validateBarPadding} from '../bar-padding';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
 import {getBarXStackLabelAnchors} from './stack-labels';
 
@@ -120,6 +121,10 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

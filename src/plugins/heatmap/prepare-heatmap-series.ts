@@ -10,6 +10,7 @@ import type {
 } from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, HeatmapSeries, HeatmapSeriesData} from '../../types';
 
@@ -25,7 +26,7 @@ function prepareSeriesData(series: HeatmapSeries): HeatmapSeriesData[] {
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, value: p.value ?? 0}));
+            return data.map((p) => withSourcePoint(p, {...p, value: p.value ?? 0}));
         case 'skip':
         default:
             return data;

@@ -221,6 +221,7 @@ export async function getShapes(args: Args) {
             <SeriesShapes
                 key={groupKey}
                 plugin={plugin}
+                isRangeSlider={isRangeSlider}
                 preparedData={renderData}
                 labels={labels}
                 boundsWidth={boundsWidth}

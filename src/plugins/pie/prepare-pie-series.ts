@@ -6,6 +6,7 @@ import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PreparedLegendOptions, PreparedPieSeries, PreparedSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, PieSeries, PieSeriesData} from '../../types';
 
@@ -21,7 +22,7 @@ function prepareSeriesData(series: PieSeries): PieSeriesData[] {
     const data = series.data;
     switch (nullMode) {
         case 'zero':
-            return data.map((p) => ({...p, value: p.value ?? 0}));
+            return data.map((p) => withSourcePoint(p, {...p, value: p.value ?? 0}));
         case 'skip':
         default:
             return data.filter((p) => p.value !== null);

@@ -94,7 +94,7 @@ export function gradientAngleToCoords(angle: number, bbox: GradientBBox): Gradie
     };
 }
 
-function getGradientT(px: number, py: number, coords: GradientCoords): number {
+export function getGradientT(px: number, py: number, coords: GradientCoords): number {
     const dx = coords.x2 - coords.x1;
     const dy = coords.y2 - coords.y1;
     const len2 = dx * dx + dy * dy;
