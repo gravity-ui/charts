@@ -1,4 +1,4 @@
-import type {ChartInteractionSeries, MeaningfulAny, WaterfallSeriesData} from '../../types';
+import type {ChartInteractionSeries, MeaningfulAny, WaterfallSeriesData} from '~core/types';
 
 export interface WaterfallInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'waterfall'>;

@@ -15,7 +15,10 @@ const DECLARATION_PATH = path.resolve(OUTPUT_DIR, 'chart-config.d.ts');
 const SCHEMA_PATH = path.resolve(OUTPUT_DIR, 'chart-config.schema.json');
 
 // Preserve published definition anchors when generic parameters change their generated names.
-const DEFINITION_ALIASES = {ChartOptions: 'ChartOptions<JsonValue>'};
+const DEFINITION_ALIASES = {
+    ChartOptions: 'ChartOptions<ChartInteractionItem>',
+    'ChartOptions<JsonValue>': 'ChartOptions<ChartInteractionItem>',
+};
 
 // A declaration bundle is standalone only while every package exposed by ChartConfig is inlined.
 // If validateDeclaration reports an external reference, find the package that exports that type

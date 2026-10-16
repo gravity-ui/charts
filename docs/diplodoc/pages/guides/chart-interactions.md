@@ -34,6 +34,12 @@ Use `chart.getClosest(position, {mode: 'tooltip'})` for the old click handler's 
 
 The `chart` API comes from the click payload. You can retain it for later queries; it uses the current chart state and returns `null` after unmounting. The component's `ChartRef` provides only `reflow()` for resizing.
 
+## Typing interaction data
+
+The interaction API is generic: `ChartInteractionItem<TPoint, TType>` describes a complete point payload and a series type string. It does not infer point shapes from series names. Without type arguments, `point` is an opaque object; narrow it before reading its fields.
+
+Pass your result type as the second parameter of `ChartData<Custom, Item>`, or as the parameter of `ChartOptions<Item>`, `ChartClickData<Item>` and `ChartApi<Item>`. The first `ChartData` parameter still describes point `custom` metadata. Use a result type covering every possible hit in the chart, including whole shapes or links where applicable. The example above uses `ChartInteractionItem<BarYSeriesData<IssueFilter>, 'bar-y'>` for its bar results.
+
 ## Migrating click handlers
 
 Existing handlers continue to use `clickMode: 'tooltip'` by default. Their top-level `point`, `series`, and second event argument remain available; the callback is skipped when no tooltip-eligible point is selected.

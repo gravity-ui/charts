@@ -63,9 +63,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 Implement `interaction.prepareNearestData` for unfiltered `{position, item}` candidates and `interaction.getTargetElements` for painted SVG elements. Reuse prepared geometry; shared utilities handle distance comparison, hit testing, clipping, and ordering. Keep tooltip selection in `tooltip.prepareData`; use `interaction.getClosestItem` only when its result needs conversion (for example, a Sankey link).
 
-Keep adapters and payload types in the plugin's `interaction.ts` and `interaction-types.ts`; add the public item to `src/plugins/interaction-types.ts`. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
-
-The core public types use type-only imports of this aggregation. Like `ChartSeries`, it describes the built-in series; plugin registration is internal. These imports do not introduce runtime dependencies on plugin implementations.
+Keep adapters in the plugin's `interaction.ts` and concrete payload types in its `interaction-types.ts`. Shared code and the public interaction API use generic contracts from `core/types/chart/interaction.ts`, without a union or mapping of built-in series. Do not import plugin payload types into shared code or public type barrels, including via type-only imports. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
 
 When preparing a copy of a source point, register it with `withSourcePoint` from `core/utils/source-point`. Public interaction results then resolve the original object without changing the data used by rendering or legacy callbacks. Resolve nested source points in composite payloads with `getSourcePoint`.
 

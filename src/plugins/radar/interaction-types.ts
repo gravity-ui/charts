@@ -3,7 +3,7 @@ import type {
     ChartShapePoint,
     MeaningfulAny,
     RadarSeriesData,
-} from '../../types';
+} from '~core/types';
 
 export interface RadarInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'radar'>;

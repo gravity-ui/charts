@@ -1,7 +1,8 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {ChartInteractionItem, TooltipDataChunk} from '../../types';
+import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
+
 import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 

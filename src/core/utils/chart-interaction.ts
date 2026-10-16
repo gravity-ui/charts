@@ -5,15 +5,16 @@ import type {
     ChartInteractionSeries,
     ChartShapePoint,
     PointPosition,
-} from '../../types';
+} from '~core/types';
+
 import type {MarkerItem, SeriesShapeData} from '../shapes/types';
 
 import {getSourcePoint} from './source-point';
 import {createSvgHitTest} from './svg-hit-test';
 
-export interface InteractionElement {
+export interface InteractionElement<TItem extends ChartInteractionItem = ChartInteractionItem> {
     element: SVGGeometryElement;
-    item: ChartInteractionItem;
+    item: TItem;
 }
 
 export interface InteractionElementsArgs {
@@ -44,11 +45,14 @@ export function registerInteractionLayer(
 }
 
 /** Read existing D3 data without changing the renderer or exposing DOM nodes to applications. */
-export function getInteractionElements<T>(
+export function getInteractionElements<
+    T,
+    TItem extends ChartInteractionItem = ChartInteractionItem,
+>(
     root: SVGGElement,
     selector: string,
-    getItem: (datum: T) => ChartInteractionItem | undefined,
-): InteractionElement[] {
+    getItem: (datum: T) => TItem | undefined,
+): InteractionElement<TItem>[] {
     return Array.from(root.querySelectorAll<SVGGeometryElement>(selector)).flatMap((element) => {
         const item = getItem(select<SVGGeometryElement, T>(element).datum());
         return item ? [{element, item}] : [];
@@ -65,7 +69,10 @@ const markerIndexes = new WeakMap<
 >();
 
 /** Includes the current symbol of a permanent marker, excluding hover-only decorations. */
-export function getMarkerInteractionElements(root: SVGGElement, shapes: MarkerShapeData[]) {
+export function getMarkerInteractionElements<TItem extends ChartInteractionItem>(
+    root: SVGGElement,
+    shapes: MarkerShapeData[],
+): InteractionElement<TItem>[] {
     let normalMarkers = markerIndexes.get(shapes);
     if (!normalMarkers) {
         normalMarkers = new Map();
@@ -78,7 +85,7 @@ export function getMarkerInteractionElements(root: SVGGElement, shapes: MarkerSh
         }
         markerIndexes.set(shapes, normalMarkers);
     }
-    return getInteractionElements<MarkerItem>(root, '.gcharts-marker__symbol', (item) => {
+    return getInteractionElements<MarkerItem, TItem>(root, '.gcharts-marker__symbol', (item) => {
         const normal = normalMarkers
             .get(item.data)
             ?.find(
@@ -88,7 +95,7 @@ export function getMarkerInteractionElements(root: SVGGElement, shapes: MarkerSh
                     marker.cy === item.cy,
             );
         return normal && !normal.marker.clipped && !item.clipped
-            ? ({point: item.data, series: normal.series} as ChartInteractionItem)
+            ? ({point: item.data, series: normal.series} as TItem)
             : undefined;
     });
 }
@@ -105,8 +112,7 @@ export function toPublicInteractionItem(item: ChartInteractionItem): ChartIntera
         series = {type, id, name, custom};
         seriesMetadata.set(item.series, series);
     }
-    // The metadata projection preserves the series type and its corresponding point type.
-    return {...item, point: getSourcePoint(item.point), series} as ChartInteractionItem;
+    return {...item, point: getSourcePoint(item.point), series};
 }
 
 export function getShapePoint<T extends object>(

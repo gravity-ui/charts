@@ -14,28 +14,31 @@ function getRuntimeFiles(directory: string): string[] {
         if (entry.isDirectory()) {
             return entry.name.startsWith('__') ? [] : getRuntimeFiles(file);
         }
-        return /\.tsx?$/.test(entry.name) ? [file] : [];
+        return /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) ? [file] : [];
     });
 }
 
-function getSeriesDependencies(source: string): string[] {
+function getSeriesDependencies(source: string, includeTypes = false): string[] {
     const file = ts.createSourceFile('runtime.tsx', source, ts.ScriptTarget.Latest, true);
     const dependencies: string[] = [];
     const visit = (node: ts.Node) => {
         if (
-            ts.isTypeNode(node) ||
-            (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
-            (ts.isExportDeclaration(node) && node.isTypeOnly)
+            !includeTypes &&
+            (ts.isTypeNode(node) ||
+                (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
+                (ts.isExportDeclaration(node) && node.isTypeOnly))
         ) {
             return;
         }
         if (ts.isStringLiteralLike(node)) {
             const value = node.text;
             const shapeDirectory = value.match(/(?:^|\/)shapes\/([^/]+)/)?.[1];
+            const moduleName = value.split('/').pop();
             if (
                 seriesNames.has(value) ||
                 /(?:^|\/)plugins(?:\/|$)/.test(value) ||
-                (shapeDirectory && seriesNames.has(shapeDirectory))
+                (shapeDirectory && seriesNames.has(shapeDirectory)) ||
+                (moduleName && seriesNames.has(moduleName))
             ) {
                 dependencies.push(value);
             }
@@ -48,6 +51,53 @@ function getSeriesDependencies(source: string): string[] {
     visit(file);
     return dependencies;
 }
+
+function getPluginDependencies(source: string): string[] {
+    return ts
+        .preProcessFile(source, true, true)
+        .importedFiles.map(({fileName}) => fileName)
+        .filter((fileName) => /(?:^|\/)plugins(?:\/|$)/.test(fileName));
+}
+
+it('keeps shared code and public types independent of plugin internals', () => {
+    const files = ['core', 'components', 'hooks', 'types'].flatMap((directory) =>
+        getRuntimeFiles(path.join(sourceRoot, directory)),
+    );
+    const violations = files.flatMap((file) => {
+        const relativePath = path.relative(sourceRoot, file);
+        return (
+            getPluginDependencies(readFileSync(file, 'utf8'))
+                // The public component entrypoint initializes the built-in registry.
+                .filter(
+                    (dependency) =>
+                        !(relativePath === 'components/index.tsx' && dependency === '../plugins'),
+                )
+                .map((dependency) => `${relativePath}: ${dependency}`)
+        );
+    });
+    expect(violations).toEqual([]);
+});
+
+it.each([
+    "import type {LineInteractionItem} from '../../../plugins/line/interaction-types';",
+    "export type {ChartSankeyLinkPoint} from '../../../plugins/sankey/interaction-types';",
+    "type Item = {point: import('../../../plugins/line/interaction-types').LineInteractionItem};",
+    "import {linePlugin} from '../../../plugins/line';",
+    "const plugin = require('../../../plugins/line');",
+])('detects plugin internals, including type-only dependencies: %s', (source) => {
+    expect(getPluginDependencies(source)).toHaveLength(1);
+});
+
+it('keeps interaction contracts generic, including type-only dependencies', () => {
+    const source = readFileSync(path.join(sourceRoot, 'core/types/chart/interaction.ts'), 'utf8');
+    expect(getSeriesDependencies(source, true)).toEqual([]);
+    expect(getSeriesDependencies("type Item = {series: {type: 'bar-y'}};", true)).toEqual([
+        'bar-y',
+    ]);
+    expect(getSeriesDependencies("import type {BarYSeriesData} from './bar-y';", true)).toEqual([
+        './bar-y',
+    ]);
+});
 
 it('keeps the migrated tooltip runtime independent of built-in series implementations', () => {
     const files = [
@@ -113,11 +163,11 @@ it.each([
     expect(getSeriesDependencies(source).length).toBeGreaterThan(0);
 });
 
-it('allows type-only dependencies and reusable shape primitives', () => {
+it('allows core-owned types and reusable shape primitives', () => {
     expect(
         getSeriesDependencies(`
-            import type {LineSeries} from '../../../plugins/line/types';
-            export type {LineSeries} from '../../../plugins/line/types';
+            import type {LineSeries} from '~core/types/chart/line';
+            export type {LineSeries} from '~core/types/chart/line';
             import {getRectPath} from '~core/shapes/utils';
             type SeriesName = 'line' | 'radar';
         `),

@@ -1,7 +1,7 @@
-import type {ChartInteractionSeries, MeaningfulAny, SankeySeriesData} from '../../types';
+import type {ChartInteractionSeries, MeaningfulAny, SankeySeriesData} from '~core/types';
 
 /** Data describing a Sankey link. Node hits return ordinary SankeySeriesData. */
-export interface ChartSankeyLinkPoint<T = MeaningfulAny> {
+export interface SankeyLinkPoint<T = MeaningfulAny> {
     kind: 'link';
     source: SankeySeriesData<T>;
     target: SankeySeriesData<T>;
@@ -10,5 +10,5 @@ export interface ChartSankeyLinkPoint<T = MeaningfulAny> {
 
 export interface SankeyInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'sankey'>;
-    point: SankeySeriesData<T> | ChartSankeyLinkPoint<T>;
+    point: SankeySeriesData<T> | SankeyLinkPoint<T>;
 }

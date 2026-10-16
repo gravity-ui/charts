@@ -36,6 +36,7 @@
     "ChartConfig",
     "ChartLegend",
     "ChartOptions",
+    "ChartOptions<ChartInteractionItem>",
     "ChartOptions<JsonValue>",
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",
@@ -331,7 +332,7 @@
       "verticalAlign",
       "width"
     ],
-    "ChartOptions<JsonValue>": ["events", "margin", "zoom"],
+    "ChartOptions<ChartInteractionItem>": ["events", "margin", "zoom"],
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",

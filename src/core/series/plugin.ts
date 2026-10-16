@@ -12,7 +12,8 @@ import type {
     TooltipDataChunk,
     TooltipRowCellItem,
     ValueFormat,
-} from '../../types';
+} from '~core/types';
+
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';

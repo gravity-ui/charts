@@ -1,4 +1,4 @@
-import type {ChartInteractionSeries, MeaningfulAny, XRangeSeriesData} from '../../types';
+import type {ChartInteractionSeries, MeaningfulAny, XRangeSeriesData} from '~core/types';
 
 export interface XRangeInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'x-range'>;

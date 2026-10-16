@@ -1,12 +1,7 @@
-import type {BuiltInInteractionItem} from '../../../plugins/interaction-types';
 import type {MeaningfulAny} from '../misc';
 
-import type {ChartSeries} from './series';
-
-export type {ChartSankeyLinkPoint} from '../../../plugins/interaction-types';
-
 /** Series metadata available independently of tooltip visibility. IDs last until series preparation changes. */
-export interface ChartInteractionSeries<TType extends ChartSeries['type'] = ChartSeries['type']> {
+export interface ChartInteractionSeries<TType extends string = string> {
     type: TType;
     id: string;
     name: string;
@@ -19,14 +14,21 @@ export interface ChartShapePoint<TPoint> {
     points: TPoint[];
 }
 
-/** Selected element data, preserving source point values; composite payloads are owned by the plugin. */
-export type ChartInteractionItem<
-    T = MeaningfulAny,
-    TType extends ChartSeries['type'] = ChartSeries['type'],
-> = Extract<BuiltInInteractionItem<T>, {series: {type: TType}}>;
+/**
+ * Selected data and series metadata, independent of any particular series implementation.
+ * TPoint describes the complete point payload; TType describes the series type string.
+ * Without explicit type arguments, point is an opaque object and type is a string.
+ */
+export interface ChartInteractionItem<
+    TPoint extends object = object,
+    TType extends string = string,
+> {
+    series: ChartInteractionSeries<TType>;
+    point: TPoint;
+}
 
 /** Stable queries over the chart's current rendered data, available in event payloads. */
-export interface ChartApi<T = MeaningfulAny> {
+export interface ChartApi<TItem extends ChartInteractionItem = ChartInteractionItem> {
     /**
      * By default, select the nearest plugin reference position by Euclidean distance in plot-relative pixels.
      * In chart mode, ties follow prepared series order, then candidate order.
@@ -34,10 +36,7 @@ export interface ChartApi<T = MeaningfulAny> {
      * Computes on request; returns null outside the plot or while no plot is available.
      * Results describe the data at query time. Later queries use the current chart state.
      */
-    getClosest(
-        position: [number, number],
-        options?: ChartClosestOptions,
-    ): ChartInteractionItem<T> | null;
+    getClosest(position: [number, number], options?: ChartClosestOptions): TItem | null;
 }
 
 export interface ChartClosestOptions {
@@ -50,7 +49,7 @@ export interface ChartClosestOptions {
 }
 
 /** Complete modern event data emitted by the chart. Legacy wrappers may forward only part of it. */
-export interface ChartClickData<T = MeaningfulAny> {
+export interface ChartClickData<TItem extends ChartInteractionItem = ChartInteractionItem> {
     /** Click coordinates in pixels relative to the main plot's top-left corner. */
     position: [number, number];
     /**
@@ -58,9 +57,9 @@ export interface ChartClickData<T = MeaningfulAny> {
      * Computed synchronously on first access using current geometry, then cached for this payload.
      * Read inside the click handler before deferring work or updating the chart.
      */
-    targets: ChartInteractionItem<T>[];
+    targets: TItem[];
     /** Stable query API. Retained references use the current chart state. */
-    chart: ChartApi<T>;
+    chart: ChartApi<TItem>;
     /** Native click event. A tap produces the same payload as a mouse click. */
     event: MouseEvent;
 }
@@ -71,8 +70,8 @@ export interface ChartClickData<T = MeaningfulAny> {
  * they are optional here because legacy wrappers may forward only point and series.
  * Legacy selection may be absent in plot mode.
  */
-export type ChartLegacyClickData<T = MeaningfulAny> = {
-    [K in keyof ChartClickData<T>]?: ChartClickData<T>[K];
+export type ChartLegacyClickData<TItem extends ChartInteractionItem = ChartInteractionItem> = {
+    [K in keyof ChartClickData<TItem>]?: ChartClickData<TItem>[K];
 } & {
     /** @deprecated Use chart.getClosest(position, {mode: 'tooltip'})?.point, or targets for exact hits. */
     point: MeaningfulAny;

@@ -5,25 +5,35 @@ import {
     getMarkerInteractionElements,
     getShapePoint,
 } from '~core/utils/chart-interaction';
-import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
+import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getPointCandidates} from '~core/utils/nearest-point';
 
-export function getTargetElements({plot, markers, preparedData}: InteractionElementsArgs) {
+import type {LineInteractionItem} from './interaction-types';
+
+export function getTargetElements({
+    plot,
+    markers,
+    preparedData,
+}: InteractionElementsArgs): InteractionElement<LineInteractionItem>[] {
     const shapes = preparedData as PreparedLineData[];
     return [
-        ...getInteractionElements<PreparedLineData>(plot, ':scope > path', (shape) => ({
-            point: getShapePoint(shape, shape.points),
-            series: shape.series,
-        })),
-        ...getMarkerInteractionElements(markers, shapes),
+        ...getInteractionElements<PreparedLineData, LineInteractionItem>(
+            plot,
+            ':scope > path',
+            (shape) => ({
+                point: getShapePoint(shape, shape.points),
+                series: shape.series,
+            }),
+        ),
+        ...getMarkerInteractionElements<LineInteractionItem>(markers, shapes),
     ];
 }
 
 export function prepareNearestData(
     args: PrepareNearestDataArgs<PreparedLineData>,
-): NearestCandidate[] {
+): NearestCandidate<LineInteractionItem>[] {
     return getPointCandidates(
         getTooltipData({...args, measureDistance: false}).xLookupPoints ?? [],
-    );
+    ) as NearestCandidate<LineInteractionItem>[];
 }

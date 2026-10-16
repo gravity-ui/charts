@@ -6,6 +6,7 @@ import throttle from 'lodash/throttle';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
+import type {ChartApi, ChartLegacyClickData} from '~core/types';
 import {EventType} from '~core/utils';
 import {getChartTargets} from '~core/utils/chart-interaction';
 import {getClosestPoints} from '~core/utils/get-closest-data';
@@ -13,13 +14,7 @@ import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {useHoverResetKey} from '../../hooks/useHoverResetKey';
-import type {
-    ChartApi,
-    ChartLegacyClickData,
-    ChartTooltipRendererArgs,
-    ChartYAxis,
-    PointPosition,
-} from '../../types';
+import type {ChartTooltipRendererArgs, ChartYAxis, PointPosition} from '../../types';
 
 import type {useChartInnerState} from './useChartInnerState';
 

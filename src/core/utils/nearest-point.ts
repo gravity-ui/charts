@@ -1,4 +1,4 @@
-import type {ChartInteractionItem, PointPosition} from '../../types';
+import type {ChartInteractionItem, PointPosition} from '~core/types';
 
 import type {ShapePoint} from './tooltip-helpers';
 
@@ -10,16 +10,16 @@ export interface PrepareNearestDataArgs<TShapeData = unknown> {
 }
 
 /** A plugin-owned reference position in plot-relative pixels. */
-export interface NearestCandidate {
+export interface NearestCandidate<TItem extends ChartInteractionItem = ChartInteractionItem> {
     position: PointPosition;
-    item: ChartInteractionItem;
+    item: TItem;
 }
 
 /** Reuse unfiltered axis-point preparation without its X-first tooltip selection. */
 export function getPointCandidates(points: ShapePoint[]): NearestCandidate[] {
     return points.map((point) => ({
         position: [point.sourceX ?? point.x, (point.y0 + point.y1) / 2],
-        item: {point: point.data, series: point.series} as ChartInteractionItem,
+        item: {point: point.data, series: point.series},
     }));
 }
 

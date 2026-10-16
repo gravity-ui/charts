@@ -1,30 +1,35 @@
 import type {PreparedSankeyData, SankeyLink, SankeyNode} from '~core/shapes/sankey/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
-import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
+import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getSourcePoint} from '~core/utils/source-point';
 
-import type {ChartSankeyLinkPoint, PointPosition} from '../../types';
+import type {PointPosition} from '../../types';
 
-const linkPoints = new WeakMap<SankeyLink, ChartSankeyLinkPoint>();
+import type {SankeyInteractionItem, SankeyLinkPoint} from './interaction-types';
 
-export function getTargetElements({plot, preparedData}: InteractionElementsArgs) {
+const linkPoints = new WeakMap<SankeyLink, SankeyLinkPoint>();
+
+export function getTargetElements({
+    plot,
+    preparedData,
+}: InteractionElementsArgs): InteractionElement<SankeyInteractionItem>[] {
     const shape = preparedData[0] as PreparedSankeyData | undefined;
     if (!shape) return [];
     const {series} = shape;
     return [
-        ...getInteractionElements<SankeyNode>(plot, 'rect', (node) => ({
+        ...getInteractionElements<SankeyNode, SankeyInteractionItem>(plot, 'rect', (node) => ({
             point: getSourcePoint(node.data),
             series,
         })),
-        ...getInteractionElements<SankeyLink>(plot, 'path', (link) => {
+        ...getInteractionElements<SankeyLink, SankeyInteractionItem>(plot, 'path', (link) => {
             const point = getLinkPoint(link);
             return {point, series};
         }),
     ];
 }
 
-function getLinkPoint(link: SankeyLink): ChartSankeyLinkPoint {
+function getLinkPoint(link: SankeyLink): SankeyLinkPoint {
     let point = linkPoints.get(link);
     if (!point) {
         point = {
@@ -42,10 +47,10 @@ const linkPositions = new WeakMap<SankeyLink, PointPosition>();
 
 export function prepareNearestData({
     data,
-}: PrepareNearestDataArgs<PreparedSankeyData>): NearestCandidate[] {
+}: PrepareNearestDataArgs<PreparedSankeyData>): NearestCandidate<SankeyInteractionItem>[] {
     const shape = data[0];
     if (!shape) return [];
-    const candidates: NearestCandidate[] = shape.nodes.map((node) => ({
+    const candidates: NearestCandidate<SankeyInteractionItem>[] = shape.nodes.map((node) => ({
         position: [(node.x0 + node.x1) / 2, (node.y0 + node.y1) / 2],
         item: {point: getSourcePoint(node.data), series: shape.series},
     }));

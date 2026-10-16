@@ -1,10 +1,11 @@
 import isEmpty from 'lodash/isEmpty';
 
+import type {ChartData, ChartInteractionItem, ChartTooltip, MeaningfulAny} from '~core/types';
+
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
 import {getRegisteredSeriesTypes, getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
-import type {ChartData, ChartTooltip} from '../types';
 import {parseNonNegativeSize} from '../utils/math';
 
 import {validateAxes} from './validate-axes';
@@ -53,7 +54,9 @@ function validateTooltip({tooltip}: {tooltip?: ChartTooltip}) {
     }
 }
 
-export function validateData(data?: ChartData) {
+export function validateData<TItem extends ChartInteractionItem>(
+    data?: ChartData<MeaningfulAny, TItem>,
+) {
     if (
         isEmpty(data) ||
         isEmpty(data.series) ||

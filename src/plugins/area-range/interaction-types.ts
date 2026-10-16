@@ -3,7 +3,7 @@ import type {
     ChartInteractionSeries,
     ChartShapePoint,
     MeaningfulAny,
-} from '../../types';
+} from '~core/types';
 
 export interface AreaRangeInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'area-range'>;

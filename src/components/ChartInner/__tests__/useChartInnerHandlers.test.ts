@@ -11,7 +11,7 @@ import * as closest from '../../../core/utils/get-closest-data';
 import type {ChartInteractionItem, ChartLegacyClickData} from '../../../types';
 import {useChartInnerHandlers} from '../useChartInnerHandlers';
 
-const hit: ChartInteractionItem = {
+const hit: ChartInteractionItem<{x: number; y: number}, 'bar-x'> = {
     point: {x: 1, y: 2},
     series: {type: 'bar-x', id: 'bar', name: 'Bar'},
 };

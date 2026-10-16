@@ -1,6 +1,4 @@
-import type {MeaningfulAny} from '../misc';
-
-import type {ChartLegacyClickData} from './interaction';
+import type {ChartInteractionItem, ChartLegacyClickData} from './interaction';
 import type {ChartTooltipRendererArgs} from './tooltip';
 import type {ChartZoom} from './zoom';
 
@@ -11,7 +9,7 @@ export interface ChartMargin {
     left: number;
 }
 
-export interface ChartOptions<T = MeaningfulAny> {
+export interface ChartOptions<TItem extends ChartInteractionItem = ChartInteractionItem> {
     margin?: Partial<ChartMargin>;
     events?: {
         /**
@@ -27,7 +25,7 @@ export interface ChartOptions<T = MeaningfulAny> {
          * The chart supplies all modern fields; check their presence when consuming events forwarded by legacy wrappers.
          * @param legacyEvent Deprecated second argument; use data.event for the native event.
          */
-        click?: (data: ChartLegacyClickData<T>, legacyEvent: PointerEvent) => void;
+        click?: (data: ChartLegacyClickData<TItem>, legacyEvent: PointerEvent) => void;
         pointermove?: (data: ChartTooltipRendererArgs | undefined, event: PointerEvent) => void;
     };
     /**

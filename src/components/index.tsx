@@ -7,7 +7,7 @@ import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';
 
 import '../plugins';
-import type {ChartApi, ChartData} from '../types';
+import type {ChartApi, ChartData, ChartInteractionItem, MeaningfulAny} from '../types';
 
 import {ChartInner} from './ChartInner';
 
@@ -33,11 +33,19 @@ interface HandleResizeOptions {
 
 export type ChartOnResize = (args: {dimensions?: ChartDimentions}) => void;
 
-export interface ChartProps {
-    data: ChartData;
+export interface ChartProps<TItem extends ChartInteractionItem = ChartInteractionItem> {
+    data: ChartData<MeaningfulAny, TItem>;
     lang?: string;
     onResize?: ChartOnResize;
     onReady?: ChartOnResize;
+}
+
+interface ChartComponent extends React.ForwardRefExoticComponent<
+    ChartProps & React.RefAttributes<ChartRef>
+> {
+    <TItem extends ChartInteractionItem>(
+        props: ChartProps<TItem> & React.RefAttributes<ChartRef>,
+    ): React.ReactNode;
 }
 
 export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props, forwardedRef) {
@@ -160,4 +168,4 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
             )}
         </div>
     );
-});
+}) as ChartComponent;

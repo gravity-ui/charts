@@ -3,7 +3,7 @@ import type {
     ChartShapePoint,
     LineSeriesData,
     MeaningfulAny,
-} from '../../types';
+} from '~core/types';
 
 export interface LineInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'line'>;

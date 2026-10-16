@@ -1,4 +1,4 @@
-import type {BarYSeriesData, ChartInteractionSeries, MeaningfulAny} from '../../types';
+import type {BarYSeriesData, ChartInteractionSeries, MeaningfulAny} from '~core/types';
 
 export interface BarYInteractionItem<T = MeaningfulAny> {
     series: ChartInteractionSeries<'bar-y'>;

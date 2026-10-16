@@ -15,6 +15,7 @@ import {getSourcePoint} from '~core/utils/source-point';
 import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {SankeyInteractionItem} from './interaction-types';
 import {prepareSankeySeries} from './prepare-sankey-series';
 
 function getLinkValue({target, data: source, value}: TooltipDataChunkSankey) {
@@ -48,7 +49,7 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
     interaction: {
         prepareNearestData,
         getTargetElements,
-        getClosestItem: (item) => {
+        getClosestItem: (item): SankeyInteractionItem => {
             const series = item.series as PreparedSankeySeries;
             const source = getSourcePoint(item.data);
             const value = getLinkValue(item);

@@ -6,11 +6,13 @@ import {
     getMarkerInteractionElements,
     getShapePoint,
 } from '~core/utils/chart-interaction';
-import type {InteractionElementsArgs} from '~core/utils/chart-interaction';
+import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getPointCandidates} from '~core/utils/nearest-point';
 
 import type {AreaSeriesData} from '../../types';
+
+import type {AreaInteractionItem} from './interaction-types';
 
 const sourcePoints = new WeakMap<AreaSeriesData[], Set<AreaSeriesData>>();
 const shapePoints = new WeakMap<PreparedAreaData, PointData[]>();
@@ -41,10 +43,14 @@ function getAreaPoints(shape: PreparedAreaData) {
     return points;
 }
 
-export function getTargetElements({plot, markers, preparedData}: InteractionElementsArgs) {
+export function getTargetElements({
+    plot,
+    markers,
+    preparedData,
+}: InteractionElementsArgs): InteractionElement<AreaInteractionItem>[] {
     const shapes = preparedData as PreparedAreaData[];
     return [
-        ...getInteractionElements<PreparedAreaData>(
+        ...getInteractionElements<PreparedAreaData, AreaInteractionItem>(
             plot,
             '.gcharts-area__line, .gcharts-area__region',
             (shape) => ({
@@ -52,7 +58,7 @@ export function getTargetElements({plot, markers, preparedData}: InteractionElem
                 series: shape.series,
             }),
         ),
-        ...getMarkerInteractionElements(markers, shapes).filter(({item}) =>
+        ...getMarkerInteractionElements<AreaInteractionItem>(markers, shapes).filter(({item}) =>
             getSourcePoints(item.series as PreparedAreaSeries).has(item.point as AreaSeriesData),
         ),
     ];
@@ -60,10 +66,10 @@ export function getTargetElements({plot, markers, preparedData}: InteractionElem
 
 export function prepareNearestData(
     args: PrepareNearestDataArgs<PreparedAreaData>,
-): NearestCandidate[] {
+): NearestCandidate<AreaInteractionItem>[] {
     return getPointCandidates(
         (getTooltipData({...args, measureDistance: false}).xLookupPoints ?? []).filter((point) =>
             getSourcePoints(point.series as PreparedAreaSeries).has(point.data as AreaSeriesData),
         ),
-    );
+    ) as NearestCandidate<AreaInteractionItem>[];
 }
