@@ -1,6 +1,16 @@
+import type {BarXSeries} from '../../../types';
+import {getSeriesStackId} from '../../series/utils';
 import {getRectPath} from '../utils';
 
 import type {PreparedBarXData} from './types';
+
+interface BarXStackSeries extends Pick<BarXSeries, 'yAxis' | 'stackId' | 'stacking'> {
+    resolvedStackId?: string;
+}
+
+export function getBarXStackKey(series: BarXStackSeries) {
+    return JSON.stringify([series.yAxis ?? 0, getSeriesStackId(series)]);
+}
 
 export function getBarXRect(d: PreparedBarXData) {
     const y = d.y - (d.extendsUp ? d.valueEndPadding : 0);

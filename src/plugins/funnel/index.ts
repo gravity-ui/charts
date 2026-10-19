@@ -13,6 +13,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 
 import type {FunnelSeries, TooltipDataChunkFunnel} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareFunnelSeries} from './prepare-funnel-series';
 
 async function prepareShapeData({
@@ -51,6 +52,10 @@ export const funnelPlugin: SeriesPlugin<FunnelSeries, TooltipDataChunkFunnel> = 
     getColorValue: (d) => d.value,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,

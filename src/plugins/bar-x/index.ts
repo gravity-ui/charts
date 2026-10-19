@@ -22,9 +22,11 @@ import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../ty
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
 import {validateBarOpacity} from '../bar-opacity';
+import {validateBarPadding} from '../bar-padding';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
 import {getBarXStackLabelAnchors} from './stack-labels';
 
@@ -95,6 +97,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateBarPadding(series.barPadding);
         validateBarOpacity(series.opacity, 'opacity');
         validateBarOpacity(seriesOptions?.['bar-x']?.opacity, 'series.options.bar-x.opacity');
         series.data.forEach((point, index) => {
@@ -119,6 +122,10 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

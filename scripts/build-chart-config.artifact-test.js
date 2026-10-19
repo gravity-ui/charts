@@ -133,6 +133,46 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('per-series bar padding is declared and constrained without changing shared options', () => {
+        const usage = `
+            const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', barPadding: 0.2, data: []};
+            const horizontal: BarYSeries = {type: 'bar-y', name: 'Actual', barPadding: 0.6, data: []};
+            // @ts-expect-error Padding is numeric.
+            vertical.barPadding = '0.2';
+            // @ts-expect-error Padding cannot be null.
+            horizontal.barPadding = null;
+            // @ts-expect-error Padding is not supported by all series.
+            const base: BaseSeries = {barPadding: 0.2};
+            void [vertical, horizontal, base];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'bar-padding-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const type of ['bar-x', 'bar-y']) {
+            for (const barPadding of [undefined, 0, 0.2, 1, -0.1, 1.1, null, '0.2']) {
+                expect(
+                    validateConfig({
+                        series: {
+                            data: [{type, name: 'Plan', barPadding, data: []}],
+                        },
+                    }),
+                ).toBe([undefined, 0, 0.2, 1].includes(barPadding));
+            }
+            expect(
+                validateConfig({
+                    series: {
+                        data: [{type, name: 'Plan', data: []}],
+                        options: {[type]: {barPadding: 2}},
+                    },
+                }),
+            ).toBe(true);
+        }
+    });
+
     test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
         const usage = `
             const tooltip: ChartTooltip = {
@@ -164,6 +204,156 @@ describe('chart config artifacts', () => {
         expect(schema.definitions['ChartTooltip<JsonValue>'].properties).not.toHaveProperty(
             'yAxes',
         );
+    });
+
+    test('click modes preserve handler compatibility and keep callbacks out of JSON configuration', () => {
+        const usage = `
+            const options: ChartOptions = {events: {click: ({targets, position, chart, event, point, series}, legacyEvent) => {
+                if (!targets || !position || !chart || !event) return;
+                const coordinates: [number, number] = position;
+                const nativeEvent: MouseEvent = event;
+                const hits: ChartInteractionItem[] = targets;
+                const nearest: ChartInteractionItem | null = chart.getClosest(position);
+                const legacySelection = chart.getClosest(position, {mode: 'tooltip'});
+                // @ts-expect-error Only documented selection modes are supported.
+                chart.getClosest(position, {mode: 'exact'});
+                // @ts-expect-error Resizing belongs to ChartRef, not the event query API.
+                chart.reflow();
+                void [coordinates, nativeEvent, hits, nearest, legacySelection, point, series, legacyEvent];
+            }}};
+            void options;
+            interface IssueMetadata {issueId: string}
+            type IssueTarget = ChartInteractionItem<BarXSeriesData<IssueMetadata>, 'bar-x'>;
+            function hasModernData<T extends ChartInteractionItem>(payload: ChartLegacyClickData<T>): payload is ChartLegacyClickData<T> & ChartClickData<T> {
+                return Boolean(payload.targets && payload.position && payload.chart && payload.event);
+            }
+            function isBar(item: ChartInteractionItem): item is IssueTarget {
+                return item.series.type === 'bar-x';
+            }
+            const typedData: ChartData<IssueMetadata, IssueTarget> = {
+                series: {data: []},
+                chart: {events: {clickMode: 'plot', click: (payload) => {
+                    // @ts-expect-error Legacy wrappers may forward only point and series.
+                    const incomplete: ChartClickData<IssueTarget> = payload;
+                    void incomplete;
+                    if (!hasModernData(payload)) return;
+                    const {targets, chart, position} = payload;
+                    const cleanPayload: ChartClickData<IssueTarget> = payload;
+                    // The common callback contract still includes legacy fields in plot mode.
+                    void [payload.point, payload.series];
+                    const api: ChartApi<IssueTarget> = chart;
+                    const item = targets[0];
+                    if (item && isBar(item) && item.point.custom) {
+                        const id: string = item.point.custom.issueId;
+                        // @ts-expect-error Custom metadata must retain the chart's generic type.
+                        const wrong: boolean = item.point.custom.issueId;
+                        void [id, wrong];
+                    }
+                    // @ts-expect-error Queries require explicit coordinates.
+                    api.getClosest();
+                    void [cleanPayload, api.getClosest(position)];
+                }}},
+            };
+            const standalone = (payload: ChartClickData<IssueTarget>) => {
+                void payload.targets;
+                // @ts-expect-error The explicitly chosen clean type has no legacy selection.
+                payload.point;
+                // @ts-expect-error The explicitly chosen clean type has no legacy series.
+                payload.series;
+            };
+            const shared: NonNullable<ChartOptions<IssueTarget>['events']> = {
+                clickMode: 'plot', click: (payload) => {
+                    if (hasModernData(payload)) standalone(payload);
+                },
+            };
+            const spread: ChartOptions<IssueTarget> = {events: {...shared, pointermove: (data, event) => {
+                const pointer: PointerEvent = event;
+                void [data?.hovered, pointer];
+            }}};
+            const oldHandler = (data: {point: unknown; series: unknown}, event: PointerEvent) => {
+                void [data.point, data.series, event];
+            };
+            const legacy: ChartOptions = {events: {click: oldHandler}};
+            const recordHandler = (payload: Record<string, unknown>) => {void payload;};
+            const recordOptions: ChartOptions = {events: {click: recordHandler}};
+            const recordForwarder: ChartOptions = {events: {click: (payload) => recordHandler(payload)}};
+            void [recordOptions, recordForwarder];
+            const explicitLegacy: ChartOptions = {events: {clickMode: 'tooltip', click: oldHandler}};
+            const plotWithLegacy: ChartOptions = {events: {clickMode: 'plot', click: oldHandler}};
+            // @ts-expect-error A handler requiring modern data cannot consume legacy forwarded payloads.
+            const unsafeForwarding: ChartOptions<IssueTarget> = {events: {click: standalone}};
+            // Previously valid wrappers must keep compiling without setting clickMode.
+            function wrapEvents(options: ChartOptions): ChartOptions {
+                return {events: {...options.events, click: ({point, series}, event) => {
+                    const pointer: PointerEvent = event;
+                    oldHandler({point, series}, pointer);
+                    options.events?.click?.({point, series}, event);
+                }}};
+            }
+            function replaceHandler(options: ChartOptions): ChartOptions {
+                return {events: {...options.events, click: oldHandler}};
+            }
+            function dynamicMode(clickMode: 'plot' | 'tooltip'): ChartOptions {
+                return {events: {clickMode, click: ({targets, point}, event) => {
+                    const hits: ChartInteractionItem[] | undefined = targets;
+                    const pointer: PointerEvent = event;
+                    void [hits, point, pointer];
+                }}};
+            }
+            // @ts-expect-error Unsupported click delivery mode.
+            const invalidMode: ChartOptions = {events: {clickMode: 'all'}};
+            const legacyPayload: Parameters<NonNullable<NonNullable<ChartOptions['events']>['click']>>[0] = {point: {}, series: {}};
+            void [spread, legacy, explicitLegacy, plotWithLegacy, unsafeForwarding, wrapEvents, replaceHandler, dynamicMode, invalidMode, legacyPayload];
+            const radar: ChartInteractionItem<RadarSeriesData<IssueMetadata> | {kind: 'shape'; points: RadarSeriesData<IssueMetadata>[]}, 'radar'> = {
+                series: {type: 'radar', id: 'radar', name: 'Radar'},
+                point: {kind: 'shape', points: [{value: 1, custom: {issueId: 'A'}}]},
+            };
+            // The contract accepts a consumer-defined payload and series name without a built-in registry.
+            const custom: ChartInteractionItem<{key: string}, 'custom-series'> = {
+                series: {type: 'custom-series', id: 'custom', name: 'Custom'}, point: {key: 'A'},
+            };
+            function readOpaque(item: ChartInteractionItem) {
+                // @ts-expect-error Default payloads must be narrowed before reading their fields.
+                return item.point.custom;
+            }
+            // @ts-expect-error Event queries carry point objects, not primitives.
+            const primitive: ChartInteractionItem<number> = custom;
+            void [readOpaque, primitive];
+            function readLinkValue(item: TooltipDataChunkSankey): number | undefined {
+                return item.value;
+            }
+            void [typedData, radar, custom, readLinkValue];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'click-query-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions['ChartOptions<ChartInteractionItem>'].properties).toHaveProperty(
+            'events',
+        );
+        const validate = createSchemaValidator().compile(schema);
+        for (const events of [{}, {clickMode: 'plot'}, {clickMode: 'tooltip'}]) {
+            expect(validate({series: {data: []}, chart: {events}})).toBe(true);
+        }
+        for (const clickMode of ['all', null, true, 1]) {
+            expect(validate({series: {data: []}, chart: {events: {clickMode}}})).toBe(false);
+        }
+        const eventsSchema =
+            schema.definitions['ChartOptions<ChartInteractionItem>'].properties.events;
+        expect(Object.keys(eventsSchema.properties)).toEqual(['clickMode']);
+        expect(eventsSchema.properties.clickMode).toMatchObject({
+            enum: ['tooltip', 'plot'],
+            default: 'tooltip',
+            enumDescriptions: expect.any(Array),
+        });
+        expect(
+            Object.keys(schema.definitions).some((name) => name.startsWith('ChartInteraction')),
+        ).toBe(false);
+        expect(declaration).toContain('@deprecated Use chart.getClosest');
+        expect(declaration).not.toContain('SankeyLinkPoint');
+        expect(declaration).not.toContain('BuiltInInteractionItem');
     });
 
     test('standalone declarations support automatic legend width and size limits', () => {
@@ -198,6 +388,19 @@ describe('chart config artifacts', () => {
         expect(validateConfig({series: {data: []}, legend: {maxWidth: 0}})).toBe(true);
         // String formats are resolved at runtime, as with other dimension options.
         expect(validateConfig({series: {data: []}, legend: {width: 'invalid'}})).toBe(true);
+    });
+
+    test('published ChartOptions references remain usable after adding generic parameters', () => {
+        const ajv = createSchemaValidator();
+        ajv.addSchema(schema, 'chart');
+        for (const name of ['ChartOptions', 'ChartOptions<JsonValue>']) {
+            const validate = ajv.compile({$ref: `chart#/definitions/${encodeURIComponent(name)}`});
+            expect(validate({events: {clickMode: 'plot'}})).toBe(true);
+            expect(validate({events: {clickMode: 'tooltip'}})).toBe(true);
+            expect(validate({events: {clickMode: 'invalid'}})).toBe(false);
+            expect(validate({unknown: true})).toBe(false);
+        }
+        expect(normalizeSchema(JSON.parse(JSON.stringify(schema)))).toEqual(schema);
     });
 
     test('documents every series type', () => {
@@ -1115,7 +1318,14 @@ describe('chart config artifacts', () => {
 
     test('omits callback-only properties', () => {
         const callbackProperties = [];
-        const callbackPropertyNames = new Set(['events', 'formatter', 'renderer', 'rowRenderer']);
+        const callbackPropertyNames = new Set([
+            'click',
+            'pointermove',
+            'itemClick',
+            'formatter',
+            'renderer',
+            'rowRenderer',
+        ]);
         visitSchema(schema, (schemaNode) => {
             for (const propertyName of Object.keys(schemaNode.properties || {})) {
                 if (callbackPropertyNames.has(propertyName)) {

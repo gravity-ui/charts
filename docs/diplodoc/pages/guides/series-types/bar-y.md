@@ -24,7 +24,7 @@ Set `grouping: false` to overlay bars at the category center without taking up g
 
 Later series in `series.data` cover earlier ones, including their borders. The example places Plan before Actual to draw Actual on top.
 
-Bar thickness is shared through `series.options['bar-y'].barPadding` and `barMaxWidth`.
+Set `barPadding` on a series to control its thickness without moving its center: use values from `0` to `1`, with larger values producing thinner bars. Omitted values inherit `series.options['bar-y'].barPadding` (default `0.2`); stacks use the largest resolved padding among all their series, including hidden ones. The example raises the shared `barMaxWidth` to keep the difference visible.
 
 <div data-chart-example="series-types/bar-y-overlay"></div>
 

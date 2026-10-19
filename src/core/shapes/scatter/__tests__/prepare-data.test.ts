@@ -8,6 +8,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import type {PreparedSplit} from '../../../layout/split-types';
 import {DEFAULT_POINT_MARKER_OPTIONS} from '../../../series/constants';
 import type {PreparedLegend} from '../../../series/types';
+import {getSourcePoint} from '../../../utils/source-point';
 import * as textUtils from '../../../utils/text';
 import {prepareScatterData} from '../prepare-data';
 
@@ -80,28 +81,24 @@ describe('prepareScatterData: data labels', () => {
     });
 });
 
-test.each([false, true])(
-    'tracks raw zero-mode points only for clustering (enabled=%s)',
-    (enabled) => {
-        const point: ScatterSeriesData = {x: null, y: null, custom: {id: 'raw'}};
-        const [series] = prepareScatterSeries({
-            series: [
-                {
-                    type: 'scatter',
-                    name: 'Scatter',
-                    data: [point],
-                    nullMode: 'zero',
-                    cluster: {enabled},
-                },
-            ],
-            colorScale: scaleOrdinal([] as string[], ['#000']),
-            colors: [],
-            legend: {enabled: false} as PreparedLegend,
-        });
+test.each([false, true])('preserves raw zero-mode points with clustering enabled=%s', (enabled) => {
+    const point: ScatterSeriesData = {x: null, y: null, custom: {id: 'raw'}};
+    const [series] = prepareScatterSeries({
+        series: [
+            {
+                type: 'scatter',
+                name: 'Scatter',
+                data: [point],
+                nullMode: 'zero',
+                cluster: {enabled},
+            },
+        ],
+        colorScale: scaleOrdinal([] as string[], ['#000']),
+        colors: [],
+        legend: {enabled: false} as PreparedLegend,
+    });
 
-        expect(series.data[0]).toEqual({...point, x: 0, y: 0});
-        expect(point).toEqual({x: null, y: null, custom: {id: 'raw'}});
-        expect(Boolean(series.sourceData)).toBe(enabled);
-        expect(series.sourceData?.get(series.data[0])).toBe(enabled ? point : undefined);
-    },
-);
+    expect(series.data[0]).toEqual({...point, x: 0, y: 0});
+    expect(point).toEqual({x: null, y: null, custom: {id: 'raw'}});
+    expect(getSourcePoint(series.data[0])).toBe(point);
+});

@@ -140,6 +140,7 @@ export interface ChartSeriesOptions {
         barMaxWidth?: number;
         /**
          * Padding between each bar as a fraction of the space allocated per bar.
+         * Can be overridden by barPadding on individual series.
          * @default 0.2
          */
         barPadding?: number;
@@ -211,6 +212,7 @@ export interface ChartSeriesOptions {
         barMaxWidth?: number;
         /**
          * Padding between each bar as a fraction of the space allocated per bar.
+         * Can be overridden by barPadding on individual series.
          * @default 0.2
          */
         barPadding?: number;

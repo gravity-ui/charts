@@ -1,4 +1,3 @@
-import type {AreaRangeSeries} from '../../../types';
 import {getDistanceToStrokedPolyline} from '../../utils/geometry';
 import type {Point} from '../../utils/geometry';
 import type {
@@ -66,7 +65,7 @@ export function getTooltipData(
                 color: point.fill ?? point.color ?? point.series.color,
                 data: point.data,
                 distance,
-                series: point.series as unknown as AreaRangeSeries,
+                series: point.series,
                 x: point.x,
                 y0: Math.min(point.y0, point.y1),
                 y1: Math.max(point.y0, point.y1),

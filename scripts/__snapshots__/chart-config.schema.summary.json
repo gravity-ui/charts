@@ -36,6 +36,8 @@
     "ChartConfig",
     "ChartLegend",
     "ChartOptions",
+    "ChartOptions<ChartInteractionItem>",
+    "ChartOptions<JsonValue>",
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",
     "ChartSeriesOptions",
@@ -208,6 +210,7 @@
     ],
     "AxisPlotShape": ["color", "custom", "label", "layerPlacement", "opacity", "value"],
     "BarXSeries<JsonValue>": [
+      "barPadding",
       "borderColor",
       "borderRadius",
       "borderWidth",
@@ -243,6 +246,7 @@
       "y"
     ],
     "BarYSeries<JsonValue>": [
+      "barPadding",
       "borderColor",
       "borderRadius",
       "borderWidth",
@@ -330,7 +334,7 @@
       "verticalAlign",
       "width"
     ],
-    "ChartOptions": ["margin", "zoom"],
+    "ChartOptions<ChartInteractionItem>": ["events", "margin", "zoom"],
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",

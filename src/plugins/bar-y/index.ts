@@ -5,7 +5,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedBarYSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/bar-y/get-tooltip-data';
 import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
@@ -21,9 +20,12 @@ import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../ty
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
 import {validateBarOpacity} from '../bar-opacity';
+import {validateBarPadding} from '../bar-padding';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTooltipData} from './get-tooltip-data';
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarYSeries} from './prepare-bar-y-series';
 import {getBarYStackLabelAnchors} from './stack-labels';
 
@@ -81,6 +83,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateBarPadding(series.barPadding);
         validateBarOpacity(series.opacity, 'opacity');
         validateBarOpacity(seriesOptions?.['bar-y']?.opacity, 'series.options.bar-y.opacity');
         series.data.forEach((point, index) => {
@@ -101,6 +104,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     getColorValue: (d) => d.x,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipXValue,

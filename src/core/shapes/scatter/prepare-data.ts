@@ -15,6 +15,7 @@ import {
     preparePointDataLabels,
     shouldPrepareSeriesDataLabels,
 } from '../../utils';
+import {getSourcePoint} from '../../utils/source-point';
 import type {LabelRect} from '../types';
 
 import {clusterSeriesData} from './cluster';
@@ -131,7 +132,7 @@ export async function prepareScatterData(args: {
             const marker: PreparedScatterData = {
                 point: {
                     data: d,
-                    sourceData: s.sourceData?.get(d) ?? d,
+                    sourceData: getSourcePoint(d),
                     series: s,
                     x,
                     y: plotY,

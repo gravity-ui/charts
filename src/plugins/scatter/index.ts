@@ -18,6 +18,7 @@ import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareScatterSeries} from './prepare-scatter-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
@@ -138,6 +139,10 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: (args) => {

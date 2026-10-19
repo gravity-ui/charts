@@ -1,5 +1,6 @@
 import type {ChartXAxis, ChartYAxis} from './chart/axis';
 import type {ChartOptions} from './chart/chart';
+import type {ChartInteractionItem} from './chart/interaction';
 import type {ChartLegend} from './chart/legend';
 import type {ChartSeries, ChartSeriesOptions} from './chart/series';
 import type {ChartSplit} from './chart/split';
@@ -12,6 +13,7 @@ export * from './chart/annotation';
 export * from './chart/axis';
 export * from './chart/base';
 export * from './chart/chart';
+export * from './chart/interaction';
 export * from './chart/legend';
 export * from './chart/pie';
 export * from './chart/scatter';
@@ -36,11 +38,15 @@ export * from './chart/gradient';
 export * from './chart/brush';
 export * from './chart/x-range';
 
-export interface ChartData<T = MeaningfulAny> {
+/** T is point custom metadata; TItem describes the interaction results produced by this chart. */
+export interface ChartData<
+    T = MeaningfulAny,
+    TItem extends ChartInteractionItem = ChartInteractionItem,
+> {
     /**
      * General options for the chart.
      */
-    chart?: ChartOptions;
+    chart?: ChartOptions<TItem>;
     /**
      * The color list of palette.
      * If no color is set in series, the colors would be adopted sequentially and circularly from this list as the colors of series.

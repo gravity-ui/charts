@@ -26,6 +26,7 @@ import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../ty
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {getAreaStackLabelAnchors} from './stack-labels';
 
@@ -128,6 +129,10 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         );
         renderStackLabels(labelsPlot, labels);
         return cleanup;
+    },
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
     },
     tooltip: {
         prepareData: getTooltipData,

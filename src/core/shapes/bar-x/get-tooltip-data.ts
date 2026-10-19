@@ -1,7 +1,6 @@
 import {max, min} from 'd3-array';
 import groupBy from 'lodash/groupBy';
 
-import type {BarXSeries} from '../../../types';
 import {getRectDistance} from '../../utils/geometry';
 import type {
     GetTooltipDataArgs,
@@ -19,9 +18,12 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
     const centers: Record<string, number> = Object.fromEntries(
         Object.entries(barXGroups).map(([key, group]) => {
             const overlay = group.find((d) => d.series.grouping === false);
+            // Slot centers stay symmetric around the category even when bar widths differ.
             const center = overlay
                 ? overlay.x + overlay.width / 2
-                : ((min(group, (d) => d.x) ?? 0) + (max(group, (d) => d.x + d.width) ?? 0)) / 2;
+                : ((min(group, (d) => d.x + d.width / 2) ?? 0) +
+                      (max(group, (d) => d.x + d.width / 2) ?? 0)) /
+                  2;
             return [key, center];
         }),
     );
@@ -36,7 +38,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
             // Set only for the own candidate; all points of a series share one value.
             distance: measureDistance ? distance : undefined,
             percentage: d.percentage,
-            series: d.series as BarXSeries,
+            series: d.series,
             x: centers[String(d.data.x)],
             y0: d.y,
             y1: d.y + d.height,

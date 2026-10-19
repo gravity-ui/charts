@@ -1,4 +1,3 @@
-import type {AreaSeries} from '../../../types';
 import {getDistanceToStrokedPolyline} from '../../utils/geometry';
 import type {Point} from '../../utils/geometry';
 import type {
@@ -65,7 +64,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
                 data: p.data,
                 distance,
                 percentage: p.percentage,
-                series: p.series as AreaSeries,
+                series: p.series,
                 x: p.x,
                 y0: p.y0,
                 y1: p.y,
