@@ -8,6 +8,7 @@ import type {AreaRangeSeries, AreaRangeSeriesData} from './area-range';
 import type {BarXSeries, BarXSeriesData} from './bar-x';
 import type {BarYSeries, BarYSeriesData} from './bar-y';
 import type {BaseTextStyle, ValueFormat} from './base';
+import type {ChartPlotPadding} from './chart';
 import type {FunnelSeries, FunnelSeriesData} from './funnel';
 import type {Halo} from './halo';
 import type {HeatmapSeries, HeatmapSeriesData} from './heatmap';
@@ -270,6 +271,8 @@ export interface ChartSeriesOptions {
         };
     };
     scatter?: {
+        /** Contribution to chart.plotPadding; omitted sides use `auto`. Only active on chart-level `auto` sides. */
+        plotPadding?: ChartPlotPadding;
         /** Options for the series states that provide additional styling information to the series. */
         states?: {
             hover?: BasicHoverState & {
@@ -282,6 +285,8 @@ export interface ChartSeriesOptions {
         };
     };
     line?: {
+        /** Contribution to chart.plotPadding; omitted sides use `auto`. Only active on chart-level `auto` sides. */
+        plotPadding?: ChartPlotPadding;
         /**
          * Pixel width of the graph line.
          * @default 1
@@ -318,6 +323,8 @@ export interface ChartSeriesOptions {
         annotation?: ChartAnnotationSeriesOptions;
     };
     area?: {
+        /** Contribution to chart.plotPadding; omitted sides use `auto`. Only active on chart-level `auto` sides. */
+        plotPadding?: ChartPlotPadding;
         /** Total labels on the outer stack boundary, grouped by X value, stackId and value axis. */
         stackLabels?: StackLabelsOptions;
         /**
@@ -342,6 +349,8 @@ export interface ChartSeriesOptions {
     };
     /** Default appearance and interaction settings for area-range series. */
     'area-range'?: {
+        /** Contribution to chart.plotPadding; omitted sides use `auto`. Only active on chart-level `auto` sides. */
+        plotPadding?: ChartPlotPadding;
         /** Width of both boundary lines in pixels. @default 1 */
         lineWidth?: number;
         /** Default marker options for both boundaries of area-range points. */

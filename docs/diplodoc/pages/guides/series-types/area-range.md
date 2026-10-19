@@ -30,6 +30,8 @@ The example shows a forecast inside its expected range. Hover to see the forecas
 
 By default, normal markers are hidden and hovering a point shows markers on both visible boundaries, with a white border. Coincident boundaries share one marker. Incomplete points and boundaries outside the visible plot have no markers.
 
+Use [plot padding](../spacing.md#plot-padding) to keep edge markers fully visible.
+
 Set `series.marker.enabled` to show normal markers. Defaults for all area-range series are configured in `series.options['area-range'].marker`; per-series values take precedence. A point's `marker.states.normal.enabled` can also enable normal markers when the series setting is disabled. The line gradient is sampled at each boundary marker, following the [marker color priority](../colors.md#point-colors).
 
 Configure hover markers through `series.options['area-range'].states.hover.marker`:

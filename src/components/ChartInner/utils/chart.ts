@@ -35,6 +35,7 @@ export const getPreparedChart = (args: {
     const zoom = getPreparedZoom({zoom: chart?.zoom, seriesData});
 
     return {
+        plotPadding: chart?.plotPadding,
         margin: {
             top: marginTop,
             right: marginRight,

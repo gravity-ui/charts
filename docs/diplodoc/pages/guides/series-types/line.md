@@ -24,6 +24,8 @@ Hover styles apply to both always-visible and hover-only markers. The normal app
 
 <div data-chart-example="series-types/line-markers"></div>
 
+Use [plot padding](../spacing.md#plot-padding) to keep edge markers fully visible.
+
 ### Line interpolation
 
 By default, lines connect points with straight segments. Set `interpolation: {type: 'monotone'}` to draw a smooth curve through the points without introducing new extrema. Order points monotonically by X. Markers, tooltips, and interactions stay attached to the original points.

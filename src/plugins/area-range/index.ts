@@ -1,4 +1,5 @@
 import {i18n} from '~core/i18n';
+import {validatePlotPadding} from '~core/layout/plot-padding';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -24,6 +25,7 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, TooltipDataChunkAreaRange} from '../../types';
 
 import {getTargetElements, prepareNearestData} from './interaction';
+import {getAreaRangePlotPadding} from './plot-padding';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
@@ -36,11 +38,16 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
     prepareSeries: prepareAreaRangeSeries,
+    getPlotPadding: getAreaRangePlotPadding,
     getAxisDomainValues: {
         y: (data) => (data.y0 === null || data.y1 === null ? [] : [data.y0, data.y1]),
     },
     getColorValue: getAreaRangeWidth,
-    validate: ({series, xAxis, yAxis}) => {
+    validate: ({series, xAxis, yAxis, seriesOptions}) => {
+        validatePlotPadding(
+            seriesOptions?.['area-range']?.plotPadding,
+            'series.options.area-range.plotPadding',
+        );
         validateAxisPlotValues({
             series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y0}))},
             xAxis,

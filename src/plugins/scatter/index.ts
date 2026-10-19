@@ -1,4 +1,5 @@
 import {DEFAULT_AXIS_TYPE} from '~core/constants';
+import {validatePlotPadding} from '~core/layout/plot-padding';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -19,6 +20,7 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
 
 import {getTargetElements, prepareNearestData} from './interaction';
+import {getScatterPlotPadding} from './plot-padding';
 import {prepareScatterSeries} from './prepare-scatter-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
@@ -50,6 +52,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         boundsHeight,
         isOutsideBounds: isOutsideBounds ?? (() => false),
         isRangeSlider,
+        hoverEnabled: args.seriesOptions.scatter?.states?.hover?.enabled,
     });
 
     return {renderData: [data], tooltipItems: data.scatterData};
@@ -75,7 +78,12 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     prepareSeries: prepareScatterSeries,
-    validate: ({series, xAxis, yAxis}) => {
+    getPlotPadding: getScatterPlotPadding,
+    validate: ({series, xAxis, yAxis, seriesOptions}) => {
+        validatePlotPadding(
+            seriesOptions?.scatter?.plotPadding,
+            'series.options.scatter.plotPadding',
+        );
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         if (!series.cluster?.enabled) {

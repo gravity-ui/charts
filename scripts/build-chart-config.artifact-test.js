@@ -39,6 +39,45 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('plot padding is exposed only on the chart and participating type options', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'plot-padding-usage.ts'),
+                declaration +
+                    `
+            const padding: ChartPlotPadding = {top: 'auto', right: '10%', bottom: '4px', left: 0};
+            const chart: ChartOptions = {plotPadding: padding};
+            const options: ChartSeriesOptions = {line: {plotPadding: padding}, area: {plotPadding: padding}, 'area-range': {plotPadding: padding}, scatter: {plotPadding: padding}};
+            // @ts-expect-error Unsupported plugin.
+            const bars: ChartSeriesOptions = {'bar-x': {plotPadding: padding}};
+            // @ts-expect-error No per-instance padding.
+            const base: BaseSeries = {plotPadding: padding};
+            void [chart, options, bars, base];
+        `,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions.ChartPlotPadding.properties.right).toMatchObject({
+            type: ['number', 'string'],
+            minimum: 0,
+        });
+        const options = schema.definitions.ChartSeriesOptions.properties;
+        for (const type of ['line', 'area', 'area-range', 'scatter']) {
+            expect(options[type].properties.plotPadding.$ref).toBe(
+                '#/definitions/ChartPlotPadding',
+            );
+        }
+        for (const type of ['bar-x', 'bar-y', 'heatmap', 'waterfall', 'x-range', 'pie']) {
+            expect(options[type].properties).not.toHaveProperty('plotPadding');
+        }
+        const validate = createSchemaValidator().compile(schema);
+        for (const right of ['auto', 0, 16, '16px', '10%']) {
+            expect(validate({chart: {plotPadding: {right}}, series: {data: []}})).toBe(true);
+        }
+        for (const right of [-1, Infinity, NaN, null, true]) {
+            expect(validate({chart: {plotPadding: {right}}, series: {data: []}})).toBe(false);
+        }
+    });
+
     test('line marker label anchors are exposed only on line data labels', () => {
         expect(() =>
             validateDeclaration(

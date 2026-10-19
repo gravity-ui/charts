@@ -38,6 +38,7 @@
     "ChartOptions",
     "ChartOptions<ChartInteractionItem>",
     "ChartOptions<JsonValue>",
+    "ChartPlotPadding",
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",
     "ChartSeriesOptions",
@@ -334,7 +335,8 @@
       "verticalAlign",
       "width"
     ],
-    "ChartOptions<ChartInteractionItem>": ["events", "margin", "zoom"],
+    "ChartOptions<ChartInteractionItem>": ["events", "margin", "plotPadding", "zoom"],
+    "ChartPlotPadding": ["bottom", "left", "right", "top"],
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",

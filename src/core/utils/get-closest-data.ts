@@ -4,6 +4,7 @@ import groupBy from 'lodash/groupBy';
 import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
 
 import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
+import {getShapeClipPredicate} from '../shapes/clip-bounds';
 import type {TooltipItemData} from '../shapes/types';
 
 import {toPublicInteractionItem} from './chart-interaction';
@@ -93,6 +94,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             continue;
         }
         const plugin = getSeriesPlugin(seriesType);
+        const isVisible = getShapeClipPredicate(list);
 
         const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
             data: list,
@@ -106,6 +108,12 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
             if (!isPointTooltipEnabled(chunk)) {
                 continue;
             }
+            if (
+                'displayPosition' in chunk &&
+                chunk.displayPosition &&
+                !isVisible(get(chunk.series, 'id', ''), ...chunk.displayPosition)
+            )
+                continue;
             result.push(chunk);
             if (chunk.closest) {
                 contenders.push(getContender(chunk, chunk.distance, layerIndexes));
@@ -113,7 +121,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
         }
         if (seriesXLookupPoints) {
             for (const p of seriesXLookupPoints) {
-                if (isPointTooltipEnabled(p)) {
+                if (isPointTooltipEnabled(p) && isVisible(p.series.id, p.x, p.y0, p.y1)) {
                     xLookupPoints.push(p);
                 }
             }
@@ -178,6 +186,7 @@ export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem
             ([seriesType, data]) => {
                 if (!hasSeriesPlugin(seriesType)) return [];
                 const plugin = getSeriesPlugin(seriesType);
+                const isVisible = getShapeClipPredicate(data);
                 return (
                     plugin.interaction?.prepareNearestData({
                         data,
@@ -185,6 +194,12 @@ export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem
                         boundsWidth: args.boundsWidth,
                         boundsHeight: args.boundsHeight,
                     }) ?? []
+                ).filter((candidate) =>
+                    isVisible(
+                        candidate.item.series.id,
+                        candidate.position[0],
+                        ...(candidate.yRange ?? [candidate.position[1], candidate.position[1]]),
+                    ),
                 );
             },
         );

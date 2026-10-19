@@ -20,6 +20,8 @@ Set `type: 'scatter'`. Each point contains `x` and `y`. For a category axis, use
 
 Use `marker` to set point size and symbol.
 
+Use [plot padding](../spacing.md#plot-padding) to keep edge markers fully visible.
+
 ### Point clustering
 
 Clustering is disabled by default. Enable it on a scatter series to group visible points into square grid cells:

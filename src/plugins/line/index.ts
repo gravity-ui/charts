@@ -1,3 +1,4 @@
+import {validatePlotPadding} from '~core/layout/plot-padding';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -22,6 +23,7 @@ import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
 import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
+import {getLinePlotPadding} from './plot-padding';
 import {prepareLineSeries} from './prepare-line-series';
 import {validateInterpolation, validateLabelAnchor} from './validation';
 
@@ -96,7 +98,9 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
     prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
     prepareSeries: prepareLineSeries,
-    validate: ({series, xAxis, yAxis}) => {
+    getPlotPadding: getLinePlotPadding,
+    validate: ({series, xAxis, yAxis, seriesOptions}) => {
+        validatePlotPadding(seriesOptions?.line?.plotPadding, 'series.options.line.plotPadding');
         validateAxisPlotValues({series, xAxis, yAxis});
         validateInterpolation({series});
         validateLabelAnchor({series});
