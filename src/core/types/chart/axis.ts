@@ -211,6 +211,7 @@ export interface ChartAxis {
     title?: ChartAxisTitle;
     /**
      * The minimum value of the axis. If undefined the min value is automatically calculated.
+     * `chart.plotPadding` can move this value inward without changing it; the axis line still spans the plot.
      *
      * The value type depends on the axis scale:
      * - For `linear` and `logarithmic` axes: numeric value
@@ -222,6 +223,7 @@ export interface ChartAxis {
     min?: number;
     /**
      * The maximum value of the axis. If undefined the max value is automatically calculated.
+     * `chart.plotPadding` can move this value inward without changing it; the axis line still spans the plot.
      *
      * The value type depends on the axis scale:
      * - For `linear` and `logarithmic` axes: numeric value
@@ -280,8 +282,8 @@ export interface ChartAxis {
      * for better readability. This can create a visual gap at the beginning of the chart
      * if the data minimum doesn't align with the tick.
      *
-     * Use `startOnTick: false` to make the chart start exactly at the data minimum,
-     * preventing gaps at the chart start.
+     * Set to `false` to disable this rounding. `chart.plotPadding` applies afterward:
+     * it can move the first tick inward while the axis line still spans the plot.
      * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     startOnTick?: boolean;
@@ -292,7 +294,8 @@ export interface ChartAxis {
      * for better readability. This can create extra space at the end of the chart
      * if the data maximum doesn't align with the tick.
      *
-     * Use `endOnTick: false` to make the chart end closer to the data maximum.
+     * Set to `false` to disable this rounding. `chart.plotPadding` applies afterward:
+     * it can move the last tick inward while the axis line still spans the plot.
      * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     endOnTick?: boolean;

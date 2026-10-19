@@ -112,6 +112,108 @@ describe('plot padding', () => {
         expect(paddedDomain.xScale.range()).toEqual([0, 600]);
     });
 
+    test.each([0.01, 0.2])(
+        'composes auto with actual X/Y maxPadding=%s domains',
+        async (maxPadding) => {
+            const args = await prepare();
+            args.xAxis = {
+                ...args.xAxis,
+                max: undefined,
+                maxPadding,
+                startOnTick: false,
+                endOnTick: false,
+            };
+            args.yAxis[0] = {...args.yAxis[0], max: undefined, maxPadding};
+            const base = {...args, boundsWidth: 600, boundsHeight: 300};
+            const plain = createScales(base);
+            const padded = createScales({...base, plotPadding: {right: 'auto', top: 'auto'}});
+            expect(plain.xScale?.domain()).toEqual([0, 2 * (1 + maxPadding)]);
+            expect(plain.yScale[0]?.domain()).toEqual([0, 100 * (1 + maxPadding)]);
+            expect(padded.xScale?.domain()).toEqual(plain.xScale?.domain());
+            expect(padded.yScale[0]?.domain()).toEqual(plain.yScale[0]?.domain());
+            if (maxPadding === 0.2) {
+                expect(padded.xScale?.range()).toEqual(plain.xScale?.range());
+                expect(padded.yScale[0]?.range()).toEqual(plain.yScale[0]?.range());
+            } else {
+                expect((padded.xScale as typeof args.xScale)(2)).toBeCloseTo(600 - 13);
+                expect((padded.yScale[0] as typeof args.xScale)(100)).toBeCloseTo(13);
+                expect(padded.plotPadding?.[0].right).toBeGreaterThan(0);
+                expect(padded.plotPadding?.[0].right).toBeLessThan(13);
+                expect(padded.plotPadding?.[0].top).toBeGreaterThan(0);
+                expect(padded.plotPadding?.[0].top).toBeLessThan(13);
+            }
+        },
+    );
+
+    test('explicit X/Y limits suppress maxPadding without suppressing plot padding', async () => {
+        const args = await prepare();
+        args.xAxis = {...args.xAxis, maxPadding: 0.2, startOnTick: false, endOnTick: false};
+        args.yAxis[0] = {...args.yAxis[0], maxPadding: 0.2};
+        const base = {...args, boundsWidth: 600, boundsHeight: 300};
+        const plain = createScales(base);
+        const padded = createScales({...base, plotPadding: allAuto});
+        expect(padded.xScale?.domain()).toEqual([0, 2]);
+        expect(padded.yScale[0]?.domain()).toEqual([0, 100]);
+        expect(plain.xScale?.range()).toEqual([0, 600]);
+        expect(plain.yScale[0]?.range()).toEqual([300, 0]);
+        expect(padded.xScale?.range()).toEqual([13, 587]);
+        expect(padded.yScale[0]?.range()).toEqual([287, 13]);
+    });
+
+    test('explicit plot padding adds to axis spacing while zero preserves that spacing', async () => {
+        const args = await prepare();
+        args.xAxis = {
+            ...args.xAxis,
+            max: undefined,
+            maxPadding: 0.2,
+            startOnTick: false,
+            endOnTick: false,
+        };
+        args.yAxis[0] = {...args.yAxis[0], max: undefined, maxPadding: 0.2};
+        const base = {...args, boundsWidth: 600, boundsHeight: 300};
+        const plain = createScales(base);
+        const explicit = createScales({...base, plotPadding: {right: 20, top: 20}});
+        const zero = createScales({...base, plotPadding: {right: 0, top: 0}});
+        expect(explicit.xScale?.domain()).toEqual(plain.xScale?.domain());
+        expect(explicit.yScale[0]?.domain()).toEqual(plain.yScale[0]?.domain());
+        expect(explicit.xScale?.range()).toEqual([0, 580]);
+        expect(explicit.yScale[0]?.range()).toEqual([300, 20]);
+        expect(zero.xScale?.domain()).toEqual(plain.xScale?.domain());
+        expect(zero.yScale[0]?.domain()).toEqual(plain.yScale[0]?.domain());
+        expect(zero.xScale?.range()).toEqual(plain.xScale?.range());
+        expect(zero.yScale[0]?.range()).toEqual(plain.yScale[0]?.range());
+    });
+
+    test.each([false, true])(
+        'preserves existing tick rounding with startOnTick/endOnTick=%s',
+        async (round) => {
+            const args = await prepare();
+            args.xAxis = {
+                ...args.xAxis,
+                min: 0.03,
+                max: 2.03,
+                startOnTick: round,
+                endOnTick: round,
+            };
+            const base = {...args, boundsWidth: 600, boundsHeight: 300};
+            const plain = createScales(base);
+            const padded = createScales({...base, plotPadding: {left: 'auto', right: 'auto'}});
+            expect(plain.xScale?.domain()).toEqual(round ? [0, 2.2] : [0.03, 2.03]);
+            expect(padded.xScale?.domain()).toEqual(plain.xScale?.domain());
+        },
+    );
+
+    test('accepts plot padding together with axis limits, domain padding and zoom', () => {
+        expect(() =>
+            validateData({
+                chart: {plotPadding: allAuto, zoom: {enabled: true, type: 'xy'}},
+                xAxis: {min: 0, max: 2, maxPadding: 0.2},
+                yAxis: [{min: 0, max: 100, maxPadding: 0.2}],
+                series: {data: [line]},
+            }),
+        ).not.toThrow();
+    });
+
     test('does not reserve hidden or out-of-domain markers', async () => {
         const args = await prepare([{...line, visible: false}]);
         applyPlotPadding({...args, options: allAuto});
