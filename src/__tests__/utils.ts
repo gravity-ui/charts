@@ -126,3 +126,16 @@ export async function dragElementByCalculatedPosition(args: {
 
     await simulateDrag({page, from, to});
 }
+
+export async function getLegendRowTops(component: Locator) {
+    return component
+        .locator('.gcharts-legend__item')
+        .evaluateAll((elements) => [
+            ...new Set(
+                elements.map(
+                    (element) =>
+                        (element as SVGGElement).transform.baseVal.consolidate()?.matrix.f ?? 0,
+                ),
+            ),
+        ]);
+}

@@ -1,18 +1,8 @@
 import React from 'react';
 
-function getReadableText(html: string) {
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    template.content.querySelectorAll('script, style, template').forEach((node) => node.remove());
-    template.content.querySelectorAll('br, p, div, li').forEach((node) => {
-        node.before(' ');
-        node.after(' ');
-    });
-    return (template.content.textContent ?? '').replace(/\s+/g, ' ').trim();
-}
+import {getReadableText} from '~core/utils/text';
 
-export function useHtmlTextOverflow() {
-    const [element, ref] = React.useState<HTMLElement | null>(null);
+export function useHtmlTextOverflow(element: HTMLElement | null) {
     const [truncated, setTruncated] = React.useState(false);
     const [text, setText] = React.useState('');
 
@@ -70,5 +60,5 @@ export function useHtmlTextOverflow() {
         };
     }, [element]);
 
-    return {ref, text, truncated};
+    return {text, truncated};
 }

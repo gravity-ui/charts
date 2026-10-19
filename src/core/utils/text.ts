@@ -478,3 +478,14 @@ export async function getTextWithElipsis({
 
     return low > 0 ? originalText.slice(0, low) + '…' : '';
 }
+
+export function getReadableText(html: string) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    template.content.querySelectorAll('script, style, template').forEach((node) => node.remove());
+    template.content.querySelectorAll('br, p, div, li').forEach((node) => {
+        node.before(' ');
+        node.after(' ');
+    });
+    return (template.content.textContent ?? '').replace(/\s+/g, ' ').trim();
+}

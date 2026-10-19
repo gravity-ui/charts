@@ -15,6 +15,7 @@ interface Props {
         metaKey: boolean;
         currentTargetLabel: string | null;
     }) => void;
+    onBubbledClick?: () => void;
     seriesData?: ChartData['series']['data'];
 }
 
@@ -26,6 +27,7 @@ export const LegendItemClickTestStory = ({
     seriesData,
     legend,
     onActivation,
+    onBubbledClick,
 }: Props) => {
     const data = React.useMemo<ChartData>(
         () => ({
@@ -78,5 +80,9 @@ export const LegendItemClickTestStory = ({
         [html, itemClickAction, onItemClick, preventDefault, seriesData, legend, onActivation],
     );
 
-    return <ChartTestStory data={data} />;
+    return (
+        <div onClick={onBubbledClick}>
+            <ChartTestStory data={data} />
+        </div>
+    );
 };

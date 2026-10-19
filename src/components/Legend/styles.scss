@@ -93,9 +93,9 @@
         pointer-events: auto;
     }
 
-    &__title-text:focus-visible,
-    &__item:focus-visible,
-    &__item-html:focus-visible {
+    &__title-text:focus,
+    &__item:focus,
+    &__item-html:focus {
         outline: none;
     }
 }

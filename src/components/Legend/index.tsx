@@ -4,19 +4,20 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleLinear} from 'd3-scale';
 import type {Selection} from 'd3-selection';
 import {select} from 'd3-selection';
-import {createPortal} from 'react-dom';
 
 import {CONTINUOUS_LEGEND_SIZE} from '~core/constants';
 import {createGradientRect, getContinuesColorFn, getTextSizeFn, getUniqId} from '~core/utils';
 import {axisBottom} from '~core/utils/axis-generators';
 
 import type {LegendItem, OnLegendItemClick, PreparedLegend, PreparedSeries} from '../../hooks';
+import {useHtmlTextOverflow} from '../../hooks/useHtmlTextOverflow';
 import {formatNumber} from '../../libs';
 import type {LegendConfig} from '../../types';
 import {block} from '../../utils';
+import {TruncatedTextTooltip} from '../TruncatedTextTooltip';
 
-import {DiscreteLegendItem} from './LegendItem';
-import {LegendTitle} from './LegendTitle';
+import type {LegendTooltipTarget, PositionedLegendItem} from './render-items';
+import {renderLegendItems, renderLegendTitle} from './render-items';
 
 import './styles.scss';
 
@@ -122,9 +123,14 @@ async function appendPaginator(args: {
 export const Legend = (props: Props) => {
     const {chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} = props;
     const ref = React.useRef<SVGGElement>(null);
-    const focusedItemRef = React.useRef<string | null>(null);
-    const focusedTitleRef = React.useRef(false);
-    const [renderedContent, setRenderedContent] = React.useState<React.ReactPortal[]>([]);
+    const [tooltipTarget, setTooltipTarget] = React.useState<LegendTooltipTarget | null>(null);
+    const htmlOverflow = useHtmlTextOverflow(tooltipTarget?.htmlLabel ?? null);
+    const closeTooltip = React.useCallback(() => setTooltipTarget(null), []);
+    React.useLayoutEffect(() => {
+        if (tooltipTarget?.htmlLabel) {
+            tooltipTarget.anchor.setAttribute('aria-label', htmlOverflow.text);
+        }
+    }, [tooltipTarget, htmlOverflow.text]);
     const pageCount = config.pagination?.pages.length ?? 1;
     const [paginationState, setPaginationState] = React.useState({
         pageIndex: 0,
@@ -143,19 +149,28 @@ export const Legend = (props: Props) => {
 
     React.useEffect(() => {
         let cancelled = false;
-        const svgNode = ref.current;
-        const focusedItem = focusedItemRef.current;
-        const focusedTitle = focusedTitleRef.current;
-        const portals: React.ReactPortal[] = [];
-        setRenderedContent([]);
+        setTooltipTarget(null);
         async function prepareLegend() {
             if (!ref.current || !htmlLayout) {
                 return;
             }
 
             const svgElement = select(ref.current);
-            // Remove only D3-owned containers; React unmounts the portals inside them.
-            svgElement.selectChildren().remove();
+            svgElement.selectAll('defs').remove();
+            svgElement.selectAll(`.${b('pagination')}, .${b('axis')}`).remove();
+            const content = svgElement
+                .selectAll<SVGGElement, unknown>(`.${b('items')}`)
+                .data([null])
+                .join('g')
+                .attr('class', b('items'))
+                .attr('clip-path', null);
+            const titleContainer = svgElement
+                .selectAll<SVGGElement, unknown>(`.${b('title')}`)
+                .data(legend.title.enable ? [null] : [])
+                .join('g')
+                .attr('class', b('title'));
+            const contentNode = content.node();
+            if (!contentNode) return;
             svgElement.style('opacity', 0).attr('clip-path', null);
 
             const isMac = navigator.platform.toUpperCase().includes('MAC');
@@ -181,10 +196,24 @@ export const Legend = (props: Props) => {
             };
 
             const htmlElement = select(htmlLayout);
-            htmlElement.selectAll('[data-legend]').remove();
-            const htmlContainer = legend.html
-                ? htmlElement.append('div').attr('data-legend', 1).style('position', 'absolute')
-                : null;
+            const activeElement = document.activeElement;
+            const focusedItem =
+                activeElement &&
+                (contentNode.contains(activeElement) ||
+                    htmlLayout.querySelector('[data-legend]')?.contains(activeElement))
+                    ? activeElement.getAttribute('data-legend-item-id')
+                    : null;
+            const htmlSelection = htmlElement
+                .selectAll<HTMLDivElement, unknown>('[data-legend]')
+                .data(legend.html && legend.type === 'discrete' ? [null] : [])
+                .join('div')
+                .attr('data-legend', 1)
+                .style('position', 'absolute')
+                .style('width', null)
+                .style('height', null)
+                .style('overflow', null)
+                .style('pointer-events', null);
+            const htmlContainer = htmlSelection.empty() ? null : htmlSelection;
 
             if (legend.clipContent) {
                 const clipId = getUniqId();
@@ -229,44 +258,35 @@ export const Legend = (props: Props) => {
                         ? config.pagination
                         : undefined;
                 let contentHeight = legend.height;
-                const svgItems = svgElement.append('g');
+                const positionedItems: PositionedLegendItem[] = [];
                 pageItems.forEach((line, lineIndex) => {
                     const row = legend.rows[start + lineIndex];
-                    // Chromium otherwise puts SVG portal containers with React's focus listeners
-                    // into the tab order, ahead of the actual legend item.
-                    const legendLine = svgItems
-                        .append('g')
-                        .attr('class', b('line'))
-                        .attr('tabindex', -1);
-                    const htmlLegendLine = htmlContainer
-                        ?.append('div')
-                        .style('position', 'absolute');
-                    const container = legendLine.node();
-                    if (container) {
-                        line.forEach((item, index) => {
-                            portals.push(
-                                createPortal(
-                                    <DiscreteLegendItem
-                                        item={item}
-                                        legend={legend}
-                                        position={row.items[index]}
-                                        rowHeight={row.height}
-                                        htmlContainer={htmlLegendLine?.node() ?? null}
-                                        restoreFocus={focusedItem === item.id}
-                                        onClick={handleItemClick}
-                                    />,
-                                    container,
-                                    `item-${item.id}`,
-                                ),
-                            );
-                        });
-                    }
-
-                    const left = contentLeft + row.left;
-                    const top = titleHeight + row.top - pageTop;
-                    legendLine.attr('transform', `translate(${[left, top].join(',')})`);
-                    htmlLegendLine?.style('transform', `translate(${left}px, ${top}px)`);
+                    line.forEach((item, index) =>
+                        positionedItems.push({
+                            item,
+                            position: row.items[index],
+                            rowHeight: row.height,
+                            left: contentLeft + row.left,
+                            top: titleHeight + row.top - pageTop,
+                        }),
+                    );
                 });
+                content.selectChildren(`:not(.${b('item')})`).remove();
+                renderLegendItems({
+                    container: contentNode,
+                    htmlContainer: htmlContainer?.node() ?? null,
+                    items: positionedItems,
+                    legend,
+                    onClick: handleItemClick,
+                    onTooltip: setTooltipTarget,
+                });
+                if (focusedItem) {
+                    (htmlContainer?.node() ?? contentNode)
+                        .querySelector<
+                            HTMLElement | SVGElement
+                        >(`[data-legend-item-id="${CSS.escape(focusedItem)}"]`)
+                        ?.focus({preventScroll: true});
+                }
 
                 if (pagination) {
                     const transform = `translate(${[0, legend.height - legend.lineHeight / 2].join(
@@ -306,7 +326,7 @@ export const Legend = (props: Props) => {
                         .append('rect')
                         .attr('width', contentWidth)
                         .attr('height', contentHeight);
-                    svgItems.attr('clip-path', `url(#${clipId})`);
+                    content.attr('clip-path', `url(#${clipId})`);
                     htmlContainer
                         ?.style('width', `${contentWidth}px`)
                         .style('height', `${contentHeight}px`)
@@ -322,6 +342,7 @@ export const Legend = (props: Props) => {
                 legendLeft = left;
                 legendTop = top;
             } else {
+                content.selectChildren().remove();
                 let left = 0;
                 switch (legend.align) {
                     case 'right': {
@@ -348,7 +369,7 @@ export const Legend = (props: Props) => {
                 // gradient rect
                 const domain = legend.colorScale.domain ?? [];
                 const rectHeight = CONTINUOUS_LEGEND_SIZE.height;
-                svgElement.call(createGradientRect, {
+                select<SVGGElement, unknown>(contentNode).call(createGradientRect, {
                     y: legend.title.height + legend.title.margin,
                     height: rectHeight,
                     width: legend.resolvedWidth,
@@ -394,66 +415,42 @@ export const Legend = (props: Props) => {
                 legendWidth = legend.resolvedWidth;
             }
 
-            if (legend.title.enable) {
-                const container = svgElement
-                    .append('g')
-                    .attr('class', b('title'))
-                    .attr('tabindex', -1)
-                    .node();
-                if (container) {
-                    portals.push(
-                        createPortal(
-                            <LegendTitle legend={legend} restoreFocus={focusedTitle} />,
-                            container,
-                            'legend-title',
-                        ),
-                    );
-                }
-            }
+            const titleNode = titleContainer.node();
+            if (titleNode) renderLegendTitle(titleNode, legend, setTooltipTarget);
 
             svgElement
                 .attr('transform', `translate(${[legendLeft, legendTop].join(',')})`)
                 .style('opacity', 1);
             htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
-            if (!cancelled) setRenderedContent(portals);
         }
 
         prepareLegend();
         return () => {
             cancelled = true;
-            const active = document.activeElement;
-            const focused =
-                active?.matches(':focus-visible') &&
-                (svgNode?.contains(active) ||
-                    htmlLayout?.querySelector('[data-legend]')?.contains(active));
-            focusedItemRef.current = focused
-                ? (active?.getAttribute('data-legend-item-id') ?? null)
-                : null;
-            focusedTitleRef.current = Boolean(focused && active?.hasAttribute('data-legend-title'));
-            select(htmlLayout).selectAll('[data-legend]').remove();
         };
     }, [chartSeries, onItemClick, onUpdate, legend, items, config, currentPageIndex, htmlLayout]);
 
-    // Portal events follow the React tree even when the tooltip is outside the SVG.
-    const stopTooltipEvent = (event: React.SyntheticEvent) => {
-        if ((event.target as Element).closest('[role="tooltip"]')) {
-            event.stopPropagation();
-        }
-    };
+    React.useEffect(
+        () => () => {
+            select(htmlLayout).selectAll('[data-legend]').remove();
+        },
+        [htmlLayout],
+    );
 
     return (
-        <g
-            className={b()}
-            ref={ref}
-            width={config.maxWidth}
-            height={legend.height}
-            onPointerMove={stopTooltipEvent}
-            onPointerLeave={stopTooltipEvent}
-            onTouchStart={stopTooltipEvent}
-            onTouchMove={stopTooltipEvent}
-            onClick={stopTooltipEvent}
-        >
-            {renderedContent}
-        </g>
+        <React.Fragment>
+            <g className={b()} ref={ref} width={config.maxWidth} height={legend.height} />
+            {tooltipTarget && (
+                <TruncatedTextTooltip
+                    anchor={tooltipTarget.anchor}
+                    text={tooltipTarget.htmlLabel ? htmlOverflow.text : tooltipTarget.text}
+                    enabled={
+                        tooltipTarget.htmlLabel ? htmlOverflow.truncated : tooltipTarget.truncated
+                    }
+                    vertical={legend.layout === 'vertical'}
+                    onClose={closeTooltip}
+                />
+            )}
+        </React.Fragment>
     );
 };

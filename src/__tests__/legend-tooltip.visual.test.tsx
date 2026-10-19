@@ -58,7 +58,8 @@ for (const mode of ['svg', 'multiline', 'html'] as const) {
             (await tooltip.getAttribute('id')) ?? '',
         );
         expect(await plot.boundingBox()).toEqual(before);
-        await tooltip.hover();
+        // The tooltip's padding must remain hoverable too.
+        await tooltip.hover({position: {x: 1, y: 1}});
         await page.waitForTimeout(350);
         await expect(tooltip).toBeVisible();
         await expect(page.locator('.gcharts-tooltip')).toHaveCount(0);
@@ -103,25 +104,47 @@ test('keyboard activation preserves selection and focus', async ({mount, page}) 
     await expect.poll(() => second.evaluate((node) => node.matches(':focus-visible'))).toBe(false);
 });
 
-test('recomputes truncation after resize and content changes', async ({mount, page}) => {
+test('preserves focus and updates truncation after reflow and content changes', async ({
+    mount,
+    page,
+}) => {
     const chart = data();
-    chart.legend = {...chart.legend, width: '50%', maxWidth: undefined};
-    const component = await mount(<ChartTestStory data={chart} styles={{width: 300}} />);
-    let item = component.getByRole('button', {name: actual, exact: true});
+    chart.legend = {
+        ...chart.legend,
+        position: 'bottom',
+        layout: 'horizontal',
+        width: '100%',
+        maxWidth: undefined,
+    };
+    const component = await mount(<ChartTestStory data={chart} styles={{width: 240}} />);
+    let item = component.getByRole('button', {name: forecast, exact: true});
     await item.focus();
-    await expect(page.getByRole('tooltip')).toHaveText(actual);
+    await expect(page.getByRole('tooltip')).toHaveText(forecast);
+    await component.update(
+        <ChartTestStory
+            data={{...chart, legend: {...chart.legend, html: true}}}
+            styles={{width: 240}}
+        />,
+    );
+    await expect(item).toBeFocused();
+    await expect(page.getByRole('tooltip')).toHaveText(forecast);
+    await component.update(<ChartTestStory data={chart} styles={{width: 240}} />);
+    await expect(item).toBeFocused();
+    await expect(page.getByRole('tooltip')).toHaveText(forecast);
+    const before = await item.boundingBox();
     await component.update(<ChartTestStory data={chart} styles={{width: 1000}} />);
     await expect(page.getByRole('tooltip')).toHaveCount(0);
     await expect(item).toBeFocused();
+    expect((await item.boundingBox())?.y).not.toBe(before?.y);
     const updated = data();
-    updated.series.data[0].legend = {itemText: 'Updated', groupId: 'series-0'};
+    updated.series.data[1].legend = {itemText: 'Updated', groupId: 'series-1'};
     await component.update(<ChartTestStory data={updated} styles={{width: 300}} />);
     item = component.getByRole('button', {name: 'Updated', exact: true});
     await expect(item).toBeFocused();
     await expect(page.getByRole('tooltip')).toHaveCount(0);
 });
 
-test('detects nested CSS truncation and style updates in HTML', async ({mount, page}) => {
+test('detects nested CSS truncation and HTML style/content updates', async ({mount, page}) => {
     const chart = data(true);
     chart.series.data[0].legend = {
         itemText: `<span style="display:block;width:300px;font-size:24px;overflow:hidden;text-overflow:ellipsis">${actual}</span>`,
@@ -140,6 +163,16 @@ test('detects nested CSS truncation and style updates in HTML', async ({mount, p
         node.style.fontSize = '24px';
     });
     await expect(page.getByRole('tooltip')).toHaveText(actual);
+    await item.locator('span').evaluate((node) => {
+        node.textContent = 'Updated enterprise subscription revenue';
+    });
+    await expect(page.getByRole('tooltip')).toHaveText('Updated enterprise subscription revenue');
+    await expect(
+        component.getByRole('button', {
+            name: 'Updated enterprise subscription revenue',
+            exact: true,
+        }),
+    ).toBeFocused();
 });
 
 test('reveals HTML text overflowing by one pixel', async ({mount, page}) => {
@@ -226,6 +259,7 @@ test('dismisses stale tooltips on pagination, hiding and unmount', async ({mount
 
 for (const html of [false, true]) {
     test(`keyboard click callback with no selection html=${html}`, async ({mount, page}) => {
+        let bubbledClicks = 0;
         const events: {
             mouseEvent: boolean;
             ctrlKey: boolean;
@@ -243,6 +277,9 @@ for (const html of [false, true]) {
                 onItemClick={(item) => {
                     items.push(item);
                 }}
+                onBubbledClick={() => {
+                    bubbledClicks++;
+                }}
                 onActivation={(event) => {
                     events.push(event);
                 }}
@@ -257,6 +294,7 @@ for (const html of [false, true]) {
             {mouseEvent: true, ctrlKey: true, metaKey: false, currentTargetLabel: actual},
             {mouseEvent: true, ctrlKey: false, metaKey: false, currentTargetLabel: actual},
         ]);
+        expect(bubbledClicks).toBe(0);
         expect(items.map((item) => item.name)).toEqual([
             html ? `<b>${actual}</b>` : actual,
             html ? `<b>${actual}</b>` : actual,
@@ -302,6 +340,9 @@ for (const type of ['discrete', 'continuous'] as const) {
         const before = await plot.boundingBox();
         await title.hover();
         await expect(tooltip).toHaveText(titleText);
+        if (type === 'discrete') {
+            await expect(page).toHaveScreenshot('legend-title-tooltip.png');
+        }
         expect(await plot.boundingBox()).toEqual(before);
         await page.keyboard.press('Escape');
         await expect(tooltip).toHaveCount(0);
