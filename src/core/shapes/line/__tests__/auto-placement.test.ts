@@ -114,6 +114,24 @@ describe('pickLabelPlacement', () => {
         size,
     };
 
+    it('checks the marker-offset candidate before trying the next direction', () => {
+        const rect = pickLabelPlacement({
+            ...baseArgs,
+            markerBounds: {top: 30, bottom: 15, left: 25, right: 25},
+            segments: [makeSegment(0, 60, 200, 60)],
+        });
+        expect(rect).toEqual({height: 10, width: 20, x: 90, y: 120});
+    });
+
+    it('preserves clamping with oversized markers and zero available width', () => {
+        const rect = pickLabelPlacement({
+            ...baseArgs,
+            bounds: {...bounds, xMax: 0},
+            markerBounds: {top: 300, bottom: 300, left: 300, right: 300},
+        });
+        expect(rect).toEqual({height: 10, width: 20, x: -20, y: 0});
+    });
+
     it('picks the first position from order when it is free', () => {
         const rect = pickLabelPlacement({...baseArgs, positions: [...baseArgs.positions]});
         expect(rect).toEqual({height: 10, width: 20, x: 90, y: 85});

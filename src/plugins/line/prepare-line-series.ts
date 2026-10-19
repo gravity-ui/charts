@@ -165,6 +165,7 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
                 allowOverlap: get(series, 'dataLabels.allowOverlap', false),
                 html: get(series, 'dataLabels.html', false),
                 format: series.dataLabels?.format,
+                anchor: series.dataLabels?.anchor ?? 'center',
                 placement: resolveLabelPlacement(series.dataLabels?.placement),
                 placementFallback: series.dataLabels?.placementFallback ?? 'show',
             },

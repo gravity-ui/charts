@@ -10,8 +10,11 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
+import {getSymbolBounds} from '../../utils/symbol';
+import type {SymbolBounds} from '../../utils/symbol';
 import type {ShapeLabels} from '../types';
 
+import {hasNormalMarker} from './normal-marker';
 import type {PointData} from './types';
 
 export const DEFAULT_PLACEMENT_ORDER: readonly LineSeriesDataLabelPlacementPosition[] = [
@@ -207,17 +210,19 @@ function getCandidateRect(
     point: {x: number; y: number},
     size: {height: number; width: number},
     padding: number,
+    markerBounds?: SymbolBounds,
 ): PlacementRect {
+    const offset = padding + (markerBounds?.[position] ?? 0);
     switch (position) {
         case 'bottom':
-            return {...size, x: point.x - size.width / 2, y: point.y + padding};
+            return {...size, x: point.x - size.width / 2, y: point.y + offset};
         case 'right':
-            return {...size, x: point.x + padding, y: point.y - size.height / 2};
+            return {...size, x: point.x + offset, y: point.y - size.height / 2};
         case 'left':
-            return {...size, x: point.x - padding - size.width, y: point.y - size.height / 2};
+            return {...size, x: point.x - offset - size.width, y: point.y - size.height / 2};
         case 'top':
         default:
-            return {...size, x: point.x - size.width / 2, y: point.y - padding - size.height};
+            return {...size, x: point.x - size.width / 2, y: point.y - offset - size.height};
     }
 }
 
@@ -295,6 +300,7 @@ export function pickLabelPlacement(args: {
     bounds: PlacementBounds;
     hangingOffset?: number;
     obstacles: PlacementRect[];
+    markerBounds?: SymbolBounds;
     padding: number;
     point: {x: number; y: number};
     positions: readonly LineSeriesDataLabelPlacementPosition[];
@@ -305,7 +311,13 @@ export function pickLabelPlacement(args: {
         const rect = clampPlacementRect({
             bounds: args.bounds,
             hangingOffset: args.hangingOffset,
-            rect: getCandidateRect(position, args.point, args.size, args.padding),
+            rect: getCandidateRect(
+                position,
+                args.point,
+                args.size,
+                args.padding,
+                args.markerBounds,
+            ),
         });
         if (args.segments.some((s) => segmentIntersectsRect(s, rect))) {
             continue;
@@ -409,6 +421,16 @@ export async function placeLineDataLabels(args: {
     const needChecks = needsPlacementChecks(series);
 
     const getTextSize = getTextSizeFn({style: series.dataLabels.style});
+    const normal = series.marker.states.normal;
+    const markerBounds =
+        series.dataLabels.anchor === 'marker-edge'
+            ? getSymbolBounds({
+                  symbolType: normal.symbol,
+                  // Use the same path radius as renderMarkers.
+                  radius: normal.radius + normal.borderWidth,
+                  strokeWidth: normal.borderWidth,
+              })
+            : undefined;
 
     for (const point of points) {
         if (point.x === null || point.y === null || isOutsideBounds(point.x, point.y)) {
@@ -420,6 +442,7 @@ export async function placeLineDataLabels(args: {
         }
 
         const anchor = {x: point.x, y: point.y};
+        const visibleMarkerBounds = hasNormalMarker(point) ? markerBounds : undefined;
 
         const text = getFormattedValue({
             value: point.data.label ?? point.data.y,
@@ -436,6 +459,7 @@ export async function placeLineDataLabels(args: {
                 bounds,
                 hangingOffset,
                 obstacles,
+                markerBounds: visibleMarkerBounds,
                 padding: series.dataLabels.padding,
                 point: anchor,
                 positions,
@@ -447,7 +471,13 @@ export async function placeLineDataLabels(args: {
             rect = clampPlacementRect({
                 bounds,
                 hangingOffset,
-                rect: getCandidateRect(positions[0], anchor, size, series.dataLabels.padding),
+                rect: getCandidateRect(
+                    positions[0],
+                    anchor,
+                    size,
+                    series.dataLabels.padding,
+                    visibleMarkerBounds,
+                ),
             });
         }
 

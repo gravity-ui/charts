@@ -106,10 +106,16 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
             gradientGeometry: getGradientGeometry(filteredData),
         };
     },
-    renderShapes: ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) => {
+    renderShapes: ({
+        plot,
+        labelsPlot,
+        preparedData,
+        seriesOptions,
+        dispatcher,
+    }: RenderShapesArgs) => {
         const data = preparedData as PreparedAreaRangeData[];
         const allowOverlap = data.some((item) => item.series.dataLabels.allowOverlap);
-        return renderAreaRange({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        return renderAreaRange({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
     },
     interaction: {
         prepareNearestData,

@@ -35,8 +35,19 @@ function prepareShapeData({
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderSankey({plot}, preparedData[0] as PreparedSankeyData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderSankey(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedSankeyData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = {

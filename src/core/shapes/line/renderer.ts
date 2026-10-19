@@ -25,6 +25,7 @@ const b = block('line');
 interface RenderLineElements {
     getCurveFactory: (interpolation?: PreparedLineData['interpolation']) => CurveFactory;
     plot: SVGGElement;
+    labelsPlot: SVGGElement;
 }
 
 export function renderLine(
@@ -77,12 +78,10 @@ export function renderLine(
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
-    const dataLabels = preparedData.reduce((acc, d) => {
-        return acc.concat(d.svgLabels);
-    }, [] as LabelData[]);
+    const dataLabels = preparedData.flatMap((d) => d.svgLabels);
 
     const labelsSelection = renderDataLabels({
-        container: plotSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

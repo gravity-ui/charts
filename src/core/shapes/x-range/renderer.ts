@@ -17,6 +17,7 @@ const b = block('x-range');
 export function renderXRange(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedXRangeData[],
     seriesOptions: PreparedSeriesOptions,
@@ -68,7 +69,7 @@ export function renderXRange(
 
     const svgLabels = preparedData.flatMap((d) => d.svgLabels);
     renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: svgLabels,
         className: b('label'),
     })

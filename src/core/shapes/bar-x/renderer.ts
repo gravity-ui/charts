@@ -16,6 +16,7 @@ const b = block('bar-x');
 export function renderBarX(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
         boundsWidth: number;
         boundsHeight: number;
     },
@@ -70,7 +71,7 @@ export function renderBarX(
     }
 
     const labelSelection = renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

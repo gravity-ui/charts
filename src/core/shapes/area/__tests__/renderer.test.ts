@@ -70,13 +70,14 @@ describe('renderArea gradient', () => {
 
     test('uses independent bounds and definitions for line and fill gradients', () => {
         const plot = createPlot();
+        const labelsPlot = createPlot();
         const data = createPreparedData([
             {x: 0, y: 20, y0: 100},
             {x: 100, y: 40, y0: 100},
             {x: 1000, y: 1000, y0: 2000, hiddenInLine: true},
         ]);
 
-        renderArea({plot}, [data], {} as PreparedSeriesOptions, true);
+        renderArea({plot, labelsPlot}, [data], {} as PreparedSeriesOptions, true);
 
         const line = plot.querySelector('.gcharts-area__line');
         const region = plot.querySelector('.gcharts-area__region');
@@ -92,13 +93,14 @@ describe('renderArea gradient', () => {
 
     test('replaces both gradient definitions on rerender', () => {
         const plot = createPlot();
+        const labelsPlot = createPlot();
         const data = createPreparedData([
             {x: 0, y: 20, y0: 100},
             {x: 100, y: 40, y0: 100},
         ]);
 
-        renderArea({plot}, [data], {} as PreparedSeriesOptions, true);
-        renderArea({plot}, [data], {} as PreparedSeriesOptions, true);
+        renderArea({plot, labelsPlot}, [data], {} as PreparedSeriesOptions, true);
+        renderArea({plot, labelsPlot}, [data], {} as PreparedSeriesOptions, true);
 
         expect(plot.querySelectorAll('defs.gradients')).toHaveLength(1);
         expect(plot.querySelectorAll('linearGradient')).toHaveLength(2);

@@ -18,6 +18,7 @@ const b = block('waterfall');
 export function renderWaterfall(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedWaterfallData[],
     seriesOptions: PreparedSeriesOptions,
@@ -48,7 +49,7 @@ export function renderWaterfall(
     }
 
     const labelSelection = renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

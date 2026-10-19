@@ -23,6 +23,7 @@ const b = block('scatter');
 export function renderScatter(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedScatterShapeData,
     seriesOptions: PreparedSeriesOptions,
@@ -43,7 +44,7 @@ export function renderScatter(
         .attr('cursor', (d) => d.point.series.cursor);
 
     renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.svgLabels,
         className: b('label'),
     })
@@ -89,7 +90,6 @@ export function renderScatter(
             }
             return d;
         });
-        svgElement.selectAll(`.${b('cluster-label')}`).raise();
     }
 
     dispatcher?.on('hover-shape.scatter', handleShapeHover);

@@ -15,6 +15,7 @@ const b = block('funnel');
 export function renderFunnel(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedFunnelData,
     seriesOptions: PreparedSeriesOptions,
@@ -62,7 +63,7 @@ export function renderFunnel(
 
     // dataLabels
     renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.svgLabels,
         className: b('label'),
     });

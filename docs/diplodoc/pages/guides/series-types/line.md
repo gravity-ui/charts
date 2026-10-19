@@ -44,6 +44,22 @@ The `color` property accepts a solid color or a [gradient](../colors.md#gradient
 
 By default, labels appear above their points and shift into the plot when they do not fit. Use `dataLabels.placement` to choose other positions.
 
+### Marker boundary
+
+Set `dataLabels.anchor: 'marker-edge'` to measure `padding` from the normal marker's outer bounds, including its shape and border. The default, `anchor: 'center'`, measures padding from the data point coordinates.
+
+```javascript
+{
+  type: 'line',
+  marker: {enabled: true, radius: 10},
+  dataLabels: {enabled: true, anchor: 'marker-edge', padding: 5},
+}
+```
+
+<div data-chart-example="data-labels/marker-edge"></div>
+
+This works with every placement direction, automatic placement, and SVG or HTML labels. Hidden markers use the point coordinates; hover does not move labels. Labels are still shifted into the plot area and use the configured fallback, so overlaps can occur near the edges. Labels render above their series' markers regardless of the anchor.
+
 ### Automatic placement
 
 Set `placement: 'auto'` to try top, bottom, left, and right in that order. The first position that avoids all line series and already placed labels is used. When labels compete for space, the series listed first in `series.data` wins.

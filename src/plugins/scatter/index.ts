@@ -55,9 +55,15 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: [data], tooltipItems: data.scatterData};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
     return renderScatter(
-        {plot},
+        {plot, labelsPlot},
         preparedData[0] as PreparedScatterShapeData,
         seriesOptions,
         dispatcher,

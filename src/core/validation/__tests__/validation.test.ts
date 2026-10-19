@@ -438,6 +438,31 @@ describe('validation/validateData', () => {
         expect(() => validateData(data)).not.toThrow();
     });
 
+    test.each([undefined, 'center', 'marker-edge', null, '', 'edge', false, 1, {}, []])(
+        'validates line dataLabels.anchor: %j',
+        (anchor) => {
+            const data = {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Line',
+                            data: [{x: 1, y: 1}],
+                            dataLabels: {anchor},
+                        },
+                    ],
+                },
+            } as unknown as ChartData;
+            if (anchor === undefined || anchor === 'center' || anchor === 'marker-edge') {
+                expect(() => validateData(data)).not.toThrow();
+            } else {
+                expect(() => validateData(data)).toThrow(
+                    expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+                );
+            }
+        },
+    );
+
     test.each([
         null,
         {type: 'invalid'},
