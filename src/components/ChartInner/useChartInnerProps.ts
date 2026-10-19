@@ -46,7 +46,7 @@ import type {ChartInnerProps} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
 
-type Props = ChartInnerProps & {
+interface Props extends Omit<ChartInnerProps, 'chartApi'> {
     clipPathId: string;
     dispatcher: Dispatch<object>;
     htmlLayout: HTMLElement | null;
@@ -55,7 +55,7 @@ type Props = ChartInnerProps & {
     updateZoomState: (nextZoomState: Partial<ZoomState>) => void;
     zoomState: Partial<ZoomState>;
     rangeSliderState?: RangeSliderState;
-};
+}
 
 function getBoundsOffsetTop({
     chartMarginTop,

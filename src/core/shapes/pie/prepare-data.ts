@@ -453,6 +453,7 @@ export function preparePieData(args: Args): Promise<PreparedPieData[]> {
                 const connector = {
                     path: line(getConnectorPoints(label.angle)),
                     color: relatedSegment.data.color,
+                    series: label.series,
                 };
                 connectors.push(connector);
             }

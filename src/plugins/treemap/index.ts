@@ -15,6 +15,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkTreemap, TreemapSeries} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareTreemap} from './prepare-treemap-series';
 
 async function prepareShapeData({
@@ -30,8 +31,19 @@ async function prepareShapeData({
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderTreemap({plot}, preparedData[0] as PreparedTreemapData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderTreemap(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedTreemapData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 function validateTreemapData(series: TreemapSeries) {
@@ -87,6 +99,10 @@ export const treemapPlugin: SeriesPlugin<TreemapSeries, TooltipDataChunkTreemap>
     },
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,

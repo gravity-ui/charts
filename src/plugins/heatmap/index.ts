@@ -13,6 +13,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 
 import type {HeatmapSeries, TooltipDataChunkHeatmap} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareHeatmapSeries} from './prepare-heatmap-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
@@ -33,8 +34,19 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderHeatmap({plot}, preparedData[0] as PreparedHeatmapData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderHeatmap(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedHeatmapData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap> = {
@@ -49,6 +61,10 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap>
     getColorValue: (d) => d.value,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,

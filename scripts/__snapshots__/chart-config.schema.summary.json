@@ -36,6 +36,8 @@
     "ChartConfig",
     "ChartLegend",
     "ChartOptions",
+    "ChartOptions<ChartInteractionItem>",
+    "ChartOptions<JsonValue>",
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",
     "ChartSeriesOptions",
@@ -332,7 +334,7 @@
       "verticalAlign",
       "width"
     ],
-    "ChartOptions": ["margin", "zoom"],
+    "ChartOptions<ChartInteractionItem>": ["events", "margin", "zoom"],
     "ChartPointAnnotation": ["label", "popup"],
     "ChartSeriesOptions": [
       "area",
@@ -570,6 +572,7 @@
     ],
     "LineSeriesDataLabels": [
       "allowOverlap",
+      "anchor",
       "enabled",
       "format",
       "html",

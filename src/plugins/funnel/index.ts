@@ -13,6 +13,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 
 import type {FunnelSeries, TooltipDataChunkFunnel} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareFunnelSeries} from './prepare-funnel-series';
 
 async function prepareShapeData({
@@ -28,8 +29,19 @@ async function prepareShapeData({
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderFunnel({plot}, preparedData[0] as PreparedFunnelData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderFunnel(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedFunnelData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const funnelPlugin: SeriesPlugin<FunnelSeries, TooltipDataChunkFunnel> = {
@@ -40,6 +52,10 @@ export const funnelPlugin: SeriesPlugin<FunnelSeries, TooltipDataChunkFunnel> = 
     getColorValue: (d) => d.value,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,

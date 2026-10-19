@@ -1,4 +1,3 @@
-import type {LineSeries} from '../../../types';
 import {getDistanceToStrokedSegment} from '../../utils/geometry';
 import type {Point} from '../../utils/geometry';
 import type {
@@ -77,7 +76,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedLineData>): GetT
                     color: getMarkerFill(p, p.series.color),
                     data: p.data,
                     distance,
-                    series: p.series as LineSeries,
+                    series: p.series,
                     x: p.x,
                     y0: p.y,
                     y1: p.y,

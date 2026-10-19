@@ -7,6 +7,7 @@ import type {PreparedSeries, PreparedWaterfallSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
+import {withSourcePoint} from '~core/utils/source-point';
 
 import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
 
@@ -16,10 +17,12 @@ function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
 
     switch (nullMode) {
         case 'zero':
-            return data.map((d) => ({
-                ...d,
-                y: d.total ? d.y : (d.y ?? 0),
-            }));
+            return data.map((d) =>
+                withSourcePoint(d, {
+                    ...d,
+                    y: d.total ? d.y : (d.y ?? 0),
+                }),
+            );
         case 'skip':
         default:
             return data.filter((d) => d.y !== null);
@@ -104,7 +107,7 @@ export function prepareWaterfallSeries(args: PrepareSeriesArgs<WaterfallSeries>)
 
     preparedData.forEach((d, index) => {
         const value = d?.y ?? 0;
-        const dataItem = {...d, index};
+        const dataItem = withSourcePoint(d, {...d, index});
 
         if (d?.total) {
             totals.data.push(dataItem);

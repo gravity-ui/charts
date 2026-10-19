@@ -6,7 +6,9 @@ import throttle from 'lodash/throttle';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
+import type {ChartApi, ChartLegacyClickData} from '~core/types';
 import {EventType} from '~core/utils';
+import {getChartTargets} from '~core/utils/chart-interaction';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 
@@ -18,7 +20,9 @@ import type {useChartInnerState} from './useChartInnerState';
 
 type ChartInnerState = ReturnType<typeof useChartInnerState>;
 
-type Props = {
+interface Props {
+    chartApi: ChartApi;
+    clickMode: 'plot' | 'tooltip';
     resetKey: ReturnType<typeof useHoverResetKey>;
     boundsHeight: number;
     boundsOffsetLeft: number;
@@ -36,10 +40,12 @@ type Props = {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
     tooltipThrottle: number;
-};
+}
 
 export function useChartInnerHandlers(props: Props) {
     const {
+        chartApi,
+        clickMode,
         boundsHeight,
         boundsOffsetLeft,
         boundsOffsetTop,
@@ -188,7 +194,7 @@ export function useChartInnerHandlers(props: Props) {
         const x = pointerX - boundsOffsetLeft;
         const y = pointerY - boundsOffsetTop;
 
-        if (isOutsideBounds(x, y)) {
+        if (boundsWidth <= 0 || boundsHeight <= 0 || isOutsideBounds(x, y)) {
             return;
         }
 
@@ -199,21 +205,28 @@ export function useChartInnerHandlers(props: Props) {
             boundsHeight,
             boundsWidth,
         });
-        const selected = items?.find((item) => item.closest);
-        if (!selected) {
-            if (tooltipPinned) {
-                unpinTooltip?.();
-            }
-
-            return;
+        const selected = items.find((item) => item.closest);
+        if (dispatcher.on(EventType.CLICK_CHART) && (clickMode === 'plot' || selected)) {
+            const screenPosition: PointPosition = [event.clientX, event.clientY];
+            let targets: Required<ChartLegacyClickData>['targets'] | undefined;
+            const payload: Required<ChartLegacyClickData> = {
+                position: [x, y],
+                get targets() {
+                    targets ??= svgContainer ? getChartTargets(svgContainer, screenPosition) : [];
+                    return targets;
+                },
+                chart: chartApi,
+                event: event.nativeEvent,
+                point: selected?.data,
+                series: selected?.series,
+            };
+            dispatcher.call(EventType.CLICK_CHART, undefined, payload, event);
         }
 
-        dispatcher.call(
-            EventType.CLICK_CHART,
-            undefined,
-            {point: selected.data, series: selected.series},
-            event,
-        );
+        if (!selected) {
+            if (tooltipPinned) unpinTooltip?.();
+            return;
+        }
 
         const nextTooltipFixed = !tooltipPinned;
 

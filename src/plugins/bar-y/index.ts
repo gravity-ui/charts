@@ -5,7 +5,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedBarYSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/bar-y/get-tooltip-data';
 import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
@@ -25,6 +24,8 @@ import {validateBarPadding} from '../bar-padding';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTooltipData} from './get-tooltip-data';
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarYSeries} from './prepare-bar-y-series';
 import {getBarYStackLabelAnchors} from './stack-labels';
 
@@ -59,14 +60,21 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: [data], tooltipItems: data.shapes, labels};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher, labels}: RenderShapesArgs) {
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+    labels,
+}: RenderShapesArgs) {
     const cleanup = renderBarY(
-        {plot},
+        {plot, labelsPlot},
         preparedData[0] as BarYShapesArgs,
         seriesOptions,
         dispatcher,
     );
-    renderStackLabels(plot, labels);
+    renderStackLabels(labelsPlot, labels);
     return cleanup;
 }
 
@@ -96,6 +104,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     getColorValue: (d) => d.x,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipXValue,

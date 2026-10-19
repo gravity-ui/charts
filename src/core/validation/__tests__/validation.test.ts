@@ -15,6 +15,20 @@ function getValidGradient() {
 }
 
 describe('validation/validateData', () => {
+    test('validates click delivery modes while preserving the omitted default', () => {
+        const data: ChartData = {
+            series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
+        };
+        for (const clickMode of [undefined, 'plot', 'tooltip'] as const) {
+            expect(() => validateData({...data, chart: {events: {clickMode}}})).not.toThrow();
+        }
+        for (const clickMode of ['all', '', null, true, 1]) {
+            expect(() =>
+                validateData({...data, chart: {events: {clickMode}}} as ChartData),
+            ).toThrow(expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}));
+        }
+    });
+
     test('accepts nonnegative pixel row gaps and rejects invalid formats', () => {
         const data: ChartData = {
             series: {data: [{type: 'pie', data: [{name: 'Series', value: 1}]}]},
@@ -423,6 +437,31 @@ describe('validation/validateData', () => {
 
         expect(() => validateData(data)).not.toThrow();
     });
+
+    test.each([undefined, 'center', 'marker-edge', null, '', 'edge', false, 1, {}, []])(
+        'validates line dataLabels.anchor: %j',
+        (anchor) => {
+            const data = {
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Line',
+                            data: [{x: 1, y: 1}],
+                            dataLabels: {anchor},
+                        },
+                    ],
+                },
+            } as unknown as ChartData;
+            if (anchor === undefined || anchor === 'center' || anchor === 'marker-edge') {
+                expect(() => validateData(data)).not.toThrow();
+            } else {
+                expect(() => validateData(data)).toThrow(
+                    expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+                );
+            }
+        },
+    );
 
     test.each([
         null,

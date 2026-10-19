@@ -34,7 +34,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ## 3. Implement the pipeline
 
-- Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) in `src/plugins/<type>/`: validation, series/shape preparation, rendering, and tooltip lookup/rows. Geometry currently lives in `src/core/shapes/<type>/`.
+- Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) in `src/plugins/<type>/`: validation, series/shape preparation, rendering, interaction lookup, and tooltip rows. Geometry currently lives in `src/core/shapes/<type>/`.
 - Reuse shared helpers; preserve raw data and callback payloads, cache measurements, and clean up subscriptions.
 - Implement domain/baseline rules, clipping, plot offsets, and layer/category order; define fill/stroke behavior where applicable.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
@@ -43,6 +43,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 - Optional `getLayerKey({series, seriesKey})` selects a layer for one raw or prepared series occurrence. By default, core uses `series.type`, so all series of a plugin share one layer. Equal returned keys share a layer; use stable, chart-unique keys. Core throws `ChartError` if different series types return the same key. `seriesKey` identifies this occurrence: core supplies a type/index key for raw input and the series ID for prepared input. The line plugin returns `seriesKey` for independent layers, including when the same raw object occurs twice.
 - Core retains series references and member order, orders layers by their first occurrence, prepares shapes in reverse order to reserve label space through `otherLayers`, and renders in forward order. Bars retain one layer per type; see the TODO on `SeriesPlugin.getLayerKey` for future layer splitting.
+- `renderShapes(args)` draws geometry into `plot` and SVG labels into `labelsPlot`. Core places `labelsPlot` above the layer's shapes and normal/hover markers, with the same clipping as `plot`.
 - Optional `getClipPath({isRangeSlider, yAxis, zoomState})` returns `'bounds'` (default), `'horizontal'` (X bounds with an expanded vertical region), or `false`. Core owns SVG IDs and geometry. Clipping affects the shape group and its SVG labels; separate marker, annotation, and HTML-label layers are unaffected.
 - Line previews use `'bounds'` in the range slider. Main-plot lines use `'horizontal'` unless explicit Y limits or zoom require `'bounds'`.
 
@@ -58,6 +59,14 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - A missing header value differs from an omitted `header`: a custom formatter can replace missing continuous or non-axis values with a placeholder, but unresolved categories and headerless plugins omit the header. Explicit `headerFormat` overrides automatic formatting and is passed to custom renderers together with the original chunks.
 - Keep tooltip row values, custom formatter context, and renderer payloads independent of the sorting/totals value. Shared code sorts the plugin values and sums only numeric values.
 - Use `source: 'color'` for swatches; format labels/endpoints once. Preserve renderer precedence and keep plugin formatting hooks internal.
+
+### Interaction lookup
+
+Implement `interaction.prepareNearestData` for unfiltered `{position, item}` candidates and `interaction.getTargetElements` for painted SVG elements. Reuse prepared geometry; shared utilities handle distance comparison, hit testing, clipping, and ordering. Keep tooltip selection in `tooltip.prepareData`; use `interaction.getClosestItem` only when its result needs conversion (for example, a Sankey link).
+
+Keep adapters in the plugin's `interaction.ts` and concrete payload types in its `interaction-types.ts`. Shared code and the public interaction API use generic contracts from `core/types/chart/interaction.ts`, without a union or mapping of built-in series. Do not import plugin payload types into shared code or public type barrels, including via type-only imports. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
+
+When preparing a copy of a source point, register it with `withSourcePoint` from `core/utils/source-point`. Public interaction results then resolve the original object without changing the data used by rendering or legacy callbacks. Resolve nested source points in composite payloads with `getSourcePoint`.
 
 ## 6. Integrate
 

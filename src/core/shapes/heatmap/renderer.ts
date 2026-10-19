@@ -14,6 +14,7 @@ const b = block('heatmap');
 export function renderHeatmap(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedHeatmapData,
     seriesOptions: PreparedSeriesOptions,
@@ -38,7 +39,7 @@ export function renderHeatmap(
 
     // dataLabels
     renderDataLabels({
-        container: svgElement,
+        container: select(elements.labelsPlot),
         data: preparedData.labels,
         className: b('label'),
     });

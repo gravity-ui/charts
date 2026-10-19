@@ -23,6 +23,7 @@ import {
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, TooltipDataChunkAreaRange} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
@@ -105,10 +106,20 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
             gradientGeometry: getGradientGeometry(filteredData),
         };
     },
-    renderShapes: ({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) => {
+    renderShapes: ({
+        plot,
+        labelsPlot,
+        preparedData,
+        seriesOptions,
+        dispatcher,
+    }: RenderShapesArgs) => {
         const data = preparedData as PreparedAreaRangeData[];
         const allowOverlap = data.some((item) => item.series.dataLabels.allowOverlap);
-        return renderAreaRange({plot}, data, seriesOptions, allowOverlap, dispatcher);
+        return renderAreaRange({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
+    },
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
     },
     tooltip: {
         prepareData: getTooltipData,

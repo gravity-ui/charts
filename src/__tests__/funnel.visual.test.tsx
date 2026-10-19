@@ -36,9 +36,9 @@ test.describe('Funnel series', () => {
         const noPreserveData = {
             ...funnelMultilineLabelsData,
             series: {
-                data: funnelMultilineLabelsData.series.data.map((s) => ({
+                data: (funnelMultilineLabelsData.series.data as FunnelSeries[]).map((s) => ({
                     ...s,
-                    dataLabels: {...(s as FunnelSeries).dataLabels, preserveLineBreaks: false},
+                    dataLabels: {...s.dataLabels, preserveLineBreaks: false},
                 })),
             },
         };
@@ -55,9 +55,9 @@ test.describe('Funnel series', () => {
         const htmlData = {
             ...funnelMultilineLabelsData,
             series: {
-                data: funnelMultilineLabelsData.series.data.map((s) => ({
+                data: (funnelMultilineLabelsData.series.data as FunnelSeries[]).map((s) => ({
                     ...s,
-                    dataLabels: {...(s as FunnelSeries).dataLabels, html: true},
+                    dataLabels: {...s.dataLabels, html: true},
                 })),
             },
         };

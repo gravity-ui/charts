@@ -14,6 +14,7 @@ import {getFormattedValue} from '~core/utils/format';
 
 import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareXRangeSeries} from './prepare-x-range-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
@@ -36,8 +37,19 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: data, tooltipItems: data};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderXRange({plot}, preparedData as PreparedXRangeData[], seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderXRange(
+        {plot, labelsPlot},
+        preparedData as PreparedXRangeData[],
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 function getXRangeWidth(data: XRangeSeriesData) {
@@ -56,6 +68,10 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = 
     getColorValue: getXRangeWidth,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: ({item, xAxis}) =>

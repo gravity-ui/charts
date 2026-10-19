@@ -2,21 +2,26 @@ import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
+    ChartInteractionItem,
     ChartSeries,
     ChartSeriesOptions,
     ChartXAxis,
     ChartYAxis,
     CustomFormatContext,
+    MeaningfulAny,
     TooltipDataChunk,
     TooltipRowCellItem,
     ValueFormat,
-} from '../../types';
+} from '~core/types';
+
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
+import type {InteractionElement, InteractionElementsArgs} from '../utils/chart-interaction';
 import type {GradientGeometry} from '../utils/gradient-reference';
+import type {NearestCandidate, PrepareNearestDataArgs} from '../utils/nearest-point';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
 import type {ZoomState} from '../zoom/types';
 
@@ -101,7 +106,10 @@ export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
 }
 
 export interface RenderShapesArgs {
+    /** SVG container for series geometry, such as lines, areas, bars, and sectors. */
     plot: SVGGElement;
+    /** SVG container for labels above the layer's shapes and markers, clipped like `plot`. */
+    labelsPlot: SVGGElement;
     preparedData: SeriesShapeData[];
     labels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
@@ -188,8 +196,19 @@ export interface SeriesPlugin<
 
     // --- Rendering ---
 
-    /** Renders shapes into the provided SVG `<g>` element using D3. May return a cleanup function. */
+    /** Renders shapes into `plot` and labels into `labelsPlot`. May return a cleanup function. */
     renderShapes(args: RenderShapesArgs): (() => void) | void;
+
+    // --- Interaction ---
+
+    interaction?: {
+        /** All eligible reference positions, without tooltip filtering or per-plugin selection. */
+        prepareNearestData(args: PrepareNearestDataArgs<MeaningfulAny>): NearestCandidate[];
+        /** Enumerates series geometry and data, excluding labels, halos and connectors. */
+        getTargetElements(args: InteractionElementsArgs): InteractionElement[];
+        /** Converts a selection containing multiple data parts into its public item. */
+        getClosestItem?(item: TTooltipChunk): ChartInteractionItem;
+    };
 
     // --- Tooltip ---
 

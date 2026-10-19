@@ -26,6 +26,7 @@ import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../ty
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {getAreaStackLabelAnchors} from './stack-labels';
 
@@ -111,6 +112,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     },
     renderShapes: function ({
         plot,
+        labelsPlot,
         preparedData,
         seriesOptions,
         dispatcher,
@@ -118,9 +120,19 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     }: RenderShapesArgs) {
         const data = preparedData as PreparedAreaData[];
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        const cleanup = renderArea({plot}, data, seriesOptions, allowOverlap, dispatcher);
-        renderStackLabels(plot, labels);
+        const cleanup = renderArea(
+            {plot, labelsPlot},
+            data,
+            seriesOptions,
+            allowOverlap,
+            dispatcher,
+        );
+        renderStackLabels(labelsPlot, labels);
         return cleanup;
+    },
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
     },
     tooltip: {
         prepareData: getTooltipData,

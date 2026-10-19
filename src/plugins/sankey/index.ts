@@ -10,13 +10,16 @@ import {prepareSankeyData} from '~core/shapes/sankey/prepare-data';
 import {renderSankey} from '~core/shapes/sankey/renderer';
 import type {PreparedSankeyData} from '~core/shapes/sankey/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import {getSourcePoint} from '~core/utils/source-point';
 
 import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
+import type {SankeyInteractionItem} from './interaction-types';
 import {prepareSankeySeries} from './prepare-sankey-series';
 
-function getLinkValue({target, data: source}: TooltipDataChunkSankey) {
-    return source.links.find((link) => link.name === target?.name)?.value;
+function getLinkValue({target, data: source, value}: TooltipDataChunkSankey) {
+    return value ?? source.links.find((link) => link.name === target?.name)?.value;
 }
 
 function prepareShapeData({
@@ -32,8 +35,19 @@ function prepareShapeData({
     return {renderData: [data], tooltipItems: [data]};
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
-    return renderSankey({plot}, preparedData[0] as PreparedSankeyData, seriesOptions, dispatcher);
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
+    return renderSankey(
+        {plot, labelsPlot},
+        preparedData[0] as PreparedSankeyData,
+        seriesOptions,
+        dispatcher,
+    );
 }
 
 export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = {
@@ -43,6 +57,27 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
         prepareSankeySeries({series: series as SankeySeries[], seriesOptions, legend, colorScale}),
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+        getClosestItem: (item): SankeyInteractionItem => {
+            const series = item.series as PreparedSankeySeries;
+            const source = getSourcePoint(item.data);
+            const value = getLinkValue(item);
+            if (!item.target || value === undefined) {
+                return {series, point: source};
+            }
+            return {
+                series,
+                point: {
+                    kind: 'link',
+                    source,
+                    target: getSourcePoint(item.target),
+                    value,
+                },
+            };
+        },
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: ({item}) => getLinkValue(item),

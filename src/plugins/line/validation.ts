@@ -6,20 +6,21 @@ const AVAILABLE_INTERPOLATION_TYPES = ['linear', 'monotone', 'cardinal'];
 
 interface ValidatableLineSeries {
     interpolation?: unknown;
+    dataLabels?: {anchor?: unknown};
 }
 
-interface ValidateInterpolationArgs {
+interface ValidateLineSeriesArgs {
     series: ValidatableLineSeries;
 }
 
-function throwInvalidInterpolation(key: string, values: string | string[]): never {
+function throwInvalidSeriesProperty(key: string, values: string | string[]): never {
     throw new ChartError({
         code: CHART_ERROR_CODE.INVALID_DATA,
         message: i18n('error', 'label_invalid-series-property', {key, values}),
     });
 }
 
-export function validateInterpolation({series}: ValidateInterpolationArgs) {
+export function validateInterpolation({series}: ValidateLineSeriesArgs) {
     const {interpolation} = series;
     if (interpolation === undefined) {
         return;
@@ -30,12 +31,12 @@ export function validateInterpolation({series}: ValidateInterpolationArgs) {
         interpolation === null ||
         Array.isArray(interpolation)
     ) {
-        throwInvalidInterpolation('interpolation.type', AVAILABLE_INTERPOLATION_TYPES);
+        throwInvalidSeriesProperty('interpolation.type', AVAILABLE_INTERPOLATION_TYPES);
     }
 
     const {type, tension} = interpolation as {tension?: unknown; type?: unknown};
     if (typeof type !== 'string' || !AVAILABLE_INTERPOLATION_TYPES.includes(type)) {
-        throwInvalidInterpolation('interpolation.type', AVAILABLE_INTERPOLATION_TYPES);
+        throwInvalidSeriesProperty('interpolation.type', AVAILABLE_INTERPOLATION_TYPES);
     }
 
     if (
@@ -43,6 +44,13 @@ export function validateInterpolation({series}: ValidateInterpolationArgs) {
         tension !== undefined &&
         (typeof tension !== 'number' || !Number.isFinite(tension) || tension < 0 || tension > 1)
     ) {
-        throwInvalidInterpolation('interpolation.tension', '0 ≤ tension ≤ 1');
+        throwInvalidSeriesProperty('interpolation.tension', '0 ≤ tension ≤ 1');
+    }
+}
+
+export function validateLabelAnchor({series}: ValidateLineSeriesArgs) {
+    const anchor = series.dataLabels?.anchor;
+    if (anchor !== undefined && anchor !== 'center' && anchor !== 'marker-edge') {
+        throwInvalidSeriesProperty('dataLabels.anchor', ['center', 'marker-edge']);
     }
 }

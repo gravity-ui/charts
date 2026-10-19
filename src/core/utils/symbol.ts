@@ -158,3 +158,32 @@ export function getDistanceToSymbol(args: {
         vertices: offsetConvexPolygon(vertices, outset),
     });
 }
+
+/** Distances from the symbol origin to its painted bounds. */
+export interface SymbolBounds {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+}
+
+/** Bounds of the filled symbol and its stroke, including mitered corners. */
+export function getSymbolBounds(args: {
+    symbolType: `${SymbolType}`;
+    radius: number;
+    strokeWidth: number;
+}): SymbolBounds {
+    const {symbolType, radius, strokeWidth} = args;
+    const vertices = getSymbolVertices(symbolType, Math.PI * radius ** 2);
+    if (!vertices.length) {
+        const extent = radius + strokeWidth / 2;
+        return {left: extent, right: extent, top: extent, bottom: extent};
+    }
+    const contour = offsetConvexPolygon(vertices, strokeWidth / 2);
+    return {
+        left: -Math.min(...contour.map(([x]) => x)),
+        right: Math.max(...contour.map(([x]) => x)),
+        top: -Math.min(...contour.map(([, y]) => y)),
+        bottom: Math.max(...contour.map(([, y]) => y)),
+    };
+}

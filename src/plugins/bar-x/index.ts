@@ -26,6 +26,7 @@ import {validateBarPadding} from '../bar-padding';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
 import {getBarXStackLabelAnchors} from './stack-labels';
 
@@ -70,6 +71,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
 function renderShapes({
     plot,
+    labelsPlot,
     preparedData,
     labels,
     seriesOptions,
@@ -80,13 +82,13 @@ function renderShapes({
     const data = preparedData as PreparedBarXData[];
     const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
     const cleanup = renderBarX(
-        {plot, boundsWidth, boundsHeight},
+        {plot, labelsPlot, boundsWidth, boundsHeight},
         data,
         seriesOptions,
         allowOverlap,
         dispatcher,
     );
-    renderStackLabels(plot, labels);
+    renderStackLabels(labelsPlot, labels);
     return cleanup;
 }
 
@@ -120,6 +122,10 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

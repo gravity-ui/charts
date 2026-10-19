@@ -10,9 +10,10 @@ interface Props {
     preparedData: SeriesShapeData[];
     dispatcher?: Dispatch<object>;
     namespace: string;
+    elementRef?: React.RefObject<SVGGElement>;
 }
 
-export const MarkerLayer = ({preparedData, dispatcher, namespace}: Props) => {
+export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: Props) => {
     const ref = React.useRef<SVGGElement>(null);
     const hoverRef = React.useRef<SVGGElement>(null);
 
@@ -63,9 +64,9 @@ export const MarkerLayer = ({preparedData, dispatcher, namespace}: Props) => {
     }, [preparedData, dispatcher, namespace]);
 
     return (
-        <React.Fragment>
+        <g ref={elementRef}>
             <g ref={ref} />
             <g ref={hoverRef} />
-        </React.Fragment>
+        </g>
     );
 };

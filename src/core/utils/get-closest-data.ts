@@ -1,21 +1,24 @@
 import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 
-import type {TooltipDataChunk} from '../../types';
-import {getSeriesPlugin} from '../series/seriesRegistry';
+import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
+
+import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
+import {toPublicInteractionItem} from './chart-interaction';
+import {getNearestItem} from './nearest-point';
 import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
 import type {LayerIndexes, ShapePoint, TooltipCandidate} from './tooltip-helpers';
 
-type GetClosestPointsArgs = {
+interface GetClosestPointsArgs {
     position: [number, number];
     shapesData: TooltipItemData[];
     boundsHeight: number;
     boundsWidth: number;
     /** Render layer of each series; without it the ties are resolved by the first candidate. */
     layerIndexes?: LayerIndexes;
-};
+}
 
 interface Contender {
     chunk: TooltipCandidate;
@@ -86,12 +89,10 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const measureDistance = Object.keys(groups).length > 1;
 
     for (const [seriesType, list] of Object.entries(groups)) {
-        let plugin;
-        try {
-            plugin = getSeriesPlugin(seriesType);
-        } catch {
+        if (!hasSeriesPlugin(seriesType)) {
             continue;
         }
+        const plugin = getSeriesPlugin(seriesType);
 
         const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
             data: list,
@@ -164,4 +165,41 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     }
 
     return resolveClosest(result, contenders);
+}
+
+interface GetChartClosestArgs extends GetClosestPointsArgs {
+    mode: 'chart' | 'tooltip';
+    seriesOrder: string[];
+}
+
+export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem | null {
+    if (args.mode === 'chart') {
+        const candidates = Object.entries(groupBy(args.shapesData, getSeriesType)).flatMap(
+            ([seriesType, data]) => {
+                if (!hasSeriesPlugin(seriesType)) return [];
+                const plugin = getSeriesPlugin(seriesType);
+                return (
+                    plugin.interaction?.prepareNearestData({
+                        data,
+                        position: args.position,
+                        boundsWidth: args.boundsWidth,
+                        boundsHeight: args.boundsHeight,
+                    }) ?? []
+                );
+            },
+        );
+        const nearest = getNearestItem(args.position, candidates, args.seriesOrder);
+        return nearest ? toPublicInteractionItem(nearest) : null;
+    }
+    // Use the same candidate selection and eligibility as the tooltip in this mode.
+    const selected = getClosestPoints(args).find((item) => item.closest);
+    if (!selected) return null;
+    const plugin = getSeriesPlugin(selected.series.type);
+    return toPublicInteractionItem(
+        plugin.interaction?.getClosestItem?.(selected) ??
+            ({
+                point: selected.data,
+                series: selected.series,
+            } as ChartInteractionItem),
+    );
 }

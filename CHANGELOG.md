@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.68.0](https://github.com/gravity-ui/charts/compare/v1.67.1...v1.68.0) (2026-10-16)
+
+
+### Features
+
+* add chart click targets and nearest queries ([#771](https://github.com/gravity-ui/charts/issues/771)) ([d624058](https://github.com/gravity-ui/charts/commit/d624058f4c27515bd24871ee75c75991b7388947))
+* support per-series bar padding ([#777](https://github.com/gravity-ui/charts/issues/777)) ([d2edaec](https://github.com/gravity-ui/charts/commit/d2edaec53f5e2b0e86da07dcb0661fa9ceccbebc))
+
 ## [1.67.1](https://github.com/gravity-ui/charts/compare/v1.67.0...v1.67.1) (2026-10-14)
 
 

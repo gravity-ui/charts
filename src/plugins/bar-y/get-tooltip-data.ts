@@ -1,16 +1,16 @@
 import {bisector, sort} from 'd3-array';
 
-import type {BarYSeries} from '../../../types';
-import {getRectDistance} from '../../utils/geometry';
-import {isPointTooltipEnabled} from '../../utils/tooltip-helpers';
+import type {PreparedBarYData} from '~core/shapes/bar-y/types';
+import {getBarYRect} from '~core/shapes/bar-y/utils';
+import {getRectDistance} from '~core/utils/geometry';
+import {isPointTooltipEnabled} from '~core/utils/tooltip-helpers';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
     TooltipCandidate,
-} from '../../utils/tooltip-helpers';
+} from '~core/utils/tooltip-helpers';
 
-import type {PreparedBarYData} from './types';
-import {getBarYRect} from './utils';
+import type {BarYSeries} from '../../types';
 
 export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
     const {data, position, measureDistance} = args;

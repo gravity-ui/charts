@@ -25,6 +25,7 @@ import type {
     LineSeriesData,
     LineSeriesDataLabelPlacementFallback,
     LineSeriesDataLabelPlacementPosition,
+    LineSeriesDataLabels,
     LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     LinearGradient,
@@ -213,7 +214,6 @@ type BasePreparedAxisRelatedSeries = {
 export type PreparedScatterSeries = {
     type: ScatterSeries['type'];
     data: ScatterSeriesData[];
-    sourceData?: WeakMap<ScatterSeriesData, ScatterSeriesData>;
     cluster: {
         enabled: boolean;
         layoutAlgorithm: {type: 'grid'; gridSize: number | string};
@@ -379,6 +379,7 @@ export type PreparedLineSeries = {
         format?: ValueFormat;
         placement: 'auto' | LineSeriesDataLabelPlacementPosition[];
         placementFallback: LineSeriesDataLabelPlacementFallback;
+        anchor: NonNullable<LineSeriesDataLabels['anchor']>;
     };
     marker: {
         states: {

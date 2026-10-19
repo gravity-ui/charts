@@ -19,7 +19,7 @@ import {getRangeBBox} from './utils';
 const b = block('area-range');
 
 export function renderAreaRange(
-    elements: {plot: SVGGElement},
+    elements: {plot: SVGGElement; labelsPlot: SVGGElement},
     preparedData: PreparedAreaRangeData[],
     seriesOptions: PreparedSeriesOptions,
     allowOverlapDataLabels: boolean,
@@ -117,7 +117,7 @@ export function renderAreaRange(
         dataLabels = filterOverlappingLabels(dataLabels);
     }
     const labelsSelection = renderDataLabels({
-        container: plotSvgElement,
+        container: select(elements.labelsPlot),
         data: dataLabels,
         className: b('label'),
     });

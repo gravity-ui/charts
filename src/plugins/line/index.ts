@@ -20,9 +20,10 @@ import {
 
 import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
+import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
-import {validateInterpolation} from './validation';
+import {validateInterpolation, validateLabelAnchor} from './validation';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -66,9 +67,15 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     };
 }
 
-function renderShapes({plot, preparedData, seriesOptions, dispatcher}: RenderShapesArgs) {
+function renderShapes({
+    plot,
+    labelsPlot,
+    preparedData,
+    seriesOptions,
+    dispatcher,
+}: RenderShapesArgs) {
     return renderLine(
-        {plot, getCurveFactory},
+        {plot, labelsPlot, getCurveFactory},
         preparedData as PreparedLineData[],
         seriesOptions,
         dispatcher,
@@ -92,12 +99,17 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({series, xAxis, yAxis});
         validateInterpolation({series});
+        validateLabelAnchor({series});
         validateSeriesColor({color: series.color, seriesName: series.name});
         validateXYSeries({series, xAxis, yAxis});
     },
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
+    interaction: {
+        prepareNearestData,
+        getTargetElements,
+    },
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,

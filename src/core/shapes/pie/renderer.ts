@@ -8,10 +8,11 @@ import get from 'lodash/get';
 import type {TooltipDataChunkPie} from '../../../types';
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';
+import {renderDataLabels} from '../../shapes/data-labels';
 import {setActiveState} from '../../shapes/utils';
 import {setEllipsisForOverflowTexts} from '../../utils';
 
-import type {PieSvgLabelData, PreparedPieData, SegmentData} from './types';
+import type {PieConnectorData, PieSvgLabelData, PreparedPieData, SegmentData} from './types';
 import {getPieArcPath} from './utils';
 
 const b = block('pie');
@@ -23,6 +24,7 @@ export function getHaloVisibility(d: PieArcDatum<SegmentData>) {
 export function renderPie(
     elements: {
         plot: SVGGElement;
+        labelsPlot: SVGGElement;
     },
     preparedData: PreparedPieData[],
     seriesOptions: PreparedSeriesOptions,
@@ -30,6 +32,8 @@ export function renderPie(
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
+    const labelsSvgElement = select(elements.labelsPlot);
+    labelsSvgElement.selectAll('*').remove();
     const segmentSelector = `.${b('segment')}`;
     const connectorSelector = `.${b('connector')}`;
 
@@ -74,25 +78,28 @@ export function renderPie(
         .attr('fill', (d) => d.data.color)
         .attr('opacity', (d) => d.data.opacity);
 
+    const labelGroups = labelsSvgElement
+        .selectAll<SVGGElement, PreparedPieData>('g')
+        .data(preparedData)
+        .join('g')
+        .attr('transform', (pieData) => {
+            const [x, y] = pieData.center;
+            return `translate(${x}, ${y})`;
+        })
+        .style('stroke-width', (pieData) => pieData.borderWidth)
+        .attr('cursor', (pieData) => pieData.series.cursor);
+
     // render Labels
-    shapesSelection
-        .selectAll<SVGTextElement, PieSvgLabelData>('text')
-        .data((pieData) => pieData.labels)
-        .join('text')
-        .html((d) => d.text)
-        .attr('class', b('label'))
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y)
-        .attr('text-anchor', (d) => d.textAnchor)
-        .style('font-size', (d) => d.style.fontSize)
-        .style('font-weight', (d) => d.style.fontWeight || null)
-        .style('fill', (d) => d.style.fontColor || null)
-        .call(setEllipsisForOverflowTexts, (d) =>
-            d.size.width > d.maxWidth ? d.maxWidth : Infinity,
-        );
+    renderDataLabels({
+        container: labelGroups,
+        data: (pieData) => pieData.labels,
+        className: b('label'),
+    }).call(setEllipsisForOverflowTexts, (d) =>
+        d.size.width > d.maxWidth ? d.maxWidth : Infinity,
+    );
 
     // Add the polyline between chart and labels
-    shapesSelection
+    labelGroups
         .selectAll(connectorSelector)
         .data((pieData) => pieData.connectors)
         .enter()
@@ -121,6 +128,7 @@ export function renderPie(
     const eventName = `hover-shape.pie`;
     const hoverOptions = get(seriesOptions, 'pie.states.hover');
     const inactiveOptions = get(seriesOptions, 'pie.states.inactive');
+    const labelNodes = labelGroups.nodes();
 
     dispatcher?.on(eventName, (data?: TooltipDataChunkPie[]) => {
         const selectedSeriesId = data?.[0]?.series?.id;
@@ -171,14 +179,13 @@ export function renderPie(
 
                     return d;
                 });
-            const labelSelection = pieSelection.selectAll<BaseType, PieSvgLabelData>(
-                `.${b('label')} tspan`,
-            );
-            const connectorSelection = pieSelection.selectAll<BaseType, PieSvgLabelData>(
-                connectorSelector,
-            );
-            labelSelection.merge(connectorSelection).datum((d, i, elements) => {
-                return setActiveState<PieSvgLabelData>({
+            const pieLabels = select(labelNodes[index]);
+            const labelSelection = pieLabels.selectAll<
+                BaseType,
+                PieSvgLabelData | PieConnectorData
+            >(`.${b('label')}, ${connectorSelector}`);
+            labelSelection.datum((d, i, elements) => {
+                return setActiveState<PieSvgLabelData | PieConnectorData>({
                     element: elements[i],
                     state: inactiveOptions,
                     active: Boolean(
