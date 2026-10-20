@@ -164,7 +164,11 @@ test.describe('Axis padding', () => {
         const markers = component.locator('.gcharts-marker__symbol[d]');
         await expect(markers).toHaveCount(4);
         const cluster = await getLocatorBoundingBox(markers.first());
-        await page.mouse.move(cluster.x + cluster.width / 2, cluster.y + cluster.height / 2);
+        // Keep the tooltip on whole CSS pixels for consistent text rasterization.
+        await page.mouse.move(
+            Math.round(cluster.x + cluster.width / 2),
+            Math.round(cluster.y + cluster.height / 2),
+        );
         await expect(page.locator('.gcharts-tooltip')).toBeVisible();
         const halo = component.locator('.gcharts-marker__halo[visibility=""]');
         await expect(halo).toBeVisible();
@@ -185,8 +189,8 @@ test.describe('Axis padding', () => {
             .toBeGreaterThan(500);
         const reversedCluster = await getLocatorBoundingBox(markers.first());
         await page.mouse.move(
-            reversedCluster.x + reversedCluster.width / 2,
-            reversedCluster.y + reversedCluster.height / 2,
+            Math.round(reversedCluster.x + reversedCluster.width / 2),
+            Math.round(reversedCluster.y + reversedCluster.height / 2),
         );
         await expect(halo).toBeVisible();
         await expectPaintInsidePlot(component.locator('.gcharts-chart__content'), halo);
@@ -249,8 +253,7 @@ test.describe('Axis padding', () => {
             <ChartTestStory data={data} styles={{width: 600, height: 300}} />,
         );
         const labels = component.locator('.gcharts-y-axis__tick text');
-        await expect(labels.last()).toBeVisible();
-        expect((await labels.allTextContents()).map(Number)).toContain(100);
+        await expect(labels.last()).toHaveText('100');
         expect((await labels.allTextContents()).map(Number).every((value) => value <= 100)).toBe(
             true,
         );
