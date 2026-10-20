@@ -89,9 +89,11 @@ const tags = assets.hasJs ? buildExamplesTags(assets) : {linkTag: null, scriptTa
 processHtmlFiles(docsDir, assets, tags);
 
 // Keep published links and section anchors working after moving the axes guide.
-fs.writeFileSync(
-    path.join(docsDir, 'pages/guides/axes/axis-labels.html'),
-    `<!doctype html>
+const axesDir = path.join(docsDir, 'pages/guides/axes');
+if (fs.existsSync(path.join(axesDir, 'index.html'))) {
+    fs.writeFileSync(
+        path.join(axesDir, 'axis-labels.html'),
+        `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -102,4 +104,5 @@ fs.writeFileSync(
 <body><a href="index.html">Continue to the axes guide</a></body>
 </html>
 `,
-);
+    );
+}

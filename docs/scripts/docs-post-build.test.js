@@ -2,6 +2,7 @@ const {execFileSync} = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const {runInNewContext} = require('node:vm');
 
 describe('documentation example assets', () => {
     let rootDir;
@@ -43,5 +44,28 @@ describe('documentation example assets', () => {
                 name !== 'development',
             );
         }
+        expect(
+            fs.existsSync(path.join(rootDir, 'dist-docs/pages/guides/axes/axis-labels.html')),
+        ).toBe(false);
+    });
+
+    it('redirects the old axes guide while preserving the query and section anchor', () => {
+        const axesDir = path.join(rootDir, 'dist-docs/pages/guides/axes');
+        fs.mkdirSync(axesDir, {recursive: true});
+        fs.writeFileSync(
+            path.join(axesDir, 'index.html'),
+            '<html><head></head><body>Axes</body></html>',
+        );
+
+        execFileSync(process.execPath, [path.join(__dirname, 'docs-post-build.js')], {
+            cwd: path.join(rootDir, 'docs'),
+        });
+
+        const html = fs.readFileSync(path.join(axesDir, 'axis-labels.html'), 'utf8');
+        const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+        expect(script).toBeDefined();
+        const replace = jest.fn();
+        runInNewContext(script, {location: {search: '?theme=dark', hash: '#html-labels', replace}});
+        expect(replace).toHaveBeenCalledWith('index.html?theme=dark#html-labels');
     });
 });
