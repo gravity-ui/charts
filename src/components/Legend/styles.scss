@@ -91,19 +91,37 @@
 
         cursor: pointer;
         pointer-events: auto;
-    }
 
-    &__title-text,
-    &__item,
-    &__item-html,
-    &__pagination-arrow {
-        &:focus:not(:focus-visible) {
-            outline: none;
-        }
+        border-radius: var(--g-border-radius-xs);
 
         &:focus-visible {
-            outline: 2px solid var(--g-color-line-focus);
-            outline-offset: -2px;
+            background-color: var(--g-color-base-simple-hover);
         }
+    }
+
+    &__focus-background {
+        fill: transparent;
+        rx: var(--g-border-radius-xs);
+    }
+
+    &__title > &__focus-background {
+        display: none;
+
+        pointer-events: none;
+    }
+
+    &__title:focus-visible > &__focus-background,
+    &__item:focus-visible > &__focus-background,
+    &__pagination-arrow:focus-visible > &__focus-background {
+        display: initial;
+
+        fill: var(--g-color-base-simple-hover);
+    }
+
+    &__title:focus,
+    &__item:focus,
+    &__item-html:focus,
+    &__pagination-arrow:focus {
+        outline: none;
     }
 }

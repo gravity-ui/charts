@@ -137,10 +137,11 @@ async function appendPaginator(args: {
         arrow.selectChildren().remove();
         arrow
             .append('rect')
+            .attr('class', b('focus-background'))
+            .attr('fill', 'transparent')
             .attr('y', -legend.lineHeight / 2)
             .attr('width', width)
-            .attr('height', legend.lineHeight)
-            .attr('fill', 'transparent');
+            .attr('height', legend.lineHeight);
         arrow
             .append('text')
             .text(text)

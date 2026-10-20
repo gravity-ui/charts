@@ -150,11 +150,12 @@ export function renderLegendItems({
         }
         group.attr('aria-hidden', null);
         group
-            .append('rect')
+            .insert('rect', ':first-child')
+            .attr('class', b('focus-background'))
+            .attr('fill', 'transparent')
             .attr('x', x)
             .attr('width', Math.max(0, position.textLeft + item.textWidth - x))
-            .attr('height', rowHeight)
-            .attr('fill', 'transparent');
+            .attr('height', rowHeight);
         const y = legend.hangingOffset + (rowHeight - item.height) / 2;
         const label = group
             .append('text')
@@ -223,24 +224,30 @@ export function renderLegendTitle(
     let dx = 0;
     if (title.align === 'right') dx = remainingWidth;
     else if (title.align === 'center') dx = remainingWidth / 2;
-    const node = select(container)
+    const group = select(container)
+        .attr('data-legend-title', '')
+        .attr('role', 'group')
+        .attr('aria-label', text)
+        .attr('tabindex', truncated ? 0 : -1);
+    group
+        .selectAll<SVGRectElement, unknown>(`.${b('focus-background')}`)
+        .data(title.enable ? [title] : [])
+        .join('rect')
+        .attr('class', b('focus-background'))
+        .attr('x', dx)
+        .attr('width', title.resolvedWidth)
+        .attr('height', title.height);
+    group
         .selectAll<SVGTextElement, unknown>(`.${b('title-text')}`)
         .data(title.enable ? [title] : [])
         .join('text')
         .attr('class', b('title-text'))
-        .attr('data-legend-title', '')
-        .attr('role', 'group')
-        .attr('aria-label', text)
-        .attr('tabindex', truncated ? 0 : -1)
         .attr('dx', dx)
         .attr('y', title.hangingOffset)
         .attr('font-weight', title.style.fontWeight ?? null)
         .attr('font-size', title.style.fontSize ?? null)
         .attr('fill', title.style.fontColor ?? null)
         .style('dominant-baseline', 'hanging')
-        .html(title.resolvedText)
-        .node();
-    if (node) {
-        tooltipController.attach(node, {text, truncated, vertical: legend.layout === 'vertical'});
-    }
+        .html(title.resolvedText);
+    tooltipController.attach(container, {text, truncated, vertical: legend.layout === 'vertical'});
 }

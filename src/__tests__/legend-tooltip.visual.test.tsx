@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
@@ -41,6 +42,13 @@ function data(html = false, rows = 1): ChartData {
     };
 }
 
+async function expectFocusBackground(anchor: Locator, html = false) {
+    await expect(anchor).toHaveCSS('outline-style', 'none');
+    const background = html ? anchor : anchor.locator(':scope > .gcharts-legend__focus-background');
+    await expect(background).toHaveCSS(html ? 'background-color' : 'fill', 'rgba(0, 0, 0, 0.05)');
+    await expect(background).toHaveCSS(html ? 'border-radius' : 'rx', '3px');
+}
+
 for (const mode of ['svg', 'multiline', 'html'] as const) {
     test(`reveals full ${mode} labels with hover and keyboard`, async ({mount, page}) => {
         const component = await mount(
@@ -72,8 +80,7 @@ for (const mode of ['svg', 'multiline', 'html'] as const) {
         await page.mouse.move(0, 0);
         await item.focus();
         await expect(item).toBeFocused();
-        await expect(item).toHaveCSS('outline-style', 'solid');
-        await expect(item).toHaveCSS('outline-width', '2px');
+        await expectFocusBackground(item, mode === 'html');
         await expect(tooltip).toHaveText(actual);
         if (mode === 'multiline') {
             await expect(page).toHaveScreenshot('legend-tooltip-focus.png');
@@ -85,9 +92,15 @@ for (const mode of ['svg', 'multiline', 'html'] as const) {
         await page.keyboard.press('ArrowDown');
         await expect(component.getByRole('button', {name: 'Other', exact: true})).toBeFocused();
         await expect(tooltip).toHaveCount(0);
-        await expect(component.getByRole('button', {name: 'Other', exact: true})).toHaveCSS(
-            'outline-style',
-            'solid',
+        await expectFocusBackground(
+            component.getByRole('button', {name: 'Other', exact: true}),
+            mode === 'html',
+        );
+        const inactiveBackground =
+            mode === 'html' ? item : item.locator('.gcharts-legend__focus-background');
+        await expect(inactiveBackground).toHaveCSS(
+            mode === 'html' ? 'background-color' : 'fill',
+            'rgba(0, 0, 0, 0)',
         );
         await page.keyboard.press('Tab');
         await expect(component.getByRole('button', {name: 'Other', exact: true})).not.toBeFocused();
@@ -362,6 +375,7 @@ for (const type of ['discrete', 'continuous'] as const) {
         await expect(tooltip).toHaveCount(0);
         await page.mouse.move(0, 0);
         await title.focus();
+        await expectFocusBackground(title);
         await expect(tooltip).toHaveText(titleText);
         await expect(title).toHaveAttribute(
             'aria-describedby',
@@ -406,6 +420,8 @@ for (const html of [false, true]) {
         await page.clock.install();
         await item.click();
         await expect(item).toBeFocused();
+        const background = html ? item : item.locator('.gcharts-legend__focus-background');
+        await expect(background).toHaveCSS(html ? 'background-color' : 'fill', 'rgba(0, 0, 0, 0)');
         await page.clock.runFor(LEGEND_TOOLTIP_OPEN_DELAY / 2);
         await expect(page.getByRole('tooltip')).toHaveCount(0);
         await page.clock.runFor(LEGEND_TOOLTIP_OPEN_DELAY);
@@ -450,7 +466,7 @@ for (const html of [false, true]) {
         await page.keyboard.press('Enter');
         await expect(items.first()).not.toHaveAttribute('aria-label', firstName);
         await expect(next).toBeFocused();
-        await expect(next).toHaveCSS('outline-style', 'solid');
+        await expectFocusBackground(next);
         await previous.focus();
         await page.keyboard.press('Space');
         await expect(items.first()).toHaveAttribute('aria-label', firstName);

@@ -84,7 +84,7 @@ The example uses abbreviated legend labels. Hover over the lines to see the full
 
 Hover over a truncated label or title to read its full text. The tooltip also appears on keyboard focus; press Escape to dismiss it.
 
-Tab enters the item list at the last focused item. Move between items with Left/Right in a horizontal legend or Up/Down in a vertical legend. Home/End move to the first or last item, and navigation crosses page boundaries. Focus has a visible outline, including on labels that fit without truncation.
+Tab enters the item list at the last focused item. Move between items with Left/Right in a horizontal legend or Up/Down in a vertical legend. Home/End move to the first or last item, and navigation crosses page boundaries. Focus highlights the item with a rounded background, including labels that fit without truncation.
 
 Press Enter or Space to activate an item. The pagination buttons are also reachable with Tab and support Enter/Space.
 
