@@ -21,6 +21,7 @@ import {AxisY} from '../AxisY/AxisY';
 import {prepareYAxisData} from '../AxisY/prepare-axis-data';
 import type {AxisYData} from '../AxisY/types';
 import {Legend} from '../Legend';
+import {LegendTooltip} from '../LegendTooltip';
 import {PlotTitle} from '../PlotTitle';
 import {RangeSlider} from '../RangeSlider';
 import type {RangeSliderHandle} from '../RangeSlider';
@@ -523,6 +524,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
                 )}
             {preparedLegend?.enabled && legendConfig && (
                 <Legend
+                    dispatcher={dispatcher}
                     chartSeries={preparedSeries}
                     legend={preparedLegend}
                     items={legendItems}
@@ -583,6 +585,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
                     </ButtonIcon>
                 </Button>
             )}
+            <LegendTooltip dispatcher={dispatcher} />
             {hasPlotArea && (
                 <Tooltip
                     dispatcher={dispatcher}

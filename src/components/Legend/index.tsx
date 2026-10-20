@@ -1,29 +1,32 @@
 import React from 'react';
 
 import type {AxisDomain, AxisScale} from 'd3-axis';
+import type {Dispatch} from 'd3-dispatch';
 import {scaleLinear} from 'd3-scale';
 import type {Selection} from 'd3-selection';
 import {select} from 'd3-selection';
 
 import {CONTINUOUS_LEGEND_SIZE} from '~core/constants';
+import {i18n} from '~core/i18n';
 import {createGradientRect, getContinuesColorFn, getTextSizeFn, getUniqId} from '~core/utils';
 import {axisBottom} from '~core/utils/axis-generators';
 
 import type {LegendItem, OnLegendItemClick, PreparedLegend, PreparedSeries} from '../../hooks';
-import {useHtmlTextOverflow} from '../../hooks/useHtmlTextOverflow';
 import {formatNumber} from '../../libs';
 import type {LegendConfig} from '../../types';
 import {block} from '../../utils';
-import {TruncatedTextTooltip} from '../TruncatedTextTooltip';
 
-import type {LegendTooltipTarget, PositionedLegendItem} from './render-items';
+import {bindLegendNavigation} from './keyboard-navigation';
+import type {PositionedLegendItem} from './render-items';
 import {renderLegendItems, renderLegendTitle} from './render-items';
+import {createLegendTooltipController} from './tooltip-controller';
 
 import './styles.scss';
 
 const b = block('legend');
 
 interface Props {
+    dispatcher: Dispatch<object>;
     chartSeries: PreparedSeries[];
     legend: PreparedLegend;
     items: LegendItem[][] | undefined;
@@ -51,9 +54,9 @@ async function appendPaginator(args: {
     transform: string;
     pages: NonNullable<LegendConfig['pagination']>['pages'];
     onArrowClick: (nextPageIndex: number) => void;
+    isCurrent: () => boolean;
 }) {
     const {container, pageIndex, legend, transform, pages, onArrowClick} = args;
-    const paginationLine = container.append('g').attr('class', b('pagination'));
     const maxPage = pages.length;
     const paginationCounterText = `${pageIndex + 1}/${maxPage}`;
 
@@ -63,6 +66,12 @@ async function appendPaginator(args: {
         getTextSize('▼'),
         getTextSize(paginationCounterText),
     ]);
+    if (!args.isCurrent()) return undefined;
+    const paginationLine = container
+        .selectAll<SVGGElement, unknown>(`.${b('pagination')}`)
+        .data([null])
+        .join('g')
+        .attr('class', b('pagination'));
     const showCounter =
         !legend.clipContent ||
         arrowIcon.width + counter.width + downArrowIcon.width <= legend.resolvedWidth;
@@ -83,17 +92,49 @@ async function appendPaginator(args: {
         }
     }
 
-    const appendArrow = (text: string, x: number, width: number, nextPageIndex: number) => {
+    const appendArrow = (
+        text: string,
+        x: number,
+        width: number,
+        nextPageIndex: number,
+        direction: 'previous' | 'next',
+    ) => {
         const inactive = nextPageIndex < 0 || nextPageIndex >= maxPage;
         const arrow = paginationLine
-            .append('g')
+            .selectAll<SVGGElement, unknown>(`[data-direction="${direction}"]`)
+            .data([null])
+            .join('g')
+            .attr('data-direction', direction)
+            .attr('role', 'button')
+            .attr(
+                'aria-label',
+                i18n(
+                    'legend',
+                    direction === 'previous' ? 'label_previous-page' : 'label_next-page',
+                ),
+            )
+            .attr('aria-disabled', String(inactive))
+            .attr('tabindex', inactive ? -1 : 0)
             .attr('class', b('pagination-arrow', {inactive}))
             .attr('transform', `translate(${x}, 0)`)
             .on('click', () => {
                 if (!inactive) {
                     onArrowClick(nextPageIndex);
                 }
+            })
+            .on('keydown', (event: KeyboardEvent) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                if (!inactive && !event.repeat && event.key === 'Enter')
+                    onArrowClick(nextPageIndex);
+            })
+            .on('keyup', (event: KeyboardEvent) => {
+                if (event.key === ' ') {
+                    event.preventDefault();
+                    if (!inactive) onArrowClick(nextPageIndex);
+                }
             });
+        arrow.selectChildren().remove();
         arrow
             .append('rect')
             .attr('y', -legend.lineHeight / 2)
@@ -106,31 +147,31 @@ async function appendPaginator(args: {
             .style('font-size', legend.itemStyle.fontSize)
             .style('dominant-baseline', 'middle');
     };
-    appendArrow('▲', upArrowX, arrowIcon.width, pageIndex - 1);
-    if (showCounter) {
-        paginationLine
-            .append('text')
-            .text(paginationCounterText)
-            .attr('class', b('pagination-counter'))
-            .attr('x', arrowIcon.width)
-            .style('font-size', legend.itemStyle.fontSize);
-    }
-    appendArrow('▼', downArrowX, downArrowIcon.width, pageIndex + 1);
+    appendArrow('▲', upArrowX, arrowIcon.width, pageIndex - 1, 'previous');
+    paginationLine
+        .selectAll<SVGTextElement, string>(`.${b('pagination-counter')}`)
+        .data(showCounter ? [paginationCounterText] : [])
+        .join('text')
+        .text((text) => text)
+        .attr('class', b('pagination-counter'))
+        .attr('x', arrowIcon.width)
+        .style('font-size', legend.itemStyle.fontSize);
+    appendArrow('▼', downArrowX, downArrowIcon.width, pageIndex + 1, 'next');
     paginationLine.attr('transform', transform);
     return paginationLine;
 }
 
 export const Legend = (props: Props) => {
-    const {chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} = props;
+    const {dispatcher, chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} =
+        props;
     const ref = React.useRef<SVGGElement>(null);
-    const [tooltipTarget, setTooltipTarget] = React.useState<LegendTooltipTarget | null>(null);
-    const htmlOverflow = useHtmlTextOverflow(tooltipTarget?.htmlLabel ?? null);
-    const closeTooltip = React.useCallback(() => setTooltipTarget(null), []);
-    React.useLayoutEffect(() => {
-        if (tooltipTarget?.htmlLabel) {
-            tooltipTarget.anchor.setAttribute('aria-label', htmlOverflow.text);
-        }
-    }, [tooltipTarget, htmlOverflow.text]);
+    const tooltipController = React.useMemo(
+        () => createLegendTooltipController(dispatcher),
+        [dispatcher],
+    );
+    const activeItemId = React.useRef<string | null>(null);
+    const pendingFocus = React.useRef<'first' | 'last' | null>(null);
+    React.useEffect(() => () => tooltipController.destroy(), [tooltipController]);
     const pageCount = config.pagination?.pages.length ?? 1;
     const [paginationState, setPaginationState] = React.useState({
         pageIndex: 0,
@@ -149,7 +190,6 @@ export const Legend = (props: Props) => {
 
     React.useEffect(() => {
         let cancelled = false;
-        setTooltipTarget(null);
         async function prepareLegend() {
             if (!ref.current || !htmlLayout) {
                 return;
@@ -157,7 +197,7 @@ export const Legend = (props: Props) => {
 
             const svgElement = select(ref.current);
             svgElement.selectAll('defs').remove();
-            svgElement.selectAll(`.${b('pagination')}, .${b('axis')}`).remove();
+            svgElement.selectAll(`.${b('axis')}`).remove();
             const content = svgElement
                 .selectAll<SVGGElement, unknown>(`.${b('items')}`)
                 .data([null])
@@ -208,6 +248,8 @@ export const Legend = (props: Props) => {
                 .data(legend.html && legend.type === 'discrete' ? [null] : [])
                 .join('div')
                 .attr('data-legend', 1)
+                .attr('role', 'group')
+                .attr('aria-label', i18n('legend', 'label_legend'))
                 .style('position', 'absolute')
                 .style('width', null)
                 .style('height', null)
@@ -278,9 +320,34 @@ export const Legend = (props: Props) => {
                     items: positionedItems,
                     legend,
                     onClick: handleItemClick,
-                    onTooltip: setTooltipTarget,
+                    tooltipController,
                 });
-                if (focusedItem) {
+                const focusableItems = bindLegendNavigation({
+                    container: htmlContainer?.node() ?? contentNode,
+                    vertical: legend.layout === 'vertical',
+                    activeId: activeItemId.current,
+                    onFocus: (id) => {
+                        activeItemId.current = id;
+                    },
+                    onPageChange: (direction) => {
+                        let next = currentPageIndex + (direction === 'next' ? 1 : -1);
+                        if (direction === 'first') next = 0;
+                        if (direction === 'last') next = pageCount - 1;
+                        if (next === currentPageIndex || next < 0 || next >= pageCount) return;
+                        pendingFocus.current =
+                            direction === 'previous' || direction === 'last' ? 'last' : 'first';
+                        setPaginationState((state) => ({...state, pageIndex: next}));
+                    },
+                });
+                const pageFocus = pendingFocus.current;
+                if (pageFocus) {
+                    const next =
+                        pageFocus === 'first'
+                            ? focusableItems[0]
+                            : focusableItems[focusableItems.length - 1];
+                    next?.focus({preventScroll: true});
+                    pendingFocus.current = null;
+                } else if (focusedItem) {
                     (htmlContainer?.node() ?? contentNode)
                         .querySelector<
                             HTMLElement | SVGElement
@@ -294,6 +361,7 @@ export const Legend = (props: Props) => {
                     )})`;
                     const paginator = await appendPaginator({
                         container: svgElement,
+                        isCurrent: () => !cancelled,
                         pageIndex: currentPageIndex,
                         legend,
                         transform,
@@ -301,7 +369,19 @@ export const Legend = (props: Props) => {
                         onArrowClick: (pageIndex) =>
                             setPaginationState((state) => ({...state, pageIndex})),
                     });
-                    if (cancelled) return;
+                    if (!paginator || cancelled) return;
+                    if (pageFocus && !focusableItems.length) {
+                        // A page of noninteractive, fitting labels has no item to receive focus.
+                        const direction = pageFocus === 'first' ? 'next' : 'previous';
+                        const arrow =
+                            paginator
+                                .select<SVGGElement>(
+                                    `[data-direction="${direction}"][aria-disabled="false"]`,
+                                )
+                                .node() ??
+                            paginator.select<SVGGElement>('[aria-disabled="false"]').node();
+                        arrow?.focus({preventScroll: true});
+                    }
                     // SVG's middle baseline is not the bounding-box center. Use the actual
                     // text bounds so a clipped row cannot touch the counter or arrows.
                     contentHeight = Math.max(
@@ -311,6 +391,7 @@ export const Legend = (props: Props) => {
                             (paginator.node()?.getBBox().y ?? 0),
                     );
                 }
+                if (!pagination) svgElement.selectAll(`.${b('pagination')}`).remove();
                 if (pageRows.some((row) => row.height > contentHeight - titleHeight)) {
                     // An indivisible row may exceed a page. Clip it before the paginator,
                     // keeping navigation usable without changing the configured symbol size.
@@ -342,6 +423,7 @@ export const Legend = (props: Props) => {
                 legendLeft = left;
                 legendTop = top;
             } else {
+                svgElement.selectAll(`.${b('pagination')}`).remove();
                 content.selectChildren().remove();
                 let left = 0;
                 switch (legend.align) {
@@ -416,19 +498,31 @@ export const Legend = (props: Props) => {
             }
 
             const titleNode = titleContainer.node();
-            if (titleNode) renderLegendTitle(titleNode, legend, setTooltipTarget);
+            if (titleNode) renderLegendTitle(titleNode, legend, tooltipController);
 
             svgElement
                 .attr('transform', `translate(${[legendLeft, legendTop].join(',')})`)
                 .style('opacity', 1);
             htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
+            tooltipController.sync();
         }
 
         prepareLegend();
         return () => {
             cancelled = true;
         };
-    }, [chartSeries, onItemClick, onUpdate, legend, items, config, currentPageIndex, htmlLayout]);
+    }, [
+        chartSeries,
+        onItemClick,
+        onUpdate,
+        legend,
+        items,
+        config,
+        currentPageIndex,
+        htmlLayout,
+        tooltipController,
+        pageCount,
+    ]);
 
     React.useEffect(
         () => () => {
@@ -438,19 +532,13 @@ export const Legend = (props: Props) => {
     );
 
     return (
-        <React.Fragment>
-            <g className={b()} ref={ref} width={config.maxWidth} height={legend.height} />
-            {tooltipTarget && (
-                <TruncatedTextTooltip
-                    anchor={tooltipTarget.anchor}
-                    text={tooltipTarget.htmlLabel ? htmlOverflow.text : tooltipTarget.text}
-                    enabled={
-                        tooltipTarget.htmlLabel ? htmlOverflow.truncated : tooltipTarget.truncated
-                    }
-                    vertical={legend.layout === 'vertical'}
-                    onClose={closeTooltip}
-                />
-            )}
-        </React.Fragment>
+        <g
+            className={b()}
+            ref={ref}
+            width={config.maxWidth}
+            height={legend.height}
+            role="group"
+            aria-label={i18n('legend', 'label_legend')}
+        />
     );
 };

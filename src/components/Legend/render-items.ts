@@ -6,14 +6,10 @@ import {decodeHtmlEntities, getLineDashArray, getReadableText, getSymbol} from '
 
 import {block} from '../../utils';
 
-const b = block('legend');
+import {isHtmlTextTruncated} from './html-overflow';
+import type {LegendTooltipController} from './tooltip-controller';
 
-export interface LegendTooltipTarget {
-    anchor: HTMLElement | SVGElement;
-    text: string;
-    truncated: boolean;
-    htmlLabel?: HTMLElement;
-}
+const b = block('legend');
 
 export interface PositionedLegendItem {
     item: LegendItem;
@@ -29,14 +25,14 @@ export function renderLegendItems({
     items,
     legend,
     onClick,
-    onTooltip,
+    tooltipController,
 }: {
     container: SVGGElement;
     htmlContainer: HTMLElement | null;
     items: PositionedLegendItem[];
     legend: PreparedLegend;
     onClick: (event: MouseEvent, item: LegendItem) => void;
-    onTooltip: (target: LegendTooltipTarget) => void;
+    tooltipController: LegendTooltipController;
 }) {
     const interactive = legend.itemClickAction !== 'none' || Boolean(legend.events?.itemClick);
     const bind = (
@@ -45,8 +41,10 @@ export function renderLegendItems({
         htmlLabel?: HTMLElement,
     ) => {
         const text = htmlLabel ? getReadableText(item.text) : decodeHtmlEntities(item.name);
-        const truncated = Boolean(item.textTruncated);
-        const showTooltip = () => onTooltip({anchor, text, truncated, htmlLabel});
+        const truncated =
+            htmlLabel && !interactive
+                ? isHtmlTextTruncated(htmlLabel)
+                : Boolean(item.textTruncated);
         const activate = (event: KeyboardEvent) => {
             if (!interactive || event.target !== event.currentTarget) return;
             if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -66,7 +64,7 @@ export function renderLegendItems({
         };
         select<HTMLElement | SVGElement, unknown>(anchor)
             .attr('role', interactive ? 'button' : 'group')
-            .attr('tabindex', interactive || truncated || htmlLabel ? 0 : -1)
+            .attr('tabindex', interactive || truncated ? 0 : -1)
             .attr('aria-label', text)
             .attr(
                 'aria-pressed',
@@ -77,9 +75,13 @@ export function renderLegendItems({
             .on('keydown', activate)
             .on('keyup', (event: KeyboardEvent) => {
                 if (event.key === ' ') activate(event);
-            })
-            .on('mouseenter focus', showTooltip);
-        if (anchor === document.activeElement || anchor.matches(':hover')) showTooltip();
+            });
+        tooltipController.attach(anchor, {
+            text,
+            truncated,
+            htmlLabel,
+            vertical: legend.layout === 'vertical',
+        });
     };
     // A shared parent keeps focused nodes in place when wrapping moves items between rows.
     const svgItems = select(container)
@@ -135,6 +137,7 @@ export function renderLegendItems({
             .selectAll(`.${b('item-symbol')}`)
             .attr('opacity', item.visible ? (marker.opacity ?? null) : null);
         if (htmlContainer) {
+            tooltipController.detach(this);
             group
                 .attr('aria-hidden', 'true')
                 .attr('tabindex', null)
@@ -142,7 +145,7 @@ export function renderLegendItems({
                 .attr('aria-label', null)
                 .attr('aria-pressed', null)
                 .attr('data-legend-item-id', null)
-                .on('click keydown keyup mouseenter focus', null);
+                .on('click keydown keyup mouseenter focus .navigation', null);
             return;
         }
         group.attr('aria-hidden', null);
@@ -190,7 +193,7 @@ export function renderLegendItems({
                     )
                     .style('height', `${rowHeight}px`)
                     .style('padding-left', `${position.textLeft - position.symbolLeft}px`);
-                const label = group
+                group
                     .selectChildren<HTMLDivElement, LegendItem>('div')
                     .data([item])
                     .join('div')
@@ -200,9 +203,10 @@ export function renderLegendItems({
                     )
                     .style('font-size', legend.itemStyle.fontSize)
                     .style('max-width', `${item.textWidth}px`)
-                    .html(item.text)
-                    .node();
-                bind(this, item, label ?? undefined);
+                    .html(item.text);
+            })
+            .each(function ({item}) {
+                bind(this, item, this.firstElementChild as HTMLElement);
             });
     }
 }
@@ -210,7 +214,7 @@ export function renderLegendItems({
 export function renderLegendTitle(
     container: SVGGElement,
     legend: PreparedLegend,
-    onTooltip: (target: LegendTooltipTarget) => void,
+    tooltipController: LegendTooltipController,
 ) {
     const {title} = legend;
     const text = decodeHtmlEntities(title.text);
@@ -237,8 +241,6 @@ export function renderLegendTitle(
         .html(title.resolvedText)
         .node();
     if (node) {
-        const showTooltip = () => onTooltip({anchor: node, text, truncated});
-        select(node).on('mouseenter focus', showTooltip);
-        if (node === document.activeElement || node.matches(':hover')) showTooltip();
+        tooltipController.attach(node, {text, truncated, vertical: legend.layout === 'vertical'});
     }
 }
