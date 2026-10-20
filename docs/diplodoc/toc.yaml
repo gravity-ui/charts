@@ -74,6 +74,8 @@ items:
             href: ./pages/guides/axes/index.md
           - name: Axis types
             href: ./pages/guides/axes/axis-types.md
+          - name: Axis labels
+            href: ./pages/guides/axes/axis-labels.md
       - name: Data labels
         href: ./pages/guides/data-labels.md
       - name: Colors

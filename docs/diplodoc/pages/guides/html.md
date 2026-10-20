@@ -136,7 +136,7 @@ series: {
 ### Axis labels
 
 For supported axis types, limitations, and a configuration example, see
-[HTML axis labels](./axes/index.md#html-labels).
+[HTML axis labels](./axes/axis-labels.md#html-labels).
 
 ### Legend
 

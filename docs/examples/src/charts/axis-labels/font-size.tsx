@@ -55,7 +55,7 @@ export const meta = {
     seriesType: 'Line',
     title: 'Axis label font size',
     description: 'Adjust X and Y axis label sizes independently.',
-    docsUrl: 'pages/guides/axes/index.html#font-size',
+    docsUrl: 'pages/guides/axes/axis-labels.html#font-size',
     gallery: {
         group: 'axes',
     },
