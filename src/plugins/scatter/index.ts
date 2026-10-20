@@ -42,6 +42,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
     const data = await prepareScatterData({
         series: series as PreparedScatterSeries[],
+        seriesOptions: args.seriesOptions,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],

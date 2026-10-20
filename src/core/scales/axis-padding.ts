@@ -7,6 +7,7 @@ import type {PreparedSplit} from '../layout/split-types';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '../series/types';
 import type {ChartMargin} from '../types';
+import {getOnlyVisibleSeries} from '../utils';
 import {getTicksCountByPixelInterval, shouldSyncAxisWithPrimary} from '../utils/axis/common';
 import {calculateNumericProperty} from '../utils/math';
 
@@ -60,13 +61,6 @@ function fitAxis(args: {
 }) {
     const {axis, direction, scale, series, points} = args;
     if ((!hasPadding(axis) && !args.syncTicks) || !('invert' in scale)) return;
-    if (
-        series.some((s) =>
-            getSeriesPlugin(s.type).isAxisDomainFixed?.({series: s, axis: direction}),
-        )
-    )
-        return;
-
     const minOption = axis.min === undefined ? axis.padding?.min : undefined;
     const maxOption = axis.max === undefined ? axis.padding?.max : undefined;
     if (minOption === undefined && maxOption === undefined && !args.syncTicks) return;
@@ -158,28 +152,51 @@ function fitAxis(args: {
             after = nextAfter;
             if (delta < 1e-7) break;
         }
-        if (before + after < 1e-6 && !(pass === 0 && args.syncTicks)) break;
+        const needsExpansion = before + after >= 1e-6;
+        if (!needsExpansion && pass === 0 && !args.syncTicks) break;
+        if (!needsExpansion && pass > 0 && args.primaryTicksCount !== undefined) break;
 
         // Time scales truncate inverted values to milliseconds. Invert with full
         // precision first, then round outward so sub-millisecond gaps still fit.
+        const currentDomain = scale.domain().map(Number);
         const inverseScale =
-            axis.type === 'datetime'
-                ? scaleLinear().domain(scale.domain().map(Number))
-                : scale.copy();
-        const inset = inverseScale.range(
-            range.map((value) => lo + before + ((value - lo) / span) * (span - before - after)),
-        );
-        const nextDomain = range.map((value) => Number(inset.invert(value)));
-        if (axis.type === 'datetime') {
-            nextDomain[0] = Math.floor(nextDomain[0]);
-            nextDomain[1] = Math.ceil(nextDomain[1]);
-        }
+            axis.type === 'datetime' ? scaleLinear().domain(currentDomain) : scale.copy();
         const minEnabled = reversed ? afterEnabled : beforeEnabled;
         const maxEnabled = reversed ? beforeEnabled : afterEnabled;
-        if (!minEnabled) nextDomain[0] = Number(scale.domain()[0]);
-        if (!maxEnabled) nextDomain[1] = Number(scale.domain()[1]);
-        if (!nextDomain.every(Number.isFinite) || nextDomain[0] >= nextDomain[1]) break;
         const candidate = scale.copy();
+        const isValidDomain = (values: number[]) => {
+            if (!values.every(Number.isFinite) || values[0] >= values[1]) return false;
+            candidate.domain(values);
+            // Finite input alone does not guarantee valid Dates or a nonzero log domain.
+            return (
+                candidate.domain().every((value) => Number.isFinite(Number(value))) &&
+                values.every((value) => Number.isFinite(candidate(value)))
+            );
+        };
+        let nextDomain = currentDomain.slice();
+        let limited = false;
+        while (before + after >= 1e-6) {
+            const insetStart = lo + before;
+            const insetSpan = span - before - after;
+            const inset = inverseScale.range(
+                range.map((value) => insetStart + ((value - lo) / span) * insetSpan),
+            );
+            const expanded = range.map((value) => Number(inset.invert(value)));
+            if (axis.type === 'datetime') {
+                expanded[0] = Math.floor(expanded[0]);
+                expanded[1] = Math.ceil(expanded[1]);
+            }
+            if (!minEnabled) expanded[0] = currentDomain[0];
+            if (!maxEnabled) expanded[1] = currentDomain[1];
+            if (isValidDomain(expanded)) {
+                nextDomain = expanded;
+                break;
+            }
+            // Back off unrepresentable padding instead of breaking an otherwise valid scale.
+            before /= 2;
+            after /= 2;
+            limited = true;
+        }
         candidate.domain(nextDomain);
         if (args.primaryTicksCount !== undefined && args.primaryTicksCount >= 2) {
             const synced = getDomainSyncedToPrimaryTicks({
@@ -188,10 +205,12 @@ function fitAxis(args: {
                 yMin: nextDomain[0],
                 yMax: nextDomain[1],
             });
-            if (!synced.every(Number.isFinite)) break;
+            if (!isValidDomain(synced)) break;
             scale.domain(synced);
+            if (limited) break;
             continue;
         }
+        const expandedDomain = nextDomain.slice();
         const defaultRounding = direction === 'x' || axis.type === 'datetime';
         const roundMin = minEnabled && (axis.startOnTick ?? defaultRounding);
         const roundMax = maxEnabled && (axis.endOnTick ?? defaultRounding);
@@ -219,8 +238,12 @@ function fitAxis(args: {
             if (roundMin) nextDomain[0] = Math.min(nextDomain[0], nice[0]);
             if (roundMax) nextDomain[1] = Math.max(nextDomain[1], nice[1]);
         }
-        if (!nextDomain.every(Number.isFinite)) break;
+        if (!isValidDomain(nextDomain)) {
+            scale.domain(expandedDomain);
+            break;
+        }
         scale.domain(nextDomain);
+        if (limited || nextDomain.every((value, index) => value === currentDomain[index])) break;
     }
 }
 
@@ -228,16 +251,34 @@ export function applyAxisPadding(
     args: PrepareAxisPaddingArgs & {fixedX?: boolean; fixedY?: boolean[]},
 ) {
     const {xAxis, yAxis, xScale, yScale, series} = args;
-    const padX = !args.fixedX && hasPadding(xAxis);
-    const padY = yAxis.map((axis, index) => !args.fixedY?.[index] && hasPadding(axis));
+    if (!hasPadding(xAxis) && !yAxis.some(hasPadding)) return;
+    const visibleSeries = getOnlyVisibleSeries(series);
+    const xSeries = visibleSeries.length ? visibleSeries : series;
+    const ySeries = yAxis.map((_, index) => {
+        const items = series.filter((s) => ('yAxis' in s ? s.yAxis : 0) === index);
+        const visible = getOnlyVisibleSeries(items);
+        return visible.length ? visible : items;
+    });
+    const isFixed = (items: PreparedSeries[], direction: 'x' | 'y') =>
+        items.some((s) =>
+            getSeriesPlugin(s.type).isAxisDomainFixed?.({series: s, axis: direction}),
+        );
+    const fixedY = ySeries.map((items, index) => args.fixedY?.[index] || isFixed(items, 'y'));
+    const padX = !args.fixedX && !isFixed(xSeries, 'x') && hasPadding(xAxis);
+    const padY = yAxis.map((axis, index) => !fixedY[index] && hasPadding(axis));
     if (!padX && !padY.some(Boolean)) return;
 
     const needsAuto = (axis: PreparedAxis) =>
         (axis.min === undefined && axis.padding?.min === 'auto') ||
         (axis.max === undefined && axis.padding?.max === 'auto');
     const points: AxisPaddingPoint[] = [];
-    if ((padX && needsAuto(xAxis)) || yAxis.some((axis, index) => padY[index] && needsAuto(axis))) {
-        for (const [type, items] of group(series, (s) => s.type)) {
+    const autoX = padX && needsAuto(xAxis);
+    const autoY = yAxis.map((axis, index) => padY[index] && needsAuto(axis));
+    if (autoX || autoY.some(Boolean)) {
+        const measuredSeries = visibleSeries.filter(
+            (s) => autoX || autoY['yAxis' in s ? s.yAxis : 0],
+        );
+        for (const [type, items] of group(measuredSeries, (s) => s.type)) {
             const contribution = getSeriesPlugin(type).getAxisPadding?.({...args, series: items});
             if (contribution) {
                 for (const point of contribution) points.push(point);
@@ -245,7 +286,7 @@ export function applyAxisPadding(
         }
     }
     // All measurements use the same original scales; axes can then expand independently.
-    if (padX) fitAxis({axis: xAxis, direction: 'x', scale: xScale, series, points});
+    if (padX) fitAxis({axis: xAxis, direction: 'x', scale: xScale, series: xSeries, points});
     const primaryAxes = new Map<PreparedYAxis, PreparedYAxis>();
     for (const [primary, secondary] of clusterYAxes(yAxis)) {
         if (secondary) primaryAxes.set(secondary, primary);
@@ -253,7 +294,7 @@ export function applyAxisPadding(
     const changedAxes = new Set<PreparedYAxis>();
     yAxis.forEach((axis, index) => {
         const scale = yScale[index];
-        if (!scale || args.fixedY?.[index]) return;
+        if (!scale || fixedY[index]) return;
         const primary = primaryAxes.get(axis);
         const primaryIndex = primary ? yAxis.indexOf(primary) : -1;
         const primaryScale = yScale[primaryIndex];
@@ -262,7 +303,6 @@ export function applyAxisPadding(
             primaryScale &&
             axis.min === undefined &&
             axis.max === undefined &&
-            (axis.type === 'linear' || axis.type === 'logarithmic') &&
             shouldSyncAxisWithPrimary(axis, primary);
         const syncTicks = Boolean(syncWithPrimary && changedAxes.has(primary));
         if (!padY[index] && !syncTicks) return;
@@ -271,7 +311,7 @@ export function applyAxisPadding(
                   axis: primary,
                   scale: primaryScale,
                   labelLineHeight: primary.labels.lineHeight,
-                  series: series.filter((s) => ('yAxis' in s ? s.yAxis : 0) === primaryIndex),
+                  series: ySeries[primaryIndex],
               }).length
             : undefined;
         const previousDomain = scale.domain().map(Number);
@@ -279,7 +319,7 @@ export function applyAxisPadding(
             axis,
             direction: 'y',
             scale,
-            series: series.filter((s) => ('yAxis' in s ? s.yAxis : 0) === index),
+            series: ySeries[index],
             points: points.filter((p) => p.yAxis === index),
             primaryTicksCount,
             syncTicks,

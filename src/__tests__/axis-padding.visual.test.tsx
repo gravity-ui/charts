@@ -1,12 +1,49 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 
 import AxisPaddingExample from '../../docs/examples/src/charts/layout/axis-padding';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData, ChartSeries} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
+
+async function expectPaintInsidePlot(plot: Locator, paint: Locator) {
+    const bounds = await plot.evaluate((element) => {
+        const matrix = (element as SVGGraphicsElement).getScreenCTM();
+        if (!matrix) throw new Error('Missing plot transform');
+        const start = new DOMPoint(0, 0).matrixTransform(matrix);
+        const end = new DOMPoint(
+            Number(element.getAttribute('width')),
+            Number(element.getAttribute('height')),
+        ).matrixTransform(matrix);
+        return {left: start.x, top: start.y, right: end.x, bottom: end.y};
+    });
+    const boxes = await paint.evaluateAll((nodes) =>
+        nodes
+            .filter((node) => getComputedStyle(node).visibility !== 'hidden')
+            .map((node) => {
+                const box = node.getBoundingClientRect();
+                const style = getComputedStyle(node);
+                // These fixtures use circular symbols; their stroke extends by half its width.
+                const stroke = style.stroke === 'none' ? 0 : parseFloat(style.strokeWidth) / 2;
+                return {
+                    left: box.left - stroke,
+                    right: box.right + stroke,
+                    top: box.top - stroke,
+                    bottom: box.bottom + stroke,
+                };
+            }),
+    );
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const box of boxes) {
+        expect(box.left).toBeGreaterThanOrEqual(bounds.left - 0.1);
+        expect(box.right).toBeLessThanOrEqual(bounds.right + 0.1);
+        expect(box.top).toBeGreaterThanOrEqual(bounds.top - 0.1);
+        expect(box.bottom).toBeLessThanOrEqual(bounds.bottom + 0.1);
+    }
+}
 
 function dataFor(type: 'line' | 'area' | 'area-range' | 'scatter'): ChartData {
     const points = [
@@ -53,15 +90,11 @@ test.describe('Axis padding', () => {
             const svg = component.locator('svg');
             const markers = component.locator('.gcharts-marker__symbol[d]');
             await expect(markers).toHaveCount(type === 'area-range' ? 6 : 3);
-            const svgBox = await getLocatorBoundingBox(svg);
+            const plot = component.locator('.gcharts-chart__content');
+            await expectPaintInsidePlot(plot, markers);
             const boxes = await markers.evaluateAll((nodes) =>
                 nodes.map((node) => node.getBoundingClientRect().toJSON()),
             );
-            for (const box of boxes) {
-                expect(box.x).toBeGreaterThanOrEqual(svgBox.x);
-                expect(box.right).toBeLessThanOrEqual(svgBox.x + svgBox.width);
-                expect(box.y).toBeGreaterThanOrEqual(svgBox.y);
-            }
             const ticks = component.locator('.gcharts-y-axis__tick text');
             await expect(ticks.first()).toBeVisible();
             const labels = await ticks.allTextContents();
@@ -72,6 +105,15 @@ test.describe('Axis padding', () => {
             const right = boxes.reduce((a, b) => (a.right > b.right ? a : b));
             await page.mouse.move(right.x + right.width / 2, right.y + right.height / 2);
             await expect(page.locator('.gcharts-tooltip')).toBeVisible();
+            await expectPaintInsidePlot(
+                plot,
+                component.locator('.gcharts-marker__symbol[d], .gcharts-marker__halo[d]'),
+            );
+            if (type === 'scatter') {
+                await expect(
+                    component.locator('.gcharts-marker__halo[visibility=""]'),
+                ).toBeVisible();
+            }
             expect(
                 await ticks.evaluateAll((nodes) =>
                     nodes.map((node) => node.getBoundingClientRect().toJSON()),
@@ -81,6 +123,124 @@ test.describe('Axis padding', () => {
             await expect(svg).toHaveScreenshot();
         });
     }
+
+    test('shifted clusters keep their hover halo inside the padded plot', async ({mount, page}) => {
+        const data: ChartData = {
+            chart: {margin: {top: 0, bottom: 0, left: 0, right: 0}},
+            legend: {enabled: false},
+            xAxis: {
+                visible: false,
+                startOnTick: false,
+                endOnTick: false,
+                padding: {min: 'auto', max: 'auto'},
+            },
+            yAxis: [{visible: false, padding: {min: 'auto', max: 'auto'}}],
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Events',
+                        cluster: {
+                            enabled: true,
+                            overlapMode: 'shift',
+                            minimumClusterSize: 3,
+                            dataLabels: {enabled: false},
+                        },
+                        data: [
+                            {x: 0, y: 50, radius: 1},
+                            {x: 0.001, y: 50, radius: 1},
+                            {x: 0.002, y: 50, radius: 1},
+                            {x: 0.13, y: 50, radius: 35},
+                            {x: 2, y: 100, radius: 1},
+                            {x: 2, y: 0, radius: 1},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 600, height: 300}} />,
+        );
+        const markers = component.locator('.gcharts-marker__symbol[d]');
+        await expect(markers).toHaveCount(4);
+        const cluster = await getLocatorBoundingBox(markers.first());
+        await page.mouse.move(cluster.x + cluster.width / 2, cluster.y + cluster.height / 2);
+        await expect(page.locator('.gcharts-tooltip')).toBeVisible();
+        const halo = component.locator('.gcharts-marker__halo[visibility=""]');
+        await expect(halo).toBeVisible();
+        await expectPaintInsidePlot(component.locator('.gcharts-chart__content'), halo);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        await component.update(
+            <ChartTestStory
+                data={{
+                    ...data,
+                    xAxis: {...data.xAxis, order: 'reverse', padding: {min: 'auto', max: 0}},
+                }}
+                styles={{width: 600, height: 300}}
+            />,
+        );
+        await expect
+            .poll(async () => (await getLocatorBoundingBox(markers.first())).x)
+            .toBeGreaterThan(500);
+        const reversedCluster = await getLocatorBoundingBox(markers.first());
+        await page.mouse.move(
+            reversedCluster.x + reversedCluster.width / 2,
+            reversedCluster.y + reversedCluster.height / 2,
+        );
+        await expect(halo).toBeVisible();
+        await expectPaintInsidePlot(component.locator('.gcharts-chart__content'), halo);
+    });
+
+    test('disabled scatter hover markers keep their normal paint and hide the halo', async ({
+        mount,
+        page,
+    }) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            xAxis: {startOnTick: false, endOnTick: false, padding: {min: 'auto', max: 'auto'}},
+            yAxis: [{padding: {min: 'auto', max: 'auto'}}],
+            series: {
+                options: {
+                    scatter: {
+                        states: {
+                            hover: {
+                                marker: {
+                                    enabled: false,
+                                    radius: 30,
+                                    halo: {enabled: true, size: 40, opacity: 0.4},
+                                },
+                            },
+                        },
+                    },
+                },
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Events',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 2, y: 100},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 600, height: 300}} />,
+        );
+        const markers = component.locator('.gcharts-marker__symbol[d]');
+        await expect(markers).toHaveCount(2);
+        const marker = markers.last();
+        const path = await marker.getAttribute('d');
+        if (!path) throw new Error('Missing normal marker path');
+        const box = await getLocatorBoundingBox(marker);
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await expect(page.locator('.gcharts-tooltip')).toBeVisible();
+        await expect(marker).toHaveAttribute('d', path);
+        await expect(component.locator('.gcharts-marker__halo[visibility=""]')).toHaveCount(0);
+        await expectPaintInsidePlot(component.locator('.gcharts-chart__content'), markers);
+    });
 
     test('keeps explicit maximum limits and tick labels unchanged', async ({mount}) => {
         const data = dataFor('line');

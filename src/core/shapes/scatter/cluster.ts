@@ -1,6 +1,7 @@
 import type {ScatterClusterData, ScatterSeriesData} from '../../../types';
 import type {SymbolType} from '../../constants';
 import type {PreparedScatterSeries} from '../../series/types';
+import type {ChartMargin} from '../../types';
 import {calculateNumericProperty, getSymbolSize} from '../../utils';
 
 import type {PreparedScatterData} from './types';
@@ -88,6 +89,7 @@ function shiftClusters(
     boundsWidth: number,
     boundsHeight: number,
     boundsTop: number,
+    shiftPadding: Partial<ChartMargin>,
 ) {
     const occupied: OccupiedMarker[] = rendered
         .filter((marker) => !marker.clipped && marker.point.series.marker.states.normal.enabled)
@@ -130,15 +132,22 @@ function shiftClusters(
 
         const originalX = marker.point.x;
         const originalY = marker.point.y;
-        const minX = Math.max(cell.x * gridSize + own.halfWidth, own.halfWidth);
-        const maxX = Math.min((cell.x + 1) * gridSize - own.halfWidth, boundsWidth - own.halfWidth);
+        const minX = Math.max(
+            cell.x * gridSize + own.halfWidth,
+            own.halfWidth,
+            shiftPadding.left ?? 0,
+        );
+        const maxX = Math.min(
+            (cell.x + 1) * gridSize - own.halfWidth,
+            boundsWidth - Math.max(own.halfWidth, shiftPadding.right ?? 0),
+        );
         const minY = Math.max(
             boundsTop + cell.y * gridSize + own.halfHeight,
-            boundsTop + own.halfHeight,
+            boundsTop + Math.max(own.halfHeight, shiftPadding.top ?? 0),
         );
         const maxY = Math.min(
             boundsTop + (cell.y + 1) * gridSize - own.halfHeight,
-            boundsTop + boundsHeight - own.halfHeight,
+            boundsTop + boundsHeight - Math.max(own.halfHeight, shiftPadding.bottom ?? 0),
         );
         if (minX > maxX || minY > maxY) {
             continue;
@@ -207,7 +216,7 @@ function shiftClusters(
     }
 }
 
-function prepareClusterMarkerSeries(series: PreparedScatterSeries): PreparedScatterSeries {
+export function prepareClusterMarkerSeries(series: PreparedScatterSeries): PreparedScatterSeries {
     return {
         ...series,
         marker: {
@@ -274,6 +283,7 @@ export function clusterSeriesData(args: {
     boundsWidth: number;
     boundsHeight: number;
     boundsTop?: number;
+    shiftPadding?: Partial<ChartMargin>;
     isOutsideBounds: (x: number, y: number) => boolean;
 }): PreparedScatterData[] {
     const {data, series, boundsWidth, boundsHeight, boundsTop = 0, isOutsideBounds} = args;
@@ -324,7 +334,15 @@ export function clusterSeriesData(args: {
     }
 
     if (series.cluster.overlapMode === 'shift') {
-        shiftClusters(clusters, result, gridSize, boundsWidth, boundsHeight, boundsTop);
+        shiftClusters(
+            clusters,
+            result,
+            gridSize,
+            boundsWidth,
+            boundsHeight,
+            boundsTop,
+            args.shiftPadding ?? {},
+        );
     }
 
     return result;

@@ -139,7 +139,7 @@ export const createScales = (args: Args) => {
             xAxis,
             yAxis,
             split,
-            series: getOnlyVisibleSeries(series),
+            series,
             seriesOptions,
             fixedX: Boolean(zoomState?.x || rangeSliderState),
             fixedY: yAxis.map((_, i) => Boolean(zoomState?.y?.[i])),

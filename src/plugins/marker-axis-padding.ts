@@ -1,10 +1,22 @@
-import type {AxisPaddingPoint} from '~core/scales/axis-padding';
+import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedLineSeries} from '~core/series/types';
 import {getSymbolBounds} from '~core/utils/symbol';
 
+interface MarkerPaddingPoint {
+    x: number | null;
+    y: number | null;
+    hiddenInLine?: boolean;
+    data: {marker?: {states?: {normal?: {enabled: boolean}}}};
+}
+
+interface ProjectedMarkerSeries {
+    series: Pick<PreparedLineSeries, 'marker' | 'yAxis'>;
+    points: MarkerPaddingPoint[];
+}
+
 /** Cache normal/hover symbol geometry once per series, outside point projection. */
-export function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
+function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
     const {normal, hover} = marker.states;
     const bounds = (state: typeof normal | typeof hover) =>
         getSymbolBounds({
@@ -47,13 +59,8 @@ export function createPaddingPointFilter(xScale: ChartScale, yScale: ChartScale)
         y <= yMax + 0.5;
 }
 
-export function appendMarkerPadding(args: {
-    points: Array<{
-        x: number | null;
-        y: number | null;
-        hiddenInLine?: boolean;
-        data: {marker?: {states?: {normal?: {enabled: boolean}}}};
-    }>;
+function appendMarkerPadding(args: {
+    points: MarkerPaddingPoint[];
     marker: PreparedLineSeries['marker'];
     xScale: ChartScale;
     yScale: ChartScale;
@@ -69,4 +76,26 @@ export function appendMarkerPadding(args: {
         const bounds = getBounds(p.data.marker?.states?.normal?.enabled);
         if (bounds) args.result.push({x: p.x, y, yAxis: args.yAxis, ...bounds});
     }
+}
+
+/** Collect shared marker geometry after each plugin has projected its own points. */
+export function collectMarkerPadding(
+    args: PrepareAxisPaddingArgs,
+    projected: ProjectedMarkerSeries[],
+): AxisPaddingPoint[] {
+    const points: AxisPaddingPoint[] = [];
+    for (const item of projected) {
+        const yScale = args.yScale[item.series.yAxis];
+        if (!yScale) continue;
+        appendMarkerPadding({
+            points: item.points,
+            marker: item.series.marker,
+            xScale: args.xScale,
+            yScale,
+            top: args.split.plots[args.yAxis[item.series.yAxis].plotIndex]?.top ?? 0,
+            yAxis: item.series.yAxis,
+            result: points,
+        });
+    }
+    return points;
 }

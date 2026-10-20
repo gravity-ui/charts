@@ -1,11 +1,11 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {PreparedScatterSeries} from '~core/series/types';
+import {prepareClusterMarkerSeries} from '~core/shapes/scatter/cluster';
+import {getScatterMarkerBounds} from '~core/shapes/scatter/marker-bounds';
 import {getXValue, getYValue} from '~core/shapes/utils';
 import type {ChartMargin} from '~core/types';
 
 import {createPaddingPointFilter} from '../marker-axis-padding';
-
-import {getScatterMarkerBounds} from './marker-bounds';
 
 export function getScatterAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
     const points: AxisPaddingPoint[] = [];
@@ -19,24 +19,7 @@ export function getScatterAxisPadding(args: PrepareAxisPaddingArgs): AxisPadding
         // its members instead of iterating clustering and layout to a fixed point.
         const clusterBounds =
             s.cluster.enabled && s.data.length >= s.cluster.minimumClusterSize
-                ? getScatterMarkerBounds(
-                      {
-                          ...s,
-                          marker: {
-                              states: {
-                                  normal: {...s.marker.states.normal, ...s.cluster.marker},
-                                  hover: {
-                                      ...s.marker.states.hover,
-                                      ...s.cluster.marker,
-                                      enabled:
-                                          s.marker.states.hover.enabled && s.cluster.marker.enabled,
-                                  },
-                              },
-                          },
-                      },
-                      undefined,
-                      hoverEnabled,
-                  )
+                ? getScatterMarkerBounds(prepareClusterMarkerSeries(s), undefined, hoverEnabled)
                 : undefined;
         for (const data of s.data) {
             const x = getXValue({point: data, xAxis: args.xAxis, xScale: args.xScale});

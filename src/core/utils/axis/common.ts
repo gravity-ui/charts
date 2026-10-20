@@ -308,5 +308,13 @@ export function shouldSyncAxisWithPrimary(axis: ChartAxis, primaryAxis: ChartAxi
         return false;
     }
 
-    return axis.startOnTick && axis.endOnTick && primaryAxis.startOnTick && primaryAxis.endOnTick;
+    // Synchronization uses evenly spaced numeric ticks, which only linear axes provide.
+    return (
+        (axis.type ?? 'linear') === 'linear' &&
+        (primaryAxis.type ?? 'linear') === 'linear' &&
+        axis.startOnTick &&
+        axis.endOnTick &&
+        primaryAxis.startOnTick &&
+        primaryAxis.endOnTick
+    );
 }

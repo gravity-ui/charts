@@ -256,6 +256,26 @@ describe('axis padding', () => {
         expect(xScale.range()).toEqual([0, 600]);
     });
 
+    test.each(['logarithmic', 'datetime'] as const)(
+        'backs off excessive padding to keep a usable %s scale',
+        async (type) => {
+            const args = await prepare();
+            args.xAxis = {...args.xAxis, type, padding: {min: '100%'}};
+            const xScale =
+                type === 'logarithmic'
+                    ? scaleLog().domain([1, 100]).range([0, 600])
+                    : scaleUtc().domain([-1e14, 1e14]).range([0, 600]);
+            const domain = xScale.domain().map(Number);
+            applyAxisPadding({...args, xScale});
+            expect(xScale.domain().map(Number).every(Number.isFinite)).toBe(true);
+            expect(Number(xScale.domain()[0])).toBeLessThan(domain[0]);
+            expect(Number(xScale.domain()[1])).toBe(domain[1]);
+            expect(xScale(domain[0])).toBeGreaterThan(0);
+            expect(xScale(domain[0])).toBeLessThan(600);
+            expect(xScale(domain[1])).toBe(600);
+        },
+    );
+
     test('ignores new padding on a reversed category axis with legacy maxPadding', async () => {
         const args = await prepare();
         args.xAxis = {
@@ -296,6 +316,56 @@ describe('axis padding', () => {
         },
     );
 
+    test.each(['bar-x', 'bar-y', 'area'] as const)(
+        'keeps the percent %s fallback domain when all series are hidden',
+        async (type) => {
+            const args = await prepare([
+                {
+                    type,
+                    name: 'Share',
+                    stacking: 'percent',
+                    visible: false,
+                    data: [
+                        {x: 1, y: 10},
+                        {x: 2, y: 20},
+                    ],
+                },
+            ]);
+            args.xAxis.padding = {min: 30, max: 30};
+            args.yAxis[0].padding = {min: 30, max: 30};
+            const scales = createScales({...args, boundsWidth: 600, boundsHeight: 300});
+            expect((type === 'bar-y' ? scales.xScale : scales.yScale[0])?.domain()).toEqual([
+                0, 100,
+            ]);
+        },
+    );
+
+    test('skips geometry measurement when auto padding only affects a fixed percent domain', async () => {
+        const args = await prepare([
+            {
+                type: 'area',
+                name: 'Share',
+                stacking: 'percent',
+                data: [
+                    {x: 0, y: 10},
+                    {x: 2, y: 20},
+                ],
+            },
+        ]);
+        args.yAxis[0].padding = allAuto;
+        const measurement = jest.spyOn(getSeriesPlugin('area'), 'getAxisPadding');
+        try {
+            applyAxisPadding(args);
+            expect(measurement).not.toHaveBeenCalled();
+            // Padding the non-normalized X axis still needs marker geometry.
+            args.xAxis.padding = allAuto;
+            applyAxisPadding(args);
+            expect(measurement).toHaveBeenCalledTimes(1);
+        } finally {
+            measurement.mockRestore();
+        }
+    });
+
     test.each([0, 0.5, 100])(
         'keeps finite scales with width %s and oversized padding',
         async (width) => {
@@ -331,6 +401,92 @@ describe('axis padding', () => {
         expect(ticks[ticks.length - 1].y).toBe(0);
         expect(args.yScale[0](100)).toBeGreaterThanOrEqual(13);
     });
+
+    test('rechecks tick alignment when the expanded domain changes label thinning', async () => {
+        const args = await prepare();
+        args.yScale[0].domain([0, 2]).range([100, 0]);
+        args.yAxis[0] = {...args.yAxis[0], min: 0, padding: {max: 13}, endOnTick: true};
+        applyAxisPadding(args);
+        const ticks = getAutomaticTickValues({
+            axis: args.yAxis[0],
+            scale: args.yScale[0],
+            labelLineHeight: args.yAxis[0].labels.lineHeight,
+            series: args.series,
+        });
+        expect(ticks[ticks.length - 1].y).toBe(0);
+        expect(args.yScale[0](2)).toBeGreaterThanOrEqual(13);
+        expect(args.yScale[0].domain()[0]).toBe(0);
+    });
+
+    test('aligns both padded boundaries to fractional ticks without floating-point drift', async () => {
+        const args = await prepare();
+        args.yScale[0].domain([1 / 3, 1]);
+        args.yAxis[0] = {
+            ...args.yAxis[0],
+            padding: {min: 13, max: 13},
+            startOnTick: true,
+            endOnTick: true,
+        };
+        applyAxisPadding(args);
+        const ticks = getAutomaticTickValues({
+            axis: args.yAxis[0],
+            scale: args.yScale[0],
+            labelLineHeight: args.yAxis[0].labels.lineHeight,
+            series: args.series,
+        });
+        expect(ticks[0].y).toBe(300);
+        expect(ticks[ticks.length - 1].y).toBe(0);
+        expect(args.yScale[0](1 / 3)).toBeLessThanOrEqual(287);
+        expect(args.yScale[0](1)).toBeGreaterThanOrEqual(13);
+    });
+
+    test.each(['linear', 'logarithmic'] as const)(
+        'keeps a padded logarithmic secondary axis usable beside a %s primary axis',
+        async (primaryType) => {
+            const args = await prepare([
+                {
+                    ...line,
+                    data: [
+                        {x: 0, y: 1},
+                        {x: 2, y: 100},
+                    ],
+                },
+                {
+                    ...line,
+                    name: 'Secondary',
+                    yAxis: 1,
+                    data: [
+                        {x: 0, y: 100},
+                        {x: 2, y: 200},
+                    ],
+                },
+            ]);
+            args.yAxis[0] = {
+                ...args.yAxis[0],
+                type: primaryType,
+                startOnTick: true,
+                endOnTick: true,
+                position: 'left',
+            };
+            args.yAxis.push({
+                ...args.yAxis[0],
+                type: 'logarithmic',
+                position: 'right',
+                padding: {max: 10},
+            });
+            const scales = createScales({...args, boundsWidth: 600, boundsHeight: 300});
+            const scale = scales.yScale[1];
+            if (!scale || !('invert' in scale)) throw new Error('Expected a continuous scale');
+            expect(
+                scale
+                    .domain()
+                    .map(Number)
+                    .every((value) => value > 0 && Number.isFinite(value)),
+            ).toBe(true);
+            expect(Number.isFinite(scale(100))).toBe(true);
+            expect(scale(200)).toBeGreaterThanOrEqual(10);
+        },
+    );
 
     test.each([{height: 80}, {height: 150}, {height: 300}, {height: 300, padding: allAuto}])(
         'keeps the secondary Y grid aligned with %j after padding changes primary ticks',

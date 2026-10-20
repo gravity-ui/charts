@@ -8,6 +8,8 @@ Use `min` and `max` to set axis limits. Numeric axes accept numbers, datetime ax
 
 `startOnTick` and `endOnTick` round the corresponding limits outward to convenient tick values, including explicitly set limits. For exact linear limits, set both to `false`. These options default to `true` for X axes and datetime Y axes, and `false` for linear/logarithmic Y axes.
 
+Two linear Y axes in the same plot synchronize their ticks when both enable `startOnTick` and `endOnTick`. Logarithmic axes calculate their ticks independently.
+
 ## Axis padding {#axis-padding}
 
 Markers at an axis limit can be clipped by the plot edge. Automatic axis padding extends the value range just enough to fit them, including their hover state. Ticks and grid lines cover the extended range as usual.

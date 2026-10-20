@@ -14,6 +14,7 @@ import {
     shouldSyncAxisWithPrimary,
 } from '../utils';
 import {getBandSize} from '../utils/band-size';
+import {sumDecimals} from '../utils/math';
 
 import type {ChartScaleLinear} from './types';
 import {
@@ -177,7 +178,7 @@ export function getDomainMinAlignedToStartTick(args: {
                 typeof tickValues[0]?.value === 'number' &&
                 typeof tickValues[1]?.value === 'number'
             ) {
-                step = tickValues[1].value - tickValues[0].value;
+                step = sumDecimals([tickValues[1].value, -tickValues[0].value]);
             } else {
                 step = tickStep(dMin, dMax, 1);
             }
@@ -186,7 +187,7 @@ export function getDomainMinAlignedToStartTick(args: {
                 return dMin;
             }
 
-            dNewMin = tickValues[0].value - step;
+            dNewMin = sumDecimals([tickValues[0].value, -step]);
         }
     }
 
@@ -224,7 +225,7 @@ export function getDomainMaxAlignedToEndTick(args: {
                 typeof tickValues[0]?.value === 'number' &&
                 typeof tickValues[1]?.value === 'number'
             ) {
-                step = tickValues[1].value - tickValues[0].value;
+                step = sumDecimals([tickValues[1].value, -tickValues[0].value]);
             } else {
                 step = tickStep(dMin, dMax, 1);
             }
@@ -233,7 +234,10 @@ export function getDomainMaxAlignedToEndTick(args: {
                 return dMax;
             }
 
-            dNewMax = Math.floor(dMax / step + 1) * step;
+            dNewMax =
+                tickValues.length === 1
+                    ? Math.floor(dMax / step + 1) * step
+                    : Math.max(dMax, sumDecimals([tickValues[tickValues.length - 1].value, step]));
         }
     }
 
