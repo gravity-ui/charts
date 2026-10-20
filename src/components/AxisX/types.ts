@@ -2,6 +2,7 @@ import type {DashStyle} from '../../core/constants';
 import type {AxisPlotShape} from '../../core/types/chart/axis';
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';
 import type {TextRowData} from '../types';
+import type {AxisLabelLevelData} from '../utils/axis-label-levels';
 
 export type AxisSvgLabelData = {
     x: number;
@@ -89,6 +90,7 @@ export type AxisDomainData = {
 };
 
 export type AxisXData = {
+    additionalLevels: AxisLabelLevelData[];
     id: string;
     gridEnabled: boolean;
     title: AxisTitleData | null;

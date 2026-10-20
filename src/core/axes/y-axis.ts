@@ -29,7 +29,8 @@ import {
     wrapText,
 } from '../utils';
 
-import type {PreparedYAxis} from './types';
+import {prepareAxisLabelLevels} from './label-levels';
+import type {NormalizedAxis, PreparedYAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
 
 export const getYAxisLabelMaxWidth = async (args: {
@@ -101,10 +102,10 @@ export const getPreparedYAxis = ({
     boundsHeight: number;
     width: number;
     seriesData: PreparedSeries[];
-    yAxis: ChartYAxis[] | undefined;
+    yAxis: NormalizedAxis<ChartYAxis>[] | undefined;
 }): Promise<PreparedYAxis[]> => {
     const axisByPlot: ChartYAxis[][] = [];
-    const axisItems = yAxis || [{} as ChartYAxis];
+    const axisItems: NormalizedAxis<ChartYAxis>[] = yAxis ?? [{}];
 
     const hasAxisRelatedSeries = seriesData.some(isAxisRelatedSeries);
     if (!hasAxisRelatedSeries) {
@@ -205,10 +206,14 @@ export const getPreparedYAxis = ({
                         calculateNumericProperty({base: width, value: axisItem.labels?.maxWidth}) ??
                         axisLabelsDefaults.maxWidth,
                     html: labelsHtml,
+                    additionalLevels: labelsEnabled
+                        ? prepareAxisLabelLevels(axisItem.labels?.additionalLevels)
+                        : [],
                 },
                 lineColor: get(axisItem, 'lineColor'),
                 lineVisible: get(axisItem, 'lineVisible', true),
                 categories: axisItem.categories,
+                orderedCategories: axisItem.orderedCategories,
                 timestamps: get(axisItem, 'timestamps'),
                 title: {
                     text: titleText,
@@ -320,6 +325,9 @@ export const getPreparedYAxis = ({
 
                 preparedAxis.labels.height = labelsHeight;
                 preparedAxis.labels.width = Math.min(preparedAxis.labels.maxWidth, labelsWidth);
+                preparedAxis.labels.additionalSize =
+                    (preparedAxis.labels.additionalLevels?.length ?? 0) *
+                    (labelsLineHeight + Math.max(0, preparedAxis.labels.padding) * 2);
             }
 
             return preparedAxis;

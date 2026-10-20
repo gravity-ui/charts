@@ -39,6 +39,42 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('additional axis levels expose numeric ranges and the shared value format', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'axis-label-levels-usage.ts'),
+                declaration +
+                    `
+                const range: AxisLabelRange = {from: 0, to: 2, value: 'January'};
+                const level: AxisLabelLevel = {
+                    ranges: [range],
+                    format: {type: 'custom', formatter: ({value}) => String(value)},
+                };
+                const x: ChartXAxis = {labels: {additionalLevels: [level]}};
+                const y: ChartYAxis = {labels: {additionalLevels: [level]}};
+                // @ts-expect-error Category boundaries are indexes.
+                range.from = 'January';
+                // @ts-expect-error A label value is required.
+                const missing: AxisLabelRange = {from: 0, to: 1};
+                void [x, y, missing];
+            `,
+            ),
+        ).not.toThrow();
+        const validate = createSchemaValidator().compile(schema);
+        const makeConfig = (range) => ({
+            series: {data: [{type: 'line', name: 'Sales', data: [{x: 0, y: 1}]}]},
+            xAxis: {
+                labels: {
+                    additionalLevels: [{ranges: [range], format: {type: 'date', format: 'MMMM'}}],
+                },
+            },
+        });
+        expect(validate(makeConfig({from: 0, to: 2, value: 0}))).toBe(true);
+        expect(validate(makeConfig({from: 'A', to: 2, value: 'Group'}))).toBe(false);
+        expect(validate(makeConfig({from: 0, to: 2}))).toBe(false);
+        expect(schema.definitions.ChartAxisLabels.properties).toHaveProperty('additionalLevels');
+    });
+
     test('line marker label anchors are exposed only on line data labels', () => {
         expect(() =>
             validateDeclaration(

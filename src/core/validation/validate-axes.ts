@@ -5,6 +5,64 @@ import type {ChartAxis, ChartXAxis, ChartYAxis} from '../types';
 
 const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
 
+function validateAdditionalLevels(axis: ChartAxis) {
+    const levels = axis.labels?.additionalLevels;
+    if (levels === undefined) {
+        return;
+    }
+    const invalid = () => {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-axis-additional-levels'),
+        });
+    };
+    if (!Array.isArray(levels)) {
+        invalid();
+    }
+    for (const level of levels) {
+        if (!level || !Array.isArray(level.ranges)) {
+            invalid();
+        }
+        if (level.format !== undefined) {
+            const format = level.format;
+            if (
+                !format ||
+                !['number', 'date', 'custom'].includes(format.type) ||
+                (format.type === 'custom' && typeof format.formatter !== 'function') ||
+                (format.type === 'date' &&
+                    format.format !== undefined &&
+                    typeof format.format !== 'string')
+            ) {
+                invalid();
+            }
+        }
+        for (const range of level.ranges) {
+            if (
+                !range ||
+                !Number.isFinite(range.from) ||
+                !Number.isFinite(range.to) ||
+                range.from > range.to ||
+                (typeof range.value !== 'string' &&
+                    !(typeof range.value === 'number' && Number.isFinite(range.value)))
+            ) {
+                invalid();
+            }
+            if (
+                axis.type === 'category' &&
+                (!Number.isInteger(range.from) ||
+                    !Number.isInteger(range.to) ||
+                    range.from < 0 ||
+                    range.to >= (axis.categories?.length ?? 0))
+            ) {
+                invalid();
+            }
+            if (axis.type === 'logarithmic' && range.from <= 0) {
+                invalid();
+            }
+        }
+    }
+}
+
 function validateCategories(axis: ChartAxis) {
     if (!axis.categories || !Array.isArray(axis.categories) || axis.categories.length === 0) {
         throw new ChartError({
@@ -119,6 +177,7 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     if (xAxis) {
         validateAxisType({axis: xAxis, key: 'x'});
         validateLabelsHtmlOptions({axis: xAxis});
+        validateAdditionalLevels(xAxis);
 
         if (xAxis?.type === 'category') {
             validateCategories(xAxis);
@@ -144,5 +203,6 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
             });
         }
         validateLabelsHtmlOptions({axis});
+        validateAdditionalLevels(axis);
     });
 }

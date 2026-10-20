@@ -36,7 +36,7 @@ export function getYAxisWidth(axis: PreparedYAxis | undefined) {
     }
 
     if (axis?.labels.enabled) {
-        result += axis.labels.margin + axis.labels.width;
+        result += axis.labels.margin + axis.labels.width + (axis.labels.additionalSize ?? 0);
     }
 
     return result;
@@ -82,7 +82,10 @@ const getBottomOffset = (args: {
         }
 
         if (preparedXAxis.labels.enabled) {
-            result += preparedXAxis.labels.margin + preparedXAxis.labels.height;
+            result +=
+                preparedXAxis.labels.margin +
+                preparedXAxis.labels.height +
+                (preparedXAxis.labels.additionalSize ?? 0);
         }
     }
 
@@ -195,7 +198,10 @@ export function getChartDimensions({
     const rightOffset = getRightOffset({preparedLegend, legendConfig});
     const leftOffset = getLeftOffset({preparedLegend, legendConfig});
 
-    const boundsHeight = height - margin.top - margin.bottom - bottomOffset - topOffset;
+    const boundsHeight = Math.max(
+        0,
+        height - margin.top - margin.bottom - bottomOffset - topOffset,
+    );
     const adjustedBoundsWidth = Math.max(0, boundsWidth - rightOffset - leftOffset);
 
     return {boundsWidth: adjustedBoundsWidth, boundsHeight};

@@ -1,5 +1,6 @@
 import type {
     AxisCrosshair,
+    AxisLabelRange,
     AxisPlotBand,
     AxisPlotShape,
     BaseTextStyle,
@@ -16,7 +17,19 @@ import type {
 } from '../../types';
 import type {DashStyle} from '../constants';
 
-type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' | 'autoRotation'> &
+/** Category indexes refer to this full ordered list, even after min/max normalization. */
+export type NormalizedAxis<T extends ChartAxis = ChartAxis> = T & {
+    orderedCategories?: string[];
+};
+
+export interface PreparedAxisLabelLevel {
+    ranges: (AxisLabelRange & {text: string})[];
+}
+
+type PreparedAxisLabels = Omit<
+    ChartAxisLabels,
+    'enabled' | 'padding' | 'style' | 'autoRotation' | 'additionalLevels'
+> &
     Required<Pick<ChartAxisLabels, 'enabled' | 'padding' | 'margin' | 'rotation' | 'html'>> & {
         style: BaseTextStyle;
         rotation: number;
@@ -24,6 +37,9 @@ type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' 
         width: number;
         lineHeight: number;
         maxWidth: number;
+        additionalLevels?: PreparedAxisLabelLevel[];
+        /** Total perpendicular space reserved for additional levels. */
+        additionalSize?: number;
     };
 
 export type PreparedAxisPlotBand = Required<Omit<AxisPlotBand, 'size' | 'align'>> & {
@@ -80,6 +96,7 @@ type PreparedBaseAxis = Omit<
     ChartAxis,
     'type' | 'labels' | 'plotLines' | 'plotBands' | 'plotShapes'
 > & {
+    orderedCategories?: string[];
     type: ChartAxisType;
     labels: PreparedAxisLabels;
     title: {

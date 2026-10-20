@@ -18,6 +18,7 @@ import {hideOverlappingTickLabels} from '~core/utils/axis/label-collision';
 
 import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
+import {prepareAdditionalAxisLabels} from '../utils/axis-label-levels';
 
 import {prepareHtmlYAxisTitle, prepareSvgYAxisTitle} from './prepare-axis-title';
 import type {
@@ -322,7 +323,9 @@ export async function prepareYAxisData({
         (acc, item) => Math.max(acc, item.svgLabel?.size.width ?? item.htmlLabel?.size.width ?? 0),
         0,
     );
-    labelsWidth = Math.min(axis.labels.width, labelsWidth);
+    labelsWidth = axis.labels.additionalSize
+        ? axis.labels.width + axis.labels.additionalSize
+        : Math.min(axis.labels.width, labelsWidth);
 
     const title = axis.title.html
         ? await prepareHtmlYAxisTitle({
@@ -486,6 +489,12 @@ export async function prepareYAxisData({
     measureContainer?.remove();
 
     return {
+        additionalLevels: await prepareAdditionalAxisLabels({
+            axis,
+            scale,
+            length: axisHeight,
+            origin: {x: domainX, y: axisPlotTopPosition},
+        }),
         id: getUniqId(),
         gridEnabled: axis.grid.enabled,
         title,

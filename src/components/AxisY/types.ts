@@ -3,6 +3,7 @@ import type {AxisPlotShape} from '../../core/types/chart/axis';
 import type {CSSProperties} from '../../core/types/css';
 import type {BaseTextStyle, HtmlItem, PlotLayerPlacement, PointPosition} from '../../types';
 import type {TextRowData} from '../types';
+import type {AxisLabelLevelData} from '../utils/axis-label-levels';
 
 export type AxisSvgLabelData = {
     x: number;
@@ -99,6 +100,7 @@ export type AxisDomainData = {
 };
 
 export type AxisYData = {
+    additionalLevels: AxisLabelLevelData[];
     id: string;
     gridEnabled: boolean;
     title: HtmlAxisTitleData | SvgAxisTitleData | null;

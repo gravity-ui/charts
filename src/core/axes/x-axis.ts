@@ -31,8 +31,9 @@ import {getSvgLabelCandidate, getVisibleLabelIndexes} from '../utils/axis/label-
 import {getXAxisTickValues} from '../utils/axis/x-axis';
 import {getXAxisLabelGeometry} from '../utils/axis/x-axis-label';
 
+import {prepareAxisLabelLevels} from './label-levels';
 import {getPreparedRangeSlider} from './range-slider';
-import type {PreparedXAxis} from './types';
+import type {NormalizedAxis, PreparedXAxis} from './types';
 import {prepareAxisPlotLabel} from './utils';
 
 interface XAxisLabelBounds {
@@ -187,7 +188,7 @@ export const getPreparedXAxis = async ({
     boundsWidth,
     labelBounds,
 }: {
-    xAxis?: ChartXAxis;
+    xAxis?: NormalizedAxis<ChartXAxis>;
     seriesData: PreparedSeries[];
     width: number;
     boundsWidth: number;
@@ -255,10 +256,14 @@ export const getPreparedXAxis = async ({
                 calculateNumericProperty({base: width, value: xAxis?.labels?.maxWidth}) ??
                 axisLabelsDefaults.maxWidth,
             html: labelsHtml,
+            additionalLevels: isLabelsEnabled
+                ? prepareAxisLabelLevels(xAxis?.labels?.additionalLevels)
+                : [],
         },
         lineColor: get(xAxis, 'lineColor'),
         lineVisible: get(xAxis, 'lineVisible', true),
         categories: xAxis?.categories,
+        orderedCategories: xAxis?.orderedCategories,
         timestamps: get(xAxis, 'timestamps'),
         title: {
             text: titleText,
@@ -356,6 +361,9 @@ export const getPreparedXAxis = async ({
             axisLabels: xAxis?.labels,
             labelBounds,
         });
+        preparedXAxis.labels.additionalSize =
+            (preparedXAxis.labels.additionalLevels?.length ?? 0) *
+            (labelsLineHeight + Math.max(0, preparedXAxis.labels.padding) * 2);
     }
 
     return preparedXAxis;

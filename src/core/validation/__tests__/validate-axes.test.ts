@@ -5,6 +5,41 @@ import {validateAxes} from '../validate-axes';
 type Args = Parameters<typeof validateAxes>[0];
 
 describe('validation/validateAxes', () => {
+    test.each([
+        null,
+        {},
+        [null],
+        [{ranges: null}],
+        [{ranges: [{from: '0', to: 1, value: 'Group'}]}],
+        [{ranges: [{from: 0, to: Infinity, value: 'Group'}]}],
+        [{ranges: [{from: 2, to: 1, value: 'Group'}]}],
+        [{ranges: [{from: 0, to: 1, value: null}]}],
+        [{ranges: [{from: 0, to: 1, value: NaN}]}],
+        [{ranges: [], format: {type: 'custom'}}],
+        [{ranges: [], format: {type: 'date', format: 123}}],
+        [{ranges: [], format: {type: 'unknown'}}],
+    ])('rejects invalid additional label levels %j on both axes', (additionalLevels) => {
+        const axis = {labels: {additionalLevels}} as Args['xAxis'];
+        expect(() => validateAxes({xAxis: axis})).toThrow();
+        expect(() => validateAxes({yAxis: [axis!]})).toThrow();
+    });
+
+    test.each([
+        {type: 'category', categories: ['A', 'B'], from: -1, to: 1},
+        {type: 'category', categories: ['A', 'B'], from: 0.5, to: 1},
+        {type: 'category', categories: ['A', 'B'], from: 0, to: 2},
+        {type: 'logarithmic', from: 0, to: 10},
+    ])('rejects invalid range units %j', ({from, to, ...axis}) => {
+        expect(() =>
+            validateAxes({
+                xAxis: {
+                    ...axis,
+                    labels: {additionalLevels: [{ranges: [{from, to, value: 'Group'}]}]},
+                } as Args['xAxis'],
+            }),
+        ).toThrow();
+    });
+
     test.each([{xAxis: {type: 'unknown'}}, {yAxis: [{type: 'unknown'}]}])(
         'validateAxes should throw an error in case of invalid axis type (data: %j)',
         (data) => {

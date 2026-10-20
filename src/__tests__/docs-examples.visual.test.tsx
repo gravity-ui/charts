@@ -2,6 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
+import AdditionalAxisLevelsExample from '../../docs/examples/src/charts/axis-labels/additional-levels';
 import AxisLabelFontSizeExample from '../../docs/examples/src/charts/axis-labels/font-size';
 import CategoryAxisExample from '../../docs/examples/src/charts/axis-types/category';
 import DatetimeAxisExample from '../../docs/examples/src/charts/axis-types/datetime';
@@ -20,6 +21,16 @@ const CONTAINER_STYLE: React.CSSProperties = {
 };
 
 test.describe('Docs examples: Axis Labels', () => {
+    test('additional levels', async ({mount}) => {
+        const component = await mount(
+            <div style={CONTAINER_STYLE}>
+                <AdditionalAxisLevelsExample />
+            </div>,
+        );
+        await expect(component.locator('.gcharts-x-axis__level')).toHaveCount(2);
+        await expect(component.locator('.gcharts-x-axis__level text')).toHaveCount(3);
+        await expect(component.locator('svg')).toHaveScreenshot();
+    });
     test('custom font size', async ({mount}) => {
         const component = await mount(
             <div style={CONTAINER_STYLE}>

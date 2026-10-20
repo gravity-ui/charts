@@ -47,8 +47,10 @@ export async function getAxes(props: UseAxesProps) {
         yAxis,
     });
     const axesWidth = getWidthOccupiedByYAxis({preparedAxis: estimatedPreparedYAxis});
-    const estimatedBoundsWidth =
-        width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right);
+    const estimatedBoundsWidth = Math.max(
+        0,
+        width - (axesWidth + preparedChart.margin.left + preparedChart.margin.right),
+    );
     const axisOffsets = getHorizontalAxisOffsets({
         preparedYAxis: estimatedPreparedYAxis,
         preparedLegend,
@@ -71,6 +73,7 @@ export async function getAxes(props: UseAxesProps) {
                 preparedXAxis.title.margin +
                 preparedXAxis.labels.margin +
                 preparedXAxis.labels.height +
+                (preparedXAxis.labels.additionalSize ?? 0) +
                 (preparedXAxis.rangeSlider.enabled
                     ? preparedXAxis.rangeSlider.height + preparedXAxis.rangeSlider.margin
                     : 0) +
@@ -82,7 +85,7 @@ export async function getAxes(props: UseAxesProps) {
 
     const preparedYAxis = await getPreparedYAxis({
         height,
-        boundsHeight: estimatedBoundsHeight,
+        boundsHeight: Math.max(0, estimatedBoundsHeight),
         width,
         seriesData,
         yAxis,

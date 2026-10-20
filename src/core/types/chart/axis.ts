@@ -5,7 +5,7 @@ import type {DateTimeLabelFormats} from '../../utils/time';
 import type {FormatNumberOptions} from '../formatter';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseTextStyle} from './base';
+import type {BaseTextStyle, ValueFormat} from './base';
 import type {ChartBrush} from './brush';
 
 /**
@@ -20,7 +20,35 @@ export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;
 
+export interface AxisLabelRange {
+    /**
+     * Start of the range in axis units: a number, a Unix timestamp in milliseconds,
+     * or a zero-based category index after `order`, before min/max and zoom.
+     * Category ranges include the entire first and last categories.
+     */
+    from: number;
+    /** End of the range, in the same units as `from`. Must be greater than or equal to `from`. */
+    to: number;
+    /** Label value, independent of the axis type. Displayed as a string when no format is set. */
+    value: string | number;
+}
+
+export interface AxisLabelLevel {
+    /** Explicit ranges. Gaps and repeated label values are allowed. */
+    ranges: AxisLabelRange[];
+    /** Format shared by this level. Does not inherit the base tick label format. */
+    format?: ValueFormat;
+}
+
 export interface ChartAxisLabels {
+    /**
+     * Additional label levels, ordered from nearest to farthest from the base tick labels.
+     * Supported on X and Y axes of every scale type; the base ticks remain configured separately.
+     * Labels are plain SVG text, parallel to the axis, centered over each visible range.
+     * They are truncated to fit; overlapping labels in the same level may be hidden.
+     * Uses the axis label font size and padding. `enabled: false` hides all levels.
+     */
+    additionalLevels?: AxisLabelLevel[];
     /** Enable or disable the axis labels. */
     enabled?: boolean;
     /**

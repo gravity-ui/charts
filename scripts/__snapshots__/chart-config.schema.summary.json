@@ -8,6 +8,8 @@
     "AreaSeriesData<JsonValue>",
     "AreaValueFormat<JsonValue>",
     "AxisCrosshair",
+    "AxisLabelLevel",
+    "AxisLabelRange",
     "AxisPlotBand",
     "AxisPlotLine",
     "AxisPlotShape",
@@ -186,6 +188,8 @@
       "snap",
       "width"
     ],
+    "AxisLabelLevel": ["format", "ranges"],
+    "AxisLabelRange": ["from", "to", "value"],
     "AxisPlotBand": [
       "align",
       "color",
@@ -285,6 +289,7 @@
     "ChartAnnotationPopup": ["backgroundColor", "borderRadius", "offset", "padding"],
     "ChartAnnotationSeriesOptions": ["label", "popup"],
     "ChartAxisLabels": [
+      "additionalLevels",
       "autoRotation",
       "dateFormat",
       "dateTimeLabelFormats",

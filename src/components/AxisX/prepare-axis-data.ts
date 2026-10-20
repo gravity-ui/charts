@@ -18,6 +18,7 @@ import {getXAxisLabelGeometry} from '~core/utils/axis/x-axis-label';
 import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
 import type {HtmlItem} from '../../types';
 import type {TextRowData} from '../types';
+import {prepareAdditionalAxisLabels} from '../utils/axis-label-levels';
 import {getMultilineTitleContentRows} from '../utils/axis-title';
 
 import type {
@@ -281,7 +282,12 @@ export async function prepareXAxisData({
                 style: axis.title.style,
                 size: titleTextSize,
                 x,
-                y: height + axis.labels.margin + axis.labels.height + axis.title.margin,
+                y:
+                    height +
+                    axis.labels.margin +
+                    axis.labels.height +
+                    (axis.labels.additionalSize ?? 0) +
+                    axis.title.margin,
                 rotate: 0,
                 offset: 0,
             };
@@ -427,6 +433,14 @@ export async function prepareXAxisData({
         measureContainer?.remove();
 
         xAxisItems.push({
+            additionalLevels: isBottomPlot
+                ? await prepareAdditionalAxisLabels({
+                      axis,
+                      scale,
+                      length: axisWidth,
+                      origin: {x: 0, y: height},
+                  })
+                : [],
             id: getUniqId(),
             gridEnabled: axis.grid.enabled,
             title,

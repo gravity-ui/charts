@@ -9,6 +9,7 @@ import {getLineDashArray} from '~core/utils';
 import {HtmlLayer} from '../../hooks/useShapes/HtmlLayer';
 import type {HtmlItem} from '../../types';
 import {block} from '../../utils';
+import {renderAdditionalAxisLabels} from '../utils/axis-label-levels';
 
 import type {
     AxisPlotBandData,
@@ -43,6 +44,7 @@ export const AxisX = (props: Props) => {
 
         const svgElement = select(ref.current);
         svgElement.selectAll('*').remove();
+        renderAdditionalAxisLabels(svgElement, preparedAxisData.additionalLevels, b('level'));
 
         let plotBeforeContainer = null;
         let plotAfterContainer = null;

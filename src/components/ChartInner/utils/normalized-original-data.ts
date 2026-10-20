@@ -1,8 +1,9 @@
+import type {NormalizedAxis} from '~core/axes/types';
 import {getAxisCategories} from '~core/utils';
 
 import type {ChartAxis, ChartData} from '../../../types';
 
-function getNormalizedCategoryAxis<T extends ChartAxis>(axis: T): T {
+function getNormalizedCategoryAxis<T extends ChartAxis>(axis: T): NormalizedAxis<T> {
     const categories = getAxisCategories(axis);
     const orderedCategories = getAxisCategories({
         categories: axis.categories,
@@ -18,7 +19,7 @@ function getNormalizedCategoryAxis<T extends ChartAxis>(axis: T): T {
             : undefined;
     const ticks = axis.ticks && values !== undefined ? {...axis.ticks, values} : axis.ticks;
 
-    return {...axis, categories, ticks} as T;
+    return {...axis, categories, ticks, orderedCategories} as NormalizedAxis<T>;
 }
 
 export function getNormalizedXAxis(props: {xAxis: ChartData['xAxis']}) {
