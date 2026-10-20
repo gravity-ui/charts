@@ -49,10 +49,9 @@ export async function prepareAxisLayout(args: Args) {
                   yAxis,
                   rangeSliderState: args.rangeSliderState,
                   zoomState: args.zoomState,
-                  plotPadding: args.preparedChart.plotPadding,
                   seriesOptions: args.preparedSeriesOptions,
               })
-            : {xScale: undefined, yScale: undefined, plotPadding: undefined};
+            : {xScale: undefined, yScale: undefined};
         return {boundsWidth, boundsHeight, split, xAxis, yAxis, ...scales};
     };
 

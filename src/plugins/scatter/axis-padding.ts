@@ -1,20 +1,21 @@
-import type {PlotPaddingContribution, PreparePlotPaddingArgs} from '~core/layout/plot-padding';
+import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {PreparedScatterSeries} from '~core/series/types';
-import {getScatterMarkerBounds} from '~core/shapes/scatter/marker-bounds';
 import {getXValue, getYValue} from '~core/shapes/utils';
 import type {ChartMargin} from '~core/types';
 
-import {createPaddingPointFilter} from '../marker-plot-padding';
+import {createPaddingPointFilter} from '../marker-axis-padding';
 
-export function getScatterPlotPadding(args: PreparePlotPaddingArgs): PlotPaddingContribution {
-    const points: PlotPaddingContribution['points'] = [];
+import {getScatterMarkerBounds} from './marker-bounds';
+
+export function getScatterAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+    const points: AxisPaddingPoint[] = [];
     const hoverEnabled = args.seriesOptions?.scatter?.states?.hover?.enabled !== false;
     for (const s of args.series as PreparedScatterSeries[]) {
         const yScale = args.yScale[s.yAxis];
         if (!yScale) continue;
         const inRange = createPaddingPointFilter(args.xScale, yScale);
         const cache = new Map<number | undefined, ChartMargin>();
-        // A range inset can regroup grid cells. Bound every potential cluster by
+        // Expanding a domain can regroup grid cells. Bound every potential cluster by
         // its members instead of iterating clustering and layout to a fixed point.
         const clusterBounds =
             s.cluster.enabled && s.data.length >= s.cluster.minimumClusterSize
@@ -50,8 +51,8 @@ export function getScatterPlotPadding(args: PreparePlotPaddingArgs): PlotPadding
                 }
                 cache.set(data.radius, bounds);
             }
-            points.push({x, y, ...bounds});
+            points.push({x, y, yAxis: s.yAxis, ...bounds});
         }
     }
-    return {points, options: args.seriesOptions?.scatter?.plotPadding};
+    return points;
 }

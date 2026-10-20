@@ -2,8 +2,29 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import {AXIS_TYPE} from '../constants';
 import {i18n} from '../i18n';
 import type {ChartAxis, ChartXAxis, ChartYAxis} from '../types';
+import {parseNonNegativeSize} from '../utils/math';
 
 const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
+
+function validatePadding(axis: ChartAxis) {
+    const padding = axis.padding;
+    if (padding === undefined) return;
+    if (!padding || typeof padding !== 'object' || Array.isArray(padding)) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: 'axis.padding must be an object',
+        });
+    }
+    for (const side of ['min', 'max'] as const) {
+        const value = padding[side];
+        if (value !== undefined && value !== 'auto' && !parseNonNegativeSize(value)) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: `axis.padding.${side} must be auto or a finite nonnegative pixel or percentage size`,
+            });
+        }
+    }
+}
 
 function validateCategories(axis: ChartAxis) {
     if (!axis.categories || !Array.isArray(axis.categories) || axis.categories.length === 0) {
@@ -117,6 +138,7 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     const {xAxis, yAxis = []} = args;
 
     if (xAxis) {
+        validatePadding(xAxis);
         validateAxisType({axis: xAxis, key: 'x'});
         validateLabelsHtmlOptions({axis: xAxis});
 
@@ -133,6 +155,7 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     validateYAxesConsistency(yAxis);
 
     yAxis.forEach((axis, axisIndex) => {
+        validatePadding(axis);
         validateAxisType({axis, key: 'y'});
 
         if (axis.type === 'category') {

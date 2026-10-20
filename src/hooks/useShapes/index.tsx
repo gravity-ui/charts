@@ -9,14 +9,8 @@ import {getSeriesLayers} from '~core/series/layers';
 import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
-import {
-    getPaddedSeriesBounds,
-    isInsideClipRect,
-    setShapeClipBounds,
-} from '~core/shapes/clip-bounds';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
 import {getClipPathIdByBounds} from '~core/shapes/utils';
-import type {ChartMargin} from '~core/types';
 import {getOnlyVisibleSeries} from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
 import type {GradientGeometry, SeriesGradientState} from '~core/utils/gradient-reference';
@@ -33,7 +27,6 @@ import './styles.scss';
 export type {TooltipItemData};
 
 interface Args {
-    plotPadding?: ChartMargin[];
     boundsWidth: number;
     boundsHeight: number;
     clipPathId: string;
@@ -178,13 +171,6 @@ export async function getShapes(args: Args) {
             return gradientState ? {...item, gradientState} : item;
         });
     }
-    const seriesBounds = getPaddedSeriesBounds({
-        padding: args.plotPadding,
-        width: boundsWidth,
-        split,
-        yAxis,
-        series: visibleSeries,
-    });
     const seriesLayers = getSeriesLayers(visibleSeries, (item) => item.id);
     const layerIndexes = new Map(
         seriesLayers.flatMap(({series: items}, index) =>
@@ -201,34 +187,6 @@ export async function getShapes(args: Args) {
         const {key: groupKey, series: chartSeries} = seriesLayers[index];
         const seriesType = chartSeries[0].type;
         const plugin = getSeriesPlugin(seriesType);
-        const layerRects = [
-            ...new Set(
-                chartSeries.flatMap((s) => {
-                    const rect = seriesBounds.get(s.id);
-                    return rect ? [rect] : [];
-                }),
-            ),
-        ];
-        const clipRects = layerRects.length ? layerRects : undefined;
-        const isOutsidePaddedBounds = clipRects
-            ? (x: number, y: number, extent?: ChartMargin) => {
-                  if (
-                      isOutsideBounds(x, y) ||
-                      !clipRects.some((rect) => isInsideClipRect(rect, x, y))
-                  )
-                      return true;
-                  return Boolean(
-                      extent &&
-                      (x - extent.left < 0 ||
-                          x + extent.right > boundsWidth ||
-                          !split.plots.some(
-                              (plot) =>
-                                  y - extent.top >= plot.top &&
-                                  y + extent.bottom <= plot.top + plot.height,
-                          )),
-                  );
-              }
-            : isOutsideBounds;
 
         const {renderData, tooltipItems, labels, gradientGeometry} = await plugin.prepareShapeData({
             series: chartSeries,
@@ -240,34 +198,24 @@ export async function getShapes(args: Args) {
             xScale,
             yScale,
             split,
-            isOutsideBounds: isOutsidePaddedBounds,
+            isOutsideBounds,
             isRangeSlider,
             otherLayers: layers,
             allSeries: visibleSeries,
         });
 
         if (gradientGeometry) preparedGradientGeometry.push(...gradientGeometry);
-        if (clipRects) setShapeClipBounds(tooltipItems, seriesBounds);
         if (renderData.length === 0) {
             continue;
         }
 
-        let resolvedClipPathId = resolveClipPathId({
+        const resolvedClipPathId = resolveClipPathId({
             plugin,
             clipPathId,
             isRangeSlider,
             yAxis,
             zoomState,
         });
-        const horizontalClip =
-            resolvedClipPathId === getClipPathIdByBounds({clipPathId, bounds: 'horizontal'});
-        const paddedClipRects =
-            resolvedClipPathId && clipRects
-                ? clipRects.map((rect) =>
-                      horizontalClip ? {...rect, y: -boundsHeight, height: boundsHeight * 3} : rect,
-                  )
-                : undefined;
-        if (paddedClipRects) resolvedClipPathId = `${clipPathId}-padding-${index}`;
 
         shapes[index] = (
             <SeriesShapes
@@ -279,7 +227,6 @@ export async function getShapes(args: Args) {
                 boundsWidth={boundsWidth}
                 boundsHeight={boundsHeight}
                 clipPathId={resolvedClipPathId}
-                clipRects={paddedClipRects}
                 seriesOptions={seriesOptions}
                 dispatcher={dispatcher}
                 htmlLayout={htmlLayout}

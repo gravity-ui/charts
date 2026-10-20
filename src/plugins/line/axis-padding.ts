@@ -1,11 +1,11 @@
-import type {PlotPaddingContribution, PreparePlotPaddingArgs} from '~core/layout/plot-padding';
+import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {PreparedLineSeries} from '~core/series/types';
 import {projectLineData} from '~core/shapes/line/prepare-data';
 
-import {appendMarkerPadding} from '../marker-plot-padding';
+import {appendMarkerPadding} from '../marker-axis-padding';
 
-export function getLinePlotPadding(args: PreparePlotPaddingArgs): PlotPaddingContribution {
-    const points: PlotPaddingContribution['points'] = [];
+export function getLineAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+    const points: AxisPaddingPoint[] = [];
     const projected = projectLineData({
         ...args,
         series: args.series as PreparedLineSeries[],
@@ -20,8 +20,9 @@ export function getLinePlotPadding(args: PreparePlotPaddingArgs): PlotPaddingCon
             xScale: args.xScale,
             yScale,
             top: args.split.plots[args.yAxis[item.series.yAxis].plotIndex]?.top ?? 0,
+            yAxis: item.series.yAxis,
             result: points,
         });
     }
-    return {points, options: args.seriesOptions?.line?.plotPadding};
+    return points;
 }

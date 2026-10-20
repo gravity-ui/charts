@@ -94,6 +94,7 @@ function renderShapes({
 
 export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
+    isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {

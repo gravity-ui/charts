@@ -224,6 +224,7 @@ export const getPreparedYAxis = ({
                 },
                 min: get(axisItem, 'min'),
                 max: get(axisItem, 'max'),
+                padding: axisItem.padding,
                 startOnTick: get(axisItem, 'startOnTick'),
                 endOnTick: get(axisItem, 'endOnTick'),
                 maxPadding: get(

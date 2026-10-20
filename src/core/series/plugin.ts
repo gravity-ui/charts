@@ -3,7 +3,6 @@ import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
     ChartInteractionItem,
-    ChartMargin,
     ChartSeries,
     ChartSeriesOptions,
     ChartXAxis,
@@ -17,8 +16,8 @@ import type {
 
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {ZoomType} from '../constants';
-import type {PlotPaddingContribution, PreparePlotPaddingArgs} from '../layout/plot-padding';
 import type {PreparedSplit} from '../layout/split-types';
+import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '../scales/axis-padding';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
 import type {InteractionElement, InteractionElementsArgs} from '../utils/chart-interaction';
@@ -70,7 +69,7 @@ export interface PrepareShapeDataArgs {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
     split?: PreparedSplit;
-    isOutsideBounds?: (x: number, y: number, extent?: ChartMargin) => boolean;
+    isOutsideBounds?: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
     otherLayers?: ShapeLabels[];
     /**
@@ -170,8 +169,13 @@ export interface SeriesPlugin<
 
     /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
-    /** Visible geometry and type-level overrides for opt-in Cartesian plot padding. */
-    getPlotPadding?(args: PreparePlotPaddingArgs): PlotPaddingContribution;
+    /** Cached paint extents used to fit markers within free continuous axis domains. */
+    getAxisPadding?(args: PrepareAxisPaddingArgs): AxisPaddingPoint[];
+    /** Domain constraints imposed by the series, such as percent normalization. */
+    isAxisDomainFixed?(args: {
+        series: Extract<PreparedSeries, {type: T['type']}>;
+        axis: 'x' | 'y';
+    }): boolean;
     /**
      * Returns the value of a data point that places it on a continuous color scale.
      * `getDomainForContinuousColorScale` coerces the result to a number and builds the `[min, max]`

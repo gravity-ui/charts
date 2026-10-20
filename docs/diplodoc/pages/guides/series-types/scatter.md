@@ -20,7 +20,7 @@ Set `type: 'scatter'`. Each point contains `x` and `y`. For a category axis, use
 
 Use `marker` to set point size and symbol.
 
-Use [plot padding](../spacing.md#plot-padding) to keep edge markers fully visible.
+Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
 ### Point clustering
 

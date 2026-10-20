@@ -6,16 +6,13 @@ import type {ChartData} from '@gravity-ui/charts';
 import type {ExampleMeta} from '../gallery';
 
 const data: ChartData = {
-    chart: {plotPadding: {right: 'auto'}},
     legend: {enabled: false},
     xAxis: {
         type: 'linear',
-        min: 1,
-        max: 4,
-        ticks: {values: [1, 2, 3, 4]},
+        padding: {min: 'auto', max: 'auto'},
         title: {text: 'Quarter'},
     },
-    yAxis: [{min: 0, max: 100, title: {text: 'Revenue'}}],
+    yAxis: [{min: 0, padding: {max: 'auto'}, endOnTick: true, title: {text: 'Revenue'}}],
     series: {
         data: [
             {
@@ -33,7 +30,7 @@ const data: ChartData = {
     },
 };
 
-export default function PlotPaddingExample() {
+export default function AxisPaddingExample() {
     return (
         <div style={{height: '100%'}}>
             <Chart data={data} />
@@ -44,6 +41,6 @@ export default function PlotPaddingExample() {
 export const meta = {
     seriesType: 'Line',
     title: 'Room for edge markers',
-    description: 'Fit markers at explicit axis limits with automatic plot padding.',
-    docsUrl: 'pages/guides/spacing.html#plot-padding',
+    description: 'Extend free axis limits to fit edge markers.',
+    docsUrl: 'pages/guides/axes/index.html#axis-padding',
 } satisfies ExampleMeta;

@@ -24,7 +24,7 @@ Set `stacking: 'normal'` to show cumulative values or `stacking: 'percent'` to s
 
 Set `marker.enabled: true` to show points. Configure hover markers through `series.options.area.states.hover.marker`; see [Markers](line.md#markers).
 
-Use [plot padding](../spacing.md#plot-padding) to keep edge markers fully visible.
+Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
 ## Colors
 

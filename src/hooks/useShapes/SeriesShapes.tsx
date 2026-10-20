@@ -17,7 +17,6 @@ interface Props {
     boundsHeight: number;
     boundsWidth: number;
     clipPathId?: string;
-    clipRects?: Array<{x: number; y: number; width: number; height: number}>;
     dispatcher?: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     namespace: string;
@@ -32,7 +31,6 @@ export const SeriesShapes = ({
     boundsHeight,
     boundsWidth,
     clipPathId,
-    clipRects,
     dispatcher,
     htmlLayout,
     namespace,
@@ -94,15 +92,6 @@ export const SeriesShapes = ({
 
     return (
         <React.Fragment>
-            {clipRects && clipPathId && (
-                <defs>
-                    <clipPath id={clipPathId}>
-                        {clipRects.map((rect, index) => (
-                            <rect key={index} {...rect} />
-                        ))}
-                    </clipPath>
-                </defs>
-            )}
             <g
                 ref={ref}
                 className={b()}

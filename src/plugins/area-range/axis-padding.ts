@@ -1,11 +1,11 @@
-import type {PlotPaddingContribution, PreparePlotPaddingArgs} from '~core/layout/plot-padding';
+import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {PreparedAreaRangeSeries} from '~core/series/types';
 import {projectAreaRangeData} from '~core/shapes/area-range/prepare-data';
 
-import {appendMarkerPadding} from '../marker-plot-padding';
+import {appendMarkerPadding} from '../marker-axis-padding';
 
-export function getAreaRangePlotPadding(args: PreparePlotPaddingArgs): PlotPaddingContribution {
-    const points: PlotPaddingContribution['points'] = [];
+export function getAreaRangeAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+    const points: AxisPaddingPoint[] = [];
     const projected = projectAreaRangeData({
         ...args,
         series: args.series as PreparedAreaRangeSeries[],
@@ -25,8 +25,9 @@ export function getAreaRangePlotPadding(args: PreparePlotPaddingArgs): PlotPaddi
             xScale: args.xScale,
             yScale,
             top: args.split.plots[args.yAxis[item.series.yAxis].plotIndex]?.top ?? 0,
+            yAxis: item.series.yAxis,
             result: points,
         });
     }
-    return {points, options: args.seriesOptions?.['area-range']?.plotPadding};
+    return points;
 }

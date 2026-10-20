@@ -243,7 +243,6 @@ export function useChartInnerProps(props: Props) {
                 yScale,
                 boundsWidth,
                 boundsHeight,
-                plotPadding,
             } = await prepareAxisLayout({
                 height,
                 preparedChart,
@@ -305,7 +304,6 @@ export function useChartInnerProps(props: Props) {
             };
 
             const {shapes, shapesData, layerIndexes} = await getShapes({
-                plotPadding,
                 boundsWidth,
                 boundsHeight,
                 dispatcher,

@@ -5,7 +5,6 @@ import type {ChartData, ChartInteractionItem, ChartTooltip, MeaningfulAny} from 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import {TOOLTIP_TOTALS_BUILT_IN_AGGREGATION} from '../constants';
 import {i18n} from '../i18n';
-import {validatePlotPadding} from '../layout/plot-padding';
 import {getRegisteredSeriesTypes, getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import {parseNonNegativeSize} from '../utils/math';
 
@@ -98,7 +97,6 @@ export function validateData<TItem extends ChartInteractionItem>(
     }
 
     validateAxes({xAxis: data.xAxis, yAxis: data.yAxis});
-    validatePlotPadding(data.chart?.plotPadding, 'chart.plotPadding');
     validateTooltip({tooltip: data.tooltip});
 
     if (data.series.data.some((s) => isEmpty(s.data))) {

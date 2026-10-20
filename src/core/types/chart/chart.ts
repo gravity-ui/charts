@@ -9,22 +9,8 @@ export interface ChartMargin {
     left: number;
 }
 
-/** Cartesian insets: `auto`, nonnegative pixels, or percentages of the plot before padding. */
-export interface ChartPlotPadding {
-    /** @minimum 0 */
-    top?: number | string;
-    /** @minimum 0 */
-    right?: number | string;
-    /** @minimum 0 */
-    bottom?: number | string;
-    /** @minimum 0 */
-    left?: number | string;
-}
-
 export interface ChartOptions<TItem extends ChartInteractionItem = ChartInteractionItem> {
     margin?: Partial<ChartMargin>;
-    /** Internal scale insets, separate from margin. Omitted sides default to 0; `auto` fits markers. */
-    plotPadding?: ChartPlotPadding;
     events?: {
         /**
          * Controls when click handlers run; their arguments are the same in both modes.

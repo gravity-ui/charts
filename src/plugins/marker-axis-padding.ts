@@ -1,4 +1,4 @@
-import type {PlotPaddingPoint} from '~core/layout/plot-padding';
+import type {AxisPaddingPoint} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedLineSeries} from '~core/series/types';
 import {getSymbolBounds} from '~core/utils/symbol';
@@ -58,7 +58,8 @@ export function appendMarkerPadding(args: {
     xScale: ChartScale;
     yScale: ChartScale;
     top: number;
-    result: PlotPaddingPoint[];
+    yAxis: number;
+    result: AxisPaddingPoint[];
 }) {
     const getBounds = createMarkerPaddingGetter(args.marker);
     const inRange = createPaddingPointFilter(args.xScale, args.yScale);
@@ -66,6 +67,6 @@ export function appendMarkerPadding(args: {
         const y = p.y === null ? null : p.y - args.top;
         if (p.x === null || y === null || p.hiddenInLine || !inRange(p.x, y)) continue;
         const bounds = getBounds(p.data.marker?.states?.normal?.enabled);
-        if (bounds) args.result.push({x: p.x, y, ...bounds});
+        if (bounds) args.result.push({x: p.x, y, yAxis: args.yAxis, ...bounds});
     }
 }

@@ -87,3 +87,19 @@ function processHtmlFiles(dir, assets, tags) {
 const assets = buildExamplesAssets();
 const tags = assets.hasJs ? buildExamplesTags(assets) : {linkTag: null, scriptTag: null};
 processHtmlFiles(docsDir, assets, tags);
+
+// Keep published links and section anchors working after moving the axes guide.
+fs.writeFileSync(
+    path.join(docsDir, 'pages/guides/axes/axis-labels.html'),
+    `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Axes guide</title>
+    <script>location.replace('index.html' + location.search + location.hash);</script>
+    <meta http-equiv="refresh" content="0; url=index.html">
+</head>
+<body><a href="index.html">Continue to the axes guide</a></body>
+</html>
+`,
+);

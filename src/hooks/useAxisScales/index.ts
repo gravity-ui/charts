@@ -2,13 +2,12 @@ import React from 'react';
 
 import get from 'lodash/get';
 
-import {applyPlotPadding} from '~core/layout/plot-padding';
+import {applyAxisPadding} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';
 import {clusterYAxes} from '~core/scales/utils';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import type {ChartPlotPadding} from '~core/types';
 import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
@@ -25,7 +24,6 @@ export {createXScale} from '~core/scales/x-scale';
 export {createYScale} from '~core/scales/y-scale';
 
 interface Args {
-    plotPadding?: ChartPlotPadding;
     seriesOptions?: PreparedSeriesOptions;
     boundsWidth: number;
     boundsHeight: number;
@@ -45,6 +43,7 @@ interface ReturnValue {
 
 export const createScales = (args: Args) => {
     const {
+        seriesOptions,
         boundsWidth,
         boundsHeight,
         isRangeSlider,
@@ -133,22 +132,20 @@ export const createScales = (args: Args) => {
             : undefined,
         yScale,
     };
-    const plotPadding =
-        !isRangeSlider && scales.xScale && xAxis
-            ? applyPlotPadding({
-                  options: args.plotPadding,
-                  split,
-                  seriesOptions: args.seriesOptions,
-                  series: getOnlyVisibleSeries(series),
-                  xAxis,
-                  yAxis,
-                  xScale: scales.xScale,
-                  yScale,
-                  width: boundsWidth,
-                  height: axisHeight,
-              })
-            : undefined;
-    return {...scales, plotPadding};
+    if (!isRangeSlider && xAxis && scales.xScale) {
+        applyAxisPadding({
+            ...scales,
+            xScale: scales.xScale,
+            xAxis,
+            yAxis,
+            split,
+            series: getOnlyVisibleSeries(series),
+            seriesOptions,
+            fixedX: Boolean(zoomState?.x || rangeSliderState),
+            fixedY: yAxis.map((_, i) => Boolean(zoomState?.y?.[i])),
+        });
+    }
+    return scales;
 };
 
 /**
@@ -156,7 +153,6 @@ export const createScales = (args: Args) => {
  */
 export const useAxisScales = (args: Args): ReturnValue => {
     const {
-        plotPadding,
         seriesOptions,
         boundsWidth,
         boundsHeight,
@@ -175,7 +171,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
 
         if (hasAxisRelatedSeries) {
             ({xScale, yScale} = createScales({
-                plotPadding,
                 seriesOptions,
                 boundsWidth,
                 boundsHeight,
@@ -191,7 +186,6 @@ export const useAxisScales = (args: Args): ReturnValue => {
 
         return {xScale, yScale};
     }, [
-        plotPadding,
         seriesOptions,
         boundsWidth,
         boundsHeight,

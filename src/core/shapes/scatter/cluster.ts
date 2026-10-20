@@ -1,9 +1,8 @@
-import type {ChartMargin, ScatterClusterData, ScatterSeriesData} from '../../../types';
+import type {ScatterClusterData, ScatterSeriesData} from '../../../types';
 import type {SymbolType} from '../../constants';
 import type {PreparedScatterSeries} from '../../series/types';
 import {calculateNumericProperty, getSymbolSize} from '../../utils';
 
-import {getScatterMarkerBounds} from './marker-bounds';
 import type {PreparedScatterData} from './types';
 
 // Subpixel clearance keeps candidate marker strokes from visually touching.
@@ -89,8 +88,6 @@ function shiftClusters(
     boundsWidth: number,
     boundsHeight: number,
     boundsTop: number,
-    isOutsideBounds: (x: number, y: number, extent?: ChartMargin) => boolean,
-    hoverEnabled: boolean,
 ) {
     const occupied: OccupiedMarker[] = rendered
         .filter((marker) => !marker.clipped && marker.point.series.marker.states.normal.enabled)
@@ -183,11 +180,6 @@ function shiftClusters(
             }
         }
 
-        const paintedBounds = getScatterMarkerBounds(
-            marker.point.series,
-            marker.point.data.radius,
-            hoverEnabled,
-        );
         const available = candidates
             .map(({x, y}) => ({
                 x: Math.max(minX, Math.min(maxX, x)),
@@ -200,7 +192,7 @@ function shiftClusters(
                     (right.x - originalX) ** 2 -
                     (right.y - originalY) ** 2,
             )
-            .find(({x, y}) => !hasCollision(x, y) && !isOutsideBounds(x, y, paintedBounds));
+            .find(({x, y}) => !hasCollision(x, y));
 
         if (available) {
             const oldKey = getIndexKey(originalX, originalY);
@@ -282,8 +274,7 @@ export function clusterSeriesData(args: {
     boundsWidth: number;
     boundsHeight: number;
     boundsTop?: number;
-    isOutsideBounds: (x: number, y: number, extent?: ChartMargin) => boolean;
-    hoverEnabled?: boolean;
+    isOutsideBounds: (x: number, y: number) => boolean;
 }): PreparedScatterData[] {
     const {data, series, boundsWidth, boundsHeight, boundsTop = 0, isOutsideBounds} = args;
     if (!series.cluster.enabled) {
@@ -333,16 +324,7 @@ export function clusterSeriesData(args: {
     }
 
     if (series.cluster.overlapMode === 'shift') {
-        shiftClusters(
-            clusters,
-            result,
-            gridSize,
-            boundsWidth,
-            boundsHeight,
-            boundsTop,
-            isOutsideBounds,
-            args.hoverEnabled ?? true,
-        );
+        shiftClusters(clusters, result, gridSize, boundsWidth, boundsHeight, boundsTop);
     }
 
     return result;

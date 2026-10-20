@@ -24,7 +24,7 @@ Hover styles apply to both always-visible and hover-only markers. The normal app
 
 <div data-chart-example="series-types/line-markers"></div>
 
-Use [plot padding](../spacing.md#plot-padding) to keep edge markers fully visible.
+Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
 ### Line interpolation
 

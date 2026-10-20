@@ -1,6 +1,6 @@
 import get from 'lodash/get';
 
-import type {ChartMargin, HtmlItem, ScatterSeriesData} from '../../../types';
+import type {HtmlItem, ScatterSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
@@ -71,11 +71,10 @@ export async function prepareScatterData(args: {
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     split: PreparedSplit;
-    isOutsideBounds: (x: number, y: number, extent?: ChartMargin) => boolean;
+    isOutsideBounds: (x: number, y: number) => boolean;
     boundsWidth: number;
     boundsHeight: number;
     isRangeSlider?: boolean;
-    hoverEnabled?: boolean;
 }): Promise<PreparedScatterShapeData> {
     const {
         series,
@@ -173,9 +172,8 @@ export async function prepareScatterData(args: {
                       boundsWidth,
                       boundsHeight: plotHeight,
                       boundsTop,
-                      hoverEnabled: args.hoverEnabled,
-                      isOutsideBounds: (x, y, extent) =>
-                          isOutsideBounds(x, y, extent) || isOutsidePlotBounds(x, y - boundsTop),
+                      isOutsideBounds: (x, y) =>
+                          isOutsideBounds(x, y) || isOutsidePlotBounds(x, y - boundsTop),
                   });
                   scatterDataBySeries.set(item.id, clustered);
                   return clustered;

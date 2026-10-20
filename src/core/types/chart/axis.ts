@@ -20,6 +20,27 @@ export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;
 
+/** Extra space obtained by extending the free ends of a continuous axis domain. */
+export interface ChartAxisPadding {
+    /**
+     * Space at the minimum value: a nonnegative number or `px` string in pixels,
+     * a percentage of the axis length, or `auto` to fit marker paint including hover.
+     * The axis length is measured after margins and axis layout, before padding.
+     * Explicit axis limits, zoom/range selection and percent normalization take precedence.
+     * Category axes ignore padding. Oversized requests are bounded and can still clip.
+     * @minimum 0
+     * @default 0
+     */
+    min?: number | string;
+    /**
+     * Space at the maximum value, in the same formats and units as `padding.min`.
+     * An explicit value (including `0` or `auto`) replaces `maxPadding` on this side.
+     * When omitted, the existing `maxPadding` behavior and default are preserved.
+     * @minimum 0
+     */
+    max?: number | string;
+}
+
 export interface ChartAxisLabels {
     /** Enable or disable the axis labels. */
     enabled?: boolean;
@@ -211,7 +232,6 @@ export interface ChartAxis {
     title?: ChartAxisTitle;
     /**
      * The minimum value of the axis. If undefined the min value is automatically calculated.
-     * `chart.plotPadding` can move this value inward without changing it; the axis line still spans the plot.
      *
      * The value type depends on the axis scale:
      * - For `linear` and `logarithmic` axes: numeric value
@@ -223,7 +243,6 @@ export interface ChartAxis {
     min?: number;
     /**
      * The maximum value of the axis. If undefined the max value is automatically calculated.
-     * `chart.plotPadding` can move this value inward without changing it; the axis line still spans the plot.
      *
      * The value type depends on the axis scale:
      * - For `linear` and `logarithmic` axes: numeric value
@@ -254,8 +273,13 @@ export interface ChartAxis {
      * - for series with data normalization along on a specific axis (stacking: 'percent')
      * - to the X axis when rangeSlider is used
      * @default 0.05 for Y axis, 0.01 for X axis
+     * @deprecated Use `padding.max`. Its numbers are pixels, whereas `maxPadding` numbers are fractions.
+     * For example, `maxPadding: 0.05` corresponds to a `padding.max: '5%'` request,
+     * although the final domains can differ because the new option fits space after existing layout.
      */
     maxPadding?: number;
+    /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */
+    padding?: ChartAxisPadding;
     /** An array of lines stretching across the plot area, marking a specific value */
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */
@@ -282,8 +306,8 @@ export interface ChartAxis {
      * for better readability. This can create a visual gap at the beginning of the chart
      * if the data minimum doesn't align with the tick.
      *
-     * Set to `false` to disable this rounding. `chart.plotPadding` applies afterward:
-     * it can move the first tick inward while the axis line still spans the plot.
+     * Use `startOnTick: false` to make the chart start exactly at the data minimum,
+     * preventing gaps at the chart start.
      * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     startOnTick?: boolean;
@@ -294,8 +318,7 @@ export interface ChartAxis {
      * for better readability. This can create extra space at the end of the chart
      * if the data maximum doesn't align with the tick.
      *
-     * Set to `false` to disable this rounding. `chart.plotPadding` applies afterward:
-     * it can move the last tick inward while the axis line still spans the plot.
+     * Use `endOnTick: false` to make the chart end closer to the data maximum.
      * @default true for X axis and datetime Y axis, false for linear/logarithmic Y axis
      */
     endOnTick?: boolean;

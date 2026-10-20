@@ -277,6 +277,7 @@ export const getPreparedXAxis = async ({
         startOnTick: get(xAxis, 'startOnTick'),
         endOnTick: get(xAxis, 'endOnTick'),
         maxPadding,
+        padding: xAxis?.padding,
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },

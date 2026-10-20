@@ -13,8 +13,6 @@ export interface PrepareNearestDataArgs<TShapeData = unknown> {
 export interface NearestCandidate<TItem extends ChartInteractionItem = ChartInteractionItem> {
     position: PointPosition;
     item: TItem;
-    /** Visible interval for clipping shapes whose center can lie outside the plot. */
-    yRange?: [number, number];
 }
 
 /** Reuse unfiltered axis-point preparation without its X-first tooltip selection. */
@@ -22,7 +20,6 @@ export function getPointCandidates(points: ShapePoint[]): NearestCandidate[] {
     return points.map((point) => ({
         position: [point.sourceX ?? point.x, (point.y0 + point.y1) / 2],
         item: {point: point.data, series: point.series},
-        yRange: [point.y0, point.y1],
     }));
 }
 
