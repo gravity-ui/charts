@@ -166,12 +166,12 @@ describe('bar-x borders', () => {
 });
 
 describe('bar-x stack geometry', () => {
-    test('resolves stack padding within each value axis, with omitted yAxis meaning zero', () => {
+    test('resolves stack sizing within each value axis, with omitted yAxis meaning zero', () => {
         const series = prepareBarXSeries({
             series: [
-                {barPadding: 0.2},
-                {barPadding: 0.6, yAxis: 0},
-                {barPadding: 0.8, yAxis: 1},
+                {barPadding: 0.2, barMaxWidth: 20},
+                {barPadding: 0.6, barMaxWidth: 40, yAxis: 0},
+                {barPadding: 0.8, barMaxWidth: 10, yAxis: 1},
             ].map((options) => ({
                 type: 'bar-x',
                 name: 'Actual',
@@ -185,6 +185,7 @@ describe('bar-x stack geometry', () => {
             legend: {enabled: false} as PreparedLegend,
         }) as PreparedBarXSeries[];
         expect(series.map((s) => s.stackBarPadding)).toEqual([0.6, 0.6, 0.8]);
+        expect(series.map((s) => s.stackBarMaxWidth)).toEqual([20, 20, 10]);
     });
 
     test('aligns with a grid drawn by another axis in the same plot', async () => {

@@ -30,6 +30,25 @@ Set `barPadding` on a series to control its thickness without moving its center:
 
 All series in the same stack must use the same `grouping` value; omitted `grouping` counts as `true`. Mixing values within a stack is a configuration error. To overlay complete stacks, give each stack a distinct `stackId` and set `grouping: false` on every series in those stacks.
 
+### Bar thickness
+
+Set `barMaxWidth` on a series to limit its thickness in pixels. Use a finite number greater than or equal to 1. The example gives Plan a limit of 80 px and Actual a limit of 24 px.
+
+<div data-chart-example="series-types/bar-y-width"></div>
+
+```ts
+series: {
+    data: [
+        {type: 'bar-y', name: 'Plan', barMaxWidth: 80, data: [/* points */]},
+        {type: 'bar-y', name: 'Actual', barMaxWidth: 24, data: [/* points */]},
+    ],
+}
+```
+
+Omitted limits inherit `series.options['bar-y'].barMaxWidth`, which defaults to 50 px. A series can override that value with a smaller or larger limit. The actual thickness also depends on available space and `barPadding`; the minimum rendered thickness is 1 px.
+
+All segments in a stack use the smallest resolved limit among its series, including hidden ones. This keeps stack thickness stable when series are toggled in the legend.
+
 ### Borders
 
 Set `borderWidth` in pixels (default `0`), `borderColor` as a CSS color, and `borderRadius` in pixels. Set defaults in `series.options['bar-y']` and override them on individual series. The default border color is `var(--gcharts-shape-border-color)`.

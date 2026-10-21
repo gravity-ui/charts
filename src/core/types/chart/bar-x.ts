@@ -116,11 +116,19 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
      * centered in the same slot. Must be a finite number in [0, 1].
      * Inherits `series.options['bar-x'].barPadding` (default 0.2).
      * Stacks use the largest resolved padding among all their series, including hidden ones.
-     * Padding is applied before the shared barMaxWidth and minimum thickness limits.
+     * Padding is applied before barMaxWidth and minimum thickness limits.
      * @minimum 0
      * @maximum 1
      */
     barPadding?: number;
+    /**
+     * Maximum bar thickness in pixels.
+     * Must be a finite number greater than or equal to 1. Inherits `series.options['bar-x'].barMaxWidth`
+     * (default 50). Stacks use the smallest resolved limit, including hidden series.
+     * Applied after barPadding; the minimum rendered thickness is 1 pixel.
+     * @minimum 1
+     */
+    barMaxWidth?: number;
     dataLabels?: Omit<BaseDataLabels, 'format'> &
         ChartSeriesOptions['dataLabels'] & {
             /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
