@@ -47,6 +47,9 @@ export function createLegendTooltipController(dispatcher: Dispatch<object>) {
                 visible.vertical === entry.vertical
             )
                 return;
+            if (visible?.anchor !== entry.anchor) {
+                visible?.anchor.removeAttribute('aria-describedby');
+            }
             visible = {
                 anchor: entry.anchor,
                 text: entry.text,
@@ -72,13 +75,16 @@ export function createLegendTooltipController(dispatcher: Dispatch<object>) {
         }
         dispatcher.call(EventType.LEGEND_TOOLTIP, undefined, visible);
     };
-    const dismiss = () => {
+    const reset = () => {
         cancelTimer();
         stopObserving?.();
         stopObserving = undefined;
         active = undefined;
         ready = false;
         overContent = false;
+    };
+    const dismiss = () => {
+        reset();
         publish();
     };
     function hide() {
@@ -105,14 +111,14 @@ export function createLegendTooltipController(dispatcher: Dispatch<object>) {
             ? observeHtmlOverflow(entry.htmlLabel, (value) => {
                   Object.assign(entry, value);
                   entry.anchor.setAttribute('aria-label', value.text);
-                  publish();
+                  if (ready) publish();
               })
             : undefined;
     };
     const activate = (entry: Entry, keyboard: boolean) => {
         cancelTimer();
         if (active !== entry) {
-            dismiss();
+            reset();
             active = entry;
             observe(entry);
         }
@@ -120,6 +126,7 @@ export function createLegendTooltipController(dispatcher: Dispatch<object>) {
             ready = true;
             publish();
         } else {
+            publish();
             timer = setTimeout(() => {
                 ready = true;
                 publish();

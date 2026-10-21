@@ -446,6 +446,9 @@ for (const html of [false, true]) {
         const next = component.getByRole('button', {name: 'Next legend page'});
         const previous = component.getByRole('button', {name: 'Previous legend page'});
         await expect(tabStops).toHaveCount(1);
+        const legendGroup = component.getByRole('group', {name: 'Legend', exact: true});
+        await expect(legendGroup).toHaveCount(1);
+        await expect(legendGroup.locator('[data-legend-item-id]')).toHaveCount(await items.count());
         const firstName = (await items.first().getAttribute('aria-label')) ?? '';
         const pageSize = await items.count();
         await tabStops.focus();

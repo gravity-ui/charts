@@ -257,6 +257,9 @@ export const Legend = (props: Props) => {
                 .style('overflow', null)
                 .style('pointer-events', null);
             const htmlContainer = htmlSelection.empty() ? null : htmlSelection;
+            svgElement
+                .attr('role', htmlContainer ? null : 'group')
+                .attr('aria-label', htmlContainer ? null : i18n('legend', 'label_legend'));
 
             if (legend.clipContent) {
                 const clipId = getUniqId();
@@ -532,14 +535,5 @@ export const Legend = (props: Props) => {
         [htmlLayout],
     );
 
-    return (
-        <g
-            className={b()}
-            ref={ref}
-            width={config.maxWidth}
-            height={legend.height}
-            role="group"
-            aria-label={i18n('legend', 'label_legend')}
-        />
-    );
+    return <g className={b()} ref={ref} width={config.maxWidth} height={legend.height} />;
 };

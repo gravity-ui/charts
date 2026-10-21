@@ -145,7 +145,7 @@ export function renderLegendItems({
                 .attr('aria-label', null)
                 .attr('aria-pressed', null)
                 .attr('data-legend-item-id', null)
-                .on('click keydown keyup mouseenter focus .navigation', null);
+                .on('click keydown keyup .navigation', null);
             return;
         }
         group.attr('aria-hidden', null);
