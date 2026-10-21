@@ -21,6 +21,7 @@ import {
 import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
+import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
@@ -39,6 +40,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         yAxis,
         yScale,
         boundsHeight,
+        boundsWidth,
         split,
         isRangeSlider,
         otherLayers = [],
@@ -56,6 +58,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         yAxis: yAxis ?? [],
         yScale,
         boundsHeight,
+        boundsWidth,
         split,
         isRangeSlider,
     });
@@ -97,6 +100,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateBarLabelPlacement(series.dataLabels);
         validateBarPadding(series.barPadding);
         validateBarMaxWidth(series.barMaxWidth);
         validateBarOpacity(series.opacity, 'opacity');

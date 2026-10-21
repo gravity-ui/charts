@@ -133,6 +133,72 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('bar label placement is exposed in declarations and schema', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'bar-label-placement-usage.ts'),
+                declaration +
+                    `
+                const horizontal: BarYSeries = {type: 'bar-y', name: 'Orders', data: [], dataLabels: {placement: ['outside', 'inside-end', 'inside-center'], placementFallback: 'hide'}};
+                const vertical: BarXSeries = {type: 'bar-x', name: 'Orders', data: [], dataLabels: {placement: 'auto'}};
+                // @ts-expect-error Center must explicitly refer to inside placement.
+                horizontal.dataLabels!.placement = ['center'];
+                // @ts-expect-error Candidates must be an array.
+                vertical.dataLabels!.placement = 'outside';
+                // @ts-expect-error This feature is not a base label option.
+                const base: BaseDataLabels = {placement: 'auto'};
+                void [horizontal, vertical, base];
+            `,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions.BarSeriesDataLabelPlacementPosition.enum).toEqual([
+            'outside',
+            'inside-end',
+            'inside-center',
+        ]);
+        expect(
+            schema.definitions.BarSeriesDataLabelPlacementPosition.enumDescriptions,
+        ).toHaveLength(3);
+        expect(
+            schema.definitions.BarSeriesDataLabelPlacementFallback.enumDescriptions,
+        ).toHaveLength(2);
+        const validate = createSchemaValidator().compile(schema);
+        for (const type of ['bar-x', 'bar-y']) {
+            for (const placement of [
+                undefined,
+                'auto',
+                ['outside'],
+                ['inside-end', 'inside-center'],
+                [],
+                ['center'],
+                'outside',
+                null,
+            ]) {
+                expect(
+                    validate({
+                        series: {
+                            data: [
+                                {
+                                    type,
+                                    name: 'Orders',
+                                    data: [{x: 1, y: 2}],
+                                    dataLabels: {placement},
+                                },
+                            ],
+                        },
+                    }),
+                ).toBe(
+                    placement === undefined ||
+                        placement === 'auto' ||
+                        (Array.isArray(placement) &&
+                            placement.length > 0 &&
+                            placement[0] !== 'center'),
+                );
+            }
+        }
+        expect(schema.definitions.BaseDataLabels.properties).not.toHaveProperty('placement');
+    });
+
     test('per-series bar padding is declared and constrained without changing shared options', () => {
         const usage = `
             const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', barPadding: 0.2, data: []};

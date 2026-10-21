@@ -184,6 +184,8 @@ export interface SeriesPlugin<
      * match category indices to category names. Must not mutate the series or its data.
      */
     getStackedDomainData?(series: T): T['data'];
+    /** Extra horizontal space in pixels reserved for labels when the X axis is autoscaled. */
+    getXAxisPadding?(series: Extract<PreparedSeries, {type: T['type']}>): number;
     /** Computes shape data (geometry, labels, markers) once per render. */
     prepareShapeData(
         args: PrepareShapeDataArgs,

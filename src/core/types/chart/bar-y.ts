@@ -1,6 +1,7 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
+import type {BarSeriesDataLabelPlacementOptions} from './bar-data-labels';
 import type {
     BaseDataLabels,
     BaseSeries,
@@ -115,16 +116,18 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
      * @minimum 1
      */
     barMaxWidth?: number;
-    dataLabels?: Omit<BaseDataLabels, 'format'> & {
-        /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
-        format?: BarYValueFormat<T>;
-        /**
-         * Whether to align the data label inside or outside the box.
-         * For charts with a percentage stack, it is always true.
-         * @default false
-         */
-        inside?: boolean;
-    };
+    dataLabels?: Omit<BaseDataLabels, 'format'> &
+        BarSeriesDataLabelPlacementOptions & {
+            /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
+            format?: BarYValueFormat<T>;
+            /**
+             * Whether to align the data label inside or outside the box.
+             * For percent stacks, labels are centered inside when `placement` is omitted.
+             * Ignored when `placement` is set.
+             * @default false
+             */
+            inside?: boolean;
+        };
     tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
         /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */
         valueFormat?: BarYValueFormat<T>;

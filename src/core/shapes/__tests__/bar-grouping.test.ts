@@ -87,6 +87,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 yAxis: [{type: 'linear', plotIndex: 0, grid: {enabled: false}}] as PreparedYAxis[],
                 yScale: [valueScale],
                 boundsHeight: 400,
+                boundsWidth: size,
                 split: {plots: [{top: 0, height: 400}]} as PreparedSplit,
             });
             geometry = bars.map((d) => ({

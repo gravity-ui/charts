@@ -17,6 +17,7 @@ export * from './chart/interaction';
 export * from './chart/legend';
 export * from './chart/pie';
 export * from './chart/scatter';
+export * from './chart/bar-data-labels';
 export * from './chart/bar-x';
 export * from './chart/bar-y';
 export * from './chart/area';

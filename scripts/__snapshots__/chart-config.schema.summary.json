@@ -11,6 +11,8 @@
     "AxisPlotBand",
     "AxisPlotLine",
     "AxisPlotShape",
+    "BarSeriesDataLabelPlacementFallback",
+    "BarSeriesDataLabelPlacementPosition",
     "BarXSeries<JsonValue>",
     "BarXSeriesData<JsonValue>",
     "BarXValueFormat<JsonValue>",

@@ -2,6 +2,7 @@ import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
+import type {BarSeriesDataLabelPlacementOptions} from './bar-data-labels';
 import type {
     BaseDataLabels,
     BaseSeries,
@@ -130,11 +131,13 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
      */
     barMaxWidth?: number;
     dataLabels?: Omit<BaseDataLabels, 'format'> &
+        BarSeriesDataLabelPlacementOptions &
         ChartSeriesOptions['dataLabels'] & {
             /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
             format?: BarXValueFormat<T>;
             /**
              * Whether to align the data label inside or outside the box
+             * Ignored when `placement` is set.
              * @default false
              */
             inside?: boolean;

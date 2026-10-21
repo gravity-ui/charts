@@ -64,6 +64,7 @@ async function prepare(
                 .range(options.reversed ? [0, height] : [height, 0]),
         ],
         boundsHeight: height,
+        boundsWidth: options.width ?? 400,
         split: {plots: [{top: options.top ?? 0, height}]} as PreparedSplit,
         isRangeSlider: options.isRangeSlider,
     });

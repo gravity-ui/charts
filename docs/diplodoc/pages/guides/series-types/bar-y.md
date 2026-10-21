@@ -63,6 +63,28 @@ The example uses the default palette with rounded borders and a shared opacity o
 
 <div data-chart-example="series-types/bar-y"></div>
 
+### Data label placement
+
+<a id="data-label-placement"></a>
+
+Set `dataLabels.placement: ['outside', 'inside-end']` to prefer labels outside the value end and move them inside when there is insufficient room. Short bars keep their labels outside. `'auto'` is shorthand for the same order.
+
+<div data-chart-example="data-labels/bar-placement"></div>
+
+An array sets the candidate order; a single entry fixes the position:
+
+- `'outside'`: Outside the value end.
+- `'inside-end'`: Inside, next to the value end of the visible bar.
+- `'inside-center'`: Centered in the visible part of the bar.
+
+Positions follow the value direction, including negative values and reversed axes. A candidate must fit entirely within the plot. Inside candidates must also fit within their own visible bar or stack segment, with `padding` at both ends along the value axis.
+
+If no candidate fits, `placementFallback: 'show'` (default) draws the first candidate shifted into the plot; it may overlap the bar edge. Use `'hide'` to omit the label instead. Label overlap filtering still follows `allowOverlap`.
+
+SVG and HTML labels recalculate placement after resize, zoom, and reset. An explicit `placement` overrides `inside`, including in percent stacks. Omitting `placement` preserves the existing `inside` behavior.
+
+Explicit placement uses the available plot space without reserving extra axis space for labels.
+
 ### States
 
 Hover changes the fill color; the border retains its configured color. The inactive state multiplies the resolved fill and border opacity by `states.inactive.opacity`, so transparent bars stay transparent. SVG data labels use the inactive opacity directly. When it ends, bars restore their point or series opacity.

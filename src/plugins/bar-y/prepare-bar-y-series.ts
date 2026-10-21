@@ -30,10 +30,11 @@ async function prepareDataLabels(series: BarYSeries) {
     const enabled = get(series, 'dataLabels.enabled', false);
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
-    // Percent labels are always inside the bars, so they do not affect axis padding.
-    // Measure them during shape preparation, when the stack percentage is available.
+    const placement = series.dataLabels?.placement;
+    // Explicit placement uses the available plot space; percent labels also need no
+    // extra axis padding. Measure both during shape preparation instead.
     const labels =
-        enabled && series.stacking !== 'percent'
+        enabled && placement === undefined && series.stacking !== 'percent'
             ? series.data.map((d) =>
                   getFormattedValue({
                       value: d.label ?? d.x,
@@ -48,11 +49,16 @@ async function prepareDataLabels(series: BarYSeries) {
         html,
     });
     const inside = series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
-    const padding = enabled ? (series.dataLabels?.padding ?? DEFAULT_LABEL_PADDING) : 0;
+    const padding =
+        enabled || placement !== undefined
+            ? (series.dataLabels?.padding ?? DEFAULT_LABEL_PADDING)
+            : 0;
 
     return {
         enabled,
         inside,
+        placement,
+        placementFallback: series.dataLabels?.placementFallback,
         style,
         maxHeight,
         maxWidth,

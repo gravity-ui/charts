@@ -4,6 +4,7 @@ import type {
     AreaSeries,
     AreaSeriesData,
     AreaValueFormat,
+    BarSeriesDataLabelPlacementOptions,
     BarXSeries,
     BarXSeriesData,
     BarXValueFormat,
@@ -272,7 +273,7 @@ export type PreparedBarXSeries = {
     stackBarMaxWidth: number;
     stackLabels?: BarXSeries['stackLabels'];
     valueAxis: 'y';
-    dataLabels: {
+    dataLabels: BarSeriesDataLabelPlacementOptions & {
         enabled: boolean;
         inside: boolean;
         style: BaseTextStyle;
@@ -305,7 +306,7 @@ export type PreparedBarYSeries = {
     stackBarMaxWidth: number;
     stackLabels?: BarYSeries['stackLabels'];
     valueAxis: 'x';
-    dataLabels: {
+    dataLabels: BarSeriesDataLabelPlacementOptions & {
         padding: number;
         enabled: boolean;
         inside: boolean;

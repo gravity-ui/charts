@@ -2,6 +2,7 @@ import {ascending, descending, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
+import {createBarLabelMeasurer, placeBarLabel} from '../../../plugins/bar-label-placement';
 import type {HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
@@ -9,9 +10,7 @@ import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types
 import {
     filterOverlappingLabels,
     getHtmlLabelConstraintedPosition,
-    getLabelsSize,
     getSvgLabelConstraintedPosition,
-    getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
@@ -20,6 +19,7 @@ import {getBarWidthBySeries} from '../bar-width';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
+import {getBarYRect} from './utils';
 
 export async function prepareBarYData(args: {
     boundsHeight: number;
@@ -234,7 +234,9 @@ export async function prepareBarYData(args: {
     let labels: LabelData[] = [];
     let htmlLabels: HtmlItem[] = [];
 
-    const map = new Map();
+    const measureLabel = createBarLabelMeasurer();
+    const [rangeStart, rangeEnd] = xLinearScale.range();
+    const baseline = xLinearScale(0);
     for (let i = 0; i < result.length; i++) {
         const prepared = result[i];
 
@@ -247,59 +249,68 @@ export async function prepareBarYData(args: {
                 context: {data, percentage: prepared.percentage},
             });
 
-            const y = prepared.y + prepared.height / 2;
-            if (dataLabels.html) {
-                const {maxHeight: height, maxWidth: width} = await getLabelsSize({
-                    labels: [content],
-                    style: dataLabels.style,
-                    html: dataLabels.html,
+            const {width, height, hangingOffset} = await measureLabel(
+                content,
+                dataLabels.style,
+                dataLabels.html,
+            );
+            let position: {x: number; y: number};
+            if (dataLabels.placement) {
+                const endAtMax =
+                    Number(data.x) === 0
+                        ? rangeEnd >= rangeStart
+                        : xLinearScale(Number(data.x)) > baseline;
+                const placed = placeBarLabel({
+                    bar: getBarYRect(prepared),
+                    plot: {x: 0, y: 0, width: boundsWidth, height: boundsHeight},
+                    label: {width, height},
+                    valueAxis: 'x',
+                    endAtMax,
+                    padding: dataLabels.padding,
+                    placement: dataLabels.placement,
+                    placementFallback: dataLabels.placementFallback,
                 });
+                if (!placed) continue;
+                position = {x: placed.x, y: placed.y + (dataLabels.html ? 0 : hangingOffset)};
+            } else {
                 const x = dataLabels.inside
                     ? prepared.x + prepared.width / 2 - width / 2
                     : prepared.x + prepared.width + dataLabels.padding;
-                const constrainedPosition = getHtmlLabelConstraintedPosition({
-                    boundsHeight,
-                    boundsWidth,
-                    height,
-                    width,
-                    x,
-                    y: y - height / 2,
-                });
-
+                const y = prepared.y + prepared.height / 2;
+                position = dataLabels.html
+                    ? getHtmlLabelConstraintedPosition({
+                          boundsHeight,
+                          boundsWidth,
+                          height,
+                          width,
+                          x,
+                          y: y - height / 2,
+                      })
+                    : getSvgLabelConstraintedPosition({
+                          boundsHeight,
+                          boundsWidth,
+                          height,
+                          width,
+                          x,
+                          y,
+                          hangingOffset,
+                      });
+            }
+            if (dataLabels.html) {
                 htmlLabels.push({
                     content,
                     size: {width, height},
                     style: dataLabels.style,
-                    x: constrainedPosition.x,
-                    y: constrainedPosition.y,
+                    ...position,
                 });
             } else {
-                if (!map.has(dataLabels.style)) {
-                    map.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
-                }
-                const getTextSize = map.get(dataLabels.style);
-                const {width, height, hangingOffset} = await getTextSize(content);
-                const x = dataLabels.inside
-                    ? prepared.x + prepared.width / 2 - width / 2
-                    : prepared.x + prepared.width + dataLabels.padding;
-                const constrainedPosition = getSvgLabelConstraintedPosition({
-                    boundsHeight,
-                    boundsWidth,
-                    height,
-                    width,
-                    x,
-                    y,
-                    hangingOffset,
-                });
-
                 labels.push({
-                    size: {width, height},
+                    size: dataLabels.placement ? {width, height, hangingOffset} : {width, height},
                     series: prepared.series,
                     style: dataLabels.style,
                     text: content,
                     textAnchor: 'start',
-                    x: constrainedPosition.x,
-                    y: constrainedPosition.y,
+                    ...position,
                 });
             }
         }

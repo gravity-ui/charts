@@ -74,6 +74,8 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
                 inside: dataLabelsInside,
+                placement: series.dataLabels?.placement,
+                placementFallback: series.dataLabels?.placementFallback,
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
                 allowOverlap: series.dataLabels?.allowOverlap || false,
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),

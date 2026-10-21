@@ -3,6 +3,7 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
+import {createBarLabelMeasurer, placeBarLabel} from '../../../plugins/bar-label-placement';
 import type {BarXSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
@@ -10,19 +11,14 @@ import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../series/types';
 import {MIN_BAR_GROUP_GAP} from '../../shapes/bar-constants';
-import {
-    getDataCategoryValue,
-    getLabelsSize,
-    getTextSizeFn,
-    isPointDataLabelEnabled,
-} from '../../utils';
+import {getDataCategoryValue, isPointDataLabelEnabled} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
 import {getBarLayout, getBarWidthBySeries} from '../bar-width';
 
 import type {PreparedBarXData} from './types';
-import {getBarXStackKey} from './utils';
+import {getBarXRect, getBarXStackKey} from './utils';
 
 /**
  * BarX always filters out data with null or replace null by zero.
@@ -36,6 +32,8 @@ const isSeriesDataValid = (
 async function getLabelData(
     d: PreparedBarXData,
     xMax: number,
+    plot: {x: number; y: number; width: number; height: number},
+    measureLabel: ReturnType<typeof createBarLabelMeasurer>,
 ): Promise<{svgLabel?: LabelData; htmlLabel?: HtmlItem}> {
     const text = getFormattedValue({
         value: d.data.label ?? d.data.y,
@@ -43,13 +41,39 @@ async function getLabelData(
         context: {data: d.data, percentage: d.percentage},
     });
     const style = d.series.dataLabels.style;
+    const {width, height, hangingOffset} = await measureLabel(
+        text,
+        style,
+        d.series.dataLabels.html,
+    );
+    if (d.series.dataLabels.placement) {
+        const placed = placeBarLabel({
+            bar: getBarXRect(d),
+            plot,
+            label: {width, height},
+            valueAxis: 'y',
+            endAtMax: !d.extendsUp,
+            padding: d.series.dataLabels.padding,
+            placement: d.series.dataLabels.placement,
+            placementFallback: d.series.dataLabels.placementFallback,
+        });
+        if (!placed) return {};
+        return d.series.dataLabels.html
+            ? {htmlLabel: {content: text, size: {width, height}, style, ...placed}}
+            : {
+                  svgLabel: {
+                      text,
+                      size: {width, height, hangingOffset},
+                      style,
+                      series: d.series,
+                      textAnchor: 'middle',
+                      x: placed.x + width / 2,
+                      y: placed.y + hangingOffset,
+                  },
+              };
+    }
 
     if (d.series.dataLabels.html) {
-        const {maxHeight: height, maxWidth: width} = await getLabelsSize({
-            labels: [text],
-            style,
-            html: true,
-        });
         let y = Math.max(height, d.y - d.series.dataLabels.padding);
         if (d.series.dataLabels.inside) {
             y = d.y + d.height / 2;
@@ -65,8 +89,6 @@ async function getLabelData(
             },
         };
     } else {
-        const getTextSize = getTextSizeFn({style});
-        const {width, height, hangingOffset} = await getTextSize(text);
         let y = Math.max(hangingOffset, d.y - height + hangingOffset - d.series.dataLabels.padding);
         if (d.series.dataLabels.inside) {
             const centerY = d.y + d.height / 2;
@@ -106,6 +128,7 @@ export const prepareBarXData = async (args: {
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
     boundsHeight: number;
+    boundsWidth: number;
     split: PreparedSplit;
     isRangeSlider?: boolean;
 }): Promise<PreparedBarXData[]> => {
@@ -117,6 +140,7 @@ export const prepareBarXData = async (args: {
         yAxis,
         yScale,
         boundsHeight: plotHeight,
+        boundsWidth,
         split,
         isRangeSlider,
     } = args;
@@ -460,6 +484,7 @@ export const prepareBarXData = async (args: {
     }
 
     const xMax = Math.max(...xScale.range());
+    const measureLabel = createBarLabelMeasurer();
 
     for (let i = 0; i < result.length; i++) {
         const barData = result[i];
@@ -475,7 +500,18 @@ export const prepareBarXData = async (args: {
             (!isBarOutsideBounds || isZeroValue) &&
             isPointDataLabelEnabled({data: barData.data, series: barData.series})
         ) {
-            const {svgLabel, htmlLabel} = await getLabelData(barData, xMax);
+            const currentPlot = split.plots[yAxis[barData.series.yAxis].plotIndex];
+            const {svgLabel, htmlLabel} = await getLabelData(
+                barData,
+                xMax,
+                {
+                    x: 0,
+                    y: currentPlot?.top ?? 0,
+                    width: boundsWidth,
+                    height: currentPlot?.height ?? plotHeight,
+                },
+                measureLabel,
+            );
             if (svgLabel) {
                 barData.svgLabels.push(svgLabel);
             }
