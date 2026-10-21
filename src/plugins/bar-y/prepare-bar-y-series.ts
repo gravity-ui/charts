@@ -10,6 +10,7 @@ import {getFormattedValue} from '~core/utils/format';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
+import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
 const DEFAULT_LABEL_PADDING = 7;
@@ -30,7 +31,7 @@ async function prepareDataLabels(series: BarYSeries) {
     const enabled = get(series, 'dataLabels.enabled', false);
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
-    const placement = series.dataLabels?.placement;
+    const placement = resolveBarLabelPlacement(series.dataLabels?.placement);
     // Explicit placement uses the available plot space; percent labels also need no
     // extra axis padding. Measure both during shape preparation instead.
     const labels =

@@ -3,7 +3,6 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import {createBarLabelMeasurer, placeBarLabel} from '../../../plugins/bar-label-placement';
 import type {BarXSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
@@ -15,6 +14,8 @@ import {getDataCategoryValue, isPointDataLabelEnabled} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
+import {placeRectLabel} from '../../utils/rect-label-placement';
+import {createLabelMeasurer} from '../../utils/text';
 import {getBarLayout, getBarWidthBySeries} from '../bar-width';
 
 import type {PreparedBarXData} from './types';
@@ -33,7 +34,7 @@ async function getLabelData(
     d: PreparedBarXData,
     xMax: number,
     plot: {x: number; y: number; width: number; height: number},
-    measureLabel: ReturnType<typeof createBarLabelMeasurer>,
+    measureLabel: ReturnType<typeof createLabelMeasurer>,
 ): Promise<{svgLabel?: LabelData; htmlLabel?: HtmlItem}> {
     const text = getFormattedValue({
         value: d.data.label ?? d.data.y,
@@ -47,15 +48,15 @@ async function getLabelData(
         d.series.dataLabels.html,
     );
     if (d.series.dataLabels.placement) {
-        const placed = placeBarLabel({
-            bar: getBarXRect(d),
-            plot,
-            label: {width, height},
-            valueAxis: 'y',
+        const placed = placeRectLabel({
+            anchor: getBarXRect(d),
+            bounds: plot,
+            size: {width, height},
+            axis: 'y',
             endAtMax: !d.extendsUp,
             padding: d.series.dataLabels.padding,
-            placement: d.series.dataLabels.placement,
-            placementFallback: d.series.dataLabels.placementFallback,
+            positions: d.series.dataLabels.placement,
+            fallback: d.series.dataLabels.placementFallback,
         });
         if (!placed) return {};
         return d.series.dataLabels.html
@@ -484,7 +485,7 @@ export const prepareBarXData = async (args: {
     }
 
     const xMax = Math.max(...xScale.range());
-    const measureLabel = createBarLabelMeasurer();
+    const measureLabel = createLabelMeasurer();
 
     for (let i = 0; i < result.length; i++) {
         const barData = result[i];

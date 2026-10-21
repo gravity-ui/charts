@@ -2,7 +2,6 @@ import {ascending, descending, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import {createBarLabelMeasurer, placeBarLabel} from '../../../plugins/bar-label-placement';
 import type {HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
@@ -15,6 +14,8 @@ import {
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
+import {placeRectLabel} from '../../utils/rect-label-placement';
+import {createLabelMeasurer} from '../../utils/text';
 import {getBarWidthBySeries} from '../bar-width';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
@@ -234,7 +235,7 @@ export async function prepareBarYData(args: {
     let labels: LabelData[] = [];
     let htmlLabels: HtmlItem[] = [];
 
-    const measureLabel = createBarLabelMeasurer();
+    const measureLabel = createLabelMeasurer();
     const [rangeStart, rangeEnd] = xLinearScale.range();
     const baseline = xLinearScale(0);
     for (let i = 0; i < result.length; i++) {
@@ -260,15 +261,15 @@ export async function prepareBarYData(args: {
                     Number(data.x) === 0
                         ? rangeEnd >= rangeStart
                         : xLinearScale(Number(data.x)) > baseline;
-                const placed = placeBarLabel({
-                    bar: getBarYRect(prepared),
-                    plot: {x: 0, y: 0, width: boundsWidth, height: boundsHeight},
-                    label: {width, height},
-                    valueAxis: 'x',
+                const placed = placeRectLabel({
+                    anchor: getBarYRect(prepared),
+                    bounds: {x: 0, y: 0, width: boundsWidth, height: boundsHeight},
+                    size: {width, height},
+                    axis: 'x',
                     endAtMax,
                     padding: dataLabels.padding,
-                    placement: dataLabels.placement,
-                    placementFallback: dataLabels.placementFallback,
+                    positions: dataLabels.placement,
+                    fallback: dataLabels.placementFallback,
                 });
                 if (!placed) continue;
                 position = {x: placed.x, y: placed.y + (dataLabels.html ? 0 : hangingOffset)};
