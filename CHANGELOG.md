@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.69.0](https://github.com/gravity-ui/charts/compare/v1.68.0...v1.69.0) (2026-10-21)
+
+
+### Features
+
+* add line label anchors and render labels above markers ([#778](https://github.com/gravity-ui/charts/issues/778)) ([6c13fe1](https://github.com/gravity-ui/charts/commit/6c13fe1beca36e41db60ab585a3c6b0403c58ecd))
+* support per-series barMaxWidth for bar charts ([#789](https://github.com/gravity-ui/charts/issues/789)) ([a20d26e](https://github.com/gravity-ui/charts/commit/a20d26e394a081b293b4be74d80f495f39b5bd12))
+
 ## [1.68.0](https://github.com/gravity-ui/charts/compare/v1.67.1...v1.68.0) (2026-10-16)
 
 
