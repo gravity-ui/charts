@@ -20,6 +20,7 @@ interface SeriesInput {
     visible?: boolean;
     category?: string;
     barPadding?: number;
+    barMaxWidth?: number;
     grouping?: boolean;
     stacking?: 'normal' | 'percent';
     stackId?: string;
@@ -150,6 +151,110 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         });
         return {bars: geometry, domainValues};
     }
+
+    test('inherits width limits and lets series override them in both directions', async () => {
+        const inputs = [{value: 40}, {value: 60}, {value: 80}];
+        const options = {barMaxWidth: 30};
+        const {bars: reference} = await prepare(inputs, 600, false, options);
+        const {bars: explicit} = await prepare(
+            inputs.map((s) => ({...s, barMaxWidth: 30})),
+            600,
+            false,
+            options,
+        );
+        expect(explicit).toEqual(reference);
+        const {bars: narrower} = await prepare(
+            inputs.map((s, i) => ({...s, barMaxWidth: i === 0 ? 15 : undefined})),
+            600,
+            false,
+            options,
+        );
+        expect(narrower.map((bar) => bar.thickness)).toEqual([15, 30, 30]);
+        expect(narrower.map((bar) => bar.center)).toEqual(reference.map((bar) => bar.center));
+        const {bars: wider} = await prepare(
+            inputs.map((s, i) => ({...s, barMaxWidth: i === 0 ? 100 : undefined})),
+            600,
+            false,
+            options,
+        );
+        expect(wider.map((bar) => bar.thickness)).toEqual([100, 30, 30]);
+        for (let i = 1; i < wider.length; i++) {
+            expect(wider[i].center - wider[i].thickness / 2).toBeGreaterThan(
+                wider[i - 1].center + wider[i - 1].thickness / 2,
+            );
+        }
+        expect(await prepare(inputs)).toEqual(
+            await prepare(inputs.map((s) => ({...s, barMaxWidth: 50}))),
+        );
+    });
+
+    test('nonbinding width limits and overlays preserve neighboring slot centers', async () => {
+        const inputs = [{value: 40, barPadding: 0.9}, {value: 60}];
+        const {bars: before} = await prepare(inputs);
+        const {bars: after} = await prepare([
+            {...inputs[0], barMaxWidth: 1000},
+            inputs[1],
+            {value: 80, grouping: false, barMaxWidth: 1000},
+        ]);
+        expect(after.slice(0, 2)).toEqual(before);
+        expect(after[2].center).toBe(100);
+        expect(after[2].thickness).toBeGreaterThan(50);
+    });
+
+    test.each([undefined, 'normal', 'percent'] as const)(
+        'uses the smallest resolved width limit in each stack, stacking=%s',
+        async (stacking) => {
+            for (const grouping of [true, false]) {
+                const {bars} = await prepare(
+                    [
+                        {value: 20, stacking, grouping, stackId: 'a', barMaxWidth: 25},
+                        {value: 30, stacking, grouping, stackId: 'a'},
+                        {value: 40, stacking, grouping, stackId: 'b', barMaxWidth: 60},
+                    ],
+                    600,
+                    false,
+                    {barMaxWidth: 40},
+                );
+                expect(bars.map((bar) => bar.thickness)).toEqual(
+                    grouping || stacking ? [25, 25, 60] : [25, 40, 60],
+                );
+            }
+        },
+    );
+
+    test('includes hidden and sparse series when resolving stack width limits', async () => {
+        const inputs: SeriesInput[] = [
+            {value: 20, category: 'A', stacking: 'normal', stackId: 'a', barMaxWidth: 60},
+            {value: 30, category: 'B', stacking: 'normal', stackId: 'a', barMaxWidth: 15},
+            {value: 40, category: 'A', stacking: 'normal', stackId: 'b', barMaxWidth: 30},
+        ];
+        const {bars} = await prepare(inputs);
+        expect(bars.map((bar) => bar.thickness)).toEqual([15, 30, 15]);
+        const {bars: hidden} = await prepare(inputs.map((s, i) => ({...s, visible: i !== 1})));
+        expect(hidden.map((bar) => bar.thickness)).toEqual([15, 30]);
+    });
+
+    test.each([
+        {size: 200, barMaxWidth: 0, options: {}, expected: 1},
+        {size: 0, barMaxWidth: 100, options: {}, expected: 1},
+        {size: 200, barMaxWidth: 100, options: {groupPadding: 2}, expected: 1},
+        {size: 3, barMaxWidth: 10000, options: {}, expected: 1},
+        {size: 200, barMaxWidth: 100, options: {}, expected: 72},
+    ])('bounds per-series width for %j', async ({size, barMaxWidth, options, expected}) => {
+        const {bars} = await prepare(
+            [
+                {value: 40, barMaxWidth},
+                {value: 60, barMaxWidth},
+            ],
+            size,
+            false,
+            options,
+        );
+        bars.forEach((bar) => {
+            expect(Number.isFinite(bar.center)).toBe(true);
+            expect(bar.thickness).toBeCloseTo(expected);
+        });
+    });
 
     test('inherits padding and preserves centers when series thickness changes', async () => {
         const inputs = [{value: 40}, {value: 60}, {value: 80}];

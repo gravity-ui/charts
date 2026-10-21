@@ -102,11 +102,19 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
      * centered in the same slot. Must be a finite number in [0, 1].
      * Inherits `series.options['bar-y'].barPadding` (default 0.2).
      * Stacks use the largest resolved padding among all their series, including hidden ones.
-     * Padding is applied before the shared barMaxWidth and minimum thickness limits.
+     * Padding is applied before barMaxWidth and minimum thickness limits.
      * @minimum 0
      * @maximum 1
      */
     barPadding?: number;
+    /**
+     * Maximum bar thickness in pixels, matching the shared barMaxWidth option.
+     * Must be a finite nonnegative number. Inherits `series.options['bar-y'].barMaxWidth`
+     * (default 50). Stacks use the smallest resolved limit, including hidden series.
+     * Applied after barPadding; the minimum rendered thickness is 1 pixel, even for a limit of 0.
+     * @minimum 0
+     */
+    barMaxWidth?: number;
     dataLabels?: Omit<BaseDataLabels, 'format'> & {
         /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
         format?: BarYValueFormat<T>;

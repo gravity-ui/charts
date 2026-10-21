@@ -20,7 +20,7 @@ import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../ty
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
 import {validateBarOpacity} from '../bar-opacity';
-import {validateBarPadding} from '../bar-padding';
+import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
@@ -84,6 +84,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     prepareSeries: prepareBarYSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateBarPadding(series.barPadding);
+        validateBarMaxWidth(series.barMaxWidth);
         validateBarOpacity(series.opacity, 'opacity');
         validateBarOpacity(seriesOptions?.['bar-y']?.opacity, 'series.options.bar-y.opacity');
         series.data.forEach((point, index) => {

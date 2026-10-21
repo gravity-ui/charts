@@ -19,7 +19,7 @@ import {
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
-import {getBarWidth, getBarWidthBySeries} from '../bar-width';
+import {getBarLayoutWidth, getBarWidthBySeries} from '../bar-width';
 
 import type {PreparedBarXData} from './types';
 import {getBarXStackKey} from './utils';
@@ -205,9 +205,9 @@ export const prepareBarXData = async (args: {
     const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
     const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
-    // Keep the type-level layout as the reference for slot centers, including its width cap.
-    const rectWidth = getBarWidth(barSlotSize, barPadding, barMaxWidth);
-    const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize, barMaxWidth);
+    // Preserve shared slot centers unless a grouped series needs a larger width limit.
+    const rectWidth = getBarLayoutWidth(series, barSlotSize, barPadding, barMaxWidth);
+    const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize);
     const borderWidthBySeries = new Map(
         series.map((s) => {
             const width = widthBySeries.get(s) ?? rectWidth;

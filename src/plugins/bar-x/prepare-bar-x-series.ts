@@ -15,7 +15,7 @@ import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
-import {resolveStackBarPadding} from '../bar-padding';
+import {resolveStackBarSizing} from '../bar-sizing';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -32,7 +32,9 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
 export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
-    const preparedSeries = seriesList.map<Omit<PreparedBarXSeries, 'stackBarPadding'>>((series) => {
+    const preparedSeries = seriesList.map<
+        Omit<PreparedBarXSeries, 'stackBarPadding' | 'stackBarMaxWidth'>
+    >((series) => {
         const name = series.name || '';
         const color = series.color || colorScale(name);
         const opacity = series.opacity ?? seriesOptions?.['bar-x']?.opacity ?? 1;
@@ -60,6 +62,9 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             barPadding:
                 series.barPadding ??
                 get(seriesOptions, 'bar-x.barPadding', seriesOptionsDefaults['bar-x'].barPadding),
+            barMaxWidth:
+                series.barMaxWidth ??
+                get(seriesOptions, 'bar-x.barMaxWidth', seriesOptionsDefaults['bar-x'].barMaxWidth),
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
             stackId: getSeriesStackId(series),
@@ -94,5 +99,5 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         };
     }, []);
 
-    return resolveStackBarPadding(preparedSeries, getBarXStackKey);
+    return resolveStackBarSizing(preparedSeries, getBarXStackKey);
 }

@@ -75,17 +75,13 @@ export async function prepareBarYData(args: {
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
     const {bandSize, barGap, barSize, barSlotSize, groupSize} = getBarYLayout({
+        series,
         groupedData,
         seriesOptions,
         scale: yScale,
     });
 
-    const widthBySeries = getBarWidthBySeries(
-        series,
-        barSlotSize,
-        groupSize,
-        seriesOptions['bar-y'].barMaxWidth,
-    );
+    const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize);
     const borderWidthBySeries = new Map(
         series.map((s) => [
             s,

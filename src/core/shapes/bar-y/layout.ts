@@ -10,7 +10,7 @@ import {getSeriesStackId} from '../../series/utils';
 import {getDataCategoryValue} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP} from '../bar-constants';
-import {getBarWidth} from '../bar-width';
+import {getBarLayoutWidth} from '../bar-width';
 
 /**
  * BarY always filters out data with null or replace null by zero.
@@ -60,11 +60,12 @@ export function groupBarYDataByYValue(series: PreparedBarYSeries[], yAxis: Prepa
 }
 
 export function getBarYLayout(args: {
+    series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     groupedData: ReturnType<typeof groupBarYDataByYValue>;
     scale: ChartScale | undefined;
 }) {
-    const {groupedData, seriesOptions, scale} = args;
+    const {series, groupedData, seriesOptions, scale} = args;
     const barMaxWidth = get(seriesOptions, 'bar-y.barMaxWidth');
     const barPadding = get(seriesOptions, 'bar-y.barPadding');
     const groupPadding = get(seriesOptions, 'bar-y.groupPadding');
@@ -82,7 +83,7 @@ export function getBarYLayout(args: {
     const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
     const barGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
-    // Keep the type-level layout as the reference for slot centers, including its width cap.
-    const barSize = getBarWidth(barSlotSize, barPadding, barMaxWidth);
+    // Preserve shared slot centers unless a grouped series needs a larger width limit.
+    const barSize = getBarLayoutWidth(series, barSlotSize, barPadding, barMaxWidth);
     return {bandSize, barGap, barSize, barSlotSize, groupSize};
 }
