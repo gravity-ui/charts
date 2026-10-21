@@ -30,6 +30,47 @@ for (const type of ['bar-x', 'bar-y'] as const) {
         await expect(component).toHaveScreenshot();
     });
 
+    test(`${type} wide grouped bars fit the plot with zero padding`, async ({mount}) => {
+        const component = await mount(
+            <ChartTestStory
+                styles={{width: 600, height: 360}}
+                data={{
+                    series: {
+                        data: Array.from({length: 4}, (_, index) => ({
+                            type,
+                            name: `Series ${index + 1}`,
+                            barPadding: 0,
+                            barMaxWidth: 1000,
+                            data: [vertical ? {x: 'Q1', y: 50} : {y: 'Q1', x: 50}],
+                        })),
+                    },
+                    xAxis: vertical ? {type: 'category', categories: ['Q1']} : undefined,
+                    yAxis: vertical ? undefined : [{type: 'category', categories: ['Q1']}],
+                }}
+            />,
+        );
+        const bars = component.locator(`.gcharts-${type}__segment`);
+        await expect(bars).toHaveCount(4);
+        const limit = Number(
+            await component
+                .locator('clipPath rect')
+                .first()
+                .getAttribute(vertical ? 'width' : 'height'),
+        );
+        const bounds = await bars.evaluateAll((elements) =>
+            elements.map((element) => {
+                const box = (element as SVGGraphicsElement).getBBox();
+                return {x: box.x, y: box.y, width: box.width, height: box.height};
+            }),
+        );
+        for (const box of bounds) {
+            const start = vertical ? box.x : box.y;
+            const end = start + (vertical ? box.width : box.height);
+            expect(start).toBeGreaterThanOrEqual(0);
+            expect(end).toBeLessThanOrEqual(limit);
+        }
+    });
+
     test(`${type} stack width survives legend toggles`, async ({mount}) => {
         const component = await mount(
             <ChartTestStory

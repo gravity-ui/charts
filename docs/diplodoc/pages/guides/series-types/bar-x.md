@@ -34,7 +34,7 @@ All series in the same stack must use the same `grouping` value; omitted `groupi
 
 ### Bar thickness
 
-Set `barMaxWidth` on a series to limit its thickness in pixels. The example gives Plan a limit of 80 px and Actual a limit of 24 px.
+Set `barMaxWidth` on a series to limit its thickness in pixels. Use a finite number greater than or equal to 1. The example gives Plan a limit of 80 px and Actual a limit of 24 px.
 
 <div data-chart-example="series-types/bar-x-width"></div>
 
@@ -47,7 +47,7 @@ series: {
 }
 ```
 
-Omitted limits inherit `series.options['bar-x'].barMaxWidth`, which defaults to 50 px. A series can override that value with a smaller or larger limit. The actual thickness also depends on available space and `barPadding`; the minimum rendered thickness is 1 px, including when the limit is zero.
+Omitted limits inherit `series.options['bar-x'].barMaxWidth`, which defaults to 50 px. A series can override that value with a smaller or larger limit. The actual thickness also depends on available space and `barPadding`; the minimum rendered thickness is 1 px.
 
 All segments in a stack use the smallest resolved limit among its series, including hidden ones. This keeps stack thickness stable when series are toggled in the legend.
 

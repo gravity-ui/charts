@@ -197,15 +197,15 @@ describe('chart config artifacts', () => {
                 schema.definitions[
                     type === 'bar-x' ? 'BarXSeries<JsonValue>' : 'BarYSeries<JsonValue>'
                 ];
-            expect(definition.properties.barMaxWidth).toMatchObject({type: 'number', minimum: 0});
-            for (const barMaxWidth of [undefined, 0, 0.5, 80, -1, null, '80px', '50%']) {
+            expect(definition.properties.barMaxWidth).toMatchObject({type: 'number', minimum: 1});
+            for (const barMaxWidth of [undefined, 0, 0.5, 1, 1.5, 80, -1, null, '80px', '50%']) {
                 expect(
                     validateConfig({
                         series: {
                             data: [{type, name: 'Plan', barMaxWidth, data: []}],
                         },
                     }),
-                ).toBe([undefined, 0, 0.5, 80].includes(barMaxWidth));
+                ).toBe([undefined, 1, 1.5, 80].includes(barMaxWidth));
             }
             expect(
                 validateConfig({

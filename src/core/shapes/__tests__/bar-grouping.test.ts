@@ -16,7 +16,7 @@ import {getBarXPaths} from '../bar-x/utils';
 import {prepareBarYData} from '../bar-y/prepare-data';
 
 interface SeriesInput {
-    value: number;
+    value: number | null;
     visible?: boolean;
     category?: string;
     barPadding?: number;
@@ -32,6 +32,7 @@ interface PrepareOptions {
     barPadding?: number;
     groupPadding?: number;
     valueSize?: number;
+    categoryDomain?: string[];
     stackGap?: number;
 }
 
@@ -44,10 +45,12 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         reversed = false,
         options: PrepareOptions = {},
     ) {
-        const {valueSize = 400, ...layoutOptions} = options;
+        const {valueSize = 400, categoryDomain, ...layoutOptions} = options;
         const increases = type === 'bar-y' ? !reversed : reversed;
         const categories = Array.from(new Set(inputs.map((s) => s.category ?? 'A')));
-        const categoryScale = scaleBand().domain(categories).range([0, size]);
+        const categoryScale = scaleBand()
+            .domain(categoryDomain ?? categories)
+            .range([0, size]);
         const valueScale = scaleLinear()
             .domain(inputs.some((s) => s.stacking === 'percent') ? [0, 100] : [-100, 100])
             .range(increases ? [0, valueSize] : [valueSize, 0]);
@@ -235,7 +238,8 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
     });
 
     test.each([
-        {size: 200, barMaxWidth: 0, options: {}, expected: 1},
+        {size: 200, barMaxWidth: 1, options: {}, expected: 1},
+        {size: 200, barMaxWidth: undefined, options: {barMaxWidth: 0}, expected: 1},
         {size: 0, barMaxWidth: 100, options: {}, expected: 1},
         {size: 200, barMaxWidth: 100, options: {groupPadding: 2}, expected: 1},
         {size: 3, barMaxWidth: 10000, options: {}, expected: 1},
@@ -254,6 +258,45 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             expect(Number.isFinite(bar.center)).toBe(true);
             expect(bar.thickness).toBeCloseTo(expected);
         });
+    });
+
+    test('wide series with small padding stay inside the category band', async () => {
+        const {bars} = await prepare(
+            Array.from({length: 4}, () => ({value: 40, barPadding: 0, barMaxWidth: 1000})),
+        );
+        expect(bars).toHaveLength(4);
+        for (const bar of bars) {
+            expect(bar.center - bar.thickness / 2).toBeGreaterThanOrEqual(0);
+            expect(bar.center + bar.thickness / 2).toBeLessThanOrEqual(200);
+        }
+        for (let i = 1; i < bars.length; i++) {
+            expect(bars[i].center - bars[i].thickness / 2).toBeGreaterThan(
+                bars[i - 1].center + bars[i - 1].thickness / 2,
+            );
+        }
+    });
+
+    test('a skipped null series does not expand neighboring grouped slots', async () => {
+        const inputs = [{value: 40}, {value: 60}];
+        const {bars: reference} = await prepare(inputs, 600);
+        const {bars} = await prepare([...inputs, {value: null, barMaxWidth: 1000}], 600);
+        expect(bars).toEqual(reference);
+    });
+
+    test('a series outside the visible category domain does not expand grouped slots', async () => {
+        const inputs = [{value: 40}, {value: 60}, {value: 80, category: 'B'}];
+        const options = {categoryDomain: ['A']};
+        const {bars: reference} = await prepare(inputs, 600, false, options);
+        const {bars} = await prepare(
+            inputs.map((s, i) => ({
+                ...s,
+                barMaxWidth: i === 2 ? 1000 : undefined,
+            })),
+            600,
+            false,
+            options,
+        );
+        expect(bars).toEqual(reference);
     });
 
     test('inherits padding and preserves centers when series thickness changes', async () => {

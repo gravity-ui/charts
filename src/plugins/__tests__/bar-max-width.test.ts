@@ -14,11 +14,11 @@ describe.each(['bar-x', 'bar-y'] as const)('%s width limit validation', (type) =
         };
     }
 
-    test.each([undefined, 0, 0.5, 30, 1000])('accepts %s', (width) => {
+    test.each([undefined, 1, 1.5, 30, 1000])('accepts %s', (width) => {
         expect(() => validateData(config(width))).not.toThrow();
     });
 
-    test.each([null, -1, NaN, Infinity, -Infinity, '30', '30px', '50%', false, {}, []])(
+    test.each([null, -1, 0, 0.5, NaN, Infinity, -Infinity, '30', '30px', '50%', false, {}, []])(
         'rejects %s',
         (width) => {
             expect(() => validateData(config(width))).toThrow(
@@ -30,9 +30,9 @@ describe.each(['bar-x', 'bar-y'] as const)('%s width limit validation', (type) =
         },
     );
 
-    test('preserves legacy shared option validation', () => {
+    test.each([-1, 0, 0.5])('preserves legacy shared option validation for %s', (width) => {
         const data = config(undefined);
-        data.series.options = {[type]: {barMaxWidth: -1}};
+        data.series.options = {[type]: {barMaxWidth: width}};
         expect(() => validateData(data)).not.toThrow();
     });
 });

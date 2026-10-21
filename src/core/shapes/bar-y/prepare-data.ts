@@ -75,7 +75,6 @@ export async function prepareBarYData(args: {
 
     const groupedData = groupBarYDataByYValue(series, yAxis);
     const {bandSize, barGap, barSize, barSlotSize, groupSize} = getBarYLayout({
-        series,
         groupedData,
         seriesOptions,
         scale: yScale,

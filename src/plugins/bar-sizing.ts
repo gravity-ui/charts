@@ -49,12 +49,12 @@ export function validateBarPadding(padding: number | undefined) {
 export function validateBarMaxWidth(width: number | undefined) {
     if (width === undefined) return;
 
-    if (typeof width !== 'number' || !Number.isFinite(width) || width < 0) {
+    if (typeof width !== 'number' || !Number.isFinite(width) || width < 1) {
         throw new ChartError({
             code: CHART_ERROR_CODE.INVALID_DATA,
             message: i18n('error', 'label_invalid-series-property', {
                 key: 'barMaxWidth',
-                values: 'a finite nonnegative number of pixels',
+                values: 'a finite number of pixels greater than or equal to 1',
             }),
         });
     }

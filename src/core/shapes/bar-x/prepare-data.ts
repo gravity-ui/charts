@@ -9,7 +9,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
 import {prepareAnnotation} from '../../series/prepare-annotation';
 import type {PreparedBarXSeries, PreparedSeriesOptions} from '../../series/types';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP} from '../../shapes/bar-constants';
+import {MIN_BAR_GROUP_GAP} from '../../shapes/bar-constants';
 import {
     getDataCategoryValue,
     getLabelsSize,
@@ -19,7 +19,7 @@ import {
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
-import {getBarLayoutWidth, getBarWidthBySeries} from '../bar-width';
+import {getBarLayout, getBarWidthBySeries} from '../bar-width';
 
 import type {PreparedBarXData} from './types';
 import {getBarXStackKey} from './utils';
@@ -139,7 +139,10 @@ export const prepareBarXData = async (args: {
         }
     })();
 
+    const categoryDomain =
+        xAxis.type === 'category' ? new Set((xScale as ScaleBand<string>).domain()) : undefined;
     const domain = new Set<string | number>();
+    const layoutSeries = new Set<PreparedBarXSeries>();
     let maxGroupSize = 1;
 
     // series grouped by plotIndex > xValue > data[];
@@ -175,6 +178,7 @@ export const prepareBarXData = async (args: {
 
                 data[key][stackId].push({data: d, series: s});
                 domain.add(key);
+                if (!categoryDomain || categoryDomain.has(String(key))) layoutSeries.add(s);
             }
         });
     });
@@ -204,9 +208,12 @@ export const prepareBarXData = async (args: {
     const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
     const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
-    const rectGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
-    // Preserve shared slot centers unless a grouped series needs a larger width limit.
-    const rectWidth = getBarLayoutWidth(series, barSlotSize, barPadding, barMaxWidth);
+    const {width: rectWidth, gap: rectGap} = getBarLayout(
+        layoutSeries,
+        barSlotSize,
+        barPadding,
+        barMaxWidth,
+    );
     const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize);
     const borderWidthBySeries = new Map(
         series.map((s) => {
@@ -229,8 +236,6 @@ export const prepareBarXData = async (args: {
         yAxis.filter((axis) => axis.visible && axis.grid.enabled).map((axis) => axis.plotIndex),
     );
 
-    const categoryDomain =
-        xAxis.type === 'category' ? new Set((xScale as ScaleBand<string>).domain()) : undefined;
     const plotIndexes = Array.from(dataByPlots.keys());
     for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
         const data = dataByPlots.get(plotIndexes[plotDataIndex]) ?? {};

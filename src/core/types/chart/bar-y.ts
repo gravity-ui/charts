@@ -108,11 +108,11 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
      */
     barPadding?: number;
     /**
-     * Maximum bar thickness in pixels, matching the shared barMaxWidth option.
-     * Must be a finite nonnegative number. Inherits `series.options['bar-y'].barMaxWidth`
+     * Maximum bar thickness in pixels.
+     * Must be a finite number greater than or equal to 1. Inherits `series.options['bar-y'].barMaxWidth`
      * (default 50). Stacks use the smallest resolved limit, including hidden series.
-     * Applied after barPadding; the minimum rendered thickness is 1 pixel, even for a limit of 0.
-     * @minimum 0
+     * Applied after barPadding; the minimum rendered thickness is 1 pixel.
+     * @minimum 1
      */
     barMaxWidth?: number;
     dataLabels?: Omit<BaseDataLabels, 'format'> & {
