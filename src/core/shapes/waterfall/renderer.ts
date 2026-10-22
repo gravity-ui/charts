@@ -56,30 +56,29 @@ export function renderWaterfall(
 
     // Add the connector line between bars
     const line = lineGenerator();
+    const connectors = preparedData.flatMap((point, index) => {
+        const previous = preparedData[index - 1];
+        return previous && point.series.connectors.enabled ? [{from: previous, to: point}] : [];
+    });
     svgElement
         .selectAll(connectorSelector)
-        .data(preparedData)
+        .data(connectors)
         .join('path')
         .attr('class', b('connector'))
-        .attr('d', (d, index) => {
-            const prev = preparedData[index - 1];
-            if (!prev || !d.series.connectors.enabled) {
-                return null;
-            }
-
+        .attr('d', ({from, to}) => {
             const points: [number, number][] = [];
-            const connectFromTop = prev.data.total ? prev.subTotal > 0 : Number(prev.data.y) > 0;
+            const connectFromTop = from.data.total ? from.subTotal > 0 : Number(from.data.y) > 0;
             if (connectFromTop) {
-                points.push([prev.x, prev.y]);
+                points.push([from.x, from.y]);
             } else {
-                points.push([prev.x, prev.y + prev.height]);
+                points.push([from.x, from.y + from.height]);
             }
 
-            const connectToBottom = d.data.total ? d.subTotal < 0 : Number(d.data.y) > 0;
+            const connectToBottom = to.data.total ? to.subTotal < 0 : Number(to.data.y) > 0;
             if (connectToBottom) {
-                points.push([d.x + d.width, d.y + d.height]);
+                points.push([to.x + to.width, to.y + to.height]);
             } else {
-                points.push([d.x + d.width, d.y]);
+                points.push([to.x + to.width, to.y]);
             }
 
             return line(points);
