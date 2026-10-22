@@ -117,7 +117,7 @@ function getBarY(
     return rects.map((rect, index) => ({
         ...rect,
         borderWidth: options.borderWidth ?? 0,
-        isLastStackItem: true,
+        borderRadius: Math.min(rect.height, rect.width / 2, series.borderRadius),
         data: {x: rect.width, y: 0, index},
         series,
     }));

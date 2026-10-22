@@ -19,8 +19,10 @@ export interface BarSeriesDataLabelPlacementOptions {
      * Candidate positions tried in order. `'auto'` means `['outside', 'inside-end']`.
      * Candidates must fit entirely within the plot; inside candidates must also fit
      * within the visible bar, with `padding` at both ends along the value axis.
+     * Outside placement is only available at the value end of a stack.
      * Takes precedence over `inside`, including in percent stacks.
-     * Uses the available plot space without reserving extra axis space for labels.
+     * Uses the available plot space without reserving extra axis space for labels,
+     * except for bar-y with only outside candidates, which reserves X axis space.
      * When omitted, the existing `inside` behavior is preserved.
      */
     placement?: 'auto' | BarSeriesDataLabelPlacementPositions;

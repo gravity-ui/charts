@@ -136,8 +136,9 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
             /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
             format?: BarXValueFormat<T>;
             /**
-             * Whether to align the data label inside or outside the box
+             * Whether to align the data label inside or outside the box.
              * Ignored when `placement` is set.
+             * @deprecated Use `placement` instead.
              * @default false
              */
             inside?: boolean;

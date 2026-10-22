@@ -99,7 +99,6 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 name: d.series.name,
                 hasBorder: Boolean(getBarXPaths(d).border),
                 percentage: d.percentage,
-                isStackEnd: d.isStackEnd,
             }));
             shapesData = bars;
             bars.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
@@ -135,7 +134,6 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
                 name: d.series.name,
                 hasBorder: d.borderWidth > 0,
                 percentage: d.percentage,
-                isStackEnd: d.isLastStackItem,
             }));
             shapesData = shapes;
             shapes.forEach((d) => expect(d.data).toBe(raw[Number(d.series.name)].data[0]));
@@ -518,7 +516,6 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             expect(
                 overlaid.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar),
             ).toEqual(plain.bars.map(({center: _center, thickness: _thickness, ...bar}) => bar));
-            expect(overlaid.bars.map((bar) => bar.isStackEnd)).toEqual([false, true, false, true]);
             if (stacking === 'percent') {
                 expect(overlaid.bars.map((bar) => bar.percentage)).toEqual([
                     1 / 3,

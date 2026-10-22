@@ -10,9 +10,10 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     color: string;
     borderWidth: number;
     borderColor: string;
+    /** Resolved corner radius; zero for segments without rounded corners. */
+    borderRadius: number;
     opacity: number;
     series: PreparedBarYSeries;
-    isLastStackItem: boolean;
 };
 
 export type BarYShapesArgs = {

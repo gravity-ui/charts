@@ -19,7 +19,7 @@ import {
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
-import {validateBarLabelPlacement} from '../bar-label-placement';
+import {hasOutsideOnlyPlacement, validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
@@ -105,9 +105,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
     },
     getStackedDomainData: (series) => getBarDomainData(series, 'y', 'x'),
     getXAxisPadding: ({dataLabels}) =>
-        dataLabels?.placement !== undefined || dataLabels?.inside
-            ? 0
-            : (dataLabels?.maxWidth ?? 0) + (dataLabels?.padding ?? 0),
+        hasOutsideOnlyPlacement(dataLabels.placement) ||
+        (dataLabels.placement === undefined && !dataLabels.inside)
+            ? dataLabels.maxWidth + dataLabels.padding
+            : 0,
     getColorValue: (d) => d.x,
     prepareShapeData,
     renderShapes,

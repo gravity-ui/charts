@@ -8,6 +8,122 @@ import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+for (const type of ['bar-x', 'bar-y'] as const) {
+    for (const stacking of ['percent', 'normal'] as const) {
+        test(`${type} ${stacking} stack keeps inner labels in their own segments`, async ({
+            mount,
+        }) => {
+            const vertical = type === 'bar-x';
+            const html = stacking === 'percent';
+            const values = html ? [20, 80] : [20, -20, 30, -30];
+            const axis = {min: html ? 0 : -100, max: 100};
+            const category = {type: 'category' as const, categories: ['A']};
+            const data: ChartData = {
+                legend: {enabled: false},
+                xAxis: vertical ? category : axis,
+                yAxis: [vertical ? axis : category],
+                series: {
+                    data: values.map((value) => ({
+                        type,
+                        name: String(value),
+                        stacking,
+                        data: [vertical ? {x: 'A', y: value} : {x: value, y: 'A'}],
+                        dataLabels: {enabled: true, html, placement: 'auto', padding: 5},
+                    })),
+                },
+            };
+            const component = await mount(<ChartTestStory data={data} />);
+            const bars = component.locator(`.gcharts-${type}__segment`);
+            const labels = component.locator(
+                html ? '.gcharts-chart__html-layer-item' : `.gcharts-${type}__label`,
+            );
+            await expect(labels).toHaveCount(values.length);
+            for (let index = 0; index < values.length; index++) {
+                const bar = await getLocatorBoundingBox(bars.nth(index));
+                const label = await getLocatorBoundingBox(
+                    labels.filter({hasText: new RegExp(`^${values[index]}$`)}),
+                );
+                if (html || index < 2) {
+                    expect(label.x).toBeGreaterThanOrEqual(bar.x);
+                    expect(label.y).toBeGreaterThanOrEqual(bar.y);
+                    expect(label.x + label.width).toBeLessThanOrEqual(bar.x + bar.width);
+                    expect(label.y + label.height).toBeLessThanOrEqual(bar.y + bar.height);
+                } else if (vertical) {
+                    if (values[index] > 0) {
+                        expect(label.y + label.height).toBeLessThanOrEqual(bar.y - 4);
+                    } else {
+                        expect(label.y).toBeGreaterThanOrEqual(bar.y + bar.height + 4);
+                    }
+                } else if (values[index] > 0) {
+                    expect(label.x).toBeGreaterThanOrEqual(bar.x + bar.width + 4);
+                } else {
+                    expect(label.x + label.width).toBeLessThanOrEqual(bar.x - 4);
+                }
+            }
+        });
+    }
+}
+
+test('outside-only bar-y labels keep the legacy autoscale reserve', async ({mount}) => {
+    const data = (placement?: ['outside']): ChartData => ({
+        legend: {enabled: false},
+        xAxis: {min: 0},
+        yAxis: [{type: 'category', categories: ['A']}],
+        series: {
+            data: [
+                {
+                    type: 'bar-y',
+                    name: 'Orders',
+                    data: [{x: 98, y: 'A'}],
+                    dataLabels: {enabled: true, placement, placementFallback: 'hide'},
+                },
+            ],
+        },
+    });
+    let readyCount = 0;
+    const onRender = () => readyCount++;
+    const component = await mount(<ChartTestStory data={data()} onRender={onRender} />);
+    const bars = component.locator('.gcharts-bar-y__segment');
+    const labels = component.locator('.gcharts-bar-y__label');
+    await expect.poll(() => readyCount).toBeGreaterThan(0);
+    const legacyBar = await getLocatorBoundingBox(bars);
+    const previousCount = readyCount;
+    await component.update(<ChartTestStory data={data(['outside'])} onRender={onRender} />);
+    await expect.poll(() => readyCount).toBeGreaterThan(previousCount);
+    await expect(labels).toHaveCount(1);
+    const bar = await getLocatorBoundingBox(bars);
+    const label = await getLocatorBoundingBox(labels);
+    expect(bar.width).toBeCloseTo(legacyBar.width);
+    expect(label.x).toBeGreaterThanOrEqual(bar.x + bar.width + 6);
+});
+
+test('bar-y placement hides fully clipped stack segments regardless of fallback', async ({
+    mount,
+}) => {
+    const data: ChartData = {
+        legend: {enabled: false},
+        xAxis: {min: 500, max: 1000},
+        yAxis: [{type: 'category', categories: ['A']}],
+        series: {
+            data: [100, 900].map((value) => ({
+                type: 'bar-y',
+                name: String(value),
+                stacking: 'normal',
+                data: [{x: value, y: 'A'}],
+                dataLabels: {enabled: true, placement: 'auto'},
+            })),
+        },
+    };
+    const component = await mount(<ChartTestStory data={data} />);
+    const labels = component.locator('.gcharts-bar-y__label');
+    await expect(labels).toHaveCount(1);
+    await expect(labels).toHaveText('900');
+    const bar = await getLocatorBoundingBox(component.locator('.gcharts-bar-y__segment').nth(1));
+    const label = await getLocatorBoundingBox(labels);
+    expect(label.x).toBeGreaterThan(bar.x);
+    expect(label.x + label.width).toBeLessThan(bar.x + bar.width);
+});
+
 test('explicit placement ignores legacy inside during autoscaling', async ({mount}) => {
     const data = (inside: boolean): ChartData => ({
         legend: {enabled: false},

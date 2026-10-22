@@ -10,7 +10,7 @@ import {getFormattedValue} from '~core/utils/format';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
-import {resolveBarLabelPlacement} from '../bar-label-placement';
+import {hasOutsideOnlyPlacement, resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
 const DEFAULT_LABEL_PADDING = 7;
@@ -32,10 +32,11 @@ async function prepareDataLabels(series: BarYSeries) {
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
     const placement = resolveBarLabelPlacement(series.dataLabels?.placement);
-    // Explicit placement uses the available plot space; percent labels also need no
-    // extra axis padding. Measure both during shape preparation instead.
+    // Adaptive and inside placements use the available plot space without an axis reserve.
     const labels =
-        enabled && placement === undefined && series.stacking !== 'percent'
+        enabled &&
+        (hasOutsideOnlyPlacement(placement) ||
+            (placement === undefined && series.stacking !== 'percent'))
             ? series.data.map((d) =>
                   getFormattedValue({
                       value: d.label ?? d.x,
@@ -59,7 +60,7 @@ async function prepareDataLabels(series: BarYSeries) {
         enabled,
         inside,
         placement,
-        placementFallback: series.dataLabels?.placementFallback,
+        placementFallback: series.dataLabels?.placementFallback ?? 'show',
         style,
         maxHeight,
         maxWidth,

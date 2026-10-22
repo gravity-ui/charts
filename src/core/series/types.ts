@@ -260,7 +260,7 @@ export type PreparedScatterSeries = {
 interface PreparedBarLabelPlacement {
     /** Candidate positions resolved by the plugin. */
     placement?: BarSeriesDataLabelPlacementPosition[];
-    placementFallback?: BarSeriesDataLabelPlacementFallback;
+    placementFallback: BarSeriesDataLabelPlacementFallback;
 }
 
 export type PreparedBarXSeries = {

@@ -56,6 +56,7 @@ async function getLabelData(
             endAtMax: !d.extendsUp,
             padding: d.series.dataLabels.padding,
             positions: d.series.dataLabels.placement,
+            allowOutside: d.isStackEnd || !d.series.stacking,
             fallback: d.series.dataLabels.placementFallback,
         });
         if (!placed) return {};

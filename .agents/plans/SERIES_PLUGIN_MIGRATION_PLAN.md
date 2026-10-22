@@ -50,15 +50,17 @@ Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-pl
 
 Move these decisions into plugin metadata or narrowly scoped callbacks:
 
-| Remaining policy                                             | Current location                                                                               |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Whether a series uses axes                                   | [series-type-guards.ts](../../src/core/utils/series-type-guards.ts)                            |
-| Percent-stack domains, bar offsets, and space for bar labels | [x-scale.ts](../../src/core/scales/x-scale.ts), [y-scale.ts](../../src/core/scales/y-scale.ts) |
-| Special handling of single-value domains                     | [scales/utils.ts](../../src/core/scales/utils.ts)                                              |
-| Heatmap padding and grid suppression                         | [x-axis.ts](../../src/core/axes/x-axis.ts), [y-axis.ts](../../src/core/axes/y-axis.ts)         |
-| X-range and bar-y tick policies                              | [X ticks](../../src/core/utils/axis/x-axis.ts), [Y ticks](../../src/components/AxisY/utils.ts) |
+| Remaining policy                         | Current location                                                                               |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Whether a series uses axes               | [series-type-guards.ts](../../src/core/utils/series-type-guards.ts)                            |
+| Percent-stack domains and bar offsets    | [x-scale.ts](../../src/core/scales/x-scale.ts), [y-scale.ts](../../src/core/scales/y-scale.ts) |
+| Special handling of single-value domains | [scales/utils.ts](../../src/core/scales/utils.ts)                                              |
+| Heatmap padding and grid suppression     | [x-axis.ts](../../src/core/axes/x-axis.ts), [y-axis.ts](../../src/core/axes/y-axis.ts)         |
+| X-range and bar-y tick policies          | [X ticks](../../src/core/utils/axis/x-axis.ts), [Y ticks](../../src/components/AxisY/utils.ts) |
 
 Keep D3 scale construction, label measurement, and layout shared. Specify how plugin requirements combine and how they interact with explicit user settings. Axis participation must not imply that every point has scalar numeric `x` and `y` fields.
+
+X-axis label space is delegated through `SeriesPlugin.getXAxisPadding`: plugins request pixels, core takes the largest request and expands only the max end of an autoscaled domain. Bar-y owns the label-space policy; explicit `xAxis.max` takes precedence.
 
 Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): axis participation and scale policies.
 

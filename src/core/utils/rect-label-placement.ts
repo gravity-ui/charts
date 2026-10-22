@@ -17,6 +17,8 @@ interface RectLabelPlacementArgs {
     endAtMax: boolean;
     padding: number;
     positions: readonly RectLabelPosition[];
+    /** Whether outside candidates are available for this rectangle. */
+    allowOutside?: boolean;
     fallback?: 'show' | 'hide';
 }
 
@@ -55,6 +57,7 @@ export function placeRectLabel(args: RectLabelPlacementArgs): {x: number; y: num
     let first: Rect | undefined;
 
     for (const position of positions) {
+        if (position === 'outside' && args.allowOutside === false) continue;
         let along: number;
         if (position === 'outside') {
             along = endAtMax

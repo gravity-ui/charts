@@ -124,6 +124,7 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
              * Whether to align the data label inside or outside the box.
              * For percent stacks, labels are centered inside when `placement` is omitted.
              * Ignored when `placement` is set.
+             * @deprecated Use `placement` instead.
              * @default false
              */
             inside?: boolean;

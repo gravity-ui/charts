@@ -77,13 +77,13 @@ An array sets the candidate order; a single entry fixes the position:
 - `'inside-end'`: Inside, next to the value end of the visible bar.
 - `'inside-center'`: Centered in the visible part of the bar.
 
-Positions follow the value direction, including negative values and reversed axes. A candidate must fit entirely within the plot. Inside candidates must also fit within their own visible bar or stack segment, with `padding` at both ends along the value axis.
+Positions follow the value direction, including negative values and reversed axes. A candidate must fit entirely within the plot. Inside candidates must also fit within their own visible bar or stack segment, with `padding` at both ends along the value axis. In stacks, outside placement is tried only for the final segment of each sign; inner segments use the remaining candidates.
 
 If no candidate fits, `placementFallback: 'show'` (default) draws the first candidate shifted into the plot; it may overlap the bar edge. Use `'hide'` to omit the label instead. Label overlap filtering still follows `allowOverlap`.
 
-SVG and HTML labels recalculate placement after resize, zoom, and reset. An explicit `placement` overrides `inside`, including in percent stacks. Omitting `placement` preserves the existing `inside` behavior.
+SVG and HTML labels recalculate placement after resize, zoom, and reset. An explicit `placement` overrides the deprecated `inside` option, including in percent stacks. Omitting `placement` preserves the existing `inside` behavior.
 
-Explicit placement uses the available plot space without reserving extra axis space for labels.
+Adaptive and inside placements use the available plot space without an axis reserve. With `placement: ['outside']`, Bar-Y reserves space at the maximum end of an autoscaled X axis, as with legacy outside labels. An explicit `xAxis.max` takes precedence.
 
 ### States
 
