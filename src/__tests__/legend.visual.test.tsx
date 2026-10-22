@@ -20,6 +20,7 @@ import type {
 
 import {LegendItemClickTestStory} from './components/LegendItemClickTestStory';
 import {LONG_TEXT} from './constants';
+import {getLegendRowTops} from './utils';
 
 test('legend selection survives updating data in the guide example', async ({mount}) => {
     const component = await mount(
@@ -467,7 +468,7 @@ test.describe('Legend', () => {
                 expect(Number(restoredHeight)).toBeLessThanOrEqual((280 - 15) / 2);
                 const titleBox = await title.boundingBox();
                 const rowBox = await component
-                    .locator('.gcharts-legend__line')
+                    .locator('.gcharts-legend__item')
                     .first()
                     .boundingBox();
                 if (!titleBox || !rowBox) {
@@ -521,7 +522,7 @@ test.describe('Legend', () => {
                     expect(legendWidth).toBeLessThanOrEqual(168);
                     const title = await component.locator('.gcharts-legend__title').boundingBox();
                     const firstRow = await component
-                        .locator('.gcharts-legend__line')
+                        .locator('.gcharts-legend__item')
                         .first()
                         .boundingBox();
                     if (!title || !firstRow || plotWidth === null) {
@@ -949,9 +950,10 @@ test.describe('Legend', () => {
                             <ChartTestStory data={data} styles={{width: 640, height: 320}} />,
                         );
                         const labels = component.locator(labelSelector);
-                        const rows = component.locator('.gcharts-legend__line');
                         const checkGeometry = async () => {
-                            await expect(rows).toHaveCount(3);
+                            await expect
+                                .poll(async () => (await getLegendRowTops(component)).length)
+                                .toBe(3);
                             await expect(labels).toHaveCount(3);
                             await expect
                                 .poll(async () => {
@@ -975,9 +977,6 @@ test.describe('Legend', () => {
                                     );
                                 })
                                 .toBe(true);
-                            for (const row of await rows.all()) {
-                                await expect(row.locator('.gcharts-legend__item')).toHaveCount(1);
-                            }
                         };
                         await checkGeometry();
                         await expect(component).toHaveScreenshot();
@@ -1017,10 +1016,21 @@ test.describe('Legend', () => {
                             .map((point) => point.name),
                     );
                     // Click a marker on a later page; its paired text reflects the same selection.
-                    await component.locator('.gcharts-legend__item-symbol').first().click();
+                    const marker = component.locator('.gcharts-legend__item-symbol').first();
+                    const markerBox = await marker.boundingBox();
+                    const item = html
+                        ? component.locator('.gcharts-legend__item-html').first()
+                        : marker;
+                    const itemBox = await item.boundingBox();
+                    if (!markerBox || !itemBox) throw new Error('Legend marker is not visible');
+                    const markerPosition = {
+                        x: markerBox.x + markerBox.width / 2 - itemBox.x,
+                        y: markerBox.y + markerBox.height / 2 - itemBox.y,
+                    };
+                    await item.click({position: markerPosition});
                     await expect(labels.first()).not.toHaveClass(/unselected/);
                     await expect(labels.nth(1)).toHaveClass(/unselected/);
-                    await component.locator('.gcharts-legend__item-symbol').first().click();
+                    await item.click({position: markerPosition});
                     await expect(labels.nth(1)).not.toHaveClass(/unselected/);
 
                     // A taller container reduces page count even when width is unchanged.
@@ -1161,7 +1171,7 @@ test.describe('Legend', () => {
                 };
                 const component = await mount(<ChartTestStory data={data} />);
 
-                await expect(component.locator('.gcharts-legend__line')).toHaveCount(2);
+                await expect.poll(async () => (await getLegendRowTops(component)).length).toBe(2);
                 await expect(component).toHaveScreenshot();
             });
 
@@ -1526,7 +1536,6 @@ test.describe('Legend', () => {
                             <ChartTestStory data={data} styles={{width: 1000}} />,
                         );
                         const plotBounds = component.locator('clipPath rect').first();
-                        const legendLines = component.locator('.gcharts-legend__line');
                         const labels = component.locator(
                             html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item text',
                         );
@@ -1548,7 +1557,9 @@ test.describe('Legend', () => {
                                 'width',
                                 String(960 - (isVertical ? width + 15 : 0)),
                             );
-                            await expect(legendLines).toHaveCount(width === 230 ? 3 : 2);
+                            await expect
+                                .poll(async () => (await getLegendRowTops(component)).length)
+                                .toBe(width === 230 ? 3 : 2);
                             await expect(labels.last()).toBeVisible();
                             await expect
                                 .poll(async () => {
@@ -1920,9 +1931,8 @@ test.describe('Multiline legend labels', () => {
             },
         };
         const component = await mount(<ChartTestStory data={data} />);
-        const line = component.locator('.gcharts-legend__line');
-        await expect(line).toHaveCount(1);
-        await expect(line.locator('.gcharts-legend__item')).toHaveCount(2);
+        await expect(component.locator('.gcharts-legend__item')).toHaveCount(2);
+        await expect.poll(async () => (await getLegendRowTops(component)).length).toBe(1);
         const targets = component.locator('.gcharts-legend__item > rect[fill="transparent"]');
         const first = await getLegendBox(targets.first());
         const second = await getLegendBox(targets.last());

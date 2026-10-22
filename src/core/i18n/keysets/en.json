@@ -32,5 +32,10 @@
   "tooltip": {
     "label_totals_sum": "Sum",
     "label_more": "{{count}} more"
+  },
+  "legend": {
+    "label_legend": "Legend",
+    "label_previous-page": "Previous legend page",
+    "label_next-page": "Next legend page"
   }
 }

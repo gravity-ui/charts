@@ -253,10 +253,12 @@ export async function wrapTextWithEllipsis(args: {
     text: string;
     width: number;
     maxRowCount: number;
+    onTruncate?: () => void;
     getTextWidth: (text: string) => Promise<number>;
 }) {
     const {text, width, maxRowCount, getTextWidth} = args;
     if (width <= 0 || maxRowCount <= 0) {
+        if (text.trim()) args.onTruncate?.();
         return [];
     }
 
@@ -287,6 +289,7 @@ export async function wrapTextWithEllipsis(args: {
                     }
                 }
                 // A glyph wider than the entire label cannot be displayed.
+                if (low === 0) args.onTruncate?.();
                 rows.push(characters.slice(0, low).join(''));
                 remaining = characters.slice(Math.max(1, low)).join('');
                 if (rows.length > maxRowCount) {
@@ -305,6 +308,7 @@ export async function wrapTextWithEllipsis(args: {
     }
 
     if (rows.length > maxRowCount) {
+        args.onTruncate?.();
         rows.length = maxRowCount;
         rows[maxRowCount - 1] = await getTextWithElipsis({
             text: rows[maxRowCount - 1] + '…',
@@ -473,4 +477,15 @@ export async function getTextWithElipsis({
     }
 
     return low > 0 ? originalText.slice(0, low) + '…' : '';
+}
+
+export function getReadableText(html: string) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    template.content.querySelectorAll('script, style, template').forEach((node) => node.remove());
+    template.content.querySelectorAll('br, p, div, li').forEach((node) => {
+        node.before(' ');
+        node.after(' ');
+    });
+    return (template.content.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
