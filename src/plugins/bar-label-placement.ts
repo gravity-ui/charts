@@ -8,12 +8,6 @@ import type {
 
 const POSITIONS: BarSeriesDataLabelPlacementPosition[] = ['outside', 'inside-end', 'inside-center'];
 
-export function hasOutsideOnlyPlacement(
-    placement: readonly BarSeriesDataLabelPlacementPosition[] | undefined,
-): boolean {
-    return Boolean(placement?.length && placement.every((position) => position === 'outside'));
-}
-
 export function resolveBarLabelPlacement(
     placement: BarSeriesDataLabelPlacementOptions['placement'],
 ): BarSeriesDataLabelPlacementPosition[] | undefined {

@@ -14,7 +14,7 @@ import {
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
-import {placeRectLabel} from '../../utils/rect-label-placement';
+import {hasOutsideOnlyPlacement, placeRectLabel} from '../../utils/rect-label-placement';
 import {createLabelMeasurer} from '../../utils/text';
 import {getBarWidthBySeries} from '../bar-width';
 
@@ -153,6 +153,8 @@ export async function prepareBarYData(args: {
                     }
                 }
 
+                // TODO: Account for reversed ranges ending at zero.
+                // https://github.com/gravity-ui/charts/issues/795
                 ratio = sum === 0 ? 0 : xLinearScale.range()[1] / sum;
             }
 
@@ -305,7 +307,10 @@ export async function prepareBarYData(args: {
                     endAtMax: valueAxisDirection === 'right',
                     padding: dataLabels.padding,
                     positions: dataLabels.placement,
-                    allowOutside: isStackEnd || !prepared.series.stacking,
+                    allowOutside:
+                        isStackEnd ||
+                        !prepared.series.stacking ||
+                        hasOutsideOnlyPlacement(dataLabels.placement),
                     fallback: dataLabels.placementFallback,
                 });
                 if (!placed) continue;

@@ -18,6 +18,7 @@
 
 - When adding or changing config fields, check several analogues and follow established types, formats, units, defaults, and validation. Reuse suitable helpers and justify deviations.
 - Treat every exported type, config field, and root export as semver-stable. Add public API only for a concrete use case; follow existing naming and nesting conventions, and preserve current behavior.
+- Before deprecating a config field, ensure its replacement supports every previously supported capability through explicit configuration. Defaults may differ, but users must be able to reproduce the old behavior by setting the new options explicitly. The only exception is old behavior that is a bug and is deliberately no longer supported; justify that decision and document the unsupported behavior and migration path in user-facing documentation or migration instructions.
 - After changing public chart config types, run `npm run test:chart-config` and verify that both the standalone declaration and JSON Schema represent the change correctly.
 
 # Tests

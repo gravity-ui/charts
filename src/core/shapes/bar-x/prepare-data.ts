@@ -14,7 +14,7 @@ import {getDataCategoryValue, isPointDataLabelEnabled} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
-import {placeRectLabel} from '../../utils/rect-label-placement';
+import {hasOutsideOnlyPlacement, placeRectLabel} from '../../utils/rect-label-placement';
 import {createLabelMeasurer} from '../../utils/text';
 import {getBarLayout, getBarWidthBySeries} from '../bar-width';
 
@@ -56,7 +56,10 @@ async function getLabelData(
             endAtMax: !d.extendsUp,
             padding: d.series.dataLabels.padding,
             positions: d.series.dataLabels.placement,
-            allowOutside: d.isStackEnd || !d.series.stacking,
+            allowOutside:
+                d.isStackEnd ||
+                !d.series.stacking ||
+                hasOutsideOnlyPlacement(d.series.dataLabels.placement),
             fallback: d.series.dataLabels.placementFallback,
         });
         if (!placed) return {};

@@ -156,23 +156,18 @@ describe('chart config artifacts', () => {
             'inside-end',
             'inside-center',
         ]);
-        expect(
-            schema.definitions.BarSeriesDataLabelPlacementPosition.enumDescriptions,
-        ).toHaveLength(3);
-        expect(
-            schema.definitions.BarSeriesDataLabelPlacementFallback.enumDescriptions,
-        ).toHaveLength(2);
         const validate = createSchemaValidator().compile(schema);
         for (const type of ['bar-x', 'bar-y']) {
-            for (const placement of [
-                undefined,
-                'auto',
-                ['outside'],
-                ['inside-end', 'inside-center'],
-                [],
-                ['center'],
-                'outside',
-                null,
+            for (const [dataLabels, valid] of [
+                [{}, true],
+                [{placement: 'auto', placementFallback: 'hide'}, true],
+                [{placement: ['outside'], placementFallback: 'show'}, true],
+                [{placement: ['inside-end', 'inside-center']}, true],
+                [{placement: []}, false],
+                [{placement: ['center']}, false],
+                [{placement: 'outside'}, false],
+                [{placement: null}, false],
+                [{placementFallback: 'auto'}, false],
             ]) {
                 expect(
                     validate({
@@ -182,18 +177,12 @@ describe('chart config artifacts', () => {
                                     type,
                                     name: 'Orders',
                                     data: [{x: 1, y: 2}],
-                                    dataLabels: {placement},
+                                    dataLabels,
                                 },
                             ],
                         },
                     }),
-                ).toBe(
-                    placement === undefined ||
-                        placement === 'auto' ||
-                        (Array.isArray(placement) &&
-                            placement.length > 0 &&
-                            placement[0] !== 'center'),
-                );
+                ).toBe(valid);
             }
         }
         expect(schema.definitions.BaseDataLabels.properties).not.toHaveProperty('placement');

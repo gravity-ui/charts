@@ -71,9 +71,7 @@ The example uses the default palette with rounded borders and a shared opacity o
 
 <a id="data-label-placement"></a>
 
-Set `dataLabels.placement: ['outside', 'inside-end']` to prefer labels outside the value end and move them inside when there is insufficient room. `'auto'` is shorthand for the same order. Positions follow the value direction, including negative values and reversed axes.
-
-The available positions, fit checks, and fallback behavior are the same as for [horizontal bars](bar-y.md#data-label-placement). SVG and HTML labels recalculate after resize, zoom, and reset. Explicit `placement` overrides `inside`; omitting it preserves the existing behavior.
+Set `dataLabels.placement: 'auto'` (equivalent to `['outside', 'inside-end']`) to prefer labels outside the value end and move them inside when space is insufficient. The positions, stack rules, fallback, and update behavior are the same as for [horizontal bars](bar-y.md#data-label-placement). Explicit `placement` overrides `inside`; omitting it preserves the existing behavior.
 
 ### States
 

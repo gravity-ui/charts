@@ -7,10 +7,11 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
-import {hasOutsideOnlyPlacement, resolveBarLabelPlacement} from '../bar-label-placement';
+import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
 const DEFAULT_LABEL_PADDING = 7;
@@ -32,11 +33,11 @@ async function prepareDataLabels(series: BarYSeries) {
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
     const placement = resolveBarLabelPlacement(series.dataLabels?.placement);
-    // Adaptive and inside placements use the available plot space without an axis reserve.
+    // Percent labels need the resolved share and never reserve axis space.
     const labels =
         enabled &&
-        (hasOutsideOnlyPlacement(placement) ||
-            (placement === undefined && series.stacking !== 'percent'))
+        series.stacking !== 'percent' &&
+        (placement === undefined || hasOutsideOnlyPlacement(placement))
             ? series.data.map((d) =>
                   getFormattedValue({
                       value: d.label ?? d.x,

@@ -1,5 +1,11 @@
 export type RectLabelPosition = 'outside' | 'inside-end' | 'inside-center';
 
+export function hasOutsideOnlyPlacement(
+    positions: readonly RectLabelPosition[] | undefined,
+): boolean {
+    return Boolean(positions?.length && positions.every((position) => position === 'outside'));
+}
+
 interface Rect {
     x: number;
     y: number;

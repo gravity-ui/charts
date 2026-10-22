@@ -57,13 +57,17 @@ async function prepare(
     });
 }
 
-test('places logarithmic bar-y labels at the value end', async () => {
-    const measure = jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({
-        width: 40,
-        height: 10,
-        hangingOffset: 2,
-    }));
-    try {
+describe('bar-y label placement', () => {
+    beforeEach(() => {
+        jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({
+            width: 40,
+            height: 10,
+            hangingOffset: 2,
+        }));
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    test('places logarithmic labels at the value end', async () => {
         const {shapes, labels} = await prepare([100], undefined, 400, {
             logarithmic: true,
             series: {dataLabels: {enabled: true, placement: 'auto', padding: 5}},
@@ -73,9 +77,27 @@ test('places logarithmic bar-y labels at the value end', async () => {
         const label = labels[0];
         expect(label.x + label.size.width).toBeCloseTo(bar.x + bar.width - 5);
         expect(label.x).toBeGreaterThan(bar.x);
-    } finally {
-        measure.mockRestore();
-    }
+    });
+
+    test('formats outside-only percent labels with resolved shares', async () => {
+        const {labels} = await prepare([1, 3], 'percent', 400, {
+            series: {
+                dataLabels: {
+                    enabled: true,
+                    placement: ['outside'],
+                    allowOverlap: true,
+                    format: {
+                        type: 'custom',
+                        formatter: ({percentage}) => {
+                            if (percentage === undefined) throw new Error('Missing percentage');
+                            return percentage.toFixed(2);
+                        },
+                    },
+                },
+            },
+        });
+        expect(labels.map((label) => label.text)).toEqual(['0.25', '0.75']);
+    });
 });
 
 test('resolves corner radii without rounding both signed stack ends', async () => {

@@ -9,6 +9,7 @@ import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
 import {
     validateAxisPlotValues,
     validatePercentStackingValues,
@@ -19,7 +20,7 @@ import {
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
-import {hasOutsideOnlyPlacement, validateBarLabelPlacement} from '../bar-label-placement';
+import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';

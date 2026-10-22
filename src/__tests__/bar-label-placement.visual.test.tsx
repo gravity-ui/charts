@@ -10,57 +10,71 @@ import {getLocatorBoundingBox} from './utils';
 
 for (const type of ['bar-x', 'bar-y'] as const) {
     for (const stacking of ['percent', 'normal'] as const) {
-        test(`${type} ${stacking} stack keeps inner labels in their own segments`, async ({
-            mount,
-        }) => {
-            const vertical = type === 'bar-x';
-            const html = stacking === 'percent';
-            const values = html ? [20, 80] : [20, -20, 30, -30];
-            const axis = {min: html ? 0 : -100, max: 100};
-            const category = {type: 'category' as const, categories: ['A']};
-            const data: ChartData = {
-                legend: {enabled: false},
-                xAxis: vertical ? category : axis,
-                yAxis: [vertical ? axis : category],
-                series: {
-                    data: values.map((value) => ({
-                        type,
-                        name: String(value),
-                        stacking,
-                        data: [vertical ? {x: 'A', y: value} : {x: value, y: 'A'}],
-                        dataLabels: {enabled: true, html, placement: 'auto', padding: 5},
-                    })),
-                },
-            };
-            const component = await mount(<ChartTestStory data={data} />);
-            const bars = component.locator(`.gcharts-${type}__segment`);
-            const labels = component.locator(
-                html ? '.gcharts-chart__html-layer-item' : `.gcharts-${type}__label`,
-            );
-            await expect(labels).toHaveCount(values.length);
-            for (let index = 0; index < values.length; index++) {
-                const bar = await getLocatorBoundingBox(bars.nth(index));
-                const label = await getLocatorBoundingBox(
-                    labels.filter({hasText: new RegExp(`^${values[index]}$`)}),
+        for (const outsideOnly of [false, true]) {
+            test(`${type} ${stacking} stack with ${outsideOnly ? 'outside-only' : 'auto'} placement`, async ({
+                mount,
+            }) => {
+                const vertical = type === 'bar-x';
+                const percent = stacking === 'percent';
+                const html = percent || (outsideOnly && !vertical);
+                const values = percent ? [20, 80] : [20, -20, 30, -30];
+                const axis = {min: percent ? 0 : -100, max: 100};
+                const category = {type: 'category' as const, categories: ['A']};
+                const data: ChartData = {
+                    legend: {enabled: false},
+                    xAxis: vertical ? category : axis,
+                    yAxis: [vertical ? axis : category],
+                    series: {
+                        data: values.map((value) => ({
+                            type,
+                            name: String(value),
+                            stacking,
+                            data: [vertical ? {x: 'A', y: value} : {x: value, y: 'A'}],
+                            dataLabels: {
+                                enabled: true,
+                                html,
+                                inside: false,
+                                placement: outsideOnly ? ['outside'] : 'auto',
+                                placementFallback: percent && outsideOnly ? 'hide' : 'show',
+                                allowOverlap: true,
+                                padding: 5,
+                            },
+                        })),
+                    },
+                };
+                const component = await mount(<ChartTestStory data={data} />);
+                const bars = component.locator(`.gcharts-${type}__segment`);
+                const labels = component.locator(
+                    html ? '.gcharts-chart__html-layer-item' : `.gcharts-${type}__label`,
                 );
-                if (html || index < 2) {
-                    expect(label.x).toBeGreaterThanOrEqual(bar.x);
-                    expect(label.y).toBeGreaterThanOrEqual(bar.y);
-                    expect(label.x + label.width).toBeLessThanOrEqual(bar.x + bar.width);
-                    expect(label.y + label.height).toBeLessThanOrEqual(bar.y + bar.height);
-                } else if (vertical) {
-                    if (values[index] > 0) {
-                        expect(label.y + label.height).toBeLessThanOrEqual(bar.y - 4);
+                // A percent stack fills the plot, so its outermost outside label cannot fit.
+                const labelCount = percent && outsideOnly ? values.length - 1 : values.length;
+                await expect(bars).toHaveCount(values.length);
+                await expect(labels).toHaveCount(labelCount);
+                for (let index = 0; index < labelCount; index++) {
+                    const bar = await getLocatorBoundingBox(bars.nth(index));
+                    const label = await getLocatorBoundingBox(
+                        labels.filter({hasText: new RegExp(`^${values[index]}$`)}),
+                    );
+                    if (!outsideOnly && (percent || index < 2)) {
+                        expect(label.x).toBeGreaterThanOrEqual(bar.x);
+                        expect(label.y).toBeGreaterThanOrEqual(bar.y);
+                        expect(label.x + label.width).toBeLessThanOrEqual(bar.x + bar.width);
+                        expect(label.y + label.height).toBeLessThanOrEqual(bar.y + bar.height);
+                    } else if (vertical) {
+                        if (values[index] > 0) {
+                            expect(label.y + label.height).toBeLessThanOrEqual(bar.y - 4);
+                        } else {
+                            expect(label.y).toBeGreaterThanOrEqual(bar.y + bar.height + 4);
+                        }
+                    } else if (values[index] > 0) {
+                        expect(label.x).toBeGreaterThanOrEqual(bar.x + bar.width + 4);
                     } else {
-                        expect(label.y).toBeGreaterThanOrEqual(bar.y + bar.height + 4);
+                        expect(label.x + label.width).toBeLessThanOrEqual(bar.x - 4);
                     }
-                } else if (values[index] > 0) {
-                    expect(label.x).toBeGreaterThanOrEqual(bar.x + bar.width + 4);
-                } else {
-                    expect(label.x + label.width).toBeLessThanOrEqual(bar.x - 4);
                 }
-            }
-        });
+            });
+        }
     }
 }
 
