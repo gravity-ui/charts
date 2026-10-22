@@ -40,6 +40,9 @@ export function prepareWaterfallSeries(args: PrepareSeriesArgs<WaterfallSeries>)
         type: series.type,
         name: series.name,
         visible: get(series, 'visible', true),
+        connectors: {
+            enabled: series.connectors?.enabled ?? true,
+        },
         dataLabels: {
             enabled: series.dataLabels?.enabled ?? true,
             style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),

@@ -50,6 +50,14 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
             totals?: string;
         };
     };
+    /** Lines connecting adjacent waterfall bars. */
+    connectors?: {
+        /**
+         * Whether to display connector lines between bars.
+         * @default true
+         */
+        enabled?: boolean;
+    };
     /**
      * Defines how to handle null values in the data.
      *

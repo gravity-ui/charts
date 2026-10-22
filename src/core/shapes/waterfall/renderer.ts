@@ -55,16 +55,15 @@ export function renderWaterfall(
     });
 
     // Add the connector line between bars
+    const line = lineGenerator();
     svgElement
         .selectAll(connectorSelector)
         .data(preparedData)
         .join('path')
         .attr('class', b('connector'))
         .attr('d', (d, index) => {
-            const line = lineGenerator();
-
             const prev = preparedData[index - 1];
-            if (!prev) {
+            if (!prev || !d.series.connectors.enabled) {
                 return null;
             }
 
@@ -86,7 +85,7 @@ export function renderWaterfall(
             return line(points);
         })
         .attr('stroke-width', 1)
-        .attr('stroke-dasharray', () => getLineDashArray(DASH_STYLE.Dash, 1));
+        .attr('stroke-dasharray', getLineDashArray(DASH_STYLE.Dash, 1));
 
     function handleShapeHover(data?: PreparedWaterfallData[]) {
         const hoverEnabled = hoverOptions?.enabled;
