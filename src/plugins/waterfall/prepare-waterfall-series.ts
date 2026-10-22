@@ -41,7 +41,7 @@ export function prepareWaterfallSeries(args: PrepareSeriesArgs<WaterfallSeries>)
         name: series.name,
         visible: get(series, 'visible', true),
         dataLabels: {
-            enabled: series.dataLabels?.enabled || true,
+            enabled: series.dataLabels?.enabled ?? true,
             style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
             allowOverlap: series.dataLabels?.allowOverlap || false,
             padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
