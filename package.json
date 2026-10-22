@@ -112,10 +112,10 @@
     "@gravity-ui/uikit": "^7.18.0",
     "@playwright/experimental-ct-react": "^1.56.1",
     "@playwright/test": "^1.56.1",
-    "@storybook/addon-a11y": "^10.2.16",
-    "@storybook/addon-docs": "^10.2.16",
-    "@storybook/react": "^10.2.16",
-    "@storybook/react-vite": "^10.2.16",
+    "@storybook/addon-a11y": "^10.6.2",
+    "@storybook/addon-docs": "^10.6.2",
+    "@storybook/react": "^10.6.2",
+    "@storybook/react-vite": "^10.6.2",
     "@testing-library/dom": "^10.1.0",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",
@@ -131,7 +131,7 @@
     "dts-bundle-generator": "^9.5.1",
     "eslint": "^9.39.4",
     "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-storybook": "^10.2.16",
+    "eslint-plugin-storybook": "^10.6.2",
     "eslint-plugin-testing-library": "^6.2.2",
     "globals": "^17.4.0",
     "gulp": "^5.0.0",
@@ -151,7 +151,7 @@
     "react-dom": "^18.3.1",
     "rimraf": "^5.0.7",
     "sass": "^1.77.1",
-    "storybook": "^10.2.16",
+    "storybook": "^10.6.2",
     "stylelint": "^15.11.0",
     "stylelint-use-logical": "^2.1.2",
     "ts-jest": "^29.2.5",
@@ -165,7 +165,11 @@
     "dompurify": "^3.4.16",
     "vite@^7.3.1": {
       "esbuild": "^0.28.1"
-    }
+    },
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.3.2"
+    },
+    "postcss-selector-parser": "^7.1.6"
   },
   "peerDependencies": {
     "@gravity-ui/uikit": "^7.0.0",
