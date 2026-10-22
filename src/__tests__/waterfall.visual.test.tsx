@@ -19,6 +19,42 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.describe('Connectors', () => {
+        for (const enabled of [undefined, true, false]) {
+            test(`enabled = ${String(enabled)}, including chart updates`, async ({mount}) => {
+                const points: WaterfallSeriesData[] = [
+                    {x: 'Income', y: 10},
+                    {x: 'Expense', y: -4},
+                    {x: 'Total', total: true},
+                ];
+                const createData = (value: boolean | undefined): ChartData => ({
+                    series: {
+                        data: [
+                            {
+                                type: 'waterfall',
+                                name: 'Balance',
+                                data: points,
+                                ...(value === undefined ? {} : {connectors: {enabled: value}}),
+                            },
+                        ],
+                    },
+                    xAxis: {type: 'category', categories: points.map((point) => String(point.x))},
+                });
+                const component = await mount(<ChartTestStory data={createData(enabled)} />);
+                const connectors = component.locator('.gcharts-waterfall__connector[d]');
+                const bars = component.locator('.gcharts-waterfall__segment');
+                await expect(bars).toHaveCount(points.length);
+                await expect(connectors).toHaveCount(enabled === false ? 0 : points.length - 1);
+
+                for (const value of [false, true, false, undefined]) {
+                    await component.update(<ChartTestStory data={createData(value)} />);
+                    await expect(bars).toHaveCount(points.length);
+                    await expect(connectors).toHaveCount(value === false ? 0 : points.length - 1);
+                }
+            });
+        }
+    });
+
     test.describe('Tooltip', () => {
         test('Datetime header in the runnable docs example', async ({mount, page}, testInfo) => {
             const component = await mount(
