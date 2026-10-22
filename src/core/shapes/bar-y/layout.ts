@@ -1,4 +1,3 @@
-import {max} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'lodash/get';
 
@@ -7,10 +6,10 @@ import type {PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
 import {getSeriesStackId} from '../../series/utils';
-import {getDataCategoryValue} from '../../utils';
+import {getDataCategoryValue, isBandScale} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
-import {MIN_BAR_GAP, MIN_BAR_GROUP_GAP} from '../bar-constants';
-import {getBarWidth} from '../bar-width';
+import {MIN_BAR_GROUP_GAP} from '../bar-constants';
+import {getBarLayout} from '../bar-width';
 
 /**
  * BarY always filters out data with null or replace null by zero.
@@ -71,18 +70,27 @@ export function getBarYLayout(args: {
     const domain = Object.keys(groupedData);
     const bandSize = getBandSize({domain, scale: scale as AxisScale<AxisDomain>});
     const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
-    const maxGroupSize =
-        max(
-            Object.values(groupedData),
-            (d) =>
-                Object.values(d).filter((items) =>
-                    items.some((item) => item.series.grouping !== false),
-                ).length,
-        ) || 1;
+    const layoutSeries = new Set<PreparedBarYSeries>();
+    const categoryDomain = isBandScale(scale) ? new Set(scale.domain().map(String)) : undefined;
+    let maxGroupSize = 1;
+    for (const [key, category] of Object.entries(groupedData)) {
+        let groupCount = 0;
+        for (const items of Object.values(category)) {
+            const grouped = items.find((item) => item.series.grouping !== false);
+            if (grouped) {
+                groupCount++;
+                if (!categoryDomain || categoryDomain.has(key)) layoutSeries.add(grouped.series);
+            }
+        }
+        maxGroupSize = Math.max(maxGroupSize, groupCount);
+    }
     const groupSize = Math.max(0, bandSize - groupGap);
     const barSlotSize = groupSize / maxGroupSize;
-    const barGap = Math.max(barSlotSize * barPadding, MIN_BAR_GAP);
-    // Keep the type-level layout as the reference for slot centers, including its width cap.
-    const barSize = getBarWidth(barSlotSize, barPadding, barMaxWidth);
+    const {width: barSize, gap: barGap} = getBarLayout(
+        layoutSeries,
+        barSlotSize,
+        barPadding,
+        barMaxWidth,
+    );
     return {bandSize, barGap, barSize, barSlotSize, groupSize};
 }

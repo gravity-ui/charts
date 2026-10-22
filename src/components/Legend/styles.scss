@@ -80,4 +80,48 @@
             fill: var(--g-color-base-brand-hover);
         }
     }
+
+    &__item-html {
+        position: absolute;
+
+        display: flex;
+        align-items: center;
+
+        box-sizing: border-box;
+
+        cursor: pointer;
+        pointer-events: auto;
+
+        border-radius: var(--g-border-radius-xs);
+
+        &:focus-visible {
+            background-color: var(--g-color-base-simple-hover);
+        }
+    }
+
+    &__focus-background {
+        fill: transparent;
+        rx: var(--g-border-radius-xs);
+    }
+
+    &__title > &__focus-background {
+        display: none;
+
+        pointer-events: none;
+    }
+
+    &__title:focus-visible > &__focus-background,
+    &__item:focus-visible > &__focus-background,
+    &__pagination-arrow:focus-visible > &__focus-background {
+        display: initial;
+
+        fill: var(--g-color-base-simple-hover);
+    }
+
+    &__title:focus,
+    &__item:focus,
+    &__item-html:focus,
+    &__pagination-arrow:focus {
+        outline: none;
+    }
 }

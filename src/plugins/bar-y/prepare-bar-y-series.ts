@@ -10,7 +10,7 @@ import {getFormattedValue} from '~core/utils/format';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
-import {resolveStackBarPadding} from '../bar-padding';
+import {resolveStackBarSizing} from '../bar-sizing';
 
 const DEFAULT_LABEL_PADDING = 7;
 
@@ -67,59 +67,69 @@ export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
     const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;
 
     const preparedSeries = await Promise.all(
-        seriesList.map<Promise<Omit<PreparedBarYSeries, 'stackBarPadding'>>>(async (series) => {
-            const name = series.name || '';
-            const color = series.color || colorScale(name);
-            const opacity = series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1;
+        seriesList.map<Promise<Omit<PreparedBarYSeries, 'stackBarPadding' | 'stackBarMaxWidth'>>>(
+            async (series) => {
+                const name = series.name || '';
+                const color = series.color || colorScale(name);
+                const opacity = series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1;
 
-            return {
-                type: series.type,
-                color,
-                opacity,
-                name,
-                id: getUniqId(),
-                visible: get(series, 'visible', true),
-                legend: {
-                    enabled: get(series, 'legend.enabled', legend.enabled),
-                    symbol: {...prepareLegendSymbol(series), opacity},
-                    groupId: series.legend?.groupId ?? getUniqId(),
-                    source: series.legend,
-                    itemText: series.legend?.itemText ?? name,
-                },
-                data: prepareSeriesData(series),
-                stacking: series.stacking,
-                grouping: series.grouping ?? true,
-                barPadding:
-                    series.barPadding ??
-                    get(
-                        seriesOptions,
-                        'bar-y.barPadding',
-                        seriesOptionsDefaults['bar-y'].barPadding,
-                    ),
-                stackLabels: series.stackLabels,
-                // Non-stacked overlays need independent domains even with a stackId.
-                stackId: getSeriesStackId(series),
-                resolvedStackId:
-                    series.grouping === false && !series.stacking ? getUniqId() : undefined,
-                valueAxis: 'x',
-                dataLabels: await prepareDataLabels(series),
-                cursor: get(series, 'cursor', null),
-                borderRadius: series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
-                borderWidth: series.borderWidth ?? seriesOptions?.['bar-y']?.borderWidth ?? 0,
-                borderColor:
-                    series.borderColor ??
-                    seriesOptions?.['bar-y']?.borderColor ??
-                    'var(--gcharts-shape-border-color)',
-                tooltip: {
-                    ...series.tooltip,
-                    valueFormat:
-                        series.tooltip?.valueFormat ??
-                        getDefaultValueFormat({axis: xAxis ?? undefined}),
-                },
-                custom: series.custom,
-            };
-        }),
+                return {
+                    type: series.type,
+                    color,
+                    opacity,
+                    name,
+                    id: getUniqId(),
+                    visible: get(series, 'visible', true),
+                    legend: {
+                        enabled: get(series, 'legend.enabled', legend.enabled),
+                        symbol: {...prepareLegendSymbol(series), opacity},
+                        groupId: series.legend?.groupId ?? getUniqId(),
+                        source: series.legend,
+                        itemText: series.legend?.itemText ?? name,
+                    },
+                    data: prepareSeriesData(series),
+                    stacking: series.stacking,
+                    grouping: series.grouping ?? true,
+                    barPadding:
+                        series.barPadding ??
+                        get(
+                            seriesOptions,
+                            'bar-y.barPadding',
+                            seriesOptionsDefaults['bar-y'].barPadding,
+                        ),
+                    barMaxWidth:
+                        series.barMaxWidth ??
+                        get(
+                            seriesOptions,
+                            'bar-y.barMaxWidth',
+                            seriesOptionsDefaults['bar-y'].barMaxWidth,
+                        ),
+                    stackLabels: series.stackLabels,
+                    // Non-stacked overlays need independent domains even with a stackId.
+                    stackId: getSeriesStackId(series),
+                    resolvedStackId:
+                        series.grouping === false && !series.stacking ? getUniqId() : undefined,
+                    valueAxis: 'x',
+                    dataLabels: await prepareDataLabels(series),
+                    cursor: get(series, 'cursor', null),
+                    borderRadius:
+                        series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
+                    borderWidth: series.borderWidth ?? seriesOptions?.['bar-y']?.borderWidth ?? 0,
+                    borderColor:
+                        series.borderColor ??
+                        seriesOptions?.['bar-y']?.borderColor ??
+                        'var(--gcharts-shape-border-color)',
+                    tooltip: {
+                        ...series.tooltip,
+                        valueFormat:
+                            series.tooltip?.valueFormat ??
+                            getDefaultValueFormat({axis: xAxis ?? undefined}),
+                    },
+                    custom: series.custom,
+                };
+            },
+        ),
     );
 
-    return resolveStackBarPadding(preparedSeries, getSeriesStackId);
+    return resolveStackBarSizing(preparedSeries, getSeriesStackId);
 }

@@ -80,12 +80,7 @@ export async function prepareBarYData(args: {
         scale: yScale,
     });
 
-    const widthBySeries = getBarWidthBySeries(
-        series,
-        barSlotSize,
-        groupSize,
-        seriesOptions['bar-y'].barMaxWidth,
-    );
+    const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize);
     const borderWidthBySeries = new Map(
         series.map((s) => [
             s,

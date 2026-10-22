@@ -87,7 +87,7 @@ test.describe('Content-based legend width', () => {
         );
         const legend = component.locator('.gcharts-legend');
         const title = component.locator('.gcharts-legend__title');
-        const firstRow = component.locator('.gcharts-legend__line').first();
+        const firstRow = component.locator('.gcharts-legend__item').first();
         await expect.poll(getReadyCount).toBeGreaterThan(0);
         await expect(component.locator('.gcharts-legend__pagination')).toBeVisible();
         const initialHeight = await legend.getAttribute('height');
@@ -380,7 +380,7 @@ test.describe('Content-based legend width', () => {
                 <ChartTestStory data={data} styles={{width: 500, height: 260}} />,
             );
             const legend = component.locator('.gcharts-legend');
-            const rows = component.locator('.gcharts-legend__line');
+            const rows = component.locator('.gcharts-legend__item');
             const labels = component.locator(
                 html ? '.gcharts-legend__item-text-html' : '.gcharts-legend__item-text',
             );

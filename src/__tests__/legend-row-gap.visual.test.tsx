@@ -6,6 +6,8 @@ import type {Locator} from '@playwright/test';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData, ChartLegend} from '../types';
 
+import {getLegendRowTops} from './utils';
+
 function getData(legend: ChartLegend): ChartData {
     return {
         chart: {margin: {left: 10, right: 10, top: 10, bottom: 10}},
@@ -29,17 +31,6 @@ function getData(legend: ChartLegend): ChartData {
             })),
         },
     };
-}
-
-async function getRowTops(component: Locator) {
-    return component
-        .locator('.gcharts-legend__line')
-        .evaluateAll((elements) =>
-            elements.map(
-                (element) =>
-                    (element as SVGGElement).transform.baseVal.consolidate()?.matrix.f ?? 0,
-            ),
-        );
 }
 
 async function getItemGeometry(component: Locator, html: boolean) {
@@ -127,7 +118,7 @@ test.describe('Legend row gap', () => {
                 const component = await mount(<ChartTestStory data={baseline} styles={styles} />);
                 const items = component.locator('.gcharts-legend__item');
                 await expect(items).toHaveCount(6);
-                const tops = await getRowTops(component);
+                const tops = await getLegendRowTops(component);
                 expect(tops.length).toBe(layout === 'vertical' ? 6 : 3);
                 const geometry = await getItemGeometry(component, html);
                 const legend = component.locator('.gcharts-legend');
@@ -138,7 +129,7 @@ test.describe('Legend row gap', () => {
                     'height',
                     String(baselineHeight + (tops.length - 1) * 7),
                 );
-                const spacedTops = await getRowTops(component);
+                const spacedTops = await getLegendRowTops(component);
                 spacedTops.forEach((top, i) => expect(top).toBeCloseTo(tops[i] + i * 7));
                 const spacedGeometry = await getItemGeometry(component, html);
                 for (const key of ['labels', 'symbols'] as const) {

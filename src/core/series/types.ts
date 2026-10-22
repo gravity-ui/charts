@@ -177,6 +177,8 @@ export interface LegendItem {
     textRows?: string[];
     dashStyle?: DashStyle;
     overflowed?: boolean;
+    /** Whether SVG label preparation removed any text, independent of row layout. */
+    textTruncated?: boolean;
     visible?: boolean;
 }
 
@@ -267,6 +269,9 @@ export type PreparedBarXSeries = {
     barPadding: number;
     /** Largest resolved padding in the stack, including hidden series. */
     stackBarPadding: number;
+    barMaxWidth: number;
+    /** Smallest resolved width limit in the stack, including hidden series. */
+    stackBarMaxWidth: number;
     stackLabels?: BarXSeries['stackLabels'];
     valueAxis: 'y';
     dataLabels: {
@@ -297,6 +302,9 @@ export type PreparedBarYSeries = {
     barPadding: number;
     /** Largest resolved padding in the stack, including hidden series. */
     stackBarPadding: number;
+    barMaxWidth: number;
+    /** Smallest resolved width limit in the stack, including hidden series. */
+    stackBarMaxWidth: number;
     stackLabels?: BarYSeries['stackLabels'];
     valueAxis: 'x';
     dataLabels: {

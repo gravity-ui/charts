@@ -211,6 +211,7 @@
     ],
     "AxisPlotShape": ["color", "custom", "label", "layerPlacement", "opacity", "value"],
     "BarXSeries<JsonValue>": [
+      "barMaxWidth",
       "barPadding",
       "borderColor",
       "borderRadius",
@@ -247,6 +248,7 @@
       "y"
     ],
     "BarYSeries<JsonValue>": [
+      "barMaxWidth",
       "barPadding",
       "borderColor",
       "borderRadius",

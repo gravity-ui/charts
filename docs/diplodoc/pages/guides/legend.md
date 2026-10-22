@@ -80,9 +80,17 @@ The example uses abbreviated legend labels. Hover over the lines to see the full
 
 <div data-chart-example="legend/labels"></div>
 
+## Keyboard navigation and truncated labels
+
+Hover over a truncated label or title to read its full text. The tooltip also appears on keyboard focus; press Escape to dismiss it.
+
+Tab enters the item list at the last focused item. Move between items with Left/Right in a horizontal legend or Up/Down in a vertical legend. Home/End move to the first or last item, and navigation crosses page boundaries. Focus highlights the item with a rounded background, including labels that fit without truncation.
+
+Press Enter or Space to activate an item. The pagination buttons are also reachable with Tab and support Enter/Space.
+
 ## Legend item clicks
 
-For a discrete legend, `legend.events.itemClick` receives the clicked item's `id`, full configured `name` before truncation, current `visible` state, and the native mouse event. The `name` may contain HTML: with `itemText: '<b>Created</b>'`, the callback receives `name: '<b>Created</b>'` even though the rendered label reads “Created”. By default, clicking applies the built-in visibility behavior: a regular click selects one item or restores all, while ⌘/Ctrl-click adds or removes an item from the visible set.
+For a discrete legend, `legend.events.itemClick` receives the clicked item's `id`, full configured `name` before truncation, current `visible` state, and a mouse event. Keyboard activation dispatches a click event with the pressed modifier keys. The `name` may contain HTML: with `itemText: '<b>Created</b>'`, the callback receives `name: '<b>Created</b>'` even though the rendered label reads “Created”. By default, clicking applies the built-in visibility behavior: a regular click selects one item or restores all, while ⌘/Ctrl-click adds or removes an item from the visible set.
 
 Set `legend.itemClickAction` to `'none'` to use a legend item for another action without changing series visibility. The callback still runs. Its return value and the mouse event's `defaultPrevented` flag do not control visibility.
 

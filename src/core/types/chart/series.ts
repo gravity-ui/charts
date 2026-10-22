@@ -135,6 +135,7 @@ export interface ChartSeriesOptions {
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
+         * Can be overridden by barMaxWidth on individual series.
          * @default 50
          */
         barMaxWidth?: number;
@@ -207,6 +208,7 @@ export interface ChartSeriesOptions {
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
+         * Can be overridden by barMaxWidth on individual series.
          * @default 50
          */
         barMaxWidth?: number;

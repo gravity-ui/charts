@@ -215,6 +215,51 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('per-series bar width limits use the shared numeric pixel contract', () => {
+        const usage = `
+            const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', barMaxWidth: 80, data: []};
+            const horizontal: BarYSeries = {type: 'bar-y', name: 'Actual', barMaxWidth: 20, data: []};
+            // @ts-expect-error Width limits are numeric, as in shared options.
+            vertical.barMaxWidth = '80px';
+            // @ts-expect-error Width limits cannot be null.
+            horizontal.barMaxWidth = null;
+            // @ts-expect-error Width limits are not supported by all series.
+            const base: BaseSeries = {barMaxWidth: 20};
+            void [vertical, horizontal, base];
+        `;
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'bar-max-width-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const type of ['bar-x', 'bar-y']) {
+            const definition =
+                schema.definitions[
+                    type === 'bar-x' ? 'BarXSeries<JsonValue>' : 'BarYSeries<JsonValue>'
+                ];
+            expect(definition.properties.barMaxWidth).toMatchObject({type: 'number', minimum: 1});
+            for (const barMaxWidth of [undefined, 0, 0.5, 1, 1.5, 80, -1, null, '80px', '50%']) {
+                expect(
+                    validateConfig({
+                        series: {
+                            data: [{type, name: 'Plan', barMaxWidth, data: []}],
+                        },
+                    }),
+                ).toBe([undefined, 1, 1.5, 80].includes(barMaxWidth));
+            }
+            expect(
+                validateConfig({
+                    series: {
+                        data: [{type, name: 'Plan', data: []}],
+                        options: {[type]: {barMaxWidth: -1}},
+                    },
+                }),
+            ).toBe(true);
+        }
+    });
+
     test('tooltip callbacks expose Y axes and the axis index of Cartesian series', () => {
         const usage = `
             const tooltip: ChartTooltip = {
