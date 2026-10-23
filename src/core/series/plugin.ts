@@ -184,6 +184,11 @@ export interface SeriesPlugin<
      * match category indices to category names. Must not mutate the series or its data.
      */
     getStackedDomainData?(series: T): T['data'];
+    /**
+     * Extra space in pixels reserved at the max end of an autoscaled X domain.
+     * The largest padding requested across series is used.
+     */
+    getXAxisPadding?(series: Extract<PreparedSeries, {type: T['type']}>): number;
     /** Computes shape data (geometry, labels, markers) once per render. */
     prepareShapeData(
         args: PrepareShapeDataArgs,

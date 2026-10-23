@@ -67,6 +67,12 @@ The example uses the default palette with rounded borders and a shared opacity o
 
 <div data-chart-example="series-types/bar-x"></div>
 
+### Data label placement
+
+<a id="data-label-placement"></a>
+
+Set `dataLabels.placement: 'auto'` (equivalent to `['outside', 'inside-end']`) to prefer labels outside the value end and move them inside when space is insufficient. The positions, stack rules, fallback, and update behavior are the same as for [horizontal bars](bar-y.md#data-label-placement). Explicit `placement` overrides `inside`; omitting it preserves the existing behavior.
+
 ### States
 
 Hover changes the fill color; the border retains its configured color. The inactive state multiplies the resolved fill and border opacity by `states.inactive.opacity`, so transparent bars stay transparent. SVG data labels use the inactive opacity directly. When it ends, bars restore their point or series opacity.

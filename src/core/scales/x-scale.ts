@@ -7,6 +7,7 @@ import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
+import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartAxis, ChartAxisType} from '../types';
 import {
     getDefaultMaxXAxisValue,
@@ -29,20 +30,11 @@ const X_AXIS_ZOOM_PADDING = 0.02;
 function calculateXAxisPadding(series: PreparedSeries[]) {
     let result = 0;
 
-    series.forEach((s) => {
-        switch (s.type) {
-            case 'bar-y': {
-                // Since labels can be located to the right of the bar, need to add an additional space
-                const inside = get(s, 'dataLabels.inside');
-                if (!inside) {
-                    const labelsMaxWidth =
-                        get(s, 'dataLabels.maxWidth', 0) + (s.dataLabels?.padding ?? 0);
-                    result = Math.max(result, labelsMaxWidth);
-                }
-
-                break;
-            }
-        }
+    series.forEach((seriesItem) => {
+        result = Math.max(
+            result,
+            getSeriesPlugin(seriesItem.type).getXAxisPadding?.(seriesItem) ?? 0,
+        );
     });
 
     return result;

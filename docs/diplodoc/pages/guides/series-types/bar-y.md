@@ -63,6 +63,32 @@ The example uses the default palette with rounded borders and a shared opacity o
 
 <div data-chart-example="series-types/bar-y"></div>
 
+### Data label placement
+
+<a id="data-label-placement"></a>
+
+Set `dataLabels.placement: 'auto'` (equivalent to `['outside', 'inside-end']`) to prefer labels outside the value end and move them inside when space is insufficient.
+
+<div data-chart-example="data-labels/bar-placement"></div>
+
+An array sets the candidate order:
+
+- `'outside'`: Outside the value end.
+- `'inside-end'`: Inside, next to the value end of the visible bar.
+- `'inside-center'`: Centered in the visible part of the bar.
+
+Positions follow the value direction, including negative values and reversed axes. Candidates must fit within the plot; inside positions must also fit within the visible segment, with `padding` at both value-axis ends.
+
+In stacks, inner segments use inside candidates when available. `placement: ['outside']` also places inner labels outside their segments, where they may overlap the adjacent segment. Percent stacks fill the plot: the outermost outside label uses `placementFallback`.
+
+If no candidate fits, `placementFallback: 'show'` (default) draws the first available candidate shifted into the plot; it may overlap the bar edge. Use `'hide'` to omit the label instead. Label overlap filtering still follows `allowOverlap`.
+
+SVG and HTML labels recalculate after resize, zoom, and reset. Explicit `placement` overrides the deprecated `inside`: use `['inside-center']` for `inside: true` and `['outside']` for `inside: false` in non-percent series. When omitted, existing behavior is preserved; percent stacks always use inside labels regardless of `inside`.
+
+For negative values and reversed axes, `['outside']` follows the value end, correcting legacy outside labels that preferred the screen's top or right side regardless of value direction.
+
+For non-percent series, `placement: ['outside']` reserves space at the maximum end of an autoscaled X axis, as with legacy outside labels. An explicit `xAxis.max` takes precedence. Other placements use the available plot space without an axis reserve.
+
 ### States
 
 Hover changes the fill color; the border retains its configured color. The inactive state multiplies the resolved fill and border opacity by `states.inactive.opacity`, so transparent bars stay transparent. SVG data labels use the inactive opacity directly. When it ends, bars restore their point or series opacity.

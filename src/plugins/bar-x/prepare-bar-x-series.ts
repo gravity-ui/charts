@@ -15,6 +15,7 @@ import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarXSeries, BarXSeriesData} from '../../types';
+import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
@@ -74,6 +75,8 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
                 inside: dataLabelsInside,
+                placement: resolveBarLabelPlacement(series.dataLabels?.placement),
+                placementFallback: series.dataLabels?.placementFallback ?? 'show',
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
                 allowOverlap: series.dataLabels?.allowOverlap || false,
                 padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),

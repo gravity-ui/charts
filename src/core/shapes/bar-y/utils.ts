@@ -2,12 +2,8 @@ import {getRectBorderPath, getRectPath} from '../../shapes/utils';
 
 import type {PreparedBarYData} from './types';
 
-function getBarYRadius(d: PreparedBarYData) {
-    return d.isLastStackItem ? Math.min(d.height, d.width / 2, d.series.borderRadius) : 0;
-}
-
 export function getBarYRect(d: PreparedBarYData) {
-    const radius = getBarYRadius(d);
+    const radius = d.borderRadius;
     const halfBorder = d.borderWidth / 2;
     const outerRadius = radius ? radius + halfBorder : 0;
     return {
@@ -20,7 +16,7 @@ export function getBarYRect(d: PreparedBarYData) {
 }
 
 export function getAdjustedRectPath(d: PreparedBarYData) {
-    const borderRadius = getBarYRadius(d);
+    const borderRadius = d.borderRadius;
 
     // Fill should match the inner border dimensions to prevent color bleeding
     const halfBorder = d.borderWidth / 2;
@@ -54,7 +50,7 @@ export function getAdjustedRectPath(d: PreparedBarYData) {
 }
 
 export function getAdjustedRectBorderPath(d: PreparedBarYData) {
-    const borderRadius = getBarYRadius(d);
+    const borderRadius = d.borderRadius;
 
     return getRectBorderPath({
         x: d.x,

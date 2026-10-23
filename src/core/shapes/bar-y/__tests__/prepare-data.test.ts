@@ -1,18 +1,20 @@
 /** @jest-environment jsdom */
 
-import {scaleBand, scaleLinear, scaleOrdinal} from 'd3-scale';
+import {scaleBand, scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
 
 import {prepareBarYSeries} from '../../../../plugins/bar-y/prepare-bar-y-series';
 import type {BarYSeries, ChartSeriesOptions} from '../../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import {seriesOptionsDefaults} from '../../../constants';
 import type {PreparedLegend} from '../../../series/types';
+import * as textUtils from '../../../utils/text';
 import {prepareBarYData} from '../prepare-data';
 
 interface PrepareOptions {
     height?: number;
     reversed?: boolean;
-    series?: Pick<BarYSeries, 'barPadding' | 'borderWidth'>;
+    logarithmic?: boolean;
+    series?: Pick<BarYSeries, 'barPadding' | 'borderWidth' | 'borderRadius' | 'dataLabels'>;
     seriesOptions?: ChartSeriesOptions['bar-y'];
 }
 
@@ -23,6 +25,8 @@ async function prepare(
     options: PrepareOptions = {},
 ) {
     const height = options.height ?? 200;
+    let domain = values.some((value) => value < 0) ? [-100, 100] : [0, 100];
+    if (options.logarithmic) domain = [1, 100];
     const series = await prepareBarYSeries({
         series: values.map((x, index) => ({
             type: 'bar-y',
@@ -42,9 +46,9 @@ async function prepare(
             ...seriesOptionsDefaults,
             'bar-y': {...seriesOptionsDefaults['bar-y'], ...options.seriesOptions},
         },
-        xAxis: {type: 'linear'} as PreparedXAxis,
-        xScale: scaleLinear()
-            .domain(values.some((value) => value < 0) ? [-100, 100] : [0, 100])
+        xAxis: {type: options.logarithmic ? 'logarithmic' : 'linear'} as PreparedXAxis,
+        xScale: (options.logarithmic ? scaleLog() : scaleLinear())
+            .domain(domain)
             .range(options.reversed ? [width, 0] : [0, width]),
         yAxis: [{type: 'category', categories: ['A']}] as PreparedYAxis[],
         yScale: [scaleBand().domain(['A']).range([0, height])],
@@ -52,6 +56,56 @@ async function prepare(
         boundsHeight: height,
     });
 }
+
+describe('bar-y label placement', () => {
+    beforeEach(() => {
+        jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({
+            width: 40,
+            height: 10,
+            hangingOffset: 2,
+        }));
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    test('places logarithmic labels at the value end', async () => {
+        const {shapes, labels} = await prepare([100], undefined, 400, {
+            logarithmic: true,
+            series: {dataLabels: {enabled: true, placement: 'auto', padding: 5}},
+        });
+        expect(labels).toHaveLength(1);
+        const bar = shapes[0];
+        const label = labels[0];
+        expect(label.x + label.size.width).toBeCloseTo(bar.x + bar.width - 5);
+        expect(label.x).toBeGreaterThan(bar.x);
+    });
+
+    test('formats outside-only percent labels with resolved shares', async () => {
+        const {labels} = await prepare([1, 3], 'percent', 400, {
+            series: {
+                dataLabels: {
+                    enabled: true,
+                    placement: ['outside'],
+                    allowOverlap: true,
+                    format: {
+                        type: 'custom',
+                        formatter: ({percentage}) => {
+                            if (percentage === undefined) throw new Error('Missing percentage');
+                            return percentage.toFixed(2);
+                        },
+                    },
+                },
+            },
+        });
+        expect(labels.map((label) => label.text)).toEqual(['0.25', '0.75']);
+    });
+});
+
+test('resolves corner radii without rounding both signed stack ends', async () => {
+    const {shapes} = await prepare([20, -10, 30, -5], 'normal', 400, {
+        series: {borderRadius: 3},
+    });
+    expect(shapes.map((shape) => shape.borderRadius)).toEqual([0, 0, 0, 3]);
+});
 
 describe('bar-y suppressed borders', () => {
     test.each<{name: string; options: PrepareOptions}>([

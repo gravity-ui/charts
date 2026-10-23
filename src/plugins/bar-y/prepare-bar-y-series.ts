@@ -7,9 +7,11 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {BarYSeries, BarYSeriesData} from '../../types';
+import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
 const DEFAULT_LABEL_PADDING = 7;
@@ -30,10 +32,12 @@ async function prepareDataLabels(series: BarYSeries) {
     const enabled = get(series, 'dataLabels.enabled', false);
     const style = Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style);
     const html = get(series, 'dataLabels.html', false);
-    // Percent labels are always inside the bars, so they do not affect axis padding.
-    // Measure them during shape preparation, when the stack percentage is available.
+    const placement = resolveBarLabelPlacement(series.dataLabels?.placement);
+    // Percent labels need the resolved share and never reserve axis space.
     const labels =
-        enabled && series.stacking !== 'percent'
+        enabled &&
+        series.stacking !== 'percent' &&
+        (placement === undefined || hasOutsideOnlyPlacement(placement))
             ? series.data.map((d) =>
                   getFormattedValue({
                       value: d.label ?? d.x,
@@ -48,11 +52,16 @@ async function prepareDataLabels(series: BarYSeries) {
         html,
     });
     const inside = series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
-    const padding = enabled ? (series.dataLabels?.padding ?? DEFAULT_LABEL_PADDING) : 0;
+    const padding =
+        enabled || placement !== undefined
+            ? (series.dataLabels?.padding ?? DEFAULT_LABEL_PADDING)
+            : 0;
 
     return {
         enabled,
         inside,
+        placement,
+        placementFallback: series.dataLabels?.placementFallback ?? 'show',
         style,
         maxHeight,
         maxWidth,

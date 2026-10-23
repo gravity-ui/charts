@@ -443,6 +443,44 @@ export function getTextSizeFn({
     };
 }
 
+/** Cache text measurements by style and content for one preparation pass. */
+export function createLabelMeasurer() {
+    const caches = {
+        svg: new Map<BaseTextStyle, Map<string, Promise<TextMeasurement>>>(),
+        html: new Map<BaseTextStyle, Map<string, Promise<TextMeasurement>>>(),
+    };
+    const svgMeasurers = new Map<BaseTextStyle, ReturnType<typeof getTextSizeFn>>();
+    return (content: string, style: BaseTextStyle, html: boolean): Promise<TextMeasurement> => {
+        const cache = html ? caches.html : caches.svg;
+        let sizes = cache.get(style);
+        if (!sizes) {
+            sizes = new Map();
+            cache.set(style, sizes);
+        }
+        let size = sizes.get(content);
+        if (!size) {
+            if (html) {
+                size = getLabelsSize({labels: [content], style, html}).then(
+                    ({maxWidth, maxHeight}) => ({
+                        width: maxWidth,
+                        height: maxHeight,
+                        hangingOffset: 0,
+                    }),
+                );
+            } else {
+                let measure = svgMeasurers.get(style);
+                if (!measure) {
+                    measure = getTextSizeFn({style});
+                    svgMeasurers.set(style, measure);
+                }
+                size = measure(content);
+            }
+            sizes.set(content, size);
+        }
+        return size;
+    };
+}
+
 // We ignore an inaccuracy of less than a pixel.
 // To do this, we round the font size down when comparing it, and the size of the allowed space up.
 export async function getTextWithElipsis({

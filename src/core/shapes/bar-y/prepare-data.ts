@@ -9,17 +9,18 @@ import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types
 import {
     filterOverlappingLabels,
     getHtmlLabelConstraintedPosition,
-    getLabelsSize,
     getSvgLabelConstraintedPosition,
-    getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 import {getPositiveShare} from '../../utils/percentage';
+import {hasOutsideOnlyPlacement, placeRectLabel} from '../../utils/rect-label-placement';
+import {createLabelMeasurer} from '../../utils/text';
 import {getBarWidthBySeries} from '../bar-width';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
+import {getBarYRect} from './utils';
 
 export async function prepareBarYData(args: {
     boundsHeight: number;
@@ -44,6 +45,7 @@ export async function prepareBarYData(args: {
 
     const stackGap = seriesOptions['bar-y'].stackGap;
     const xLinearScale = xScale as ScaleLinear<number, number>;
+    const [rangeStart, rangeEnd] = xLinearScale.range();
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
 
     if (!yLinearScale) {
@@ -90,7 +92,15 @@ export async function prepareBarYData(args: {
 
     const categoryDomain =
         yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
-    const result: PreparedBarYData[] = [];
+    interface BarYPreparationItem {
+        shape: PreparedBarYData;
+        /** Allows outside labels at the end of each left- or right-extending stack branch. */
+        isStackEnd: boolean;
+        /** Screen direction from the segment's base toward its value along the value axis. */
+        valueAxisDirection: 'left' | 'right';
+    }
+
+    const result: BarYPreparationItem[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         let center;
 
@@ -126,7 +136,7 @@ export async function prepareBarYData(args: {
             let positiveStack = base;
             let negativeStack = base;
 
-            const stackItems: PreparedBarYData[] = [];
+            const stackItems: BarYPreparationItem[] = [];
             const sortedData = sortKey
                 ? sort(measureValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : measureValues;
@@ -143,6 +153,8 @@ export async function prepareBarYData(args: {
                     }
                 }
 
+                // TODO: Account for reversed ranges ending at zero.
+                // https://github.com/gravity-ui/charts/issues/795
                 ratio = sum === 0 ? 0 : xLinearScale.range()[1] / sum;
             }
 
@@ -173,6 +185,7 @@ export async function prepareBarYData(args: {
                 const isFirstInStack = xValueIndex === 0;
                 const isLastStackItem = independent || xValueIndex === sortedData.length - 1;
                 const extendsRight = xPixel > baseValue;
+                const endAtMax = xValue === 0 ? rangeEnd >= rangeStart : extendsRight;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
                 let itemX = extendsRight ? positiveStack : negativeStack - width;
@@ -195,7 +208,7 @@ export async function prepareBarYData(args: {
                     itemX += halfBorder;
                 }
 
-                const item: PreparedBarYData = {
+                const shape: PreparedBarYData = {
                     x: itemX,
                     y: y,
                     width: shapeWidth,
@@ -210,7 +223,14 @@ export async function prepareBarYData(args: {
                         s.stacking === 'percent'
                             ? getPositiveShare(xValue, percentTotal)
                             : undefined,
-                    isLastStackItem,
+                    borderRadius: isLastStackItem
+                        ? Math.min(height, shapeWidth / 2, s.borderRadius)
+                        : 0,
+                };
+                const item: BarYPreparationItem = {
+                    shape,
+                    isStackEnd: independent,
+                    valueAxisDirection: endAtMax ? 'right' : 'left',
                 };
 
                 stackItems.push(item);
@@ -222,23 +242,48 @@ export async function prepareBarYData(args: {
                 }
             });
 
+            let lastRightItem: BarYPreparationItem | undefined;
+            let lastLeftItem: BarYPreparationItem | undefined;
+            for (const item of stackItems) {
+                if (item.shape.width <= 0 || Number(item.shape.data.x) === 0) continue;
+                if (item.valueAxisDirection === 'right') {
+                    lastRightItem = item;
+                } else {
+                    lastLeftItem = item;
+                }
+            }
+            if (lastRightItem) lastRightItem.isStackEnd = true;
+            if (lastLeftItem) lastLeftItem.isStackEnd = true;
+
             result.push(...stackItems);
         });
     });
 
     if (series.some((s) => s.grouping === false)) {
         const seriesOrder = new Map(series.map((s, index) => [s, index]));
-        result.sort((a, b) => (seriesOrder.get(a.series) ?? 0) - (seriesOrder.get(b.series) ?? 0));
+        result.sort(
+            (a, b) =>
+                (seriesOrder.get(a.shape.series) ?? 0) - (seriesOrder.get(b.shape.series) ?? 0),
+        );
     }
 
     let labels: LabelData[] = [];
     let htmlLabels: HtmlItem[] = [];
 
-    const map = new Map();
+    const measureLabel = createLabelMeasurer();
     for (let i = 0; i < result.length; i++) {
-        const prepared = result[i];
+        const {shape: prepared, valueAxisDirection, isStackEnd} = result[i];
 
         const dataLabels = prepared.series.dataLabels;
+        const anchor = getBarYRect(prepared);
+        const isBarOutsideBounds =
+            anchor.x + anchor.width <= 0 ||
+            anchor.x >= boundsWidth ||
+            anchor.y + anchor.height <= 0 ||
+            anchor.y >= boundsHeight;
+        if (dataLabels.placement && isBarOutsideBounds && Number(prepared.data.x) !== 0) {
+            continue;
+        }
         if (isPointDataLabelEnabled({data: prepared.data, series: prepared.series})) {
             const data = prepared.data;
             const content = getFormattedValue({
@@ -247,65 +292,74 @@ export async function prepareBarYData(args: {
                 context: {data, percentage: prepared.percentage},
             });
 
-            const y = prepared.y + prepared.height / 2;
-            if (dataLabels.html) {
-                const {maxHeight: height, maxWidth: width} = await getLabelsSize({
-                    labels: [content],
-                    style: dataLabels.style,
-                    html: dataLabels.html,
+            const {width, height, hangingOffset} = await measureLabel(
+                content,
+                dataLabels.style,
+                dataLabels.html,
+            );
+            let position: {x: number; y: number};
+            if (dataLabels.placement) {
+                const placed = placeRectLabel({
+                    anchor,
+                    bounds: {x: 0, y: 0, width: boundsWidth, height: boundsHeight},
+                    size: {width, height},
+                    axis: 'x',
+                    endAtMax: valueAxisDirection === 'right',
+                    padding: dataLabels.padding,
+                    positions: dataLabels.placement,
+                    allowOutside:
+                        isStackEnd ||
+                        !prepared.series.stacking ||
+                        hasOutsideOnlyPlacement(dataLabels.placement),
+                    fallback: dataLabels.placementFallback,
                 });
+                if (!placed) continue;
+                position = {x: placed.x, y: placed.y + (dataLabels.html ? 0 : hangingOffset)};
+            } else {
                 const x = dataLabels.inside
                     ? prepared.x + prepared.width / 2 - width / 2
                     : prepared.x + prepared.width + dataLabels.padding;
-                const constrainedPosition = getHtmlLabelConstraintedPosition({
-                    boundsHeight,
-                    boundsWidth,
-                    height,
-                    width,
-                    x,
-                    y: y - height / 2,
-                });
-
+                const y = prepared.y + prepared.height / 2;
+                position = dataLabels.html
+                    ? getHtmlLabelConstraintedPosition({
+                          boundsHeight,
+                          boundsWidth,
+                          height,
+                          width,
+                          x,
+                          y: y - height / 2,
+                      })
+                    : getSvgLabelConstraintedPosition({
+                          boundsHeight,
+                          boundsWidth,
+                          height,
+                          width,
+                          x,
+                          y,
+                          hangingOffset,
+                      });
+            }
+            if (dataLabels.html) {
                 htmlLabels.push({
                     content,
                     size: {width, height},
                     style: dataLabels.style,
-                    x: constrainedPosition.x,
-                    y: constrainedPosition.y,
+                    ...position,
                 });
             } else {
-                if (!map.has(dataLabels.style)) {
-                    map.set(dataLabels.style, getTextSizeFn({style: dataLabels.style}));
-                }
-                const getTextSize = map.get(dataLabels.style);
-                const {width, height, hangingOffset} = await getTextSize(content);
-                const x = dataLabels.inside
-                    ? prepared.x + prepared.width / 2 - width / 2
-                    : prepared.x + prepared.width + dataLabels.padding;
-                const constrainedPosition = getSvgLabelConstraintedPosition({
-                    boundsHeight,
-                    boundsWidth,
-                    height,
-                    width,
-                    x,
-                    y,
-                    hangingOffset,
-                });
-
                 labels.push({
-                    size: {width, height},
+                    size: dataLabels.placement ? {width, height, hangingOffset} : {width, height},
                     series: prepared.series,
                     style: dataLabels.style,
                     text: content,
                     textAnchor: 'start',
-                    x: constrainedPosition.x,
-                    y: constrainedPosition.y,
+                    ...position,
                 });
             }
         }
     }
 
-    const allowOverlap = result[0]?.series.dataLabels.allowOverlap;
+    const allowOverlap = result[0]?.shape.series.dataLabels.allowOverlap;
 
     if (labels.length && !allowOverlap) {
         labels = filterOverlappingLabels(labels);
@@ -314,7 +368,7 @@ export async function prepareBarYData(args: {
     }
 
     return {
-        shapes: result,
+        shapes: result.map((item) => item.shape),
         labels,
         htmlLabels,
         markers: [],

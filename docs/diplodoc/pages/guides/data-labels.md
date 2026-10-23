@@ -6,6 +6,8 @@ Data Labels are a feature used to display textual or numeric information directl
 
 For more granular control over the positioning and appearance of data labels for a specific series type, refer to the detailed configuration options within the series' own type definition. For example, see the `dataLabels` options for the [PieSeries](../api/Series/Pie/interfaces/PieSeries.md#properties).
 
+For adaptive bar labels, see [Bar-Y placement](./series-types/bar-y.md#data-label-placement) and [Bar-X placement](./series-types/bar-x.md#data-label-placement).
+
 For line labels, see [placement](./series-types/line.md#data-label-placement) and [marker boundary anchoring](./series-types/line.md#marker-boundary).
 
 ## Enabling and Disabling Data Labels

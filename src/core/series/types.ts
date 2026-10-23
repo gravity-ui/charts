@@ -4,6 +4,8 @@ import type {
     AreaSeries,
     AreaSeriesData,
     AreaValueFormat,
+    BarSeriesDataLabelPlacementFallback,
+    BarSeriesDataLabelPlacementPosition,
     BarXSeries,
     BarXSeriesData,
     BarXValueFormat,
@@ -257,6 +259,12 @@ export type PreparedScatterSeries = {
 } & BasePreparedSeries &
     BasePreparedAxisRelatedSeries;
 
+interface PreparedBarLabelPlacement {
+    /** Candidate positions resolved by the plugin. */
+    placement?: BarSeriesDataLabelPlacementPosition[];
+    placementFallback: BarSeriesDataLabelPlacementFallback;
+}
+
 export type PreparedBarXSeries = {
     opacity: number;
     type: BarXSeries['type'];
@@ -274,7 +282,7 @@ export type PreparedBarXSeries = {
     stackBarMaxWidth: number;
     stackLabels?: BarXSeries['stackLabels'];
     valueAxis: 'y';
-    dataLabels: {
+    dataLabels: PreparedBarLabelPlacement & {
         enabled: boolean;
         inside: boolean;
         style: BaseTextStyle;
@@ -307,7 +315,7 @@ export type PreparedBarYSeries = {
     stackBarMaxWidth: number;
     stackLabels?: BarYSeries['stackLabels'];
     valueAxis: 'x';
-    dataLabels: {
+    dataLabels: PreparedBarLabelPlacement & {
         padding: number;
         enabled: boolean;
         inside: boolean;
