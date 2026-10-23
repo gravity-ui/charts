@@ -39,6 +39,42 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('waterfall connectors are available in declarations and schema', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'waterfall-connectors-usage.ts'),
+                declaration +
+                    `
+                const series: WaterfallSeries = {type: 'waterfall', name: 'Balance', data: [], connectors: {enabled: false}};
+                series.connectors = {enabled: true};
+                // @ts-expect-error Enabled must be boolean.
+                series.connectors = {enabled: 'false'};
+                // @ts-expect-error Connectors are not a base series setting.
+                const base: BaseSeries = {connectors: {enabled: false}};
+                void [series, base];
+            `,
+            ),
+        ).not.toThrow();
+        const connectors = schema.definitions['WaterfallSeries<JsonValue>'].properties.connectors;
+        expect(connectors.properties.enabled).toMatchObject({type: 'boolean', default: true});
+        const validate = createSchemaValidator().compile(schema);
+        for (const value of [
+            undefined,
+            {},
+            {enabled: true},
+            {enabled: false},
+            {enabled: 'false'},
+        ]) {
+            expect(
+                validate({
+                    series: {
+                        data: [{type: 'waterfall', name: 'Balance', data: [], connectors: value}],
+                    },
+                }),
+            ).toBe(value?.enabled !== 'false');
+        }
+    });
+
     test('line marker label anchors are exposed only on line data labels', () => {
         expect(() =>
             validateDeclaration(

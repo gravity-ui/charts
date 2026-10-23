@@ -719,6 +719,7 @@
     ],
     "WaterfallSeries<JsonValue>": [
       "color",
+      "connectors",
       "cursor",
       "custom",
       "data",
