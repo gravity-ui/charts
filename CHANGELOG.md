@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.70.0](https://github.com/gravity-ui/charts/compare/v1.69.0...v1.70.0) (2026-10-23)
+
+
+### Features
+
+* add adaptive placement for bar data labels ([#790](https://github.com/gravity-ui/charts/issues/790)) ([7b5c7aa](https://github.com/gravity-ui/charts/commit/7b5c7aab170e14730c713f230c3390af6837c585))
+
+
+### Bug Fixes
+
+* add legend text tooltips and keyboard navigation ([#780](https://github.com/gravity-ui/charts/issues/780)) ([642e0b9](https://github.com/gravity-ui/charts/commit/642e0b98af44b96e78348052a5c596972db7f435))
+* **deps:** update vulnerable dependencies ([#794](https://github.com/gravity-ui/charts/issues/794)) ([069ca08](https://github.com/gravity-ui/charts/commit/069ca08f1b2644da10890bb4a984e43c492a07fe))
+* **waterfall:** respect disabled data labels ([#792](https://github.com/gravity-ui/charts/issues/792)) ([b52d1e5](https://github.com/gravity-ui/charts/commit/b52d1e5a2adadda88756f4f330284f7f0c288b38))
+
 ## [1.69.0](https://github.com/gravity-ui/charts/compare/v1.68.0...v1.69.0) (2026-10-21)
 
 
