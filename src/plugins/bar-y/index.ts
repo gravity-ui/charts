@@ -105,9 +105,10 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
     getStackedDomainData: (series) => getBarDomainData(series, 'y', 'x'),
-    getXAxisPadding: ({dataLabels}) =>
-        hasOutsideOnlyPlacement(dataLabels.placement) ||
-        (dataLabels.placement === undefined && !dataLabels.inside)
+    getXAxisPadding: ({dataLabels, stacking}) =>
+        stacking !== 'percent' &&
+        (hasOutsideOnlyPlacement(dataLabels.placement) ||
+            (dataLabels.placement === undefined && !dataLabels.inside))
             ? dataLabels.maxWidth + dataLabels.padding
             : 0,
     getColorValue: (d) => d.x,

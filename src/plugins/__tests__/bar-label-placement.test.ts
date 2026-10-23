@@ -1,3 +1,6 @@
+import {scaleOrdinal} from 'd3-scale';
+
+import type {PreparedLegend} from '~core/series/types';
 import {validateData} from '~core/validation';
 
 import {CHART_ERROR_CODE} from '../../libs';
@@ -7,8 +10,29 @@ import type {
     ChartData,
 } from '../../types';
 import {resolveBarLabelPlacement, validateBarLabelPlacement} from '../bar-label-placement';
+import {barYPlugin} from '../bar-y';
+import {prepareBarYSeries} from '../bar-y/prepare-bar-y-series';
 
 describe('bar placement options', () => {
+    test('percent bar-y series request no axis reserve with outside-only placement', async () => {
+        const [series] = await prepareBarYSeries({
+            series: [
+                {
+                    type: 'bar-y',
+                    name: 'Orders',
+                    stacking: 'percent',
+                    data: [{x: 20, y: 'A'}],
+                    dataLabels: {enabled: true, placement: ['outside'], padding: 7},
+                },
+            ],
+            colorScale: scaleOrdinal<string, string>().range(['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        });
+
+        expect(barYPlugin.getXAxisPadding?.(series)).toBe(0);
+    });
+
     test('expands auto while preserving explicit candidate order and omitted placement', () => {
         const positions: BarSeriesDataLabelPlacementPosition[] = ['inside-end', 'outside'];
         expect(resolveBarLabelPlacement('auto')).toEqual(['outside', 'inside-end']);
