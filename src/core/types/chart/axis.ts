@@ -20,6 +20,28 @@ export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;
 
+/** Extra space obtained by extending the free ends of a continuous axis domain. */
+export interface ChartAxisPadding {
+    /**
+     * Space at the minimum value: a nonnegative number or `px` string in pixels,
+     * a percentage of the axis length, or `auto` to fit marker paint including hover.
+     * The axis length is measured after margins and axis layout, before padding.
+     * Explicit axis limits, zoom and percent normalization take precedence.
+     * X padding is ignored when `xAxis.rangeSlider.enabled` is `true`.
+     * Category axes ignore padding. Oversized requests are bounded and can still clip.
+     * @minimum 0
+     * @default 0
+     */
+    min?: number | string;
+    /**
+     * Space at the maximum value, in the same formats and units as `padding.min`.
+     * An explicit value (including `0` or `auto`) replaces `maxPadding` on this side.
+     * When omitted, the existing `maxPadding` behavior and default are preserved.
+     * @minimum 0
+     */
+    max?: number | string;
+}
+
 export interface ChartAxisLabels {
     /** Enable or disable the axis labels. */
     enabled?: boolean;
@@ -252,8 +274,13 @@ export interface ChartAxis {
      * - for series with data normalization along on a specific axis (stacking: 'percent')
      * - to the X axis when rangeSlider is used
      * @default 0.05 for Y axis, 0.01 for X axis
+     * @deprecated Use `padding.max`. Its numbers are pixels, whereas `maxPadding` numbers are fractions.
+     * For example, `maxPadding: 0.05` corresponds to a `padding.max: '5%'` request,
+     * although the final domains can differ because the new option fits space after existing layout.
      */
     maxPadding?: number;
+    /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */
+    padding?: ChartAxisPadding;
     /** An array of lines stretching across the plot area, marking a specific value */
     plotLines?: AxisPlotLine[];
     /** An array of colored bands stretching across the plot area marking an interval on the axis. */

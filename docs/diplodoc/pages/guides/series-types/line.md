@@ -24,6 +24,8 @@ Hover styles apply to both always-visible and hover-only markers. The normal app
 
 <div data-chart-example="series-types/line-markers"></div>
 
+Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
+
 ### Line interpolation
 
 By default, lines connect points with straight segments. Set `interpolation: {type: 'monotone'}` to draw a smooth curve through the points without introducing new extrema. Order points monotonically by X. Markers, tooltips, and interactions stay attached to the original points.

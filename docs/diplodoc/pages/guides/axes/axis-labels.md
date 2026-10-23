@@ -1,8 +1,8 @@
-# Axis Labels
+# Axis labels
 
 Axis labels show a value or category for each tick. Configure them with `xAxis.labels` for the X axis and `yAxis[].labels` for Y axes.
 
-## Font size
+## Font size {#font-size}
 
 Set `labels.style.fontSize` to a CSS font-size value. The X and Y axes can use different sizes.
 
@@ -29,7 +29,7 @@ The following example applies custom font sizes to both axes:
 
 <div data-chart-example="axis-labels/font-size"></div>
 
-## HTML labels
+## HTML labels {#html-labels}
 
 HTML labels are supported only on category axes (`type: 'category'`). Rotation options are disabled when `html: true`.
 

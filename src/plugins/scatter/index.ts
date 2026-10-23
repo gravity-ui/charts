@@ -18,6 +18,7 @@ import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
 
+import {getScatterAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareScatterSeries} from './prepare-scatter-series';
 
@@ -41,6 +42,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
     const data = await prepareScatterData({
         series: series as PreparedScatterSeries[],
+        seriesOptions: args.seriesOptions,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -72,6 +74,7 @@ function renderShapes({
 
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
+    getAxisPadding: getScatterAxisPadding,
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     prepareSeries: prepareScatterSeries,

@@ -70,6 +70,8 @@ items:
             href: ./pages/guides/series-types/x-range.md
       - name: Axes
         items:
+          - name: Overview
+            href: ./pages/guides/axes/index.md
           - name: Axis types
             href: ./pages/guides/axes/axis-types.md
           - name: Axis labels

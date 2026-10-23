@@ -82,6 +82,7 @@ function renderShapes({
 
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
+    isAxisDomainFixed: ({series, axis}) => axis === 'x' && series.stacking === 'percent',
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {

@@ -14,6 +14,7 @@ import {
     shouldSyncAxisWithPrimary,
 } from '../utils';
 import {getBandSize} from '../utils/band-size';
+import {sumDecimals} from '../utils/math';
 
 import type {ChartScaleLinear} from './types';
 import {
@@ -54,7 +55,7 @@ function isSeriesWithYAxisOffset(series: PreparedSeries[]) {
     return series.some((s) => types.includes(s.type));
 }
 
-function getDomainSyncedToPrimaryTicks(args: {
+export function getDomainSyncedToPrimaryTicks(args: {
     scale: ChartScaleLinear;
     primaryTicksCount: number;
     yMin: number;
@@ -144,7 +145,7 @@ function getLogarithmicYMin(args: {
     return needsHeadroom ? smallestPositive / 10 : smallestPositive;
 }
 
-function getDomainMinAlignedToStartTick(args: {
+export function getDomainMinAlignedToStartTick(args: {
     axis: PreparedAxis;
     range: [number, number];
     scale: ChartScaleLinear;
@@ -177,7 +178,7 @@ function getDomainMinAlignedToStartTick(args: {
                 typeof tickValues[0]?.value === 'number' &&
                 typeof tickValues[1]?.value === 'number'
             ) {
-                step = tickValues[1].value - tickValues[0].value;
+                step = sumDecimals([tickValues[1].value, -tickValues[0].value]);
             } else {
                 step = tickStep(dMin, dMax, 1);
             }
@@ -186,14 +187,14 @@ function getDomainMinAlignedToStartTick(args: {
                 return dMin;
             }
 
-            dNewMin = tickValues[0].value - step;
+            dNewMin = sumDecimals([tickValues[0].value, -step]);
         }
     }
 
     return dNewMin;
 }
 
-function getDomainMaxAlignedToEndTick(args: {
+export function getDomainMaxAlignedToEndTick(args: {
     axis: PreparedAxis;
     range: [number, number];
     scale: ChartScaleLinear;
@@ -224,7 +225,7 @@ function getDomainMaxAlignedToEndTick(args: {
                 typeof tickValues[0]?.value === 'number' &&
                 typeof tickValues[1]?.value === 'number'
             ) {
-                step = tickValues[1].value - tickValues[0].value;
+                step = sumDecimals([tickValues[1].value, -tickValues[0].value]);
             } else {
                 step = tickStep(dMin, dMax, 1);
             }
@@ -233,7 +234,10 @@ function getDomainMaxAlignedToEndTick(args: {
                 return dMax;
             }
 
-            dNewMax = Math.floor(dMax / step + 1) * step;
+            dNewMax =
+                tickValues.length === 1
+                    ? Math.floor(dMax / step + 1) * step
+                    : Math.max(dMax, sumDecimals([tickValues[tickValues.length - 1].value, step]));
         }
     }
 
@@ -339,7 +343,10 @@ export function createYScale(args: {
 
                 let offsetMin = 0;
                 // We should ignore padding if we are drawing only one point on the plot.
-                let offsetMax = yMin === yMax ? 0 : boundsHeight * axis.maxPadding;
+                let offsetMax =
+                    yMin === yMax || axis.padding?.max !== undefined
+                        ? 0
+                        : boundsHeight * axis.maxPadding;
                 if (isSeriesWithYAxisOffset(series)) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({
@@ -474,7 +481,8 @@ export function createYScale(args: {
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
                     let offsetMin = 0;
-                    let offsetMax = boundsHeight * axis.maxPadding;
+                    let offsetMax =
+                        axis.padding?.max === undefined ? boundsHeight * axis.maxPadding : 0;
                     if (isSeriesWithYAxisOffset(series)) {
                         if (Object.keys(domain).length > 1) {
                             const bandWidth = getBandSize({

@@ -23,11 +23,13 @@ import {
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, TooltipDataChunkAreaRange} from '../../types';
 
+import {getAreaRangeAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
+    getAxisPadding: getAreaRangeAxisPadding,
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',

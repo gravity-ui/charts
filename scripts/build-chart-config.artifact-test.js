@@ -39,6 +39,48 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('axis padding extends the axis API while keeping legacy maxPadding numeric', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'axis-padding-usage.ts'),
+                declaration +
+                    `
+                const padding: ChartAxisPadding = {min: 'auto', max: '5%'};
+                const x: ChartXAxis = {padding, maxPadding: 0.05};
+                const y: ChartYAxis = {padding: {min: 12, max: '12px'}};
+                const legacy: number = x.maxPadding ?? 0;
+                // @ts-expect-error The legacy contract stays numeric.
+                x.maxPadding = 'auto';
+                // @ts-expect-error There is no legacy minPadding.
+                x.minPadding = 0;
+                // @ts-expect-error Padding belongs to axes.
+                const chart: ChartOptions = {plotPadding: {right: 'auto'}};
+                void [x, y, legacy, chart];
+            `,
+            ),
+        ).not.toThrow();
+        for (const side of ['min', 'max']) {
+            expect(schema.definitions.ChartAxisPadding.properties[side]).toMatchObject({
+                type: ['number', 'string'],
+                minimum: 0,
+            });
+        }
+        for (const name of ['ChartXAxis', 'ChartYAxis']) {
+            expect(schema.definitions[name].properties.padding.$ref).toBe(
+                '#/definitions/ChartAxisPadding',
+            );
+            expect(schema.definitions[name].properties.maxPadding.type).toBe('number');
+        }
+        const validate = createSchemaValidator().compile(schema);
+        for (const max of ['auto', 0, 16, '16px', '10%', '.5%', '0.5px']) {
+            expect(validate({xAxis: {padding: {max}}, series: {data: []}})).toBe(true);
+        }
+        for (const max of [-1, Infinity, NaN, null, true]) {
+            expect(validate({xAxis: {padding: {max}}, series: {data: []}})).toBe(false);
+        }
+        expect(validate({chart: {plotPadding: {right: 'auto'}}, series: {data: []}})).toBe(false);
+    });
+
     test('line marker label anchors are exposed only on line data labels', () => {
         expect(() =>
             validateDeclaration(

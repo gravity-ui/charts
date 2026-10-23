@@ -2,17 +2,19 @@ import React from 'react';
 
 import get from 'lodash/get';
 
+import {applyAxisPadding} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';
 import {clusterYAxes} from '~core/scales/utils';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {
-    PreparedAxis,
     PreparedSeries,
     PreparedSplit,
+    PreparedXAxis,
     PreparedYAxis,
     RangeSliderState,
     ZoomState,
@@ -21,25 +23,27 @@ import type {
 export {createXScale} from '~core/scales/x-scale';
 export {createYScale} from '~core/scales/y-scale';
 
-type Args = {
+interface Args {
+    seriesOptions?: PreparedSeriesOptions;
     boundsWidth: number;
     boundsHeight: number;
     series: PreparedSeries[];
-    xAxis: PreparedAxis | null;
+    xAxis: PreparedXAxis | null;
     yAxis: PreparedYAxis[];
     split: PreparedSplit;
     isRangeSlider?: boolean;
     rangeSliderState?: RangeSliderState;
     zoomState?: Partial<ZoomState>;
-};
+}
 
-type ReturnValue = {
+interface ReturnValue {
     xScale?: ChartScale;
     yScale?: (ChartScale | undefined)[];
-};
+}
 
 export const createScales = (args: Args) => {
     const {
+        seriesOptions,
         boundsWidth,
         boundsHeight,
         isRangeSlider,
@@ -116,7 +120,7 @@ export const createScales = (args: Args) => {
         [] as (ChartScale | undefined)[],
     );
 
-    return {
+    const scales = {
         xScale: xAxis
             ? createXScale({
                   axis: xAxis,
@@ -128,6 +132,21 @@ export const createScales = (args: Args) => {
             : undefined,
         yScale,
     };
+    if (!isRangeSlider && xAxis && scales.xScale) {
+        applyAxisPadding({
+            ...scales,
+            xScale: scales.xScale,
+            xAxis,
+            yAxis,
+            split,
+            series,
+            seriesOptions,
+            // The slider's initial selection is derived from this scale before its state exists.
+            fixedX: Boolean(xAxis.rangeSlider?.enabled || zoomState?.x || rangeSliderState),
+            fixedY: yAxis.map((_, i) => Boolean(zoomState?.y?.[i])),
+        });
+    }
+    return scales;
 };
 
 /**
@@ -135,6 +154,7 @@ export const createScales = (args: Args) => {
  */
 export const useAxisScales = (args: Args): ReturnValue => {
     const {
+        seriesOptions,
         boundsWidth,
         boundsHeight,
         isRangeSlider,
@@ -152,6 +172,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
 
         if (hasAxisRelatedSeries) {
             ({xScale, yScale} = createScales({
+                seriesOptions,
                 boundsWidth,
                 boundsHeight,
                 isRangeSlider,
@@ -166,6 +187,7 @@ export const useAxisScales = (args: Args): ReturnValue => {
 
         return {xScale, yScale};
     }, [
+        seriesOptions,
         boundsWidth,
         boundsHeight,
         isRangeSlider,

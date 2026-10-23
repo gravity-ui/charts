@@ -20,6 +20,10 @@ Set `type: 'scatter'`. Each point contains `x` and `y`. For a category axis, use
 
 Use `marker` to set point size and symbol.
 
+Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
+
+Set `series.options.scatter.states.hover.marker.enabled` to `false` to keep the normal marker on hover and hide its halo. Tooltips remain available.
+
 ### Point clustering
 
 Clustering is disabled by default. Enable it on a scatter series to group visible points into square grid cells:

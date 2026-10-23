@@ -65,7 +65,11 @@ export function renderScatter(
         selection.datum((d, index, list) => {
             const elementSelection = select<BaseType, MarkerData>(list[index]);
 
-            const hovered = Boolean(hoverEnabled && d.point.data === selectedDataItem);
+            const hovered = Boolean(
+                hoverEnabled &&
+                d.point.series.marker.states.hover.enabled &&
+                d.point.data === selectedDataItem,
+            );
             if (d.hovered !== hovered) {
                 d.hovered = hovered;
                 elementSelection.attr('z-index', hovered ? 999 : null);

@@ -75,7 +75,8 @@ export function createXScale(args: {
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const hasZoomX = Boolean(zoomStateX);
     const xCategories = get(axis, 'categories');
-    const maxPadding = get(axis, 'maxPadding', 0);
+    const maxPadding =
+        xType === 'category' || axis.padding?.max === undefined ? get(axis, 'maxPadding', 0) : 0;
     const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
 
     const range = getXScaleRange({

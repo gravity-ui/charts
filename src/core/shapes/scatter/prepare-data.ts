@@ -1,10 +1,10 @@
 import get from 'lodash/get';
 
 import type {HtmlItem, ScatterSeriesData} from '../../../types';
-import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
+import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
-import type {PreparedScatterSeries} from '../../series/types';
+import type {PreparedScatterSeries, PreparedSeriesOptions} from '../../series/types';
 import {createIsOutsideBounds, getXValue, getYValue} from '../../shapes/utils';
 import {
     filterOverlappingLabels,
@@ -18,11 +18,19 @@ import {
 import {getSourcePoint} from '../../utils/source-point';
 import type {LabelRect} from '../types';
 
-import {clusterSeriesData} from './cluster';
+import {clusterSeriesData, prepareClusterMarkerSeries} from './cluster';
+import {getScatterMarkerBounds} from './marker-bounds';
 import type {PreparedScatterData, PreparedScatterShapeData, ScatterSvgLabelData} from './types';
 
 function getFilteredLinearScatterData(data: ScatterSeriesData[]) {
     return data.filter((d) => typeof d.x === 'number' && typeof d.y === 'number');
+}
+
+function getAutoPaddingSides(axis: PreparedAxis, scale: ChartScale) {
+    const min = axis.min === undefined && axis.padding?.min === 'auto';
+    const max = axis.max === undefined && axis.padding?.max === 'auto';
+    const range = scale.range();
+    return range[0] > range[1] ? [max, min] : [min, max];
 }
 
 function getFilteredCategoryScatterData(args: {
@@ -66,6 +74,7 @@ function getFilteredCategoryScatterData(args: {
 
 export async function prepareScatterData(args: {
     series: PreparedScatterSeries[];
+    seriesOptions?: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -156,7 +165,8 @@ export async function prepareScatterData(args: {
             ? markers
             : series.flatMap((item) => {
                   const seriesMarkers = scatterDataBySeries.get(item.id) ?? [];
-                  if (!item.cluster.enabled) {
+                  const seriesYScale = yScale[item.yAxis];
+                  if (!item.cluster.enabled || !seriesYScale) {
                       return seriesMarkers;
                   }
                   const plot = split.plots?.[yAxis[item.yAxis].plotIndex];
@@ -166,12 +176,32 @@ export async function prepareScatterData(args: {
                       boundsWidth,
                       boundsHeight: plotHeight,
                   });
+                  const seriesYAxis = yAxis[item.yAxis];
+                  const [left, right] = getAutoPaddingSides(xAxis, xScale);
+                  const [top, bottom] = getAutoPaddingSides(seriesYAxis, seriesYScale);
+                  const paint =
+                      item.cluster.overlapMode === 'shift' && (left || right || top || bottom)
+                          ? getScatterMarkerBounds(
+                                prepareClusterMarkerSeries(item),
+                                undefined,
+                                args.seriesOptions?.scatter?.states?.hover?.enabled !== false,
+                            )
+                          : undefined;
                   const clustered = clusterSeriesData({
                       data: seriesMarkers,
                       series: item,
                       boundsWidth,
                       boundsHeight: plotHeight,
                       boundsTop,
+                      // Shifting must preserve the hover clearance reserved by automatic padding.
+                      shiftPadding: paint
+                          ? {
+                                left: left ? paint.left : 0,
+                                right: right ? paint.right : 0,
+                                top: top ? paint.top : 0,
+                                bottom: bottom ? paint.bottom : 0,
+                            }
+                          : undefined,
                       isOutsideBounds: (x, y) =>
                           isOutsideBounds(x, y) || isOutsidePlotBounds(x, y - boundsTop),
                   });

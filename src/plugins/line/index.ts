@@ -20,6 +20,7 @@ import {
 
 import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
+import {getLineAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
@@ -84,6 +85,7 @@ function renderShapes({
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
+    getAxisPadding: getLineAxisPadding,
     getLayerKey: ({seriesKey}) => seriesKey,
     getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
         if (isRangeSlider) return 'bounds';
