@@ -38,7 +38,7 @@ Explicit sizes add space beyond the otherwise computed range. Tick rounding can 
 
 Padding extends only free boundaries. An explicit `min` or `max` takes precedence on that side. Use `startOnTick` or `endOnTick` to round the extended boundary to a tick.
 
-Zoomed boundaries and the selected X range stay fixed. The range slider overview does not apply axis padding. Category axes and normalized percentage axes ignore it.
+Zoomed boundaries stay fixed. X padding is ignored when `xAxis.rangeSlider.enabled` is `true`. The range slider overview does not apply axis padding. Category axes and normalized percentage axes ignore it.
 
 ### Supported series
 

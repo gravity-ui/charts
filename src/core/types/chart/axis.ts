@@ -26,7 +26,8 @@ export interface ChartAxisPadding {
      * Space at the minimum value: a nonnegative number or `px` string in pixels,
      * a percentage of the axis length, or `auto` to fit marker paint including hover.
      * The axis length is measured after margins and axis layout, before padding.
-     * Explicit axis limits, zoom/range selection and percent normalization take precedence.
+     * Explicit axis limits, zoom and percent normalization take precedence.
+     * X padding is ignored when `xAxis.rangeSlider.enabled` is `true`.
      * Category axes ignore padding. Oversized requests are bounded and can still clip.
      * @minimum 0
      * @default 0
