@@ -212,6 +212,8 @@ test.describe('Axis padding', () => {
                                 marker: {
                                     enabled: false,
                                     radius: 30,
+                                    borderWidth: 6,
+                                    borderColor: 'red',
                                     halo: {enabled: true, size: 40, opacity: 0.4},
                                 },
                             },
@@ -238,10 +240,14 @@ test.describe('Axis padding', () => {
         const marker = markers.last();
         const path = await marker.getAttribute('d');
         if (!path) throw new Error('Missing normal marker path');
+        const borderWidth = await marker.getAttribute('stroke-width');
+        const borderColor = await marker.getAttribute('stroke');
         const box = await getLocatorBoundingBox(marker);
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
         await expect(page.locator('.gcharts-tooltip')).toBeVisible();
         await expect(marker).toHaveAttribute('d', path);
+        await expect(marker).toHaveAttribute('stroke-width', borderWidth ?? '');
+        await expect(marker).toHaveAttribute('stroke', borderColor ?? '');
         await expect(component.locator('.gcharts-marker__halo[visibility=""]')).toHaveCount(0);
         await expectPaintInsidePlot(component.locator('.gcharts-chart__content'), markers);
     });
@@ -320,5 +326,46 @@ test.describe('Axis padding', () => {
                 nodes.every((node) => !/NaN|Infinity/.test(node.outerHTML)),
             ),
         ).toBe(true);
+    });
+
+    test('anchors the initial range slider selection at the unpadded data maximum', async ({
+        mount,
+    }) => {
+        const data: ChartData = {
+            legend: {enabled: false},
+            xAxis: {
+                startOnTick: false,
+                endOnTick: false,
+                padding: {min: 'auto', max: 'auto'},
+                rangeSlider: {enabled: true, defaultRange: {size: 0.5}},
+            },
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Events',
+                        data: [
+                            {x: 0, y: 20},
+                            {x: 1.5, y: 50},
+                            {x: 2, y: 80},
+                        ],
+                    },
+                ],
+            },
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 600, height: 300}} />,
+        );
+        const plot = component.locator('.gcharts-chart__content');
+        const markers = plot.locator('.gcharts-marker__symbol[d]');
+        await expect(markers).toHaveCount(2);
+
+        const slider = component.locator('.gcharts-range-slider');
+        const selection = slider.locator('.selection');
+        const sliderWidth = Number(await slider.getAttribute('width'));
+        await expect
+            .poll(async () => Number(await selection.getAttribute('x')) / sliderWidth)
+            .toBeCloseTo(0.75, 6);
+        expect(Number(await selection.getAttribute('width')) / sliderWidth).toBeCloseTo(0.25, 6);
     });
 });

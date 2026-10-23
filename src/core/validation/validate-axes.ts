@@ -12,7 +12,7 @@ function validatePadding(axis: ChartAxis) {
     if (!padding || typeof padding !== 'object' || Array.isArray(padding)) {
         throw new ChartError({
             code: CHART_ERROR_CODE.INVALID_DATA,
-            message: 'axis.padding must be an object',
+            message: i18n('error', 'label_invalid-axis-padding-type'),
         });
     }
     for (const side of ['min', 'max'] as const) {
@@ -20,7 +20,7 @@ function validatePadding(axis: ChartAxis) {
         if (value !== undefined && value !== 'auto' && !parseNonNegativeSize(value)) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
-                message: `axis.padding.${side} must be auto or a finite nonnegative pixel or percentage size`,
+                message: i18n('error', 'label_invalid-axis-padding-size', {side}),
             });
         }
     }

@@ -141,7 +141,8 @@ export const createScales = (args: Args) => {
             split,
             series,
             seriesOptions,
-            fixedX: Boolean(zoomState?.x || rangeSliderState),
+            // The slider's initial selection is derived from this scale before its state exists.
+            fixedX: Boolean(xAxis.rangeSlider?.enabled || zoomState?.x || rangeSliderState),
             fixedY: yAxis.map((_, i) => Boolean(zoomState?.y?.[i])),
         });
     }
