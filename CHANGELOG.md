@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.71.0](https://github.com/gravity-ui/charts/compare/v1.70.0...v1.71.0) (2026-10-23)
+
+
+### Features
+
+* add configurable axis padding ([#783](https://github.com/gravity-ui/charts/issues/783)) ([06d0703](https://github.com/gravity-ui/charts/commit/06d0703e48f891083cb5627a0fb831025a43d169))
+
 ## [1.70.0](https://github.com/gravity-ui/charts/compare/v1.69.0...v1.70.0) (2026-10-23)
 
 
