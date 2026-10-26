@@ -1,15 +1,6 @@
 import {spawnSync} from 'node:child_process';
-import {
-    existsSync,
-    mkdirSync,
-    mkdtempSync,
-    readFileSync,
-    readdirSync,
-    rmSync,
-    writeFileSync,
-} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
-import {tmpdir} from 'node:os';
 import path from 'node:path';
 
 import {renderPage} from './page.mjs';
@@ -63,8 +54,8 @@ export async function measure(root) {
 
 // Mirrors the build of @size-limit/esbuild (get-config.js and processImport).
 async function bundle(root, check) {
-    const outdir = mkdtempSync(path.join(tmpdir(), 'bundle-size-'));
-    // Inside root, so the treemap shows only root-relative paths.
+    // The entry and the (never written) output live in root, so the treemap shows only
+    // root-relative paths.
     const entry = path.join(root, `.size-limit-${slugify(check.name)}.js`);
     try {
         let entryPoints = (Array.isArray(check.path) ? check.path : [check.path]).map((p) =>
@@ -93,13 +84,12 @@ async function bundle(root, check) {
             minifyIdentifiers: true,
             minifySyntax: true,
             minifyWhitespace: true,
-            outdir,
+            outdir: root,
             treeShaking: true,
             write: false,
         });
         return result.metafile;
     } finally {
-        rmSync(outdir, {recursive: true, force: true});
         rmSync(entry, {force: true});
     }
 }
