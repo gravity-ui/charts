@@ -61,6 +61,11 @@ test.describe('Waterfall series', () => {
                 await component.update(<ChartTestStory data={createData(enabled)} />);
                 await expect(bars).toHaveCount(points.length);
                 await expect(connectors).toHaveCount(enabled === false ? 0 : points.length - 1);
+                if (enabled !== false) {
+                    for (const connector of await connectors.all()) {
+                        await expect(connector).toHaveAttribute('d', /.+/);
+                    }
+                }
             }
         });
     });
