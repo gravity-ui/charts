@@ -166,7 +166,8 @@ export function updateHistory(out) {
         }
     }
     const history = {
-        entries: [...entries.values()].sort((a, b) => a.date.localeCompare(b.date)),
+        // Commit dates carry a UTC offset and npm publish times are in UTC.
+        entries: [...entries.values()].sort((a, b) => Date.parse(a.date) - Date.parse(b.date)),
     };
     writeFileSync(historyPath, `${JSON.stringify(history, null, 2)}\n`);
     writeFileSync(path.join(out, 'index.html'), renderPage(history));
