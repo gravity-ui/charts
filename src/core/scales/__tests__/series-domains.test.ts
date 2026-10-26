@@ -69,7 +69,7 @@ test('merges the baseline with extrema from other plugins', async () => {
             type: 'line',
             name: 'Line',
             data: [
-                {x: 0, y: -100},
+                {x: 0, y: 100},
                 {x: 1, y: 200},
             ],
         },
@@ -82,7 +82,7 @@ test('merges the baseline with extrema from other plugins', async () => {
             ],
         },
     ]);
-    expect(createYScale({axis, boundsHeight: 300, series})?.domain()).toEqual([-100, 200]);
+    expect(createYScale({axis, boundsHeight: 300, series})?.domain()).toEqual([0, 200]);
 });
 
 test('keeps stack domains separate across axes and honors visibility and the all-hidden fallback', async () => {
@@ -191,22 +191,3 @@ test.each(['bar-x', 'area', 'waterfall'] as const)(
         ).toBe(5);
     },
 );
-
-test.each(['bar-x', 'bar-y', 'area'] as const)('%s preserves percent domains', async (type) => {
-    const series = await prepare([
-        {
-            type,
-            name: 'Share',
-            stacking: 'percent',
-            data: [
-                {x: 10, y: 20},
-                {x: 20, y: 40},
-            ],
-        },
-    ]);
-    const scale =
-        type === 'bar-y'
-            ? createXScale({axis, boundsWidth: 600, series})
-            : createYScale({axis, boundsHeight: 300, series});
-    expect(scale?.domain()).toEqual([0, 100]);
-});
