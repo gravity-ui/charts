@@ -86,8 +86,15 @@ export const Tooltip = (props: TooltipProps) => {
     }, [svgContainer]);
 
     const containerRect = containerRectRef.current;
-    const left = (pointerPosition?.[0] || 0) + containerRect.left;
-    const top = (pointerPosition?.[1] || 0) + containerRect.top;
+    const pointerX = pointerPosition?.[0] || 0;
+    const pointerY = pointerPosition?.[1] || 0;
+    const matrix = pointerPosition && svgContainer?.getScreenCTM();
+    // The tooltip portal uses screen coordinates; pointerPosition is SVG-local.
+    const screenPoint = matrix
+        ? new DOMPoint(pointerX, pointerY).matrixTransform(matrix)
+        : undefined;
+    const left = screenPoint?.x ?? pointerX + containerRect.left;
+    const top = screenPoint?.y ?? pointerY + containerRect.top;
     const {anchor} = useVirtualElement({left, top});
 
     const handleOnOpenChange: PopupProps['onOpenChange'] = (_open: boolean, e) => {
