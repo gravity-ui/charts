@@ -10,10 +10,13 @@ import {
 } from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 
 import {renderPage} from './page.mjs';
 
 const require = createRequire(import.meta.url);
+const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(SCRIPTS_DIR, '../..');
 const SIZE_LIMIT_BIN = path.join(
     path.dirname(require.resolve('size-limit/package.json')),
     'bin.js',
@@ -170,8 +173,38 @@ export function updateHistory(out) {
         entries: [...entries.values()].sort((a, b) => Date.parse(a.date) - Date.parse(b.date)),
     };
     writeFileSync(historyPath, `${JSON.stringify(history, null, 2)}\n`);
-    writeFileSync(path.join(out, 'index.html'), renderPage(history));
+    writeFileSync(path.join(out, 'index.html'), renderPage(history, bundleViewer()));
     return history;
+}
+
+let viewer;
+
+// Bundles viewer.jsx with the charts build of this repository, so the page draws its charts
+// with the current @gravity-ui/charts. Run `npm run build` first.
+function bundleViewer() {
+    if (viewer) return viewer;
+    const charts = path.join(REPO_ROOT, 'dist/esm/index.js');
+    if (!existsSync(charts)) {
+        throw new Error(`${charts} is missing: run \`npm run build\` first`);
+    }
+    const result = esbuild.buildSync({
+        alias: {'@gravity-ui/charts': charts},
+        bundle: true,
+        define: {'process.env.NODE_ENV': '"production"'},
+        entryPoints: [path.join(SCRIPTS_DIR, 'viewer.jsx')],
+        format: 'iife',
+        logLevel: 'silent',
+        minify: true,
+        outdir: path.join(SCRIPTS_DIR, 'viewer-build'),
+        write: false,
+    });
+    const text = (ext) =>
+        result.outputFiles
+            .filter((file) => file.path.endsWith(ext))
+            .map((file) => file.text)
+            .join('\n');
+    viewer = {js: text('.js'), css: text('.css')};
+    return viewer;
 }
 
 function slugify(name) {

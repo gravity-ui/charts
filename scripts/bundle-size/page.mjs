@@ -1,5 +1,6 @@
 const REPO_URL = 'https://github.com/gravity-ui/charts';
 const TOP_CHANGES = 3;
+const TOP_PACKAGES = 6;
 
 const formatBytes = (bytes) => (bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed(2)} kB`);
 function formatChange(bytes) {
@@ -13,10 +14,13 @@ const escape = (value) =>
         (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c],
     );
 
-// Static HTML page: a size chart and a drill-down table per size-limit check.
-export function renderPage(history) {
+// A self-contained HTML page per history: charts drawn by the bundled viewer (`viewer`:
+// its JS and CSS, built from viewer.jsx) and a drill-down table per size-limit check.
+export function renderPage(history, viewer) {
     const names = [...new Set(history.entries.flatMap((e) => e.checks.map((c) => c.name)))];
-    const sections = names.map((name) => renderCheck(name, history.entries)).join('\n');
+    const checks = names.map((name) => collectRows(name, history.entries));
+    const sections = checks.map(renderCheck).join('\n');
+    const chartData = JSON.stringify(checks.map(toChartData)).replace(/</g, '\\u003c');
     return `<!doctype html>
 <html lang="en">
 <head>
@@ -27,10 +31,8 @@ export function renderPage(history) {
 body { font: 14px/1.5 system-ui, sans-serif; margin: 24px auto; max-width: 1100px; padding: 0 16px; color: #222; }
 h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 32px; }
 .note { color: #666; }
-svg { width: 100%; height: auto; }
-svg .line { fill: none; stroke: #4c7bd9; stroke-width: 2; }
-svg circle { fill: #4c7bd9; } svg a:hover circle { fill: #e05a2b; }
-svg text { font-size: 11px; fill: #666; }
+.chart { height: 300px; margin: 8px 0 24px; }
+h3 { font-size: 14px; font-weight: 600; margin: 16px 0 0; }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -42,6 +44,7 @@ tr.packages td { background: #fafafa; }
 .grid div { display: grid; grid-template-columns: 1fr auto 84px; gap: 8px; }
 :target { background: #fff8e1; }
 </style>
+<style>${viewer.css.replace(/<\/style/gi, '<\\/style')}</style>
 </head>
 <body>
 <h1>@gravity-ui/charts bundle size</h1>
@@ -68,21 +71,56 @@ function openTarget() {
 window.addEventListener('hashchange', openTarget);
 openTarget();
 </script>
+<script type="application/json" id="bundle-size-data">${chartData}</script>
+<script>${viewer.js.replace(/<\/script/gi, '<\\/script')}</script>
 </body>
 </html>
 `;
 }
 
-function renderCheck(name, entries) {
+// Builds of one check in time order.
+function collectRows(name, entries) {
     const rows = entries
         .map((entry) => ({entry, check: entry.checks.find((c) => c.name === name)}))
         .filter((row) => row.check);
+    return {name, slug: rows[0].check.slug, rows};
+}
+
+// Series for viewer.jsx: totals and the biggest packages of the latest build, in kB.
+function toChartData({name, slug, rows}) {
+    const toKB = (bytes) => Math.round(bytes / 10) / 100;
+    const latest = rows[rows.length - 1].check.packages;
+    const top = Object.keys(latest).slice(0, TOP_PACKAGES);
+    const other = (packages) =>
+        Object.entries(packages)
+            .filter(([pkg]) => !top.includes(pkg))
+            .reduce((sum, [, bytes]) => sum + bytes, 0);
+    return {
+        name,
+        slug,
+        labels: rows.map(({entry}) => label(entry)),
+        anchors: rows.map(({entry}) => `${slug}-${entry.id}`),
+        totals: rows.map(({check}) => toKB(check.size)),
+        packages: [
+            ...top.map((pkg) => ({
+                name: pkg,
+                values: rows.map(({check}) => toKB(check.packages[pkg] ?? 0)),
+            })),
+            {name: 'other', values: rows.map(({check}) => toKB(other(check.packages)))},
+        ],
+    };
+}
+
+function renderCheck({name, slug, rows}) {
     const body = rows
         .map((row, i) => renderRow(row, rows[i - 1]))
         .reverse()
         .join('\n');
     return `<h2>${escape(name)}</h2>
-${renderChart(rows)}
+<h3>Size</h3>
+<div class="chart" data-check="${escape(slug)}" data-chart="total"></div>
+<h3>By package</h3>
+<div class="chart" data-check="${escape(slug)}" data-chart="packages"></div>
 <table>
 <thead><tr><th>Build</th><th>Date</th><th class="num">Size</th><th class="num">Change</th><th>Biggest package changes</th><th></th></tr></thead>
 <tbody>
@@ -145,36 +183,6 @@ function renderPackages(check, previous, packageChanges) {
                 `<div><s>${escape(c.name)}</s><span class="num"></span><span class="num down">${formatChange(c.change)}</span></div>`,
         );
     return `<div class="grid">${[...items, ...removed].join('')}</div>`;
-}
-
-function renderChart(rows) {
-    if (rows.length < 2) return '';
-    const width = 1000;
-    const height = 220;
-    const pad = {top: 16, right: 16, bottom: 28, left: 72};
-    const sizes = rows.map((r) => r.check.size);
-    const min = Math.min(...sizes);
-    const max = Math.max(...sizes);
-    const span = max - min || 1;
-    const x = (i) => pad.left + (i * (width - pad.left - pad.right)) / (rows.length - 1);
-    const y = (size) => pad.top + ((max - size) * (height - pad.top - pad.bottom)) / span;
-    const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.check.size).toFixed(1)}`).join(' ');
-    const dots = rows
-        .map(
-            ({entry, check}, i) =>
-                `<a href="#${escape(`${check.slug}-${entry.id}`)}"><circle cx="${x(i).toFixed(1)}" cy="${y(check.size).toFixed(1)}" r="4"><title>${escape(label(entry))} · ${formatBytes(check.size)}</title></circle></a>`,
-        )
-        .join('');
-    const first = rows[0].entry;
-    const last = rows[rows.length - 1].entry;
-    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Size by build">
-<text x="${pad.left - 8}" y="${y(max) + 4}" text-anchor="end">${formatBytes(max)}</text>
-<text x="${pad.left - 8}" y="${y(min) + 4}" text-anchor="end">${formatBytes(min)}</text>
-<text x="${pad.left}" y="${height - 8}">${escape(label(first))}</text>
-<text x="${width - pad.right}" y="${height - 8}" text-anchor="end">${escape(label(last))}</text>
-<polyline class="line" points="${points}"/>
-${dots}
-</svg>`;
 }
 
 function diffPackages(before, after) {
