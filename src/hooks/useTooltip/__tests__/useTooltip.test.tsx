@@ -7,6 +7,7 @@ import {getDispatcher} from '~core/utils/dispatcher';
 
 import type {
     PointPosition,
+    TooltipDataChunk,
     TooltipDataChunkBarY,
     TooltipDataChunkLine,
     TooltipDataChunkWaterfall,
@@ -38,7 +39,7 @@ function setup() {
         {data: {x: 1, y: 1}, series: {type: 'bar-y', name: 'Series', data: []}},
     ];
     const pointerPosition: PointPosition = [10, 20];
-    const hover = (nextHovered = hovered) => {
+    const hover = (nextHovered: TooltipDataChunk[] = hovered) => {
         act(() =>
             dispatcher.call('hover-shape', undefined, nextHovered, pointerPosition, {
                 bands: [],
