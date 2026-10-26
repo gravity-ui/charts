@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- React 17 or later
+- React 18 or later
 - [@gravity-ui/uikit](https://github.com/gravity-ui/uikit) — required peer dependency (provides theming and UI primitives)
 
 ## Install

@@ -37,7 +37,7 @@ Visual regression tests run in Docker to ensure consistent screenshots across en
 npm run playwright:docker
 ```
 
-In pull requests, the main visual suite runs in two parallel GitHub Actions shards with four workers each. The `Visual Tests` check merges their reports and fails if either shard fails. Performance tests run in a separate job; the React 17 and 19 release checks keep their existing configuration.
+In pull requests, the main visual suite runs in two parallel GitHub Actions shards with four workers each. The `Visual Tests` check merges their reports and fails if either shard fails. Performance tests run in a separate job; the React 19 release checks keep their existing configuration.
 
 To run one shard locally with the same browser selection as CI:
 
