@@ -53,6 +53,17 @@ If you need to update the reference screenshots (e.g. after intentional UI chang
 npm run playwright:docker:update
 ```
 
+## Bundle size
+
+CI checks the size of the `Chart` import from the ESM build with [size-limit](https://github.com/ai/size-limit): minified and brotlied, without peer dependencies. Build first, then run the check:
+
+```shell
+npm run build
+npm run size
+```
+
+If a change grows the bundle on purpose, raise `limit` in `.size-limit.js` in the same pull request.
+
 ## Documentation examples
 
 Add a live example as a `.tsx` file under `docs/examples/src/charts`, exporting its component as the default export and its metadata as `export const meta = {...} satisfies ExampleMeta`. Import `ExampleMeta` from `../gallery` for examples in a subdirectory. Use literal strings, numbers, and objects in metadata so the build can validate it without running the component.
