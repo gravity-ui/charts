@@ -6,6 +6,8 @@ const esModules = [
     'internmap',
     'delaunator',
     'robust-predicates',
+    // ESM-only dependency of the uikit ColorPicker, loaded by the uikit root entry point
+    'colors-named',
 ].join('|');
 
 module.exports = {

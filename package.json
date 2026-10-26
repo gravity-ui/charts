@@ -107,7 +107,7 @@
     "@gravity-ui/prettier-config": "^1.1.0",
     "@gravity-ui/stylelint-config": "^4.0.1",
     "@gravity-ui/tsconfig": "^1.0.0",
-    "@gravity-ui/uikit": "^7.51.1",
+    "@gravity-ui/uikit": "^8.0.0",
     "@playwright/experimental-ct-react": "^1.56.1",
     "@playwright/test": "^1.56.1",
     "@storybook/addon-a11y": "^10.6.2",
@@ -170,7 +170,7 @@
     "postcss-selector-parser": "^7.1.6"
   },
   "peerDependencies": {
-    "@gravity-ui/uikit": "^7.0.0",
+    "@gravity-ui/uikit": "^8.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },

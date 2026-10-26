@@ -51,32 +51,32 @@ const RotatedLabels = () => {
     const labelPrefix = 'Long long text for line breaks ';
 
     return (
-        <Container spaceRow={5}>
-            <Row space={1}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-1">
                 <Text variant="subheader-2">X-axis labels rotation (single line)</Text>
             </Row>
-            <Row space={4}>
-                <Col s={4}>
+            <Row gap="spacing-4">
+                <Col size={4}>
                     <ChartStory data={getWidgetData(0)} />
                 </Col>
-                <Col s={4}>
+                <Col size={4}>
                     <ChartStory data={getWidgetData(45)} />
                 </Col>
-                <Col s={4}>
+                <Col size={4}>
                     <ChartStory data={getWidgetData(-45)} />
                 </Col>
             </Row>
-            <Row space={1}>
+            <Row gap="spacing-1">
                 <Text variant="subheader-2">Y-axis labels rotation (long text)</Text>
             </Row>
-            <Row space={3}>
-                <Col s={4}>
+            <Row gap="spacing-3">
+                <Col size={4}>
                     <ChartStory data={getWidgetData(0, labelPrefix)} />
                 </Col>
-                <Col s={4}>
+                <Col size={4}>
                     <ChartStory data={getWidgetData(45, labelPrefix)} />
                 </Col>
-                <Col s={4}>
+                <Col size={4}>
                     <ChartStory data={getWidgetData(-45, labelPrefix)} />
                 </Col>
             </Row>

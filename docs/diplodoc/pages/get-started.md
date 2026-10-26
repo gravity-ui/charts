@@ -3,7 +3,7 @@
 ## Requirements
 
 - React 18 or later
-- [@gravity-ui/uikit](https://github.com/gravity-ui/uikit) — required peer dependency (provides theming and UI primitives)
+- [@gravity-ui/uikit](https://github.com/gravity-ui/uikit) v8 — required peer dependency (provides theming and UI primitives)
 
 ## Install
 
@@ -24,10 +24,10 @@ For full setup details see the [uikit styles guide](https://github.com/gravity-u
 
 ## Basic usage
 
-Wrap your app with `ThemeProvider` from `@gravity-ui/uikit`, then render a `Chart` inside a sized container:
+Wrap your app with `Provider` from `@gravity-ui/uikit`, then render a `Chart` inside a sized container:
 
 ```tsx
-import {ThemeProvider} from '@gravity-ui/uikit';
+import {Provider} from '@gravity-ui/uikit';
 import {Chart} from '@gravity-ui/charts';
 
 const data = {
@@ -49,11 +49,11 @@ const data = {
 
 export default function App() {
   return (
-    <ThemeProvider theme="light">
+    <Provider theme="light">
       <div style={{height: 300}}>
         <Chart data={data} />
       </div>
-    </ThemeProvider>
+    </Provider>
   );
 }
 ```
