@@ -1,16 +1,18 @@
 import React from 'react';
 
-import {MobileProvider, ThemeProvider} from '@gravity-ui/uikit';
+import {Provider} from '@gravity-ui/uikit';
 import type {Decorator} from '@storybook/react-vite';
 
 export const WithContext: Decorator = (Story, context) => {
     return (
         <React.StrictMode>
-            <ThemeProvider theme={context.globals.theme} direction={context.globals.direction}>
-                <MobileProvider mobile={context.globals.platform === 'mobile'}>
-                    <Story {...context} />
-                </MobileProvider>
-            </ThemeProvider>
+            <Provider
+                theme={context.globals.theme}
+                direction={context.globals.direction}
+                mobile={context.globals.platform === 'mobile'}
+            >
+                <Story {...context} />
+            </Provider>
         </React.StrictMode>
     );
 };
