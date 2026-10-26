@@ -12,7 +12,7 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-import {renderPage} from './page.mjs';
+import {renderPage, renderTreemapPage} from './page.mjs';
 
 const require = createRequire(import.meta.url);
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -27,7 +27,6 @@ const esbuild = require(
         paths: [path.dirname(require.resolve('@size-limit/esbuild/package.json'))],
     }),
 );
-const {visualizer} = require('esbuild-visualizer');
 
 export const OWN_PACKAGE = '@gravity-ui/charts';
 
@@ -68,7 +67,7 @@ async function bundle(measuredRoot, check) {
     // esbuild resolves absWorkingDir through symlinks (such as /var on macOS), so outdir
     // has to be resolved too for the output paths to stay relative.
     const root = realpathSync(measuredRoot);
-    // The entry and the (never written) output live in root, so the treemap shows paths
+    // The entry and the (never written) output live in root, so the metafile has only paths
     // relative to root.
     const entry = path.join(root, `.size-limit-${slugify(check.name)}.js`);
     try {
@@ -108,42 +107,104 @@ async function bundle(measuredRoot, check) {
     }
 }
 
-// Minified bytes per npm package; code outside node_modules belongs to charts.
-export function groupByPackage(metafile) {
-    const sizes = {};
+// Splits a bundled file path into its npm package and the path inside it; code outside
+// node_modules is the dist/esm build of charts.
+function splitPath(file) {
+    const nodeModules = file.lastIndexOf('node_modules/');
+    if (nodeModules === -1) {
+        return [OWN_PACKAGE, ...file.replace(/^dist\/esm\//, '').split('/')];
+    }
+    const rest = file.slice(nodeModules + 'node_modules/'.length).split('/');
+    const nameLength = rest[0].startsWith('@') ? 2 : 1;
+    return [rest.slice(0, nameLength).join('/'), ...rest.slice(nameLength)];
+}
+
+function* bundledFiles(metafile) {
     for (const output of Object.values(metafile.outputs)) {
         for (const [file, {bytesInOutput}] of Object.entries(output.inputs)) {
-            const parts = file.split('node_modules/');
-            let name = OWN_PACKAGE;
-            if (parts.length > 1) {
-                const segments = parts[parts.length - 1].split('/');
-                name = segments[0].startsWith('@') ? `${segments[0]}/${segments[1]}` : segments[0];
-            }
-            sizes[name] = (sizes[name] || 0) + bytesInOutput;
+            if (bytesInOutput && !file.startsWith('.size-limit-')) yield [file, bytesInOutput];
         }
+    }
+}
+
+// Minified bytes per npm package.
+export function groupByPackage(metafile) {
+    const sizes = {};
+    for (const [file, bytes] of bundledFiles(metafile)) {
+        const [name] = splitPath(file);
+        sizes[name] = (sizes[name] || 0) + bytes;
     }
     return Object.fromEntries(Object.entries(sizes).sort((a, b) => b[1] - a[1]));
 }
 
-// Writes `<out>/snapshots/<id>/`: summary.json plus a metafile and a treemap per check.
-// `info` describes the measured build: id, kind ('release' | 'commit'), version, sha, date.
-export async function writeSnapshot(out, info, checks) {
+// Module tree for the treemap: packages, then directories and files, biggest first.
+// Directories with a single subdirectory are merged into one node ("date-utils/build").
+export function buildModuleTree(metafile, name) {
+    const root = {name, size: 0, children: new Map()};
+    for (const [file, bytes] of bundledFiles(metafile)) {
+        let node = root;
+        node.size += bytes;
+        for (const part of splitPath(file)) {
+            if (!node.children.has(part)) {
+                node.children.set(part, {name: part, size: 0, children: new Map()});
+            }
+            node = node.children.get(part);
+            node.size += bytes;
+        }
+    }
+    const finalize = (node) => {
+        let children = [...node.children.values()].map(finalize).sort((a, b) => b.size - a.size);
+        let nodeName = node.name;
+        if (node !== root) {
+            while (children.length === 1 && children[0].children) {
+                nodeName = `${nodeName}/${children[0].name}`;
+                children = children[0].children;
+            }
+        }
+        return children.length
+            ? {name: nodeName, size: node.size, children}
+            : {name: nodeName, size: node.size};
+    };
+    return finalize(root);
+}
+
+// The page title and tree label of a build, such as "Chart · 1.70.0".
+export function buildTitle(info, check) {
+    const label = info.kind === 'release' ? info.version : (info.label ?? info.sha.slice(0, 7));
+    return `${check.name} · ${label}`;
+}
+
+export function writeTreemapPage(dir, info, check, tree) {
+    writeFileSync(
+        path.join(dir, `${check.slug}.treemap.html`),
+        renderTreemapPage({title: `${OWN_PACKAGE} ${buildTitle(info, check)}`, tree}),
+    );
+}
+
+// Writes `<out>/snapshots/<id>/`: summary.json, and per check the metafile, the module tree
+// and its treemap page. `info` describes the build: id, kind ('release' | 'commit' | 'pr'),
+// version, sha, date and title.
+export function writeSnapshot(out, info, checks) {
     const dir = path.join(out, 'snapshots', info.id);
     mkdirSync(dir, {recursive: true});
     for (const check of checks) {
+        const tree = buildModuleTree(check.metafile, buildTitle(info, check));
         writeFileSync(
             path.join(dir, `${check.slug}.metafile.json`),
             JSON.stringify(check.metafile),
         );
-        const html = await visualizer(check.metafile, {
-            title: `${OWN_PACKAGE} ${info.version} ${check.name}`,
-            template: 'treemap',
-        });
-        writeFileSync(path.join(dir, `${check.slug}.treemap.html`), html);
+        writeFileSync(path.join(dir, `${check.slug}.modules.json`), JSON.stringify(tree));
+        writeTreemapPage(dir, info, check, tree);
     }
     const summary = {
         ...info,
-        checks: checks.map(({name, slug, size, packages}) => ({name, slug, size, packages})),
+        checks: checks.map(({name, slug, size, packages}) => ({
+            name,
+            slug,
+            size,
+            packages,
+            treemap: true,
+        })),
     };
     writeFileSync(path.join(dir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
     return summary;
@@ -173,13 +234,21 @@ export function updateHistory(out) {
         entries: [...entries.values()].sort((a, b) => Date.parse(a.date) - Date.parse(b.date)),
     };
     writeFileSync(historyPath, `${JSON.stringify(history, null, 2)}\n`);
-    writeFileSync(path.join(out, 'index.html'), renderPage(history, bundleViewer()));
+    writeSite(out, history);
     return history;
+}
+
+// Writes `<out>/index.html` for `history` and the viewer it loads.
+export function writeSite(out, history, options) {
+    writeFileSync(path.join(out, 'index.html'), renderPage(history, options));
+    const {js, css} = bundleViewer();
+    writeFileSync(path.join(out, 'viewer.js'), js);
+    writeFileSync(path.join(out, 'viewer.css'), css);
 }
 
 let viewer;
 
-// Bundles viewer.jsx with the charts build of this repository, so the page draws its charts
+// Bundles viewer.jsx with the charts build of this repository, so the pages draw their charts
 // with the current @gravity-ui/charts. Run `npm run build` first.
 function bundleViewer() {
     if (viewer) return viewer;

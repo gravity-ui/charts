@@ -1,10 +1,12 @@
-// Client side of the bundle size page: draws the precomputed series with @gravity-ui/charts.
-// page.mjs bundles it with the charts build of the repository.
+// Client side of the bundle size pages, bundled by lib.mjs with the charts build of the
+// repository into viewer.js: the history charts, or the module treemap of one build.
 import React from 'react';
 
 import {Chart} from '@gravity-ui/charts';
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {createRoot} from 'react-dom/client';
+
+import {Treemap} from './treemap.jsx';
 
 import '@gravity-ui/uikit/styles/styles.css';
 
@@ -64,13 +66,19 @@ function packagesData(check) {
     };
 }
 
-const checks = JSON.parse(document.getElementById('bundle-size-data').textContent);
-for (const container of document.querySelectorAll('[data-chart]')) {
-    const check = checks.find((c) => c.slug === container.dataset.check);
-    const data = container.dataset.chart === 'total' ? totalData(check) : packagesData(check);
-    createRoot(container).render(
-        <ThemeProvider theme="light">
-            <Chart data={data} lang="en" />
-        </ThemeProvider>,
-    );
+function render(container, element) {
+    createRoot(container).render(<ThemeProvider theme="light">{element}</ThemeProvider>);
+}
+
+const treemapData = document.getElementById('treemap-data');
+if (treemapData) {
+    const {tree} = JSON.parse(treemapData.textContent);
+    render(document.getElementById('treemap-root'), <Treemap tree={tree} />);
+} else {
+    const checks = JSON.parse(document.getElementById('bundle-size-data').textContent);
+    for (const container of document.querySelectorAll('[data-chart]')) {
+        const check = checks.find((c) => c.slug === container.dataset.check);
+        const data = container.dataset.chart === 'total' ? totalData(check) : packagesData(check);
+        render(container, <Chart data={data} lang="en" />);
+    }
 }

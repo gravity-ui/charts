@@ -46,7 +46,7 @@ for (const version of versions) {
         writeFileSync(pkgPath, JSON.stringify(pkg));
 
         const checks = await measure(root);
-        await writeSnapshot(
+        writeSnapshot(
             values.out,
             {
                 id: tag,

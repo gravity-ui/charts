@@ -1,3 +1,5 @@
+// HTML pages of the bundle size history. They load viewer.js and viewer.css from the root of
+// the output (see bundleViewer in lib.mjs), which draws the charts with @gravity-ui/charts.
 const REPO_URL = 'https://github.com/gravity-ui/charts';
 const TOP_CHANGES = 3;
 const TOP_PACKAGES = 6;
@@ -13,23 +15,25 @@ const escape = (value) =>
         /[&<>"']/g,
         (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c],
     );
+const json = (value) => JSON.stringify(value).replace(/</g, '\\u003c');
 
-// A self-contained HTML page per history: charts drawn by the bundled viewer (`viewer`:
-// its JS and CSS, built from viewer.jsx) and a drill-down table per size-limit check.
-export function renderPage(history, viewer) {
+const BASE_STYLE = `body { font: 14px/1.5 system-ui, sans-serif; margin: 24px auto; max-width: 1100px; padding: 0 16px; color: #222; }
+h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 32px; }
+button { font: inherit; color: #1a5fd0; background: none; border: 0; padding: 0; cursor: pointer; }`;
+
+// The history (or a pull request report): charts and a drill-down table per size-limit check.
+export function renderPage(history, {title = '@gravity-ui/charts bundle size'} = {}) {
     const names = [...new Set(history.entries.flatMap((e) => e.checks.map((c) => c.name)))];
     const checks = names.map((name) => collectRows(name, history.entries));
-    const sections = checks.map(renderCheck).join('\n');
-    const chartData = JSON.stringify(checks.map(toChartData)).replace(/</g, '\\u003c');
     return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@gravity-ui/charts bundle size</title>
+<title>${escape(title)}</title>
+<link rel="stylesheet" href="viewer.css">
 <style>
-body { font: 14px/1.5 system-ui, sans-serif; margin: 24px auto; max-width: 1100px; padding: 0 16px; color: #222; }
-h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 32px; }
+${BASE_STYLE}
 .note { color: #666; }
 .chart { height: 300px; margin: 8px 0 24px; }
 h3 { font-size: 14px; font-weight: 600; margin: 16px 0 0; }
@@ -38,20 +42,18 @@ th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eee; vert
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .nowrap { white-space: nowrap; }
 .up { color: #c62828; } .down { color: #2e7d32; }
-button { font: inherit; color: #1a5fd0; background: none; border: 0; padding: 0; cursor: pointer; }
 tr.packages td { background: #fafafa; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2px 24px; padding: 4px 0 8px; }
 .grid div { display: grid; grid-template-columns: 1fr auto 84px; gap: 8px; }
 :target { background: #fff8e1; }
 </style>
-<style>${viewer.css.replace(/<\/style/gi, '<\\/style')}</style>
 </head>
 <body>
-<h1>@gravity-ui/charts bundle size</h1>
+<h1>${escape(title)}</h1>
 <p class="note">Sizes are the size-limit checks: minified and brotlied, without peer dependencies.
 Package breakdowns are minified bytes before compression, compared with the previous build.
 The treemap shows every module of a build.</p>
-${sections}
+${checks.map(renderCheck).join('\n')}
 <script>
 function showPackages(row) {
     row.nextElementSibling.hidden = false;
@@ -71,8 +73,36 @@ function openTarget() {
 window.addEventListener('hashchange', openTarget);
 openTarget();
 </script>
-<script type="application/json" id="bundle-size-data">${chartData}</script>
-<script>${viewer.js.replace(/<\/script/gi, '<\\/script')}</script>
+<script type="application/json" id="bundle-size-data">${json(checks.map(toChartData))}</script>
+<script src="viewer.js"></script>
+</body>
+</html>
+`;
+}
+
+// The module treemap of one build, stored in snapshots/<id>/.
+export function renderTreemapPage({title, tree}) {
+    return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escape(title)}</title>
+<link rel="stylesheet" href="../../viewer.css">
+<style>
+${BASE_STYLE}
+body { max-width: none; margin: 16px; }
+.crumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.crumbs button:disabled { color: #222; font-weight: 600; cursor: default; }
+.crumbs .sep { color: #999; } .crumbs .size { color: #666; margin-left: 12px; }
+.crumbs .nested { margin-left: auto; color: #444; cursor: pointer; }
+.treemap { height: calc(100vh - 80px); min-height: 480px; }
+</style>
+</head>
+<body>
+<div id="treemap-root"></div>
+<script type="application/json" id="treemap-data">${json({tree})}</script>
+<script src="../../viewer.js"></script>
 </body>
 </html>
 `;
@@ -140,13 +170,16 @@ function renderRow({entry, check}, previous) {
                 `${escape(c.name)} <span class="${trend(c.change)}">${formatChange(c.change)}</span>`,
         )
         .join(', ');
+    const treemap = check.treemap
+        ? ` · <a href="snapshots/${escape(entry.id)}/${escape(check.slug)}.treemap.html">treemap</a>`
+        : '';
     return `<tr id="${escape(anchor)}">
 <td>${renderBuild(entry)}</td>
 <td class="nowrap">${escape(entry.date.slice(0, 10))}</td>
 <td class="num">${formatBytes(check.size)}</td>
 <td class="num ${trend(change)}">${previous ? formatChange(change) : ''}</td>
 <td>${top}</td>
-<td class="nowrap"><button type="button" data-packages>packages</button> · <a href="snapshots/${escape(entry.id)}/${escape(check.slug)}.treemap.html">treemap</a></td>
+<td class="nowrap"><button type="button" data-packages>packages</button>${treemap}</td>
 </tr>
 <tr class="packages" hidden><td colspan="6">${renderPackages(check, previous, packageChanges)}</td></tr>`;
 }
@@ -158,6 +191,9 @@ function renderBuild(entry) {
     if (entry.kind === 'release') {
         return `<a href="${REPO_URL}/releases/tag/v${escape(entry.version)}">${escape(entry.version)}</a>${commit}`;
     }
+    if (entry.kind === 'pr') {
+        return `This pull request${commit}`;
+    }
     const title = escape(entry.title ?? '').replace(
         /\(#(\d+)\)/g,
         (_, pr) => `(<a href="${REPO_URL}/pull/${pr}">#${pr}</a>)`,
@@ -167,7 +203,9 @@ function renderBuild(entry) {
 
 // Releases are told apart by version, commits between releases by sha.
 function label(entry) {
-    return entry.kind === 'release' ? entry.version : entry.sha.slice(0, 7);
+    if (entry.kind === 'release') return entry.version;
+    if (entry.kind === 'pr') return 'PR';
+    return entry.sha.slice(0, 7);
 }
 
 function renderPackages(check, previous, packageChanges) {
@@ -185,7 +223,7 @@ function renderPackages(check, previous, packageChanges) {
     return `<div class="grid">${[...items, ...removed].join('')}</div>`;
 }
 
-function diffPackages(before, after) {
+export function diffPackages(before, after) {
     const names = new Set([...Object.keys(before), ...Object.keys(after)]);
     return [...names]
         .map((name) => ({name, change: (after[name] ?? 0) - (before[name] ?? 0)}))
