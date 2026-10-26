@@ -1,0 +1,60 @@
+name: Bundle Size History
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Also measure the last N releases (0 to skip)'
+        type: number
+        default: 0
+
+# Each run rewrites history.json, so runs must not overlap.
+concurrency:
+  group: bundle-size-history
+  cancel-in-progress: false
+
+jobs:
+  history:
+    name: Update History
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.STORYBOOK_S3_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ru-central1
+      AWS_EC2_METADATA_DISABLED: true
+      S3_ENDPOINT: https://storage.yandexcloud.net
+      S3_PATH: s3://playwright-reports/charts/bundle-size
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Release tags give the lockfiles that backfill installs.
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: Install Packages
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2.22.35
+          arch: amd64
+      - name: Download History
+        run: |
+          mkdir -p bundle-size
+          aws s3 cp "${S3_PATH}/history.json" bundle-size/history.json --endpoint-url="${S3_ENDPOINT}" || echo 'No history yet'
+        shell: bash
+      - name: Measure Releases
+        if: ${{ inputs.backfill > 0 }}
+        run: node scripts/bundle-size/backfill.mjs --out bundle-size --count "${{ inputs.backfill }}"
+      - name: Measure Commit
+        run: node scripts/bundle-size/snapshot.mjs --out bundle-size
+      - name: Upload
+        run: aws s3 cp bundle-size "${S3_PATH}/" --endpoint-url="${S3_ENDPOINT}" --recursive
