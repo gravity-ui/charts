@@ -226,11 +226,18 @@ describe('area-range plugin', () => {
     });
 
     test('excludes incomplete points from the y domain', () => {
-        const getYDomainValues = areaRangePlugin.getAxisDomainValues?.y;
-
-        expect(getYDomainValues?.({x: 0, y0: null, y1: 10})).toEqual([]);
-        expect(getYDomainValues?.({x: 1, y0: 5, y1: null})).toEqual([]);
-        expect(getYDomainValues?.({x: 2, y0: 5, y1: 10})).toEqual([5, 10]);
+        const series: AreaRangeSeries = {
+            type: 'area-range',
+            name: 'Range',
+            data: [
+                {x: 0, y0: null, y1: 10},
+                {x: 1, y0: 5, y1: null},
+                {x: 2, y0: 5, y1: 10},
+            ],
+        };
+        expect(areaRangePlugin.getAxisDomainValues?.({series: [series], axis: 'y'})).toEqual([
+            5, 10,
+        ]);
     });
 
     test('orders points by their effective category positions', async () => {

@@ -1,177 +1,19 @@
-import {group} from 'd3-array';
 import {select} from 'd3-selection';
 import get from 'lodash/get';
-import sortBy from 'lodash/sortBy';
 
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../constants';
-import {getSeriesPlugin} from '../series/seriesRegistry';
-import type {PreparedWaterfallSeries, StackedSeries} from '../series/types';
-import {getSeriesStackId} from '../series/utils';
+import {getAxisDomainValues} from '../series/axis-domain';
+import type {ChartAxis} from '../types';
 
-import {isSeriesWithNumericalXValues, isSeriesWithNumericalYValues} from './series-type-guards';
 import type {UnknownSeries} from './series-type-guards';
 import type {AxisDirection} from './types';
 
-export const CHART_SERIES_WITH_VOLUME_ON_Y_AXIS: ChartSeries['type'][] = [
-    'bar-x',
-    'area',
-    'waterfall',
-];
+export const getDomainDataXBySeries = (series: UnknownSeries[], axisOptions?: ChartAxis) =>
+    getAxisDomainValues(series, 'x', axisOptions);
 
-export const CHART_SERIES_WITH_VOLUME_ON_X_AXIS: ChartSeries['type'][] = ['bar-y'];
-
-function getDomainDataForStackedSeries(
-    seriesList: StackedSeries[],
-    keyAttr: 'x' | 'y' = 'x',
-    valueAttr: 'x' | 'y' = 'y',
-) {
-    const acc: number[] = [];
-    const stackedSeries = group(seriesList, getSeriesStackId);
-    Array.from(stackedSeries).forEach(([_stackId, seriesStack]) => {
-        const positiveValues = new Map<string, number>();
-        const negativeValues = new Map<string, number>();
-
-        seriesStack.forEach((singleSeries) => {
-            const data = (getSeriesPlugin(singleSeries.type).getStackedDomainData?.(singleSeries) ??
-                singleSeries.data) as StackedSeries['data'];
-            data.forEach((point) => {
-                const keyValue = point[keyAttr];
-                if (keyValue === null) {
-                    return;
-                }
-
-                const key = String(keyValue);
-                let value = 0;
-
-                if (valueAttr in point && typeof point[valueAttr] === 'number') {
-                    value = point[valueAttr] as number;
-                }
-
-                if (value >= 0) {
-                    positiveValues.set(key, (positiveValues.get(key) ?? 0) + value);
-                }
-                if (value < 0) {
-                    negativeValues.set(key, (negativeValues.get(key) ?? 0) + value);
-                }
-            });
-        });
-
-        acc.push(...negativeValues.values(), ...positiveValues.values());
-    });
-
-    return acc;
-}
-
-export const getDomainDataXBySeries = (series: UnknownSeries[]) => {
-    const groupedSeries = group(series, (item) => item.type);
-
-    const values = Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
-        const getDomainValues = getSeriesPlugin(type).getAxisDomainValues?.x;
-        if (getDomainValues) {
-            seriesList.forEach((s) => {
-                (s.data as unknown[]).forEach((d) => {
-                    const value = getDomainValues(d as ChartSeriesData);
-                    acc.push(...(Array.isArray(value) ? value : [value]));
-                });
-            });
-            return acc;
-        }
-
-        switch (type) {
-            case 'bar-y': {
-                acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[], 'y', 'x'));
-                break;
-            }
-            default: {
-                seriesList.filter(isSeriesWithNumericalXValues).forEach((s) => {
-                    acc.push(...s.data.map((d) => d.x));
-                });
-            }
-        }
-
-        return acc;
-    }, []);
-
-    return Array.from(new Set(values.filter((v) => v !== null)));
-};
-
-export function getDefaultMaxXAxisValue(series: UnknownSeries[]) {
-    if (series.some((s) => s.type === 'bar-y')) {
-        return 0;
-    }
-
-    return undefined;
-}
-
-export function getDefaultMinXAxisValue(series: UnknownSeries[]) {
-    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_X_AXIS.includes(s.type))) {
-        const domainData = getDomainDataXBySeries(series) as number[];
-        return domainData.reduce((minValue, d) => {
-            return Math.min(minValue, d);
-        }, 0);
-    }
-
-    return undefined;
-}
-
-export const getDomainDataYBySeries = (series: UnknownSeries[]) => {
-    const groupedSeries = group(series, (item) => item.type);
-
-    const items = Array.from(groupedSeries).reduce<unknown[]>((acc, [type, seriesList]) => {
-        const getDomainValues = getSeriesPlugin(type).getAxisDomainValues?.y;
-        if (getDomainValues) {
-            seriesList.forEach((s) => {
-                (s.data as unknown[]).forEach((d) => {
-                    const value = getDomainValues(d as ChartSeriesData);
-                    acc.push(...(Array.isArray(value) ? value : [value]));
-                });
-            });
-            return acc;
-        }
-
-        switch (type) {
-            case 'area':
-            case 'bar-x': {
-                acc.push(...getDomainDataForStackedSeries(seriesList as StackedSeries[]));
-
-                break;
-            }
-            case 'waterfall': {
-                let yValue = 0;
-                const points = (seriesList as PreparedWaterfallSeries[]).map((s) => s.data).flat();
-                sortBy(points, (p) => p.index).forEach((d) => {
-                    if (!d.total) {
-                        yValue += Number(d.y) || 0;
-                        acc.push(yValue);
-                    }
-                });
-
-                break;
-            }
-            default: {
-                seriesList.filter(isSeriesWithNumericalYValues).forEach((s) => {
-                    acc.push(...s.data.map((d) => d.y));
-                });
-            }
-        }
-
-        return acc;
-    }, []);
-
-    return Array.from(new Set(items));
-};
-
-export function getDefaultMinYAxisValue(series?: UnknownSeries[]) {
-    if (series?.some((s) => CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type))) {
-        const domainData = getDomainDataYBySeries(series) as number[];
-        return domainData.reduce((minValue, d) => {
-            return Math.min(minValue, d);
-        }, 0);
-    }
-
-    return undefined;
-}
+export const getDomainDataYBySeries = (series: UnknownSeries[], axisOptions?: ChartAxis) =>
+    getAxisDomainValues(series, 'y', axisOptions);
 
 // Uses to get all series names array (except `pie` charts)
 export const getSeriesNames = (series: ChartSeries[]) => {

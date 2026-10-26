@@ -38,8 +38,15 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
     prepareSeries: prepareAreaRangeSeries,
-    getAxisDomainValues: {
-        y: (data) => (data.y0 === null || data.y1 === null ? [] : [data.y0, data.y1]),
+    getAxisDomainValues: ({series, axis}) => {
+        if (axis === 'x') {
+            return series.flatMap((item) => item.data.map((point) => point.x));
+        }
+        return series.flatMap((item) =>
+            item.data.flatMap((point) =>
+                point.y0 === null || point.y1 === null ? [] : [point.y0, point.y1],
+            ),
+        );
     },
     getColorValue: getAreaRangeWidth,
     validate: ({series, xAxis, yAxis}) => {

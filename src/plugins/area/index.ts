@@ -5,6 +5,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedAreaSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
@@ -31,8 +32,14 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {getAreaStackLabelAnchors} from './stack-labels';
 
+function getAreaDomainData(series: Pick<AreaSeries, 'data'>) {
+    // Area projection keeps the last point at each X, including an explicit null.
+    return [...new Map(series.data.map((point) => [String(point.x), point])).values()];
+}
+
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
+    axisBaseline: 'y',
     isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
     getAxisPadding: getAreaAxisPadding,
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
@@ -66,10 +73,15 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         }
     },
     getColorValue: (d) => d.y,
-    getStackedDomainData: (series) => {
-        // Area projection keeps the last point at each X, including an explicit null.
-        return [...new Map(series.data.map((point) => [String(point.x), point])).values()];
-    },
+    getAxisDomainValues: ({series, axis}) =>
+        axis === 'y'
+            ? getStackedDomainValues({
+                  series,
+                  categoryKey: 'x',
+                  valueKey: 'y',
+                  getData: getAreaDomainData,
+              })
+            : series.flatMap((item) => item.data.map((point) => point.x)),
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
         const {
             series,

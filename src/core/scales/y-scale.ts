@@ -7,12 +7,8 @@ import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
 import type {PreparedSeries} from '../series';
-import {
-    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
-    getDefaultMinYAxisValue,
-    getDomainDataYBySeries,
-    shouldSyncAxisWithPrimary,
-} from '../utils';
+import {hasAxisBaseline} from '../series/axis-domain';
+import {getDomainDataYBySeries, shouldSyncAxisWithPrimary} from '../utils';
 import {getBandSize} from '../utils/band-size';
 import {sumDecimals} from '../utils/math';
 
@@ -111,9 +107,9 @@ function getLogarithmicYMin(args: {
     axis: PreparedAxis;
     domain: unknown[];
     yMinDomain: number;
-    hasSeriesWithVolumeOnYAxis: boolean;
+    hasBaseline: boolean;
 }): number {
-    const {axis, domain, yMinDomain, hasSeriesWithVolumeOnYAxis} = args;
+    const {axis, domain, yMinDomain, hasBaseline} = args;
 
     // scaleLog cannot represent values <= 0. Pick the smallest positive value
     // present in the domain, falling back to 1 if there is none.
@@ -127,11 +123,11 @@ function getLogarithmicYMin(args: {
                   return min;
               }, null) ?? 1);
 
-    if (!hasSeriesWithVolumeOnYAxis) {
+    if (!hasBaseline) {
         return smallestPositive;
     }
 
-    // Volume series (bar-x, area, waterfall) draw bars from yMin up to the
+    // Series requiring a baseline draw from yMin up to the
     // value, so a bar whose value equals yMin collapses to zero height. Drop
     // the baseline one decade below to give it visible space — but only when
     // the later `nice()` pass (triggered by startOnTick) won't supply that
@@ -266,7 +262,7 @@ export function createYScale(args: {
     switch (axis.type) {
         case 'linear':
         case 'logarithmic': {
-            const domain = getDomainDataYBySeries(series);
+            const domain = getDomainDataYBySeries(series, axis);
             const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
             if (hasOnlyNullValues || domain.length === 0) {
@@ -287,9 +283,7 @@ export function createYScale(args: {
                     number,
                 ];
 
-                const hasSeriesWithVolumeOnYAxis = series.some((s) =>
-                    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
-                );
+                const hasBaseline = hasAxisBaseline(series, 'y');
 
                 let yMin: number;
                 if (typeof yMinPropsOrState === 'number') {
@@ -299,11 +293,12 @@ export function createYScale(args: {
                         axis,
                         domain,
                         yMinDomain,
-                        hasSeriesWithVolumeOnYAxis,
+                        hasBaseline,
                     });
                 } else {
-                    const yMinDefault = getDefaultMinYAxisValue(series);
-                    yMin = typeof yMinDefault === 'number' ? yMinDefault : yMinDomain;
+                    yMin = hasBaseline
+                        ? (domain as number[]).reduce((min, value) => Math.min(min, value), 0)
+                        : yMinDomain;
                 }
 
                 let yMax: number;
@@ -314,7 +309,7 @@ export function createYScale(args: {
                     // greater than yMin so the resulting domain stays valid.
                     yMax = yMaxDomain > yMin ? yMaxDomain : yMin * 10;
                 } else {
-                    yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
+                    yMax = hasBaseline ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
                 // When the user pins only one of min/max on the wrong side of all data,
@@ -325,7 +320,7 @@ export function createYScale(args: {
                 // when the opposite bound is auto-derived — if the user supplied both
                 // bounds, trust the explicit range and let point filtering hide the
                 // rest. Comparison uses the raw data extent because upstream coercions
-                // like volume-series `yMax = Math.max(yMaxDomain, 0)` can make the
+                // like baseline expansion `yMax = Math.max(yMaxDomain, 0)` can make the
                 // post-coerced yMin/yMax lie about where data actually sits.
                 // Logarithmic has its own guard.
                 if (axis.type === 'linear') {
@@ -451,7 +446,7 @@ export function createYScale(args: {
                 }
                 return scale;
             } else {
-                const domain = getDomainDataYBySeries(series);
+                const domain = getDomainDataYBySeries(series, axis);
                 const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
                 if (hasOnlyNullValues || domain.length === 0) {

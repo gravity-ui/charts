@@ -40,6 +40,16 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - Optional `getXAxisPadding(series)` requests label space in pixels at the max end of an autoscaled X domain. Core uses the largest request across series; an explicit `xAxis.max` disables that reserve. Keep label measurement and placement policy in the plugin.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
 
+### Axis domains
+
+Implement `getAxisDomainValues({series, axis, axisOptions})` when scalar point coordinates do not describe the series domain. The callback receives the ordered group of this plugin's raw or prepared series for one axis and returns an array of unformatted values. Core merges and deduplicates contributions from all plugins. Returning `[]` excludes the group; omitting the callback uses scalar `x`/`y` coordinates of axis-related series.
+
+For independent points, flatten the group's point values, as X-range does for interval endpoints. For stacks and cumulative series, calculate the whole group together. The reusable `core/series/stacked-domain.ts` helper accepts category/value coordinate keys and a point selector; it groups stack IDs and sums positive and negative values separately. Bars retain all duplicate segments, except independent overlays, which contribute their extrema. Area keeps the last point at each X. Waterfall restores prepared points' source order before accumulating contributions and excludes the totals' own `y` values.
+
+The caller selects visibility, zoom filtering, and axis membership before collecting contributions. Preserve that selection rather than filtering hidden series again: the main plot falls back to all series when every series on an axis is hidden, and range-slider selection follows its existing rules. `axisOptions` supplies the receiving axis's config when available. Do not change raw coordinates or point order while deriving domain values.
+
+Declare `axisBaseline: 'x'` or `'y'` when the value axis needs a baseline. A request from any contributing plugin extends free linear bounds to include zero, including extrema from other plugins on that axis. Explicit bounds and zoom take precedence. Logarithmic Y retains its positive-baseline headroom; logarithmic X and percent-stack domains keep their existing scale policies. Baseline metadata is separate from the values returned by `getAxisDomainValues`.
+
 ## 4. Define layers and clipping
 
 - Optional `getLayerKey({series, seriesKey})` selects a layer for one raw or prepared series occurrence. By default, core uses `series.type`, so all series of a plugin share one layer. Equal returned keys share a layer; use stable, chart-unique keys. Core throws `ChartError` if different series types return the same key. `seriesKey` identifies this occurrence: core supplies a type/index key for raw input and the series ID for prepared input. The line plugin returns `seriesKey` for independent layers, including when the same raw object occurs twice.
