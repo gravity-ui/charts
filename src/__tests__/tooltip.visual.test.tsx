@@ -939,6 +939,41 @@ test.describe('Tooltip', () => {
         });
     });
 
+    test('Tooltip follows a chart inside a CSS-scaled container', async ({mount, page}) => {
+        await page.setViewportSize({width: 600, height: 400});
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    legend: {enabled: false},
+                    xAxis: {type: 'category', categories: ['A', 'B', 'C']},
+                    series: {
+                        data: [
+                            {
+                                type: 'bar-x',
+                                name: 'Series',
+                                data: [
+                                    {x: 0, y: 10},
+                                    {x: 1, y: 20},
+                                    {x: 2, y: 15},
+                                ],
+                            },
+                        ],
+                    },
+                }}
+                styles={{
+                    marginLeft: 100,
+                    marginTop: 60,
+                    transform: 'scale(0.6)',
+                    transformOrigin: 'top left',
+                }}
+            />,
+        );
+        const bar = component.locator('.gcharts-bar-x__segment').nth(1);
+        await bar.hover();
+        await expect(page.locator('.gcharts-tooltip')).toBeVisible();
+        await expect(page).toHaveScreenshot({maxDiffPixels: 200});
+    });
+
     // TODO: rewrite the test after updating @gravity-ui/uikit (to the version with a drawer)
     test('Tooltip is visible and correctly positioned when chart is inside an animated panel', async ({
         mount,
