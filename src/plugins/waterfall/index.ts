@@ -73,6 +73,10 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
+        isNullValue: (item) => {
+            const c = item as TooltipDataChunkWaterfall;
+            return !c.data.total && c.data.y === null;
+        },
         header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (chunk) => {
             const c = chunk as TooltipDataChunkWaterfall;
