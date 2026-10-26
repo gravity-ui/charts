@@ -1,5 +1,13 @@
 import {spawnSync} from 'node:child_process';
-import {existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
+import {
+    existsSync,
+    mkdirSync,
+    readFileSync,
+    readdirSync,
+    realpathSync,
+    rmSync,
+    writeFileSync,
+} from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 
@@ -53,9 +61,12 @@ export async function measure(root) {
 }
 
 // Mirrors the build of @size-limit/esbuild (get-config.js and processImport).
-async function bundle(root, check) {
-    // The entry and the (never written) output live in root, so the treemap shows only
-    // root-relative paths.
+async function bundle(measuredRoot, check) {
+    // esbuild resolves absWorkingDir through symlinks (such as /var on macOS), so outdir
+    // has to be resolved too for the output paths to stay relative.
+    const root = realpathSync(measuredRoot);
+    // The entry and the (never written) output live in root, so the treemap shows paths
+    // relative to root.
     const entry = path.join(root, `.size-limit-${slugify(check.name)}.js`);
     try {
         let entryPoints = (Array.isArray(check.path) ? check.path : [check.path]).map((p) =>
