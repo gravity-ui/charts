@@ -63,7 +63,7 @@ test.describe('Waterfall series', () => {
 
             const tooltip = page.locator('.gcharts-tooltip');
             await expect(tooltip.getByText('2025', {exact: true})).toBeVisible();
-            await expect(tooltip.getByRole('row', {name: 'Total 72'})).toBeVisible();
+            await expect(tooltip.getByRole('row', {name: 'Total 72', exact: true})).toBeVisible();
 
             for (const scrollY of [0, 8]) {
                 await page.evaluate((y) => window.scrollTo(0, y), scrollY);
