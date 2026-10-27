@@ -161,3 +161,48 @@ describe('bar-y percentage', () => {
         },
     );
 });
+
+describe('bar-y logarithmic stacks', () => {
+    test.each(
+        [0, 400].flatMap((width) =>
+            [false, true].flatMap((reversed) =>
+                [0, 2].map((borderWidth) => ({width, reversed, borderWidth})),
+            ),
+        ),
+    )('projects cumulative values with %j', async ({width, reversed, borderWidth}) => {
+        const {shapes} = await prepare([10, 20], 'normal', width, {
+            logarithmic: true,
+            reversed,
+            series: {borderWidth},
+            seriesOptions: {stackGap: 0},
+        });
+        const scale = scaleLog()
+            .domain([1, 100])
+            .range(reversed ? [width, 0] : [0, width]);
+        const ends = shapes.map((shape) =>
+            reversed
+                ? shape.x - shape.borderWidth / 2
+                : shape.x + shape.width + shape.borderWidth / 2,
+        );
+
+        expect(ends[0]).toBeCloseTo(scale(10));
+        expect(ends[1]).toBeCloseTo(scale(30));
+        expect(shapes.every((shape) => Number.isFinite(shape.x) && shape.width >= 0)).toBe(true);
+    });
+
+    test('keeps zero contributions finite without changing the stack end', async () => {
+        const {shapes} = await prepare([0, 10, 0, 20], 'normal', 400, {
+            logarithmic: true,
+            series: {borderWidth: 0},
+            seriesOptions: {stackGap: 0},
+        });
+        const scale = scaleLog().domain([1, 100]).range([0, 400]);
+        expect(shapes.map((shape) => shape.width)).toEqual([
+            0,
+            scale(10),
+            0,
+            scale(30) - scale(10),
+        ]);
+        expect(shapes.every((shape) => Number.isFinite(shape.x))).toBe(true);
+    });
+});

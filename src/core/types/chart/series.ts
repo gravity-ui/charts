@@ -101,7 +101,7 @@ export interface StackLabelsOptions {
     /** Text styles, merged with plugin defaults. */
     style?: Partial<BaseTextStyle>;
     /**
-     * Distance from the stack boundary in pixels. Labels are kept inside the plot.
+     * Distance from the stack boundary in pixels. Space is reserved outside the stack.
      * @default 5
      */
     padding?: number;
@@ -111,6 +111,17 @@ export interface StackLabelsOptions {
      * @default false
      */
     allowOverlap?: boolean;
+}
+
+/** Total labels for bars, optionally using a measure independent of bar size. */
+export interface BarStackLabelsOptions extends StackLabelsOptions {
+    /**
+     * Source of total label values.
+     * - `'value'`: Sum bar coordinates; requires stacking.
+     * - `'custom'`: Sum `stackLabelValue` contributions, or label each bar without stacking.
+     * @default 'value'
+     */
+    valueSource?: 'value' | 'custom';
 }
 
 export interface ChartSeriesOptions {
@@ -131,7 +142,7 @@ export interface ChartSeriesOptions {
          */
         opacity?: number | null;
         /** Total labels for each visible stack, grouped by category, stackId and value axis. */
-        stackLabels?: StackLabelsOptions;
+        stackLabels?: BarStackLabelsOptions;
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
@@ -204,7 +215,7 @@ export interface ChartSeriesOptions {
          */
         opacity?: number | null;
         /** Total labels for each visible stack, grouped by category and stackId. */
-        stackLabels?: StackLabelsOptions;
+        stackLabels?: BarStackLabelsOptions;
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.

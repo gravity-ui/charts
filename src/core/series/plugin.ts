@@ -18,6 +18,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '../scales/axis-padding';
+import type {ScalePaddingPoint} from '../scales/scale-padding';
 import type {ChartScale} from '../scales/types';
 import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
 import type {InteractionElement, InteractionElementsArgs} from '../utils/chart-interaction';
@@ -171,6 +172,8 @@ export interface SeriesPlugin<
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
     /** Cached paint extents used to fit markers within free continuous axis domains. */
     getAxisPadding?(args: PrepareAxisPaddingArgs): AxisPaddingPoint[];
+    /** Reserve pixel space for layer labels while preserving the axis domain. */
+    getScalePadding?(args: PrepareShapeDataArgs): Promise<ScalePaddingPoint[]>;
     /** Domain constraints imposed by the series, such as percent normalization. */
     isAxisDomainFixed?(args: {
         series: Extract<PreparedSeries, {type: T['type']}>;

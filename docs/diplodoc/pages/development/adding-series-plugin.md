@@ -38,6 +38,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - Reuse shared helpers; preserve raw data and callback payloads, cache measurements, and clean up subscriptions.
 - Implement domain/baseline rules, clipping, plot offsets, and layer/category order; define fill/stroke behavior where applicable.
 - Optional `getXAxisPadding(series)` requests label space in pixels at the max end of an autoscaled X domain. Core uses the largest request across series; an explicit `xAxis.max` disables that reserve. Keep label measurement and placement policy in the plugin.
+- Optional `getScalePadding(args)` measures space for layer labels before shape rendering. Return projected positions and pixel extents to inset continuous scale ranges without changing their domains, including fixed percent domains.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
 
 ## 4. Define layers and clipping

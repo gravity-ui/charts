@@ -1,9 +1,10 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
-import {scaleLinear, scaleOrdinal} from 'd3-scale';
+import {scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
+import {applyScalePadding} from '~core/scales/scale-padding';
 import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
@@ -12,7 +13,7 @@ import type {BarYShapesArgs, PreparedBarYData} from '~core/shapes/bar-y/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
-import type {ChartSeries, StackLabelsOptions} from '../../types';
+import type {BarStackLabelsOptions, ChartSeries} from '../../types';
 import {areaPlugin} from '../area';
 import {barXPlugin} from '../bar-x';
 import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
@@ -37,8 +38,9 @@ async function prepare(
     plugin: SeriesPlugin,
     values: (number | null)[][],
     stacking: 'normal' | 'percent' = 'normal',
-    options: StackLabelsOptions = {enabled: true},
-    perSeriesOptions: (StackLabelsOptions | undefined)[] = [],
+    options: BarStackLabelsOptions = {enabled: true},
+    perSeriesOptions: (BarStackLabelsOptions | undefined)[] = [],
+    customValues?: (number | null | undefined)[][],
 ) {
     const horizontal = plugin.type === 'bar-y';
     const raw: ChartSeries[] = values.map((points, index) =>
@@ -57,6 +59,14 @@ async function prepare(
               },
     );
     raw.forEach((series, index) => Object.assign(series, {stackLabels: perSeriesOptions[index]}));
+    raw.forEach((series, index) => {
+        if (series.type === 'bar-x' || series.type === 'bar-y') {
+            series.data.forEach((point, category) => {
+                point.stackLabelValue = customValues?.[index]?.[category];
+                point.label = 'formatted label';
+            });
+        }
+    });
     const original = JSON.stringify(raw);
     const series = await plugin.prepareSeries({
         series: raw,
@@ -82,6 +92,8 @@ async function prepare(
         boundsWidth: 400,
         split: {plots: [{top: 0, height: 200}]} as PreparedSplit,
     };
+    await applyScalePadding(args);
+
     const result = await plugin.prepareShapeData(args);
     expect(JSON.stringify(raw)).toBe(original);
     return {args, result};
@@ -335,7 +347,6 @@ describe.each([barXPlugin, barYPlugin])('$type stack overlays', (plugin) => {
             const anchors = horizontal
                 ? getBarYStackLabelAnchors(shapes as PreparedBarYData[], {
                       xScale: valueScale,
-                      boundsWidth: 400,
                       seriesOptions: args.seriesOptions,
                       yAxis: args.yAxis,
                   })
@@ -421,4 +432,406 @@ test('reuses text measurements across stacks with equivalent styles', async () =
     });
     expect(textUtils.getTextSizeFn).toHaveBeenCalledTimes(1);
     expect(measure).toHaveBeenCalledTimes(1);
+});
+
+function getBarAnchors(
+    plugin: SeriesPlugin,
+    args: PrepareShapeDataArgs,
+    result: Awaited<ReturnType<SeriesPlugin['prepareShapeData']>>,
+) {
+    if (!args.xScale) throw new Error('Expected an X scale');
+    return plugin.type === 'bar-x'
+        ? getBarXStackLabelAnchors(result.renderData as PreparedBarXData[], args)
+        : getBarYStackLabelAnchors((result.renderData[0] as BarYShapesArgs).shapes, {
+              xScale: args.xScale,
+              seriesOptions: args.seriesOptions,
+              yAxis: args.yAxis,
+          });
+}
+
+describe.each([barXPlugin, barYPlugin])('$type custom stack totals', (plugin) => {
+    const options: BarStackLabelsOptions = {
+        enabled: true,
+        valueSource: 'custom',
+        allowOverlap: true,
+    };
+
+    test('sums a separate measure at the original geometric boundary', async () => {
+        const values = [[10], [20]];
+        const original = await prepare(plugin, values, 'normal', {enabled: true});
+        const prepared = await prepare(plugin, values, 'normal', options, [], [[3], [7]]);
+        expect(texts(prepared.result.labels)).toEqual(['10']);
+        expect(
+            getBarAnchors(plugin, prepared.args, prepared.result).map(({x, y, direction}) => ({
+                x,
+                y,
+                direction,
+            })),
+        ).toEqual(
+            getBarAnchors(plugin, original.args, original.result).map(({x, y, direction}) => ({
+                x,
+                y,
+                direction,
+            })),
+        );
+    });
+
+    test.each([false, true])(
+        '100 + 200 keeps its boundary while custom 3 + 7 = 10, reversed=%s',
+        async (reversed) => {
+            const prepared = await prepare(
+                plugin,
+                [[100], [200]],
+                'normal',
+                options,
+                [],
+                [[3], [7]],
+            );
+            const horizontal = plugin.type === 'bar-y';
+            const scale = scaleLinear()
+                .domain([-1000, 1000])
+                .range(reversed ? [400, 0] : [0, 400]);
+            if (horizontal) prepared.args.xScale = scale;
+            else prepared.args.yScale = [scale];
+            const result = await plugin.prepareShapeData(prepared.args);
+            const anchors = getBarAnchors(plugin, prepared.args, result);
+            expect(anchors).toHaveLength(1);
+            expect(anchors[0].total).toBe(10);
+            if (horizontal) {
+                expect(anchors[0].direction).toBe(reversed ? 'left' : 'right');
+            } else {
+                expect(anchors[0].direction).toBe(reversed ? 'top' : 'bottom');
+            }
+            // Horizontal reversed stacks retain the existing border compensation.
+            expect(
+                Math.abs((horizontal ? anchors[0].x : anchors[0].y) - scale(300)),
+            ).toBeLessThanOrEqual(1);
+            prepared.args.seriesOptions = getPreparedOptions({
+                [plugin.type]: {stackLabels: {enabled: true}},
+            });
+            const original = getBarAnchors(
+                plugin,
+                prepared.args,
+                await plugin.prepareShapeData(prepared.args),
+            );
+            expect(original[0]).toMatchObject({
+                ...anchors[0],
+                total: 300,
+                options: expect.objectContaining({valueSource: 'value'}),
+            });
+        },
+    );
+
+    test('formats the decimal total independently of label text', async () => {
+        const formatter = jest.fn(({value}) => `${value} units`);
+        const prepared = await prepare(
+            plugin,
+            [[10], [20]],
+            'normal',
+            {
+                ...options,
+                format: {type: 'custom', formatter},
+            },
+            [],
+            [[0.1], [0.2]],
+        );
+        expect(texts(prepared.result.labels)).toEqual(['0.3 units']);
+        expect(formatter).toHaveBeenCalledWith({value: 0.3});
+    });
+
+    test.each([null, undefined])(
+        'keeps the outer boundary when its value is %s',
+        async (missing) => {
+            const original = await prepare(plugin, [[10], [20]]);
+            const prepared = await prepare(
+                plugin,
+                [[10], [20]],
+                'normal',
+                options,
+                [],
+                [[3], [missing]],
+            );
+            expect(texts(prepared.result.labels)).toEqual(['3']);
+            expect(
+                getBarAnchors(plugin, prepared.args, prepared.result).map(({x, y, direction}) => ({
+                    x,
+                    y,
+                    direction,
+                })),
+            ).toEqual(
+                getBarAnchors(plugin, original.args, original.result).map(({x, y, direction}) => ({
+                    x,
+                    y,
+                    direction,
+                })),
+            );
+        },
+    );
+
+    test('excludes disabled participants without shortening the geometric stack', async () => {
+        const original = await prepare(plugin, [[10], [20]]);
+        const prepared = await prepare(
+            plugin,
+            [[10], [20]],
+            'normal',
+            options,
+            [undefined, {enabled: false}],
+            [[3], [7]],
+        );
+        expect(texts(prepared.result.labels)).toEqual(['3']);
+        expect(
+            getBarAnchors(plugin, prepared.args, prepared.result).map(({x, y, direction}) => ({
+                x,
+                y,
+                direction,
+            })),
+        ).toEqual(
+            getBarAnchors(plugin, original.args, original.result).map(({x, y, direction}) => ({
+                x,
+                y,
+                direction,
+            })),
+        );
+    });
+
+    test('does not fall back to coordinates when all custom values are missing', async () => {
+        const prepared = await prepare(plugin, [[10], [20]], 'normal', options, [], [[null], []]);
+        expect(prepared.result.labels).toEqual([]);
+    });
+
+    test.each([{custom: [[0], [0]]}, {custom: [[3], [-3]]}])(
+        'keeps a zero custom sum on nonzero geometry: %j',
+        async ({custom}) => {
+            const prepared = await prepare(plugin, [[10], [20]], 'normal', options, [], custom);
+            expect(texts(prepared.result.labels)).toEqual(['0']);
+        },
+    );
+
+    test('separates signs by geometry, even when custom values have opposite signs', async () => {
+        const original = await prepare(plugin, [[10], [-20]]);
+        const prepared = await prepare(plugin, [[10], [-20]], 'normal', options, [], [[-3], [7]]);
+        expect(texts(prepared.result.labels)).toEqual(['-3', '7']);
+        expect(
+            getBarAnchors(plugin, prepared.args, prepared.result).map(({x, y, direction}) => ({
+                x,
+                y,
+                direction,
+            })),
+        ).toEqual(
+            getBarAnchors(plugin, original.args, original.result).map(({x, y, direction}) => ({
+                x,
+                y,
+                direction,
+            })),
+        );
+    });
+
+    test('does not create a second total for an empty positive geometric side', async () => {
+        const prepared = await prepare(plugin, [[-10], [0]], 'normal', options, [], [[0], [3]]);
+        expect(texts(prepared.result.labels)).toEqual(['0']);
+        const zero = await prepare(plugin, [[0], [0]], 'normal', options, [], [[3], [7]]);
+        expect(texts(zero.result.labels)).toEqual(['10']);
+    });
+
+    test('keeps non-stacked bars independent, including repeated categories in one series', async () => {
+        const {args} = await prepare(
+            plugin,
+            [
+                [10, 20],
+                [30, 40],
+            ],
+            'normal',
+            options,
+            [],
+            [
+                [3, 5],
+                [7, 11],
+            ],
+        );
+        args.series.forEach((series) => Object.assign(series, {stacking: undefined}));
+        expect(texts((await plugin.prepareShapeData(args)).labels)).toEqual(['11', '3', '5', '7']);
+        const first = args.series[0];
+        if (first.type === 'bar-x') first.data[1].x = first.data[0].x;
+        else if (first.type === 'bar-y') first.data[1].y = first.data[0].y;
+        expect(texts((await plugin.prepareShapeData(args)).labels)).toEqual(['11', '3', '5', '7']);
+    });
+
+    test('recalculates totals and boundaries when legend visibility changes', async () => {
+        const {args} = await prepare(plugin, [[10], [20]], 'normal', options, [], [[3], [7]]);
+        // The chart pipeline passes only visible series to shape preparation.
+        const hidden = {...args, series: args.series.slice(0, 1)};
+        expect(texts((await plugin.prepareShapeData(hidden)).labels)).toEqual(['3']);
+        expect(texts((await plugin.prepareShapeData(args)).labels)).toEqual(['10']);
+    });
+
+    test('keeps logarithmic geometry independent of custom values', async () => {
+        const prepared = await prepare(plugin, [[10], [20]], 'normal', options, [], [[3], [7]]);
+        const horizontal = plugin.type === 'bar-y';
+        const scale = scaleLog()
+            .domain([1, 1000])
+            .range(horizontal ? [0, 400] : [200, 0]);
+        if (horizontal) {
+            prepared.args.xScale = scale;
+            prepared.args.xAxis = {...prepared.args.xAxis, type: 'logarithmic'} as PreparedXAxis;
+        } else {
+            prepared.args.yScale = [scale];
+            prepared.args.yAxis = [
+                {...prepared.args.yAxis?.[0], type: 'logarithmic'},
+            ] as PreparedYAxis[];
+        }
+        const anchors = getBarAnchors(
+            plugin,
+            prepared.args,
+            await plugin.prepareShapeData(prepared.args),
+        );
+        prepared.args.seriesOptions = getPreparedOptions({
+            [plugin.type]: {stackLabels: {enabled: true}},
+        });
+        const original = getBarAnchors(
+            plugin,
+            prepared.args,
+            await plugin.prepareShapeData(prepared.args),
+        );
+        expect(anchors).toHaveLength(1);
+        expect(anchors[0]).toMatchObject({
+            x: original[0].x,
+            y: original[0].y,
+            direction: original[0].direction,
+            total: 10,
+        });
+    });
+
+    test('keeps categories and stack ids separate and suppresses range slider labels', async () => {
+        const {args} = await prepare(
+            plugin,
+            [
+                [10, 20],
+                [30, 40],
+            ],
+            'normal',
+            options,
+            [],
+            [
+                [3, 5],
+                [7, 11],
+            ],
+        );
+        Object.assign(args.series[1], {stackId: 'other'});
+        expect(texts((await plugin.prepareShapeData(args)).labels)).toEqual(['11', '3', '5', '7']);
+        expect((await plugin.prepareShapeData({...args, isRangeSlider: true})).labels).toEqual([]);
+    });
+});
+
+test('custom column totals separate value axes and split panels with identical categories and stack ids', async () => {
+    const {args} = await prepare(
+        barXPlugin,
+        [[10], [20]],
+        'normal',
+        {
+            enabled: true,
+            valueSource: 'custom',
+            allowOverlap: true,
+        },
+        [],
+        [[3], [7]],
+    );
+    Object.assign(args.series[1], {yAxis: 1});
+    args.yAxis = [
+        {type: 'linear', plotIndex: 0},
+        {type: 'linear', plotIndex: 1},
+    ] as PreparedYAxis[];
+    args.yScale = [
+        scaleLinear().domain([0, 100]).range([100, 0]),
+        scaleLinear().domain([0, 100]).range([100, 0]),
+    ];
+    args.split = {
+        plots: [
+            {top: 0, height: 100},
+            {top: 100, height: 100},
+        ],
+    } as PreparedSplit;
+    const anchors = getBarAnchors(barXPlugin, args, await barXPlugin.prepareShapeData(args));
+    expect(anchors).toMatchObject([
+        {total: 3, plotIndex: 0},
+        {total: 7, plotIndex: 1},
+    ]);
+    expect(anchors[1].y).toBeGreaterThan(100);
+});
+
+describe.each([barXPlugin, barYPlugin])('$type stack total space', (plugin) => {
+    test.each([
+        {stacking: 'normal' as const, reversed: false},
+        {stacking: 'normal' as const, reversed: true},
+        {stacking: 'percent' as const, reversed: false},
+        {stacking: 'percent' as const, reversed: true},
+    ])(
+        'keeps totals outside the stack without changing the domain: %j',
+        async ({stacking, reversed}) => {
+            const {args} = await prepare(plugin, [[30], [70]], stacking);
+            const horizontal = plugin.type === 'bar-y';
+            const scale = scaleLinear()
+                .domain([0, 100])
+                .range(horizontal ? [0, 400] : [200, 0]);
+            if (reversed) scale.range(scale.range().reverse());
+            if (horizontal) args.xScale = scale;
+            else args.yScale = [scale];
+
+            await applyScalePadding(args);
+
+            const result = await plugin.prepareShapeData(args);
+            const [anchor] = getBarAnchors(plugin, args, result);
+            const [label] = result.labels ?? [];
+            expect(label).toBeDefined();
+            expect(scale.domain()).toEqual([0, 100]);
+            // Horizontal stacks retain the existing one-pixel border compensation.
+            expect(Math.abs((horizontal ? anchor.x : anchor.y) - scale(100))).toBeLessThanOrEqual(
+                1.01,
+            );
+
+            const left = label.x;
+            const top = label.y - (label.size.hangingOffset ?? 0);
+            const right = left + label.size.width;
+            const bottom = top + label.size.height;
+            expect(left).toBeGreaterThanOrEqual(-0.01);
+            expect(top).toBeGreaterThanOrEqual(-0.01);
+            expect(right).toBeLessThanOrEqual(args.boundsWidth + 0.01);
+            expect(bottom).toBeLessThanOrEqual(args.boundsHeight + 0.01);
+
+            switch (anchor.direction) {
+                case 'top':
+                    expect(bottom).toBeLessThanOrEqual(anchor.y - 5 + 0.01);
+                    break;
+                case 'bottom':
+                    expect(top).toBeGreaterThanOrEqual(anchor.y + 5 - 0.01);
+                    break;
+                case 'left':
+                    expect(right).toBeLessThanOrEqual(anchor.x - 5 + 0.01);
+                    break;
+                case 'right':
+                    expect(left).toBeGreaterThanOrEqual(anchor.x + 5 - 0.01);
+                    break;
+            }
+        },
+    );
+});
+
+test.each([0, 8, 12, 16])('hides totals when the available dimension is %s', async (span) => {
+    for (const direction of ['top', 'bottom', 'left', 'right'] as const) {
+        const horizontal = direction === 'left' || direction === 'right';
+        const labels = await prepareStackLabels({
+            boundsWidth: horizontal ? span : 100,
+            boundsHeight: horizontal ? 100 : span,
+            anchors: [
+                {
+                    x: horizontal ? span / 2 : 50,
+                    y: horizontal ? 50 : span / 2,
+                    total: 100,
+                    direction,
+                    plotIndex: 0,
+                    options: {enabled: true, allowOverlap: true},
+                },
+            ],
+        });
+        expect(labels).toEqual([]);
+    }
 });

@@ -129,12 +129,15 @@ export async function prepareBarYData(args: {
             const slotIndex = measureValues.some((item) => item.series.grouping !== false)
                 ? groupedIndex++
                 : 0;
-            const baseValue = xAxis.type === 'logarithmic' ? 0 : xLinearScale(0);
+            const logarithmic =
+                xAxis.type === 'logarithmic' && measureValues[0].series.stacking !== 'percent';
+            const baseValue = logarithmic ? rangeStart : xLinearScale(0);
             const base = independent
                 ? baseValue
                 : baseValue - (borderWidthBySeries.get(measureValues[0].series) ?? 0);
             let positiveStack = base;
             let negativeStack = base;
+            let stackValue = 0;
 
             const stackItems: BarYPreparationItem[] = [];
             const sortedData = sortKey
@@ -144,18 +147,14 @@ export async function prepareBarYData(args: {
             let ratio = 1;
             let percentTotal = 0;
             if (measureValues.some((item) => item.series.stacking === 'percent')) {
-                let sum = 0;
                 for (const item of sortedData) {
                     const value = Number(item.data.x);
                     if (Number.isFinite(value) && value > 0) {
                         percentTotal += value;
-                        sum += xLinearScale(value);
                     }
                 }
 
-                // TODO: Account for reversed ranges ending at zero.
-                // https://github.com/gravity-ui/charts/issues/795
-                ratio = sum === 0 ? 0 : xLinearScale.range()[1] / sum;
+                ratio = percentTotal === 0 ? 0 : 100 / percentTotal;
             }
 
             sortedData.forEach(({data, series: s}, xValueIndex) => {
@@ -171,8 +170,17 @@ export async function prepareBarYData(args: {
                       (barSize + barGap) * slotIndex +
                       (barSize - height) / 2;
                 const xValue = Number(data.x);
-                const xPixel = xLinearScale(xValue);
-                const width = Math.abs(xPixel * ratio - base);
+                const startValue = s.stacking ? stackValue : 0;
+                const endValue = startValue + xValue;
+                const startPixel =
+                    logarithmic && startValue !== 0 ? xLinearScale(startValue) : baseValue;
+                let xPixel = xLinearScale(xValue);
+                if (logarithmic) {
+                    xPixel = xValue === 0 ? startPixel : xLinearScale(endValue);
+                }
+                const width = logarithmic
+                    ? Math.abs(xPixel - startPixel)
+                    : Math.abs((xPixel - baseValue) * ratio + baseValue - base);
                 let shapeWidth = width - (!independent && stackItems.length ? stackGap : 0);
                 if (shapeWidth < 0) {
                     shapeWidth = width;
@@ -181,10 +189,12 @@ export async function prepareBarYData(args: {
                 const itemStackGap = width - shapeWidth;
                 const seriesBorderWidth = borderWidthBySeries.get(s) ?? 0;
                 const borderWidth =
-                    !overlay || shapeWidth > seriesBorderWidth * 2 ? seriesBorderWidth : 0;
+                    (!overlay && !logarithmic) || shapeWidth > seriesBorderWidth * 2
+                        ? seriesBorderWidth
+                        : 0;
                 const isFirstInStack = xValueIndex === 0;
                 const isLastStackItem = independent || xValueIndex === sortedData.length - 1;
-                const extendsRight = xPixel > baseValue;
+                const extendsRight = xPixel > (logarithmic ? startPixel : baseValue);
                 const endAtMax = xValue === 0 ? rangeEnd >= rangeStart : extendsRight;
                 // Calculate position with border compensation
                 // Border extends halfBorder outward from the shape, so we need to adjust position
@@ -192,7 +202,14 @@ export async function prepareBarYData(args: {
                 itemX += itemStackGap;
                 const halfBorder = borderWidth / 2;
 
-                if (independent) {
+                if (logarithmic) {
+                    itemX =
+                        Math.min(startPixel, xPixel) +
+                        (extendsRight ? itemStackGap : 0) +
+                        halfBorder;
+                    shapeWidth = Math.max(0, shapeWidth - borderWidth);
+                    stackValue = endValue;
+                } else if (independent) {
                     // Keep the outer contour at the baseline and value, including on reversed axes.
                     itemX = Math.min(baseValue, xPixel) + halfBorder;
                     shapeWidth -= borderWidth;

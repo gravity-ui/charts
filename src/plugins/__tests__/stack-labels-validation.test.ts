@@ -103,3 +103,64 @@ test.each(['bar-x', 'area'] as const)(
         expect(() => validateData(data)).not.toThrow();
     },
 );
+
+describe.each(['bar-x', 'bar-y'] as const)('%s custom total validation', (type) => {
+    function config(): ChartData {
+        return {
+            series: {
+                data: [3, 7].map((stackLabelValue) => ({
+                    type,
+                    name: String(stackLabelValue),
+                    stacking: 'normal',
+                    stackLabels: {enabled: true, valueSource: 'custom'},
+                    data: [{x: 10, y: 20, stackLabelValue}],
+                })),
+            },
+        };
+    }
+
+    test.each(['3', '', NaN, Infinity, -Infinity])('rejects invalid numbers: %s', (value) => {
+        const data = config();
+        Object.assign(data.series.data[0].data[0], {stackLabelValue: value});
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test.each([0, null, undefined])('accepts zero and missing values: %s', (value) => {
+        const data = config();
+        Object.assign(data.series.data[0].data[0], {stackLabelValue: value});
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('rejects conflicting sources only in a shared stack', () => {
+        const data = config();
+        Object.assign(data.series.data[1], {stackLabels: {enabled: true, valueSource: 'value'}});
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+        data.series.data.forEach((series) => Object.assign(series, {stacking: undefined}));
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('inherits plugin source and allows series to override it', () => {
+        const data = config();
+        data.series.options = {[type]: {stackLabels: {enabled: true, valueSource: 'custom'}}};
+        data.series.data.forEach((series) => Object.assign(series, {stackLabels: undefined}));
+        expect(() => validateData(data)).not.toThrow();
+        Object.assign(data.series.data[1], {stackLabels: {valueSource: 'value'}});
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+        Object.assign(data.series.data[1], {stackLabels: {enabled: false, valueSource: 'value'}});
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('rejects unsupported source names', () => {
+        const data = config();
+        Object.assign(data.series.data[0], {stackLabels: {valueSource: 'label'}});
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+});

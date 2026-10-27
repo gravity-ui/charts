@@ -410,12 +410,17 @@ export const prepareBarXData = async (args: {
                     const currentPlot = split.plots[plotIndexes[plotDataIndex]];
                     const currentPlotHeight = currentPlot?.height ?? plotHeight;
                     const currentPlotTop = currentPlot?.top ?? 0;
+                    const range = yScale[stackItems[0]?.series.yAxis ?? 0]?.range() ?? [
+                        currentPlotHeight,
+                        0,
+                    ];
+                    const rangeTop = Math.min(...range);
 
                     const visibleCount = stackItems.filter(
                         (item) => Number(item.data.y) > 0,
                     ).length;
                     const gapCount = Math.max(0, visibleCount - 1);
-                    const availableHeight = Math.max(0, currentPlotHeight);
+                    const availableHeight = Math.max(0, Math.max(...range) - rangeTop);
                     const gap = gapCount ? Math.min(stackGap, availableHeight / gapCount) : 0;
                     const segmentsHeight = Math.max(0, availableHeight - gap * gapCount);
                     const extendsUp =
@@ -434,6 +439,7 @@ export const prepareBarXData = async (args: {
                         item.extendsUp = extendsUp;
                         item.y =
                             currentPlotTop +
+                            rangeTop +
                             (extendsUp
                                 ? Math.max(0, availableHeight - offset - item.height)
                                 : offset);

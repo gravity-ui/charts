@@ -12,7 +12,7 @@ import type {
     ValueFormat,
 } from './base';
 import type {RectLegendSymbolOptions} from './legend';
-import type {StackLabelsOptions} from './series';
+import type {BarStackLabelsOptions} from './series';
 export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     /**
      * The `x` value of the bar. Depending on the context , it may represents:
@@ -30,6 +30,11 @@ export interface BarYSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     y?: string | number;
     /** Data label value of the bar. If not specified, the x value is used. */
     label?: string | number;
+    /**
+     * Numeric contribution when `stackLabels.valueSource` is 'custom'.
+     * Omitted or null values do not contribute; zero is included. Independent of `label`.
+     */
+    stackLabelValue?: number | null;
     /**
      * Individual opacity for the bar. Omitted or null values inherit series opacity.
      * @minimum 0
@@ -87,7 +92,7 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
     /** Override plugin stack label options. Only enabled series contribute to totals. */
-    stackLabels?: StackLabelsOptions;
+    stackLabels?: BarStackLabelsOptions;
     /**
      * Whether to place bars or stacks side by side.
      * When false, bars share the category center without taking up grouped slots.

@@ -29,12 +29,13 @@ import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getAreaAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
-import {getAreaStackLabelAnchors} from './stack-labels';
+import {getAreaStackLabelAnchors, getAreaStackLabelScalePadding} from './stack-labels';
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
     isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
     getAxisPadding: getAreaAxisPadding,
+    getScalePadding: getAreaStackLabelScalePadding,
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
         includeSolidSeries: true,

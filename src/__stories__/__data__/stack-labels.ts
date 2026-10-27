@@ -31,3 +31,40 @@ export function getStackLabelsData(
         },
     };
 }
+
+export function getCustomStackLabelsData(type: 'bar-x' | 'bar-y'): ChartData {
+    const horizontal = type === 'bar-y';
+    const categoryAxis = {type: 'category' as const, categories: ['January', 'February', 'March']};
+    const valueAxis = {min: 0, max: 500};
+    return {
+        xAxis: horizontal ? valueAxis : categoryAxis,
+        yAxis: [horizontal ? categoryAxis : valueAxis],
+        series: {
+            data: [
+                {name: 'Desktop', values: [100, 150, 200], orders: [3, 5, 8]},
+                {name: 'Mobile', values: [200, 100, 150], orders: [7, 4, 6]},
+            ].map(({name, values, orders}) => ({
+                type,
+                name,
+                stacking: 'normal',
+                dataLabels: {enabled: true, inside: true},
+                data: values.map((value, category) => ({
+                    x: horizontal ? value : category,
+                    y: horizontal ? category : value,
+                    label: orders[category],
+                    stackLabelValue: orders[category],
+                })),
+            })),
+            options: {
+                [type]: {
+                    stackLabels: {
+                        enabled: true,
+                        valueSource: 'custom',
+                        allowOverlap: true,
+                        format: {type: 'number', precision: 0, postfix: ' orders'},
+                    },
+                },
+            },
+        },
+    };
+}

@@ -1,11 +1,35 @@
 import {group} from 'd3-array';
 
 import type {PrepareShapeDataArgs} from '~core/series/plugin';
+import type {PreparedAreaSeries} from '~core/series/types';
+import {projectAreaData} from '~core/shapes/area/prepare-data';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {sumDecimals} from '~core/utils/math';
 
 import type {StackLabelAnchor} from '../stack-labels';
+import {createStackLabelScalePaddingPreparer} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
+
+export const getAreaStackLabelScalePadding = createStackLabelScalePaddingPreparer(
+    async (args) => {
+        const {xAxis, xScale, yAxis = [], yScale = [], split} = args;
+        if (!xAxis || !xScale || !split) return [];
+
+        const data = projectAreaData({
+            ...args,
+            series: args.series as PreparedAreaSeries[],
+            xAxis,
+            xScale,
+            yAxis,
+            yScale,
+            split,
+            isOutsideBounds: () => false,
+        });
+
+        return getAreaStackLabelAnchors(data, args);
+    },
+    (args) => args.seriesOptions.area?.stackLabels,
+);
 
 interface Boundary {
     values: number[];

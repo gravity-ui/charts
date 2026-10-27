@@ -4,13 +4,20 @@ import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {i18n} from '~core/i18n';
 
 import {CHART_ERROR_CODE, ChartError} from '../libs';
-import type {AreaSeries, BarXSeries, BarYSeries, ChartSeries, StackLabelsOptions} from '../types';
+import type {
+    AreaSeries,
+    BarStackLabelsOptions,
+    BarXSeries,
+    BarYSeries,
+    ChartSeries,
+} from '../types';
 
 export function resolveStackLabelsOptions(
-    defaults?: StackLabelsOptions,
-    overrides?: StackLabelsOptions,
-): Required<Omit<StackLabelsOptions, 'format'>> & Pick<StackLabelsOptions, 'format'> {
+    defaults?: BarStackLabelsOptions,
+    overrides?: BarStackLabelsOptions,
+): Required<Omit<BarStackLabelsOptions, 'format'>> & Pick<BarStackLabelsOptions, 'format'> {
     return {
+        valueSource: overrides?.valueSource ?? defaults?.valueSource ?? 'value',
         enabled: overrides?.enabled ?? defaults?.enabled ?? false,
         format: overrides?.format ?? defaults?.format,
         style: {...DEFAULT_DATALABELS_STYLE, ...defaults?.style, ...overrides?.style},
@@ -22,7 +29,7 @@ export function resolveStackLabelsOptions(
 export function validateStackLabelsOptions(args: {
     series: BarXSeries | BarYSeries | AreaSeries;
     allSeries: ChartSeries[];
-    options?: StackLabelsOptions;
+    options?: BarStackLabelsOptions;
 }) {
     const {series, allSeries, options} = args;
     // Collection validation runs once per plugin, including initially hidden series.

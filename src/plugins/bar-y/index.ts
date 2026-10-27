@@ -23,13 +23,14 @@ import {validateBarGrouping} from '../bar-grouping';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
+import {validateBarStackLabels} from '../bar-stack-labels';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarYSeries} from './prepare-bar-y-series';
-import {getBarYStackLabelAnchors} from './stack-labels';
+import {getBarYStackLabelAnchors, getBarYStackLabelScalePadding} from './stack-labels';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale, boundsHeight, boundsWidth} = args;
@@ -53,7 +54,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         ...args,
         anchors: args.isRangeSlider
             ? []
-            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions, yAxis}),
+            : getBarYStackLabelAnchors(data.shapes, {xScale, seriesOptions, yAxis}),
         otherLayers: [
             ...(args.otherLayers ?? []),
             {svgLabels: data.labels, htmlLabels: data.htmlLabels},
@@ -82,6 +83,7 @@ function renderShapes({
 
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
+    getScalePadding: getBarYStackLabelScalePadding,
     isAxisDomainFixed: ({series, axis}) => axis === 'x' && series.stacking === 'percent',
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
@@ -94,6 +96,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         series.data.forEach((point, index) => {
             validateBarOpacity(point.opacity, `data[${index}].opacity`);
         });
+        validateBarStackLabels(series, seriesOptions?.['bar-y']?.stackLabels);
         validateStackLabelsOptions({
             series,
             allSeries,

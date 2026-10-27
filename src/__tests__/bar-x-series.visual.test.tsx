@@ -936,7 +936,19 @@ test.describe('Bar-x series', () => {
                         ).toBeCloseTo(stackGap);
                     }
                     // The outer edge covers the half-pixel of the centered 100% grid stroke.
-                    if (stacking === 'percent') expect(firstStack[2].y).toBeCloseTo(-0.5);
+                    if (stacking === 'percent') {
+                        const gridTop = await component.evaluate((element) =>
+                            Math.min(
+                                ...Array.from(
+                                    element.querySelectorAll<SVGPathElement>(
+                                        '.gcharts-y-axis__tick > path',
+                                    ),
+                                    (line) => line.getBBox().y,
+                                ),
+                            ),
+                        );
+                        expect(firstStack[2].y).toBeCloseTo(gridTop - 0.5);
+                    }
                     await expect(component.locator('svg')).toHaveScreenshot();
                 });
             }

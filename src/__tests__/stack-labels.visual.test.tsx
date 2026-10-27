@@ -4,16 +4,20 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import type {Locator} from '@playwright/test';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {getStackLabelsData} from '../__stories__/__data__/stack-labels';
+import {getCustomStackLabelsData, getStackLabelsData} from '../__stories__/__data__/stack-labels';
 import type {PreparedBarYData} from '../core/shapes/bar-y/types';
 import type {ChartData} from '../types';
 
 const labelSelector = '.gcharts-stack-labels__label';
 
 async function getBoundingBox(locator: Locator) {
-    const box = await locator.boundingBox();
-    if (!box) throw new Error('Expected a visible chart element');
-    return box;
+    await expect(locator).toBeVisible();
+
+    // WebKit's automation bounding box can omit SVG text's x/y offsets.
+    return locator.evaluate((element) => {
+        const {x, y, width, height} = element.getBoundingClientRect();
+        return {x, y, width, height};
+    });
 }
 
 function getBoundaryTestData(): ChartData {
@@ -137,7 +141,7 @@ test.describe('Stack labels', () => {
                 const before = await labels.evaluateAll((elements) =>
                     elements.map((element) => {
                         const box = element.getBoundingClientRect();
-                        return {x: box.x, y: box.y};
+                        return {x: box.x, y: box.y, width: box.width};
                     }),
                 );
                 const all = getStackLabelsData(type, stacking);
@@ -151,14 +155,15 @@ test.describe('Stack labels', () => {
                 const after = await labels.evaluateAll((elements) =>
                     elements.map((element) => {
                         const box = element.getBoundingClientRect();
-                        return {x: box.x, y: box.y};
+                        return {x: box.x, y: box.y, width: box.width};
                     }),
                 );
-                // Different digits have different widths; centering or clamping can
-                // shift the text's left edge by a pixel without moving the stack.
+                // Centering or clamping different-width totals can move their left edges.
                 after.forEach((position, index) => {
                     expect(position.y).toBeCloseTo(before[index].y, 1);
-                    expect(Math.abs(position.x - before[index].x)).toBeLessThanOrEqual(1);
+                    expect(Math.abs(position.x - before[index].x)).toBeLessThanOrEqual(
+                        Math.abs(position.width - before[index].width) + 0.01,
+                    );
                 });
                 await component.update(<ChartTestStory data={data} />);
                 await expect
@@ -370,3 +375,163 @@ test.describe('Stack labels', () => {
         }
     });
 });
+
+for (const type of ['bar-x', 'bar-y'] as const) {
+    for (const reversed of [false, true]) {
+        test(`${type} custom totals: geometry and legend, reversed=${reversed} @webkit`, async ({
+            mount,
+        }, testInfo) => {
+            const data = getCustomStackLabelsData(type);
+            const horizontal = type === 'bar-y';
+            if (reversed) {
+                if (horizontal) data.xAxis = {...data.xAxis, order: 'reverse'};
+                else data.yAxis = [{...data.yAxis?.[0], order: 'reverse'}];
+            }
+            const component = await mount(<ChartTestStory data={data} />);
+            const labels = component.locator(labelSelector);
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['10 orders', '14 orders', '9 orders']);
+            await component
+                .locator('svg')
+                .screenshot({path: testInfo.outputPath('custom-totals.png')});
+            const bars = component.locator(`.gcharts-${type}__segment`);
+            const before = await bars.evaluateAll((nodes) =>
+                nodes.map((node) => node.getAttribute('d')),
+            );
+            const original = getCustomStackLabelsData(type);
+            original.xAxis = data.xAxis;
+            original.yAxis = data.yAxis;
+            original.series.options = {[type]: {stackLabels: {enabled: true, allowOverlap: true}}};
+            await component.update(<ChartTestStory data={original} />);
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['250', '300', '350']);
+            await expect
+                .poll(async () =>
+                    bars.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('d'))),
+                )
+                .toEqual(before);
+            await component.update(<ChartTestStory data={data} />);
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['10 orders', '14 orders', '9 orders']);
+            await component.getByRole('button', {name: 'Mobile', exact: true}).press('Enter');
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['4 orders', '6 orders', '7 orders']);
+            await component.getByRole('button', {name: 'Mobile', exact: true}).press('Enter');
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['10 orders', '14 orders', '9 orders']);
+        });
+    }
+}
+
+for (const type of ['bar-x', 'bar-y'] as const) {
+    for (const stacking of ['normal', 'percent'] as const) {
+        for (const reversed of [false, true]) {
+            test(`${type} ${stacking}: reserves space outside the stack, reversed=${reversed} @webkit`, async ({
+                mount,
+            }, testInfo) => {
+                const horizontal = type === 'bar-y';
+                const valueAxis = {
+                    visible: false,
+                    min: 0,
+                    max: 100,
+                    order: reversed ? ('reverse' as const) : undefined,
+                };
+                const categoryAxis = {visible: false, type: 'category' as const, categories: ['A']};
+                const data = getBoundaryTestData();
+                data.xAxis = horizontal ? valueAxis : categoryAxis;
+                data.yAxis = [horizontal ? categoryAxis : valueAxis];
+                data.series = {
+                    data: [30, 70].map((value) => ({
+                        type,
+                        name: String(value),
+                        stacking,
+                        borderWidth: 0,
+                        data: [horizontal ? {x: value, y: 0} : {x: 0, y: value}],
+                    })),
+                    options: {[type]: {stackLabels: {enabled: true}}},
+                };
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: 240, height: 200}} />,
+                );
+                const label = component.locator(labelSelector);
+                await expect(label).toHaveText('100');
+                const box = await getBoundingBox(label);
+                const plot = await getBoundingBox(component.locator('svg'));
+                const bars = await getBoundingBox(component.locator(`.gcharts-${type}`));
+
+                expect(box.x).toBeGreaterThanOrEqual(plot.x - 0.1);
+                expect(box.y).toBeGreaterThanOrEqual(plot.y - 0.1);
+                expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 0.1);
+                expect(box.y + box.height).toBeLessThanOrEqual(plot.y + plot.height + 0.1);
+                if (horizontal) {
+                    if (reversed) expect(box.x + box.width).toBeLessThanOrEqual(bars.x - 4.9);
+                    else expect(box.x).toBeGreaterThanOrEqual(bars.x + bars.width + 4.9);
+                } else if (reversed)
+                    expect(box.y).toBeGreaterThanOrEqual(bars.y + bars.height + 4.9);
+                else expect(box.y + box.height).toBeLessThanOrEqual(bars.y - 4.9);
+                await component
+                    .locator('svg')
+                    .screenshot({path: testInfo.outputPath('outside-total.png')});
+
+                await component.update(
+                    <ChartTestStory
+                        data={data}
+                        styles={horizontal ? {width: 12, height: 200} : {width: 240, height: 12}}
+                    />,
+                );
+                await expect(label).toHaveCount(0);
+            });
+        }
+    }
+}
+
+for (const reversed of [false, true]) {
+    test(`bar-y logarithmic: custom totals follow cumulative stack ends, reversed=${reversed} @webkit`, async ({
+        mount,
+    }, testInfo) => {
+        const data = getCustomStackLabelsData('bar-y');
+        data.xAxis = {
+            type: 'logarithmic',
+            min: 1,
+            max: 1000,
+            order: reversed ? 'reverse' : undefined,
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const labels = component.locator(labelSelector);
+        await expect
+            .poll(async () => (await labels.allTextContents()).sort())
+            .toEqual(['10 orders', '14 orders', '9 orders']);
+
+        const bars = await component.locator('.gcharts-bar-y__segment').evaluateAll((elements) =>
+            elements.map((element) => {
+                const {x, y, width, height} = element.getBoundingClientRect();
+                return {x, y, width, height};
+            }),
+        );
+        const plot = await getBoundingBox(component.locator('svg'));
+        for (const label of await labels.all()) {
+            const box = await getBoundingBox(label);
+            const middle = box.y + box.height / 2;
+            const row = bars.filter((bar) => middle >= bar.y && middle <= bar.y + bar.height);
+            expect(row).toHaveLength(2);
+            expect(box.x).toBeGreaterThanOrEqual(plot.x);
+            expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 0.1);
+            if (reversed)
+                expect(box.x + box.width).toBeLessThanOrEqual(
+                    Math.min(...row.map((bar) => bar.x)) - 4.4,
+                );
+            else
+                expect(box.x).toBeGreaterThanOrEqual(
+                    Math.max(...row.map((bar) => bar.x + bar.width)) + 4.4,
+                );
+        }
+        await component
+            .locator('svg')
+            .screenshot({path: testInfo.outputPath('logarithmic-totals.png')});
+    });
+}

@@ -24,12 +24,13 @@ import {validateBarGrouping} from '../bar-grouping';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
+import {validateBarStackLabels} from '../bar-stack-labels';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
-import {getBarXStackLabelAnchors} from './stack-labels';
+import {getBarXStackLabelAnchors, getBarXStackLabelScalePadding} from './stack-labels';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -97,6 +98,7 @@ function renderShapes({
 
 export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
+    getScalePadding: getBarXStackLabelScalePadding,
     isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
@@ -109,6 +111,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
         series.data.forEach((point, index) => {
             validateBarOpacity(point.opacity, `data[${index}].opacity`);
         });
+        validateBarStackLabels(series, seriesOptions?.['bar-x']?.stackLabels);
         validateStackLabelsOptions({
             series,
             allSeries,

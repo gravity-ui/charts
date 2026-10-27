@@ -74,10 +74,34 @@ series: {
 
 For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.
 
-Totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals. Zero totals appear only for all-zero stacks.
+Totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals. With coordinate totals, zero totals appear only for all-zero stacks.
 
-Participants with the same type, `stackId` and value axis must have matching effective `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom formats must share the same formatter function.
+Participants with the same type, `stackId` and value axis must have matching effective `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Bar series must also use the same `valueSource` within a stack. Custom formats must share the same formatter function.
 
 **Segment labels take priority over totals in the same plugin layer**, even for a small top segment: the overlapping total is hidden. Set `stackLabels.allowOverlap: true` to keep both labels. See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
 
+Space for totals is reserved outside the stacks, including in percent charts where the value axis stays at 0–100. Totals that cannot fit in the available plot area are hidden.
+
 <div data-chart-example="data-labels/stack-labels"></div>
+
+### Totals from a separate measure
+
+To show order totals on bars sized by revenue, set `stackLabels.valueSource: 'custom'` and supply numeric `stackLabelValue` on each point. This works for `bar-x` and `bar-y`. In the example, revenues of 100 and 200 with order counts of 3 and 7 produce a total of **10 orders**.
+
+<div data-chart-example="data-labels/custom-column-totals"></div>
+
+```javascript
+{
+  type: 'bar-x',
+  name: 'Desktop',
+  stacking: 'normal',
+  stackLabels: {enabled: true, valueSource: 'custom'},
+  data: [{x: 0, y: 100, label: '3 orders', stackLabelValue: 3}],
+}
+```
+
+Missing and `null` contributions are skipped; zero is included. If every contribution is missing, no total is shown. The displayed `label` is independent of `stackLabelValue` and is never parsed for totals.
+
+Totals sit at the full visible stack boundary, including segments without a contribution. Positive and negative bars form separate totals based on bar geometry, regardless of the contribution's sign. Without stacking, each bar gets its own total.
+
+Omit `valueSource` or use `'value'` to sum bar coordinates; this mode requires stacking. Area series support only coordinate totals.

@@ -2,6 +2,8 @@ import {select} from 'd3-selection';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import type {PreparedSplit} from '~core/layout/split-types';
+import type {ScalePaddingPoint} from '~core/scales/scale-padding';
+import type {PrepareShapeDataArgs} from '~core/series/plugin';
 import {renderDataLabels} from '~core/shapes/data-labels';
 import type {LabelRect, ShapeLabels, SvgLabel} from '~core/shapes/types';
 import {
@@ -14,6 +16,8 @@ import {getFormattedValue} from '~core/utils/format';
 import {getMultilineTextInfo, getTextSizeFn} from '~core/utils/text';
 
 import type {BaseTextStyle, StackLabelsOptions} from '../types';
+
+import {resolveStackLabelsOptions} from './stack-labels-options';
 
 // Prepared geometry may be rounded to hundredths of a pixel while plot bounds are not.
 const COORDINATE_EPSILON = 0.01;
@@ -38,7 +42,7 @@ interface StackLabelMeasurementContext {
     measurements: Map<string, ReturnType<typeof getMultilineTextInfo>>;
 }
 
-export async function prepareStackLabels(args: {
+interface PrepareStackLabelsArgs {
     anchors: StackLabelAnchor[];
     options?: StackLabelsOptions;
     boundsWidth: number;
@@ -46,8 +50,20 @@ export async function prepareStackLabels(args: {
     split?: PreparedSplit;
     otherLayers?: ShapeLabels[];
     isRangeSlider?: boolean;
-}): Promise<SvgLabel[]> {
-    const {anchors, boundsWidth, boundsHeight, split, otherLayers = [], isRangeSlider} = args;
+}
+
+interface MeasuredStackLabel {
+    text: string;
+    anchor: StackLabelAnchor;
+    options: StackLabelsOptions;
+    style: BaseTextStyle;
+    size: Awaited<ReturnType<typeof getMultilineTextInfo>>;
+    top: number;
+    height: number;
+}
+
+async function measureStackLabels(args: PrepareStackLabelsArgs): Promise<MeasuredStackLabel[]> {
+    const {anchors, boundsWidth, boundsHeight, split, isRangeSlider} = args;
     const defaultOptions = args.options ?? {};
     if (isRangeSlider || !anchors.length) {
         return [];
@@ -69,8 +85,8 @@ export async function prepareStackLabels(args: {
             return [options, context] as const;
         }),
     );
-    const obstacles = getLayerLabelRects(otherLayers);
-    const candidates: StackLabelCandidate[] = [];
+
+    const labels: MeasuredStackLabel[] = [];
 
     for (const anchor of anchors) {
         const options = anchor.options ?? defaultOptions;
@@ -78,7 +94,6 @@ export async function prepareStackLabels(args: {
         const context = contexts.get(options);
         if (!context) continue;
         const {style, measure, measurements} = context;
-        const padding = options.padding ?? 5;
         const plot = split?.plots[anchor.plotIndex];
         const top = plot?.top ?? 0;
         const height = plot?.height ?? boundsHeight;
@@ -108,6 +123,57 @@ export async function prepareStackLabels(args: {
         if (size.width > boundsWidth || size.height > height) {
             continue;
         }
+        labels.push({text, anchor, options, style, size, top, height});
+    }
+
+    return labels;
+}
+
+export function createStackLabelScalePaddingPreparer(
+    getAnchors: (args: PrepareShapeDataArgs) => Promise<StackLabelAnchor[]>,
+    getDefaults: (args: PrepareShapeDataArgs) => StackLabelsOptions | undefined,
+) {
+    return async (args: PrepareShapeDataArgs): Promise<ScalePaddingPoint[]> => {
+        const defaults = getDefaults(args);
+        const enabled = args.series.some(
+            (series) =>
+                resolveStackLabelsOptions(
+                    defaults,
+                    'stackLabels' in series ? series.stackLabels : undefined,
+                ).enabled,
+        );
+        if (!enabled) return [];
+
+        const anchors = await getAnchors(args);
+        const points: ScalePaddingPoint[] = [];
+
+        for (const {anchor, options, size, top} of await measureStackLabels({...args, anchors})) {
+            const horizontal = anchor.direction === 'left' || anchor.direction === 'right';
+            const before = anchor.direction === 'left' || anchor.direction === 'top';
+            const extent = (horizontal ? size.width : size.height) + (options.padding ?? 5);
+
+            points.push({
+                axis: horizontal ? 'x' : 'y',
+                plotIndex: anchor.plotIndex,
+                position: horizontal ? anchor.x : anchor.y - top,
+                before: before ? extent : 0,
+                after: before ? 0 : extent,
+            });
+        }
+
+        return points;
+    };
+}
+
+export async function prepareStackLabels(args: PrepareStackLabelsArgs): Promise<SvgLabel[]> {
+    const {boundsWidth, otherLayers = []} = args;
+    const obstacles = getLayerLabelRects(otherLayers);
+    const candidates: StackLabelCandidate[] = [];
+
+    for (const {text, anchor, options, style, size, top, height} of await measureStackLabels(
+        args,
+    )) {
+        const padding = options.padding ?? 5;
         let x = anchor.x - size.width / 2;
         let y = anchor.y - top - size.height / 2;
         switch (anchor.direction) {
@@ -124,6 +190,12 @@ export async function prepareStackLabels(args: {
                 x = anchor.x + padding;
                 break;
         }
+        const horizontal = anchor.direction === 'left' || anchor.direction === 'right';
+        const outside = horizontal
+            ? x < -COORDINATE_EPSILON || x + size.width > boundsWidth + COORDINATE_EPSILON
+            : y < -COORDINATE_EPSILON || y + size.height > height + COORDINATE_EPSILON;
+        if (outside) continue;
+
         const position = getHtmlLabelConstraintedPosition({
             boundsWidth,
             boundsHeight: height,

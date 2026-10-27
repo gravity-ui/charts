@@ -1420,6 +1420,55 @@ describe('chart config artifacts', () => {
         ).not.toThrow();
     });
 
+    test.each(['bar-x', 'bar-y'])('%s custom totals are serializable and bar-specific', (type) => {
+        const validate = createSchemaValidator().compile(schema);
+        const config = (stackLabelValue) => ({
+            series: {
+                data: [
+                    {
+                        type,
+                        name: 'Orders',
+                        stackLabels: {enabled: true, valueSource: 'custom'},
+                        data: [{x: 0, y: 100, stackLabelValue}],
+                    },
+                ],
+                options: {[type]: {stackLabels: {valueSource: 'custom'}}},
+            },
+        });
+        for (const value of [0, 3, -3, null, undefined]) expect(validate(config(value))).toBe(true);
+        for (const value of ['3', '', NaN, Infinity]) expect(validate(config(value))).toBe(false);
+        expect(
+            validate({
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Area',
+                            data: [],
+                            stackLabels: {enabled: true, valueSource: 'custom'},
+                        },
+                    ],
+                },
+            }),
+        ).toBe(false);
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'custom-totals-usage.ts'),
+                declaration +
+                    `
+            const options: BarStackLabelsOptions = {enabled: true, valueSource: 'custom'};
+            const x: BarXSeries = {type: 'bar-x', name: 'X', stackLabels: options,
+                data: [{x: 0, y: 100, stackLabelValue: 3}]};
+            const y: BarYSeries = {type: 'bar-y', name: 'Y', stackLabels: options,
+                data: [{x: 100, y: 0, stackLabelValue: null}]};
+            // @ts-expect-error Custom sources are bar-specific.
+            const area: StackLabelsOptions = {valueSource: 'custom'};
+            void [x, y, area];
+        `,
+            ),
+        ).not.toThrow();
+    });
+
     test('schema definitions and properties match the committed snapshot', () => {
         const snapshotPath = path.resolve(
             __dirname,

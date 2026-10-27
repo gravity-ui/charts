@@ -13,6 +13,7 @@
     "AxisPlotShape",
     "BarSeriesDataLabelPlacementFallback",
     "BarSeriesDataLabelPlacementPosition",
+    "BarStackLabelsOptions",
     "BarXSeries<JsonValue>",
     "BarXSeriesData<JsonValue>",
     "BarXValueFormat<JsonValue>",
@@ -212,6 +213,14 @@
       "width"
     ],
     "AxisPlotShape": ["color", "custom", "label", "layerPlacement", "opacity", "value"],
+    "BarStackLabelsOptions": [
+      "allowOverlap",
+      "enabled",
+      "format",
+      "padding",
+      "style",
+      "valueSource"
+    ],
     "BarXSeries<JsonValue>": [
       "barMaxWidth",
       "barPadding",
@@ -245,6 +254,7 @@
       "dataLabels",
       "label",
       "opacity",
+      "stackLabelValue",
       "tooltip",
       "x",
       "y"
@@ -278,6 +288,7 @@
       "dataLabels",
       "label",
       "opacity",
+      "stackLabelValue",
       "tooltip",
       "x",
       "y"

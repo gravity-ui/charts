@@ -1,6 +1,7 @@
 import isEqual from 'lodash/isEqual';
 
 import {getSplit} from '~core/layout/split';
+import {applyScalePadding} from '~core/scales/scale-padding';
 import {getChartDimensions, isAxisRelatedSeries} from '~core/utils';
 
 import type {RangeSliderState, ZoomState} from '../../hooks';
@@ -52,7 +53,15 @@ export async function prepareAxisLayout(args: Args) {
                   seriesOptions: args.preparedSeriesOptions,
               })
             : {xScale: undefined, yScale: undefined};
-        return {boundsWidth, boundsHeight, split, xAxis, yAxis, ...scales};
+        const layout = {boundsWidth, boundsHeight, split, xAxis, yAxis, ...scales};
+
+        await applyScalePadding({
+            ...layout,
+            series: args.preparedSeries,
+            seriesOptions: args.preparedSeriesOptions,
+        });
+
+        return layout;
     };
 
     const layout = await calculate();
