@@ -50,6 +50,24 @@ Y axes with explicit `timestamps` ignore percentage padding.
 
 Automatic padding measures markers in line, area, area-range, and scatter series. Labels and tooltips do not contribute. Other Cartesian series on the same axis use the extended range too. Explicit sizes work on continuous axes regardless of series type.
 
+{% note info "Migrating from `maxPadding`" %}
+
+Replace a legacy fraction with a percentage string to preserve the layout on linear and datetime axes:
+
+```ts
+// Before
+const before = {maxPadding: 0.25};
+
+// After
+const after = {padding: {max: '25%'}};
+```
+
+Numbers inside `padding` are pixels, so `padding: {max: 0.25}` requests only a quarter of a pixel.
+
+On logarithmic axes, percentage padding uses the logarithmic span and can change the layout. Keep `maxPadding` when its exact legacy calculation is required.
+
+{% endnote %}
+
 ## Labels
 
 See [Axis labels](./axis-labels.md) for label styling and HTML labels.

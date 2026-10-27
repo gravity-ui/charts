@@ -276,23 +276,26 @@ describe('axis padding', () => {
         },
     );
 
-    test('ignores new padding on a reversed category axis with legacy maxPadding', async () => {
-        const args = await prepare();
-        args.xAxis = {
-            ...args.xAxis,
-            type: 'category',
-            categories: ['A', 'B', 'C'],
-            order: 'reverse',
-            maxPadding: 0.5,
-        };
-        const common = {...args, boundsWidth: 600, boundsHeight: 300};
-        const original = createScales(common).xScale;
-        args.xAxis.padding = allAuto;
-        const padded = createScales(common).xScale;
-        expect(padded?.domain()).toEqual(original?.domain());
-        expect(padded?.range()).toEqual(original?.range());
-        expect(padded?.range()).toEqual([600, 0]);
-    });
+    test.each([allAuto, {max: '0%'}, {min: '25%', max: '1%'}])(
+        'ignores padding %j on a reversed category axis with legacy maxPadding',
+        async (padding) => {
+            const args = await prepare();
+            args.xAxis = {
+                ...args.xAxis,
+                type: 'category',
+                categories: ['A', 'B', 'C'],
+                order: 'reverse',
+                maxPadding: 0.5,
+            };
+            const common = {...args, boundsWidth: 600, boundsHeight: 300};
+            const original = createScales(common).xScale;
+            args.xAxis.padding = padding;
+            const padded = createScales(common).xScale;
+            expect(padded?.domain()).toEqual(original?.domain());
+            expect(padded?.range()).toEqual(original?.range());
+            expect(padded?.range()).toEqual([600, 0]);
+        },
+    );
 
     test.each(['bar-x', 'bar-y', 'area'] as const)(
         'does not extend the normalized axis of percent %s',

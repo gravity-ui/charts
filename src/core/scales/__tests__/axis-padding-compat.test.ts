@@ -287,3 +287,60 @@ test.each([0, 1, -1, 300])(
         expect(result.converted.positions.every(Number.isFinite)).toBe(true);
     },
 );
+
+test.each(['x', 'y'] as const)(
+    'logarithmic %s percentage padding stays representable after rounding both ends',
+    async (direction) => {
+        const {converted} = await compare({
+            name: 'rounded log limits',
+            direction,
+            values: [1e-250, 1e250],
+            axis: {type: 'logarithmic', startOnTick: true, endOnTick: true},
+            replacement: {padding: {min: '25%', max: '25%'}},
+        });
+        expect(converted.domain.every((value) => Number.isFinite(value) && value > 0)).toBe(true);
+        expect(converted.positions.every(Number.isFinite)).toBe(true);
+        expect(converted.ticks.length).toBeGreaterThan(0);
+    },
+);
+
+test.each(['min', 'max'] as const)(
+    'linear percentage padding stays representable after rounding the %s boundary',
+    async (side) => {
+        const values = side === 'min' ? [-1e308, 0] : [0, 1e308];
+        const {converted} = await compare({
+            name: 'rounded linear limit',
+            values,
+            axis: {startOnTick: true, endOnTick: true},
+            replacement: {padding: {[side]: '75%'}},
+        });
+        expect(converted.domain.every(Number.isFinite)).toBe(true);
+        expect(converted.positions.every(Number.isFinite)).toBe(true);
+        expect(converted.ticks.length).toBeGreaterThan(0);
+    },
+);
+
+test.each([
+    {direction: 'x', type: 'linear'},
+    {direction: 'y', type: 'linear'},
+    {direction: 'x', type: 'datetime'},
+    {direction: 'y', type: 'datetime'},
+] as const)(
+    'oversized percentages keep the $type $direction scale usable',
+    async ({direction, type}) => {
+        const values = type === 'datetime' ? [1704067200000, 1704153600000] : [0, 100];
+        const max = type === 'datetime' ? '100000000000%' : `1${'0'.repeat(308)}%`;
+        const {converted} = await compare({
+            name: 'oversized percentages',
+            direction,
+            values,
+            axis: {type},
+            replacement: {padding: {min: max, max}},
+        });
+        expect(converted.domain.every(Number.isFinite)).toBe(true);
+        expect(converted.positions.every(Number.isFinite)).toBe(true);
+        expect(converted.domain[0]).toBeLessThanOrEqual(values[0]);
+        expect(converted.domain[1]).toBeGreaterThanOrEqual(values[1]);
+        expect(converted.positions[0]).not.toBe(converted.positions[1]);
+    },
+);

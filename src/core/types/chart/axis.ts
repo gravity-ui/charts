@@ -264,7 +264,9 @@ export interface ChartAxis {
     /**
      * Maximum-side padding as a fraction of the initial scale.
      * @default 0.05 for Y axis, 0.01 for X axis
-     * @deprecated Use `padding.max`; percentage limits differ on logarithmic axes.
+     * @deprecated Use `padding.max` with a percentage string: `maxPadding: 0.25` becomes
+     * `padding: {max: '25%'}`. Numbers in `padding` are pixels.
+     * Percentage limits differ on logarithmic axes; keep `maxPadding` for its legacy calculation.
      */
     maxPadding?: number;
     /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */

@@ -16,7 +16,7 @@ import {
 import {getBandSize} from '../utils/band-size';
 import {sumDecimals} from '../utils/math';
 
-import {getDomainPadding, getLogarithmicPaddedValue} from './axis-padding-options';
+import {getDomainPadding, getPaddedDomain} from './axis-padding-options';
 import type {ChartScaleLinear} from './types';
 import {
     checkIsPointDomain,
@@ -105,7 +105,10 @@ export function getDomainSyncedToPrimaryTicks(args: {
         secondaryTicks[0] -= step;
     }
 
-    return [secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]];
+    const syncedDomain = [secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]];
+    return syncedDomain.every(Number.isFinite) && Number.isFinite(syncedDomain[1] - syncedDomain[0])
+        ? syncedDomain
+        : [dMin, dMax];
 }
 
 function getLogarithmicYMin(args: {
@@ -192,7 +195,9 @@ export function getDomainMinAlignedToStartTick(args: {
         }
     }
 
-    return dNewMin;
+    return Number.isFinite(dNewMin) && (axis.type !== 'logarithmic' || dNewMin > 0)
+        ? dNewMin
+        : dMin;
 }
 
 export function getDomainMaxAlignedToEndTick(args: {
@@ -242,7 +247,7 @@ export function getDomainMaxAlignedToEndTick(args: {
         }
     }
 
-    return dNewMax;
+    return Number.isFinite(dNewMax) ? dNewMax : dMax;
 }
 
 export function createYScale(args: {
@@ -343,9 +348,8 @@ export function createYScale(args: {
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 
                 const domainPadding = getDomainPadding(axis);
-                let offsetMin = boundsHeight * domainPadding.min;
-                // We should ignore padding if we are drawing only one point on the plot.
-                let offsetMax = yMin === yMax ? 0 : boundsHeight * domainPadding.max;
+                let offsetMin = 0;
+                let offsetMax = 0;
                 if (isSeriesWithYAxisOffset(series)) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({
@@ -361,24 +365,19 @@ export function createYScale(args: {
                 const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
                 const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
 
-                const domainOffsetMin = isMinSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                const domainOffsetMax = isMaxSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
-
-                let domainMin = yMin - domainOffsetMin;
-                let domainMax = yMax + domainOffsetMax;
-                if (axis.type === 'logarithmic') {
-                    if (!isMinSpecified && domainPadding.min > 0) {
-                        domainMin = getLogarithmicPaddedValue(scale, offsetMin, 'min');
-                    }
-                    if (!isMaxSpecified && domainPadding.maxIsPercentage && domainPadding.max > 0) {
-                        domainMax = getLogarithmicPaddedValue(scale, offsetMax, 'max');
-                    }
-                }
-                scale = scale.domain([domainMin, domainMax]);
+                scale = scale.domain(
+                    getPaddedDomain({
+                        scale,
+                        domain: [yMin, yMax],
+                        type: axis.type,
+                        padding: domainPadding,
+                        size: boundsHeight,
+                        offsetMin,
+                        offsetMax,
+                        isMinSpecified,
+                        isMaxSpecified,
+                    }),
+                );
 
                 const startOnTick = get(axis, 'startOnTick', false);
                 const endOnTick = get(axis, 'endOnTick', false);
@@ -490,8 +489,8 @@ export function createYScale(args: {
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
                     const domainPadding = getDomainPadding(axis);
-                    let offsetMin = boundsHeight * domainPadding.min;
-                    let offsetMax = boundsHeight * domainPadding.max;
+                    let offsetMin = 0;
+                    let offsetMax = 0;
                     if (isSeriesWithYAxisOffset(series)) {
                         if (Object.keys(domain).length > 1) {
                             const bandWidth = getBandSize({
@@ -507,14 +506,19 @@ export function createYScale(args: {
                     const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
                     const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
 
-                    const domainOffsetMin = isMinSpecified
-                        ? 0
-                        : Math.abs(scale.invert(offsetMin).getTime() - scale.invert(0).getTime());
-                    const domainOffsetMax = isMaxSpecified
-                        ? 0
-                        : Math.abs(scale.invert(offsetMax).getTime() - scale.invert(0).getTime());
-
-                    return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+                    return scale.domain(
+                        getPaddedDomain({
+                            scale,
+                            domain: [yMin, yMax],
+                            type: axis.type,
+                            padding: domainPadding,
+                            size: boundsHeight,
+                            offsetMin,
+                            offsetMax,
+                            isMinSpecified,
+                            isMaxSpecified,
+                        }),
+                    );
                 }
             }
         }
