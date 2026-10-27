@@ -74,10 +74,18 @@ series: {
 
 For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.
 
-Totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals. Zero totals appear only for all-zero stacks.
+By default, totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals. Zero totals appear only for all-zero stacks.
 
-Participants with the same type, `stackId` and value axis must have matching effective `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom formats must share the same formatter function.
+Participants with the same type, `stackId` and value axis must have matching effective `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
 
 **Segment labels take priority over totals in the same plugin layer**, even for a small top segment: the overlapping total is hidden. Set `stackLabels.allowOverlap: true` to keep both labels. See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
 
 <div data-chart-example="data-labels/stack-labels"></div>
+
+### Custom stack totals
+
+Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. Points are original values from participating visible series, grouped by stack and sign. The default is `'sum'`.
+
+Here, stack height shows revenue while the total label sums `custom.orders`. Formatting and positioning stay unchanged.
+
+<div data-chart-example="data-labels/stack-labels-aggregation"></div>

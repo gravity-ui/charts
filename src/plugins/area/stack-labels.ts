@@ -4,11 +4,13 @@ import type {PrepareShapeDataArgs} from '~core/series/plugin';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {sumDecimals} from '~core/utils/math';
 
+import type {AreaSeriesData} from '../../types';
+import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
 interface Boundary {
-    values: number[];
+    points: AreaSeriesData[];
     y: number;
 }
 
@@ -68,10 +70,10 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 if (boundaryPoint.y === null) continue;
                 const boundary = stack[side];
                 if (boundary) {
-                    boundary.values.push(value);
+                    boundary.points.push(point.data);
                     boundary.y = (negative ? Math.max : Math.min)(boundary.y, boundaryPoint.y);
                 } else {
-                    stack[side] = {values: [value], y: boundaryPoint.y};
+                    stack[side] = {points: [point.data], y: boundaryPoint.y};
                 }
             }
         });
@@ -88,14 +90,14 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 boundary = nextIsOuter ? stack.next : stack.prev;
             }
             if (!boundary) continue;
-            const total = sumDecimals(boundary.values);
+            const total = sumDecimals(boundary.points.map((point) => Number(point.y)));
             // Zero segments do not add a separate total beside a negative stack.
             if (total === 0 && boundariesBySign.has(true)) continue;
             anchors.push({
                 options: stack.options,
                 x: stack.x,
                 y: boundary.y,
-                total,
+                total: getStackLabelValue(stack.options, boundary.points, total),
                 plotIndex: stack.plotIndex,
                 direction: stack.negative ? 'bottom' : 'top',
             });

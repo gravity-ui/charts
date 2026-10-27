@@ -86,9 +86,14 @@ export interface BasicInactiveState {
     opacity?: number;
 }
 
+export interface StackLabelsAggregationArgs<T = MeaningfulAny> {
+    /** Original participating points from visible series, grouped by stack and sign. Excludes synthetic area points. */
+    points: (BarXSeriesData<T> | BarYSeriesData<T> | AreaSeriesData<T>)[];
+}
+
 /**
  * Raw totals of visible stacked series. Participants in one stack and value axis must
- * resolve to identical style, format, padding and allowOverlap settings or validation fails.
+ * resolve to identical aggregation, style, format, padding and allowOverlap settings or validation fails.
  */
 export interface StackLabelsOptions {
     /**
@@ -96,7 +101,13 @@ export interface StackLabelsOptions {
      * @default false
      */
     enabled?: boolean;
-    /** Format the raw sum, including for percent stacks. Custom formatters receive `{value}`. */
+    /**
+     * Calculate the label value without changing stack geometry or sign grouping.
+     * - `'sum'`: Sum raw values (`x` for bar-y, `y` for bar-x and area).
+     * @default 'sum'
+     */
+    aggregation?: 'sum' | ((args: StackLabelsAggregationArgs) => number);
+    /** Format the aggregated value, including for percent stacks. Custom formatters receive `{value}`. */
     format?: ValueFormat;
     /** Text styles, merged with plugin defaults. */
     style?: Partial<BaseTextStyle>;

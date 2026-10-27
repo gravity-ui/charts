@@ -1,4 +1,4 @@
-import type {ChartData} from '../../types';
+import type {ChartData, StackLabelsOptions} from '../../types';
 
 export function getStackLabelsData(
     type: 'bar-x' | 'bar-y' | 'area',
@@ -30,4 +30,31 @@ export function getStackLabelsData(
             },
         },
     };
+}
+
+export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'): ChartData {
+    const data = getStackLabelsData(type);
+    const orders = [
+        [12, 10, 18],
+        [8, 6, 12],
+    ];
+
+    data.series.data.forEach((series, seriesIndex) => {
+        if (series.type !== 'bar-x' && series.type !== 'bar-y' && series.type !== 'area') return;
+
+        series.data.forEach((point, pointIndex) => {
+            point.custom = {orders: orders[seriesIndex][pointIndex]};
+            point.label = `${point.custom.orders} orders`;
+        });
+    });
+    const stackLabels: StackLabelsOptions = {
+        enabled: true,
+        aggregation: ({points}) =>
+            points.reduce((sum, point) => sum + (point.custom?.orders ?? 0), 0),
+        format: {type: 'number', postfix: ' orders'},
+    };
+
+    data.series.options = {[type]: {stackLabels}};
+
+    return data;
 }

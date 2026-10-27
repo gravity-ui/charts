@@ -793,6 +793,7 @@ describe('chart config artifacts', () => {
         const usage = `
             const labels: StackLabelsOptions = {
                 enabled: true, padding: 8, allowOverlap: false, style: {fontSize: '12px'},
+                aggregation: ({points}) => points.reduce((sum, point) => sum + (point.custom?.orders ?? 0), 0),
                 format: {type: 'custom', formatter: ({value}) => String(value)},
             };
             const options: ChartSeriesOptions = {
@@ -844,6 +845,7 @@ describe('chart config artifacts', () => {
                         stackLabels: {
                             enabled: true,
                             padding: 8,
+                            aggregation: 'sum',
                             allowOverlap: false,
                             style: {fontSize: '12px'},
                             format: {type: 'number', precision: 2},
@@ -853,6 +855,9 @@ describe('chart config artifacts', () => {
             },
         };
         expect(validateConfig(config)).toBe(true);
+        config.series.options[type].stackLabels.aggregation = 'average';
+        expect(validateConfig(config)).toBe(false);
+        config.series.options[type].stackLabels.aggregation = 'sum';
         config.series.data[0].stackLabels.enabled = 'yes';
         expect(validateConfig(config)).toBe(false);
         config.series.data[0].stackLabels.enabled = true;

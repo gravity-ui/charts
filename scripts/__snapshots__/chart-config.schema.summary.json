@@ -694,7 +694,7 @@
       "y"
     ],
     "SplitPlotOptions": ["title"],
-    "StackLabelsOptions": ["allowOverlap", "enabled", "format", "padding", "style"],
+    "StackLabelsOptions": ["aggregation", "allowOverlap", "enabled", "format", "padding", "style"],
     "TooltipRowCellItem": ["align", "format", "id", "source", "width"],
     "TreemapSeries<JsonValue>": [
       "color",

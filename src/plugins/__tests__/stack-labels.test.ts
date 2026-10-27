@@ -7,12 +7,13 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
+import type {PreparedAreaData} from '~core/shapes/area/types';
 import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import type {BarYShapesArgs, PreparedBarYData} from '~core/shapes/bar-y/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
-import type {ChartSeries, StackLabelsOptions} from '../../types';
+import type {ChartSeries, StackLabelsAggregationArgs, StackLabelsOptions} from '../../types';
 import {areaPlugin} from '../area';
 import {barXPlugin} from '../bar-x';
 import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
@@ -39,6 +40,7 @@ async function prepare(
     stacking: 'normal' | 'percent' = 'normal',
     options: StackLabelsOptions = {enabled: true},
     perSeriesOptions: (StackLabelsOptions | undefined)[] = [],
+    configure?: (series: ChartSeries[]) => void,
 ) {
     const horizontal = plugin.type === 'bar-y';
     const raw: ChartSeries[] = values.map((points, index) =>
@@ -57,6 +59,7 @@ async function prepare(
               },
     );
     raw.forEach((series, index) => Object.assign(series, {stackLabels: perSeriesOptions[index]}));
+    configure?.(raw);
     const original = JSON.stringify(raw);
     const series = await plugin.prepareSeries({
         series: raw,
@@ -84,7 +87,7 @@ async function prepare(
     };
     const result = await plugin.prepareShapeData(args);
     expect(JSON.stringify(raw)).toBe(original);
-    return {args, result};
+    return {args, result, raw};
 }
 
 function texts(labels: SvgLabel[] = []) {
@@ -123,6 +126,145 @@ describe('bar-x stack label anchors', () => {
 });
 
 describe.each(plugins)('$type stack labels', (plugin) => {
+    test.each(['normal', 'percent'] as const)(
+        'aggregates original custom data independently of geometry in %s stacks',
+        async (stacking) => {
+            const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) =>
+                points.reduce((sum, point) => sum + point.custom.orders, 0),
+            );
+
+            const {args, result, raw} = await prepare(
+                plugin,
+                [[30], [20]],
+                stacking,
+                {enabled: true, aggregation, format: {type: 'number', postfix: ' orders'}},
+                [],
+                (series) =>
+                    series.forEach((item, index) => {
+                        item.data[0].custom = {orders: index === 0 ? 12 : 8};
+                        Object.assign(item.data[0], {label: 'display only'});
+                    }),
+            );
+
+            args.seriesOptions = getPreparedOptions({
+                [plugin.type]: {stackLabels: {enabled: true}},
+            });
+            const summed = await plugin.prepareShapeData(args);
+            const geometry = (data: typeof result.renderData) => {
+                if (plugin.type === 'area') {
+                    return (data as PreparedAreaData[]).map((item) =>
+                        item.points.map(({x, y, y0}) => ({x, y, y0})),
+                    );
+                }
+                const bars =
+                    plugin.type === 'bar-y'
+                        ? (data as BarYShapesArgs[]).flatMap((item) => item.shapes)
+                        : (data as PreparedBarXData[]);
+                return bars.map(({x, y, width, height}) => ({x, y, width, height}));
+            };
+
+            const points = aggregation.mock.calls[0][0].points;
+
+            expect(texts(result.labels)).toEqual(['20 orders']);
+            expect(aggregation).toHaveBeenCalledTimes(1);
+            expect(points).toHaveLength(2);
+            raw.forEach((series) => expect(points).toContain(series.data[0]));
+            expect(geometry(result.renderData)).toEqual(geometry(summed.renderData));
+            expect(result.labels?.map(({y}) => y)).toEqual(summed.labels?.map(({y}) => y));
+        },
+    );
+
+    test('uses geometry signs and zero suppression independently of callback results', async () => {
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) =>
+            points.some((point) => Number(plugin.type === 'bar-y' ? point.x : point.y) < 0) ? 7 : 0,
+        );
+
+        const {result} = await prepare(
+            plugin,
+            [
+                [20, 0],
+                [-10, -5],
+                [0, 0],
+            ],
+            'normal',
+            {
+                enabled: true,
+                aggregation,
+                allowOverlap: true,
+            },
+        );
+
+        expect(texts(result.labels)).toEqual(['0', '7', '7']);
+        expect(aggregation).toHaveBeenCalledTimes(3);
+        for (const [{points}] of aggregation.mock.calls) {
+            const signs = new Set(
+                points.map((point) => Number(plugin.type === 'bar-y' ? point.x : point.y) < 0),
+            );
+            expect(signs.size).toBe(1);
+        }
+    });
+
+    test('recalculates participating points when visibility changes and excludes disabled series', async () => {
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+        const {args, raw} = await prepare(
+            plugin,
+            [[10], [20], [30]],
+            'normal',
+            {enabled: true, aggregation},
+            [{enabled: false}],
+        );
+        aggregation.mockClear();
+        // Shape preparation receives visible series from the chart's series pipeline.
+        args.series = args.series.filter((series) => series.name !== '1');
+
+        const result = await plugin.prepareShapeData(args);
+
+        expect(texts(result.labels)).toEqual(['1']);
+        expect(aggregation).toHaveBeenCalledTimes(1);
+        expect(aggregation.mock.calls[0][0].points).toEqual([raw[2].data[0]]);
+        expect(aggregation.mock.calls[0][0].points[0]).toBe(raw[2].data[0]);
+    });
+
+    test('resolves original points after nullMode preparation', async () => {
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+
+        const {raw} = await prepare(
+            plugin,
+            [[10], [null]],
+            'normal',
+            {enabled: true, aggregation},
+            [],
+            (series) => series.forEach((item) => Object.assign(item, {nullMode: 'zero'})),
+        );
+
+        const points = aggregation.mock.calls[0][0].points;
+
+        expect(points).toHaveLength(2);
+        raw.forEach((series) => expect(points).toContain(series.data[0]));
+    });
+
+    test('allows a series to override custom aggregation with sum', async () => {
+        const aggregation = jest.fn(() => 99);
+
+        const {result} = await prepare(plugin, [[10]], 'normal', {enabled: true, aggregation}, [
+            {aggregation: 'sum'},
+        ]);
+
+        expect(texts(result.labels)).toEqual(['10']);
+        expect(aggregation).not.toHaveBeenCalled();
+    });
+
+    test.each([NaN, Infinity, -Infinity])(
+        'hides non-finite aggregation results: %s',
+        async (value) => {
+            const options: StackLabelsOptions = {enabled: true, aggregation: () => value};
+
+            const {result} = await prepare(plugin, [[10]], 'normal', options);
+
+            expect(result.labels).toEqual([]);
+        },
+    );
+
     test.each(['normal', 'percent'] as const)(
         'calculates decimal totals before formatting in %s stacks',
         async (stacking) => {
@@ -306,6 +448,37 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             ]),
         );
         expect(result.labels).toHaveLength(2);
+    });
+});
+
+describe('area stack labels', () => {
+    test('aggregation excludes synthetic points and counts step boundary points once', async () => {
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+
+        const {raw} = await prepare(
+            areaPlugin,
+            [
+                [10, 20, 30],
+                [5, 15, 25],
+            ],
+            'normal',
+            {enabled: true, aggregation},
+            [],
+            (series) => {
+                series[1].data.splice(1, 1);
+            },
+        );
+
+        expect(aggregation).toHaveBeenCalledTimes(3);
+        for (const [{points}] of aggregation.mock.calls) {
+            const expected = raw
+                .flatMap((series) => (series.type === 'area' ? series.data : []))
+                .filter((point) => point.x === points[0].x);
+
+            expect(new Set(points).size).toBe(points.length);
+            expect(points).toHaveLength(expected.length);
+            expected.forEach((point) => expect(points).toContain(point));
+        }
     });
 });
 

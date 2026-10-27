@@ -2,7 +2,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';
-import {getStackLabelsData} from '../__data__/stack-labels';
+import {getStackLabelsAggregationData, getStackLabelsData} from '../__data__/stack-labels';
 
 const meta: Meta<typeof Chart> = {
     title: 'Other/Stack labels',
@@ -20,3 +20,9 @@ export const Bars: Story = {args: {data: getStackLabelsData('bar-y')}};
 export const BarsPercent: Story = {args: {data: getStackLabelsData('bar-y', 'percent')}};
 export const Area: Story = {args: {data: getStackLabelsData('area')}};
 export const AreaPercent: Story = {args: {data: getStackLabelsData('area', 'percent')}};
+
+export const ColumnsCustomAggregation: Story = {
+    args: {data: getStackLabelsAggregationData('bar-x')},
+};
+export const BarsCustomAggregation: Story = {args: {data: getStackLabelsAggregationData('bar-y')}};
+export const AreaCustomAggregation: Story = {args: {data: getStackLabelsAggregationData('area')}};

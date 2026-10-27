@@ -262,7 +262,7 @@ const formatRevenue = ({value}) => {
 
 ### Stack totals
 
-`stackLabels.format` accepts all `ValueFormat` variants and formats the raw sum of participating visible series, including in percent stacks. Custom formatters receive `{value}`. See [Stack total labels](./data-labels.md#stack-total-labels) for configuration.
+`stackLabels.format` accepts all `ValueFormat` variants and formats the aggregated value of participating visible series, including in percent stacks. Custom formatters receive `{value}`. See [Stack total labels](./data-labels.md#stack-total-labels) for configuration.
 
 ### Computed percentage context
 

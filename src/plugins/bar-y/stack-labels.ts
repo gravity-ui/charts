@@ -7,6 +7,7 @@ import type {PreparedBarYData} from '~core/shapes/bar-y/types';
 import {getDataCategoryValue} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
 
+import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
@@ -75,7 +76,11 @@ export function getBarYStackLabelAnchors(
                 options,
                 x,
                 y: outer.y + outer.height / 2,
-                total,
+                total: getStackLabelValue(
+                    options,
+                    points.map((item) => item.data),
+                    total,
+                ),
                 direction: extendsRight ? 'right' : 'left',
                 plotIndex: 0,
             });

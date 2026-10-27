@@ -8,6 +8,8 @@ import {getStackLabelsData} from '../__stories__/__data__/stack-labels';
 import type {PreparedBarYData} from '../core/shapes/bar-y/types';
 import type {ChartData} from '../types';
 
+import {StackLabelsAggregationTestStory} from './components/StackLabelsAggregationTestStory';
+
 const labelSelector = '.gcharts-stack-labels__label';
 
 async function getBoundingBox(locator: Locator) {
@@ -27,6 +29,30 @@ function getBoundaryTestData(): ChartData {
 }
 
 test.describe('Stack labels', () => {
+    for (const type of ['bar-x', 'bar-y', 'area'] as const) {
+        test(`${type}: custom aggregation follows legend visibility @webkit`, async ({mount}) => {
+            const component = await mount(<StackLabelsAggregationTestStory type={type} />);
+            const labels = component.locator(labelSelector);
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['16 orders', '20 orders', '30 orders']);
+
+            // Activating a legend item isolates its series; the next activation restores all series.
+            await component.getByRole('button', {name: 'Mobile', exact: true}).press('Enter');
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['12 orders', '6 orders', '8 orders']);
+
+            await component.getByRole('button', {name: 'Mobile', exact: true}).press('Enter');
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['16 orders', '20 orders', '30 orders']);
+        });
+    }
+
     test('bar-y: zero segments do not add totals to negative stacks', async ({mount}) => {
         const data: ChartData = {
             title: {text: 'bar-y: A = [-10, 0], B = [-20, -5]'},

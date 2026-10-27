@@ -21,6 +21,7 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
         {style: {fontSize: '18px'}},
         {format: {type: 'number', precision: 2}},
         {padding: 10},
+        {aggregation: () => 10},
         {allowOverlap: true},
     ])('rejects conflicting effective options: %j', (override) => {
         const {series, data} = config();
@@ -36,6 +37,7 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
             enabled: true,
             style: {fontColor: 'red', fontSize: '18px'},
             padding: 5,
+            aggregation: 'sum',
             allowOverlap: false,
         };
         const original = JSON.stringify(data);
@@ -67,6 +69,57 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
         series[1].stackId = 'other';
         series[1].stackLabels = {style: {fontColor: 'red'}};
         expect(() => validateData(data)).not.toThrow();
+    });
+
+    test.each(['average', '', 42, false, null, {}])(
+        'rejects invalid aggregation: %j',
+        (aggregation) => {
+            const {data} = config();
+            Object.assign(data.series.options?.[type]?.stackLabels ?? {}, {aggregation});
+
+            expect(() => validateData(data)).toThrow(
+                expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+            );
+        },
+    );
+
+    test('rejects invalid plugin aggregation even when series override it', () => {
+        const {series, data} = config();
+        Object.assign(data.series.options?.[type]?.stackLabels ?? {}, {aggregation: 'average'});
+        series.forEach((item) => {
+            item.stackLabels = {aggregation: 'sum'};
+        });
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test('rejects invalid aggregation on a disabled series', () => {
+        const {series, data} = config();
+        series[1].stackLabels = {enabled: false};
+        Object.assign(series[1].stackLabels, {aggregation: null});
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test('accepts the same aggregation callback on stack participants', () => {
+        const aggregation = () => 10;
+        const {series, data} = config({aggregation});
+        series[1].stackLabels = {aggregation};
+
+        expect(() => validateData(data)).not.toThrow();
+    });
+
+    test('rejects distinct aggregation callbacks on stack participants', () => {
+        const {series, data} = config({aggregation: () => 10});
+        series[1].stackLabels = {aggregation: () => 10};
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
     });
 
     test('compares custom formatters by identity', () => {
