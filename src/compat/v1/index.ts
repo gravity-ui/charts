@@ -155,14 +155,6 @@ function analyze(data: unknown, collectPatches: boolean) {
         ['series', 'options', '*', 'stackLabels', 'format'],
     ])
         visit(data, path, valueFormat);
-    visit(data, ['tooltip', 'rowRenderer'], (_, path) => {
-        review(
-            path,
-            'tooltip-row-renderer',
-            'rows[].renderer cannot yet preserve every plugin-provided row and fallback.',
-            'rows[].renderer',
-        );
-    });
     visit(data, ['chart', 'events', 'click'], (handler, path) => {
         if (typeof handler === 'function') {
             review(

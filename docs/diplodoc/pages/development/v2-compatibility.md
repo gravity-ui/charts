@@ -2,7 +2,7 @@
 
 These cases need a decision before removing the remaining deprecated API. They are reproducible issue drafts, not announcements that support has ended. The baseline is v1.70.0 / `06d0703e`; the comparison shows the existing replacement APIs on that baseline, not a finished v2 implementation.
 
-The current migration removes `ticks.pixelInterval`, numeric `unit`, and Bar-X/Bar-Y `dataLabels.inside`. The isolated v1 adapter converts those options and `maxPadding`, and returns diagnostics. The click and tooltip cases below remain unchanged. See [Migrating from v1 to v2](./migration-v2.md) for usage.
+The current migration removes `ticks.pixelInterval`, numeric `unit`, and Bar-X/Bar-Y `dataLabels.inside`. The isolated v1 adapter converts those options and `maxPadding`, and returns diagnostics. The click case below remains unchanged. See [Migrating from v1 to v2](./migration-v2.md) for usage.
 
 For each case, choose either equivalent behavior through explicit configuration and the adapter, or an explicit decision to discontinue the listed behavior. A confirmed bug can be excluded from compatibility, but its unsupported behavior and replacement still need release documentation.
 
@@ -36,38 +36,6 @@ Legacy `series` also contains prepared series data, while the modern interaction
 
 **Acceptance:** verified callback payloads and call counts against the baseline, or release notes explicitly listing each unsupported capability. The adapter must not globally patch event handling.
 
-## Preserve plugin-generated rows when replacing rowRenderer
-
-**Status:** confirmed compatibility gap. The replacement is currently experimental.
-
-**Reproduce:** use waterfall with values 50 and 30, followed by a total. Hover the second bar. Render `String(name)` and `String(value)` in the callback, comparing:
-
-```ts
-tooltip: {
-  rowRenderer: renderer;
-}
-// Candidate
-tooltip: {
-  rows: [{renderer}];
-}
-```
-
-**Observed:** the old callback receives the plugin's two rows: `Revenue / ↑30` and `Subtotal / 80`. An explicit `rows` array replaces the plugin's row definitions. A row containing only `renderer` has no cells from which to resolve `name` and `value`, producing one row with `null / null`.
-
-Existing callback with plugin rows:
-
-![The old renderer receives Revenue and Subtotal rows](./v2-compatibility/tooltip-v1.png)
-
-Direct replacement:
-
-![Explicit rows lose the plugin's cells and produce null values](./v2-compatibility/tooltip-candidate.png)
-
-**Compatibility work:** retain dynamic plugin rows, their cells, formatting and renderer fallback precedence. Cover total points and mixed series. Copying one plugin's row definitions into the adapter would create a second implementation that can diverge as plugins evolve.
-
-**If discontinued:** explicitly require callers to define all rows and cells. Document that plugin-generated subtotals and specialized row formatting are no longer inherited by that configuration.
-
-**Acceptance:** identical row count, callback arguments, content and fallback behavior for baseline configurations, or a documented intentional loss of the listed capabilities. Correct the existing TSDoc references to `row.renderer` when finalizing the actual replacement API.
-
 ## Reproduce the evidence
 
 Run from the repository root:
@@ -76,4 +44,4 @@ Run from the repository root:
 npm run playwright:docker -- migration-v2.visual.test.tsx --project=chromium --workers=2
 ```
 
-Fixtures live in `src/__tests__/components/MigrationV2Cases.tsx`. The test captures real rendered charts and actual click payloads, checks the reported differences, and writes the images next to this page. No support-removal decision has been made by these tests.
+Fixtures live in `src/__tests__/components/MigrationV2ClickCase.tsx`. The test captures real rendered charts and actual click payloads, checks the reported differences, and writes the images next to this page. No support-removal decision has been made by these tests.

@@ -264,9 +264,7 @@ export interface SeriesPlugin<
          * - Function: called per chunk, allowing conditional extra rows
          *   (e.g. waterfall adds a "Subtotal" row for non-total bars).
          *
-         * Each entry maps to one rendered `<tr>`. The first entry is the *primary* row
-         * and is the only one that respects user overrides (`row.cells.items` /
-         * `row.renderer`). Extra entries are always rendered with the plugin's cells.
+         * Each entry maps to one rendered `<tr>`. Explicit `tooltip.rows` replaces this list.
          */
         rows:
             | ReadonlyArray<TooltipRowDef>

@@ -125,7 +125,6 @@ test('checks plugin-specific fields without mistaking funnel inside or applicati
     const result = migrateChartDataV1(data);
     expect(result.warnings.map(({code}) => code)).toEqual([
         'axis-max-padding',
-        'tooltip-row-renderer',
         'bar-label-inside',
         'point-category',
         'number-unit',
@@ -137,6 +136,19 @@ test('checks plugin-specific fields without mistaking funnel inside or applicati
     expect(result.data.series.data[0].dataLabels).toEqual({placement: ['outside']});
     expect(result.data.series.data[1].data[0]).not.toBe(data.series.data[1].data[0]);
     expect(data.series.data[1].data[0]).toHaveProperty('tooltip.valueFormat.unit', 'k');
+});
+
+test('preserves supported tooltip row renderers without migration diagnostics', () => {
+    const rowRenderer = jest.fn();
+    const data: ChartDataV1 = {
+        tooltip: {rowRenderer, rows: [{cells: [{id: 'value', source: 'data.y'}]}]},
+        series: {data: []},
+    };
+    expect(inspectChartDataV1(data)).toEqual([]);
+    const result = migrateChartDataV1(data);
+    expect(result).toEqual({data, warnings: []});
+    expect(result.data).toBe(data);
+    expect(rowRenderer).not.toHaveBeenCalled();
 });
 
 test('reports invalid legacy units without silently deleting them', () => {

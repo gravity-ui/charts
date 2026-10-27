@@ -6,7 +6,7 @@ import MigrationV1Example from '../../docs/examples/src/charts/migration/v1';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {migrateChartDataV1} from '../compat/v1';
 
-import {MigrationV2Cases} from './components/MigrationV2Cases';
+import {MigrationV2ClickCase} from './components/MigrationV2ClickCase';
 import {getLocatorBoundingBox} from './utils';
 
 test('v1 adapter fixes HTML inside label centering', async ({mount}) => {
@@ -42,46 +42,20 @@ test('renders the v1 migration documentation example', async ({mount}) => {
     ).toBeVisible();
 });
 
-for (const kind of ['tooltip', 'click'] as const) {
-    test(`v2 migration evidence: ${kind}`, async ({mount, page}) => {
-        await page.setViewportSize({width: 1100, height: 700});
-        const component = await mount(<MigrationV2Cases kind={kind} />);
-        await expect(component.locator('svg')).toHaveCount(kind === 'click' ? 1 : 2);
-        const marks = component.locator(
-            '.gcharts-bar-x__segment, .gcharts-waterfall__segment, .gcharts-marker__symbol[d]',
-        );
-        await expect(marks.first()).toBeVisible();
-        if (kind === 'click') {
-            await marks.first().click();
-            await expect(component.getByTestId('migration-event')).toContainText('"modern"');
-            const event = JSON.parse(
-                (await component.getByTestId('migration-event').textContent()) ?? '',
-            );
-            expect(event.v1.point.y).toBe(0);
-            expect(event.modern.point.y).toBeNull();
-            expect(event.v1.eventHasNativeEvent).toBe(true);
-            expect(event.modern.eventHasNativeEvent).toBe(false);
-        }
-        if (kind === 'tooltip') {
-            const left = component.locator('section').first();
-            const right = component.locator('section').nth(1);
-            await left.locator('.gcharts-waterfall__segment').nth(1).hover();
-            await expect(page.locator('.gcharts-tooltip')).toContainText('Subtotal');
-            await expect(page.locator('.gcharts-tooltip tbody tr')).toHaveCount(2);
-            await left.screenshot({
-                path: 'docs/diplodoc/pages/development/v2-compatibility/tooltip-v1.png',
-            });
-            await right.locator('.gcharts-waterfall__segment').nth(1).hover();
-            await expect(page.locator('.gcharts-tooltip')).toContainText('null');
-            await expect(page.locator('.gcharts-tooltip tbody tr')).toHaveCount(1);
-            await right.screenshot({
-                path: 'docs/diplodoc/pages/development/v2-compatibility/tooltip-candidate.png',
-            });
-            return;
-        }
-        await page.mouse.move(1080, 650);
-        await component.screenshot({
-            path: `docs/diplodoc/pages/development/v2-compatibility/${kind}.png`,
-        });
+test('v2 migration evidence: click', async ({mount, page}) => {
+    await page.setViewportSize({width: 1100, height: 700});
+    const component = await mount(<MigrationV2ClickCase />);
+    const marks = component.locator('.gcharts-marker__symbol[d]');
+    await expect(marks.first()).toBeVisible();
+    await marks.first().click();
+    await expect(component.getByTestId('migration-event')).toContainText('"modern"');
+    const event = JSON.parse((await component.getByTestId('migration-event').textContent()) ?? '');
+    expect(event.v1.point.y).toBe(0);
+    expect(event.modern.point.y).toBeNull();
+    expect(event.v1.eventHasNativeEvent).toBe(true);
+    expect(event.modern.eventHasNativeEvent).toBe(false);
+    await page.mouse.move(1080, 650);
+    await component.screenshot({
+        path: 'docs/diplodoc/pages/development/v2-compatibility/click.png',
     });
-}
+});

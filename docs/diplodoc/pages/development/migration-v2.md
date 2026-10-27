@@ -110,10 +110,11 @@ Diagnostics run only when these functions are called. They do not add work to ch
 The following options remain supported and are not automatically rewritten:
 
 - Bar-X/Scatter point `category`: deprecated; use explicit coordinates. This change leaves the field and raw point payloads intact (`point-category`).
-- `tooltip.rowRenderer`: plugin-generated rows and values need to be preserved (`tooltip-row-renderer`).
 - Click handlers: legacy point normalization, series metadata, the second event argument and the proposed default mode change require review (`click-handler-review`). Every configured handler is flagged; the inspector cannot determine which payload properties its function body reads.
 
 This change does not remove those options, change the click default, or discontinue their support. A later change must either provide equivalent behavior or explicitly document the unsupported behavior and migration steps.
+
+`tooltip.rowRenderer` remains supported and requires no migration. It customizes the resolved rows; `tooltip.rows` defines a replacement set of rows and serves a different purpose.
 
 See [V2 compatibility decisions](./v2-compatibility.md) for reproducible issue drafts, observed differences and screenshots.
 
