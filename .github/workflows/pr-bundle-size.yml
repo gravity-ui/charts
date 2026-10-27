@@ -3,6 +3,8 @@ name: PR Bundle Size
 on:
   pull_request:
     # `edited` for a change of the base branch, which changes what the PR is compared with.
+    # Edits of the title or description measure again too: a job skipped for them would
+    # replace the last measurement in the PR checks.
     types: [opened, synchronize, reopened, edited]
 
 permissions:
@@ -10,13 +12,9 @@ permissions:
 
 jobs:
   measure:
-    # A skipped check named "Measure" would hide the last measurement in the PR checks.
-    name: ${{ github.event.action == 'edited' && !github.event.changes.base && 'Measure (PR edited)' || 'Measure' }}
-    # Edits of the title or description leave the report as it is.
-    if: github.event.action != 'edited' || github.event.changes.base
+    name: Measure
     runs-on: ubuntu-latest
-    # A new push or base makes the previous measurement obsolete. On the job, so that a skipped
-    # run for an edit does not cancel a measurement in progress.
+    # A new push or base makes the previous measurement obsolete.
     concurrency:
       group: pr-bundle-size-${{ github.event.number }}
       cancel-in-progress: true
