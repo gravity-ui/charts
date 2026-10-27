@@ -12,6 +12,7 @@ import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterOverlappingLabels} from '~core/utils';
 
+import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
 
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -53,6 +54,26 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
     prepareSeries: prepareWaterfallSeries,
+    validate: ({series}) => {
+        const {connectors} = series;
+        if (connectors === undefined) {
+            return;
+        }
+
+        if (typeof connectors !== 'object' || connectors === null || Array.isArray(connectors)) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: 'waterfall.connectors must be an object',
+            });
+        }
+
+        if (connectors.enabled !== undefined && typeof connectors.enabled !== 'boolean') {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: 'waterfall.connectors.enabled must be a boolean',
+            });
+        }
+    },
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes: function ({
