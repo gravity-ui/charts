@@ -53,6 +53,19 @@ If you need to update the reference screenshots (e.g. after intentional UI chang
 npm run playwright:docker:update
 ```
 
+## Bundle size
+
+CI measures the `Chart` import from the ESM build with [size-limit](https://github.com/ai/size-limit): minified and brotlied, without peer dependencies. Its `limit` in `.size-limit.js` is deliberately high, a safety net against accidental blowups rather than a budget. Build first, then run the check:
+
+```shell
+npm run build
+npm run size
+```
+
+Every pull request gets a bundle size comment. It compares the PR build with the head of its base branch, or with the closest measured commit before it, package by package, and links to a report with module treemaps. Each run replaces the previous report of the PR.
+
+Every push to `main` adds the build to the [bundle size history](https://storage.yandexcloud.net/playwright-reports/charts/bundle-size/index.html), with a per-package breakdown and a module treemap for each build. Pull request builds do not go into the history. To measure a build locally, run `node scripts/bundle-size/snapshot.mjs --out <dir>` after `npm run build` and open `<dir>/index.html`.
+
 ## Documentation examples
 
 Add a live example as a `.tsx` file under `docs/examples/src/charts`, exporting its component as the default export and its metadata as `export const meta = {...} satisfies ExampleMeta`. Import `ExampleMeta` from `../gallery` for examples in a subdirectory. Use literal strings, numbers, and objects in metadata so the build can validate it without running the component.

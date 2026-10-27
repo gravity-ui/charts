@@ -1,0 +1,54 @@
+.crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+
+    margin-block-end: 8px;
+}
+
+.crumbs button:disabled {
+    font-weight: 600;
+    cursor: default;
+
+    color: #222;
+}
+
+.crumbs .sep {
+    color: #999;
+}
+
+.crumbs .size {
+    margin-inline-start: 12px;
+
+    color: #666;
+}
+
+.crumbs .nested {
+    margin-inline-start: auto;
+
+    cursor: pointer;
+
+    color: #444;
+}
+
+.treemap {
+    height: calc(100vh - 80px);
+    min-height: 480px;
+}
+
+.bs-swatch {
+    display: inline-block;
+
+    width: 10px;
+    height: 10px;
+
+    border-radius: 2px;
+}
+
+.bs-value {
+    padding-inline-start: 16px;
+
+    text-align: end;
+    white-space: nowrap;
+}
