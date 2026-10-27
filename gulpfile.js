@@ -21,8 +21,8 @@ function compileTs(modules = false) {
     const tsProject = ts.createProject('tsconfig.json', {
         declaration: true,
         ...(modules ? undefined : {verbatimModuleSyntax: false}),
-        module: modules ? 'esnext' : 'NodeNext',
-        moduleResolution: modules ? 'bundler' : 'NodeNext',
+        module: modules ? 'esnext' : 'commonjs',
+        moduleResolution: modules ? 'bundler' : 'node',
     });
 
     return src([

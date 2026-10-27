@@ -876,7 +876,7 @@ test.describe('Bar-y series', () => {
                             {y: 1, x: 1, label: 'Data label: 1'},
                             {y: 2, x: 100, label: 'Data label: 100'},
                         ],
-                        dataLabels: {enabled: true, inside: true},
+                        dataLabels: {enabled: true, placement: ['inside-center']},
                     },
                 ],
             },

@@ -19,6 +19,16 @@
         "types": "./dist/cjs/index.d.ts",
         "default": "./dist/cjs/index.js"
       }
+    },
+    "./compat/v1": {
+      "import": {
+        "types": "./dist/esm/compat/v1/index.d.ts",
+        "default": "./dist/esm/compat/v1/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/compat/v1/index.d.ts",
+        "default": "./dist/cjs/compat/v1/index.js"
+      }
     }
   },
   "sideEffects": [

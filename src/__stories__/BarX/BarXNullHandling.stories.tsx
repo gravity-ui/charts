@@ -16,10 +16,10 @@ import {
 const BarXNullHandlingComparison = () => {
     const skipData = cloneDeep(barXNullModeSkipLinearXData);
     set(skipData, 'title', {text: 'nullMode: "skip" (default) - Linear X-axis'});
-    set(skipData, 'series.data[0].dataLabels', {enabled: true, inside: true});
+    set(skipData, 'series.data[0].dataLabels', {enabled: true, placement: ['inside-center']});
     const zeroData = cloneDeep(barXNullModeZeroLinearXData);
     set(zeroData, 'title', {text: 'nullMode: "zero" - Linear X-axis'});
-    set(zeroData, 'series.data[0].dataLabels', {enabled: true, inside: true});
+    set(zeroData, 'series.data[0].dataLabels', {enabled: true, placement: ['inside-center']});
 
     const skipDataCategory = cloneDeep(barXNullModeSkipCategoryXData);
     set(skipDataCategory, 'title', {text: 'nullMode: "skip" (default) - Category X-axis'});

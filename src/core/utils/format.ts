@@ -3,7 +3,7 @@ import type {DateTimeInput} from '@gravity-ui/date-utils';
 import type {AxisDomain} from 'd3-axis';
 import capitalize from 'lodash/capitalize';
 
-import {formatNumber, getDefaultUnit} from '../../libs';
+import {formatNumber, getDefaultNumberUnits} from '../../libs';
 import type {FormatOptions} from '../../libs/format-number/types';
 import type {CustomFormatContext, ValueFormat} from '../../types';
 import type {PreparedAxis} from '../axes/types';
@@ -147,7 +147,7 @@ export function formatAxisTickLabel(args: {axis: PreparedAxis; value: AxisDomain
         case 'linear':
         default: {
             const numberFormat: FormatOptions = {
-                unit: value && step ? getDefaultUnit(step) : undefined,
+                units: value && step ? getDefaultNumberUnits(step) : undefined,
                 ...axis.labels.numberFormat,
             };
 

@@ -520,14 +520,20 @@ test.describe('Bar-x series', () => {
         test.describe('Linear X-axis', () => {
             test('nullMode=skip', async ({mount}) => {
                 const data = cloneDeep(barXNullModeSkipLinearXData);
-                set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+                set(data, 'series.data[0].dataLabels', {
+                    enabled: true,
+                    placement: ['inside-center'],
+                });
                 const component = await mount(<ChartTestStory data={data} />);
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
 
             test('nullMode=zero', async ({mount}) => {
                 const data = cloneDeep(barXNullModeZeroLinearXData);
-                set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+                set(data, 'series.data[0].dataLabels', {
+                    enabled: true,
+                    placement: ['inside-center'],
+                });
                 const component = await mount(<ChartTestStory data={data} />);
                 await expect(component.locator('svg')).toHaveScreenshot();
             });

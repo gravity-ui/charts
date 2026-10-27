@@ -1,4 +1,5 @@
 import {i18nInstance, makeInstance} from './i18n/i18n';
+import {FORMAT_UNITS_NUMBERS} from './presets';
 import type {
     FormatI18nString,
     FormatNumberOptions,
@@ -97,12 +98,6 @@ const BASE_NUMBER_FORMAT_UNIT_KEYS = [
     'value_short-t',
 ];
 
-const baseFormatNumber = unitFormatter({
-    exponent: 1000,
-    unitDelimiterI18nKey: 'value_number-delimiter',
-    unitsI18nKeys: BASE_NUMBER_FORMAT_UNIT_KEYS,
-});
-
 const resolvePostfix = (postfix: FormatI18nString, lang: string): string => {
     if (typeof postfix === 'string') {
         return postfix;
@@ -185,21 +180,21 @@ const customUnitFormatter = (
     return `${result}${delimiter}${resolvedPostfix}`;
 };
 
-const NUMBER_UNIT_RATE_BY_UNIT = {
-    default: 0,
-    auto: undefined,
-    k: 1,
-    m: 2,
-    b: 3,
-    t: 4,
+/** Default axis abbreviation is selected by tick step without a suffix delimiter. */
+const defaultNumberUnitScales: FormatUnitScale[] = ['', 'K', 'M', 'B', 'T'].map(
+    (postfix, index) => ({
+        scale: [{factor: 1000 ** index, postfix}],
+        delimiter: '',
+    }),
+);
+
+export const getDefaultNumberUnits = (value: number): FormatUnitScale => {
+    const index = getUnitRate(value, 1000, BASE_NUMBER_FORMAT_UNIT_KEYS);
+    return defaultNumberUnitScales[index];
 };
 
-export const getDefaultUnit = (value: number) => {
-    const unitRate = getUnitRate(value, 1000, BASE_NUMBER_FORMAT_UNIT_KEYS);
-    const [unit] =
-        Object.entries(NUMBER_UNIT_RATE_BY_UNIT).find(([_key, val]) => val === unitRate) ?? [];
-    return unit;
-};
+/** Internal continuous-legend preset; the public preset deliberately includes a space. */
+export const compactNumberUnits: FormatUnitScale = {...FORMAT_UNITS_NUMBERS, delimiter: ''};
 
 export const formatNumber = (value: number | string, options: FormatNumberOptions = {}) => {
     if (Number.isNaN(value) || Number.isNaN(Number(value))) {
@@ -211,7 +206,6 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
         multiplier = 1,
         prefix = '',
         postfix = '',
-        unit,
         units,
         labelMode,
     } = options;
@@ -239,10 +233,7 @@ export const formatNumber = (value: number | string, options: FormatNumberOption
         return `${prefix}${formattedValue}${prePostfix}${postfix}`;
     }
 
-    const formattedValue = baseFormatNumber(Number(value) * changedMultiplier, {
-        ...options,
-        unitRate: NUMBER_UNIT_RATE_BY_UNIT[unit ?? 'default'],
-    });
+    const formattedValue = formatScaledNumber(Number(value) * changedMultiplier, options);
 
     return `${prefix}${formattedValue}${prePostfix}${postfix}`;
 };

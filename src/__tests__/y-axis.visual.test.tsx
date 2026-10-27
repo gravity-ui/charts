@@ -969,7 +969,7 @@ test.describe('Y-axis', () => {
             xAxis: {
                 type: 'datetime',
                 ticks: {
-                    pixelInterval: 120,
+                    interval: 120,
                 },
             },
             yAxis: [

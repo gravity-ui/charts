@@ -193,12 +193,6 @@ export interface ChartAxisTicks {
      */
     interval?: number | string;
     /**
-     * Pixel interval of the tick marks. Not applicable to categorized axis.
-     * The specified value is only a hint; the interval between ticks can be greater or less depending on the data.
-     * @deprecated use `interval` instead
-     */
-    pixelInterval?: number;
-    /**
      * Explicit values of the rendered ticks. These values do not change the axis domain and are not thinned automatically.
      * Tick marks and grid lines remain; labels may be hidden when they would overlap.
      *
@@ -208,7 +202,7 @@ export interface ChartAxisTicks {
      * - For `category` axes: index of the element after applying `order`, but before applying `min` and `max`
      *
      * Duplicate values and values outside the current domain are ignored. An empty array hides all ticks.
-     * This option takes precedence over `interval` and `pixelInterval` when rendering ticks.
+     * This option takes precedence over `interval` when rendering ticks.
      * `startOnTick` and `endOnTick` retain their usual domain alignment behavior, so axis endpoints
      * and ticks on a synchronized secondary Y axis need not coincide with explicit values.
      */

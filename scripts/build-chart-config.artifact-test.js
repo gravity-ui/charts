@@ -39,6 +39,56 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('v2 removes only aliases with a verified v1 adapter', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'v2-migration-usage.ts'),
+                declaration +
+                    `
+                const ticks: ChartAxisTicks = {interval: 120};
+                // @ts-expect-error Removed alias belongs to the v1 adapter input only.
+                ticks.pixelInterval = 120;
+                const format: FormatNumberOptions = {units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''}};
+                // @ts-expect-error Removed alias belongs to the v1 adapter input only.
+                format.unit = 'k';
+                const bars: BarXSeries = {type: 'bar-x', name: 'A', data: [], dataLabels: {placement: ['inside-center']}};
+                // @ts-expect-error Removed bar alias belongs to the v1 adapter input only.
+                bars.dataLabels!.inside = true;
+                const axis: ChartXAxis = {maxPadding: 0.05};
+                void [ticks, format, axis, bars];
+            `,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions.ChartAxisTicks.properties).not.toHaveProperty('pixelInterval');
+        for (const [name, definition] of Object.entries(schema.definitions)) {
+            if (name.startsWith('BarXSeries<') || name.startsWith('BarYSeries<')) {
+                expect(definition.properties.dataLabels.properties).not.toHaveProperty('inside');
+            }
+        }
+        for (const definition of Object.values(schema.definitions)) {
+            if (definition.properties?.units)
+                expect(definition.properties).not.toHaveProperty('unit');
+        }
+        const validate = createSchemaValidator().compile(schema);
+        expect(validate({series: {data: []}, xAxis: {ticks: {pixelInterval: 120}}})).toBe(false);
+        expect(validate({series: {data: []}, xAxis: {labels: {numberFormat: {unit: 'k'}}}})).toBe(
+            false,
+        );
+        expect(
+            validate({
+                series: {data: []},
+                xAxis: {
+                    ticks: {interval: 120},
+                    labels: {
+                        numberFormat: {
+                            units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''},
+                        },
+                    },
+                },
+            }),
+        ).toBe(true);
+    });
+
     test('axis padding extends the axis API while keeping legacy maxPadding numeric', () => {
         expect(() =>
             validateDeclaration(

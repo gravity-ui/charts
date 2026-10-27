@@ -287,7 +287,7 @@ export const getPreparedXAxis = async ({
                       base: width,
                       value: xAxis.ticks.interval,
                   })
-                : xAxis?.ticks?.pixelInterval,
+                : undefined,
             values: xAxis?.ticks?.values,
         },
         tickMarks: {

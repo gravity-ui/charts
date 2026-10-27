@@ -56,7 +56,7 @@ function prepareData(): ChartData {
             title: {
                 text: 'Release year',
             },
-            ticks: {pixelInterval: 200},
+            ticks: {interval: 200},
         },
     };
 }

@@ -25,7 +25,7 @@ const data: ChartData = {
                 name: 'Actual',
                 barPadding: 0.6,
                 grouping: false,
-                dataLabels: {enabled: true, inside: true},
+                dataLabels: {enabled: true, placement: ['inside-center']},
                 data: [
                     {y: 'Q1', x: 75},
                     {y: 'Q2', x: 50},

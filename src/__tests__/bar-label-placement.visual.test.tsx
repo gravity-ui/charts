@@ -4,6 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 
 import BarLabelPlacementExample from '../../docs/examples/src/charts/data-labels/bar-placement';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {migrateChartDataV1} from '../compat/v1';
 import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
@@ -33,7 +34,6 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                             dataLabels: {
                                 enabled: true,
                                 html,
-                                inside: false,
                                 placement: outsideOnly ? ['outside'] : 'auto',
                                 placementFallback: percent && outsideOnly ? 'hide' : 'show',
                                 allowOverlap: true,
@@ -139,21 +139,22 @@ test('bar-y placement hides fully clipped stack segments regardless of fallback'
 });
 
 test('explicit placement ignores legacy inside during autoscaling', async ({mount}) => {
-    const data = (inside: boolean): ChartData => ({
-        legend: {enabled: false},
-        xAxis: {min: 0, order: 'reverse', startOnTick: false, endOnTick: false},
-        yAxis: [{type: 'category', categories: ['A']}],
-        series: {
-            data: [
-                {
-                    type: 'bar-y',
-                    name: 'Orders',
-                    data: [{x: 90, y: 'A', label: 'A long label'}],
-                    dataLabels: {enabled: true, inside, placement: ['inside-center']},
-                },
-            ],
-        },
-    });
+    const data = (inside: boolean): ChartData =>
+        migrateChartDataV1({
+            legend: {enabled: false},
+            xAxis: {min: 0, order: 'reverse', startOnTick: false, endOnTick: false},
+            yAxis: [{type: 'category', categories: ['A']}],
+            series: {
+                data: [
+                    {
+                        type: 'bar-y',
+                        name: 'Orders',
+                        data: [{x: 90, y: 'A', label: 'A long label'}],
+                        dataLabels: {enabled: true, inside, placement: ['inside-center']},
+                    },
+                ],
+            },
+        }).data;
     let readyCount = 0;
     const onRender = () => {
         readyCount++;
@@ -212,7 +213,7 @@ test('reversed percent stacks honor explicit inside-end', async ({mount}) => {
                 name: String(value),
                 stacking: 'percent',
                 data: [{x: 'A', y: value}],
-                dataLabels: {enabled: true, inside: false, placement: ['inside-end'], padding: 5},
+                dataLabels: {enabled: true, placement: ['inside-end'], padding: 5},
             })),
         },
     };
@@ -258,7 +259,6 @@ for (const type of ['bar-y', 'bar-x'] as const) {
                             ).map((point) => ({...point, dataLabels: {enabled: true}})),
                             dataLabels: {
                                 enabled: !pointOverride,
-                                inside: true,
                                 html,
                                 placement: html ? 'auto' : ['outside', 'inside-end'],
                                 padding: 5,

@@ -241,7 +241,7 @@ export const getPreparedYAxis = ({
                               base: height,
                               value: axisItem.ticks?.interval,
                           })
-                        : axisItem.ticks?.pixelInterval,
+                        : undefined,
                     values: axisItem.ticks?.values,
                 },
                 tickMarks: {
