@@ -32,7 +32,8 @@ jobs:
       # through an artifact, because the artifact is controlled by the PR.
       # `workflow_run.pull_requests` is empty for forks, hence the lookup.
       # A run for a commit that is no longer the PR head resolves to nothing,
-      # and the remaining steps are skipped.
+      # and the remaining steps are skipped. The bases are the ones that
+      # "PR Docs Preview" runs for.
       - name: Find PR
         id: pr
         env:
@@ -42,8 +43,11 @@ jobs:
         run: |
           number=$(
             gh api --method GET "repos/${GITHUB_REPOSITORY}/pulls" \
-              -f state=open -f base=main -f head="${HEAD_LABEL}" |
-              jq -r --arg sha "${HEAD_SHA}" 'map(select(.head.sha == $sha)) | .[0].number // empty'
+              -f state=open -f head="${HEAD_LABEL}" |
+              jq -r --arg sha "${HEAD_SHA}" '
+                map(select(.head.sha == $sha and
+                  (.base.ref == "main" or (.base.ref | startswith("release/v")))))
+                | .[0].number // empty'
           )
           if [ -z "${number}" ]; then
             echo "::notice::No open PR has this commit as its head, skipping."

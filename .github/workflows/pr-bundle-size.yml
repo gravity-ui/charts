@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   measure:
-    name: Measure
+    # A skipped check named "Measure" would hide the last measurement in the PR checks.
+    name: ${{ github.event.action == 'edited' && !github.event.changes.base && 'Measure (PR edited)' || 'Measure' }}
     # Edits of the title or description leave the report as it is.
     if: github.event.action != 'edited' || github.event.changes.base
     runs-on: ubuntu-latest
