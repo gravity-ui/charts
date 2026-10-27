@@ -48,6 +48,11 @@ export default [
                     selector: "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
                     message: "Don't use React.FC",
                 },
+                {
+                    selector: "ImportDeclaration[source.value='lodash'][importKind!='type']",
+                    message:
+                        "Import lodash functions by path, e.g. import get from 'lodash/get': the 'lodash' entry pulls the whole library into the bundle.",
+                },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
