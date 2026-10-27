@@ -94,7 +94,7 @@ describe('axis padding', () => {
         expect(JSON.stringify(args.series)).toBe(before);
     });
 
-    test.each([30, '30px', '5%'])(
+    test.each([30, '30px'])(
         'uses equivalent size %j at the numeric maximum on a reversed axis',
         async (max) => {
             const args = await prepare();
@@ -260,7 +260,7 @@ describe('axis padding', () => {
         'backs off excessive padding to keep a usable %s scale',
         async (type) => {
             const args = await prepare();
-            args.xAxis = {...args.xAxis, type, padding: {min: '100%'}};
+            args.xAxis = {...args.xAxis, type, padding: {min: 600}};
             const xScale =
                 type === 'logarithmic'
                     ? scaleLog().domain([1, 100]).range([0, 600])

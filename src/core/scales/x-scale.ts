@@ -17,6 +17,7 @@ import {
 } from '../utils';
 import {getBandSize} from '../utils/band-size';
 
+import {getDomainPadding, getLogarithmicPaddedValue} from './axis-padding-options';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
@@ -75,9 +76,11 @@ export function createXScale(args: {
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const hasZoomX = Boolean(zoomStateX);
     const xCategories = get(axis, 'categories');
-    const maxPadding =
-        xType === 'category' || axis.padding?.max === undefined ? get(axis, 'maxPadding', 0) : 0;
-    const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
+    const domainPadding =
+        'rangeSlider' in axis && axis.rangeSlider?.enabled
+            ? {min: 0, max: 0, maxIsPercentage: false}
+            : getDomainPadding(axis);
+    const xAxisMaxPadding = boundsWidth * domainPadding.max + calculateXAxisPadding(series);
 
     const range = getXScaleRange({
         boundsWidth,
@@ -138,7 +141,7 @@ export function createXScale(args: {
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
-                let offsetMin = 0;
+                let offsetMin = boundsWidth * domainPadding.min;
                 let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
@@ -166,7 +169,17 @@ export function createXScale(args: {
                 // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
 
-                scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
+                let domainMin = xMin - domainOffsetMin;
+                let domainMax = xMax + domainOffsetMax;
+                if (xType === 'logarithmic') {
+                    if (!isMinSpecified && domainPadding.min > 0) {
+                        domainMin = getLogarithmicPaddedValue(scale, offsetMin, 'min');
+                    }
+                    if (!isMaxSpecified && domainPadding.maxIsPercentage && domainPadding.max > 0) {
+                        domainMax = getLogarithmicPaddedValue(scale, offsetMax, 'max');
+                    }
+                }
+                scale.domain([domainMin, domainMax]);
 
                 const startOnTick = get(axis, 'startOnTick', true);
                 const endOnTick = get(axis, 'endOnTick', true);
@@ -237,7 +250,7 @@ export function createXScale(args: {
 
                 const scale = scaleUtc().domain(domain).range(range);
 
-                let offsetMin = 0;
+                let offsetMin = boundsWidth * domainPadding.min;
                 let offsetMax = xAxisMaxPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {

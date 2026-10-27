@@ -20,23 +20,19 @@ export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;
 
-/** Extra space obtained by extending the free ends of a continuous axis domain. */
+/** Extend a continuous axis domain. Explicit axis limits take precedence. */
 export interface ChartAxisPadding {
     /**
-     * Space at the minimum value: a nonnegative number or `px` string in pixels,
-     * a percentage of the axis length, or `auto` to fit marker paint including hover.
-     * The axis length is measured after margins and axis layout, before padding.
-     * Explicit axis limits, zoom and percent normalization take precedence.
-     * X padding is ignored when `xAxis.rangeSlider.enabled` is `true`.
-     * Category axes ignore padding. Oversized requests are bounded and can still clip.
+     * Minimum-side space: pixels (number or `px` string), a percentage, or `auto` to fit markers.
+     * Percentages on both sides use the initial scale before band/label offsets and tick rounding.
+     * Logarithmic axes use the logarithmic span.
      * @minimum 0
      * @default 0
      */
     min?: number | string;
     /**
-     * Space at the maximum value, in the same formats and units as `padding.min`.
-     * An explicit value (including `0` or `auto`) replaces `maxPadding` on this side.
-     * When omitted, the existing `maxPadding` behavior and default are preserved.
+     * Maximum-side space, using the same units as `min`.
+     * Falls back to `maxPadding` when omitted.
      * @minimum 0
      */
     max?: number | string;
@@ -266,17 +262,9 @@ export interface ChartAxis {
     };
     ticks?: ChartAxisTicks;
     /**
-     * Padding of the max value relative to the length of the axis.
-     * A padding of 0.05 will make a 100px axis 5px longer.
-     *
-     *
-     * Does not apply:
-     * - for series with data normalization along on a specific axis (stacking: 'percent')
-     * - to the X axis when rangeSlider is used
+     * Maximum-side padding as a fraction of the initial scale.
      * @default 0.05 for Y axis, 0.01 for X axis
-     * @deprecated Use `padding.max`. Its numbers are pixels, whereas `maxPadding` numbers are fractions.
-     * For example, `maxPadding: 0.05` corresponds to a `padding.max: '5%'` request,
-     * although the final domains can differ because the new option fits space after existing layout.
+     * @deprecated Use `padding.max`; percentage limits differ on logarithmic axes.
      */
     maxPadding?: number;
     /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */

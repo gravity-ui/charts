@@ -16,6 +16,7 @@ import {
 import {getBandSize} from '../utils/band-size';
 import {sumDecimals} from '../utils/math';
 
+import {getDomainPadding, getLogarithmicPaddedValue} from './axis-padding-options';
 import type {ChartScaleLinear} from './types';
 import {
     checkIsPointDomain,
@@ -341,12 +342,10 @@ export function createYScale(args: {
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 
-                let offsetMin = 0;
+                const domainPadding = getDomainPadding(axis);
+                let offsetMin = boundsHeight * domainPadding.min;
                 // We should ignore padding if we are drawing only one point on the plot.
-                let offsetMax =
-                    yMin === yMax || axis.padding?.max !== undefined
-                        ? 0
-                        : boundsHeight * axis.maxPadding;
+                let offsetMax = yMin === yMax ? 0 : boundsHeight * domainPadding.max;
                 if (isSeriesWithYAxisOffset(series)) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({
@@ -369,7 +368,17 @@ export function createYScale(args: {
                     ? 0
                     : Math.abs(scale.invert(offsetMax) - scale.invert(0));
 
-                scale = scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+                let domainMin = yMin - domainOffsetMin;
+                let domainMax = yMax + domainOffsetMax;
+                if (axis.type === 'logarithmic') {
+                    if (!isMinSpecified && domainPadding.min > 0) {
+                        domainMin = getLogarithmicPaddedValue(scale, offsetMin, 'min');
+                    }
+                    if (!isMaxSpecified && domainPadding.maxIsPercentage && domainPadding.max > 0) {
+                        domainMax = getLogarithmicPaddedValue(scale, offsetMax, 'max');
+                    }
+                }
+                scale = scale.domain([domainMin, domainMax]);
 
                 const startOnTick = get(axis, 'startOnTick', false);
                 const endOnTick = get(axis, 'endOnTick', false);
@@ -480,9 +489,9 @@ export function createYScale(args: {
                             : yMaxTimestamp;
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
-                    let offsetMin = 0;
-                    let offsetMax =
-                        axis.padding?.max === undefined ? boundsHeight * axis.maxPadding : 0;
+                    const domainPadding = getDomainPadding(axis);
+                    let offsetMin = boundsHeight * domainPadding.min;
+                    let offsetMax = boundsHeight * domainPadding.max;
                     if (isSeriesWithYAxisOffset(series)) {
                         if (Object.keys(domain).length > 1) {
                             const bandWidth = getBandSize({

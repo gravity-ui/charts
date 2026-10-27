@@ -30,25 +30,25 @@ Set `min`, `max`, or both inside `padding`. They refer to the minimum and maximu
 
 - **Automatic** — use `'auto'` to fit markers, their borders, enabled hover sizes, and visible scatter halos. It reuses space already available in the range. Space is reserved before hovering, so hovering does not move the axes.
 - **Pixels** — use a nonnegative number or pixel string, such as `12` or `'12px'`.
-- **Percentages** — use a string such as `'5%'`, relative to the axis length after margins, axes, and legend layout.
+- **Percentages** — expand both ends using the same initial scale, before space for bars and labels and tick rounding. For a linear range of `[0, 100]`, `padding: {min: '10%', max: '25%'}` gives `[-10, 125]` before rounding. The percentages do not describe fractions of the final visible width or height.
 
-Explicit sizes add space beyond the otherwise computed range. Tick rounding can leave more space than requested. Oversized requests are bounded to keep a usable scale; markers can still clip when the chart is too small.
+Pixel and automatic sizes add space beyond the otherwise computed range. Tick rounding can leave more space than requested. Oversized visual-space requests are bounded to keep a usable scale; markers can still clip when the chart is too small.
+
+On a logarithmic axis, percentages extend the original logarithmic span. For `[1, 100]`, setting both ends to `'25%'` produces approximately `[0.316, 316.23]` before other offsets and rounding. Equal percentages extend both sides equally in scale coordinates, independently of axis direction.
+
+An omitted maximum continues to use `maxPadding` and its defaults. On a logarithmic axis, that calculation differs from an explicit percentage. Set both `padding.min` and `padding.max` to control both ends with the percentage rule.
 
 ### Limits and ticks
 
 Padding extends only free boundaries. An explicit `min` or `max` takes precedence on that side. Use `startOnTick` or `endOnTick` to round the extended boundary to a tick.
 
-Zoomed boundaries stay fixed. X padding is ignored when `xAxis.rangeSlider.enabled` is `true`. The range slider overview does not apply axis padding. Category axes and normalized percentage axes ignore it.
+Pixel and automatic padding do not extend zoomed boundaries. Percentage padding keeps the same initial-scale calculation during zoom. X padding is ignored when `xAxis.rangeSlider.enabled` is `true`. The range slider overview does not apply visual-space fitting. Category axes ignore visual-space fitting, and normalized percentage axes ignore padding.
+
+Y axes with explicit `timestamps` ignore percentage padding.
 
 ### Supported series
 
 Automatic padding measures markers in line, area, area-range, and scatter series. Labels and tooltips do not contribute. Other Cartesian series on the same axis use the extended range too. Explicit sizes work on continuous axes regardless of series type.
-
-### Migrating from `maxPadding`
-
-`maxPadding` is deprecated but keeps its numeric type, defaults, and behavior. Set `padding.max` to override it, including with `0` or `'auto'`. Setting only `padding.min` leaves `maxPadding` in effect.
-
-Legacy `maxPadding` numbers are fractions; new `padding` numbers are pixels. For example, `maxPadding: 0.05` requests a proportion comparable to `padding: {max: '5%'}`. The resulting limits can differ because the new option fits space after the existing axis layout. Keep `maxPadding` when exact legacy behavior is required.
 
 ## Labels
 
