@@ -2,29 +2,35 @@ name: PR Bundle Size
 
 on:
   pull_request:
+    # `edited` for a change of the base branch, which changes what the PR is compared with.
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
 
-# A new push to the PR makes the previous measurement obsolete.
-concurrency:
-  group: pr-bundle-size-${{ github.event.number }}
-  cancel-in-progress: true
-
 jobs:
   measure:
     name: Measure
+    # Edits of the title or description leave the report as it is.
+    if: github.event.action != 'edited' || github.event.changes.base
     runs-on: ubuntu-latest
+    # A new push or base makes the previous measurement obsolete. On the job, so that a skipped
+    # run for an edit does not cancel a measurement in progress.
+    concurrency:
+      group: pr-bundle-size-${{ github.event.number }}
+      cancel-in-progress: true
     steps:
-      # First, so that "PR Bundle Size Report" can comment on a failed measurement too.
-      # The number is untrusted there and verified against the run.
+      # First, so that "PR Bundle Size Report" can comment on a failed measurement too. The
+      # number and base are untrusted there and verified against the run and the PR.
       - name: Save PR Number
         env:
           PR_NUMBER: ${{ github.event.number }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
           PR_DIR: ${{ runner.temp }}/bundle-size-pr
         run: |
           mkdir -p "${PR_DIR}"
           echo "${PR_NUMBER}" > "${PR_DIR}/number.txt"
+          echo "${PR_BASE}" > "${PR_DIR}/base.txt"
       - name: Upload PR Number
         uses: actions/upload-artifact@v4
         with:

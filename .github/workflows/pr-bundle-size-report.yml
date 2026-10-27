@@ -10,11 +10,13 @@ on:
     types:
       - completed
 
-# Reports of one PR branch are published one at a time. Together with the head check before
-# the upload, a run that finishes late cannot replace the report of a newer commit.
+# Reports of one PR branch are published one at a time. Together with the head and base check
+# before the upload, a run that finishes late cannot replace a newer report. `queue: max` keeps
+# every pending run, so two PRs from the same branch both get their reports.
 concurrency:
   group: pr-bundle-size-report-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   report:
@@ -61,15 +63,16 @@ jobs:
 
       # Two PRs can share a head branch and commit, so the PR comes from the measurement itself
       # rather than from a lookup. Its number is accepted only for an open PR whose head is the
-      # commit and repository of this run.
+      # commit and repository of this run. The base it was measured against is checked below.
       - name: Find PR
         id: pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           number=$(head -c 20 bundle-size-pr/number.txt 2>/dev/null | tr -d '[:space:]' || true)
-          if ! [[ "${number}" =~ ^[0-9]+$ ]]; then
-            echo "::notice::The measurement has no PR number, skipping."
+          base=$(head -c 256 bundle-size-pr/base.txt 2>/dev/null | tr -d '[:space:]' || true)
+          if ! [[ "${number}" =~ ^[0-9]+$ ]] || ! [[ "${base}" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "::notice::The measurement has no PR number or base, skipping."
             exit 0
           fi
           if ! read -r state sha repo < <(
@@ -84,6 +87,7 @@ jobs:
             exit 0
           fi
           echo "number=${number}" >> "$GITHUB_OUTPUT"
+          echo "base=${base}" >> "$GITHUB_OUTPUT"
         shell: bash
 
       # The default branch, for pr-comment.mjs. Checked out before the report is on disk.
@@ -109,19 +113,22 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       # The run may have waited for an earlier one of the same branch: publish only if the PR
-      # still has this head.
+      # still has this head and base. A new head or base gets a measurement of its own.
       - name: Check PR Head
         id: head
         if: steps.pr.outputs.number
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_BASE: ${{ steps.pr.outputs.base }}
         run: |
-          sha=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .head.sha)
-          if [ "${sha}" = "${HEAD_SHA}" ]; then
+          read -r sha base < <(
+            gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '"\(.head.sha) \(.base.ref)"'
+          )
+          if [ "${sha}" = "${HEAD_SHA}" ] && [ "${base}" = "${PR_BASE}" ]; then
             echo "current=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::PR #${PR_NUMBER} moved on to ${sha}, skipping."
+            echo "::notice::PR #${PR_NUMBER} moved on to ${sha} on ${base}, skipping."
           fi
         shell: bash
 
