@@ -940,7 +940,7 @@ test.describe('Tooltip', () => {
     });
 
     test('Tooltip follows a chart inside a CSS-scaled container', async ({mount, page}) => {
-        await page.setViewportSize({width: 600, height: 400});
+        await page.setViewportSize({width: 1000, height: 600});
         const component = await mount(
             <ChartTestStory
                 data={{
@@ -969,9 +969,23 @@ test.describe('Tooltip', () => {
             />,
         );
         const bar = component.locator('.gcharts-bar-x__segment').nth(1);
-        await bar.hover();
-        await expect(page.locator('.gcharts-tooltip')).toBeVisible();
-        await expect(page).toHaveScreenshot({maxDiffPixels: 200});
+        const box = await getLocatorBoundingBox(bar);
+        const pointer = {
+            x: Math.round(box.x + box.width / 2),
+            y: Math.round(box.y + box.height / 2),
+        };
+        await page.mouse.move(pointer.x, pointer.y);
+        const tooltip = page.locator('.gcharts-tooltip');
+        await expect(tooltip.getByText('B', {exact: true})).toBeVisible();
+        await expect
+            .poll(async () => {
+                const bounds = await getLocatorBoundingBox(tooltip);
+                return Math.max(
+                    Math.abs(bounds.x - pointer.x - 20),
+                    Math.abs(bounds.y + bounds.height / 2 - pointer.y),
+                );
+            })
+            .toBeLessThanOrEqual(2);
     });
 
     // TODO: rewrite the test after updating @gravity-ui/uikit (to the version with a drawer)

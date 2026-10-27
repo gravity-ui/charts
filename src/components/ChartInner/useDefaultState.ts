@@ -9,6 +9,7 @@ import {EventType} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
 import {calculateNumericProperty} from '~core/utils/math';
+import {getSvgScreenPoint} from '~core/utils/svg-screen-point';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {ChartTooltipRendererArgs, ChartYAxis} from '../../types';
@@ -102,13 +103,14 @@ export function useDefaultState(props: Props) {
                 hoveredPlotsArg,
             );
 
-            const rect = svgRef.current?.getBoundingClientRect();
+            const svg = svgRef.current;
+            const screenPoint = getSvgScreenPoint(svg, svgPointerX, svgPointerY);
             const syntheticEvent =
-                rect &&
+                svg &&
                 new PointerEvent('pointermove', {
                     bubbles: true,
-                    clientX: rect.left + svgPointerX,
-                    clientY: rect.top + svgPointerY,
+                    clientX: screenPoint.x,
+                    clientY: screenPoint.y,
                 });
 
             if (syntheticEvent) {
