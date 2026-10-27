@@ -348,6 +348,11 @@ export function createYScale(args: {
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 
                 const domainPadding = getDomainPadding(axis);
+                // Avoid inverse-scale rounding drift when proportional padding has no domain span.
+                if (yMin === yMax) {
+                    domainPadding.min = 0;
+                    domainPadding.max = 0;
+                }
                 let offsetMin = 0;
                 let offsetMax = 0;
                 if (isSeriesWithYAxisOffset(series)) {

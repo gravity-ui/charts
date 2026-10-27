@@ -166,6 +166,23 @@ test('percentage maximum retains the legacy upper bound for the motivating examp
     expect((await compare({name: '0 to 100'})).converted.domain).toEqual([0, 125]);
 });
 
+test.each([{values: [0.53]}, {values: [0.53, 0.53]}])(
+    'constant fractional Y values $values stay centered with proportional padding',
+    async ({values}) => {
+        const {original, converted} = await compare({
+            name: 'constant fractional Y',
+            values,
+            axis: {maxPadding: 0.05},
+            replacement: {padding: {min: '10%', max: '5%'}},
+        });
+        for (const result of [original, converted]) {
+            expect(result.domain).toEqual([0.53, 0.53]);
+            expect(result.positions).toEqual(values.map(() => 150));
+            expect(result.ticks).toEqual([0.53]);
+        }
+    },
+);
+
 test.each(['x', 'y'] as const)(
     'both percentage ends use the same original %s scale',
     async (direction) => {
