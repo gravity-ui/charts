@@ -16,6 +16,21 @@ jobs:
     name: Measure
     runs-on: ubuntu-latest
     steps:
+      # First, so that "PR Bundle Size Report" can comment on a failed measurement too.
+      # The number is untrusted there and verified against the run.
+      - name: Save PR Number
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_DIR: ${{ runner.temp }}/bundle-size-pr
+        run: |
+          mkdir -p "${PR_DIR}"
+          echo "${PR_NUMBER}" > "${PR_DIR}/number.txt"
+      - name: Upload PR Number
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-size-pr
+          path: ${{ runner.temp }}/bundle-size-pr
+          retention-days: 1
       - name: Checkout
         uses: actions/checkout@v4
         with:

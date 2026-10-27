@@ -80,7 +80,9 @@ openTarget();
 `;
 }
 
-// The module treemap of one build, stored in snapshots/<id>/.
+// The module treemap of one build, stored in snapshots/<id>/. Snapshot pages are written once
+// while viewer.js and viewer.css are rewritten on every run, so the treemap styles live in
+// treemap.css (bundled into viewer.css) rather than here.
 export function renderTreemapPage({title, tree}) {
     return `<!doctype html>
 <html lang="en">
@@ -92,11 +94,6 @@ export function renderTreemapPage({title, tree}) {
 <style>
 ${BASE_STYLE}
 body { max-width: none; margin: 16px; }
-.crumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.crumbs button:disabled { color: #222; font-weight: 600; cursor: default; }
-.crumbs .sep { color: #999; } .crumbs .size { color: #666; margin-left: 12px; }
-.crumbs .nested { margin-left: auto; color: #444; cursor: pointer; }
-.treemap { height: calc(100vh - 80px); min-height: 480px; }
 </style>
 </head>
 <body>

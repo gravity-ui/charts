@@ -10,10 +10,12 @@ on:
         type: number
         default: 0
 
-# Each run rewrites history.json, so runs must not overlap.
+# Each run rewrites history.json, so runs must not overlap. `queue: max` keeps every pending
+# run instead of only the latest, so each push to main gets its snapshot.
 concurrency:
   group: bundle-size-history
   cancel-in-progress: false
+  queue: max
 
 jobs:
   history:
@@ -46,10 +48,20 @@ jobs:
         with:
           version: 2.22.35
           arch: amd64
+      # Only a missing history.json starts a new history: on any other error the upload below
+      # would replace the published history with this run's entries alone.
       - name: Download History
         run: |
           mkdir -p bundle-size
-          aws s3 cp "${S3_PATH}/history.json" bundle-size/history.json --endpoint-url="${S3_ENDPOINT}" || echo 'No history yet'
+          if ! aws s3 cp "${S3_PATH}/history.json" bundle-size/history.json \
+            --endpoint-url="${S3_ENDPOINT}" 2> download-error.txt; then
+            if grep -q '(404)' download-error.txt; then
+              echo 'No history yet'
+            else
+              cat download-error.txt >&2
+              exit 1
+            fi
+          fi
         shell: bash
       - name: Measure Releases
         if: ${{ inputs.backfill > 0 }}

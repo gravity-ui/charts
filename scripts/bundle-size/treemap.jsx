@@ -3,6 +3,8 @@ import React from 'react';
 
 import {Chart} from '@gravity-ui/charts';
 
+import './treemap.css';
+
 const PALETTE = [
     '#4c7bd9',
     '#e8743b',
@@ -19,53 +21,86 @@ const OTHER_COLOR = '#bbbbbb';
 const TOP_TILES = 48;
 const TOP_GROUPS = 24;
 const TOP_CHILDREN = 12;
-const kBFormat = {type: 'number', precision: 2, postfix: ' kB', lang: 'en'};
 const formatKB = (bytes) => `${(bytes / 1000).toFixed(2)} kB`;
+// Tile values are in kB, like the history charts.
+const toKB = (bytes) => bytes / 1000;
 
-// The biggest children, with the rest folded into one "other" tile (index -1).
-function topChildren(node, limit) {
-    const children = (node.children ?? []).map((child, index) => ({child, index}));
-    if (children.length <= limit) return children;
-    const rest = children.slice(limit);
-    const size = rest.reduce((sum, {child}) => sum + child.size, 0);
-    return [
-        ...children.slice(0, limit),
-        {child: {name: `other (${rest.length})`, size}, index: -1},
-    ];
+// Flat tiles are named [name, size] for a two-line label, which the default tooltip row would
+// show joined. This row shows the plain name from `custom.label` and the size of the tile.
+function TooltipRow({className, hovered}) {
+    const point = hovered?.[0]?.data;
+    if (!point) return null;
+    return (
+        <tr className={className}>
+            <td>
+                <span className="bs-swatch" style={{background: point.color}} />
+            </td>
+            <td>{point.custom?.label}</td>
+            <td className="bs-value">{point.value.toFixed(2)} kB</td>
+        </tr>
+    );
 }
 
-const colorOf = (index, i) => (index === -1 ? OTHER_COLOR : PALETTE[i % PALETTE.length]);
+// A path element is a child index, or `rest:<n>` for the "other" tile: the children from
+// index n on, which opens like any other node.
+const REST = 'rest:';
+
+function step(node, element) {
+    if (typeof element === 'number') return node.children[element];
+    const rest = node.children.slice(Number(element.slice(REST.length)));
+    return {
+        name: `other (${rest.length})`,
+        size: rest.reduce((sum, child) => sum + child.size, 0),
+        children: rest,
+    };
+}
+
+// The biggest children, with the rest folded into one "other" tile.
+function topChildren(node, limit) {
+    const children = (node.children ?? []).map((child, index) => ({child, element: index}));
+    if (children.length <= limit) return children;
+    const element = `${REST}${limit}`;
+    return [...children.slice(0, limit), {child: step(node, element), element}];
+}
+
+const colorOf = (element, i) =>
+    typeof element === 'string' ? OTHER_COLOR : PALETTE[i % PALETTE.length];
 
 // One level: every tile is labelled with its name and size.
 function flatPoints(node, path) {
-    return topChildren(node, TOP_TILES).map(({child, index}, i) => ({
+    return topChildren(node, TOP_TILES).map(({child, element}, i) => ({
         name: [child.name, formatKB(child.size)],
-        value: child.size,
-        color: colorOf(index, i),
-        custom: {path: index === -1 ? null : [...path, index]},
+        value: toKB(child.size),
+        color: colorOf(element, i),
+        custom: {path: [...path, element], label: child.name},
     }));
 }
 
 // Two levels. The charts treemap labels only leaves, so groups are told apart by color.
 function nestedPoints(node, path) {
     const points = [];
-    topChildren(node, TOP_GROUPS).forEach(({child, index}, i) => {
-        const color = colorOf(index, i);
-        const childPath = index === -1 ? null : [...path, index];
+    topChildren(node, TOP_GROUPS).forEach(({child, element}, i) => {
+        const color = colorOf(element, i);
+        const childPath = [...path, element];
         const grandchildren = child.children ? topChildren(child, TOP_CHILDREN) : [];
         if (grandchildren.length < 2) {
-            points.push({name: child.name, value: child.size, color, custom: {path: childPath}});
+            points.push({
+                name: child.name,
+                value: toKB(child.size),
+                color,
+                custom: {path: childPath, label: child.name},
+            });
             return;
         }
         const id = `group-${i}`;
-        points.push({id, name: child.name, color, custom: {path: childPath}});
-        for (const {child: grandchild, index: grandIndex} of grandchildren) {
+        points.push({id, name: child.name, color, custom: {path: childPath, label: child.name}});
+        for (const {child: grandchild, element: grandElement} of grandchildren) {
             points.push({
                 name: grandchild.name,
                 parentId: id,
-                value: grandchild.size,
+                value: toKB(grandchild.size),
                 color,
-                custom: {path: grandIndex === -1 ? childPath : [...childPath, grandIndex]},
+                custom: {path: [...childPath, grandElement], label: grandchild.name},
             });
         }
     });
@@ -76,7 +111,7 @@ export function Treemap({tree}) {
     const [path, setPath] = React.useState([]);
     const [nested, setNested] = React.useState(false);
     const nodes = path.reduce(
-        (list, index) => [...list, list[list.length - 1].children[index]],
+        (list, element) => [...list, step(list[list.length - 1], element)],
         [tree],
     );
     const node = nodes[nodes.length - 1];
@@ -84,7 +119,7 @@ export function Treemap({tree}) {
     // A tile without children opens its parent group instead.
     const open = React.useCallback(
         (target) => {
-            const resolved = target.reduce((n, index) => n.children[index], tree);
+            const resolved = target.reduce(step, tree);
             setPath(resolved.children ? target : target.slice(0, -1));
         },
         [tree],
@@ -92,7 +127,7 @@ export function Treemap({tree}) {
     const data = React.useMemo(
         () => ({
             legend: {enabled: false},
-            tooltip: {valueFormat: kBFormat},
+            tooltip: {rows: [{renderer: TooltipRow}]},
             series: {
                 data: [
                     {

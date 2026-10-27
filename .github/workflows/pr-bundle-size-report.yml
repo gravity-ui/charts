@@ -1,14 +1,20 @@
 name: PR Bundle Size Report
 
 # Runs in the context of the base repository, so repository secrets are available even when
-# the measurement was triggered by a pull request from a fork. The report artifact is
-# untrusted: its site is only uploaded, and the comment is rendered by the scripts of the
-# default branch from validated numbers.
+# the measurement was triggered by a pull request from a fork. The artifacts are untrusted:
+# the PR number is verified against the run, the report site is only uploaded, and the comment
+# is rendered by the scripts of the default branch from validated numbers.
 on:
   workflow_run:
     workflows: ['PR Bundle Size']
     types:
       - completed
+
+# Reports of one PR branch are published one at a time. Together with the head check before
+# the upload, a run that finishes late cannot replace the report of a newer commit.
+concurrency:
+  group: pr-bundle-size-report-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
 
 jobs:
   report:
@@ -22,6 +28,10 @@ jobs:
       actions: read
       contents: read
       pull-requests: read
+    env:
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+      MEASURED: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Generate token
         id: generate-token
@@ -30,52 +40,67 @@ jobs:
           app-id: ${{ secrets.GRAVITY_UI_APP_ID }}
           private-key: ${{ secrets.GRAVITY_UI_APP_PRIVATE_KEY }}
 
-      # The PR number is resolved from the event instead of being passed through the artifact,
-      # because the artifact is controlled by the PR. `workflow_run.pull_requests` is empty for
-      # forks, hence the lookup. A run for a commit that is no longer the PR head resolves to
-      # nothing, and the remaining steps are skipped.
-      - name: Find PR
-        id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          HEAD_LABEL: ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          number=$(
-            gh api --method GET "repos/${GITHUB_REPOSITORY}/pulls" \
-              -f state=open -f head="${HEAD_LABEL}" |
-              jq -r --arg sha "${HEAD_SHA}" 'map(select(.head.sha == $sha)) | .[0].number // empty'
-          )
-          if [ -z "${number}" ]; then
-            echo "::notice::No open PR has this commit as its head, skipping."
-          fi
-          echo "number=${number}" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      # The default branch, for pr-comment.mjs. Checked out before anything from the PR is on disk.
-      - name: Checkout
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Setup Node
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-
+      # Installed before the downloads so that nothing from the PR is on disk yet.
       - name: Install AWS CLI
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: env.MEASURED == 'true'
         uses: unfor19/install-aws-cli-action@v1
         with:
           version: 2.22.35
           arch: amd64
 
       # Not v4: its bundled extractor is affected by GHSA-6jrj-vc65-c983 (files written outside
-      # the target directory), and this archive is untrusted.
+      # the target directory), and these archives are untrusted.
+      - name: Download PR Number
+        continue-on-error: true
+        uses: actions/download-artifact@v7
+        with:
+          name: bundle-size-pr
+          path: bundle-size-pr
+          github-token: ${{ steps.generate-token.outputs.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # Two PRs can share a head branch and commit, so the PR comes from the measurement itself
+      # rather than from a lookup. Its number is accepted only for an open PR whose head is the
+      # commit and repository of this run.
+      - name: Find PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          number=$(head -c 20 bundle-size-pr/number.txt 2>/dev/null | tr -d '[:space:]' || true)
+          if ! [[ "${number}" =~ ^[0-9]+$ ]]; then
+            echo "::notice::The measurement has no PR number, skipping."
+            exit 0
+          fi
+          if ! read -r state sha repo < <(
+            gh api "repos/${GITHUB_REPOSITORY}/pulls/${number}" \
+              --jq '"\(.state) \(.head.sha) \(.head.repo.full_name)"'
+          ); then
+            echo "::notice::PR #${number} was not found, skipping."
+            exit 0
+          fi
+          if [ "${state}" != 'open' ] || [ "${sha}" != "${HEAD_SHA}" ] || [ "${repo}" != "${HEAD_REPO}" ]; then
+            echo "::notice::PR #${number} is closed or no longer has this head, skipping."
+            exit 0
+          fi
+          echo "number=${number}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      # The default branch, for pr-comment.mjs. Checked out before the report is on disk.
+      - name: Checkout
+        if: steps.pr.outputs.number && env.MEASURED == 'true'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        if: steps.pr.outputs.number && env.MEASURED == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Download Report
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.pr.outputs.number && env.MEASURED == 'true'
         uses: actions/download-artifact@v7
         with:
           name: bundle-size-report
@@ -83,9 +108,26 @@ jobs:
           github-token: ${{ steps.generate-token.outputs.token }}
           run-id: ${{ github.event.workflow_run.id }}
 
+      # The run may have waited for an earlier one of the same branch: publish only if the PR
+      # still has this head.
+      - name: Check PR Head
+        id: head
+        if: steps.pr.outputs.number
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          sha=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .head.sha)
+          if [ "${sha}" = "${HEAD_SHA}" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::PR #${PR_NUMBER} moved on to ${sha}, skipping."
+          fi
+        shell: bash
+
       # Each run replaces the previous report of the PR.
       - name: Upload to S3
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.head.outputs.current && env.MEASURED == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.STORYBOOK_S3_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STORYBOOK_S3_SECRET_KEY }}
@@ -99,7 +141,7 @@ jobs:
         shell: bash
 
       - name: Build Comment
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.head.outputs.current && env.MEASURED == 'true'
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
@@ -109,7 +151,7 @@ jobs:
         shell: bash
 
       - name: Comment on PR (success)
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'success'
+        if: steps.head.outputs.current && env.MEASURED == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -118,7 +160,7 @@ jobs:
           path: bundle-size-comment.md
 
       - name: Comment on PR (measurement failure)
-        if: steps.pr.outputs.number && github.event.workflow_run.conclusion == 'failure'
+        if: steps.head.outputs.current && env.MEASURED != 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
