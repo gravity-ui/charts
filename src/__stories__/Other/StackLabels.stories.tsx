@@ -21,8 +21,42 @@ export const BarsPercent: Story = {args: {data: getStackLabelsData('bar-y', 'per
 export const Area: Story = {args: {data: getStackLabelsData('area')}};
 export const AreaPercent: Story = {args: {data: getStackLabelsData('area', 'percent')}};
 
-export const ColumnsCustomAggregation: Story = {
-    args: {data: getStackLabelsAggregationData('bar-x')},
-};
-export const BarsCustomAggregation: Story = {args: {data: getStackLabelsAggregationData('bar-y')}};
-export const AreaCustomAggregation: Story = {args: {data: getStackLabelsAggregationData('area')}};
+function createCustomAggregationStory(type: 'bar-x' | 'bar-y' | 'area'): Story {
+    const data = getStackLabelsAggregationData(type);
+    let aggregationSource = '';
+    const source = JSON.stringify(
+        data,
+        (key, value) => {
+            if (key === 'aggregation' && typeof value === 'function') {
+                aggregationSource = value.toString();
+                return '__AGGREGATION_CALLBACK__';
+            }
+
+            return value;
+        },
+        2,
+    ).replace('"__AGGREGATION_CALLBACK__"', aggregationSource);
+
+    return {
+        args: {data},
+        parameters: {
+            docs: {
+                codePanel: true,
+                source: {
+                    type: 'code',
+                    language: 'tsx',
+                    code: `import {Chart} from '@gravity-ui/charts';
+import type {ChartData} from '@gravity-ui/charts';
+
+const data: ChartData = ${source};
+
+<Chart data={data} />`,
+                },
+            },
+        },
+    };
+}
+
+export const ColumnsCustomAggregation: Story = createCustomAggregationStory('bar-x');
+export const BarsCustomAggregation: Story = createCustomAggregationStory('bar-y');
+export const AreaCustomAggregation: Story = createCustomAggregationStory('area');
