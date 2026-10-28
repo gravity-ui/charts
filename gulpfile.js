@@ -3,12 +3,12 @@ const path = require('node:path');
 const utils = require('@gravity-ui/gulp-utils');
 const {task, src, dest, series, parallel} = require('gulp');
 const sass = require('gulp-dart-sass');
-const replace = require('gulp-replace');
-const ts = require('gulp-typescript');
+const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
-const {replaceTscAliasPaths} = require('tsc-alias');
 
 const {buildChartConfig} = require('./scripts/build-chart-config');
+
+const {version, sideEffects} = require('./package.json');
 
 const BUILD_DIR = path.resolve('dist');
 
@@ -17,30 +17,54 @@ task('clean', (done) => {
     done();
 });
 
-function compileTs(modules = false) {
-    const tsProject = ts.createProject('tsconfig.json', {
-        declaration: true,
-        ...(modules ? undefined : {verbatimModuleSyntax: false}),
-        module: modules ? 'esnext' : 'NodeNext',
-        moduleResolution: modules ? 'bundler' : 'NodeNext',
+async function compileTs(modules = false) {
+    const tsProject = await utils.createTypescriptProject({
+        compilerOptions: {
+            declaration: true,
+            module: modules ? 'esnext' : 'nodenext',
+            moduleResolution: modules ? 'bundler' : 'nodenext',
+            ...(modules ? undefined : {verbatimModuleSyntax: false}),
+        },
     });
 
-    return src([
-        'src/**/*.{ts,tsx}',
-        '!src/demo/**/*',
-        '!src/**/__stories__/**/*',
-        '!src/**/__tests__/**/*',
-        '!src/**/*.test.{ts,tsx}',
-    ])
-        .pipe(replace(/import '.+\.scss';/g, (match) => match.replace('.scss', '.css')))
-        .pipe(tsProject())
-        .pipe(dest(path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs')));
-}
-
-async function replaceAliases(modules = false) {
-    await replaceTscAliasPaths({
-        configFile: 'tsconfig.json',
-        outDir: path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs'),
+    // Local imports, including the `~core` alias, get relative paths with extensions, and
+    // `.scss` imports point to the compiled `.css`.
+    const transformers = [
+        tsProject.customTransformers.transformScssImports,
+        tsProject.customTransformers.transformLocalModules,
+    ];
+    return new Promise((resolve) => {
+        src([
+            'src/**/*.{ts,tsx}',
+            '!src/demo/**/*',
+            '!src/**/__stories__/**/*',
+            '!src/**/__tests__/**/*',
+            '!src/**/*.test.{ts,tsx}',
+            '!src/setup-*.ts',
+        ])
+            .pipe(sourcemaps.init())
+            .pipe(
+                tsProject({
+                    customTransformers: {
+                        before: transformers,
+                        afterDeclarations: transformers,
+                    },
+                }),
+            )
+            .pipe(sourcemaps.write('.', {includeContent: true, sourceRoot: '../../src'}))
+            // Bundlers read `sideEffects` from the closest package.json, so it repeats the root one.
+            .pipe(
+                utils.addVirtualFile({
+                    fileName: 'package.json',
+                    text: JSON.stringify({
+                        version,
+                        type: modules ? 'module' : 'commonjs',
+                        sideEffects,
+                    }),
+                }),
+            )
+            .pipe(dest(path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs')))
+            .on('end', resolve);
     });
 }
 
@@ -50,14 +74,6 @@ task('compile-to-esm', () => {
 
 task('compile-to-cjs', () => {
     return compileTs();
-});
-
-task('replace-aliases-esm', () => {
-    return replaceAliases(true);
-});
-
-task('replace-aliases-cjs', () => {
-    return replaceAliases();
 });
 
 task('chart-config', (done) => {
@@ -101,7 +117,6 @@ task(
         'clean',
         parallel(['compile-to-esm', 'compile-to-cjs']),
         'chart-config',
-        parallel(['replace-aliases-esm', 'replace-aliases-cjs']),
         'copy-i18n',
         'styles',
         'copy-docs',
