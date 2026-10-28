@@ -7,14 +7,10 @@ import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
+import {hasAxisBaseline} from '../series/axis-domain';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartAxis, ChartAxisType} from '../types';
-import {
-    getDefaultMaxXAxisValue,
-    getDefaultMinXAxisValue,
-    getDomainDataXBySeries,
-    getEffectiveXRange,
-} from '../utils';
+import {getDomainDataXBySeries, getEffectiveXRange} from '../utils';
 import {getBandSize} from '../utils/band-size';
 
 import {
@@ -113,6 +109,7 @@ export function createXScale(args: {
                 const isPointDomain = hasOnlyMarkerSeries(series)
                     ? checkIsPointDomain([xMinDomain, xMaxDomain])
                     : false;
+                const hasBaseline = hasAxisBaseline(series, 'x');
                 let xMin: number;
                 let xMax: number;
 
@@ -121,18 +118,13 @@ export function createXScale(args: {
                 } else if (xType === 'logarithmic') {
                     xMin = xMinDomain;
                 } else {
-                    const xMinDefault = getDefaultMinXAxisValue(series);
-                    xMin = xMinDefault ?? xMinDomain;
+                    xMin = hasBaseline ? Math.min(xMinDomain, 0) : xMinDomain;
                 }
 
                 if (typeof xMaxPropsOrState === 'number' && !isPointDomain) {
                     xMax = xMaxPropsOrState;
                 } else {
-                    const xMaxDefault = getDefaultMaxXAxisValue(series);
-                    xMax =
-                        typeof xMaxDefault === 'number'
-                            ? Math.max(xMaxDefault, xMaxDomain)
-                            : xMaxDomain;
+                    xMax = hasBaseline ? Math.max(0, xMaxDomain) : xMaxDomain;
                 }
 
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;

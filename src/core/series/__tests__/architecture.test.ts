@@ -153,6 +153,20 @@ it('keeps chart interaction coordination independent of built-in series implemen
     expect(violations).toEqual([]);
 });
 
+it('keeps axis-domain coordination and stacking primitives independent of built-in series', () => {
+    const files = [
+        'core/utils/common.ts',
+        'core/series/axis-domain.ts',
+        'core/series/stacked-domain.ts',
+    ];
+    const violations = files.flatMap((file) =>
+        getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
+            (dependency) => `${file}: ${dependency}`,
+        ),
+    );
+    expect(violations).toEqual([]);
+});
+
 it.each([
     "switch (series.type) { case 'line': break; }",
     "const types = new Set(['radar', 'bar-y']);",

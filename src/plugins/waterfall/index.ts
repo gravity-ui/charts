@@ -1,3 +1,5 @@
+import sortBy from 'lodash/sortBy';
+
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -51,9 +53,26 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
+    axisBaseline: 'y',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
     prepareSeries: prepareWaterfallSeries,
     getColorValue: (d) => d.y,
+    getAxisDomainValues: ({series, axis}) => {
+        if (axis === 'x') return undefined;
+
+        // Preparation splits signs/totals into separate series; restore source point order.
+        const points = series.flatMap((item) => item.data);
+        const ordered = sortBy(points, (point) => ('index' in point ? point.index : undefined));
+        const values: number[] = [];
+        let total = 0;
+        for (const point of ordered) {
+            if (!point.total) {
+                total += Number(point.y) || 0;
+                values.push(total);
+            }
+        }
+        return values;
+    },
     prepareShapeData,
     renderShapes: function ({
         plot,

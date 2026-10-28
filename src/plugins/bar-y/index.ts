@@ -4,6 +4,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedBarYSeries} from '~core/series/types';
 import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
@@ -82,6 +83,7 @@ function renderShapes({
 
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
+    axisBaseline: 'x',
     isAxisDomainFixed: ({series, axis}) => axis === 'x' && series.stacking === 'percent',
     zoom: {types: ['y', 'xy'], defaultType: 'y'},
     prepareSeries: prepareBarYSeries,
@@ -105,7 +107,15 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validateBarGrouping({series, allSeries});
         validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
-    getStackedDomainData: (series) => getBarDomainData(series, 'y', 'x'),
+    getAxisDomainValues: ({series, axis}) =>
+        axis === 'x'
+            ? getStackedDomainValues({
+                  series,
+                  categoryKey: 'y',
+                  valueKey: 'x',
+                  getData: (item) => getBarDomainData(item, 'y', 'x'),
+              })
+            : undefined,
     getXAxisPadding: ({dataLabels, stacking}) =>
         stacking !== 'percent' &&
         (hasOutsideOnlyPlacement(dataLabels.placement) ||

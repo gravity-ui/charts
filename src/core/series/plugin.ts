@@ -44,9 +44,10 @@ export interface GetClipPathArgs {
 
 export type SeriesClipPath = 'bounds' | 'horizontal' | false;
 
-export interface SeriesAxisDomainValues<T extends ChartSeries> {
-    x?(data: T['data'][number]): AxisDomainValue | AxisDomainValue[];
-    y?(data: T['data'][number]): AxisDomainValue | AxisDomainValue[];
+export interface GetAxisDomainValuesArgs<TSeries> {
+    /** Series of this plugin for the current axis, in input order. */
+    series: readonly TSeries[];
+    axis: 'x' | 'y';
 }
 
 export interface PrepareSeriesArgs<T = ChartSeries> {
@@ -139,6 +140,11 @@ export interface SeriesPlugin<
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
     /**
+     * Value axis requiring a baseline. Linear scales include zero; logarithmic Y scales
+     * reserve positive headroom. Explicit bounds and zoom take precedence.
+     */
+    axisBaseline?: 'x' | 'y';
+    /**
      * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
      * Omit to use series.type: all series of this plugin share one layer by default.
      * Use stable, chart-unique layer keys; core rejects keys shared by different types.
@@ -183,15 +189,15 @@ export interface SeriesPlugin<
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
-    /** Axis-domain contributions for a point; return [] to exclude it. Omitted axes use the default extraction. */
-    getAxisDomainValues?: SeriesAxisDomainValues<T>;
     /**
-     * Selects points contributing to stacked axis domains from a raw or prepared series.
-     * Defaults to all points; contributions of each sign are summed separately.
-     * Receives no axis context, so duplicate detection uses raw coordinates and cannot
-     * match category indices to category names. Must not mutate the series or its data.
+     * Values contributing to one axis domain, computed once for the whole plugin group.
+     * Core merges contributions across plugins. Return [] to exclude the group.
+     * Omit or return undefined to extract scalar coordinates from axis-related series.
+     * Must not mutate series or points; visibility and axis membership are selected by the caller.
      */
-    getStackedDomainData?(series: T): T['data'];
+    getAxisDomainValues?(
+        args: GetAxisDomainValuesArgs<T | Extract<PreparedSeries, {type: T['type']}>>,
+    ): AxisDomainValue[] | undefined;
     /**
      * Extra space in pixels reserved at the max end of an autoscaled X domain.
      * The largest padding requested across series is used.
