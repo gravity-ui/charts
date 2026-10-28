@@ -1,7 +1,13 @@
 import type {ChartApi, ChartData} from '../../types';
 
+export interface ChartInnerRef extends ChartApi {
+    isReady: (dimensions: {width: number; height: number}, data: ChartData) => boolean;
+}
+
 export interface ChartInnerProps {
     chartApi: ChartApi;
+    reflowId?: number;
+    onRenderError?: (error: unknown) => void;
     width: number;
     height: number;
     data: ChartData;

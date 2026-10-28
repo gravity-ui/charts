@@ -77,6 +77,7 @@ function getBoundsOffsetTop({
 const EMPTY_LAYER_INDEXES = new Map<string, number>();
 
 type ChartState = {
+    preparation: object;
     gradientReference?: GradientLayoutReference;
     allPreparedSeries: PreparedSeries[];
     boundsHeight: number;
@@ -114,6 +115,8 @@ export function useChartInnerProps(props: Props) {
         updateRangeSliderState,
         updateZoomState,
         zoomState,
+        reflowId,
+        onRenderError,
     } = props;
 
     const selectedLegendItemsRef = React.useRef<string[] | null>(null);
@@ -126,7 +129,46 @@ export function useChartInnerProps(props: Props) {
     const previousChartData = React.useRef<ChartData | null>(null);
     const currentRunRef = React.useRef(0);
     const gradientReferenceRef = React.useRef<GradientReferenceCacheEntry>();
+    const preparation = React.useMemo(
+        () => ({
+            height,
+            width,
+            data,
+            legendSelectionVersion,
+            zoomState,
+            rangeSliderState,
+            dispatcher,
+            htmlLayout,
+            updateRangeSliderState,
+            clipPathId,
+            reflowId,
+        }),
+        [
+            height,
+            width,
+            data,
+            legendSelectionVersion,
+            zoomState,
+            rangeSliderState,
+            dispatcher,
+            htmlLayout,
+            updateRangeSliderState,
+            clipPathId,
+            reflowId,
+        ],
+    );
     React.useEffect(() => {
+        const {
+            height,
+            width,
+            data,
+            zoomState,
+            rangeSliderState,
+            dispatcher,
+            htmlLayout,
+            updateRangeSliderState,
+            clipPathId,
+        } = preparation;
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
         const selectedLegendItems = selectedLegendItemsRef.current;
@@ -338,6 +380,7 @@ export function useChartInnerProps(props: Props) {
                 ? await getGradientReference()
                 : undefined;
             const newStateValue = {
+                preparation,
                 gradientReference: activeGradientReference,
                 allPreparedSeries,
                 boundsHeight,
@@ -365,25 +408,28 @@ export function useChartInnerProps(props: Props) {
             if (currentRunRef.current === currentRun) {
                 selectedLegendItemsRef.current = nextSelectedLegendItems;
                 gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
-                if (!isEqual(prevStateValue.current, newStateValue)) {
+                if (
+                    prevStateValue.current?.preparation !== preparation ||
+                    !isEqual(prevStateValue.current, newStateValue)
+                ) {
                     setState(newStateValue);
                     prevStateValue.current = newStateValue;
                 }
                 previousChartData.current = data;
             }
-        })();
-    }, [
-        height,
-        width,
-        data,
-        legendSelectionVersion,
-        zoomState,
-        rangeSliderState,
-        dispatcher,
-        htmlLayout,
-        updateRangeSliderState,
-        clipPathId,
-    ]);
+        })().catch((error: unknown) => {
+            if (currentRunRef.current === currentRun) {
+                if (onRenderError) {
+                    onRenderError(error);
+                } else {
+                    throw error;
+                }
+            }
+        });
+        return () => {
+            currentRunRef.current++;
+        };
+    }, [preparation, onRenderError]);
 
     // additional start
 
@@ -487,6 +533,7 @@ export function useChartInnerProps(props: Props) {
         shapesData: chartState?.shapesData ?? [],
         layerIndexes: chartState?.layerIndexes ?? EMPTY_LAYER_INDEXES,
         shapesReady: Boolean(chartState),
+        shapesCurrent: chartState?.preparation === preparation,
         handleLegendItemClick,
         preparedTitle: chartState?.preparedTitle,
         preparedChart: chartState?.preparedChart,

@@ -10,6 +10,7 @@ import '../plugins';
 import type {ChartApi, ChartData, ChartInteractionItem, MeaningfulAny} from '../types';
 
 import {ChartInner} from './ChartInner';
+import type {ChartInnerRef} from './ChartInner/types';
 
 export {ChartTooltipContent} from './Tooltip/ChartTooltipContent';
 export type {ChartTooltipContentProps} from './Tooltip/ChartTooltipContent';
@@ -19,7 +20,12 @@ export interface ChartReflowOptions {
 }
 
 export interface ChartRef {
-    reflow: (options?: ChartReflowOptions) => void;
+    /**
+     * Completes after the resized chart's shapes and axes have committed.
+     * Rejects on preparation failure, an unavailable host, or unmount.
+     * Ignoring the returned promise remains safe for fire-and-forget callers.
+     */
+    reflow: (options?: ChartReflowOptions) => Promise<void>;
 }
 
 export interface ChartDimentions {
@@ -29,6 +35,17 @@ export interface ChartDimentions {
 
 interface HandleResizeOptions {
     force?: boolean;
+}
+
+interface PendingReflow {
+    id: number;
+    resolve: () => void;
+    reject: (error: unknown) => void;
+}
+
+interface ChartLayout {
+    dimensions: ChartDimentions;
+    reflowId: number;
 }
 
 export type ChartOnResize = (args: {dimensions?: ChartDimentions}) => void;
@@ -50,41 +67,76 @@ interface ChartComponent extends React.ForwardRefExoticComponent<
 
 export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props, forwardedRef) {
     const {data, lang, onResize, onReady} = props;
-    const innerRef = React.useRef<ChartApi>(null);
+    const innerRef = React.useRef<ChartInnerRef>(null);
     const validatedData = React.useRef<ChartData>();
     const ref = React.useRef<HTMLDivElement>(null);
     const debounced = React.useRef<
         DebouncedFunc<(options?: HandleResizeOptions) => void> | undefined
     >();
-    const [dimensions, setDimensions] = React.useState<ChartDimentions>();
+    const [layout, setLayout] = React.useState<ChartLayout>();
+    const dimensions = layout?.dimensions;
+    const reflowId = layout?.reflowId ?? 0;
+    const requestedReflowId = React.useRef(0);
+    const pendingReflows = React.useRef<PendingReflow[]>([]);
+    const mounted = React.useRef(true);
+    const currentData = React.useRef(data);
+    currentData.current = data;
+
+    const settleReflows = React.useCallback((id: number, failure?: {error: unknown}) => {
+        const settled = pendingReflows.current.filter((request) => request.id <= id);
+        pendingReflows.current = pendingReflows.current.filter((request) => request.id > id);
+        settled.forEach((request) => {
+            if (failure) {
+                request.reject(failure.error);
+            } else {
+                request.resolve();
+            }
+        });
+        return settled.length > 0;
+    }, []);
 
     if (validatedData.current !== data) {
         validateData(data);
         validatedData.current = data;
     }
 
-    const handleResize = React.useCallback((options?: HandleResizeOptions) => {
-        const parentElement = ref.current?.parentElement;
+    const handleResize = React.useCallback(
+        (options?: HandleResizeOptions) => {
+            const parentElement = ref.current?.parentElement;
+            const id = requestedReflowId.current;
+            if (!parentElement) {
+                settleReflows(id, {error: new Error('Chart host is unavailable')});
+                return;
+            }
 
-        if (parentElement) {
             const nextDimensions = {
                 width: parentElement.clientWidth,
                 height: parentElement.clientHeight,
             };
-
-            setDimensions((currentDimensions) => {
+            const ready = innerRef.current?.isReady(nextDimensions, currentData.current);
+            const force = options?.force || pendingReflows.current.length > 0;
+            setLayout((current) => {
                 if (
-                    !options?.force &&
-                    currentDimensions?.width === nextDimensions.width &&
-                    currentDimensions.height === nextDimensions.height
+                    !force &&
+                    current?.dimensions.width === nextDimensions.width &&
+                    current.dimensions.height === nextDimensions.height
                 ) {
-                    return currentDimensions;
+                    return current;
                 }
-
-                return nextDimensions;
+                return {
+                    dimensions: nextDimensions,
+                    reflowId: ready ? (current?.reflowId ?? 0) : id,
+                };
             });
-        }
-    }, []);
+
+            if (!nextDimensions.width || !nextDimensions.height) {
+                settleReflows(id, {error: new Error('Chart host has zero size')});
+            } else if (ready) {
+                settleReflows(id);
+            }
+        },
+        [settleReflows],
+    );
 
     const debuncedHandleResize = React.useMemo(() => {
         debounced.current?.cancel();
@@ -104,15 +156,67 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         forwardedRef,
         () => ({
             reflow(options?: ChartReflowOptions) {
-                if (options?.immediate) {
+                const promise = new Promise<void>((resolve, reject) => {
+                    pendingReflows.current.push({id: ++requestedReflowId.current, resolve, reject});
+                });
+                // Keep legacy calls that ignore the promise safe; await still receives failures.
+                promise.catch(() => undefined);
+                if (!mounted.current) {
+                    settleReflows(requestedReflowId.current, {
+                        error: new Error('Chart is unmounted'),
+                    });
+                } else if (options?.immediate) {
+                    debuncedHandleResize.cancel();
                     handleResize({force: true});
                 } else {
                     debuncedHandleResize({force: true});
                 }
+                return promise;
             },
         }),
-        [debuncedHandleResize, handleResize],
+        [debuncedHandleResize, handleResize, settleReflows],
     );
+
+    const handleReady = React.useCallback<NonNullable<ChartProps['onReady']>>(
+        (args) => {
+            const host = ref.current?.parentElement;
+            const rendered = args.dimensions;
+            const isCurrent = () =>
+                mounted.current &&
+                host &&
+                rendered &&
+                host.clientWidth === rendered.width &&
+                host.clientHeight === rendered.height &&
+                innerRef.current?.isReady(rendered, currentData.current);
+            if (isCurrent()) {
+                onReady?.(args);
+                if (isCurrent()) {
+                    settleReflows(reflowId);
+                    return;
+                }
+            }
+            if (pendingReflows.current.length) {
+                handleResize({force: true});
+            }
+        },
+        [onReady, reflowId, settleReflows, handleResize],
+    );
+    const handleRenderError = React.useCallback(
+        (error: unknown) => {
+            if (!settleReflows(reflowId, {error})) {
+                throw error;
+            }
+        },
+        [reflowId, settleReflows],
+    );
+
+    React.useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+            settleReflows(Infinity, {error: new Error('Chart unmounted before reflow completed')});
+        };
+    }, [settleReflows]);
 
     React.useEffect(() => {
         // dimensions initialize
@@ -163,7 +267,9 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
                     height={dimensions?.height ?? 0}
                     width={dimensions?.width ?? 0}
                     data={data}
-                    onReady={onReady}
+                    onReady={handleReady}
+                    reflowId={reflowId}
+                    onRenderError={handleRenderError}
                 />
             )}
         </div>

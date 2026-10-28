@@ -12,7 +12,6 @@ import {getChartClosest} from '~core/utils/get-closest-data';
 import {useCrosshair, usePrevious} from '../../hooks';
 import {useHoverResetKey} from '../../hooks/useHoverResetKey';
 import {getClipPathIdByBounds} from '../../hooks/useShapes/utils';
-import type {ChartApi} from '../../types';
 import {block} from '../../utils';
 import {AxisX} from '../AxisX/AxisX';
 import {prepareXAxisData} from '../AxisX/prepare-axis-data';
@@ -29,7 +28,7 @@ import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
 import {getInitialRangeSliderState} from '../utils';
 
-import type {ChartInnerProps} from './types';
+import type {ChartInnerProps, ChartInnerRef} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
 import {useChartInnerProps} from './useChartInnerProps';
 import {useChartInnerState} from './useChartInnerState';
@@ -48,8 +47,12 @@ const b = block('chart');
 
 const DEBOUNCED_VALUE_DELAY = 10;
 
-function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.ForwardedRef<ChartApi>) {
-    const {width, height, data, onReady, chartApi} = props;
+function ChartInnerComponent(
+    props: ChartInnerProps,
+    forwardedRef: React.ForwardedRef<ChartInnerRef>,
+) {
+    const {width, height, data, onReady, chartApi, reflowId, onRenderError} = props;
+    const readyRef = React.useRef(false);
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const resetZoomButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [htmlLayout, setHtmlLayout] = React.useState<HTMLDivElement | null>(null);
@@ -101,6 +104,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
         shapes,
         shapesData,
         shapesReady,
+        shapesCurrent,
         xAxis,
         xScale,
         yAxis,
@@ -188,6 +192,11 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
     React.useImperativeHandle(
         forwardedRef,
         () => ({
+            isReady: (dimensions, chartData) =>
+                readyRef.current &&
+                dimensions.width === width &&
+                dimensions.height === height &&
+                chartData === data,
             getClosest: (position, options) => {
                 const [x, y] = position;
                 if (
@@ -221,6 +230,9 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
             boundsHeight,
             preparedSeries,
             layerIndexes,
+            width,
+            height,
+            data,
         ],
     );
     useHoverGeometryRefresh({
@@ -338,7 +350,12 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
     // Using legendConfig (undefined → value, never reverts) avoids false→true toggling
     // on every zoom/range-slider interaction that would otherwise stall axis rendering.
     const axisDataReady = !preparedLegend?.enabled || Boolean(legendConfig);
-    const yAxisDataItems = useAsyncState<AxisYData[]>([], setYAxisDataItems, axisDataReady);
+    const {value: yAxisDataItems, isReady: yAxisReady} = useAsyncState<AxisYData[]>(
+        [],
+        setYAxisDataItems,
+        axisDataReady,
+        onRenderError,
+    );
 
     const setXAxisDataItems = React.useCallback(async () => {
         const items: AxisXData[] = [];
@@ -385,7 +402,12 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
         xScale,
         yAxis,
     ]);
-    const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems, axisDataReady);
+    const {value: xAxisDataItems, isReady: xAxisReady} = useAsyncState<AxisXData[]>(
+        [],
+        setXAxisDataItems,
+        axisDataReady,
+        onRenderError,
+    );
 
     React.useEffect(() => {
         if (!initialized && xScale) {
@@ -425,11 +447,23 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
         xScale,
     ]);
 
+    const ready = shapesCurrent && xAxisReady && yAxisReady;
+    React.useLayoutEffect(() => {
+        if (!ready) {
+            readyRef.current = false;
+        }
+        return () => {
+            readyRef.current = false;
+        };
+    }, [ready]);
+
     React.useEffect(() => {
-        if (shapesReady) {
+        if (ready) {
+            // Axis DOM effects run before this parent effect.
+            readyRef.current = true;
             onReady?.({dimensions: {width, height}});
         }
-    }, [height, shapesReady, onReady, width]);
+    }, [height, ready, onReady, width, reflowId]);
 
     const chartContent = (
         <React.Fragment>
