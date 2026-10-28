@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function StackLabelsAggregationTestStory({type}: Props) {
-    const data = React.useMemo(() => getStackLabelsAggregationData(type), [type]);
+    const data = getStackLabelsAggregationData(type);
 
     return <ChartTestStory data={data} styles={{width: 600}} />;
 }
