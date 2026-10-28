@@ -81,7 +81,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
                   valueKey: 'y',
                   getData: getAreaDomainData,
               })
-            : series.flatMap((item) => item.data.map((point) => point.x)),
+            : undefined,
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
         const {
             series,

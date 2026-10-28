@@ -134,7 +134,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
                   valueKey: 'y',
                   getData: (item) => getBarDomainData(item, 'x', 'y'),
               })
-            : series.flatMap((item) => item.data.map((point) => point.x)),
+            : undefined,
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,

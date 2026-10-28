@@ -34,9 +34,9 @@ Deferred work:
 
 ### 3. Delegate axis-domain contributions — completed
 
-- [x] Replaced point callbacks with grouped `getAxisDomainValues({series, axis, axisOptions})` and removed the obsolete `getStackedDomainData` hook. Plugins own bar/area stacking and waterfall accumulation; scalar extraction remains the default.
+- [x] Replaced point callbacks with grouped `getAxisDomainValues({series, axis})` and removed the obsolete `getStackedDomainData` hook. Plugins own bar/area stacking and waterfall accumulation; scalar extraction remains the default when the callback is omitted or returns `undefined`.
 - [x] Added separate `axisBaseline?: 'x' | 'y'` metadata, replacing shared volume-series lists while preserving bounds, zoom, and logarithmic baseline behavior.
-- [x] Kept contribution merging in [shared coordination](../../src/core/series/axis-domain.ts) and parameterized [stacking math](../../src/core/series/stacked-domain.ts). Axis consumers forward config; baseline calculations reuse collected values.
+- [x] Kept contribution merging in [shared coordination](../../src/core/series/axis-domain.ts) and parameterized [stacking math](../../src/core/series/stacked-domain.ts). Baseline calculations reuse collected values.
 - [x] Added domain regression and architecture coverage and updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md). Public chart config and root exports are unchanged.
 
 Issue audit (fixes remain separate): [#785](https://github.com/gravity-ui/charts/issues/785#issuecomment-6370692582), [#786](https://github.com/gravity-ui/charts/issues/786#issuecomment-6370698187), [#795](https://github.com/gravity-ui/charts/issues/795#issuecomment-6370698486), [#348](https://github.com/gravity-ui/charts/issues/348#issuecomment-6370698832), [#342](https://github.com/gravity-ui/charts/issues/342#issuecomment-6370699159), [#395](https://github.com/gravity-ui/charts/issues/395#issuecomment-6370699492), [#587](https://github.com/gravity-ui/charts/issues/587#issuecomment-6370699826).

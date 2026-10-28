@@ -5,14 +5,14 @@ import type * as LinePreparation from '../../../plugins/line/prepare-line-series
 import type * as XRangePlugin from '../../../plugins/x-range';
 import type {PreparedAxis} from '../../axes/types';
 import type * as XScale from '../../scales/x-scale';
-import type {ChartSeries, ChartXAxis} from '../../types';
+import type {ChartSeries} from '../../types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common';
 import type * as AxisDomain from '../axis-domain';
 import {getAxisDomainValues} from '../axis-domain';
 import type * as Registry from '../seriesRegistry';
 import type {PreparedLegendOptions} from '../types';
 
-it('groups contributions once per plugin, retaining series order, references and axis context', () => {
+it('groups contributions once per plugin, retaining series order, references and axis direction', () => {
     jest.isolateModules(() => {
         const registry = jest.requireActual<typeof Registry>('../seriesRegistry');
         const domain = jest.requireActual<typeof AxisDomain>('../axis-domain');
@@ -36,17 +36,16 @@ it('groups contributions once per plugin, retaining series order, references and
             {type: 'x-range', name: 'Range', data: [{x0: -10, x1: 20, y: 1}]},
             {type: 'line', name: 'Last', data: [{x: 200, y: 2}]},
         ];
-        const axisOptions: ChartXAxis = {type: 'linear', min: -20};
-        expect(domain.getAxisDomainValues(series, 'x', axisOptions)).toEqual([8, 12, -10, 20]);
+        expect(domain.getAxisDomainValues(series, 'x')).toEqual([8, 12, -10, 20]);
         expect(getValues).toHaveBeenCalledTimes(1);
         const args = getValues.mock.calls[0][0];
         expect(args.series[0]).toBe(series[0]);
         expect(args.series[1]).toBe(series[2]);
         expect(args.axis).toBe('x');
-        expect(args.axisOptions).toBe(axisOptions);
         expect(domain.hasAxisBaseline(series, 'x')).toBe(true);
         expect(domain.hasAxisBaseline(series, 'y')).toBe(false);
         expect(registry.getRegisteredSeriesTypes()).toEqual(['line', 'x-range']);
+        expect(domain.getAxisDomainValues(series, 'y')).toEqual([1]);
 
         const {prepareLineSeries} = jest.requireActual<typeof LinePreparation>(
             '../../../plugins/line/prepare-line-series',
@@ -98,6 +97,39 @@ it('accepts contributions exceeding the JavaScript function argument limit', () 
     expect(values).toHaveLength(data.length + 1);
     expect(values[values.length - 1]).toBe(data.length);
 });
+
+it.each(['bar-x', 'area', 'bar-y'] as const)(
+    '%s accepts stacked contributions exceeding the JavaScript function argument limit',
+    (type) => {
+        const data = Array.from({length: 150_000}, (_, index) => {
+            const value = index % 2 === 0 ? index : -index;
+            return type === 'bar-y' ? {x: value, y: index} : {x: index, y: value};
+        });
+        const series: ChartSeries = {type, name: 'Values', data};
+        const values =
+            type === 'bar-y' ? getDomainDataXBySeries([series]) : getDomainDataYBySeries([series]);
+        expect(values).toHaveLength(data.length);
+        expect(values).toEqual(expect.arrayContaining([-149_999, 0, 149_998]));
+    },
+);
+
+it.each([
+    {type: 'bar-x', axis: 'x', coordinate: 1},
+    {type: 'area', axis: 'x', coordinate: 1},
+    {type: 'waterfall', axis: 'x', coordinate: 1},
+    {type: 'area-range', axis: 'x', coordinate: 1},
+    {type: 'bar-y', axis: 'y', coordinate: 2},
+    {type: 'x-range', axis: 'y', coordinate: 2},
+] as const)(
+    '$type delegates scalar $axis extraction to core for sparse point arrays',
+    ({type, axis, coordinate}) => {
+        const point = {x: 1, y: 2, x0: 0, x1: 3, y0: 4, y1: 5};
+        const data = new Array<typeof point>(2);
+        data[1] = point;
+        const series: ChartSeries = {type, name: 'Scalar coordinates', data};
+        expect(getAxisDomainValues([series], axis)).toEqual([undefined, coordinate]);
+    },
+);
 
 it('preserves scalar extraction and stack accumulation for sparse point arrays', () => {
     const data = new Array<{x: number; y: number}>(2);

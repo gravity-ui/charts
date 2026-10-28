@@ -61,9 +61,9 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = 
     zoom: {types: ['x'], defaultType: 'x'},
     prepareSeries: prepareXRangeSeries,
     getAxisDomainValues: ({series, axis}) =>
-        series.flatMap((item) =>
-            item.data.flatMap((point) => (axis === 'x' ? [point.x0, point.x1] : [point.y])),
-        ),
+        axis === 'x'
+            ? series.flatMap((item) => item.data.flatMap((point) => [point.x0, point.x1]))
+            : undefined,
     // Use bar duration (x1 - x0) as the color value so that longer bars can be
     // visually distinguished by color intensity.
     getColorValue: getXRangeWidth,

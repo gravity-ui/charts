@@ -44,7 +44,8 @@ export function getStackedDomainValues<T extends StackedDomainSeries>({
             });
         }
 
-        values.push(...negativeValues.values(), ...positiveValues.values());
+        for (const value of negativeValues.values()) values.push(value);
+        for (const value of positiveValues.values()) values.push(value);
     }
     return values;
 }

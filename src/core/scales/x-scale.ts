@@ -90,7 +90,7 @@ export function createXScale(args: {
     switch (xType) {
         case 'linear':
         case 'logarithmic': {
-            const domainData = getDomainDataXBySeries(series, axis);
+            const domainData = getDomainDataXBySeries(series);
             const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domainData);
 
             if (hasOnlyNullValues || domainData.length === 0) {
@@ -118,9 +118,7 @@ export function createXScale(args: {
                 } else if (xType === 'logarithmic') {
                     xMin = xMinDomain;
                 } else {
-                    xMin = hasBaseline
-                        ? (domainData as number[]).reduce((min, value) => Math.min(min, value), 0)
-                        : xMinDomain;
+                    xMin = hasBaseline ? Math.min(xMinDomain, 0) : xMinDomain;
                 }
 
                 if (typeof xMaxPropsOrState === 'number' && !isPointDomain) {
@@ -202,7 +200,7 @@ export function createXScale(args: {
         }
         case 'datetime': {
             let domain: [number, number] | null = null;
-            const domainData = get(axis, 'timestamps') || getDomainDataXBySeries(series, axis);
+            const domainData = get(axis, 'timestamps') || getDomainDataXBySeries(series);
             const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domainData);
 
             if (hasOnlyNullValues || domainData.length === 0) {

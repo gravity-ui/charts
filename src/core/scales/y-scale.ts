@@ -262,7 +262,7 @@ export function createYScale(args: {
     switch (axis.type) {
         case 'linear':
         case 'logarithmic': {
-            const domain = getDomainDataYBySeries(series, axis);
+            const domain = getDomainDataYBySeries(series);
             const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
             if (hasOnlyNullValues || domain.length === 0) {
@@ -296,9 +296,7 @@ export function createYScale(args: {
                         hasBaseline,
                     });
                 } else {
-                    yMin = hasBaseline
-                        ? (domain as number[]).reduce((min, value) => Math.min(min, value), 0)
-                        : yMinDomain;
+                    yMin = hasBaseline ? Math.min(yMinDomain, 0) : yMinDomain;
                 }
 
                 let yMax: number;
@@ -446,7 +444,7 @@ export function createYScale(args: {
                 }
                 return scale;
             } else {
-                const domain = getDomainDataYBySeries(series, axis);
+                const domain = getDomainDataYBySeries(series);
                 const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
                 if (hasOnlyNullValues || domain.length === 0) {

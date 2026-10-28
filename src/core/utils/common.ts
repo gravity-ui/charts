@@ -4,16 +4,13 @@ import get from 'lodash/get';
 import type {BaseTextStyle, ChartSeries, ChartSeriesData} from '../../types';
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../constants';
 import {getAxisDomainValues} from '../series/axis-domain';
-import type {ChartAxis} from '../types';
 
 import type {UnknownSeries} from './series-type-guards';
 import type {AxisDirection} from './types';
 
-export const getDomainDataXBySeries = (series: UnknownSeries[], axisOptions?: ChartAxis) =>
-    getAxisDomainValues(series, 'x', axisOptions);
+export const getDomainDataXBySeries = (series: UnknownSeries[]) => getAxisDomainValues(series, 'x');
 
-export const getDomainDataYBySeries = (series: UnknownSeries[], axisOptions?: ChartAxis) =>
-    getAxisDomainValues(series, 'y', axisOptions);
+export const getDomainDataYBySeries = (series: UnknownSeries[]) => getAxisDomainValues(series, 'y');
 
 // Uses to get all series names array (except `pie` charts)
 export const getSeriesNames = (series: ChartSeries[]) => {

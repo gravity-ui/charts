@@ -58,10 +58,10 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     prepareSeries: prepareWaterfallSeries,
     getColorValue: (d) => d.y,
     getAxisDomainValues: ({series, axis}) => {
-        const points = series.flatMap((item) => item.data);
-        if (axis === 'x') return points.map((point) => point.x);
+        if (axis === 'x') return undefined;
 
         // Preparation splits signs/totals into separate series; restore source point order.
+        const points = series.flatMap((item) => item.data);
         const ordered = sortBy(points, (point) => ('index' in point ? point.index : undefined));
         const values: number[] = [];
         let total = 0;

@@ -40,7 +40,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
     prepareSeries: prepareAreaRangeSeries,
     getAxisDomainValues: ({series, axis}) => {
         if (axis === 'x') {
-            return series.flatMap((item) => item.data.map((point) => point.x));
+            return undefined;
         }
         return series.flatMap((item) =>
             item.data.flatMap((point) =>

@@ -115,7 +115,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
                   valueKey: 'x',
                   getData: (item) => getBarDomainData(item, 'y', 'x'),
               })
-            : series.flatMap((item) => item.data.map((point) => point.y)),
+            : undefined,
     getXAxisPadding: ({dataLabels, stacking}) =>
         stacking !== 'percent' &&
         (hasOutsideOnlyPlacement(dataLabels.placement) ||

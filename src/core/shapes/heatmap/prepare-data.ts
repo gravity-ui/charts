@@ -36,11 +36,11 @@ export async function prepareHeatmapData({
     yAxis,
     yScale,
 }: PrepareHeatmapDataArgs) {
-    const yDomainData = getDomainDataYBySeries([series], yAxis) as AxisDomain[];
+    const yDomainData = getDomainDataYBySeries([series]) as AxisDomain[];
     const bandHeight = getBandSize({domain: yDomainData, scale: yScale as AxisScale<AxisDomain>});
     const yAxisCategories = yAxis.categories ?? [];
 
-    const xDomainData = getDomainDataXBySeries([series], xAxis) as AxisDomain[];
+    const xDomainData = getDomainDataXBySeries([series]) as AxisDomain[];
     const bandWidth = getBandSize({domain: xDomainData, scale: xScale as AxisScale<AxisDomain>});
     const xAxisCategories = xAxis.categories ?? [];
 

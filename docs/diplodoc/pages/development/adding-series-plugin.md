@@ -42,7 +42,7 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ### Axis domains
 
-Implement `getAxisDomainValues({series, axis, axisOptions})` when scalar point coordinates do not describe the series domain. It receives an ordered group of this plugin's raw or prepared series and optional config for the receiving axis. Return an array of unformatted values for core to merge and deduplicate across plugins. Returning `[]` excludes the group; omitting the callback uses scalar `x`/`y` coordinates of axis-related series.
+Implement `getAxisDomainValues({series, axis})` when scalar point coordinates do not describe the series domain. It receives an ordered group of this plugin's raw or prepared series and the axis direction. Return an array of unformatted values for core to merge and deduplicate across plugins. Returning `[]` excludes the group; omitting the callback or returning `undefined` uses scalar `x`/`y` coordinates of axis-related series.
 
 For independent points, flatten their values or interval endpoints. Calculate stacks and cumulative values for the whole group. The `core/series/stacked-domain.ts` helper accepts coordinate roles and a point selector, grouping stacks and summing each sign separately.
 

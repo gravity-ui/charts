@@ -2,7 +2,6 @@ import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
-    ChartAxis,
     ChartInteractionItem,
     ChartSeries,
     ChartSeriesOptions,
@@ -49,8 +48,6 @@ export interface GetAxisDomainValuesArgs<TSeries> {
     /** Series of this plugin for the current axis, in input order. */
     series: readonly TSeries[];
     axis: 'x' | 'y';
-    /** Config of the axis receiving the contribution, when available. */
-    axisOptions?: ChartAxis;
 }
 
 export interface PrepareSeriesArgs<T = ChartSeries> {
@@ -195,12 +192,12 @@ export interface SeriesPlugin<
     /**
      * Values contributing to one axis domain, computed once for the whole plugin group.
      * Core merges contributions across plugins. Return [] to exclude the group.
-     * Omit to extract scalar coordinates from axis-related series.
+     * Omit or return undefined to extract scalar coordinates from axis-related series.
      * Must not mutate series or points; visibility and axis membership are selected by the caller.
      */
     getAxisDomainValues?(
         args: GetAxisDomainValuesArgs<T | Extract<PreparedSeries, {type: T['type']}>>,
-    ): AxisDomainValue[];
+    ): AxisDomainValue[] | undefined;
     /**
      * Extra space in pixels reserved at the max end of an autoscaled X domain.
      * The largest padding requested across series is used.
