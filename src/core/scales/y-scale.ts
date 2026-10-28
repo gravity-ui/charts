@@ -347,12 +347,7 @@ export function createYScale(args: {
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 
-                const domainPadding = getDomainPadding(axis);
-                // Avoid inverse-scale rounding drift when proportional padding has no domain span.
-                if (yMin === yMax) {
-                    domainPadding.min = 0;
-                    domainPadding.max = 0;
-                }
+                const domainPadding = getDomainPadding(axis, Boolean(zoomStateY));
                 let offsetMin = 0;
                 let offsetMax = 0;
                 if (isSeriesWithYAxisOffset(series)) {
@@ -452,14 +447,30 @@ export function createYScale(args: {
                         ? yMaxPropsOrState
                         : yMaxTimestamp;
                 const scale = scaleUtc().domain([yMin, yMax]).range(range);
+                const [paddedMin, paddedMax] = getPaddedDomain({
+                    scale,
+                    domain: [yMin, yMax],
+                    type: axis.type,
+                    // Explicit timestamps have never used the legacy maxPadding fallback.
+                    padding: getDomainPadding(
+                        {type: axis.type, padding: axis.padding},
+                        Boolean(zoomStateY),
+                    ),
+                    size: boundsHeight,
+                    offsetMin: 0,
+                    offsetMax: 0,
+                    isMinSpecified: typeof axis.min === 'number' && !zoomStateY,
+                    isMaxSpecified: typeof axis.max === 'number' && !zoomStateY,
+                });
+                scale.domain([paddedMin, paddedMax]);
                 const startOnTick = get(axis, 'startOnTick', true);
                 const endOnTick = get(axis, 'endOnTick', true);
 
                 if (startOnTick || endOnTick) {
                     const nicedDomain = scale.copy().nice().domain();
                     return scale.domain([
-                        startOnTick ? Number(nicedDomain[0]) : yMin,
-                        endOnTick ? Number(nicedDomain[1]) : yMax,
+                        startOnTick ? Number(nicedDomain[0]) : paddedMin,
+                        endOnTick ? Number(nicedDomain[1]) : paddedMax,
                     ]);
                 }
                 return scale;
@@ -493,7 +504,7 @@ export function createYScale(args: {
                             : yMaxTimestamp;
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
-                    const domainPadding = getDomainPadding(axis);
+                    const domainPadding = getDomainPadding(axis, Boolean(zoomStateY));
                     let offsetMin = 0;
                     let offsetMax = 0;
                     if (isSeriesWithYAxisOffset(series)) {

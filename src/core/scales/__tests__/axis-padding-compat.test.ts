@@ -131,18 +131,11 @@ const scenarios: Scenario[] = [
         values: [1704067200000, 1704153600000],
     },
     {name: 'datetime Y', axis: {type: 'datetime'}, values: [1704067200000, 1704153600000]},
-    {
-        name: 'explicit datetime Y timestamps',
-        axis: {type: 'datetime', timestamps: [1704067200000, 1704153600000]},
-        values: [1704067200000, 1704153600000],
-    },
     {name: 'millisecond domain', axis: {type: 'datetime'}, values: [1704067200000, 1704067200001]},
     {name: 'Bar-X band offsets', direction: 'x', type: 'bar-x'},
     {name: 'Bar-Y band offsets', type: 'bar-y'},
     {name: 'Bar-Y labels at 300px', direction: 'x', type: 'bar-y', labelPadding: 30},
     {name: 'Bar-Y labels at 600px', direction: 'x', type: 'bar-y', labelPadding: 30, size: 600},
-    {name: 'zoom X', direction: 'x', zoom: [20, 80]},
-    {name: 'zoom Y', zoom: [20, 80]},
     {name: 'split plot', split: true},
     {name: 'zero size', size: 0},
     {name: 'one pixel', size: 1},
@@ -166,19 +159,26 @@ test('percentage maximum retains the legacy upper bound for the motivating examp
     expect((await compare({name: '0 to 100'})).converted.domain).toEqual([0, 125]);
 });
 
-test.each([{values: [0.53]}, {values: [0.53, 0.53]}])(
-    'constant fractional Y values $values stay centered with proportional padding',
-    async ({values}) => {
+test.each([
+    {direction: 'y', values: [0.53], rounded: false, fraction: 0.05},
+    {direction: 'y', values: [0.53, 0.53], rounded: false, fraction: 0.05},
+    {direction: 'x', values: [0.53], rounded: false, fraction: 0.05},
+    {direction: 'x', values: [0.53, 0.53], rounded: true, fraction: 0.05},
+    {direction: 'x', values: [1.1], rounded: false, fraction: 0.01},
+] as const)(
+    'constant fractional $direction values $values stay centered (rounded: $rounded)',
+    async ({direction, values, rounded, fraction}) => {
         const {original, converted} = await compare({
-            name: 'constant fractional Y',
-            values,
-            axis: {maxPadding: 0.05},
-            replacement: {padding: {min: '10%', max: '5%'}},
+            name: 'constant fractional values',
+            direction,
+            values: [...values],
+            axis: {maxPadding: fraction, startOnTick: rounded, endOnTick: rounded},
+            replacement: {padding: {min: '10%', max: `${fraction * 100}%`}},
         });
         for (const result of [original, converted]) {
-            expect(result.domain).toEqual([0.53, 0.53]);
+            expect(result.domain).toEqual([values[0], values[0]]);
             expect(result.positions).toEqual(values.map(() => 150));
-            expect(result.ticks).toEqual([0.53]);
+            expect(result.ticks).toEqual([values[0]]);
         }
     },
 );
@@ -198,18 +198,111 @@ test.each(['x', 'y'] as const)(
     },
 );
 
-test('explicit datetime Y timestamps retain the existing padding exclusion', async () => {
+test.each(['x', 'y'] as const)(
+    'percentage padding preserves zoomed %s boundaries while maxPadding retains its behavior',
+    async (direction) => {
+        const {original, converted} = await compare({
+            name: 'zoomed percentage padding',
+            direction,
+            zoom: [20, 80],
+            replacement: {padding: {min: '10%', max: '25%'}},
+        });
+        expect(converted.domain).toEqual([20, 80]);
+        expect(converted.range).toEqual(original.range);
+        expect(original.domain[0]).toBe(20);
+        expect(original.domain[1]).toBeCloseTo(direction === 'x' ? 95.625 : 95, 8);
+    },
+);
+
+test('an omitted maximum preserves the maxPadding fallback during zoom', async () => {
+    const {original, converted} = await compare({
+        name: 'zoomed legacy fallback',
+        zoom: [20, 80],
+        replacement: {maxPadding: 0.25, padding: {min: '10%'}},
+    });
+    expect(converted.domain).toEqual(original.domain);
+    expect(converted.domain).toEqual([20, 95]);
+});
+
+test.each([
+    {direction: 'x', timestamps: undefined},
+    {direction: 'y', timestamps: undefined},
+    {direction: 'y', timestamps: [0, 100]},
+] as const)(
+    'datetime $direction padding preserves zoom with timestamps: $timestamps',
+    async ({direction, timestamps}) => {
+        const {converted} = await compare({
+            name: 'zoomed datetime padding',
+            direction,
+            zoom: [20, 80],
+            axis: {type: 'datetime', timestamps: timestamps ? [...timestamps] : undefined},
+            replacement: {padding: {min: '10%', max: '25%'}},
+        });
+        expect(converted.domain).toEqual([20, 80]);
+    },
+);
+
+test.each([false, true])(
+    'explicit datetime Y timestamps apply percentages before rounding (%s)',
+    async (rounded) => {
+        const min = 1704067200000;
+        const max = min + 86400000;
+        const result = await compare({
+            name: 'timestamp ends',
+            axis: {
+                type: 'datetime',
+                timestamps: [min, max],
+                startOnTick: rounded,
+                endOnTick: rounded,
+            },
+            values: [min, max],
+            replacement: {padding: {min: '10%', max: '25%'}},
+        });
+        expect(result.converted.domain).toEqual([
+            min - (rounded ? 10800000 : 8640000),
+            max + 21600000,
+        ]);
+        expect(result.original.domain).toEqual([min, max]);
+    },
+);
+
+test('explicit limits override percentage padding with datetime Y timestamps', async () => {
     const min = 1704067200000;
     const max = min + 86400000;
-    const result = await compare({
-        name: 'timestamp ends',
-        axis: {type: 'datetime', timestamps: [min, max]},
+    const {converted} = await compare({
+        name: 'fixed timestamp limits',
+        axis: {type: 'datetime', timestamps: [min, max], min, max},
         values: [min, max],
         replacement: {padding: {min: '10%', max: '25%'}},
     });
-    expect(result.converted.domain).toEqual([min, max]);
-    expect(result.original.domain).toEqual([min, max]);
+    expect(converted.domain).toEqual([min, max]);
 });
+
+test.each([
+    {direction: 'x', max: 30, rounded: false},
+    {direction: 'x', max: 30, rounded: true},
+    {direction: 'y', max: 'auto', rounded: false},
+    {direction: 'y', max: 'auto', rounded: true},
+] as const)(
+    'mixed units preserve the percentage minimum on $direction (max: $max, rounded: $rounded)',
+    async ({direction, max, rounded}) => {
+        const {converted} = await compare({
+            name: 'mixed padding',
+            direction,
+            axis: {startOnTick: rounded, endOnTick: rounded},
+            replacement: {padding: {min: '7%', max}},
+        });
+        expect(converted.domain[0]).toBeCloseTo(direction === 'y' && rounded ? -10 : -7, 8);
+        expect(converted.domain[1]).toBeGreaterThan(100);
+        if (rounded) {
+            expect(converted.domain[1]).toBe(direction === 'x' ? 120 : 110);
+        } else if (max === 30) {
+            expect(converted.positions[1]).toBeCloseTo(270, 8);
+        } else {
+            expect(converted.positions[1]).toBeGreaterThan(0);
+        }
+    },
+);
 
 test.each(['x', 'y'] as const)(
     'logarithmic %s percentages expand the original log span while maxPadding stays unchanged',

@@ -20,12 +20,16 @@ export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;
 
-/** Extend a continuous axis domain. Explicit axis limits take precedence. */
+/** Extend the free boundaries of a continuous axis. */
 export interface ChartAxisPadding {
     /**
      * Minimum-side space: pixels (number or `px` string), a percentage, or `auto` to fit markers.
-     * Percentages on both sides use the initial scale before band/label offsets and tick rounding.
-     * Logarithmic axes use the logarithmic span.
+     * A percentage is a share of the axis value range before padding (the data extent or explicit limits).
+     * Both sides use that same range; logarithmic axes use its logarithmic span.
+     * Percentages are applied before space for bars and labels and before tick rounding.
+     * Explicit axis limits and zoom take precedence. Category axes and axes normalized
+     * with `stacking: 'percent'` ignore padding. X padding is ignored when
+     * `xAxis.rangeSlider.enabled` is `true`. Oversized requests are bounded and can still clip.
      * @minimum 0
      * @default 0
      */
@@ -262,11 +266,17 @@ export interface ChartAxis {
     };
     ticks?: ChartAxisTicks;
     /**
-     * Maximum-side padding as a fraction of the initial scale.
+     * Legacy maximum-side padding. On linear and datetime axes, a fraction of the value range before padding.
+     * Ignored on axes normalized with `stacking: 'percent'` and on X when the range slider is enabled.
+     * Datetime Y axes with explicit `timestamps` also ignore it.
      * @default 0.05 for Y axis, 0.01 for X axis
-     * @deprecated Use `padding.max` with a percentage string: `maxPadding: 0.25` becomes
-     * `padding: {max: '25%'}`. Numbers in `padding` are pixels.
-     * Percentage limits differ on logarithmic axes; keep `maxPadding` for its legacy calculation.
+     * @deprecated On linear and datetime axes where this option adds space, use `padding.max`
+     * with a percentage string: `maxPadding: 0.25` becomes `padding: {max: '25%'}`.
+     * Numbers in `padding` are pixels. Unlike `maxPadding`, `padding` does not extend zoomed boundaries.
+     * On logarithmic axes, migrate to percentages of the logarithmic range; the legacy
+     * direction-dependent calculation is a bug and is not supported by `padding`.
+     * Category axes ignore `padding`; remove `maxPadding` without a replacement.
+     * Its incidental effect on category direction is a bug and is not supported by `padding`.
      */
     maxPadding?: number;
     /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */

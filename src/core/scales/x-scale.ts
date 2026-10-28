@@ -78,8 +78,8 @@ export function createXScale(args: {
     const xCategories = get(axis, 'categories');
     const domainPadding =
         'rangeSlider' in axis && axis.rangeSlider?.enabled
-            ? {min: 0, max: 0, maxIsPercentage: false}
-            : getDomainPadding(axis);
+            ? {minFraction: 0, maxFraction: 0, legacyMaxFraction: 0}
+            : getDomainPadding(axis, hasZoomX);
     const xAxisPadding = calculateXAxisPadding(series);
 
     const range = getXScaleRange({
@@ -204,7 +204,10 @@ export function createXScale(args: {
                 });
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 
-                if (xScale.step() / 2 < boundsWidth * domainPadding.max + xAxisPadding) {
+                if (
+                    xScale.step() / 2 <
+                    boundsWidth * domainPadding.legacyMaxFraction + xAxisPadding
+                ) {
                     xScale.range(range);
                 }
 
