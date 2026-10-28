@@ -18,6 +18,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "playwright/*",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "docs/examples/**/*.ts",
     "docs/examples/**/*.tsx"
   ]
