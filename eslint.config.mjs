@@ -14,6 +14,8 @@ export default [
             '**/node_modules/**',
             'storybook-static/**',
             'dist/**',
+            'dist-docs/**',
+            'docs/examples/dist/**',
             'playwright/.cache/**',
             'playwright/.cache-docker/**',
             'playwright-report/**',
