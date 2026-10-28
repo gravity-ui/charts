@@ -76,11 +76,14 @@ export function getBarYStackLabelAnchors(
                 options,
                 x,
                 y: outer.y + outer.height / 2,
-                total: getStackLabelValue(
-                    options,
-                    points.map((item) => item.data),
-                    total,
-                ),
+                total:
+                    typeof options.aggregation === 'function'
+                        ? getStackLabelValue(
+                              options,
+                              points.map((item) => item.data),
+                              total,
+                          )
+                        : total,
                 direction: extendsRight ? 'right' : 'left',
                 plotIndex: 0,
             });

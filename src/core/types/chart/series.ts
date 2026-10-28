@@ -89,7 +89,7 @@ export interface BasicInactiveState {
 export interface StackLabelsAggregationArgs<T = MeaningfulAny> {
     /**
      * Original participating points from visible series at the same category or X, grouped by stack and sign.
-     * Includes points on both sides of area gaps; excludes synthetic area points.
+     * Includes points on both sides of area gaps and real points isolated between nulls; excludes synthetic area points.
      */
     points: (BarXSeriesData<T> | BarYSeriesData<T> | AreaSeriesData<T>)[];
 }
@@ -106,7 +106,8 @@ export interface StackLabelsOptions<T = MeaningfulAny> {
     enabled?: boolean;
     /**
      * Calculate the label value without changing stack geometry or sign grouping.
-     * Return a finite number; NaN and infinite results hide the label.
+     * Return a finite number; NaN and infinite results hide the label. Returning zero does not itself hide it.
+     * Area totals include isolated real points, but no label is shown without an area boundary at that X.
      * - `'sum'`: Sum raw values (`x` for bar-y, `y` for bar-x and area).
      * @default 'sum'
      */

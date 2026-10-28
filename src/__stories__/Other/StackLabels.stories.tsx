@@ -22,35 +22,28 @@ export const Area: Story = {args: {data: getStackLabelsData('area')}};
 export const AreaPercent: Story = {args: {data: getStackLabelsData('area', 'percent')}};
 
 function createCustomAggregationStory(type: 'bar-x' | 'bar-y' | 'area'): Story {
-    const data = getStackLabelsAggregationData(type);
-    let aggregationSource = '';
-    const source = JSON.stringify(
-        data,
-        (key, value) => {
-            if (key === 'aggregation' && typeof value === 'function') {
-                aggregationSource = value.toString();
-                return '__AGGREGATION_CALLBACK__';
-            }
-
-            return value;
-        },
-        2,
-    ).replace('"__AGGREGATION_CALLBACK__"', aggregationSource);
-
     return {
-        args: {data},
+        args: {data: getStackLabelsAggregationData(type)},
         parameters: {
             docs: {
                 codePanel: true,
                 source: {
                     type: 'code',
                     language: 'tsx',
-                    code: `import {Chart} from '@gravity-ui/charts';
-import type {ChartData} from '@gravity-ui/charts';
+                    code: `import type {ChartSeriesOptions} from '@gravity-ui/charts';
 
-const data: ChartData = ${source};
+const options: ChartSeriesOptions<{orders: number}> = {
+    '${type}': {
+        stackLabels: {
+            enabled: true,
+            aggregation: ({points}) =>
+                points.reduce((sum, point) => sum + (point.custom?.orders ?? 0), 0),
+            format: {type: 'number', postfix: ' orders'},
+        },
+    },
+};
 
-<Chart data={data} />`,
+// Apply as data.series.options; each point supplies custom.orders.`,
                 },
             },
         },

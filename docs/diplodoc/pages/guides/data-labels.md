@@ -74,7 +74,9 @@ series: {
 
 For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.
 
-By default, totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals. Zero totals appear only for all-zero stacks.
+By default, totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals.
+
+A separate zero total is hidden when the same stack has negative values. This rule uses the original axis values, not the result of a custom aggregation callback.
 
 Participants with the same type, `stackId` and value axis must have matching effective `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
 
@@ -84,8 +86,16 @@ Participants with the same type, `stackId` and value axis must have matching eff
 
 ### Custom stack totals
 
-Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. Points are original values from participating visible series at the same category or X, grouped by stack and sign. Area totals include points on both sides of a gap, independently of the boundary used to position the label. The default is `'sum'`.
+Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. Points are original values from participating visible series at the same category or X, grouped by stack and sign. The default is `'sum'`.
 
 Here, stack height shows revenue while the total label sums `custom.orders`. Formatting and positioning stay unchanged.
 
 <div data-chart-example="data-labels/stack-labels-aggregation"></div>
+
+Returning `0` from the callback does not by itself hide the label. For example, a positive stack can display a custom total of `0`.
+
+### Area gaps and isolated points
+
+Both the default sum and custom aggregation include real points on both sides of an area gap, including points isolated between two nulls. Synthetic points added during layout are excluded.
+
+The label is positioned at an existing area boundary, independently of which points contribute to its value. If a stack at a given X contains only isolated points and has no area boundary, no total label is shown.

@@ -9,6 +9,8 @@ import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
+const DEFAULT_POSITIVE_EXTENDS_UP = true;
+
 interface Boundary {
     y: number;
 }
@@ -17,7 +19,7 @@ interface StackBoundary {
     points: AreaSeriesData[];
     options: StackLabelAnchor['options'];
     x: number;
-    negative: boolean;
+    extendsUp: boolean;
     plotIndex: number;
     prev?: Boundary;
     next?: Boundary;
@@ -32,6 +34,10 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
             item.series.stackLabels,
         );
         if (!options.enabled) continue;
+        const range = args.yScale?.[item.series.yAxis]?.range();
+        const positiveExtendsUp = range
+            ? range[0] > range[range.length - 1]
+            : DEFAULT_POSITIVE_EXTENDS_UP;
         const rawPoints = new Set(item.series.data);
         // A step may have two points at the same X, one for each adjoining section.
         const pointsByX = Array.from(group(item.points, (point) => point.x).values());
@@ -58,7 +64,7 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                     points: [],
                     options,
                     x: point.x,
-                    negative,
+                    extendsUp: negative ? !positiveExtendsUp : positiveExtendsUp,
                     plotIndex: args.yAxis?.[item.series.yAxis]?.plotIndex ?? 0,
                 };
                 boundariesBySign.set(negative, stack);
@@ -73,7 +79,10 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 if (boundaryPoint.y === null) continue;
                 const boundary = stack[side];
                 if (boundary) {
-                    boundary.y = (negative ? Math.max : Math.min)(boundary.y, boundaryPoint.y);
+                    boundary.y = (stack.extendsUp ? Math.min : Math.max)(
+                        boundary.y,
+                        boundaryPoint.y,
+                    );
                 } else {
                     stack[side] = {y: boundaryPoint.y};
                 }
@@ -86,9 +95,9 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
         for (const stack of boundariesBySign.values()) {
             let boundary = stack.prev ?? stack.next;
             if (stack.prev && stack.next) {
-                const nextIsOuter = stack.negative
-                    ? stack.next.y > stack.prev.y
-                    : stack.next.y < stack.prev.y;
+                const nextIsOuter = stack.extendsUp
+                    ? stack.next.y < stack.prev.y
+                    : stack.next.y > stack.prev.y;
                 boundary = nextIsOuter ? stack.next : stack.prev;
             }
             if (!boundary) continue;
@@ -101,7 +110,7 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 y: boundary.y,
                 total: getStackLabelValue(stack.options, stack.points, total),
                 plotIndex: stack.plotIndex,
-                direction: stack.negative ? 'bottom' : 'top',
+                direction: stack.extendsUp ? 'top' : 'bottom',
             });
         }
     }

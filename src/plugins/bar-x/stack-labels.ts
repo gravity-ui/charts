@@ -57,11 +57,14 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
                 options,
                 x: outer.x + outer.width / 2,
                 y,
-                total: getStackLabelValue(
-                    options,
-                    points.map((item) => item.data),
-                    total,
-                ),
+                total:
+                    typeof options.aggregation === 'function'
+                        ? getStackLabelValue(
+                              options,
+                              points.map((item) => item.data),
+                              total,
+                          )
+                        : total,
                 direction: extendsUp ? 'top' : 'bottom',
                 plotIndex,
             });

@@ -465,6 +465,132 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
+    test.each([false, true])('follows both value ends, reversed=%s', async (reversed) => {
+        const {args} = await prepare(areaPlugin, [[10], [20], [-10], [-20]]);
+        const yScale = scaleLinear()
+            .domain([-100, 100])
+            .range(reversed ? [0, 200] : [200, 0]);
+        args.yScale = [yScale];
+
+        const {renderData} = await areaPlugin.prepareShapeData(args);
+        const anchors = getAreaStackLabelAnchors(renderData as PreparedAreaData[], args);
+
+        expect(anchors).toHaveLength(2);
+        expect(anchors.find((anchor) => anchor.total === 30)).toMatchObject({
+            y: yScale(30),
+            direction: reversed ? 'bottom' : 'top',
+        });
+        expect(anchors.find((anchor) => anchor.total === -30)).toMatchObject({
+            y: yScale(-30),
+            direction: reversed ? 'top' : 'bottom',
+        });
+    });
+
+    test.each([
+        {sign: 1, reversed: false},
+        {sign: 1, reversed: true},
+        {sign: -1, reversed: false},
+        {sign: -1, reversed: true},
+    ])(
+        'selects the outer side of a gap, sign=$sign, reversed=$reversed',
+        async ({sign, reversed}) => {
+            const {args} = await prepare(areaPlugin, [
+                [null, sign * 10, sign * 10, sign * 10, null],
+                [sign * 20, sign * 20, null, sign * 20, sign * 20],
+            ]);
+            const yScale = scaleLinear()
+                .domain([-100, 100])
+                .range(reversed ? [0, 200] : [200, 0]);
+            args.yScale = [yScale];
+
+            const {renderData} = await areaPlugin.prepareShapeData(args);
+            const anchors = getAreaStackLabelAnchors(renderData as PreparedAreaData[], args);
+            const extendsUp = reversed ? sign < 0 : sign > 0;
+
+            for (const x of [200, 400]) {
+                expect(anchors.find((anchor) => anchor.x === x)).toMatchObject({
+                    total: sign * 30,
+                    y: yScale(sign * 20),
+                    direction: extendsUp ? 'top' : 'bottom',
+                });
+            }
+        },
+    );
+
+    test.each([false, true])(
+        'anchors percent totals at the plot edge, reversed=%s',
+        async (reversed) => {
+            const {args} = await prepare(areaPlugin, [[10], [20]], 'percent');
+            args.yScale = [
+                scaleLinear()
+                    .domain([0, 100])
+                    .range(reversed ? [0, 200] : [200, 0]),
+            ];
+
+            const {renderData} = await areaPlugin.prepareShapeData(args);
+            const anchors = getAreaStackLabelAnchors(renderData as PreparedAreaData[], args);
+
+            expect(anchors).toMatchObject([
+                {total: 30, y: reversed ? 200 : 0, direction: reversed ? 'bottom' : 'top'},
+            ]);
+        },
+    );
+
+    test.each(['normal', 'percent'] as const)(
+        'includes isolated real points in sum and custom totals for %s stacks',
+        async (stacking) => {
+            const {args, raw, result} = await prepare(
+                areaPlugin,
+                [
+                    [null, 10, null],
+                    [20, 20, 20],
+                ],
+                stacking,
+            );
+            const summed = getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args);
+            const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+
+            args.seriesOptions = getPreparedOptions({
+                area: {stackLabels: {enabled: true, aggregation}},
+            });
+            const aggregated = getAreaStackLabelAnchors(
+                result.renderData as PreparedAreaData[],
+                args,
+            );
+            const middlePoints = aggregation.mock.calls.find(([{points}]) =>
+                points.some((point) => point === raw[0].data[1]),
+            )?.[0].points;
+
+            expect(summed.find((anchor) => anchor.x === 200)?.total).toBe(30);
+            expect(aggregated.find((anchor) => anchor.x === 200)?.total).toBe(2);
+            expect(middlePoints).toHaveLength(2);
+            expect(middlePoints).toContain(raw[0].data[1]);
+            expect(middlePoints).toContain(raw[1].data[1]);
+            expect(aggregated.map(({x, y}) => ({x, y}))).toEqual(summed.map(({x, y}) => ({x, y})));
+        },
+    );
+
+    test.each(['normal', 'percent'] as const)(
+        'does not label isolated-only %s stacks without an area boundary',
+        async (stacking) => {
+            const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+
+            for (const value of ['sum', aggregation] as const) {
+                const {args, result} = await prepare(areaPlugin, [[null, 10, null]], stacking, {
+                    enabled: true,
+                    aggregation: value,
+                });
+
+                expect(
+                    getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args),
+                ).toEqual([]);
+                expect(result.labels).toEqual([]);
+            }
+
+            expect(aggregation).not.toHaveBeenCalled();
+        },
+    );
+
     test.each([
         {value: 10, sign: 1, stacking: 'normal'},
         {value: 30, sign: 1, stacking: 'normal'},

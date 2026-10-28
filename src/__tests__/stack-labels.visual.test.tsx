@@ -31,7 +31,7 @@ function getBoundaryTestData(): ChartData {
 
 test.describe('Stack labels', () => {
     for (const type of ['bar-x', 'bar-y', 'area'] as const) {
-        test(`${type}: custom aggregation follows legend visibility @webkit`, async ({mount}) => {
+        test(`${type}: custom aggregation follows legend visibility`, async ({mount}) => {
             const component = await mount(<StackLabelsAggregationTestStory type={type} />);
             const labels = component.locator(labelSelector);
 
@@ -55,7 +55,7 @@ test.describe('Stack labels', () => {
     }
 
     for (const stacking of ['normal', 'percent'] as const) {
-        test(`area ${stacking}: gap totals include both sides @webkit`, async ({mount}) => {
+        test(`area ${stacking}: gap totals include both sides`, async ({mount}) => {
             const component = await mount(
                 <AreaStackLabelsGapsTestStory
                     desktopValue={10}
@@ -104,9 +104,6 @@ test.describe('Stack labels', () => {
             await expect
                 .poll(async () => (await labels.allTextContents()).sort())
                 .toEqual(['20', '30', '50']);
-            await component.screenshot({
-                path: `/tmp/charts-811-area-gaps-${stacking}-${test.info().project.name}.png`,
-            });
         });
     }
 
