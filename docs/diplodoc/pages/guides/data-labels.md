@@ -84,7 +84,7 @@ Participants with the same type, `stackId` and value axis must have matching eff
 
 ### Custom stack totals
 
-Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. Points are original values from participating visible series, grouped by stack and sign. The default is `'sum'`.
+Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. Points are original values from participating visible series at the same category or X, grouped by stack and sign. Area totals include points on both sides of a gap, independently of the boundary used to position the label. The default is `'sum'`.
 
 Here, stack height shows revenue while the total label sums `custom.orders`. Formatting and positioning stay unchanged.
 

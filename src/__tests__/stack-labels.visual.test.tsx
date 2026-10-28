@@ -8,6 +8,7 @@ import {getStackLabelsData} from '../__stories__/__data__/stack-labels';
 import type {PreparedBarYData} from '../core/shapes/bar-y/types';
 import type {ChartData} from '../types';
 
+import {AreaStackLabelsGapsTestStory} from './components/AreaStackLabelsGapsTestStory';
 import {StackLabelsAggregationTestStory} from './components/StackLabelsAggregationTestStory';
 
 const labelSelector = '.gcharts-stack-labels__label';
@@ -50,6 +51,62 @@ test.describe('Stack labels', () => {
             await expect
                 .poll(async () => (await labels.allTextContents()).sort())
                 .toEqual(['16 orders', '20 orders', '30 orders']);
+        });
+    }
+
+    for (const stacking of ['normal', 'percent'] as const) {
+        test(`area ${stacking}: gap totals include both sides @webkit`, async ({mount}) => {
+            const component = await mount(
+                <AreaStackLabelsGapsTestStory
+                    desktopValue={10}
+                    stacking={stacking}
+                    aggregation="orders"
+                />,
+            );
+            const labels = component.locator(labelSelector);
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['12', '20', '8']);
+
+            await component.update(
+                <AreaStackLabelsGapsTestStory
+                    desktopValue={30}
+                    stacking={stacking}
+                    aggregation="orders"
+                />,
+            );
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['12', '20', '8']);
+
+            await component.update(
+                <AreaStackLabelsGapsTestStory
+                    desktopValue={10}
+                    stacking={stacking}
+                    aggregation="sum"
+                />,
+            );
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['10', '20', '30']);
+
+            await component.update(
+                <AreaStackLabelsGapsTestStory
+                    desktopValue={30}
+                    stacking={stacking}
+                    aggregation="sum"
+                />,
+            );
+
+            await expect
+                .poll(async () => (await labels.allTextContents()).sort())
+                .toEqual(['20', '30', '50']);
+            await component.screenshot({
+                path: `/tmp/charts-811-area-gaps-${stacking}-${test.info().project.name}.png`,
+            });
         });
     }
 

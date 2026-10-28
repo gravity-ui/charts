@@ -15,6 +15,7 @@ import * as textUtils from '~core/utils/text';
 
 import type {ChartSeries, StackLabelsAggregationArgs, StackLabelsOptions} from '../../types';
 import {areaPlugin} from '../area';
+import {getAreaStackLabelAnchors} from '../area/stack-labels';
 import {barXPlugin} from '../bar-x';
 import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
 import {barYPlugin} from '../bar-y';
@@ -171,6 +172,18 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             raw.forEach((series) => expect(points).toContain(series.data[0]));
             expect(geometry(result.renderData)).toEqual(geometry(summed.renderData));
             expect(result.labels?.map(({y}) => y)).toEqual(summed.labels?.map(({y}) => y));
+            if (plugin.type === 'bar-y') {
+                const bars = (result.renderData as BarYShapesArgs[]).flatMap((item) => item.shapes);
+                const boundaryX = Math.max(...bars.map((bar) => bar.x + bar.width));
+
+                for (const label of [...(result.labels ?? []), ...(summed.labels ?? [])]) {
+                    if (stacking === 'percent') {
+                        expect(label.x + label.size.width).toBeCloseTo(args.boundsWidth);
+                    } else {
+                        expect(label.x).toBeCloseTo(boundaryX + 5);
+                    }
+                }
+            }
         },
     );
 
@@ -452,7 +465,89 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
-    test('aggregation excludes synthetic points and counts step boundary points once', async () => {
+    test.each([
+        {value: 10, sign: 1, stacking: 'normal'},
+        {value: 30, sign: 1, stacking: 'normal'},
+        {value: 10, sign: -1, stacking: 'normal'},
+        {value: 30, sign: -1, stacking: 'normal'},
+        {value: 10, sign: 1, stacking: 'percent'},
+        {value: 30, sign: 1, stacking: 'percent'},
+    ] as const)(
+        'aggregates both sides of gaps: value=$value, sign=$sign, stacking=$stacking',
+        async ({value, sign, stacking}) => {
+            const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) =>
+                points.reduce((sum, point) => sum + point.custom.orders, 0),
+            );
+            const {args, raw, result} = await prepare(
+                areaPlugin,
+                [
+                    [null, sign * value, sign * value],
+                    [sign * 20, sign * 20, null],
+                ],
+                stacking,
+                {enabled: true},
+                [],
+                (series) =>
+                    series.forEach((item, index) => {
+                        item.data.forEach((point) => {
+                            point.custom = {orders: index === 0 ? 12 : 8};
+                        });
+                    }),
+            );
+            const summed = getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args);
+            args.seriesOptions = getPreparedOptions({
+                area: {stackLabels: {enabled: true, aggregation}},
+            });
+
+            const aggregated = getAreaStackLabelAnchors(
+                result.renderData as PreparedAreaData[],
+                args,
+            );
+            const middleSum = summed.find((anchor) => anchor.x === 200);
+            const middleTotal = aggregated.find((anchor) => anchor.x === 200);
+            const middlePoints = aggregation.mock.calls.find(([{points}]) =>
+                points.some((point) => point === raw[0].data[1]),
+            )?.[0].points;
+
+            expect(middleSum?.total).toBe(sign * (value + 20));
+            expect(middleTotal?.total).toBe(20);
+            expect(middlePoints).toHaveLength(2);
+            expect(middlePoints).toContain(raw[0].data[1]);
+            expect(middlePoints).toContain(raw[1].data[1]);
+            expect(aggregation).toHaveBeenCalledTimes(3);
+            expect(aggregated.map(({x, y, direction}) => ({x, y, direction}))).toEqual(
+                summed.map(({x, y, direction}) => ({x, y, direction})),
+            );
+        },
+    );
+
+    test('aggregation counts each source point of a real step once', async () => {
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+        const {args, raw, result} = await prepare(areaPlugin, [
+            [10, 20, 30],
+            [5, 15, null],
+        ]);
+        const source = raw[0].data[1];
+        const stepPoints = (result.renderData as PreparedAreaData[])
+            .flatMap((item) => item.points)
+            .filter((point) => point.data === source);
+        args.seriesOptions = getPreparedOptions({
+            area: {stackLabels: {enabled: true, aggregation}},
+        });
+
+        getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args);
+        const aggregatedPoints = aggregation.mock.calls.find(([{points}]) =>
+            points.some((point) => point === source),
+        )?.[0].points;
+
+        expect(stepPoints).toHaveLength(2);
+        expect(stepPoints[0].x).toBe(stepPoints[1].x);
+        expect(stepPoints[0].y).not.toBe(stepPoints[1].y);
+        expect(aggregatedPoints?.filter((point) => point === source)).toHaveLength(1);
+        expect(aggregatedPoints).toContain(raw[1].data[1]);
+    });
+
+    test('aggregation excludes synthetic missing points', async () => {
         const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
 
         const {raw} = await prepare(

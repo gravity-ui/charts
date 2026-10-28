@@ -10,11 +10,11 @@ import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
 interface Boundary {
-    points: AreaSeriesData[];
     y: number;
 }
 
 interface StackBoundary {
+    points: AreaSeriesData[];
     options: StackLabelAnchor['options'];
     x: number;
     negative: boolean;
@@ -55,6 +55,7 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
             let stack = boundariesBySign.get(negative);
             if (!stack) {
                 stack = {
+                    points: [],
                     options,
                     x: point.x,
                     negative,
@@ -62,6 +63,8 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 };
                 boundariesBySign.set(negative, stack);
             }
+            stack.points.push(point.data);
+
             for (const side of ['prev', 'next'] as const) {
                 const neighbor = pointsByX[index + (side === 'prev' ? -1 : 1)]?.[0];
                 // Explicit nulls open a gap; synthetic missing points are zero-height sections.
@@ -70,10 +73,9 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 if (boundaryPoint.y === null) continue;
                 const boundary = stack[side];
                 if (boundary) {
-                    boundary.points.push(point.data);
                     boundary.y = (negative ? Math.max : Math.min)(boundary.y, boundaryPoint.y);
                 } else {
-                    stack[side] = {points: [point.data], y: boundaryPoint.y};
+                    stack[side] = {y: boundaryPoint.y};
                 }
             }
         });
@@ -90,14 +92,14 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 boundary = nextIsOuter ? stack.next : stack.prev;
             }
             if (!boundary) continue;
-            const total = sumDecimals(boundary.points.map((point) => Number(point.y)));
+            const total = sumDecimals(stack.points.map((point) => Number(point.y)));
             // Zero segments do not add a separate total beside a negative stack.
             if (total === 0 && boundariesBySign.has(true)) continue;
             anchors.push({
                 options: stack.options,
                 x: stack.x,
                 y: boundary.y,
-                total: getStackLabelValue(stack.options, boundary.points, total),
+                total: getStackLabelValue(stack.options, stack.points, total),
                 plotIndex: stack.plotIndex,
                 direction: stack.negative ? 'bottom' : 'top',
             });

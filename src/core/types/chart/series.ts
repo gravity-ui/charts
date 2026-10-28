@@ -87,7 +87,10 @@ export interface BasicInactiveState {
 }
 
 export interface StackLabelsAggregationArgs<T = MeaningfulAny> {
-    /** Original participating points from visible series, grouped by stack and sign. Excludes synthetic area points. */
+    /**
+     * Original participating points from visible series at the same category or X, grouped by stack and sign.
+     * Includes points on both sides of area gaps; excludes synthetic area points.
+     */
     points: (BarXSeriesData<T> | BarYSeriesData<T> | AreaSeriesData<T>)[];
 }
 
@@ -95,7 +98,7 @@ export interface StackLabelsAggregationArgs<T = MeaningfulAny> {
  * Raw totals of visible stacked series. Participants in one stack and value axis must
  * resolve to identical aggregation, style, format, padding and allowOverlap settings or validation fails.
  */
-export interface StackLabelsOptions {
+export interface StackLabelsOptions<T = MeaningfulAny> {
     /**
      * Include the visible series in stack totals. Series-level values override plugin options.
      * @default false
@@ -103,10 +106,11 @@ export interface StackLabelsOptions {
     enabled?: boolean;
     /**
      * Calculate the label value without changing stack geometry or sign grouping.
+     * Return a finite number; NaN and infinite results hide the label.
      * - `'sum'`: Sum raw values (`x` for bar-y, `y` for bar-x and area).
      * @default 'sum'
      */
-    aggregation?: 'sum' | ((args: StackLabelsAggregationArgs) => number);
+    aggregation?: 'sum' | ((args: StackLabelsAggregationArgs<T>) => number);
     /** Format the aggregated value, including for percent stacks. Custom formatters receive `{value}`. */
     format?: ValueFormat;
     /** Text styles, merged with plugin defaults. */
@@ -124,7 +128,7 @@ export interface StackLabelsOptions {
     allowOverlap?: boolean;
 }
 
-export interface ChartSeriesOptions {
+export interface ChartSeriesOptions<T = MeaningfulAny> {
     /** Individual data label for each point. */
     dataLabels?: {
         /** Enable or disable the data labels */
@@ -142,7 +146,7 @@ export interface ChartSeriesOptions {
          */
         opacity?: number | null;
         /** Total labels for each visible stack, grouped by category, stackId and value axis. */
-        stackLabels?: StackLabelsOptions;
+        stackLabels?: StackLabelsOptions<T>;
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
@@ -215,7 +219,7 @@ export interface ChartSeriesOptions {
          */
         opacity?: number | null;
         /** Total labels for each visible stack, grouped by category and stackId. */
-        stackLabels?: StackLabelsOptions;
+        stackLabels?: StackLabelsOptions<T>;
         /**
          * The maximum allowed pixel width for a column.
          * This prevents the columns from becoming too wide when there is a small number of points in the chart.
@@ -332,7 +336,7 @@ export interface ChartSeriesOptions {
     };
     area?: {
         /** Total labels on the outer stack boundary, grouped by X value, stackId and value axis. */
-        stackLabels?: StackLabelsOptions;
+        stackLabels?: StackLabelsOptions<T>;
         /**
          * Pixel width of the graph line.
          * @default 1
