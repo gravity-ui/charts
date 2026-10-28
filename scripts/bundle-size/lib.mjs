@@ -68,8 +68,9 @@ async function bundle(measuredRoot, check) {
     // has to be resolved too for the output paths to stay relative.
     const root = realpathSync(measuredRoot);
     // The entry and the (never written) output live in root, so the metafile has only paths
-    // relative to root.
-    const entry = path.join(root, `.size-limit-${slugify(check.name)}.js`);
+    // relative to root. The entry is .mjs: as a .js file under `"type": "commonjs"`, it would
+    // require the build, and esbuild would wrap every module and could not tree-shake them.
+    const entry = path.join(root, `.size-limit-${slugify(check.name)}.mjs`);
     try {
         let entryPoints = (Array.isArray(check.path) ? check.path : [check.path]).map((p) =>
             path.resolve(root, p),
