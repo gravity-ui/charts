@@ -12,7 +12,8 @@ i18nFactory.setLang('en');
 i18nFactory.setFallbackLang('en');
 
 // The keyset type is inferred from the argument, so declaration files inline it instead of
-// importing the JSON: an ES module cannot import JSON without an import attribute.
+// importing the JSON, which TypeScript rejects in the declarations of an ES module without
+// `resolveJsonModule` or an import attribute.
 function bindI18n<T extends KeysetData>(_keysets: T) {
     return i18nFactory.i18n.bind(i18nFactory) as I18NFn<T>;
 }

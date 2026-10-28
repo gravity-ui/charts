@@ -1,9 +1,10 @@
+const fs = require('node:fs');
 const path = require('node:path');
+const {Transform} = require('node:stream');
 
 const utils = require('@gravity-ui/gulp-utils');
 const {task, src, dest, series, parallel} = require('gulp');
 const sass = require('gulp-dart-sass');
-const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
 const {buildChartConfig} = require('./scripts/build-chart-config');
@@ -17,7 +18,34 @@ task('clean', (done) => {
     done();
 });
 
+// gulp's own source maps leave out the sources and a way back to them: this embeds the sources
+// and sets `sourceRoot` from each map to `src`. The final newline puts the `sourceMappingURL`
+// comment that gulp appends on a line of its own.
+function completeSourceMaps(outDir) {
+    return new Transform({
+        objectMode: true,
+        transform(file, _encoding, callback) {
+            const map = file.sourceMap;
+            if (map) {
+                if (!file.contents.toString('utf8').endsWith('\n')) {
+                    file.contents = Buffer.concat([file.contents, Buffer.from('\n')]);
+                }
+                map.file = path.basename(file.relative);
+                map.sourceRoot = path.relative(
+                    path.dirname(path.join(outDir, file.relative)),
+                    file.base,
+                );
+                map.sourcesContent = map.sources.map((source) =>
+                    fs.readFileSync(path.join(file.base, source), 'utf8'),
+                );
+            }
+            callback(null, file);
+        },
+    });
+}
+
 async function compileTs(modules = false) {
+    const outDir = path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs');
     const tsProject = await utils.createTypescriptProject({
         compilerOptions: {
             declaration: true,
@@ -34,15 +62,19 @@ async function compileTs(modules = false) {
         tsProject.customTransformers.transformLocalModules,
     ];
     return new Promise((resolve) => {
-        src([
-            'src/**/*.{ts,tsx}',
-            '!src/demo/**/*',
-            '!src/**/__stories__/**/*',
-            '!src/**/__tests__/**/*',
-            '!src/**/*.test.{ts,tsx}',
-            '!src/setup-*.ts',
-        ])
-            .pipe(sourcemaps.init())
+        src(
+            [
+                'src/**/*.{ts,tsx}',
+                '!src/demo/**/*',
+                '!src/**/__stories__/**/*',
+                '!src/**/__tests__/**/*',
+                '!src/**/__mocks__/**/*',
+                '!src/**/*.test.{ts,tsx}',
+                '!src/**/__snapshots__/**/*',
+                '!src/setup-*.ts',
+            ],
+            {sourcemaps: true},
+        )
             .pipe(
                 tsProject({
                     customTransformers: {
@@ -51,7 +83,7 @@ async function compileTs(modules = false) {
                     },
                 }),
             )
-            .pipe(sourcemaps.write('.', {includeContent: true, sourceRoot: '../../src'}))
+            .pipe(completeSourceMaps(outDir))
             // Bundlers read `sideEffects` from the closest package.json, so it repeats the root one.
             .pipe(
                 utils.addVirtualFile({
@@ -63,7 +95,7 @@ async function compileTs(modules = false) {
                     }),
                 }),
             )
-            .pipe(dest(path.resolve(BUILD_DIR, modules ? 'esm' : 'cjs')))
+            .pipe(dest(outDir, {sourcemaps: '.'}))
             .on('end', resolve);
     });
 }
