@@ -78,6 +78,7 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     const reflowId = layout?.reflowId ?? 0;
     const requestedReflowId = React.useRef(0);
     const pendingReflows = React.useRef<PendingReflow[]>([]);
+    const failedReflowGenerations = React.useRef(new WeakSet<object>());
     const mounted = React.useRef(true);
     const currentData = React.useRef(data);
     currentData.current = data;
@@ -202,8 +203,10 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         [onReady, reflowId, settleReflows, handleResize],
     );
     const handleRenderError = React.useCallback(
-        (error: unknown) => {
-            if (!settleReflows(reflowId, {error})) {
+        (error: unknown, generation: object) => {
+            if (settleReflows(reflowId, {error})) {
+                failedReflowGenerations.current.add(generation);
+            } else if (!failedReflowGenerations.current.has(generation)) {
                 throw error;
             }
         },

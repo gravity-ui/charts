@@ -113,15 +113,9 @@ export function renderPie(
         .style('fill', 'none');
 
     // Render custom shapes if defined
-    shapesSelection.each(async function (d, index, nodes) {
-        const customShape = await d.series.renderCustomShape?.({
-            series: {
-                innerRadius: d.innerRadius,
-            },
-        });
-
-        if (customShape) {
-            (nodes[index] as Element).append(customShape as Node);
+    shapesSelection.each(function (d, index, nodes) {
+        if (d.customShape) {
+            (nodes[index] as Element).append(d.customShape as Node);
         }
     });
 

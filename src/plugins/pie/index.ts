@@ -28,6 +28,13 @@ async function prepareShapeData({
         boundsWidth,
         boundsHeight,
     });
+    await Promise.all(
+        data.map(async (pie) => {
+            pie.customShape = await pie.series.renderCustomShape?.({
+                series: {innerRadius: pie.innerRadius},
+            });
+        }),
+    );
     return {renderData: data, tooltipItems: data};
 }
 

@@ -7,7 +7,7 @@ export interface ChartInnerRef extends ChartApi {
 export interface ChartInnerProps {
     chartApi: ChartApi;
     reflowId?: number;
-    onRenderError?: (error: unknown) => void;
+    onRenderError?: (error: unknown, generation: object) => void;
     width: number;
     height: number;
     data: ChartData;

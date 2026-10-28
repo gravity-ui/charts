@@ -157,6 +157,16 @@ export function useChartInnerProps(props: Props) {
             reflowId,
         ],
     );
+    const handlePreparationError = React.useCallback(
+        (error: unknown) => {
+            if (onRenderError) {
+                onRenderError(error, preparation);
+            } else {
+                throw error;
+            }
+        },
+        [onRenderError, preparation],
+    );
     React.useEffect(() => {
         const {
             height,
@@ -419,17 +429,13 @@ export function useChartInnerProps(props: Props) {
             }
         })().catch((error: unknown) => {
             if (currentRunRef.current === currentRun) {
-                if (onRenderError) {
-                    onRenderError(error);
-                } else {
-                    throw error;
-                }
+                handlePreparationError(error);
             }
         });
         return () => {
             currentRunRef.current++;
         };
-    }, [preparation, onRenderError]);
+    }, [preparation, handlePreparationError]);
 
     // additional start
 
@@ -534,6 +540,7 @@ export function useChartInnerProps(props: Props) {
         layerIndexes: chartState?.layerIndexes ?? EMPTY_LAYER_INDEXES,
         shapesReady: Boolean(chartState),
         shapesCurrent: chartState?.preparation === preparation,
+        handlePreparationError,
         handleLegendItemClick,
         preparedTitle: chartState?.preparedTitle,
         preparedChart: chartState?.preparedChart,

@@ -51,7 +51,7 @@ function ChartInnerComponent(
     props: ChartInnerProps,
     forwardedRef: React.ForwardedRef<ChartInnerRef>,
 ) {
-    const {width, height, data, onReady, chartApi, reflowId, onRenderError} = props;
+    const {width, height, data, onReady, chartApi, reflowId} = props;
     const readyRef = React.useRef(false);
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const resetZoomButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -94,6 +94,7 @@ function ChartInnerComponent(
         boundsOffsetTop,
         boundsWidth,
         handleLegendItemClick,
+        handlePreparationError,
         layerIndexes,
         legendConfig,
         legendItems,
@@ -354,7 +355,7 @@ function ChartInnerComponent(
         [],
         setYAxisDataItems,
         axisDataReady,
-        onRenderError,
+        handlePreparationError,
     );
 
     const setXAxisDataItems = React.useCallback(async () => {
@@ -406,7 +407,7 @@ function ChartInnerComponent(
         [],
         setXAxisDataItems,
         axisDataReady,
-        onRenderError,
+        handlePreparationError,
     );
 
     React.useEffect(() => {
