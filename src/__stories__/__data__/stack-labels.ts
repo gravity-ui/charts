@@ -40,11 +40,10 @@ export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'):
     ];
 
     data.series.data.forEach((series, seriesIndex) => {
-        if (series.type !== 'bar-x' && series.type !== 'bar-y' && series.type !== 'area') return;
-
         series.data.forEach((point, pointIndex) => {
-            point.custom = {orders: orders[seriesIndex][pointIndex]};
-            point.label = `${point.custom.orders} orders`;
+            const orderCount = orders[seriesIndex][pointIndex];
+
+            Object.assign(point, {custom: {orders: orderCount}, label: `${orderCount} orders`});
         });
     });
     const stackLabels: StackLabelsOptions = {
