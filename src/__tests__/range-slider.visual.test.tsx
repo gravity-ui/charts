@@ -333,16 +333,17 @@ test.describe('Range slider', () => {
             },
             xAxis: {type: 'datetime', rangeSlider},
         });
-        const segments = '.gcharts-bar-x__segment';
+        // The range slider draws its own copy of the bars, so count only the bars in the plot.
+        const plotBars = '.gcharts-chart__content .gcharts-bar-x__segment';
         const component = await mount(<ChartTestStory data={getBarData()} />);
-        await expect(component.locator(segments)).toHaveCount(10);
+        await expect(component.locator(plotBars)).toHaveCount(10);
 
         await component.update(
             <ChartTestStory data={getBarData({enabled: true, defaultRange: {size: 'P2D'}})} />,
         );
-        await expect(component.locator(segments)).not.toHaveCount(10);
+        await expect(component.locator(plotBars)).toHaveCount(2);
 
         await component.update(<ChartTestStory data={getBarData()} />);
-        await expect(component.locator(segments)).toHaveCount(10);
+        await expect(component.locator(plotBars)).toHaveCount(10);
     });
 });

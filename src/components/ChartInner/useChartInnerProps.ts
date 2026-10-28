@@ -125,29 +125,34 @@ export function useChartInnerProps(props: Props) {
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
+    const previousXAxisRef = React.useRef<ChartData['xAxis']>();
     const currentRunRef = React.useRef(0);
     const gradientReferenceRef = React.useRef<GradientReferenceCacheEntry>();
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
         const selectedLegendItems = selectedLegendItemsRef.current;
+        // The range slider state of new data is set before its preparation finishes, so compare
+        // with the previous requested x axis rather than with the last prepared data.
+        const previousXAxis = previousXAxisRef.current;
+        previousXAxisRef.current = data.xAxis;
+        const axisTypeChanged =
+            previousXAxis?.type !== undefined && previousXAxis.type !== data.xAxis?.type;
+        // Zoom also copies its x range into the range slider state, so reset the state only when
+        // the slider is turned off, not whenever it is disabled.
+        const rangeSliderTurnedOff =
+            getPreparedRangeSlider({xAxis: previousXAxis}).enabled &&
+            !getPreparedRangeSlider({xAxis: data.xAxis}).enabled;
+
+        if ((axisTypeChanged || rangeSliderTurnedOff) && rangeSliderState !== undefined) {
+            updateRangeSliderState(undefined);
+            return;
+        }
 
         (async function () {
             const chartDataChanged = !(
                 previousChartData.current && isEqual(previousChartData.current, data)
             );
-            const axisTypeChanged =
-                previousChartData.current?.xAxis?.type !== undefined &&
-                previousChartData.current.xAxis.type !== data.xAxis?.type;
-            const rangeSliderDisabled =
-                previousChartData.current !== null &&
-                getPreparedRangeSlider({xAxis: previousChartData.current.xAxis}).enabled &&
-                !getPreparedRangeSlider({xAxis: data.xAxis}).enabled;
-
-            if ((axisTypeChanged || rangeSliderDisabled) && rangeSliderState !== undefined) {
-                updateRangeSliderState(undefined);
-                return;
-            }
 
             const preparedTitle = await getPreparedTitle({
                 title: data.title,

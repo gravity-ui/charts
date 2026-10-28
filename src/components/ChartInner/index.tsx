@@ -258,6 +258,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
     const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);
+    const prevRangeSliderEnabled = usePrevious(preparedRangeSlider.enabled);
 
     useCrosshair({
         resetKey: hoverResetKey,
@@ -402,7 +403,11 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
 
             updateRangeSliderState(initialRangeSliderState);
             setInitialized(true);
-        } else if (preparedRangeSlider.defaultRange !== prevRangeSliderDefaultRange && xScale) {
+        } else if (
+            (preparedRangeSlider.defaultRange !== prevRangeSliderDefaultRange ||
+                (preparedRangeSlider.enabled && !prevRangeSliderEnabled)) &&
+            xScale
+        ) {
             if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
                 return;
             }
@@ -420,6 +425,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
         preparedRangeSlider.defaultRange,
         preparedRangeSlider.enabled,
         prevRangeSliderDefaultRange,
+        prevRangeSliderEnabled,
         setInitialized,
         updateRangeSliderState,
         xScale,

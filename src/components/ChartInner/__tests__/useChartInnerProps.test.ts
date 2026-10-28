@@ -388,40 +388,58 @@ describe('legend and domain updates', () => {
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
     });
 
-    test('x domain is not limited by the previous range slider after it is disabled', async () => {
-        const points = Array.from({length: 10}, (_, i) => ({x: i * DAY, y: i + 1}));
-        const sliderData: ChartData = {
-            series: {data: [{type: 'bar-x', name: 'Bars', data: points}]},
-            xAxis: {type: 'datetime', rangeSlider: {enabled: true}},
-        };
-        const plainData: ChartData = {
-            series: {data: [{type: 'line', name: 'Line', data: points}]},
-            xAxis: {type: 'datetime'},
-        };
-        const dispatcher = dispatch();
-        const {result, rerender} = renderHook(
-            ({data}: {data: ChartData}) => {
-                const state = useChartInnerState({
-                    dispatcher,
-                    preparedRangeSlider: getPreparedRangeSlider({xAxis: data.xAxis}),
-                });
-                return {
-                    ...state,
-                    ...useChartInnerProps({...getProps(data), dispatcher, ...state}),
-                };
-            },
-            {initialProps: {data: sliderData}},
-        );
-        const getXDomain = () => (result.current.xScale?.domain() ?? []).map(Number);
-        await waitFor(() => expect(result.current.shapesReady).toBe(true));
-        act(() => result.current.updateRangeSliderState({min: 8 * DAY, max: 9 * DAY}));
-        await waitFor(() => expect(getXDomain()[0]).toBeGreaterThan(7 * DAY));
+    test.each([true, false])(
+        'x domain is not limited by a range slider that the next data turns off (slider data prepared: %s)',
+        async (sliderDataPrepared) => {
+            const series: ChartData['series'] = {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Bars',
+                        data: Array.from({length: 10}, (_, i) => ({x: i * DAY, y: i + 1})),
+                    },
+                ],
+            };
+            const sliderData: ChartData = {
+                series,
+                xAxis: {type: 'datetime', rangeSlider: {enabled: true}},
+            };
+            const plainData: ChartData = {series, xAxis: {type: 'datetime'}};
+            const dispatcher = dispatch();
+            const {result, rerender} = renderHook(
+                ({data}: {data: ChartData}) => {
+                    const {rangeSliderState, updateRangeSliderState, updateZoomState, zoomState} =
+                        useChartInnerState({
+                            dispatcher,
+                            preparedRangeSlider: getPreparedRangeSlider({xAxis: data.xAxis}),
+                        });
+                    return {
+                        updateRangeSliderState,
+                        ...useChartInnerProps({
+                            ...getProps(data),
+                            dispatcher,
+                            rangeSliderState,
+                            updateRangeSliderState,
+                            updateZoomState,
+                            zoomState,
+                        }),
+                    };
+                },
+                {initialProps: {data: sliderData}},
+            );
+            const getXDomain = () => (result.current.xScale?.domain() ?? []).map(Number);
+            // The chart sets the range slider state as soon as it renders the data.
+            act(() => result.current.updateRangeSliderState({min: 8 * DAY, max: 9 * DAY}));
+            if (sliderDataPrepared) {
+                await waitFor(() => expect(getXDomain()[0]).toBeGreaterThan(7 * DAY));
+            }
 
-        rerender({data: plainData});
-        await waitFor(() => expect(result.current.preparedSeries[0]?.type).toBe('line'));
-        expect(getXDomain()[0]).toBeLessThanOrEqual(0);
-        expect(getXDomain()[1]).toBeGreaterThanOrEqual(9 * DAY);
-    });
+            rerender({data: plainData});
+            await waitFor(() => expect(result.current.xAxis?.rangeSlider.enabled).toBe(false));
+            expect(getXDomain()[0]).toBeLessThanOrEqual(0);
+            expect(getXDomain()[1]).toBeGreaterThanOrEqual(9 * DAY);
+        },
+    );
 
     test.each(['bar-x', 'pie', 'funnel'] as const)(
         'preserves %s legend selection when config/data changes regenerate group IDs',
