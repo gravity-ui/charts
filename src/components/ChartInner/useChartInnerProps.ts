@@ -3,6 +3,7 @@ import React from 'react';
 import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
+import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {DEFAULT_PALETTE} from '~core/constants';
 import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import {getPreparedSeries} from '~core/series';
@@ -138,8 +139,12 @@ export function useChartInnerProps(props: Props) {
             const axisTypeChanged =
                 previousChartData.current?.xAxis?.type !== undefined &&
                 previousChartData.current.xAxis.type !== data.xAxis?.type;
+            const rangeSliderDisabled =
+                previousChartData.current !== null &&
+                getPreparedRangeSlider({xAxis: previousChartData.current.xAxis}).enabled &&
+                !getPreparedRangeSlider({xAxis: data.xAxis}).enabled;
 
-            if (axisTypeChanged && rangeSliderState !== undefined) {
+            if ((axisTypeChanged || rangeSliderDisabled) && rangeSliderState !== undefined) {
                 updateRangeSliderState(undefined);
                 return;
             }
