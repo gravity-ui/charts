@@ -19,6 +19,57 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.describe('Connectors', () => {
+        const points: WaterfallSeriesData[] = [
+            {x: 'Income', y: 10},
+            {x: 'Expense', y: -4},
+            {x: 'Total', total: true},
+        ];
+        const createData = (enabled?: boolean): ChartData => ({
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Balance',
+                        data: points,
+                        ...(enabled === undefined ? {} : {connectors: {enabled}}),
+                    },
+                ],
+            },
+            xAxis: {type: 'category', categories: points.map((point) => String(point.x))},
+        });
+
+        for (const enabled of [undefined, true, false]) {
+            test(`enabled = ${String(enabled)}`, async ({mount}) => {
+                const component = await mount(<ChartTestStory data={createData(enabled)} />);
+                await expect(component.locator('.gcharts-waterfall__segment')).toHaveCount(
+                    points.length,
+                );
+                await expect(component.locator('.gcharts-waterfall__connector')).toHaveCount(
+                    enabled === false ? 0 : points.length - 1,
+                );
+            });
+        }
+
+        test('Toggle on chart updates', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={createData()} />);
+            const connectors = component.locator('.gcharts-waterfall__connector');
+            const bars = component.locator('.gcharts-waterfall__segment');
+            await expect(connectors).toHaveCount(points.length - 1);
+
+            for (const enabled of [false, true, false, undefined]) {
+                await component.update(<ChartTestStory data={createData(enabled)} />);
+                await expect(bars).toHaveCount(points.length);
+                await expect(connectors).toHaveCount(enabled === false ? 0 : points.length - 1);
+                if (enabled !== false) {
+                    for (const connector of await connectors.all()) {
+                        await expect(connector).toHaveAttribute('d', /.+/);
+                    }
+                }
+            }
+        });
+    });
+
     test.describe('Tooltip', () => {
         test('Datetime header in the runnable docs example', async ({mount, page}, testInfo) => {
             const component = await mount(

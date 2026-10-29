@@ -519,6 +519,9 @@ export type PreparedWaterfallSeriesData = WaterfallSeriesData & {index: number};
 
 export type PreparedWaterfallSeries = {
     type: WaterfallSeries['type'];
+    connectors: {
+        enabled: boolean;
+    };
     data: PreparedWaterfallSeriesData[];
     dataLabels: {
         enabled: boolean;

@@ -16,6 +16,10 @@ Set `type: 'waterfall'`. Each change has an `x` position and a signed `y` value.
 
 Null values are skipped by default. Set `nullMode: 'zero'` to treat them as zero changes.
 
+## Connectors
+
+Connector lines between bars are enabled by default. Set `connectors.enabled: false` on the series to hide them. You can toggle this option when updating the chart.
+
 ## Colors
 
 Set `positiveColor` and `negativeColor` to distinguish increases and decreases; `color` is used for totals. See [Colors](../colors.md).
