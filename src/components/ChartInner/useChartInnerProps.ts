@@ -17,6 +17,7 @@ import {
     getOnlyVisibleSeries,
     getSortedSeriesData,
     getZoomedSeriesData,
+    isBandScale,
 } from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
 
@@ -26,6 +27,7 @@ import type {
     LegendItem,
     OnLegendItemClick,
     PreparedLegend,
+    PreparedRangeSlider,
     PreparedSeries,
     PreparedSeriesOptions,
     PreparedSplit,
@@ -37,6 +39,7 @@ import type {
 import type {PreparedChart, PreparedTitle} from '../../hooks/types';
 import type {GradientLayoutReference} from '../../hooks/useShapes/types';
 import type {ChartData, LegendConfig} from '../../types';
+import {getInitialRangeSliderState} from '../utils';
 
 import type {GradientReferenceCacheEntry} from './gradientReferenceCache';
 import {isGradientReferenceCurrent} from './gradientReferenceCache';
@@ -76,6 +79,25 @@ function getBoundsOffsetTop({
 }
 
 const EMPTY_LAYER_INDEXES = new Map<string, number>();
+
+interface RangeSliderConfig {
+    axisType?: string;
+    defaultRange: PreparedRangeSlider['defaultRange'];
+    enabled: boolean;
+}
+
+/**
+ * Whether the range slider state of the previous data no longer applies. Zoom also copies its x
+ * range into the state, so the state of a chart without a slider is kept while it stays disabled.
+ */
+function isRangeSliderChanged(previous: RangeSliderConfig | undefined, next: RangeSliderConfig) {
+    return (
+        !previous ||
+        previous.axisType !== next.axisType ||
+        previous.enabled !== next.enabled ||
+        (next.enabled && previous.defaultRange !== next.defaultRange)
+    );
+}
 
 type ChartState = {
     gradientReference?: GradientLayoutReference;
@@ -125,28 +147,35 @@ export function useChartInnerProps(props: Props) {
     const [chartState, setState] = React.useState<ChartState | null>(null);
     const prevStateValue = React.useRef(chartState);
     const previousChartData = React.useRef<ChartData | null>(null);
-    const previousXAxisRef = React.useRef<ChartData['xAxis']>();
+    const previousRangeSliderRef = React.useRef<RangeSliderConfig>();
+    const rangeSliderInitPendingRef = React.useRef(false);
     const currentRunRef = React.useRef(0);
     const gradientReferenceRef = React.useRef<GradientReferenceCacheEntry>();
+    const preparedRangeSlider = React.useMemo(
+        () => getPreparedRangeSlider({xAxis: data.xAxis}),
+        [data.xAxis],
+    );
     React.useEffect(() => {
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
         const selectedLegendItems = selectedLegendItemsRef.current;
-        // The range slider state of new data is set before its preparation finishes, so compare
-        // with the previous requested x axis rather than with the last prepared data.
-        const previousXAxis = previousXAxisRef.current;
-        previousXAxisRef.current = data.xAxis;
-        const axisTypeChanged =
-            previousXAxis?.type !== undefined && previousXAxis.type !== data.xAxis?.type;
-        // Zoom also copies its x range into the range slider state, so reset the state only when
-        // the slider is turned off, not whenever it is disabled.
-        const rangeSliderTurnedOff =
-            getPreparedRangeSlider({xAxis: previousXAxis}).enabled &&
-            !getPreparedRangeSlider({xAxis: data.xAxis}).enabled;
+        const rangeSlider: RangeSliderConfig = {
+            axisType: data.xAxis?.type,
+            defaultRange: preparedRangeSlider.defaultRange,
+            enabled: preparedRangeSlider.enabled,
+        };
+        const previousRangeSlider = previousRangeSliderRef.current;
+        previousRangeSliderRef.current = rangeSlider;
 
-        if ((axisTypeChanged || rangeSliderTurnedOff) && rangeSliderState !== undefined) {
-            updateRangeSliderState(undefined);
-            return;
+        if (isRangeSliderChanged(previousRangeSlider, rangeSlider)) {
+            // The slider is initialized from the x scale of the new data, once it is prepared
+            // without the previous range.
+            rangeSliderInitPendingRef.current = rangeSlider.enabled;
+
+            if (rangeSliderState !== undefined) {
+                updateRangeSliderState(undefined);
+                return;
+            }
         }
 
         (async function () {
@@ -267,6 +296,23 @@ export function useChartInnerProps(props: Props) {
                 rangeSliderState,
                 zoomState,
             });
+
+            if (rangeSliderInitPendingRef.current && xScale && !isBandScale(xScale)) {
+                const initialRangeSliderState = getInitialRangeSliderState({
+                    defaultRange: preparedRangeSlider.defaultRange,
+                    xScale,
+                });
+
+                if (!isEqual(initialRangeSliderState, rangeSliderState)) {
+                    if (currentRunRef.current === currentRun) {
+                        rangeSliderInitPendingRef.current = false;
+                        updateRangeSliderState(initialRangeSliderState);
+                    }
+                    return;
+                }
+
+                rangeSliderInitPendingRef.current = false;
+            }
 
             let gradientReference = gradientReferenceRef.current;
             const getGradientReference = async (): Promise<GradientLayoutReference> => {
@@ -391,6 +437,7 @@ export function useChartInnerProps(props: Props) {
         rangeSliderState,
         dispatcher,
         htmlLayout,
+        preparedRangeSlider,
         updateRangeSliderState,
         clipPathId,
     ]);

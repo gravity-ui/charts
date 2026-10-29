@@ -3,7 +3,6 @@
 import {act, renderHook, waitFor} from '@testing-library/react';
 import {dispatch} from 'd3-dispatch';
 
-import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {DAY} from '~core/constants';
 
 import type {PreparedAreaData} from '../../../core/shapes/area/types';
@@ -388,58 +387,49 @@ describe('legend and domain updates', () => {
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
     });
 
-    test.each([true, false])(
-        'x domain is not limited by a range slider that the next data turns off (slider data prepared: %s)',
-        async (sliderDataPrepared) => {
-            const series: ChartData['series'] = {
-                data: [
-                    {
-                        type: 'bar-x',
-                        name: 'Bars',
-                        data: Array.from({length: 10}, (_, i) => ({x: i * DAY, y: i + 1})),
-                    },
-                ],
-            };
-            const sliderData: ChartData = {
-                series,
-                xAxis: {type: 'datetime', rangeSlider: {enabled: true}},
-            };
-            const plainData: ChartData = {series, xAxis: {type: 'datetime'}};
-            const dispatcher = dispatch();
-            const {result, rerender} = renderHook(
-                ({data}: {data: ChartData}) => {
-                    const {rangeSliderState, updateRangeSliderState, updateZoomState, zoomState} =
-                        useChartInnerState({
-                            dispatcher,
-                            preparedRangeSlider: getPreparedRangeSlider({xAxis: data.xAxis}),
-                        });
-                    return {
-                        updateRangeSliderState,
-                        ...useChartInnerProps({
-                            ...getProps(data),
-                            dispatcher,
-                            rangeSliderState,
-                            updateRangeSliderState,
-                            updateZoomState,
-                            zoomState,
-                        }),
-                    };
+    test('x domain is not limited by a range slider that the next data turns off before it is prepared', async () => {
+        const series: ChartData['series'] = {
+            data: [
+                {
+                    type: 'bar-x',
+                    name: 'Bars',
+                    data: Array.from({length: 10}, (_, i) => ({x: i * DAY, y: i + 1})),
                 },
-                {initialProps: {data: sliderData}},
-            );
-            const getXDomain = () => (result.current.xScale?.domain() ?? []).map(Number);
-            // The chart sets the range slider state as soon as it renders the data.
-            act(() => result.current.updateRangeSliderState({min: 8 * DAY, max: 9 * DAY}));
-            if (sliderDataPrepared) {
-                await waitFor(() => expect(getXDomain()[0]).toBeGreaterThan(7 * DAY));
-            }
+            ],
+        };
+        const sliderData: ChartData = {
+            series,
+            xAxis: {type: 'datetime', rangeSlider: {enabled: true}},
+        };
+        const plainData: ChartData = {series, xAxis: {type: 'datetime'}};
+        const dispatcher = dispatch();
+        const {result, rerender} = renderHook(
+            ({data}: {data: ChartData}) => {
+                const {rangeSliderState, updateRangeSliderState, updateZoomState, zoomState} =
+                    useChartInnerState({dispatcher});
+                return {
+                    updateRangeSliderState,
+                    ...useChartInnerProps({
+                        ...getProps(data),
+                        dispatcher,
+                        rangeSliderState,
+                        updateRangeSliderState,
+                        updateZoomState,
+                        zoomState,
+                    }),
+                };
+            },
+            {initialProps: {data: sliderData}},
+        );
+        const getXDomain = () => (result.current.xScale?.domain() ?? []).map(Number);
+        // The slider state is set before the chart commits the data it belongs to.
+        act(() => result.current.updateRangeSliderState({min: 8 * DAY, max: 9 * DAY}));
 
-            rerender({data: plainData});
-            await waitFor(() => expect(result.current.xAxis?.rangeSlider.enabled).toBe(false));
-            expect(getXDomain()[0]).toBeLessThanOrEqual(0);
-            expect(getXDomain()[1]).toBeGreaterThanOrEqual(9 * DAY);
-        },
-    );
+        rerender({data: plainData});
+        await waitFor(() => expect(result.current.xAxis?.rangeSlider.enabled).toBe(false));
+        expect(getXDomain()[0]).toBeLessThanOrEqual(0);
+        expect(getXDomain()[1]).toBeGreaterThanOrEqual(9 * DAY);
+    });
 
     test.each(['bar-x', 'pie', 'funnel'] as const)(
         'preserves %s legend selection when config/data changes regenerate group IDs',
