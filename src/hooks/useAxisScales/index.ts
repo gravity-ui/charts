@@ -1,5 +1,3 @@
-import React from 'react';
-
 import get from 'lodash/get';
 
 import {applyAxisPadding} from '~core/scales/axis-padding';
@@ -8,7 +6,7 @@ import {clusterYAxes} from '~core/scales/utils';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import {getAxisHeight, getOnlyVisibleSeries, isAxisRelatedSeries} from '~core/utils';
+import {getAxisHeight, getOnlyVisibleSeries} from '~core/utils';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {
@@ -34,11 +32,6 @@ interface Args {
     isRangeSlider?: boolean;
     rangeSliderState?: RangeSliderState;
     zoomState?: Partial<ZoomState>;
-}
-
-interface ReturnValue {
-    xScale?: ChartScale;
-    yScale?: (ChartScale | undefined)[];
 }
 
 export const createScales = (args: Args) => {
@@ -147,55 +140,4 @@ export const createScales = (args: Args) => {
         });
     }
     return scales;
-};
-
-/**
- * Uses to create scales for axis related series
- */
-export const useAxisScales = (args: Args): ReturnValue => {
-    const {
-        seriesOptions,
-        boundsWidth,
-        boundsHeight,
-        isRangeSlider,
-        rangeSliderState,
-        series,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    } = args;
-    return React.useMemo(() => {
-        let xScale: ChartScale | undefined;
-        let yScale: (ChartScale | undefined)[] | undefined;
-        const hasAxisRelatedSeries = series.some(isAxisRelatedSeries);
-
-        if (hasAxisRelatedSeries) {
-            ({xScale, yScale} = createScales({
-                seriesOptions,
-                boundsWidth,
-                boundsHeight,
-                isRangeSlider,
-                rangeSliderState,
-                series,
-                split,
-                xAxis,
-                yAxis,
-                zoomState,
-            }));
-        }
-
-        return {xScale, yScale};
-    }, [
-        seriesOptions,
-        boundsWidth,
-        boundsHeight,
-        isRangeSlider,
-        rangeSliderState,
-        series,
-        split,
-        xAxis,
-        yAxis,
-        zoomState,
-    ]);
 };
