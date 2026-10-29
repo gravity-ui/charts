@@ -78,7 +78,7 @@
   },
   "dependencies": {
     "@bem-react/classname": "^1.6.0",
-    "@gravity-ui/date-utils": "^2.5.4",
+    "@gravity-ui/date-utils": "^2.7.2",
     "@gravity-ui/i18n": "^1.6.0",
     "@gravity-ui/icons": "^2.15.0",
     "csstype": "^3.2.3",
