@@ -11,6 +11,7 @@ import {getOnlyVisibleSeries} from '../utils';
 import {getTicksCountByPixelInterval, shouldSyncAxisWithPrimary} from '../utils/axis/common';
 import {calculateNumericProperty} from '../utils/math';
 
+import {getVisualPadding} from './axis-padding-options';
 import type {ChartScale, ChartScaleLinear} from './types';
 import {clusterYAxes} from './utils';
 import {
@@ -45,8 +46,8 @@ interface PaddingConstraint {
 function hasPadding(axis: PreparedAxis) {
     return (
         axis.type !== 'category' &&
-        ((axis.min === undefined && axis.padding?.min !== undefined) ||
-            (axis.max === undefined && axis.padding?.max !== undefined))
+        ((axis.min === undefined && getVisualPadding(axis.padding?.min) !== undefined) ||
+            (axis.max === undefined && getVisualPadding(axis.padding?.max) !== undefined))
     );
 }
 
@@ -61,8 +62,8 @@ function fitAxis(args: {
 }) {
     const {axis, direction, scale, series, points} = args;
     if ((!hasPadding(axis) && !args.syncTicks) || !('invert' in scale)) return;
-    const minOption = axis.min === undefined ? axis.padding?.min : undefined;
-    const maxOption = axis.max === undefined ? axis.padding?.max : undefined;
+    const minOption = axis.min === undefined ? getVisualPadding(axis.padding?.min) : undefined;
+    const maxOption = axis.max === undefined ? getVisualPadding(axis.padding?.max) : undefined;
     if (minOption === undefined && maxOption === undefined && !args.syncTicks) return;
     const range = scale.range();
     const lo = Math.min(...range);

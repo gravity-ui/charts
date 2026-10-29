@@ -1,0 +1,71 @@
+name: PR Bundle Size
+
+on:
+  pull_request:
+    # `edited` for a change of the base branch, which changes what the PR is compared with.
+    # Edits of the title or description measure again too: a job skipped for them would
+    # replace the last measurement in the PR checks.
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: Measure
+    runs-on: ubuntu-latest
+    # A new push or base makes the previous measurement obsolete.
+    concurrency:
+      group: pr-bundle-size-${{ github.event.number }}
+      cancel-in-progress: true
+    steps:
+      # First, so that "PR Bundle Size Report" can comment on a failed measurement too. The
+      # number and base are untrusted there and verified against the run and the PR.
+      - name: Save PR Number
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_DIR: ${{ runner.temp }}/bundle-size-pr
+        run: |
+          mkdir -p "${PR_DIR}"
+          echo "${PR_NUMBER}" > "${PR_DIR}/number.txt"
+          echo "${PR_BASE}" > "${PR_DIR}/base.txt"
+      - name: Upload PR Number
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-size-pr
+          path: ${{ runner.temp }}/bundle-size-pr
+          retention-days: 1
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # pr-report.mjs walks back from the base branch head to a measured commit.
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: Install Packages
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Measure
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >
+          node scripts/bundle-size/pr-report.mjs
+          --out bundle-size-report
+          --history https://storage.yandexcloud.net/playwright-reports/charts/bundle-size
+          --pr "${PR_NUMBER}"
+          --sha "${PR_HEAD_SHA}"
+      # Pull requests from forks run without repository secrets, so this workflow only
+      # measures. "PR Bundle Size Report" uploads the report to S3 and comments on the PR.
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-size-report
+          path: bundle-size-report
+          if-no-files-found: error
+          retention-days: 1

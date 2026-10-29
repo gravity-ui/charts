@@ -70,11 +70,11 @@ export const AreaRangeNullHandlingComparisonStory = {
     name: 'Null modes',
     render: () => (
         <Container>
-            <Row space={3}>
-                <Col s={12} m={6}>
+            <Row gap="spacing-3">
+                <Col size={{xs: 12, m: 6}}>
                     <ChartStory data={areaRangeNullModeSkipData} />
                 </Col>
-                <Col s={12} m={6}>
+                <Col size={{xs: 12, m: 6}}>
                     <ChartStory data={areaRangeNullModeConnectData} />
                 </Col>
             </Row>

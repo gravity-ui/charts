@@ -6,6 +6,8 @@ const esModules = [
     'internmap',
     'delaunator',
     'robust-predicates',
+    // ESM-only dependency of the uikit ColorPicker, loaded by the uikit root entry point
+    'colors-named',
 ].join('|');
 
 module.exports = {
@@ -14,7 +16,9 @@ module.exports = {
         '^.+\\.tsx?$': ['ts-jest', {useESM: true, tsconfig: 'tsconfig.jest.json'}],
         '^.+\\.js$': ['babel-jest', {presets: ['@babel/preset-env']}],
     },
-    transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
+    // Any node_modules, including docs/node_modules: docs tests load its typescript, which
+    // takes minutes to transform.
+    transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
     testMatch: ['**/*.test.[jt]s?(x)'],
     testPathIgnorePatterns: ['.visual.'],
     moduleNameMapper: {

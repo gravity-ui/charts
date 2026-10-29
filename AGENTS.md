@@ -33,7 +33,8 @@
 # User-facing documentation
 
 - Update TSDoc and guides when users need new information to configure or use the library, or when existing documentation becomes inaccurate. Standard expected behavior without a new setting or usage pattern does not need separate documentation. Implementation changes and routine fixes alone are not reasons to add explanations or examples.
-- Structure guides around the reader's task: explain the problem and visible result, show a focused live example and minimal configuration, then describe the main options. Put advanced interactions and limitations later under descriptive subheadings.
+- Structure guides around the reader's task: explain the problem and visible result, show a focused live example and minimal configuration, then describe the main options. Put advanced interactions and detailed limitations later under descriptive subheadings.
+- Put short caveats and exceptions in a note next to the relevant explanation, rather than a separate subsection.
 - Keep each paragraph focused on one idea. Do not compress defaults, supported types, overrides, and edge cases into a dense sequence of paragraphs; group details by the question they answer and remove repeated explanations.
 - Use short lists for option choices and fenced code blocks for nested configuration. Avoid tables in guides and long inline configuration fragments that make prose hard to scan.
 - Guides cover common usage. Add an example only when it helps explain a distinct user task; keep edge cases, option combinations, and regression coverage in Storybook and tests. Embed guide examples through `docs/examples` and `data-chart-example`, rather than directing users to Storybook.

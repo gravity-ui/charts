@@ -17,13 +17,13 @@ const config: StorybookConfig = {
     core: {
         disableTelemetry: true,
     },
-    async viteFinal(config) {
-        config.resolve ??= {};
-        config.resolve.alias = {
-            ...((config.resolve.alias as Record<string, string>) ?? {}),
+    async viteFinal(viteConfig) {
+        viteConfig.resolve ??= {};
+        viteConfig.resolve.alias = {
+            ...((viteConfig.resolve.alias as Record<string, string>) ?? {}),
             '~core': path.resolve(__dirname, '../src/core'),
         };
-        return config;
+        return viteConfig;
     },
 };
 

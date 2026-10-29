@@ -49,26 +49,26 @@ const AxisTitle = () => {
     });
 
     return (
-        <Container spaceRow={5}>
-            <Row space={1}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-1">
                 <Text variant="subheader-3">Text alignment</Text>
             </Row>
-            <Row space={3}>
-                <Col s={4}>
+            <Row gap="spacing-3">
+                <Col size={4}>
                     <ChartStory data={getWidgetData({text: 'Left', align: 'left'})} />
                 </Col>
-                <Col s={4}>
+                <Col size={4}>
                     <ChartStory data={getWidgetData({text: 'Center', align: 'center'})} />
                 </Col>
-                <Col s={4}>
+                <Col size={4}>
                     <ChartStory data={getWidgetData({text: 'Right', align: 'right'})} />
                 </Col>
             </Row>
-            <Row space={1}>
+            <Row gap="spacing-1">
                 <Text variant="subheader-3">Long text</Text>
             </Row>
-            <Row space={3}>
-                <Col s={6}>
+            <Row gap="spacing-3">
+                <Col size={6}>
                     <ChartStory
                         data={{
                             ...getWidgetData({text: longText}),
@@ -76,7 +76,7 @@ const AxisTitle = () => {
                         }}
                     />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <ChartStory
                         data={{
                             ...getWidgetData({text: longText, maxRowCount: 3}),
@@ -85,11 +85,11 @@ const AxisTitle = () => {
                     />
                 </Col>
             </Row>
-            <Row space={1}>
+            <Row gap="spacing-1">
                 <Text variant="subheader-3">Title rotation</Text>
             </Row>
-            <Row space={3}>
-                <Col s={6}>
+            <Row gap="spacing-3">
+                <Col size={6}>
                     <ChartStory
                         data={{
                             ...getWidgetData({text: longText, rotation: 0}),
@@ -97,7 +97,7 @@ const AxisTitle = () => {
                         }}
                     />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <ChartStory
                         data={{
                             ...getWidgetData({text: longText, rotation: 0, maxRowCount: 3}),
@@ -106,11 +106,11 @@ const AxisTitle = () => {
                     />
                 </Col>
             </Row>
-            <Row space={1}>
+            <Row gap="spacing-1">
                 <Text variant="subheader-3">Html title</Text>
             </Row>
-            <Row space={3}>
-                <Col s={6}>
+            <Row gap="spacing-3">
+                <Col size={6}>
                     <ChartStory
                         data={{
                             ...getWidgetData({
@@ -121,7 +121,7 @@ const AxisTitle = () => {
                         }}
                     />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <ChartStory
                         data={{
                             ...getWidgetData({

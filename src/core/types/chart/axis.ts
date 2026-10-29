@@ -20,23 +20,23 @@ export type ChartAxisType = (typeof AXIS_TYPE)[keyof typeof AXIS_TYPE];
 export type ChartAxisTitleAlignment = 'left' | 'center' | 'right';
 export type ChartAxisTitleRotation = 0 | 90 | -90;
 
-/** Extra space obtained by extending the free ends of a continuous axis domain. */
+/** Extend the free boundaries of a continuous axis. */
 export interface ChartAxisPadding {
     /**
-     * Space at the minimum value: a nonnegative number or `px` string in pixels,
-     * a percentage of the axis length, or `auto` to fit marker paint including hover.
-     * The axis length is measured after margins and axis layout, before padding.
-     * Explicit axis limits, zoom and percent normalization take precedence.
-     * X padding is ignored when `xAxis.rangeSlider.enabled` is `true`.
-     * Category axes ignore padding. Oversized requests are bounded and can still clip.
+     * Minimum-side space: pixels (number or `px` string), a percentage, or `auto` to fit markers.
+     * A percentage is a share of the axis value range before padding (the data extent or explicit limits).
+     * Both sides use that same range; logarithmic axes use its logarithmic span.
+     * Percentages are applied before space for bars and labels and before tick rounding.
+     * Explicit axis limits and zoom take precedence. Category axes and axes normalized
+     * with `stacking: 'percent'` ignore padding. X padding is ignored when
+     * `xAxis.rangeSlider.enabled` is `true`. Oversized requests are bounded and can still clip.
      * @minimum 0
      * @default 0
      */
     min?: number | string;
     /**
-     * Space at the maximum value, in the same formats and units as `padding.min`.
-     * An explicit value (including `0` or `auto`) replaces `maxPadding` on this side.
-     * When omitted, the existing `maxPadding` behavior and default are preserved.
+     * Maximum-side space, using the same units as `min`.
+     * Falls back to `maxPadding` when omitted.
      * @minimum 0
      */
     max?: number | string;
@@ -260,17 +260,17 @@ export interface ChartAxis {
     };
     ticks?: ChartAxisTicks;
     /**
-     * Padding of the max value relative to the length of the axis.
-     * A padding of 0.05 will make a 100px axis 5px longer.
-     *
-     *
-     * Does not apply:
-     * - for series with data normalization along on a specific axis (stacking: 'percent')
-     * - to the X axis when rangeSlider is used
+     * Legacy maximum-side padding. On linear and datetime axes, a fraction of the value range before padding.
+     * Ignored on axes normalized with `stacking: 'percent'` and on X when the range slider is enabled.
+     * Datetime Y axes with explicit `timestamps` also ignore it.
      * @default 0.05 for Y axis, 0.01 for X axis
-     * @deprecated Use `padding.max`. Its numbers are pixels, whereas `maxPadding` numbers are fractions.
-     * For example, `maxPadding: 0.05` corresponds to a `padding.max: '5%'` request,
-     * although the final domains can differ because the new option fits space after existing layout.
+     * @deprecated On linear and datetime axes where this option adds space, use `padding.max`
+     * with a percentage string: `maxPadding: 0.25` becomes `padding: {max: '25%'}`.
+     * Numbers in `padding` are pixels. Unlike `maxPadding`, `padding` does not extend zoomed boundaries.
+     * On logarithmic axes, migrate to percentages of the logarithmic range; the legacy
+     * direction-dependent calculation is a bug and is not supported by `padding`.
+     * Category axes ignore `padding`; remove `maxPadding` without a replacement.
+     * Its incidental effect on category direction is a bug and is not supported by `padding`.
      */
     maxPadding?: number;
     /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */

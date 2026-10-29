@@ -1,4 +1,4 @@
-import type {AreaSeries, BarXSeries, BarYSeries} from '../../../types';
+import type {AreaSeries, BarXSeries, BarYSeries, ChartSeries} from '../../../types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../common';
 
 describe.each(['bar-x', 'bar-y'] as const)('%s duplicate category domain', (type) => {
@@ -85,4 +85,46 @@ describe('area duplicate category domain', () => {
         }));
         expect(getDomainDataYBySeries(series)).toEqual([30]);
     });
+});
+
+test('merges mixed plugins without stacking across types or independent stacks', () => {
+    const series: ChartSeries[] = [
+        {
+            type: 'bar-x',
+            name: 'First',
+            stackId: 'shared',
+            stacking: 'normal',
+            data: [{x: 0, y: 20}, {x: 1, y: -5}, {x: 2, y: null}, {x: 3}],
+        },
+        {
+            type: 'bar-x',
+            name: 'Second',
+            stackId: 'shared',
+            stacking: 'normal',
+            data: [
+                {x: 0, y: 30},
+                {x: 1, y: -10},
+                {x: 2, y: 0},
+            ],
+        },
+        {
+            type: 'bar-x',
+            name: 'Independent',
+            stackId: 'other',
+            stacking: 'normal',
+            data: [{x: 0, y: 7}],
+        },
+        {
+            type: 'area',
+            name: 'Area',
+            stackId: 'shared',
+            stacking: 'normal',
+            data: [{x: 0, y: 100}],
+        },
+        {type: 'line', name: 'Line', data: [{x: 0, y: -200}]},
+        {type: 'area-range', name: 'Range', data: [{x: 0, y0: 40, y1: 300}]},
+    ];
+    const before = JSON.stringify(series);
+    expect(getDomainDataYBySeries(series)).toEqual([-15, 50, 0, 7, 100, -200, 40, 300]);
+    expect(JSON.stringify(series)).toBe(before);
 });

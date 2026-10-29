@@ -7,15 +7,12 @@ import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
 import type {PreparedSeries} from '../series';
-import {
-    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS,
-    getDefaultMinYAxisValue,
-    getDomainDataYBySeries,
-    shouldSyncAxisWithPrimary,
-} from '../utils';
+import {hasAxisBaseline} from '../series/axis-domain';
+import {getDomainDataYBySeries, shouldSyncAxisWithPrimary} from '../utils';
 import {getBandSize} from '../utils/band-size';
 import {sumDecimals} from '../utils/math';
 
+import {getDomainPadding, getPaddedDomain} from './axis-padding-options';
 import type {ChartScaleLinear} from './types';
 import {
     checkIsPointDomain,
@@ -104,16 +101,19 @@ export function getDomainSyncedToPrimaryTicks(args: {
         secondaryTicks[0] -= step;
     }
 
-    return [secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]];
+    const syncedDomain = [secondaryTicks[0], secondaryTicks[secondaryTicks.length - 1]];
+    return syncedDomain.every(Number.isFinite) && Number.isFinite(syncedDomain[1] - syncedDomain[0])
+        ? syncedDomain
+        : [dMin, dMax];
 }
 
 function getLogarithmicYMin(args: {
     axis: PreparedAxis;
     domain: unknown[];
     yMinDomain: number;
-    hasSeriesWithVolumeOnYAxis: boolean;
+    hasBaseline: boolean;
 }): number {
-    const {axis, domain, yMinDomain, hasSeriesWithVolumeOnYAxis} = args;
+    const {axis, domain, yMinDomain, hasBaseline} = args;
 
     // scaleLog cannot represent values <= 0. Pick the smallest positive value
     // present in the domain, falling back to 1 if there is none.
@@ -127,11 +127,11 @@ function getLogarithmicYMin(args: {
                   return min;
               }, null) ?? 1);
 
-    if (!hasSeriesWithVolumeOnYAxis) {
+    if (!hasBaseline) {
         return smallestPositive;
     }
 
-    // Volume series (bar-x, area, waterfall) draw bars from yMin up to the
+    // Series requiring a baseline draw from yMin up to the
     // value, so a bar whose value equals yMin collapses to zero height. Drop
     // the baseline one decade below to give it visible space — but only when
     // the later `nice()` pass (triggered by startOnTick) won't supply that
@@ -191,7 +191,9 @@ export function getDomainMinAlignedToStartTick(args: {
         }
     }
 
-    return dNewMin;
+    return Number.isFinite(dNewMin) && (axis.type !== 'logarithmic' || dNewMin > 0)
+        ? dNewMin
+        : dMin;
 }
 
 export function getDomainMaxAlignedToEndTick(args: {
@@ -241,7 +243,7 @@ export function getDomainMaxAlignedToEndTick(args: {
         }
     }
 
-    return dNewMax;
+    return Number.isFinite(dNewMax) ? dNewMax : dMax;
 }
 
 export function createYScale(args: {
@@ -287,9 +289,7 @@ export function createYScale(args: {
                     number,
                 ];
 
-                const hasSeriesWithVolumeOnYAxis = series.some((s) =>
-                    CHART_SERIES_WITH_VOLUME_ON_Y_AXIS.includes(s.type),
-                );
+                const hasBaseline = hasAxisBaseline(series, 'y');
 
                 let yMin: number;
                 if (typeof yMinPropsOrState === 'number') {
@@ -299,11 +299,10 @@ export function createYScale(args: {
                         axis,
                         domain,
                         yMinDomain,
-                        hasSeriesWithVolumeOnYAxis,
+                        hasBaseline,
                     });
                 } else {
-                    const yMinDefault = getDefaultMinYAxisValue(series);
-                    yMin = typeof yMinDefault === 'number' ? yMinDefault : yMinDomain;
+                    yMin = hasBaseline ? Math.min(yMinDomain, 0) : yMinDomain;
                 }
 
                 let yMax: number;
@@ -314,7 +313,7 @@ export function createYScale(args: {
                     // greater than yMin so the resulting domain stays valid.
                     yMax = yMaxDomain > yMin ? yMaxDomain : yMin * 10;
                 } else {
-                    yMax = hasSeriesWithVolumeOnYAxis ? Math.max(yMaxDomain, 0) : yMaxDomain;
+                    yMax = hasBaseline ? Math.max(yMaxDomain, 0) : yMaxDomain;
                 }
 
                 // When the user pins only one of min/max on the wrong side of all data,
@@ -325,7 +324,7 @@ export function createYScale(args: {
                 // when the opposite bound is auto-derived — if the user supplied both
                 // bounds, trust the explicit range and let point filtering hide the
                 // rest. Comparison uses the raw data extent because upstream coercions
-                // like volume-series `yMax = Math.max(yMaxDomain, 0)` can make the
+                // like baseline expansion `yMax = Math.max(yMaxDomain, 0)` can make the
                 // post-coerced yMin/yMax lie about where data actually sits.
                 // Logarithmic has its own guard.
                 if (axis.type === 'linear') {
@@ -341,12 +340,9 @@ export function createYScale(args: {
                 const scaleFn = axis.type === 'logarithmic' ? scaleLog : scaleLinear;
                 let scale = scaleFn().domain([yMin, yMax]).range(range);
 
+                const domainPadding = getDomainPadding(axis, Boolean(zoomStateY));
                 let offsetMin = 0;
-                // We should ignore padding if we are drawing only one point on the plot.
-                let offsetMax =
-                    yMin === yMax || axis.padding?.max !== undefined
-                        ? 0
-                        : boundsHeight * axis.maxPadding;
+                let offsetMax = 0;
                 if (isSeriesWithYAxisOffset(series)) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({
@@ -362,14 +358,19 @@ export function createYScale(args: {
                 const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
                 const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
 
-                const domainOffsetMin = isMinSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                const domainOffsetMax = isMaxSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
-
-                scale = scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+                scale = scale.domain(
+                    getPaddedDomain({
+                        scale,
+                        domain: [yMin, yMax],
+                        type: axis.type,
+                        padding: domainPadding,
+                        size: boundsHeight,
+                        offsetMin,
+                        offsetMax,
+                        isMinSpecified,
+                        isMaxSpecified,
+                    }),
+                );
 
                 const startOnTick = get(axis, 'startOnTick', false);
                 const endOnTick = get(axis, 'endOnTick', false);
@@ -439,14 +440,30 @@ export function createYScale(args: {
                         ? yMaxPropsOrState
                         : yMaxTimestamp;
                 const scale = scaleUtc().domain([yMin, yMax]).range(range);
+                const [paddedMin, paddedMax] = getPaddedDomain({
+                    scale,
+                    domain: [yMin, yMax],
+                    type: axis.type,
+                    // Explicit timestamps have never used the legacy maxPadding fallback.
+                    padding: getDomainPadding(
+                        {type: axis.type, padding: axis.padding},
+                        Boolean(zoomStateY),
+                    ),
+                    size: boundsHeight,
+                    offsetMin: 0,
+                    offsetMax: 0,
+                    isMinSpecified: typeof axis.min === 'number' && !zoomStateY,
+                    isMaxSpecified: typeof axis.max === 'number' && !zoomStateY,
+                });
+                scale.domain([paddedMin, paddedMax]);
                 const startOnTick = get(axis, 'startOnTick', true);
                 const endOnTick = get(axis, 'endOnTick', true);
 
                 if (startOnTick || endOnTick) {
                     const nicedDomain = scale.copy().nice().domain();
                     return scale.domain([
-                        startOnTick ? Number(nicedDomain[0]) : yMin,
-                        endOnTick ? Number(nicedDomain[1]) : yMax,
+                        startOnTick ? Number(nicedDomain[0]) : paddedMin,
+                        endOnTick ? Number(nicedDomain[1]) : paddedMax,
                     ]);
                 }
                 return scale;
@@ -480,9 +497,9 @@ export function createYScale(args: {
                             : yMaxTimestamp;
                     const scale = scaleUtc().domain([yMin, yMax]).range(range);
 
+                    const domainPadding = getDomainPadding(axis, Boolean(zoomStateY));
                     let offsetMin = 0;
-                    let offsetMax =
-                        axis.padding?.max === undefined ? boundsHeight * axis.maxPadding : 0;
+                    let offsetMax = 0;
                     if (isSeriesWithYAxisOffset(series)) {
                         if (Object.keys(domain).length > 1) {
                             const bandWidth = getBandSize({
@@ -498,14 +515,19 @@ export function createYScale(args: {
                     const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateY;
                     const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateY;
 
-                    const domainOffsetMin = isMinSpecified
-                        ? 0
-                        : Math.abs(scale.invert(offsetMin).getTime() - scale.invert(0).getTime());
-                    const domainOffsetMax = isMaxSpecified
-                        ? 0
-                        : Math.abs(scale.invert(offsetMax).getTime() - scale.invert(0).getTime());
-
-                    return scale.domain([yMin - domainOffsetMin, yMax + domainOffsetMax]);
+                    return scale.domain(
+                        getPaddedDomain({
+                            scale,
+                            domain: [yMin, yMax],
+                            type: axis.type,
+                            padding: domainPadding,
+                            size: boundsHeight,
+                            offsetMin,
+                            offsetMax,
+                            isMinSpecified,
+                            isMaxSpecified,
+                        }),
+                    );
                 }
             }
         }

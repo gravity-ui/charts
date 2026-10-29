@@ -19,6 +19,57 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test.describe('Connectors', () => {
+        const points: WaterfallSeriesData[] = [
+            {x: 'Income', y: 10},
+            {x: 'Expense', y: -4},
+            {x: 'Total', total: true},
+        ];
+        const createData = (enabled?: boolean): ChartData => ({
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Balance',
+                        data: points,
+                        ...(enabled === undefined ? {} : {connectors: {enabled}}),
+                    },
+                ],
+            },
+            xAxis: {type: 'category', categories: points.map((point) => String(point.x))},
+        });
+
+        for (const enabled of [undefined, true, false]) {
+            test(`enabled = ${String(enabled)}`, async ({mount}) => {
+                const component = await mount(<ChartTestStory data={createData(enabled)} />);
+                await expect(component.locator('.gcharts-waterfall__segment')).toHaveCount(
+                    points.length,
+                );
+                await expect(component.locator('.gcharts-waterfall__connector')).toHaveCount(
+                    enabled === false ? 0 : points.length - 1,
+                );
+            });
+        }
+
+        test('Toggle on chart updates', async ({mount}) => {
+            const component = await mount(<ChartTestStory data={createData()} />);
+            const connectors = component.locator('.gcharts-waterfall__connector');
+            const bars = component.locator('.gcharts-waterfall__segment');
+            await expect(connectors).toHaveCount(points.length - 1);
+
+            for (const enabled of [false, true, false, undefined]) {
+                await component.update(<ChartTestStory data={createData(enabled)} />);
+                await expect(bars).toHaveCount(points.length);
+                await expect(connectors).toHaveCount(enabled === false ? 0 : points.length - 1);
+                if (enabled !== false) {
+                    for (const connector of await connectors.all()) {
+                        await expect(connector).toHaveAttribute('d', /.+/);
+                    }
+                }
+            }
+        });
+    });
+
     test.describe('Tooltip', () => {
         test('Datetime header in the runnable docs example', async ({mount, page}, testInfo) => {
             const component = await mount(
@@ -49,18 +100,40 @@ test.describe('Waterfall series', () => {
         });
 
         test('Totals column', async ({page, mount}) => {
-            page.setViewportSize({width: 450, height: 280});
+            await page.setViewportSize({width: 450, height: 280});
             const component = await mount(<ChartTestStory data={waterfallBasicData} />);
 
+            const svg = component.locator('svg');
+            const initialSvgBox = await getLocatorBoundingBox(svg);
             const totalColumn = component.locator('.gcharts-waterfall__segment').last();
             await expect(totalColumn).toBeVisible();
             const totalColumnBox = await getLocatorBoundingBox(totalColumn);
-            await page.mouse.move(
-                Math.round(totalColumnBox.x + totalColumnBox.width / 2),
-                Math.round(totalColumnBox.y + totalColumnBox.height / 2),
-            );
+            const pointerX = Math.round(totalColumnBox.x + totalColumnBox.width / 2);
+            const pointerY = Math.round(totalColumnBox.y + totalColumnBox.height / 2);
+            await page.mouse.move(pointerX, pointerY);
 
-            await expect(component.locator('svg')).toHaveScreenshot();
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.getByText('2025', {exact: true})).toBeVisible();
+            await expect(tooltip.getByRole('row', {name: 'Total 72', exact: true})).toBeVisible();
+
+            for (const scrollY of [0, 8]) {
+                await page.evaluate((y) => window.scrollTo(0, y), scrollY);
+                await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scrollY);
+                await expect
+                    .poll(async () => {
+                        const box = await tooltip.boundingBox();
+                        const svgBox = await getLocatorBoundingBox(svg);
+                        const expectedY = pointerY + svgBox.y - initialSvgBox.y;
+                        return (
+                            box &&
+                            Math.max(
+                                Math.abs(box.x + box.width - pointerX + 20),
+                                Math.abs(box.y + box.height / 2 - expectedY),
+                            )
+                        );
+                    })
+                    .toBeLessThanOrEqual(2);
+            }
         });
 
         test('Overrided tooltip.rows.cells', async ({page, mount}) => {

@@ -40,6 +40,16 @@ Compare existing plugins and their actual behavior. For each capability, documen
 - Optional `getXAxisPadding(series)` requests label space in pixels at the max end of an autoscaled X domain. Core uses the largest request across series; an explicit `xAxis.max` disables that reserve. Keep label measurement and placement policy in the plugin.
 - For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
 
+### Axis domains
+
+Implement `getAxisDomainValues({series, axis})` when scalar point coordinates do not describe the series domain. It receives an ordered group of this plugin's raw or prepared series and the axis direction. Return an array of unformatted values for core to merge and deduplicate across plugins. Returning `[]` excludes the group; omitting the callback or returning `undefined` uses scalar `x`/`y` coordinates of axis-related series.
+
+For independent points, flatten their values or interval endpoints. Calculate stacks and cumulative values for the whole group. The `core/series/stacked-domain.ts` helper accepts coordinate roles and a point selector, grouping stacks and summing each sign separately.
+
+The caller selects visibility, zoom filtering, and axis membership. Preserve that selection, including the all-hidden fallback; do not filter hidden series again or mutate input points or their order.
+
+Declare separate `axisBaseline: 'x'` or `'y'` metadata when the value axis needs a baseline. Core includes zero in free linear bounds if any plugin requests it, considering all contributions on the axis. Explicit bounds and zoom take precedence. Logarithmic Y retains positive headroom; logarithmic X and percent domains follow their scale policies.
+
 ## 4. Define layers and clipping
 
 - Optional `getLayerKey({series, seriesKey})` selects a layer for one raw or prepared series occurrence. By default, core uses `series.type`, so all series of a plugin share one layer. Equal returned keys share a layer; use stable, chart-unique keys. Core throws `ChartError` if different series types return the same key. `seriesKey` identifies this occurrence: core supplies a type/index key for raw input and the series ID for prepared input. The line plugin returns `seriesKey` for independent layers, including when the same raw object occurs twice.

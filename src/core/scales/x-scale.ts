@@ -7,16 +7,13 @@ import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
+import {hasAxisBaseline} from '../series/axis-domain';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartAxis, ChartAxisType} from '../types';
-import {
-    getDefaultMaxXAxisValue,
-    getDefaultMinXAxisValue,
-    getDomainDataXBySeries,
-    getEffectiveXRange,
-} from '../utils';
+import {getDomainDataXBySeries, getEffectiveXRange} from '../utils';
 import {getBandSize} from '../utils/band-size';
 
+import {getDomainPadding, getPaddedDomain} from './axis-padding-options';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
@@ -75,9 +72,11 @@ export function createXScale(args: {
     const xType: ChartAxisType = get(axis, 'type', DEFAULT_AXIS_TYPE);
     const hasZoomX = Boolean(zoomStateX);
     const xCategories = get(axis, 'categories');
-    const maxPadding =
-        xType === 'category' || axis.padding?.max === undefined ? get(axis, 'maxPadding', 0) : 0;
-    const xAxisMaxPadding = boundsWidth * maxPadding + calculateXAxisPadding(series);
+    const domainPadding =
+        'rangeSlider' in axis && axis.rangeSlider?.enabled
+            ? {minFraction: 0, maxFraction: 0, legacyMaxFraction: 0}
+            : getDomainPadding(axis, hasZoomX);
+    const xAxisPadding = calculateXAxisPadding(series);
 
     const range = getXScaleRange({
         boundsWidth,
@@ -113,6 +112,7 @@ export function createXScale(args: {
                 const isPointDomain = hasOnlyMarkerSeries(series)
                     ? checkIsPointDomain([xMinDomain, xMaxDomain])
                     : false;
+                const hasBaseline = hasAxisBaseline(series, 'x');
                 let xMin: number;
                 let xMax: number;
 
@@ -121,25 +121,20 @@ export function createXScale(args: {
                 } else if (xType === 'logarithmic') {
                     xMin = xMinDomain;
                 } else {
-                    const xMinDefault = getDefaultMinXAxisValue(series);
-                    xMin = xMinDefault ?? xMinDomain;
+                    xMin = hasBaseline ? Math.min(xMinDomain, 0) : xMinDomain;
                 }
 
                 if (typeof xMaxPropsOrState === 'number' && !isPointDomain) {
                     xMax = xMaxPropsOrState;
                 } else {
-                    const xMaxDefault = getDefaultMaxXAxisValue(series);
-                    xMax =
-                        typeof xMaxDefault === 'number'
-                            ? Math.max(xMaxDefault, xMaxDomain)
-                            : xMaxDomain;
+                    xMax = hasBaseline ? Math.max(0, xMaxDomain) : xMaxDomain;
                 }
 
                 const scaleFn = xType === 'logarithmic' ? scaleLog : scaleLinear;
                 const scale = scaleFn().domain([xMin, xMax]).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = xAxisMaxPadding;
+                let offsetMax = xAxisPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -156,17 +151,21 @@ export function createXScale(args: {
                 const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateX;
                 const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateX;
 
-                const domainOffsetMin = isMinSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMin) - scale.invert(0));
-                const domainOffsetMax = isMaxSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMax) - scale.invert(0));
-
-                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                // 10 is the default number of ticks; keep small series consistent.
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
-
-                scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
+                scale.domain(
+                    getPaddedDomain({
+                        scale,
+                        domain: [xMin, xMax],
+                        type: xType,
+                        padding: domainPadding,
+                        size: boundsWidth,
+                        offsetMin,
+                        offsetMax,
+                        isMinSpecified,
+                        isMaxSpecified,
+                    }),
+                );
 
                 const startOnTick = get(axis, 'startOnTick', true);
                 const endOnTick = get(axis, 'endOnTick', true);
@@ -197,7 +196,10 @@ export function createXScale(args: {
                 });
                 const xScale = scaleBand().domain(filteredCategories).range([0, boundsWidth]);
 
-                if (xScale.step() / 2 < xAxisMaxPadding) {
+                if (
+                    xScale.step() / 2 <
+                    boundsWidth * domainPadding.legacyMaxFraction + xAxisPadding
+                ) {
                     xScale.range(range);
                 }
 
@@ -238,7 +240,7 @@ export function createXScale(args: {
                 const scale = scaleUtc().domain(domain).range(range);
 
                 let offsetMin = 0;
-                let offsetMax = xAxisMaxPadding;
+                let offsetMax = xAxisPadding;
                 const hasOffset = isSeriesWithXAxisOffset(series);
                 if (hasOffset) {
                     if (domainData.length > 1) {
@@ -255,16 +257,21 @@ export function createXScale(args: {
                 const isMinSpecified = typeof get(axis, 'min') === 'number' && !zoomStateX;
                 const isMaxSpecified = typeof get(axis, 'max') === 'number' && !zoomStateX;
 
-                const domainOffsetMin = isMinSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMin).getTime() - scale.invert(0).getTime());
-                const domainOffsetMax = isMaxSpecified
-                    ? 0
-                    : Math.abs(scale.invert(offsetMax).getTime() - scale.invert(0).getTime());
-                // 10 is the default value for the number of ticks. Here, to preserve the appearance of a series with a small number of points
+                // 10 is the default number of ticks; keep small series consistent.
                 const nicedDomain = scale.copy().nice(Math.max(10, domainData.length)).domain();
-
-                scale.domain([xMin - domainOffsetMin, xMax + domainOffsetMax]);
+                scale.domain(
+                    getPaddedDomain({
+                        scale,
+                        domain: [xMin, xMax],
+                        type: xType,
+                        padding: domainPadding,
+                        size: boundsWidth,
+                        offsetMin,
+                        offsetMax,
+                        isMinSpecified,
+                        isMaxSpecified,
+                    }),
+                );
 
                 const startOnTick = get(axis, 'startOnTick', true);
                 const endOnTick = get(axis, 'endOnTick', true);

@@ -4,6 +4,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedBarXSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/bar-x/get-tooltip-data';
 import {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
@@ -97,6 +98,7 @@ function renderShapes({
 
 export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
+    axisBaseline: 'y',
     isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
     zoom: {types: ['x', 'xy'], defaultType: 'x'},
     prepareSeries: prepareBarXSeries,
@@ -124,7 +126,15 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
             valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
         });
     },
-    getStackedDomainData: (series) => getBarDomainData(series, 'x', 'y'),
+    getAxisDomainValues: ({series, axis}) =>
+        axis === 'y'
+            ? getStackedDomainValues({
+                  series,
+                  categoryKey: 'x',
+                  valueKey: 'y',
+                  getData: (item) => getBarDomainData(item, 'x', 'y'),
+              })
+            : undefined,
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,

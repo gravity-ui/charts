@@ -31,13 +31,20 @@ Storybook will be available at `http://localhost:7007`.
 npm test
 ```
 
+To check the built package, build it first. The check loads both the CommonJS and the ESM build in Node and compares their exports:
+
+```shell
+npm run build
+npm run test:build
+```
+
 Visual regression tests run in Docker to ensure consistent screenshots across environments:
 
 ```shell
 npm run playwright:docker
 ```
 
-In pull requests, the main visual suite runs in two parallel GitHub Actions shards with four workers each. The `Visual Tests` check merges their reports and fails if either shard fails. Performance tests run in a separate job; the React 17 and 19 release checks keep their existing configuration.
+In pull requests, the main visual suite runs in two parallel GitHub Actions shards with four workers each. The `Visual Tests` check merges their reports and fails if either shard fails. Performance tests run in a separate job; the React 19 release checks keep their existing configuration.
 
 To run one shard locally with the same browser selection as CI:
 
@@ -52,6 +59,19 @@ If you need to update the reference screenshots (e.g. after intentional UI chang
 ```shell
 npm run playwright:docker:update
 ```
+
+## Bundle size
+
+CI measures the `Chart` import from the ESM build with [size-limit](https://github.com/ai/size-limit): minified and brotlied, without peer dependencies. Its `limit` in `.size-limit.js` is deliberately high, a safety net against accidental blowups rather than a budget. Build first, then run the check:
+
+```shell
+npm run build
+npm run size
+```
+
+Every pull request gets a bundle size comment. It compares the PR build with the head of its base branch, or with the closest measured commit before it, package by package, and links to a report with module treemaps. Each run replaces the previous report of the PR.
+
+Every push to `main` adds the build to the [bundle size history](https://storage.yandexcloud.net/playwright-reports/charts/bundle-size/index.html), with a per-package breakdown and a module treemap for each build. Pull request builds do not go into the history. To measure a build locally, run `node scripts/bundle-size/snapshot.mjs --out <dir>` after `npm run build` and open `<dir>/index.html`.
 
 ## Documentation examples
 

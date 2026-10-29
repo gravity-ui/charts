@@ -8,7 +8,7 @@ The goal is to make each built-in plugin own its behavior while the core coordin
 
 Deliver the migration incrementally, preserving behavior. The axis-domain and scale stages are the largest and should be split into focused changes.
 
-Stages 1 and 2 are complete. Next: stage 3, axis-domain contributions.
+Stages 1–3 are complete. Next: stage 4, remaining axis and scale policies.
 
 ### 1. Complete tooltip delegation — completed
 
@@ -32,19 +32,14 @@ Deferred work:
 
 - Interleaved layers such as `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` remain unsupported. Keep the TODO on [SeriesPlugin.getLayerKey](../../src/core/series/plugin.ts): separate shared bar geometry from render layers, retain source order through preparation, and define placement when group members straddle other layers. Splitting current bar groups alone would change widths, offsets, and stacking.
 
-### 3. Delegate axis-domain contributions
+### 3. Delegate axis-domain contributions — completed
 
-[common.ts](../../src/core/utils/common.ts) still owns stacked bar/area accumulation, waterfall cumulative values, zero-baseline rules, and lists of series with volume on each axis.
+- [x] Replaced point callbacks with grouped `getAxisDomainValues({series, axis})` and removed the obsolete `getStackedDomainData` hook. Plugins own bar/area stacking and waterfall accumulation; scalar extraction remains the default when the callback is omitted or returns `undefined`.
+- [x] Added separate `axisBaseline?: 'x' | 'y'` metadata, replacing shared volume-series lists while preserving bounds, zoom, and logarithmic baseline behavior.
+- [x] Kept contribution merging in [shared coordination](../../src/core/series/axis-domain.ts) and parameterized [stacking math](../../src/core/series/stacked-domain.ts). Baseline calculations reuse collected values.
+- [x] Added domain regression and architecture coverage and updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md). Public chart config and root exports are unchanged.
 
-The existing `getAxisDomainValues` callback processes one point. Stacks and waterfall require a group-level calculation with series order and axis context. Extend the contract to support that distinction; do not force aggregate calculations into per-point callbacks.
-
-- Let plugins compute their domain contributions and baseline requirements.
-- Keep merging contributions for a given axis in the core.
-- Share parameterized stacking math where useful, without branching on series names.
-
-Verify mixed signs, zeros, sparse/null data, multiple stacks and axes, hidden series, waterfall totals, zoom, and logarithmic axes.
-
-Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): point/group domain contributions and baseline rules.
+Issue audit (fixes remain separate): [#785](https://github.com/gravity-ui/charts/issues/785#issuecomment-6370692582), [#786](https://github.com/gravity-ui/charts/issues/786#issuecomment-6370698187), [#795](https://github.com/gravity-ui/charts/issues/795#issuecomment-6370698486), [#348](https://github.com/gravity-ui/charts/issues/348#issuecomment-6370698832), [#342](https://github.com/gravity-ui/charts/issues/342#issuecomment-6370699159), [#395](https://github.com/gravity-ui/charts/issues/395#issuecomment-6370699492), [#587](https://github.com/gravity-ui/charts/issues/587#issuecomment-6370699826).
 
 ### 4. Delegate remaining axis and scale policies
 

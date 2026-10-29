@@ -55,38 +55,37 @@ export function renderWaterfall(
     });
 
     // Add the connector line between bars
-    svgElement
-        .selectAll(connectorSelector)
-        .data(preparedData)
-        .join('path')
-        .attr('class', b('connector'))
-        .attr('d', (d, index) => {
-            const line = lineGenerator();
+    if (preparedData[0]?.series.connectors.enabled) {
+        const line = lineGenerator();
+        svgElement
+            .selectAll(connectorSelector)
+            .data(preparedData.slice(1))
+            .join('path')
+            .attr('class', b('connector'))
+            .attr('d', (d, index) => {
+                const prev = preparedData[index];
+                const points: [number, number][] = [];
+                const connectFromTop = prev.data.total
+                    ? prev.subTotal > 0
+                    : Number(prev.data.y) > 0;
+                if (connectFromTop) {
+                    points.push([prev.x, prev.y]);
+                } else {
+                    points.push([prev.x, prev.y + prev.height]);
+                }
 
-            const prev = preparedData[index - 1];
-            if (!prev) {
-                return null;
-            }
+                const connectToBottom = d.data.total ? d.subTotal < 0 : Number(d.data.y) > 0;
+                if (connectToBottom) {
+                    points.push([d.x + d.width, d.y + d.height]);
+                } else {
+                    points.push([d.x + d.width, d.y]);
+                }
 
-            const points: [number, number][] = [];
-            const connectFromTop = prev.data.total ? prev.subTotal > 0 : Number(prev.data.y) > 0;
-            if (connectFromTop) {
-                points.push([prev.x, prev.y]);
-            } else {
-                points.push([prev.x, prev.y + prev.height]);
-            }
-
-            const connectToBottom = d.data.total ? d.subTotal < 0 : Number(d.data.y) > 0;
-            if (connectToBottom) {
-                points.push([d.x + d.width, d.y + d.height]);
-            } else {
-                points.push([d.x + d.width, d.y]);
-            }
-
-            return line(points);
-        })
-        .attr('stroke-width', 1)
-        .attr('stroke-dasharray', () => getLineDashArray(DASH_STYLE.Dash, 1));
+                return line(points);
+            })
+            .attr('stroke-width', 1)
+            .attr('stroke-dasharray', getLineDashArray(DASH_STYLE.Dash, 1));
+    }
 
     function handleShapeHover(data?: PreparedWaterfallData[]) {
         const hoverEnabled = hoverOptions?.enabled;
