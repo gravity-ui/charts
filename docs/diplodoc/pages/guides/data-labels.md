@@ -92,6 +92,8 @@ Here, stack height shows revenue while the total label sums `custom.orders`. For
 
 <div data-chart-example="data-labels/stack-labels-aggregation"></div>
 
+The callback must return a finite number. Returning `NaN`, `Infinity` or `-Infinity` hides the total label.
+
 Returning `0` from the callback does not by itself hide the label. For example, a positive stack can display a custom total of `0`.
 
 ### Area gaps and isolated points

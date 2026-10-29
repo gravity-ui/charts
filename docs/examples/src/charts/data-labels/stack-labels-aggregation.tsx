@@ -5,7 +5,7 @@ import type {ChartData} from '@gravity-ui/charts';
 
 import type {ExampleMeta} from '../gallery';
 
-const data: ChartData = {
+const data: ChartData<{orders: number}> = {
     xAxis: {type: 'category', categories: ['Apples', 'Oranges']},
     yAxis: [{title: {text: 'Revenue'}, max: 650}],
     series: {

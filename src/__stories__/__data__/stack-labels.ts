@@ -46,7 +46,7 @@ export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'):
             Object.assign(point, {custom: {orders: orderCount}, label: `${orderCount} orders`});
         });
     });
-    const stackLabels: StackLabelsOptions = {
+    const stackLabels: StackLabelsOptions<{orders: number}> = {
         enabled: true,
         aggregation: ({points}) =>
             points.reduce((sum, point) => sum + (point.custom?.orders ?? 0), 0),

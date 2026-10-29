@@ -172,6 +172,87 @@ describe('validation/validateData', () => {
         },
     );
 
+    describe.each(['bar-x', 'bar-y', 'area', 'line', 'scatter'] as const)(
+        '%s logarithmic axes',
+        (type) => {
+            describe.each(['x', 'y', 'secondary-y'] as const)('%s', (axis) => {
+                function createData(value: unknown): ChartData {
+                    return {
+                        xAxis: {
+                            type: axis === 'x' ? 'logarithmic' : 'category',
+                            categories: ['10'],
+                        },
+                        yAxis:
+                            axis === 'secondary-y'
+                                ? [{type: 'linear'}, {type: 'logarithmic'}]
+                                : [
+                                      {
+                                          type: axis === 'y' ? 'logarithmic' : 'category',
+                                          categories: ['10'],
+                                      },
+                                  ],
+                        series: {
+                            data: [
+                                {
+                                    type,
+                                    name: 'Revenue',
+                                    yAxis: axis === 'secondary-y' ? 1 : 0,
+                                    data: [
+                                        axis === 'x' ? {x: value, y: '10'} : {x: '10', y: value},
+                                    ],
+                                },
+                            ],
+                        },
+                    } as unknown as ChartData;
+                }
+
+                test.each(['10', 'invalid', '', true, undefined, {}, []])(
+                    'rejects nonnumeric value %j',
+                    (value) => {
+                        expect(() => validateData(createData(value))).toThrow(
+                            expect.objectContaining({
+                                code: CHART_ERROR_CODE.INVALID_DATA,
+                            }),
+                        );
+                    },
+                );
+
+                test.each([10, null])('accepts %j and preserves category strings', (value) => {
+                    expect(() => validateData(createData(value))).not.toThrow();
+                });
+            });
+        },
+    );
+
+    describe.each(['x', 'y0', 'y1'] as const)('area-range logarithmic %s', (key) => {
+        function createData(value: number | string | null): ChartData {
+            return {
+                xAxis: {type: 'logarithmic'},
+                yAxis: [{type: 'linear'}, {type: 'logarithmic'}],
+                series: {
+                    data: [
+                        {
+                            type: 'area-range',
+                            name: 'Range',
+                            yAxis: 1,
+                            data: [{x: 1, y0: 1, y1: 20, [key]: value}],
+                        },
+                    ],
+                },
+            };
+        }
+
+        test('rejects a numeric string', () => {
+            expect(() => validateData(createData('10'))).toThrow(
+                expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+            );
+        });
+
+        test.each([10, null])('accepts %j', (value) => {
+            expect(() => validateData(createData(value))).not.toThrow();
+        });
+    });
+
     test.each<ChartData>([PIE_SERIES.INVALID_VALUE])(
         '[Pie Series] validateData should throw an error in case of invalid data (data: %j)',
         (data) => {

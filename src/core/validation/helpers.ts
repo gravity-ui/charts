@@ -98,14 +98,18 @@ export function validateXYSeries(args: {
 
                 break;
             }
-            case 'linear': {
+            case 'linear':
+            case 'logarithmic': {
                 if (typeof x !== 'number' && x !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
-                        message: i18n('error', 'label_invalid-axis-linear-data-point', {
-                            key: 'x',
-                            seriesName: series.name,
-                        }),
+                        message:
+                            xType === 'logarithmic'
+                                ? 'Invalid data type for logarithmic axis'
+                                : i18n('error', 'label_invalid-axis-linear-data-point', {
+                                      key: 'x',
+                                      seriesName: series.name,
+                                  }),
                     });
                 }
             }
@@ -137,14 +141,18 @@ export function validateXYSeries(args: {
 
                 break;
             }
-            case 'linear': {
+            case 'linear':
+            case 'logarithmic': {
                 if (typeof y !== 'number' && y !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
-                        message: i18n('error', 'label_invalid-axis-linear-data-point', {
-                            key: 'y',
-                            seriesName: series.name,
-                        }),
+                        message:
+                            yType === 'logarithmic'
+                                ? 'Invalid data type for logarithmic axis'
+                                : i18n('error', 'label_invalid-axis-linear-data-point', {
+                                      key: 'y',
+                                      seriesName: series.name,
+                                  }),
                     });
                 }
             }
