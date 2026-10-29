@@ -2,8 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import {median} from 'd3-array';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import {cloneDeep, set} from 'es-toolkit/compat';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {scatterBasicData} from '../__stories__/__data__';

@@ -1,5 +1,4 @@
-import random from 'lodash/random';
-import range from 'lodash/range';
+import {random, range} from 'es-toolkit/compat';
 
 import {randomString} from '~core/utils';
 

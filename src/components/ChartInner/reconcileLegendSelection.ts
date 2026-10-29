@@ -1,4 +1,4 @@
-import isNil from 'lodash/isNil';
+import {isNil} from 'es-toolkit/compat';
 
 import type {PreparedSeries} from '~core/series/types';
 

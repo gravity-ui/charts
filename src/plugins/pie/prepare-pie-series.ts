@@ -1,5 +1,5 @@
 import {scaleOrdinal} from 'd3-scale';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';

@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {HtmlItem, ScatterSeriesData} from '../../../types';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../../axes/types';

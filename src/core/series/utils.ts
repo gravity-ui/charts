@@ -1,4 +1,4 @@
-import memoize from 'lodash/memoize';
+import {memoize} from 'es-toolkit/compat';
 
 import type {RectLegendSymbolOptions} from '../../types';
 import {SymbolType} from '../constants';

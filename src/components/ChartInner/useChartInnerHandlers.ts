@@ -2,7 +2,8 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 import {pointer} from 'd3-selection';
-import throttle from 'lodash/throttle';
+import type {DebouncedFunc} from 'es-toolkit/compat';
+import {throttle} from 'es-toolkit/compat';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
@@ -153,7 +154,7 @@ export function useChartInnerHandlers(props: Props) {
         [svgContainer, handleMove],
     );
 
-    const throttledHandlePointerMove = React.useMemo(
+    const throttledHandlePointerMove = React.useMemo<DebouncedFunc<typeof handlePointerMove>>(
         () => throttle(handlePointerMove, tooltipThrottle),
         [handlePointerMove, tooltipThrottle],
     );
@@ -177,7 +178,7 @@ export function useChartInnerHandlers(props: Props) {
         [svgContainer, handleMove],
     );
 
-    const throttledHandleTouchMove = React.useMemo(
+    const throttledHandleTouchMove = React.useMemo<DebouncedFunc<typeof handleTouchMove>>(
         () => throttle(handleTouchMove, tooltipThrottle),
         [handleTouchMove, tooltipThrottle],
     );

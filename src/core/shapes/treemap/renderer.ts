@@ -3,7 +3,7 @@ import type {Dispatch} from 'd3-dispatch';
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 import {select} from 'd3-selection';
 import type {BaseType} from 'd3-selection';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {TooltipDataChunkTreemap, TreemapSeriesData} from '../../../types';
 import {block} from '../../../utils';

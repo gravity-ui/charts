@@ -1,6 +1,4 @@
-import clone from 'lodash/clone';
-import get from 'lodash/get';
-import merge from 'lodash/merge';
+import {clone, get, merge} from 'es-toolkit/compat';
 
 import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
 import type {PreparedChart} from '../chart/types';

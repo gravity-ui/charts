@@ -1,5 +1,4 @@
-import get from 'lodash/get';
-import isEmpty from 'lodash/isEmpty';
+import {get, isEmpty} from 'es-toolkit/compat';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 import {calculateNumericProperty, getTextSizeFn} from '../utils';

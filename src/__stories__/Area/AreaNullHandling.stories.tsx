@@ -2,8 +2,7 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import {cloneDeep, set} from 'es-toolkit/compat';
 
 import {ChartStory} from '../ChartStory';
 import {

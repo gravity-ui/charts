@@ -1,4 +1,4 @@
-import merge from 'lodash/merge';
+import {merge} from 'es-toolkit/compat';
 
 import type {ChartXAxis} from '../../types';
 import {brushDefaults} from '../constants';

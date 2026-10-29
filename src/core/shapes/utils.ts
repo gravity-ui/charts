@@ -2,7 +2,7 @@ import {path} from 'd3-path';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {ChartScale} from '../scales/types';

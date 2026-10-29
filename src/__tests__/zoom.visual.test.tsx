@@ -2,8 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import type {MountResult} from '@playwright/experimental-ct-react';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import {cloneDeep, set} from 'es-toolkit/compat';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barYDatetimeYData, lineTwoYAxisData, scatterBasicData} from '../__stories__/__data__';

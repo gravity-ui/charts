@@ -1,6 +1,6 @@
 import React from 'react';
 
-import set from 'lodash/set';
+import {set} from 'es-toolkit/compat';
 
 import {ChartStory} from '../../src/__stories__/ChartStory';
 import type {ChartData} from '../../src/types';

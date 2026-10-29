@@ -1,4 +1,4 @@
-import isEqual from 'lodash/isEqual';
+import {isEqual} from 'es-toolkit/compat';
 
 import {getSplit} from '~core/layout/split';
 import {getChartDimensions, isAxisRelatedSeries} from '~core/utils';

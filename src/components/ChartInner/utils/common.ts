@@ -1,7 +1,6 @@
 import React from 'react';
 
-import debounce from 'lodash/debounce';
-import isEqual from 'lodash/isEqual';
+import {debounce, isEqual} from 'es-toolkit/compat';
 
 import type {PreparedAxis, PreparedSeries} from '../../../hooks';
 import type {PreparedZoom} from '../../../hooks/types';

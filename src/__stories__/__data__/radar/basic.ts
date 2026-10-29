@@ -1,5 +1,5 @@
 import {max} from 'd3-array';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {ChartData, RadarSeriesCategory, RadarSeriesData} from '../../../types';
 

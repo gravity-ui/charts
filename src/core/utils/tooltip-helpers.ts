@@ -1,6 +1,5 @@
 import {bisector, sort} from 'd3-array';
-import get from 'lodash/get';
-import groupBy from 'lodash/groupBy';
+import {get, groupBy} from 'es-toolkit/compat';
 
 import type {ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
 import type {PreparedSeries} from '../series/types';

@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import {getCurveFactory} from '../../../plugins/line/interpolation';
 import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';

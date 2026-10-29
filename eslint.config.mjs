@@ -51,9 +51,9 @@ export default [
                     message: "Don't use React.FC",
                 },
                 {
-                    selector: "ImportDeclaration[source.value='lodash'][importKind!='type']",
+                    selector: 'ImportDeclaration[source.value=/^lodash\\b/]',
                     message:
-                        "Import lodash functions by path, e.g. import get from 'lodash/get': the 'lodash' entry pulls the whole library into the bundle.",
+                        "Use es-toolkit instead of lodash, e.g. import {get} from 'es-toolkit/compat'.",
                 },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],

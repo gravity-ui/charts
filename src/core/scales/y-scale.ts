@@ -1,7 +1,7 @@
 import {extent, tickStep, ticks} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis} from '../axes/types';

@@ -1,6 +1,5 @@
 import {sort} from 'd3-array';
-import get from 'lodash/get';
-import isEmpty from 'lodash/isEmpty';
+import {get, isEmpty} from 'es-toolkit/compat';
 
 import type {ChartAxis, ChartSeries, ChartSeriesData} from '../../../types';
 import {SERIES_TYPE} from '../../constants';

@@ -1,7 +1,7 @@
 import {extent} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';

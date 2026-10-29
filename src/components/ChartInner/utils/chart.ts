@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {PreparedChart, PreparedTitle} from '../../../hooks/types';
 import type {ChartData, ChartSeries} from '../../../types';

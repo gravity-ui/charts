@@ -1,8 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import cloneDeep from 'lodash/cloneDeep';
-import merge from 'lodash/merge';
+import {cloneDeep, merge} from 'es-toolkit/compat';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {lineTwoYAxisData} from '../__stories__/__data__';

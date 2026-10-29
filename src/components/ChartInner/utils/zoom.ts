@@ -1,5 +1,4 @@
-import intersection from 'lodash/intersection';
-import merge from 'lodash/merge';
+import {intersection, merge} from 'es-toolkit/compat';
 
 import {brushDefaults} from '~core/constants';
 import type {ZoomType} from '~core/constants';

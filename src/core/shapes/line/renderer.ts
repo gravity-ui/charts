@@ -4,7 +4,7 @@ import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import type {CurveFactory} from 'd3-shape';
 import {line as lineGenerator} from 'd3-shape';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {LabelData, TooltipDataChunkLine} from '../../../types';
 import {block} from '../../../utils';

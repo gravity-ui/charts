@@ -1,6 +1,5 @@
 import {sort} from 'd3-array';
-import get from 'lodash/get';
-import merge from 'lodash/merge';
+import {get, merge} from 'es-toolkit/compat';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {

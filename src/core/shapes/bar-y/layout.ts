@@ -1,5 +1,5 @@
 import type {AxisDomain, AxisScale} from 'd3-axis';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {BarYSeriesData} from '../../../types';
 import type {PreparedYAxis} from '../../axes/types';

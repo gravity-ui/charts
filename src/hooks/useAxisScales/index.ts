@@ -1,6 +1,6 @@
 import React from 'react';
 
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import {applyAxisPadding} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';

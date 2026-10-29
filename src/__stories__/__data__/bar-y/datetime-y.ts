@@ -1,4 +1,4 @@
-import range from 'lodash/range';
+import {range} from 'es-toolkit/compat';
 
 import type {ChartData} from '../../../types';
 

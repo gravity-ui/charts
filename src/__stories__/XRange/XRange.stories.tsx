@@ -1,6 +1,5 @@
 import type {Meta, StoryObj} from '@storybook/react';
-import cloneDeep from 'lodash/cloneDeep';
-import merge from 'lodash/merge';
+import {cloneDeep, merge} from 'es-toolkit/compat';
 
 import {Chart} from '../../components';
 import {ChartStory} from '../ChartStory';

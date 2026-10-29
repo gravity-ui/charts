@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {Meta, StoryFn} from '@storybook/react';
-import random from 'lodash/random';
+import {random} from 'es-toolkit/compat';
 
 import type {
     ChartAxis,

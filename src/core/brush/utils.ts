@@ -1,7 +1,7 @@
 import type {BrushBehavior} from 'd3-brush';
 import {path} from 'd3-path';
 import {select} from 'd3-selection';
-import round from 'lodash/round';
+import {round} from 'es-toolkit/compat';
 
 import type {ChartBrush, DeepRequired} from '../types';
 

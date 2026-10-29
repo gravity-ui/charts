@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import isEqual from 'lodash/isEqual';
+import {isEqual} from 'es-toolkit/compat';
 
 import type {PreparedSeries} from '~core/series/types';
 

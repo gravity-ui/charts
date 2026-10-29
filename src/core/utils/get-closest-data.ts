@@ -1,5 +1,4 @@
-import get from 'lodash/get';
-import groupBy from 'lodash/groupBy';
+import {get, groupBy} from 'es-toolkit/compat';
 
 import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
 

@@ -1,8 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import {cloneDeep, set} from 'es-toolkit/compat';
 
 import MultipleYAxesTooltipExample from '../../docs/examples/src/charts/tooltip/multiple-y-axes';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';

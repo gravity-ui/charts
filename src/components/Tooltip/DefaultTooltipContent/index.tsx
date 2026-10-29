@@ -1,9 +1,8 @@
 import React from 'react';
 
 import {Divider} from '@gravity-ui/uikit';
+import {get, isEqual} from 'es-toolkit/compat';
 import parse from 'html-react-parser';
-import get from 'lodash/get';
-import isEqual from 'lodash/isEqual';
 
 import {i18n} from '~core/i18n';
 import type {PluginTooltipRowCell} from '~core/series/plugin';

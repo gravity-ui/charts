@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import get from 'lodash/get';
+import {get} from 'es-toolkit/compat';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
