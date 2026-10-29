@@ -3,10 +3,9 @@ import React from 'react';
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
-import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {getVisibleSeries} from '~core/series/utils';
 import {prepareTooltipHeaderFormat} from '~core/tooltip/header';
-import {EventType, getDispatcher, isBandScale} from '~core/utils';
+import {EventType, getDispatcher} from '~core/utils';
 import {getChartClosest} from '~core/utils/get-closest-data';
 
 import {useCrosshair, usePrevious} from '../../hooks';
@@ -26,7 +25,6 @@ import {RangeSlider} from '../RangeSlider';
 import type {RangeSliderHandle} from '../RangeSlider';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
-import {getInitialRangeSliderState} from '../utils';
 
 import type {ChartInnerProps, ChartInnerRef} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
@@ -68,12 +66,7 @@ function ChartInnerComponent(
             tooltip: data.tooltip,
         });
     }, [data.tooltip]);
-    const preparedRangeSlider = React.useMemo(() => {
-        return getPreparedRangeSlider({xAxis: data.xAxis});
-    }, [data.xAxis]);
     const {
-        initialized,
-        setInitialized,
         tooltipPinned,
         togglePinTooltip,
         unpinTooltip,
@@ -83,7 +76,6 @@ function ChartInnerComponent(
         zoomState,
     } = useChartInnerState({
         dispatcher,
-        preparedRangeSlider,
         tooltip: preparedTooltip,
     });
     const {
@@ -275,7 +267,6 @@ function ChartInnerComponent(
     });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
-    const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);
 
     useCrosshair({
         resetKey: hoverResetKey,
@@ -415,44 +406,6 @@ function ChartInnerComponent(
         handlePreparationError,
     );
 
-    React.useEffect(() => {
-        if (!initialized && xScale) {
-            if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
-                setInitialized(true);
-                return;
-            }
-
-            const defaultRange = preparedRangeSlider.defaultRange;
-            const initialRangeSliderState = getInitialRangeSliderState({
-                defaultRange,
-                xScale,
-            });
-
-            updateRangeSliderState(initialRangeSliderState);
-            setInitialized(true);
-        } else if (preparedRangeSlider.defaultRange !== prevRangeSliderDefaultRange && xScale) {
-            if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
-                return;
-            }
-
-            const defaultRange = preparedRangeSlider.defaultRange;
-            const initialRangeSliderState = getInitialRangeSliderState({
-                defaultRange,
-                xScale,
-            });
-
-            updateRangeSliderState(initialRangeSliderState);
-        }
-    }, [
-        initialized,
-        preparedRangeSlider.defaultRange,
-        preparedRangeSlider.enabled,
-        prevRangeSliderDefaultRange,
-        setInitialized,
-        updateRangeSliderState,
-        xScale,
-    ]);
-
     const [legendReadyFor, setLegendReadyFor] = React.useState<typeof legendConfig>();
     const handleLegendReady = React.useCallback(
         (isReady: boolean) => setLegendReadyFor(isReady ? legendConfig : undefined),
@@ -482,13 +435,7 @@ function ChartInnerComponent(
         handlePreparationError,
     );
     const ready =
-        initialized &&
-        shapesCurrent &&
-        renderingReady &&
-        xAxisReady &&
-        yAxisReady &&
-        legendReady &&
-        sliderReady;
+        shapesCurrent && renderingReady && xAxisReady && yAxisReady && legendReady && sliderReady;
     React.useLayoutEffect(() => {
         if (!ready) {
             readyRef.current = false;
@@ -634,7 +581,7 @@ function ChartInnerComponent(
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
             >
-                {initialized ? chartContent : null}
+                {chartContent}
             </svg>
             <div
                 className={b('html-layer')}

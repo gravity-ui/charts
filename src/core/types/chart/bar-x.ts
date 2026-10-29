@@ -101,7 +101,7 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
     /** Override plugin stack label options. Only enabled series contribute to totals. */
-    stackLabels?: StackLabelsOptions;
+    stackLabels?: StackLabelsOptions<T>;
     /**
      * Whether to place bars or stacks side by side.
      * When false, bars share the category center without taking up grouped slots.

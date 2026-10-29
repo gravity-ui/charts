@@ -83,7 +83,7 @@ export interface ChartData<
         /**
          * Allows for customizing the appearance and behavior of the series.
          */
-        options?: ChartSeriesOptions;
+        options?: ChartSeriesOptions<T>;
     };
     /**
      * Setting for displaying charts on different plots.

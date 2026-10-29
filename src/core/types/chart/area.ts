@@ -88,7 +88,7 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
     /** This option allows grouping series in a stacked chart */
     stackId?: string;
     /** Override plugin stack label options. Only enabled series contribute to totals. */
-    stackLabels?: StackLabelsOptions;
+    stackLabels?: StackLabelsOptions<T>;
     dataLabels?: Omit<BaseDataLabels, 'format'> & {
         /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
         format?: AreaValueFormat<T>;

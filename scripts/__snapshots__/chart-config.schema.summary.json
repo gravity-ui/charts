@@ -44,6 +44,7 @@
     "ChartPointAnnotation",
     "ChartSeries<JsonValue>",
     "ChartSeriesOptions",
+    "ChartSeriesOptions<JsonValue>",
     "ChartSeriesRangeSliderOptions",
     "ChartSplit",
     "ChartTitle",
@@ -101,6 +102,7 @@
     "SeriesColor",
     "SplitPlotOptions",
     "StackLabelsOptions",
+    "StackLabelsOptions<JsonValue>",
     "TooltipRowCellItem",
     "TreemapSeries<JsonValue>",
     "TreemapSeriesData<JsonValue>",
@@ -342,7 +344,7 @@
     ],
     "ChartOptions<ChartInteractionItem>": ["events", "margin", "zoom"],
     "ChartPointAnnotation": ["label", "popup"],
-    "ChartSeriesOptions": [
+    "ChartSeriesOptions<JsonValue>": [
       "area",
       "area-range",
       "bar-x",
@@ -694,7 +696,14 @@
       "y"
     ],
     "SplitPlotOptions": ["title"],
-    "StackLabelsOptions": ["allowOverlap", "enabled", "format", "padding", "style"],
+    "StackLabelsOptions<JsonValue>": [
+      "aggregation",
+      "allowOverlap",
+      "enabled",
+      "format",
+      "padding",
+      "style"
+    ],
     "TooltipRowCellItem": ["align", "format", "id", "source", "width"],
     "TreemapSeries<JsonValue>": [
       "color",
@@ -723,6 +732,7 @@
     ],
     "WaterfallSeries<JsonValue>": [
       "color",
+      "connectors",
       "cursor",
       "custom",
       "data",
