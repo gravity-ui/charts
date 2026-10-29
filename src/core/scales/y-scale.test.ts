@@ -60,6 +60,24 @@ function getDomain(options: AxisOptions) {
     })?.domain();
 }
 
+test('keeps a percentage-padded secondary axis finite when tick synchronization overflows', () => {
+    const axis = {...getAxis({maxPadding: 0}), padding: {max: '75%'}};
+    const series = SERIES.map((item) => ({
+        ...item,
+        data: item.data.map((point, index) => ({...point, y: index * 1e308})),
+    }));
+    const scale = createYScale({
+        axis,
+        primaryAxis: getAxis({maxPadding: 0}),
+        primaryTicksCount: 3,
+        boundsHeight: 300,
+        series,
+    });
+    if (!scale || !('invert' in scale)) throw new Error('Missing continuous secondary scale');
+    expect(scale.domain().map(Number).every(Number.isFinite)).toBe(true);
+    expect(Number.isFinite(scale(1e308))).toBe(true);
+});
+
 describe('createYScale with explicit tick values', () => {
     test('keeps a reversed domain identical to automatic ticks', () => {
         const options = {
