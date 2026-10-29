@@ -103,13 +103,13 @@ export function validateXYSeries(args: {
                 if (typeof x !== 'number' && x !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
-                        message:
+                        message: i18n(
+                            'error',
                             xType === 'logarithmic'
-                                ? 'Invalid data type for logarithmic axis'
-                                : i18n('error', 'label_invalid-axis-linear-data-point', {
-                                      key: 'x',
-                                      seriesName: series.name,
-                                  }),
+                                ? 'label_invalid-axis-logarithmic-data-point'
+                                : 'label_invalid-axis-linear-data-point',
+                            {key: 'x', seriesName: series.name},
+                        ),
                     });
                 }
             }
@@ -146,13 +146,13 @@ export function validateXYSeries(args: {
                 if (typeof y !== 'number' && y !== null) {
                     throw new ChartError({
                         code: CHART_ERROR_CODE.INVALID_DATA,
-                        message:
+                        message: i18n(
+                            'error',
                             yType === 'logarithmic'
-                                ? 'Invalid data type for logarithmic axis'
-                                : i18n('error', 'label_invalid-axis-linear-data-point', {
-                                      key: 'y',
-                                      seriesName: series.name,
-                                  }),
+                                ? 'label_invalid-axis-logarithmic-data-point'
+                                : 'label_invalid-axis-linear-data-point',
+                            {key: 'y', seriesName: series.name},
+                        ),
                     });
                 }
             }

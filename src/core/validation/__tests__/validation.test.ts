@@ -1,6 +1,7 @@
 import {validateData} from '../';
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
+import {i18nFactory} from '../../i18n';
 import type {ChartData, ChartLegend} from '../../types';
 import {PIE_SERIES, XY_SERIES} from '../__mocks__';
 
@@ -223,6 +224,37 @@ describe('validation/validateData', () => {
             });
         },
     );
+
+    describe.each(['en', 'ru'])('logarithmic validation in %s', (language) => {
+        test.each(['x', 'y'] as const)('localizes the %s axis error', (axis) => {
+            const data: ChartData = {
+                xAxis: {type: 'logarithmic'},
+                yAxis: [{type: 'logarithmic'}],
+                series: {
+                    data: [
+                        {type: 'scatter', name: 'Revenue', data: [{x: 10, y: 20, [axis]: '10'}]},
+                    ],
+                },
+            };
+
+            i18nFactory.setLang(language);
+
+            try {
+                expect(() => validateData(data)).toThrow(
+                    expect.objectContaining({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
+                        message: expect.stringContaining(
+                            language === 'ru'
+                                ? 'оси с типом "logarithmic"'
+                                : 'axis with type "logarithmic"',
+                        ),
+                    }),
+                );
+            } finally {
+                i18nFactory.setLang('en');
+            }
+        });
+    });
 
     describe.each(['x', 'y0', 'y1'] as const)('area-range logarithmic %s', (key) => {
         function createData(value: number | string | null): ChartData {
