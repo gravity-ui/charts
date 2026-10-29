@@ -3,7 +3,7 @@
 - `chart.events.click` runs on clicks and taps inside the main plot. Set `chart.events.clickMode: 'plot'` to receive every click, including empty space and disabled tooltips, with `{targets, position, event, chart}`. The default mode, `'tooltip'`, preserves the previous callback arguments and runs only when the tooltip selection finds a point.
 - `chart.events.pointermove` runs on pointer movement and touch start/movement; pauses while the tooltip is pinned. Receives tooltip selection and axes, or `undefined` on leaving the plot, with the event as the second argument.
 - `legend.events.itemClick` runs before a discrete legend item's visibility action. Receives `{id, name, visible}` and a native `MouseEvent`. Set `legend.itemClickAction: 'none'` to manage selection yourself.
-- `<Chart onReady>` runs after the current shapes and axes have committed and repeats on resize. Receives `{dimensions: {width, height}}`.
+- `<Chart onReady>` runs after the first shapes are prepared and repeats when dimensions or the callback identity change. Legend, zoom, range slider and data changes alone do not trigger it. Receives `{dimensions: {width, height}}`.
 - `<Chart onResize>` runs on initialization and changes to chart dimensions. Receives `{dimensions}`, initially possibly `undefined`.
 
 See [Legend](legend.md) and [Tooltip](tooltip.md) for their configuration.
@@ -34,7 +34,23 @@ Use `chart.getClosest(position, {mode: 'tooltip'})` for the old click handler's 
 
 The `chart` API comes from the click payload. You can retain it for later queries; it uses the current chart state and returns `null` after unmounting. The component's `ChartRef` provides only `reflow()` for resizing.
 
-For a screenshot or export after changing the container size, await `ref.current.reflow()`. It completes after the current shapes and axes have committed, including coalesced resize requests. If the size is unchanged and the chart is already ready, it completes without another `onReady` callback. Use `reflow({immediate: true})` to skip the resize debounce.
+For a screenshot or export after changing the container size, await `ref.current.reflow()`. It completes after the current shapes, axes, legend and range slider preview have committed, including coalesced resize requests. Identical requests join the preparation already in progress. If the size is unchanged and the chart is already ready, it completes without another `onReady` callback. Use `reflow({immediate: true})` to skip the resize debounce.
+
+Optional pie nodes returned by `renderCustomShape` are inserted when their callbacks finish. They do not delay the main chart or `reflow()` completion; a failed callback omits only its custom node. If an export needs these nodes, wait for your custom renderer's completion as well.
+
+Preparation errors reject with their original cause. An ignored promise still reports a preparation failure as an unhandled rejection. Host-unavailable, zero-size and unmount cancellations also reject, but are handled automatically for callers that ignore the promise.
+
+### Updating implementations of ChartRef
+
+`ChartRef.reflow()` now returns `Promise<void>`. Existing calls can continue to ignore its result. Custom ref implementations and test mocks that previously returned `void` must return a promise that settles after their rendering completes. Forwarding wrappers should return the underlying promise:
+
+```ts
+const chartRef: ChartRef = {
+  reflow: (options) => underlyingChart.reflow(options),
+};
+```
+
+For a synchronous test mock, use `reflow: async () => {}`. Do not resolve a production wrapper's promise before the underlying chart commits.
 
 The promise rejects if preparation fails, the host is missing or has zero size, or the chart unmounts before completion. Handle rejection when awaiting it. Existing calls that ignore the return value remain supported.
 
