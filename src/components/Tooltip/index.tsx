@@ -1,10 +1,11 @@
 import React from 'react';
 
-import {Popup, useVirtualElement} from '@gravity-ui/uikit';
+import {Popup} from '@gravity-ui/uikit';
 import type {PopupProps} from '@gravity-ui/uikit';
 import type {Dispatch} from 'd3-dispatch';
 
 import type {PreparedSeries} from '~core/series/types';
+import {getSvgScreenPoint} from '~core/utils/svg-screen-point';
 
 import type {PreparedTooltip, PreparedXAxis, PreparedYAxis} from '../../hooks';
 import {useTooltip} from '../../hooks';
@@ -56,39 +57,19 @@ export const Tooltip = (props: TooltipProps) => {
         yAxis,
     });
     const headerFormat = tooltip.headerFormat ?? getHeaderFormat?.(hovered ?? []);
-    const containerRectRef = React.useRef<{left: number; top: number}>({left: 0, top: 0});
-
-    React.useEffect(() => {
-        if (!svgContainer) return undefined;
-
-        const updateRect = (e?: Event) => {
-            // Skip the synthetic CustomEvent('scroll') dispatched below to reposition the Popup.
-            // All other events — including transitionend and animationend — should update the rect.
-            if (e instanceof CustomEvent) return;
-            containerRectRef.current = svgContainer.getBoundingClientRect();
-        };
-
-        updateRect();
-
-        const resizeObserver = new ResizeObserver(() => updateRect());
-        resizeObserver.observe(svgContainer);
-
-        window.addEventListener('scroll', updateRect, {passive: true, capture: true});
-        window.addEventListener('transitionend', updateRect, {capture: true});
-        window.addEventListener('animationend', updateRect, {capture: true});
-
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener('scroll', updateRect, {capture: true});
-            window.removeEventListener('transitionend', updateRect, {capture: true});
-            window.removeEventListener('animationend', updateRect, {capture: true});
-        };
-    }, [svgContainer]);
-
-    const containerRect = containerRectRef.current;
-    const left = (pointerPosition?.[0] || 0) + containerRect.left;
-    const top = (pointerPosition?.[1] || 0) + containerRect.top;
-    const {anchor} = useVirtualElement({left, top});
+    const pointerX = pointerPosition?.[0] ?? 0;
+    const pointerY = pointerPosition?.[1] ?? 0;
+    const anchor = React.useMemo(
+        () => ({
+            contextElement: svgContainer ?? undefined,
+            getBoundingClientRect() {
+                // Popup measures after commit; hover rendering must not force SVG layout.
+                const {x: left, y: top} = getSvgScreenPoint(svgContainer, pointerX, pointerY);
+                return {x: left, y: top, left, top, right: left, bottom: top, width: 0, height: 0};
+            },
+        }),
+        [svgContainer, pointerX, pointerY],
+    );
 
     const handleOnOpenChange: PopupProps['onOpenChange'] = (_open: boolean, e) => {
         if (svgContainer?.contains(e?.target as HTMLElement)) {
@@ -98,9 +79,6 @@ export const Tooltip = (props: TooltipProps) => {
         onOutsideClick?.();
     };
 
-    React.useEffect(() => {
-        window.dispatchEvent(new CustomEvent('scroll'));
-    }, [left, top]);
     return hovered?.length ? (
         <Popup
             anchorElement={anchor}

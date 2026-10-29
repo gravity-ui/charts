@@ -9,6 +9,86 @@ import type {ChartData, ChartSeries} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+for (const type of ['bar-x', 'bar-y'] as const) {
+    test(`percentage maximum preserves ${type} geometry and measured labels after resize`, async ({
+        mount,
+        page,
+    }) => {
+        const legacy: ChartData = {
+            legend: {enabled: false},
+            xAxis: {maxPadding: 0.25, startOnTick: false, endOnTick: false},
+            yAxis: [{maxPadding: 0.25, startOnTick: false, endOnTick: false}],
+            series: {
+                data: [
+                    {
+                        type,
+                        name: 'Revenue',
+                        dataLabels: {enabled: true},
+                        data:
+                            type === 'bar-x'
+                                ? [
+                                      {x: 0, y: 60},
+                                      {x: 100, y: 80},
+                                  ]
+                                : [
+                                      {x: 60, y: 0},
+                                      {x: 100, y: 1},
+                                  ],
+                    },
+                ],
+            },
+        };
+        const replacement: ChartData = {
+            ...legacy,
+            xAxis: {padding: {max: '25%'}, startOnTick: false, endOnTick: false},
+            yAxis: [{padding: {max: '25%'}, startOnTick: false, endOnTick: false}],
+        };
+        const component = await mount(
+            <ChartTestStory data={legacy} styles={{width: 350, height: 300}} />,
+        );
+        const shapes = component.locator(`.gcharts-${type}__segment`);
+        const geometry = () =>
+            component
+                .locator(
+                    `.gcharts-${type}__segment, .gcharts-x-axis__tick text, .gcharts-y-axis__tick text`,
+                )
+                .evaluateAll((nodes) =>
+                    nodes.map((node) => {
+                        const rect = node.getBoundingClientRect();
+                        return {
+                            text: node.textContent,
+                            x: rect.x,
+                            y: rect.y,
+                            width: rect.width,
+                            height: rect.height,
+                        };
+                    }),
+                );
+        for (const width of [350, 650]) {
+            await component.update(<ChartTestStory data={legacy} styles={{width, height: 300}} />);
+            await expect(component.locator('svg').first()).toHaveAttribute('width', String(width));
+            await expect(shapes).toHaveCount(2);
+            await page.evaluate(
+                () =>
+                    new Promise<void>((resolve) =>
+                        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+                    ),
+            );
+            const before = await geometry();
+            await component.update(
+                <ChartTestStory data={replacement} styles={{width, height: 300}} />,
+            );
+            await page.evaluate(
+                () =>
+                    new Promise<void>((resolve) =>
+                        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+                    ),
+            );
+            await expect.poll(geometry).toEqual(before);
+        }
+    });
+}
+
 async function expectPaintInsidePlot(plot: Locator, paint: Locator) {
     const bounds = await plot.evaluate((element) => {
         const matrix = (element as SVGGraphicsElement).getScreenCTM();
@@ -79,6 +159,79 @@ function dataFor(type: 'line' | 'area' | 'area-range' | 'scatter'): ChartData {
 }
 
 test.describe('Axis padding', () => {
+    for (const type of ['linear', 'logarithmic'] as const) {
+        test(`${type} percentages expand both ends symmetrically`, async ({mount}) => {
+            const values = type === 'linear' ? [0, 100] : [1, 100];
+            const axis = {
+                type,
+                padding: {min: '25%', max: '25%'},
+                startOnTick: false,
+                endOnTick: false,
+            };
+            const data: ChartData = {
+                legend: {enabled: false},
+                xAxis: axis,
+                yAxis: [axis],
+                series: {
+                    data: [
+                        {type: 'scatter', name: 'Revenue', data: values.map((v) => ({x: v, y: v}))},
+                    ],
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 600, height: 300}} />,
+            );
+            const markers = component.locator('.gcharts-marker__symbol[d]');
+            await expect(markers).toHaveCount(2);
+            for (const order of [undefined, 'reverse'] as const) {
+                await component.update(
+                    <ChartTestStory
+                        data={{...data, xAxis: {...axis, order}, yAxis: [{...axis, order}]}}
+                        styles={{width: 600, height: 300}}
+                    />,
+                );
+                await expect
+                    .poll(async () => {
+                        const plot = await component
+                            .locator('.gcharts-chart__content')
+                            .evaluate((element) => {
+                                const matrix = (element as SVGGraphicsElement).getScreenCTM();
+                                if (!matrix) throw new Error('Missing plot transform');
+                                const start = new DOMPoint(0, 0).matrixTransform(matrix);
+                                const end = new DOMPoint(
+                                    Number(element.getAttribute('width')),
+                                    Number(element.getAttribute('height')),
+                                ).matrixTransform(matrix);
+                                return {
+                                    x: start.x,
+                                    y: start.y,
+                                    width: end.x - start.x,
+                                    height: end.y - start.y,
+                                };
+                            });
+                        const boxes = await markers.evaluateAll((nodes) =>
+                            nodes.map((node) => node.getBoundingClientRect().toJSON()),
+                        );
+                        return ['x', 'y'].map((direction) =>
+                            boxes
+                                .map((box) => {
+                                    const fraction =
+                                        direction === 'x'
+                                            ? (box.x + box.width / 2 - plot.x) / plot.width
+                                            : (box.y + box.height / 2 - plot.y) / plot.height;
+                                    return Math.round(fraction * 600);
+                                })
+                                .sort((a, b) => a - b),
+                        );
+                    })
+                    .toEqual([
+                        [100, 500],
+                        [100, 500],
+                    ]);
+            }
+        });
+    }
+
     for (const type of ['line', 'area', 'area-range', 'scatter'] as const) {
         test(`${type} fits markers with a continuous axis and stable hover`, async ({
             mount,

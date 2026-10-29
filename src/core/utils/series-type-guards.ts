@@ -20,13 +20,6 @@ export function isSeriesWithNumericalXValues(series: UnknownSeries): series is {
     return isAxisRelatedSeries(series);
 }
 
-export function isSeriesWithNumericalYValues(series: UnknownSeries): series is {
-    type: ChartSeries['type'];
-    data: {y: number}[];
-} {
-    return isAxisRelatedSeries(series);
-}
-
 export function isSeriesWithCategoryValues(series: UnknownSeries): series is {
     type: ChartSeries['type'];
     data: {category: string}[];
