@@ -18,6 +18,8 @@ const SCHEMA_PATH = path.resolve(OUTPUT_DIR, 'chart-config.schema.json');
 const DEFINITION_ALIASES = {
     ChartOptions: 'ChartOptions<ChartInteractionItem>',
     'ChartOptions<JsonValue>': 'ChartOptions<ChartInteractionItem>',
+    ChartSeriesOptions: 'ChartSeriesOptions<JsonValue>',
+    StackLabelsOptions: 'StackLabelsOptions<JsonValue>',
 };
 
 // A declaration bundle is standalone only while every package exposed by ChartConfig is inlined.

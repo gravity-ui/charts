@@ -4,18 +4,22 @@ import type {PrepareShapeDataArgs} from '~core/series/plugin';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {sumDecimals} from '~core/utils/math';
 
+import type {AreaSeriesData} from '../../types';
+import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
+const DEFAULT_POSITIVE_EXTENDS_UP = true;
+
 interface Boundary {
-    values: number[];
     y: number;
 }
 
 interface StackBoundary {
+    points: AreaSeriesData[];
     options: StackLabelAnchor['options'];
     x: number;
-    negative: boolean;
+    extendsUp: boolean;
     plotIndex: number;
     prev?: Boundary;
     next?: Boundary;
@@ -30,6 +34,10 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
             item.series.stackLabels,
         );
         if (!options.enabled) continue;
+        const range = args.yScale?.[item.series.yAxis]?.range();
+        const positiveExtendsUp = range
+            ? range[0] > range[range.length - 1]
+            : DEFAULT_POSITIVE_EXTENDS_UP;
         const rawPoints = new Set(item.series.data);
         // A step may have two points at the same X, one for each adjoining section.
         const pointsByX = Array.from(group(item.points, (point) => point.x).values());
@@ -53,13 +61,16 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
             let stack = boundariesBySign.get(negative);
             if (!stack) {
                 stack = {
+                    points: [],
                     options,
                     x: point.x,
-                    negative,
+                    extendsUp: negative ? !positiveExtendsUp : positiveExtendsUp,
                     plotIndex: args.yAxis?.[item.series.yAxis]?.plotIndex ?? 0,
                 };
                 boundariesBySign.set(negative, stack);
             }
+            stack.points.push(point.data);
+
             for (const side of ['prev', 'next'] as const) {
                 const neighbor = pointsByX[index + (side === 'prev' ? -1 : 1)]?.[0];
                 // Explicit nulls open a gap; synthetic missing points are zero-height sections.
@@ -68,10 +79,12 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 if (boundaryPoint.y === null) continue;
                 const boundary = stack[side];
                 if (boundary) {
-                    boundary.values.push(value);
-                    boundary.y = (negative ? Math.max : Math.min)(boundary.y, boundaryPoint.y);
+                    boundary.y = (stack.extendsUp ? Math.min : Math.max)(
+                        boundary.y,
+                        boundaryPoint.y,
+                    );
                 } else {
-                    stack[side] = {values: [value], y: boundaryPoint.y};
+                    stack[side] = {y: boundaryPoint.y};
                 }
             }
         });
@@ -82,22 +95,22 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
         for (const stack of boundariesBySign.values()) {
             let boundary = stack.prev ?? stack.next;
             if (stack.prev && stack.next) {
-                const nextIsOuter = stack.negative
-                    ? stack.next.y > stack.prev.y
-                    : stack.next.y < stack.prev.y;
+                const nextIsOuter = stack.extendsUp
+                    ? stack.next.y < stack.prev.y
+                    : stack.next.y > stack.prev.y;
                 boundary = nextIsOuter ? stack.next : stack.prev;
             }
             if (!boundary) continue;
-            const total = sumDecimals(boundary.values);
+            const total = sumDecimals(stack.points.map((point) => Number(point.y)));
             // Zero segments do not add a separate total beside a negative stack.
             if (total === 0 && boundariesBySign.has(true)) continue;
             anchors.push({
                 options: stack.options,
                 x: stack.x,
                 y: boundary.y,
-                total,
+                total: getStackLabelValue(stack.options, stack.points, total),
                 plotIndex: stack.plotIndex,
-                direction: stack.negative ? 'bottom' : 'top',
+                direction: stack.extendsUp ? 'top' : 'bottom',
             });
         }
     }

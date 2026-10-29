@@ -829,6 +829,7 @@ describe('chart config artifacts', () => {
         const usage = `
             const labels: StackLabelsOptions = {
                 enabled: true, padding: 8, allowOverlap: false, style: {fontSize: '12px'},
+                aggregation: ({points}) => points.reduce((sum, point) => sum + (point.custom?.orders ?? 0), 0),
                 format: {type: 'custom', formatter: ({value}) => String(value)},
             };
             const options: ChartSeriesOptions = {
@@ -856,6 +857,69 @@ describe('chart config artifacts', () => {
         ).not.toThrow();
     });
 
+    test.each([
+        ['BarXSeries', 'bar-x'],
+        ['BarYSeries', 'bar-y'],
+        ['AreaSeries', 'area'],
+    ])('stack label aggregation preserves custom metadata for %s', (seriesType, type) => {
+        const usage = `
+            interface Orders { orders: number; }
+            const series: ${seriesType}<Orders> = {
+                type: '${type}', name: 'Orders', data: [],
+                stackLabels: {
+                    aggregation: ({points}) => {
+                        // @ts-expect-error orders is numeric, not any.
+                        points[0].custom?.orders.trim();
+                        return points.reduce((sum, point) => sum + (point.custom?.orders ?? 0), 0);
+                    },
+                },
+            };
+            const options: ChartSeriesOptions<Orders> = {
+                '${type}': {
+                    stackLabels: {
+                        aggregation: ({points}) => {
+                            // @ts-expect-error Unknown custom fields must not be accepted.
+                            return points[0].custom?.missing;
+                        },
+                    },
+                },
+            };
+            const chart: ChartData<Orders> = {
+                series: {
+                    data: [series],
+                    options: {
+                        '${type}': {
+                            stackLabels: {
+                                aggregation: ({points}) => {
+                                    // @ts-expect-error Chart-level options preserve numeric orders.
+                                    points[0].custom?.orders.trim();
+                                    return points[0].custom?.orders ?? 0;
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+            void [series, options, chart];
+        `;
+
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'stack-labels-custom-usage.ts'),
+                declaration + usage,
+            ),
+        ).not.toThrow();
+    });
+
+    test('preserves schema anchors after adding stack label custom metadata generics', () => {
+        expect(schema.definitions.ChartSeriesOptions).toEqual({
+            $ref: '#/definitions/ChartSeriesOptions%3CJsonValue%3E',
+        });
+        expect(schema.definitions.StackLabelsOptions).toEqual({
+            $ref: '#/definitions/StackLabelsOptions%3CJsonValue%3E',
+        });
+    });
+
     test.each(['bar-x', 'bar-y', 'area'])('schema supports stack labels for %s', (type) => {
         const validateConfig = createSchemaValidator().compile(schema);
         const config = {
@@ -880,6 +944,7 @@ describe('chart config artifacts', () => {
                         stackLabels: {
                             enabled: true,
                             padding: 8,
+                            aggregation: 'sum',
                             allowOverlap: false,
                             style: {fontSize: '12px'},
                             format: {type: 'number', precision: 2},
@@ -889,6 +954,9 @@ describe('chart config artifacts', () => {
             },
         };
         expect(validateConfig(config)).toBe(true);
+        config.series.options[type].stackLabels.aggregation = 'average';
+        expect(validateConfig(config)).toBe(false);
+        config.series.options[type].stackLabels.aggregation = 'sum';
         config.series.data[0].stackLabels.enabled = 'yes';
         expect(validateConfig(config)).toBe(false);
         config.series.data[0].stackLabels.enabled = true;
@@ -941,8 +1009,8 @@ describe('chart config artifacts', () => {
         ).toBe(false);
         expect(schema.definitions['BarXSeries<JsonValue>'].properties.borderWidth.default).toBe(0);
         expect(
-            schema.definitions.ChartSeriesOptions.properties['bar-x'].properties.borderWidth
-                .default,
+            schema.definitions['ChartSeriesOptions<JsonValue>'].properties['bar-x'].properties
+                .borderWidth.default,
         ).toBe(0);
     });
 
