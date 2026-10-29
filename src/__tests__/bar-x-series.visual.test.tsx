@@ -70,7 +70,7 @@ test.describe('Bar-x series', () => {
                     lineColor: 'transparent',
                     startOnTick: true,
                     endOnTick: true,
-                    maxPadding: 0,
+                    padding: {max: 0},
                 },
             ],
         };
@@ -675,8 +675,8 @@ test.describe('Bar-x series', () => {
                     },
                 ],
             },
-            yAxis: [{maxPadding: 0}],
-            xAxis: {maxPadding: 0},
+            yAxis: [{padding: {max: 0}}],
+            xAxis: {padding: {max: 0}},
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -990,7 +990,7 @@ test.describe('Bar-x series', () => {
                     type: 'category',
                     categories: ['Positive', 'Negative', 'Short', 'Zero', 'Mixed'],
                 },
-                yAxis: [{min: -15, max: 15, maxPadding: 0}],
+                yAxis: [{min: -15, max: 15, padding: {max: 0}}],
             };
             const plain = cloneDeep(data);
             plain.series.options = {'bar-x': {...plain.series.options?.['bar-x'], borderWidth: 0}};

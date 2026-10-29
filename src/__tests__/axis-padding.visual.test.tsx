@@ -5,6 +5,8 @@ import type {Locator} from '@playwright/test';
 
 import AxisPaddingExample from '../../docs/examples/src/charts/layout/axis-padding';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {migrateChartDataV1} from '../migration/v1';
+import type {ChartDataV1} from '../migration/v1';
 import type {ChartData, ChartSeries} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
@@ -14,7 +16,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
         mount,
         page,
     }) => {
-        const legacy: ChartData = {
+        const legacy: ChartDataV1 = {
             legend: {enabled: false},
             xAxis: {maxPadding: 0.25, startOnTick: false, endOnTick: false},
             yAxis: [{maxPadding: 0.25, startOnTick: false, endOnTick: false}],
@@ -39,12 +41,15 @@ for (const type of ['bar-x', 'bar-y'] as const) {
             },
         };
         const replacement: ChartData = {
-            ...legacy,
+            ...migrateChartDataV1(legacy).data,
             xAxis: {padding: {max: '25%'}, startOnTick: false, endOnTick: false},
             yAxis: [{padding: {max: '25%'}, startOnTick: false, endOnTick: false}],
         };
         const component = await mount(
-            <ChartTestStory data={legacy} styles={{width: 350, height: 300}} />,
+            <ChartTestStory
+                data={migrateChartDataV1(legacy).data}
+                styles={{width: 350, height: 300}}
+            />,
         );
         const shapes = component.locator(`.gcharts-${type}__segment`);
         const geometry = () =>
@@ -65,7 +70,12 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                     }),
                 );
         for (const width of [350, 650]) {
-            await component.update(<ChartTestStory data={legacy} styles={{width, height: 300}} />);
+            await component.update(
+                <ChartTestStory
+                    data={migrateChartDataV1(legacy).data}
+                    styles={{width, height: 300}}
+                />,
+            );
             await expect(component.locator('svg').first()).toHaveAttribute('width', String(width));
             await expect(shapes).toHaveCount(2);
             await page.evaluate(

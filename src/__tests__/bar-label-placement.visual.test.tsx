@@ -4,7 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 
 import BarLabelPlacementExample from '../../docs/examples/src/charts/data-labels/bar-placement';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {migrateChartDataV1} from '../compat/v1';
+import {migrateChartDataV1} from '../migration/v1';
 import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
@@ -236,9 +236,15 @@ for (const type of ['bar-y', 'bar-x'] as const) {
                 chart: {zoom: {enabled: true, type: 'xy'}},
                 xAxis: vertical
                     ? {type: 'category', categories: ['Small', 'Large']}
-                    : {min: 0, max: 1082.4, startOnTick: false, endOnTick: false, maxPadding: 0},
+                    : {
+                          min: 0,
+                          max: 1082.4,
+                          startOnTick: false,
+                          endOnTick: false,
+                          padding: {max: 0},
+                      },
                 yAxis: vertical
-                    ? [{min: 0, max: 1000, startOnTick: false, endOnTick: false, maxPadding: 0}]
+                    ? [{min: 0, max: 1000, startOnTick: false, endOnTick: false, padding: {max: 0}}]
                     : [{type: 'category', categories: ['Small', 'Large']}],
                 legend: {enabled: false},
                 tooltip: {enabled: false},

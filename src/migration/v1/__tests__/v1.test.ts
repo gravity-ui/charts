@@ -82,12 +82,12 @@ test('migrates nested formats, preserves input and opaque payload identity, and 
     expect(result.warnings.map(({code}) => code)).toEqual([
         'number-unit',
         'number-unit',
-        'click-handler-review',
         'number-unit',
     ]);
     const again = migrateChartDataV1(result.data);
     expect(again.data).toBe(result.data);
-    expect(again.warnings.map(({code}) => code)).toEqual(['click-handler-review']);
+    expect(again.warnings).toEqual([]);
+    expect(click).not.toHaveBeenCalled();
 });
 
 test('checks plugin-specific fields without mistaking funnel inside or application data for deprecated options', () => {
@@ -210,7 +210,7 @@ test('uses decimal percentage notation for a small maxPadding fraction', () => {
     expect(result.data.xAxis?.padding?.max).toBe('0.0000000001%');
 });
 
-test('reports the logarithmic behavior change while converting maxPadding', () => {
+test('converts logarithmic maxPadding to the corrected percentage calculation', () => {
     const data: ChartDataV1 = {
         xAxis: {type: 'logarithmic', maxPadding: 0.25, padding: {min: '10%'}},
         yAxis: [{type: 'logarithmic', maxPadding: 0.25, order: 'reverse'}],
@@ -221,12 +221,12 @@ test('reports the logarithmic behavior change while converting maxPadding', () =
     expect(result.data.yAxis?.[0].padding).toEqual({max: '25%'});
     expect(result.warnings).toEqual([
         expect.objectContaining({
-            code: 'axis-max-padding-logarithmic',
+            code: 'axis-max-padding',
             path: ['xAxis', 'maxPadding'],
             resolution: 'automatic',
         }),
         expect.objectContaining({
-            code: 'axis-max-padding-logarithmic',
+            code: 'axis-max-padding',
             path: ['yAxis', 0, 'maxPadding'],
             resolution: 'automatic',
         }),
@@ -234,18 +234,6 @@ test('reports the logarithmic behavior change while converting maxPadding', () =
     expect(inspectChartDataV1(data)).toEqual(result.warnings);
     expect(data.xAxis?.maxPadding).toBe(0.25);
     expect(migrateChartDataV1(result.data).warnings).toEqual([]);
-});
-
-test.each([0, undefined, 'explicit'] as const)('does not report a log change for %s', (value) => {
-    const result = migrateChartDataV1({
-        xAxis: {
-            type: 'logarithmic',
-            maxPadding: value === 'explicit' ? 0.25 : value,
-            padding: value === 'explicit' ? {max: 0} : undefined,
-        },
-        series: {data: []},
-    });
-    expect(result.warnings.map(({code}) => code)).toEqual(['axis-max-padding']);
 });
 
 test('preserves valid current config references and leaves arbitrary custom data alone', () => {

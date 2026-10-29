@@ -1,8 +1,8 @@
 import type {ChartData} from '../../../../types';
 
 export const groupedLegend: ChartData = {
-    xAxis: {maxPadding: 0},
-    yAxis: [{maxPadding: 0}],
+    xAxis: {padding: {max: 0}},
+    yAxis: [{padding: {max: 0}}],
     chart: {margin: {top: 10, bottom: 10, right: 10, left: 10}},
     series: {
         data: [

@@ -8,7 +8,7 @@ import {createYScale} from '../y-scale';
 
 const axis = {
     type: 'linear',
-    maxPadding: 0,
+    padding: {max: 0},
     startOnTick: false,
     endOnTick: false,
     plotIndex: 0,

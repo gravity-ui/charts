@@ -65,7 +65,7 @@ export const xRangeCustomizationData: ChartData = {
     xAxis: {
         type: 'datetime',
         title: {text: 'Timeline'},
-        maxPadding: 0,
+        padding: {max: 0},
     },
     yAxis: [
         {

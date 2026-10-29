@@ -107,6 +107,7 @@ function analyze(data: unknown, collectPatches: boolean) {
             },
             path,
         );
+
         if (!isOptions(value) || !Object.prototype.hasOwnProperty.call(value, 'maxPadding')) return;
         const {maxPadding, ...next} = value;
         if (
@@ -121,11 +122,6 @@ function analyze(data: unknown, collectPatches: boolean) {
             return;
         }
         const padding = isOptions(value.padding) ? value.padding : {};
-        const changesLogarithmicPadding =
-            value.type === 'logarithmic' &&
-            typeof maxPadding === 'number' &&
-            maxPadding > 0 &&
-            padding.max === undefined;
         if (padding.max === undefined && maxPadding !== undefined) {
             // Size strings do not accept exponent notation, including for tiny fractions.
             const percentage = (maxPadding * 100).toLocaleString('en-US', {
@@ -135,11 +131,10 @@ function analyze(data: unknown, collectPatches: boolean) {
             next.padding = {...padding, max: `${percentage}%`};
         }
         warnings.push({
-            code: changesLogarithmicPadding ? 'axis-max-padding-logarithmic' : 'axis-max-padding',
+            code: 'axis-max-padding',
             path: [...path, 'maxPadding'],
-            message: changesLogarithmicPadding
-                ? 'Converted to padding.max. Logarithmic limits may change: percentages extend the original log span instead of reproducing the orientation-dependent v1 calculation.'
-                : 'Use padding.max as a percentage of the original domain.',
+            message:
+                'maxPadding was removed; use padding.max as a percentage of the original domain.',
             replacement: 'padding.max',
             resolution: 'automatic',
         });
@@ -155,15 +150,6 @@ function analyze(data: unknown, collectPatches: boolean) {
         ['series', 'options', '*', 'stackLabels', 'format'],
     ])
         visit(data, path, valueFormat);
-    visit(data, ['chart', 'events', 'click'], (handler, path) => {
-        if (typeof handler === 'function') {
-            review(
-                path,
-                'click-handler-review',
-                'Review click payloads, the second event argument and clickMode. Function bodies cannot be inspected reliably.',
-            );
-        }
-    });
     visit(data, ['series', 'data', '*'], (series, path) => {
         for (const pattern of [
             ['dataLabels', 'format'],

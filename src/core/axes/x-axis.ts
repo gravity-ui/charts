@@ -33,7 +33,7 @@ import {getXAxisLabelGeometry} from '../utils/axis/x-axis-label';
 
 import {getPreparedRangeSlider} from './range-slider';
 import type {PreparedXAxis} from './types';
-import {prepareAxisPlotLabel} from './utils';
+import {getDefaultAxisPadding, prepareAxisPlotLabel} from './utils';
 
 interface XAxisLabelBounds {
     leftOverflow: number;
@@ -172,14 +172,6 @@ async function setLabelSettings({
     axis.labels.rotation = rotation;
 }
 
-function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
-    if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
-        return 0;
-    }
-
-    return 0.01;
-}
-
 export const getPreparedXAxis = async ({
     xAxis,
     seriesData,
@@ -233,9 +225,6 @@ export const getPreparedXAxis = async ({
     const shouldHideGrid =
         isAxisVisible === false || seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
     const preparedRangeSlider = getPreparedRangeSlider({xAxis});
-    const maxPadding = preparedRangeSlider.enabled
-        ? 0
-        : get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData}));
 
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
@@ -276,8 +265,10 @@ export const getPreparedXAxis = async ({
         max: get(xAxis, 'max'),
         startOnTick: get(xAxis, 'startOnTick'),
         endOnTick: get(xAxis, 'endOnTick'),
-        maxPadding,
-        padding: xAxis?.padding,
+        padding: {
+            ...xAxis?.padding,
+            max: xAxis?.padding?.max ?? getDefaultAxisPadding(seriesData, 'x'),
+        },
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },

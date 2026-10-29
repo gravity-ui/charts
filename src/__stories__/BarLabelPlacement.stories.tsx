@@ -23,7 +23,7 @@ function BarLabelPlacementStory({orientation, html, reversed, negative, ...place
         order: reversed ? ('reverse' as const) : undefined,
         startOnTick: false,
         endOnTick: false,
-        maxPadding: 0,
+        padding: {max: 0},
     };
     const categoryAxis = {type: 'category' as const, categories};
     const data: ChartData = {

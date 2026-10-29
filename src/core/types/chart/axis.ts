@@ -36,7 +36,8 @@ export interface ChartAxisPadding {
     min?: number | string;
     /**
      * Maximum-side space, using the same units as `min`.
-     * Falls back to `maxPadding` when omitted.
+     * Defaults to `"1%"` on X and `"5%"` on Y. Heatmap axes and datetime Y axes
+     * with explicit `timestamps` default to `0`.
      * @minimum 0
      */
     max?: number | string;
@@ -259,20 +260,6 @@ export interface ChartAxis {
         enabled?: boolean;
     };
     ticks?: ChartAxisTicks;
-    /**
-     * Legacy maximum-side padding. On linear and datetime axes, a fraction of the value range before padding.
-     * Ignored on axes normalized with `stacking: 'percent'` and on X when the range slider is enabled.
-     * Datetime Y axes with explicit `timestamps` also ignore it.
-     * @default 0.05 for Y axis, 0.01 for X axis
-     * @deprecated On linear and datetime axes where this option adds space, use `padding.max`
-     * with a percentage string: `maxPadding: 0.25` becomes `padding: {max: '25%'}`.
-     * Numbers in `padding` are pixels. Unlike `maxPadding`, `padding` does not extend zoomed boundaries.
-     * On logarithmic axes, migrate to percentages of the logarithmic range; the legacy
-     * direction-dependent calculation is a bug and is not supported by `padding`.
-     * Category axes ignore `padding`; remove `maxPadding` without a replacement.
-     * Its incidental effect on category direction is a bug and is not supported by `padding`.
-     */
-    maxPadding?: number;
     /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */
     padding?: ChartAxisPadding;
     /** An array of lines stretching across the plot area, marking a specific value */

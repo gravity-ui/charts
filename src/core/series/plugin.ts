@@ -144,6 +144,8 @@ export interface SeriesPlugin<
      * reserve positive headroom. Explicit bounds and zoom take precedence.
      */
     axisBaseline?: 'x' | 'y';
+    /** Whether the chart's default axis padding applies. Explicit padding remains available. */
+    defaultAxisPadding?: boolean;
     /**
      * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
      * Omit to use series.type: all series of this plugin share one layer by default.

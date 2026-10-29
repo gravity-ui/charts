@@ -1,5 +1,11 @@
 import type {FormatNumberOptions} from '../../libs/format-number/types';
-import type {ChartData, ChartInteractionItem, MeaningfulAny} from '../../types';
+import type {
+    ChartData,
+    ChartInteractionItem,
+    ChartXAxis,
+    ChartYAxis,
+    MeaningfulAny,
+} from '../../types';
 
 export interface FormatNumberOptionsV1 extends FormatNumberOptions {
     unit?: 'auto' | 'k' | 'm' | 'b' | 't' | null;
@@ -24,11 +30,18 @@ type WithV1Options<T> = T extends (...args: never[]) => unknown
         } & (T extends {type: 'number'} ? Pick<FormatNumberOptionsV1, 'unit'> : unknown)
       : T;
 
-/** Input accepted by the v1 adapter, based on the v1.70.0 configuration with removed aliases. */
-export type ChartDataV1<
+interface LegacyAxisOptions {
+    maxPadding?: number;
+}
+
+/** Input accepted by the v1 adapter, including aliases removed in v2. */
+export interface ChartDataV1<
     T = MeaningfulAny,
     TItem extends ChartInteractionItem = ChartInteractionItem,
-> = WithV1Options<ChartData<T, TItem>>;
+> extends Omit<WithV1Options<ChartData<T, TItem>>, 'xAxis' | 'yAxis'> {
+    xAxis?: WithV1Options<ChartXAxis> & LegacyAxisOptions;
+    yAxis?: (WithV1Options<ChartYAxis> & LegacyAxisOptions)[];
+}
 
 /** Structured, localizable diagnostic. Paths address the input, including array indices. */
 export interface MigrationV1Warning {

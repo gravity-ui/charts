@@ -813,8 +813,8 @@ test.describe('Scatter series', () => {
                         },
                     ],
                 },
-                yAxis: [{maxPadding: 0}],
-                xAxis: {maxPadding: 0},
+                yAxis: [{padding: {max: 0}}],
+                xAxis: {padding: {max: 0}},
             };
             const component = await mount(<ChartTestStory data={data} />);
             await expect(component.locator('svg')).toHaveScreenshot();

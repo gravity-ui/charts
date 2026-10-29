@@ -58,7 +58,7 @@ test.describe('Y-axis', () => {
 
     test('maxPadding=0', async ({mount}) => {
         const data = cloneDeep(scatterBasicData);
-        set(data, 'yAxis[0].maxPadding', 0);
+        set(data, 'yAxis[0].padding.max', 0);
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
@@ -301,7 +301,7 @@ test.describe('Y-axis', () => {
                     labels: {html: true},
                 },
             ],
-            xAxis: {maxPadding: 0},
+            xAxis: {padding: {max: 0}},
         };
 
         test('default settings', async ({mount}) => {
@@ -722,7 +722,7 @@ test.describe('Y-axis', () => {
                 yAxis: [
                     {
                         min: 0,
-                        maxPadding: 0,
+                        padding: {max: 0},
                     },
                 ],
                 series: {
@@ -1104,7 +1104,7 @@ test.describe('Y-axis', () => {
                         },
                     ],
                 },
-                xAxis: {maxPadding: 0},
+                xAxis: {padding: {max: 0}},
                 yAxis: [
                     {
                         type: 'category',

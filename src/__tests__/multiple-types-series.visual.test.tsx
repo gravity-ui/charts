@@ -49,11 +49,11 @@ test.describe('Multiple types of series on same chart', () => {
                     },
                 ],
             },
-            yAxis: [{maxPadding: 0, visible: false}],
+            yAxis: [{padding: {max: 0}, visible: false}],
             xAxis: {
                 type: 'category',
                 categories: ['a', 'b', 'c'],
-                maxPadding: 0,
+                padding: {max: 0},
                 grid: {enabled: false},
             },
         };

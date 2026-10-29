@@ -11,7 +11,8 @@
     "paths": {
       "~playwright/*": ["./playwright/*"],
       "~core/*": ["./src/core/*"],
-      "@gravity-ui/charts": ["./src/index.ts"]
+      "@gravity-ui/charts": ["./src/index.ts"],
+      "@gravity-ui/charts/migration/v1": ["./src/migration/v1/index.ts"]
     }
   },
   "include": [

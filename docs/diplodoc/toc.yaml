@@ -30,8 +30,6 @@ items:
         href: ./pages/development.md
       - name: Migrating from v1 to v2
         href: ./pages/development/migration-v2.md
-      - name: V2 compatibility decisions
-        href: ./pages/development/v2-compatibility.md
       - name: Adding a series plugin
         href: ./pages/development/adding-series-plugin.md
   - name: Integrations

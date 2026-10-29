@@ -173,7 +173,7 @@ test.describe('Range slider', () => {
     test('maxPadding should not applied', async ({mount}) => {
         const data = getData({
             basicData: scatterLinearXAxisData,
-            extraData: {xAxis: {maxPadding: 0.2}},
+            extraData: {xAxis: {padding: {max: '20%'}}},
         });
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();

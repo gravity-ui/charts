@@ -41,7 +41,7 @@ async function prepare(raw: ChartSeries[] = [line], options?: ChartSeriesOptions
         seriesOptions: getPreparedOptions(options),
         xAxis: {
             type: 'linear',
-            maxPadding: 0,
+            padding: {max: 0},
             startOnTick: false,
             endOnTick: false,
             ticks: {},
@@ -51,7 +51,7 @@ async function prepare(raw: ChartSeries[] = [line], options?: ChartSeriesOptions
             {
                 type: 'linear',
                 plotIndex: 0,
-                maxPadding: 0,
+                padding: {max: 0},
                 startOnTick: false,
                 endOnTick: false,
                 ticks: {},
@@ -277,7 +277,7 @@ describe('axis padding', () => {
     );
 
     test.each([allAuto, {max: '0%'}, {min: '25%', max: '1%'}])(
-        'ignores padding %j on a reversed category axis with legacy maxPadding',
+        'ignores padding %j on a reversed category axis with percentage padding',
         async (padding) => {
             const args = await prepare();
             args.xAxis = {
@@ -285,7 +285,7 @@ describe('axis padding', () => {
                 type: 'category',
                 categories: ['A', 'B', 'C'],
                 order: 'reverse',
-                maxPadding: 0.5,
+                padding: {max: '50%'},
             };
             const common = {...args, boundsWidth: 600, boundsHeight: 300};
             const original = createScales(common).xScale;
@@ -551,16 +551,16 @@ describe('axis padding', () => {
         expect(preview.yScale[0]?.domain()).toEqual([0, 100]);
     });
 
-    test('preserves legacy padding and lets an explicit new maximum override it', async () => {
+    test('lets maximum padding be disabled independently of minimum padding', async () => {
         const args = await prepare();
-        args.xAxis.maxPadding = 0.2;
-        args.yAxis[0].maxPadding = 0.2;
+        args.xAxis.padding = {max: '20%'};
+        args.yAxis[0].padding = {max: '20%'};
         const common = {...args, boundsWidth: 600, boundsHeight: 300};
-        const legacy = createScales(common);
-        expect(legacy.xScale?.domain()).toEqual([0, 2.4]);
-        expect(legacy.yScale[0]?.domain()).toEqual([0, 120]);
+        const initial = createScales(common);
+        expect(initial.xScale?.domain()).toEqual([0, 2.4]);
+        expect(initial.yScale[0]?.domain()).toEqual([0, 120]);
         args.xAxis.padding = {max: 0};
-        args.yAxis[0].padding = {min: 0};
+        args.yAxis[0].padding = {min: 0, max: '20%'};
         const override = createScales(common);
         expect(override.xScale?.domain()).toEqual([0, 2]);
         expect(override.yScale[0]?.domain()).toEqual([0, 120]);

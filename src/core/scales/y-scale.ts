@@ -444,11 +444,7 @@ export function createYScale(args: {
                     scale,
                     domain: [yMin, yMax],
                     type: axis.type,
-                    // Explicit timestamps have never used the legacy maxPadding fallback.
-                    padding: getDomainPadding(
-                        {type: axis.type, padding: axis.padding},
-                        Boolean(zoomStateY),
-                    ),
+                    padding: getDomainPadding(axis, Boolean(zoomStateY)),
                     size: boundsHeight,
                     offsetMin: 0,
                     offsetMax: 0,

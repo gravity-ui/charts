@@ -22,7 +22,7 @@ function prepareData(): ChartData {
         yAxis: [
             {
                 type: 'datetime',
-                maxPadding: 0,
+                padding: {max: 0},
             },
         ],
     };

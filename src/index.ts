@@ -9,6 +9,3 @@ export {
 } from './libs/format-number/presets';
 export * from './components';
 export * from './types';
-
-export {inspectChartDataV1, migrateChartDataV1} from './compat/v1';
-export type {ChartDataV1, MigrationV1Warning, MigrationV1Result} from './compat/v1/types';

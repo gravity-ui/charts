@@ -2,6 +2,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const {migrateChartDataV1} = require('../src/migration/v1');
+
 const {
     createSchemaValidator,
     generateChartConfigArtifacts,
@@ -54,7 +56,9 @@ describe('chart config artifacts', () => {
                 const bars: BarXSeries = {type: 'bar-x', name: 'A', data: [], dataLabels: {placement: ['inside-center']}};
                 // @ts-expect-error Removed bar alias belongs to the v1 adapter input only.
                 bars.dataLabels!.inside = true;
-                const axis: ChartXAxis = {maxPadding: 0.05};
+                const axis: ChartXAxis = {padding: {max: '5%'}};
+                // @ts-expect-error Removed alias belongs to the v1 adapter input only.
+                axis.maxPadding = 0.05;
                 void [ticks, format, axis, bars];
             `,
             ),
@@ -87,6 +91,38 @@ describe('chart config artifacts', () => {
                 },
             }),
         ).toBe(true);
+    });
+
+    test('validates stored v1 JSON after migration without relaxing the v2 schema', () => {
+        const legacy = JSON.parse(`{
+            "xAxis": {"ticks": {"pixelInterval": 120}, "labels": {"numberFormat": {"unit": "k"}}},
+            "yAxis": [{"ticks": {"pixelInterval": 60}, "maxPadding": 0.25}],
+            "series": {"data": [{
+                "type": "bar-x", "name": "Revenue", "data": [{"x": 1, "y": 1500}],
+                "dataLabels": {"inside": true, "format": {"type": "number", "unit": "k"}}
+            }]}
+        }`);
+        const original = JSON.stringify(legacy);
+        const validate = createSchemaValidator().compile(schema);
+        expect(validate(legacy)).toBe(false);
+
+        const {data, warnings} = migrateChartDataV1(legacy);
+        expect(validate(data)).toBe(true);
+        expect(warnings.every(({resolution}) => resolution === 'automatic')).toBe(true);
+        expect(JSON.stringify(legacy)).toBe(original);
+        expect(data.yAxis[0].padding).toEqual({max: '25%'});
+        expect(data.yAxis[0]).not.toHaveProperty('maxPadding');
+
+        const unknown = migrateChartDataV1({...legacy, unknownProperty: true});
+        expect(validate(unknown.data)).toBe(false);
+        const invalid = migrateChartDataV1({
+            ...legacy,
+            xAxis: {labels: {numberFormat: {unit: 'bytes'}}},
+        });
+        expect(validate(invalid.data)).toBe(false);
+        expect(invalid.warnings).toContainEqual(
+            expect.objectContaining({code: 'invalid-number-unit', resolution: 'review'}),
+        );
     });
 
     test('waterfall connectors are available in declarations and schema', () => {
@@ -125,23 +161,22 @@ describe('chart config artifacts', () => {
         }
     });
 
-    test('axis padding extends the axis API while keeping legacy maxPadding numeric', () => {
+    test('axis padding replaces legacy maxPadding in declarations and schema', () => {
         expect(() =>
             validateDeclaration(
                 path.resolve(__dirname, 'axis-padding-usage.ts'),
                 declaration +
                     `
                 const padding: ChartAxisPadding = {min: 'auto', max: '5%'};
-                const x: ChartXAxis = {padding, maxPadding: 0.05};
+                const x: ChartXAxis = {padding};
                 const y: ChartYAxis = {padding: {min: 12, max: '12px'}};
-                const legacy: number = x.maxPadding ?? 0;
-                // @ts-expect-error The legacy contract stays numeric.
-                x.maxPadding = 'auto';
+                // @ts-expect-error maxPadding was removed in v2.
+                x.maxPadding = 0.05;
                 // @ts-expect-error There is no legacy minPadding.
                 x.minPadding = 0;
                 // @ts-expect-error Padding belongs to axes.
                 const chart: ChartOptions = {plotPadding: {right: 'auto'}};
-                void [x, y, legacy, chart];
+                void [x, y, chart];
             `,
             ),
         ).not.toThrow();
@@ -155,7 +190,7 @@ describe('chart config artifacts', () => {
             expect(schema.definitions[name].properties.padding.$ref).toBe(
                 '#/definitions/ChartAxisPadding',
             );
-            expect(schema.definitions[name].properties.maxPadding.type).toBe('number');
+            expect(schema.definitions[name].properties).not.toHaveProperty('maxPadding');
         }
         const validate = createSchemaValidator().compile(schema);
         for (const max of ['auto', 0, 16, '16px', '10%', '.5%', '0.5px']) {
@@ -164,6 +199,8 @@ describe('chart config artifacts', () => {
         for (const max of [-1, Infinity, NaN, null, true]) {
             expect(validate({xAxis: {padding: {max}}, series: {data: []}})).toBe(false);
         }
+        expect(validate({xAxis: {maxPadding: 0.05}, series: {data: []}})).toBe(false);
+        expect(validate({yAxis: [{maxPadding: 0.05}], series: {data: []}})).toBe(false);
         expect(validate({chart: {plotPadding: {right: 'auto'}}, series: {data: []}})).toBe(false);
     });
 

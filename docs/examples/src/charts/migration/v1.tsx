@@ -1,7 +1,8 @@
 import React from 'react';
 
-import {Chart, migrateChartDataV1} from '@gravity-ui/charts';
-import type {ChartDataV1} from '@gravity-ui/charts';
+import {Chart} from '@gravity-ui/charts';
+import {migrateChartDataV1} from '@gravity-ui/charts/migration/v1';
+import type {ChartDataV1} from '@gravity-ui/charts/migration/v1';
 
 import type {ExampleMeta} from '../gallery';
 
