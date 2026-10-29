@@ -58,6 +58,42 @@ describe('Chart/rangeSlider', () => {
         return {container, update};
     }
 
+    test('the chart is ready with the default range already applied', async () => {
+        const onReady = jest.fn();
+        renderChart(
+            <Chart
+                data={getData({
+                    type: 'datetime',
+                    rangeSlider: {enabled: true, defaultRange: {size: 'P2D'}},
+                })}
+                onReady={() => onReady(getPlotBarCount(document.body))}
+            />,
+        );
+
+        await waitFor(() => expect(onReady).toHaveBeenCalledTimes(1));
+        expect(onReady).toHaveBeenCalledWith(2);
+    });
+
+    test('a new default range is applied when it replaces data that is still being prepared', async () => {
+        const getX = (i: number) => Date.UTC(2024, 0, 1) + i * DAY;
+        const xAxis: ChartXAxis = {
+            type: 'datetime',
+            rangeSlider: {enabled: true, defaultRange: {size: 'P2D'}},
+        };
+        const {container, update} = renderUpdatableChart(getData(xAxis, getX));
+        await waitFor(() => expect(getPlotBarCount(container)).toBe(2));
+
+        // A data refresh starts a run that is replaced before its range slider check.
+        update(getData(xAxis, getX));
+        update(
+            getData(
+                {type: 'datetime', rangeSlider: {enabled: true, defaultRange: {size: 'P3D'}}},
+                getX,
+            ),
+        );
+        await waitFor(() => expect(getPlotBarCount(container)).toBe(3));
+    });
+
     test('turning the range slider on again applies its default range', async () => {
         const defaultRange = {size: 'P2D'};
         const getSliderData = (rangeSlider: ChartAxisRangeSlider) =>

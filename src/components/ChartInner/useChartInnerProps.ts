@@ -4,7 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
 import {getPreparedRangeSlider} from '~core/axes/range-slider';
-import {DEFAULT_PALETTE} from '~core/constants';
+import {DEFAULT_AXIS_TYPE, DEFAULT_PALETTE} from '~core/constants';
 import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import {getPreparedSeries} from '~core/series';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
@@ -38,7 +38,7 @@ import type {
 } from '../../hooks';
 import type {PreparedChart, PreparedTitle} from '../../hooks/types';
 import type {GradientLayoutReference} from '../../hooks/useShapes/types';
-import type {ChartData, LegendConfig} from '../../types';
+import type {ChartAxisType, ChartData, LegendConfig} from '../../types';
 import {getInitialRangeSliderState} from '../utils';
 
 import type {GradientReferenceCacheEntry} from './gradientReferenceCache';
@@ -81,7 +81,7 @@ function getBoundsOffsetTop({
 const EMPTY_LAYER_INDEXES = new Map<string, number>();
 
 interface RangeSliderConfig {
-    axisType?: string;
+    axisType: ChartAxisType;
     defaultRange: PreparedRangeSlider['defaultRange'];
     enabled: boolean;
 }
@@ -160,7 +160,7 @@ export function useChartInnerProps(props: Props) {
         const currentRun = currentRunRef.current;
         const selectedLegendItems = selectedLegendItemsRef.current;
         const rangeSlider: RangeSliderConfig = {
-            axisType: data.xAxis?.type,
+            axisType: data.xAxis?.type ?? DEFAULT_AXIS_TYPE,
             defaultRange: preparedRangeSlider.defaultRange,
             enabled: preparedRangeSlider.enabled,
         };
@@ -298,20 +298,21 @@ export function useChartInnerProps(props: Props) {
             });
 
             if (rangeSliderInitPendingRef.current && xScale && !isBandScale(xScale)) {
+                // A superseded run must not consume the initialization requested by a newer one.
+                if (currentRunRef.current !== currentRun) {
+                    return;
+                }
+
+                rangeSliderInitPendingRef.current = false;
                 const initialRangeSliderState = getInitialRangeSliderState({
                     defaultRange: preparedRangeSlider.defaultRange,
                     xScale,
                 });
 
                 if (!isEqual(initialRangeSliderState, rangeSliderState)) {
-                    if (currentRunRef.current === currentRun) {
-                        rangeSliderInitPendingRef.current = false;
-                        updateRangeSliderState(initialRangeSliderState);
-                    }
+                    updateRangeSliderState(initialRangeSliderState);
                     return;
                 }
-
-                rangeSliderInitPendingRef.current = false;
             }
 
             let gradientReference = gradientReferenceRef.current;
