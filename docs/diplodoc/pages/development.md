@@ -31,6 +31,13 @@ Storybook will be available at `http://localhost:7007`.
 npm test
 ```
 
+To check the built package, build it first. The check loads both the CommonJS and the ESM build in Node and compares their exports:
+
+```shell
+npm run build
+npm run test:build
+```
+
 Visual regression tests run in Docker to ensure consistent screenshots across environments:
 
 ```shell
