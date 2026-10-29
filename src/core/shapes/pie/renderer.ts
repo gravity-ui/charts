@@ -38,7 +38,7 @@ export function renderPie(
     const connectorSelector = `.${b('connector')}`;
 
     const shapesSelection = svgElement
-        .selectAll('pie')
+        .selectAll<SVGGElement, PreparedPieData>('pie')
         .data(preparedData)
         .join('g')
         .attr('id', (pieData) => pieData.id)
@@ -112,11 +112,16 @@ export function renderPie(
         .attr('stroke-linecap', 'round')
         .style('fill', 'none');
 
-    // Render custom shapes if defined
-    shapesSelection.each(function (d, index, nodes) {
-        if (d.customShape) {
-            (nodes[index] as Element).append(d.customShape as Node);
-        }
+    let cancelled = false;
+    // Optional custom nodes never delay the chart's main content or export completion.
+    shapesSelection.each(function (d) {
+        const node = this;
+        Promise.resolve()
+            .then(() => d.series.renderCustomShape?.({series: {innerRadius: d.innerRadius}}))
+            .then((customShape) => {
+                if (!cancelled && customShape) node.append(customShape as Node);
+            })
+            .catch(() => undefined);
     });
 
     const eventName = `hover-shape.pie`;
@@ -192,6 +197,7 @@ export function renderPie(
     });
 
     return () => {
+        cancelled = true;
         dispatcher?.on(eventName, null);
     };
 }

@@ -45,13 +45,17 @@ export function hasAtLeastOneSeriesDataPerPlot(
 export function useAsyncState<T>(
     value: T,
     prepare: () => Promise<T>,
-    isReady = true,
+    enabled = true,
     onError?: (error: unknown) => void,
 ) {
     const [result, setResult] = React.useState<{value: T; prepare?: typeof prepare}>({value});
+    const onErrorRef = React.useRef(onError);
+    onErrorRef.current = onError;
     React.useEffect(() => {
         let cancelled = false;
-        if (isReady) {
+        // Keep errors bound to the generation that started this work.
+        const handleError = onErrorRef.current;
+        if (enabled) {
             prepare().then(
                 (nextValue) => {
                     if (!cancelled) {
@@ -63,8 +67,8 @@ export function useAsyncState<T>(
                 },
                 (error: unknown) => {
                     if (!cancelled) {
-                        if (onError) {
-                            onError(error);
+                        if (handleError) {
+                            handleError(error);
                         } else {
                             throw error;
                         }
@@ -75,9 +79,9 @@ export function useAsyncState<T>(
         return () => {
             cancelled = true;
         };
-    }, [prepare, isReady, onError]);
+    }, [prepare, enabled]);
 
-    return {value: result.value, isReady: isReady && result.prepare === prepare};
+    return {value: result.value, isReady: enabled && result.prepare === prepare};
 }
 
 export function getResetZoomButtonStyle(

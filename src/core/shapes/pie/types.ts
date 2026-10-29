@@ -1,4 +1,3 @@
-import type {BaseType} from 'd3-selection';
 import type {PieArcDatum} from 'd3-shape';
 
 import type {ConnectorCurve, HtmlItem, LabelData} from '../../../types';
@@ -61,7 +60,6 @@ export interface PieConnectorData {
 
 export type PreparedPieData = {
     id: string;
-    customShape?: BaseType;
     segments: PieArcDatum<SegmentData>[];
     labels: PieSvgLabelData[];
     connectors: PieConnectorData[];

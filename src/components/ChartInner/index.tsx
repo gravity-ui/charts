@@ -51,7 +51,7 @@ function ChartInnerComponent(
     props: ChartInnerProps,
     forwardedRef: React.ForwardedRef<ChartInnerRef>,
 ) {
-    const {width, height, data, onReady, chartApi, reflowId} = props;
+    const {width, height, data, onReady, onCommitted, chartApi} = props;
     const readyRef = React.useRef(false);
     const svgRef = React.useRef<SVGSVGElement | null>(null);
     const resetZoomButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -87,6 +87,7 @@ function ChartInnerComponent(
         tooltip: preparedTooltip,
     });
     const {
+        preparation,
         activeLegendItems,
         allPreparedSeries,
         boundsHeight,
@@ -95,6 +96,7 @@ function ChartInnerComponent(
         boundsWidth,
         handleLegendItemClick,
         handlePreparationError,
+        hasFailed,
         layerIndexes,
         legendConfig,
         legendItems,
@@ -193,6 +195,7 @@ function ChartInnerComponent(
     React.useImperativeHandle(
         forwardedRef,
         () => ({
+            hasFailed,
             isReady: (dimensions, chartData) =>
                 readyRef.current &&
                 dimensions.width === width &&
@@ -224,6 +227,7 @@ function ChartInnerComponent(
             },
         }),
         [
+            hasFailed,
             shapesReady,
             hasPlotArea,
             shapesData,
@@ -448,7 +452,27 @@ function ChartInnerComponent(
         xScale,
     ]);
 
-    const ready = shapesCurrent && xAxisReady && yAxisReady;
+    const [legendReadyFor, setLegendReadyFor] = React.useState<typeof legendConfig>();
+    const handleLegendReady = React.useCallback(
+        (isReady: boolean) => setLegendReadyFor(isReady ? legendConfig : undefined),
+        [legendConfig],
+    );
+    const sliderGeneration = React.useMemo(
+        () => ({preparation, debouncedRangeSliderData}),
+        [preparation, debouncedRangeSliderData],
+    );
+    const [sliderReadyFor, setSliderReadyFor] = React.useState<typeof sliderGeneration>();
+    const handleSliderReady = React.useCallback(
+        () => setSliderReadyFor(sliderGeneration),
+        [sliderGeneration],
+    );
+    const legendReady = !preparedLegend?.enabled || legendReadyFor === legendConfig;
+    const sliderEnabled = hasPlotArea && xAxis?.rangeSlider?.enabled;
+    const sliderReady =
+        !sliderEnabled ||
+        (debouncedRangeSliderData === rangeSliderData && sliderReadyFor === sliderGeneration);
+    const ready =
+        initialized && shapesCurrent && xAxisReady && yAxisReady && legendReady && sliderReady;
     React.useLayoutEffect(() => {
         if (!ready) {
             readyRef.current = false;
@@ -462,9 +486,13 @@ function ChartInnerComponent(
         if (ready) {
             // Axis DOM effects run before this parent effect.
             readyRef.current = true;
-            onReady?.({dimensions: {width, height}});
+            onCommitted?.({dimensions: {width, height}});
         }
-    }, [height, ready, onReady, width, reflowId]);
+    }, [height, ready, onCommitted, width]);
+
+    React.useEffect(() => {
+        if (shapesReady) onReady?.({dimensions: {width, height}});
+    }, [height, shapesReady, onReady, width]);
 
     const chartContent = (
         <React.Fragment>
@@ -544,6 +572,8 @@ function ChartInnerComponent(
                         height={height}
                         htmlLayout={htmlLayout}
                         onUpdate={updateRangeSliderState}
+                        onReady={handleSliderReady}
+                        onError={handlePreparationError}
                         preparedChart={preparedChart}
                         preparedLegend={preparedLegend}
                         preparedSeries={debouncedRangeSliderData.series}
@@ -566,6 +596,8 @@ function ChartInnerComponent(
                     config={legendConfig}
                     onItemClick={handleLegendItemClick}
                     onUpdate={unpinTooltip}
+                    onReady={handleLegendReady}
+                    onError={handlePreparationError}
                     htmlLayout={htmlLayout}
                 />
             )}

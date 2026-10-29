@@ -10,7 +10,7 @@ import '../plugins';
 import type {ChartApi, ChartData, ChartInteractionItem, MeaningfulAny} from '../types';
 
 import {ChartInner} from './ChartInner';
-import type {ChartInnerRef} from './ChartInner/types';
+import type {ChartInnerRef, ChartPreparation} from './ChartInner/types';
 
 export {ChartTooltipContent} from './Tooltip/ChartTooltipContent';
 export type {ChartTooltipContentProps} from './Tooltip/ChartTooltipContent';
@@ -21,9 +21,9 @@ export interface ChartReflowOptions {
 
 export interface ChartRef {
     /**
-     * Completes after the resized chart's shapes and axes have committed.
+     * Completes after the resized chart's shapes, axes, legend and range slider have committed.
      * Rejects on preparation failure, an unavailable host, or unmount.
-     * Ignoring the returned promise remains safe for fire-and-forget callers.
+     * Lifecycle cancellation is handled for fire-and-forget callers; preparation errors remain observable.
      */
     reflow: (options?: ChartReflowOptions) => Promise<void>;
 }
@@ -41,6 +41,7 @@ interface PendingReflow {
     id: number;
     resolve: () => void;
     reject: (error: unknown) => void;
+    promise: Promise<void>;
 }
 
 interface ChartLayout {
@@ -83,18 +84,22 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
     const currentData = React.useRef(data);
     currentData.current = data;
 
-    const settleReflows = React.useCallback((id: number, failure?: {error: unknown}) => {
-        const settled = pendingReflows.current.filter((request) => request.id <= id);
-        pendingReflows.current = pendingReflows.current.filter((request) => request.id > id);
-        settled.forEach((request) => {
-            if (failure) {
-                request.reject(failure.error);
-            } else {
-                request.resolve();
-            }
-        });
-        return settled.length > 0;
-    }, []);
+    const settleReflows = React.useCallback(
+        (id: number, failure?: {error: unknown; cancelled?: boolean}) => {
+            const settled = pendingReflows.current.filter((request) => request.id <= id);
+            pendingReflows.current = pendingReflows.current.filter((request) => request.id > id);
+            settled.forEach((request) => {
+                if (failure) {
+                    if (failure.cancelled) request.promise.catch(() => undefined);
+                    request.reject(failure.error);
+                } else {
+                    request.resolve();
+                }
+            });
+            return settled.length > 0;
+        },
+        [],
+    );
 
     if (validatedData.current !== data) {
         validateData(data);
@@ -106,7 +111,7 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
             const parentElement = ref.current?.parentElement;
             const id = requestedReflowId.current;
             if (!parentElement) {
-                settleReflows(id, {error: new Error('Chart host is unavailable')});
+                settleReflows(id, {error: new Error('Chart host is unavailable'), cancelled: true});
                 return;
             }
 
@@ -126,12 +131,12 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
                 }
                 return {
                     dimensions: nextDimensions,
-                    reflowId: ready ? (current?.reflowId ?? 0) : id,
+                    reflowId: innerRef.current?.hasFailed() ? id : (current?.reflowId ?? 0),
                 };
             });
 
             if (!nextDimensions.width || !nextDimensions.height) {
-                settleReflows(id, {error: new Error('Chart host has zero size')});
+                settleReflows(id, {error: new Error('Chart host has zero size'), cancelled: true});
             } else if (ready) {
                 settleReflows(id);
             }
@@ -157,14 +162,22 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         forwardedRef,
         () => ({
             reflow(options?: ChartReflowOptions) {
-                const promise = new Promise<void>((resolve, reject) => {
-                    pendingReflows.current.push({id: ++requestedReflowId.current, resolve, reject});
+                let resolve!: () => void;
+                let reject!: (error: unknown) => void;
+                const promise = new Promise<void>((success, failure) => {
+                    resolve = success;
+                    reject = failure;
                 });
-                // Keep legacy calls that ignore the promise safe; await still receives failures.
-                promise.catch(() => undefined);
+                pendingReflows.current.push({
+                    id: ++requestedReflowId.current,
+                    resolve,
+                    reject,
+                    promise,
+                });
                 if (!mounted.current) {
                     settleReflows(requestedReflowId.current, {
                         error: new Error('Chart is unmounted'),
+                        cancelled: true,
                     });
                 } else if (options?.immediate) {
                     debuncedHandleResize.cancel();
@@ -178,7 +191,7 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
         [debuncedHandleResize, handleResize, settleReflows],
     );
 
-    const handleReady = React.useCallback<NonNullable<ChartProps['onReady']>>(
+    const handleCommitted = React.useCallback<NonNullable<ChartProps['onReady']>>(
         (args) => {
             const host = ref.current?.parentElement;
             const rendered = args.dimensions;
@@ -190,34 +203,44 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
                 host.clientHeight === rendered.height &&
                 innerRef.current?.isReady(rendered, currentData.current);
             if (isCurrent()) {
-                onReady?.(args);
-                if (isCurrent()) {
-                    settleReflows(reflowId);
-                    return;
-                }
+                settleReflows(Infinity);
+                return;
             }
             if (pendingReflows.current.length) {
                 handleResize({force: true});
             }
         },
-        [onReady, reflowId, settleReflows, handleResize],
+        [settleReflows, handleResize],
     );
     const handleRenderError = React.useCallback(
-        (error: unknown, generation: object) => {
-            if (settleReflows(reflowId, {error})) {
+        (error: unknown, generation: ChartPreparation) => {
+            const host = ref.current?.parentElement;
+            if (
+                pendingReflows.current.length &&
+                (generation.data !== currentData.current ||
+                    host?.clientWidth !== generation.width ||
+                    host?.clientHeight !== generation.height)
+            ) {
+                handleResize({force: true});
+                return;
+            }
+            if (settleReflows(Infinity, {error})) {
                 failedReflowGenerations.current.add(generation);
             } else if (!failedReflowGenerations.current.has(generation)) {
                 throw error;
             }
         },
-        [reflowId, settleReflows],
+        [settleReflows, handleResize],
     );
 
     React.useEffect(() => {
         mounted.current = true;
         return () => {
             mounted.current = false;
-            settleReflows(Infinity, {error: new Error('Chart unmounted before reflow completed')});
+            settleReflows(Infinity, {
+                error: new Error('Chart unmounted before reflow completed'),
+                cancelled: true,
+            });
         };
     }, [settleReflows]);
 
@@ -270,7 +293,8 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
                     height={dimensions?.height ?? 0}
                     width={dimensions?.width ?? 0}
                     data={data}
-                    onReady={handleReady}
+                    onReady={onReady}
+                    onCommitted={handleCommitted}
                     reflowId={reflowId}
                     onRenderError={handleRenderError}
                 />

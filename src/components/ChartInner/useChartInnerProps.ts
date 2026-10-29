@@ -42,7 +42,7 @@ import {isGradientReferenceCurrent} from './gradientReferenceCache';
 import {prepareAxisLayout} from './prepareAxisLayout';
 import {prepareGradientReference} from './prepareGradientReference';
 import {reconcileLegendSelection} from './reconcileLegendSelection';
-import type {ChartInnerProps} from './types';
+import type {ChartInnerProps, ChartPreparation} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
 
@@ -77,7 +77,7 @@ function getBoundsOffsetTop({
 const EMPTY_LAYER_INDEXES = new Map<string, number>();
 
 type ChartState = {
-    preparation: object;
+    preparation: ChartPreparation;
     gradientReference?: GradientLayoutReference;
     allPreparedSeries: PreparedSeries[];
     boundsHeight: number;
@@ -157,15 +157,28 @@ export function useChartInnerProps(props: Props) {
             reflowId,
         ],
     );
-    const handlePreparationError = React.useCallback(
-        (error: unknown) => {
-            if (onRenderError) {
-                onRenderError(error, preparation);
+    const currentPreparation = React.useRef(preparation);
+    currentPreparation.current = preparation;
+    const failedPreparation = React.useRef<object>();
+    const onRenderErrorRef = React.useRef(onRenderError);
+    onRenderErrorRef.current = onRenderError;
+    const reportPreparationError = React.useCallback(
+        (error: unknown, generation: ChartPreparation) => {
+            if (generation !== currentPreparation.current) return;
+            failedPreparation.current = generation;
+            if (onRenderErrorRef.current) {
+                onRenderErrorRef.current(error, generation);
             } else {
                 throw error;
             }
         },
-        [onRenderError, preparation],
+        [],
+    );
+    const handlePreparationError = React.useCallback(
+        (error: unknown) => {
+            if (chartState) reportPreparationError(error, chartState.preparation);
+        },
+        [chartState, reportPreparationError],
     );
     React.useEffect(() => {
         const {
@@ -429,13 +442,13 @@ export function useChartInnerProps(props: Props) {
             }
         })().catch((error: unknown) => {
             if (currentRunRef.current === currentRun) {
-                handlePreparationError(error);
+                reportPreparationError(error, preparation);
             }
         });
         return () => {
             currentRunRef.current++;
         };
-    }, [preparation, handlePreparationError]);
+    }, [preparation, reportPreparationError]);
 
     // additional start
 
@@ -538,6 +551,7 @@ export function useChartInnerProps(props: Props) {
         yAxis,
         shapesData: chartState?.shapesData ?? [],
         layerIndexes: chartState?.layerIndexes ?? EMPTY_LAYER_INDEXES,
+        hasFailed: () => failedPreparation.current === preparation,
         shapesReady: Boolean(chartState),
         shapesCurrent: chartState?.preparation === preparation,
         handlePreparationError,

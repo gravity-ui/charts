@@ -5,11 +5,11 @@ import React from 'react';
 
 import {act, fireEvent, screen, waitFor} from '@testing-library/react';
 
+import * as axisGenerators from '../../core/utils/axis-generators/bottom';
 import * as shapes from '../../hooks/useShapes';
 import type {ChartData, PieSeries} from '../../types';
 import * as xAxis from '../AxisX/prepare-axis-data';
 import * as yAxis from '../AxisY/prepare-axis-data';
-import * as asyncState from '../ChartInner/utils/common';
 import {Chart} from '../index';
 import type {ChartRef} from '../index';
 
@@ -174,6 +174,7 @@ function deferred<T>() {
 describe('Chart/reflow completion', () => {
     beforeEach(() => {
         jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+            fillRect: () => undefined,
             measureText: (text: string) => ({
                 width: text.length * 6,
                 fontBoundingBoxAscent: 10,
@@ -181,7 +182,10 @@ describe('Chart/reflow completion', () => {
                 actualBoundingBoxLeft: 0,
                 actualBoundingBoxRight: text.length * 6,
             }),
-        } as CanvasRenderingContext2D);
+        } as unknown as CanvasRenderingContext2D);
+        jest.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
+            'data:image/png;base64,',
+        );
     });
     afterEach(() => jest.restoreAllMocks());
 
@@ -190,9 +194,188 @@ describe('Chart/reflow completion', () => {
         const onReady = jest.fn();
         const view = renderChart(<Chart ref={ref} data={chartData} onReady={onReady} />);
         await waitFor(() => expect(onReady).toHaveBeenCalledTimes(1));
+        let committed = false;
+        act(() => {
+            ref.current!.reflow({immediate: true}).then(() => {
+                committed = true;
+            });
+        });
+        await waitFor(() => expect(committed).toBe(true));
         onReady.mockClear();
         return {...view, ref, onReady};
     }
+
+    test('public onReady does not repeat for legend or equivalent data', async () => {
+        const onReady = jest.fn();
+        let replaceData!: () => void;
+        function Fixture() {
+            const [chartData, setData] = React.useState<ChartData>({
+                ...data,
+                legend: {enabled: true},
+            });
+            replaceData = () => setData({...data, legend: {enabled: true}});
+            return <Chart data={chartData} onReady={onReady} />;
+        }
+        renderChart(<Fixture />);
+        await waitFor(() => expect(onReady).toHaveBeenCalledTimes(1));
+        fireEvent.click(screen.getByText('Test Series'));
+        await act(async () => {
+            await Promise.resolve();
+        });
+        act(replaceData);
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(onReady).toHaveBeenCalledTimes(1);
+    });
+
+    test('public onReady repeats when callback identity changes', async () => {
+        const first = jest.fn();
+        const second = jest.fn();
+        let replaceCallback!: () => void;
+        function Fixture() {
+            const [changed, setChanged] = React.useState(false);
+            replaceCallback = () => setChanged(true);
+            return <Chart data={data} onReady={changed ? second : first} />;
+        }
+        renderChart(<Fixture />);
+        await waitFor(() => expect(first).toHaveBeenCalledTimes(1));
+        act(replaceCallback);
+        await waitFor(() => expect(second).toHaveBeenCalledTimes(1));
+        expect(first).toHaveBeenCalledTimes(1);
+    });
+
+    test('stable parent dimension callback with inline data terminates', async () => {
+        const calls = jest.fn();
+        function Fixture() {
+            const [, setDimensions] = React.useState<unknown>();
+            const onReady = React.useCallback((args: unknown) => {
+                calls();
+                // Bound the broken baseline so its infinite loop cannot hang the test worker.
+                if (calls.mock.calls.length < 5) setDimensions(args);
+            }, []);
+            return <Chart data={{...data}} onReady={onReady} />;
+        }
+        renderChart(<Fixture />);
+        await waitFor(() => expect(calls).toHaveBeenCalled());
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(calls).toHaveBeenCalledTimes(1);
+    });
+
+    test('identical requests join delayed preparation without restarting', async () => {
+        const {ref, container} = await readyChart();
+        const gate = deferred<void>();
+        const original = shapes.getShapes;
+        const preparation = jest.spyOn(shapes, 'getShapes').mockImplementation(async (args) => {
+            await gate.promise;
+            return original(args);
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        const completions: Promise<void>[] = [];
+        act(() => {
+            completions.push(ref.current!.reflow({immediate: true}));
+        });
+        await waitFor(() => expect(preparation).toHaveBeenCalledTimes(1));
+        for (let i = 0; i < 3; i++) {
+            await act(async () => {
+                completions.push(ref.current!.reflow({immediate: true}));
+            });
+        }
+        expect(preparation).toHaveBeenCalledTimes(1);
+        await act(async () => {
+            gate.resolve();
+        });
+        await Promise.all(completions);
+    });
+
+    test('export completion waits for visible continuous legend', async () => {
+        const chartData: ChartData = {
+            ...data,
+            legend: {
+                enabled: true,
+                type: 'continuous',
+                colorScale: {colors: ['red', 'blue']},
+            },
+        };
+        const {ref, container} = await readyChart(chartData);
+        const gate = deferred<void>();
+        const original = axisGenerators.axisBottom;
+        let started = false;
+        jest.spyOn(axisGenerators, 'axisBottom').mockImplementation(async (args) => {
+            if (args.domain.color === 'transparent') {
+                started = true;
+                await gate.promise;
+            }
+            return original(args);
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        let completion!: Promise<void>;
+        let completed = false;
+        act(() => {
+            completion = ref.current!.reflow({immediate: true});
+            completion.then(() => {
+                completed = true;
+            });
+        });
+        await waitFor(() => expect(started).toBe(true));
+        expect(completed).toBe(false);
+        // Rendering is hidden during asynchronous tick measurement.
+        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Export contract requires actual visible legend DOM. */
+        expect((container.querySelector('.gcharts-legend') as SVGElement).style.opacity).toBe('0');
+        await act(async () => {
+            gate.resolve();
+        });
+        await completion;
+        expect((container.querySelector('.gcharts-legend') as SVGElement).style.opacity).toBe('1');
+        expect(container.querySelectorAll('.gcharts-legend .tick').length).toBeGreaterThan(0);
+        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+    });
+
+    test('export completion waits for current range slider preview', async () => {
+        const {ref, container} = await readyChart({...data, xAxis: {rangeSlider: {enabled: true}}});
+        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Compare actual preview geometry after resize. */
+        const previousPath = container
+            .querySelector('.gcharts-range-slider__shapes .gcharts-line path')
+            ?.getAttribute('d');
+        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+        const gate = deferred<void>();
+        const original = shapes.getShapes;
+        let started = false;
+        jest.spyOn(shapes, 'getShapes').mockImplementation(async (args) => {
+            if (args.isRangeSlider) {
+                started = true;
+                await gate.promise;
+            }
+            return original(args);
+        });
+        Object.defineProperty(container, 'clientWidth', {value: 640, configurable: true});
+        let completion!: Promise<void>;
+        let completed = false;
+        act(() => {
+            completion = ref.current!.reflow({immediate: true});
+            completion.then(() => {
+                completed = true;
+            });
+        });
+        await waitFor(() => expect(started).toBe(true));
+        expect(completed).toBe(false);
+        await act(async () => {
+            gate.resolve();
+        });
+        await completion;
+        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Assert current slider preview paths and resized bounds. */
+        const slider = container.querySelector('.gcharts-range-slider')!;
+        expect(Number(slider.getAttribute('width'))).toBeLessThan(640);
+        expect(slider.querySelector('.gcharts-line path')?.getAttribute('d')).not.toBe(
+            previousPath,
+        );
+        expect(
+            slider.querySelectorAll('.gcharts-range-slider__shapes .gcharts-line path').length,
+        ).toBeGreaterThan(0);
+        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+    });
 
     test('same-size reflow completes without another onReady callback', async () => {
         const {ref, onReady} = await readyChart();
@@ -241,7 +424,6 @@ describe('Chart/reflow completion', () => {
             });
             await waitFor(() => expect(started).toBe(true));
             expect(completed).toBe(false);
-            expect(onReady).not.toHaveBeenCalled();
             await act(async () => {
                 gate.resolve();
             });
@@ -291,7 +473,6 @@ describe('Chart/reflow completion', () => {
             old.resolve();
         });
         expect(completed).toBe(false);
-        expect(onReady).not.toHaveBeenCalled();
         await act(async () => {
             current.resolve();
         });
@@ -330,7 +511,7 @@ describe('Chart/reflow completion', () => {
     test.each(['x-axis', 'y-axis'] as const)(
         'handles later sibling failures after %s rejects the request',
         async (firstAxis) => {
-            const {ref, container, onReady} = await readyChart();
+            const {ref, container} = await readyChart();
             const x = deferred<Awaited<ReturnType<typeof xAxis.prepareXAxisData>>>();
             const y = deferred<Awaited<ReturnType<typeof yAxis.prepareYAxisData>>>();
             const xPreparation = jest.spyOn(xAxis, 'prepareXAxisData').mockReturnValue(x.promise);
@@ -350,69 +531,114 @@ describe('Chart/reflow completion', () => {
             await act(async () => {
                 (firstAxis === 'x-axis' ? y : x).reject(new Error('sibling axis failed'));
             });
-            expect(onReady).not.toHaveBeenCalled();
             xPreparation.mockRestore();
             yPreparation.mockRestore();
             act(() => {
                 completion = ref.current!.reflow({immediate: true});
             });
-            await waitFor(() => expect(onReady).toHaveBeenCalledTimes(1));
             await completion;
         },
     );
 
-    test.each(['data', 'dimensions', 'legend'] as const)(
-        'surfaces unowned failures again after %s changes',
-        async (change) => {
-            const original = asyncState.useAsyncState;
-            let reportError: ((error: unknown) => void) | undefined;
-            jest.spyOn(asyncState, 'useAsyncState').mockImplementation((...args) => {
-                reportError = args[3];
-                return original(...args);
-            });
+    test('old measured-size failure cannot reject a newer resize request', async () => {
+        const {ref, container} = await readyChart();
+        const old = deferred<void>();
+        const original = shapes.getShapes;
+        let runs = 0;
+        jest.spyOn(shapes, 'getShapes').mockImplementation(async (args) => {
+            if (++runs === 1) await old.promise;
+            return original(args);
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        let first!: Promise<void>;
+        act(() => {
+            first = ref.current!.reflow({immediate: true});
+        });
+        await waitFor(() => expect(runs).toBe(1));
+        Object.defineProperty(container, 'clientHeight', {value: 530, configurable: true});
+        const second = ref.current!.reflow();
+        await act(async () => {
+            old.reject(new Error('obsolete measured geometry'));
+        });
+        await Promise.all([first, second]);
+        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Completion must target the latest host geometry. */
+        expect(container.querySelector('svg')?.getAttribute('height')).toBe('530');
+        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+    });
+
+    test('resize prepares each axis once and ignores obsolete axis failures', async () => {
+        const {ref, container} = await readyChart();
+        const old = deferred<Awaited<ReturnType<typeof xAxis.prepareXAxisData>>>();
+        const original = xAxis.prepareXAxisData;
+        const prepare = jest
+            .spyOn(xAxis, 'prepareXAxisData')
+            .mockReturnValueOnce(old.promise)
+            .mockImplementation(original);
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        let first!: Promise<void>;
+        act(() => {
+            first = ref.current!.reflow({immediate: true});
+        });
+        await waitFor(() => expect(prepare).toHaveBeenCalledTimes(1));
+        const gate = deferred<void>();
+        const getShapes = shapes.getShapes;
+        const next = jest.spyOn(shapes, 'getShapes').mockImplementation(async (args) => {
+            await gate.promise;
+            return getShapes(args);
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 530, configurable: true});
+        let second!: Promise<void>;
+        act(() => {
+            second = ref.current!.reflow({immediate: true});
+        });
+        await waitFor(() => expect(next).toHaveBeenCalledTimes(1));
+        expect(prepare).toHaveBeenCalledTimes(1);
+        await act(async () => {
+            old.reject(new Error('obsolete axis'));
+        });
+        await act(async () => {
+            gate.resolve();
+        });
+        await Promise.all([first, second]);
+        expect(prepare).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(['pending', 'reject'] as const)(
+        'initial chart renders despite %s optional pie callback',
+        async (outcome) => {
+            const gate = deferred<SVGElement>();
             const ref = React.createRef<ChartRef>();
-            const onReady = jest.fn();
-            let replaceData!: React.Dispatch<React.SetStateAction<ChartData>>;
-            function Fixture() {
-                const [chartData, setData] = React.useState<ChartData>({
-                    ...data,
-                    legend: {enabled: true},
+            const {container} = renderChart(
+                <Chart
+                    ref={ref}
+                    data={{
+                        legend: {enabled: false},
+                        series: {
+                            data: [
+                                {
+                                    type: 'pie',
+                                    data: [{name: 'Slice', value: 2}],
+                                    renderCustomShape: () => gate.promise,
+                                },
+                                ...data.series.data,
+                            ],
+                        },
+                    }}
+                />,
+            );
+            /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Main paths must render on first mount without the optional node. */
+            await waitFor(() =>
+                expect(container.querySelectorAll('.gcharts-pie__segment').length).toBe(1),
+            );
+            await waitFor(() =>
+                expect(container.querySelectorAll('.gcharts-line path').length).toBeGreaterThan(0),
+            );
+            if (outcome === 'reject')
+                await act(async () => {
+                    gate.reject(new Error('optional node failed'));
                 });
-                replaceData = setData;
-                return <Chart ref={ref} data={chartData} onReady={onReady} />;
-            }
-            const {container} = renderChart(<Fixture />);
-            await waitFor(() => expect(onReady).toHaveBeenCalled());
-            const failure = new Error('unowned failure');
-            // Exercise the existing stage error callback synchronously so Jest can observe its throw.
-            expect(() => reportError?.(failure)).toThrow(failure);
-            const gate = deferred<Awaited<ReturnType<typeof shapes.getShapes>>>();
-            jest.spyOn(shapes, 'getShapes').mockReturnValue(gate.promise);
-            Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
-            let completion!: Promise<void>;
-            act(() => {
-                completion = ref.current!.reflow({immediate: true});
-            });
-            const ownedHandler = reportError;
-            act(() => {
-                reportError?.(failure);
-            });
-            await expect(completion).rejects.toBe(failure);
-            expect(() => reportError?.(new Error('owned sibling failure'))).not.toThrow();
-            if (change === 'data') {
-                act(() => {
-                    replaceData({...data});
-                });
-            } else if (change === 'dimensions') {
-                Object.defineProperty(container, 'clientHeight', {value: 530, configurable: true});
-                act(() => {
-                    __triggerResizeObserver(container);
-                });
-            } else {
-                fireEvent.click(screen.getByText('Test Series'));
-            }
-            await waitFor(() => expect(reportError).not.toBe(ownedHandler));
-            expect(() => reportError?.(failure)).toThrow(failure);
+            expect(container.querySelectorAll('.gcharts-pie__segment').length).toBe(1);
+            /* eslint-enable testing-library/no-container, testing-library/no-node-access */
         },
     );
 
@@ -451,118 +677,10 @@ describe('Chart/reflow completion', () => {
         return {...view, custom, pieData};
     }
 
-    test('waits for custom pie node commit, including same-size requests', async () => {
-        const {ref, container, onReady, custom, pieData} = await readyPie();
-        const gate = deferred<SVGElement>();
-        custom.mockReturnValue(gate.promise);
-        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
-        let completion!: Promise<void>;
-        let sameSize!: Promise<void>;
-        let completed = false;
-        act(() => {
-            completion = ref.current!.reflow({immediate: true});
-            completion.then(() => {
-                completed = true;
-            });
-        });
-        await waitFor(() => expect(custom).toHaveBeenCalled());
-        await act(async () => {
-            sameSize = ref.current!.reflow({immediate: true});
-        });
-        expect(completed).toBe(false);
-        expect(onReady).not.toHaveBeenCalled();
-        const node = customNode('current');
-        await act(async () => {
-            gate.resolve(node);
-        });
-        await Promise.all([completion, sameSize]);
-        expect(completed).toBe(true);
-        expect(custom).toHaveBeenLastCalledWith({series: {innerRadius: 40}});
-        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Verify committed custom node and preserved pie geometry/style. */
-        expect(container.querySelector('[data-custom-pie="current"]')).toBe(node);
-        const group = node.parentElement!;
-        expect(group.getAttribute('transform')).toBe('translate(150, 160)');
-        expect(group.style.strokeWidth).toBe('3');
-        expect(group.getAttribute('cursor')).toBe('pointer');
-        const segment = group.querySelector('.gcharts-pie__segment')!;
-        expect(segment.getAttribute('d')).toContain('A150,150');
-        expect(segment.getAttribute('d')).toContain('A40,40');
-        expect((segment as SVGElement).style.stroke).toBe('red');
-        expect(container.querySelector('svg')?.getAttribute('height')).toBe('472');
-        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
-        expect(pieData.series.data[0]).not.toHaveProperty('customShape');
-        expect(pieData.series.data[0].data[0]).not.toHaveProperty('customShape');
-    });
-
-    test.each(['resolve', 'reject'] as const)(
-        'ignores superseded custom pie %s without completing newer request',
+    test.each(['pending', 'resolve', 'reject'] as const)(
+        'commits main pie and completes reflow while optional node is %s',
         async (outcome) => {
-            const {ref, container, onReady, custom} = await readyPie();
-            const old = deferred<SVGElement>();
-            const current = deferred<SVGElement>();
-            custom.mockReturnValue(old.promise);
-            Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
-            let first!: Promise<void>;
-            act(() => {
-                first = ref.current!.reflow({immediate: true});
-            });
-            await waitFor(() => expect(custom).toHaveBeenCalled());
-            custom.mockClear().mockReturnValue(current.promise);
-            Object.defineProperty(container, 'clientHeight', {value: 530, configurable: true});
-            let second!: Promise<void>;
-            let completed = false;
-            act(() => {
-                second = ref.current!.reflow({immediate: true});
-                second.then(() => {
-                    completed = true;
-                });
-            });
-            await waitFor(() => expect(custom).toHaveBeenCalled());
-            const staleNode = customNode('stale');
-            await act(async () => {
-                if (outcome === 'resolve') {
-                    old.resolve(staleNode);
-                } else {
-                    old.reject(new Error('stale custom shape failed'));
-                }
-            });
-            expect(completed).toBe(false);
-            expect(onReady).not.toHaveBeenCalled();
-            const node = customNode('current');
-            await act(async () => {
-                current.resolve(node);
-            });
-            await Promise.all([first, second]);
-            /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Stale custom nodes must never enter current SVG. */
-            expect(staleNode.isConnected).toBe(false);
-            expect(container.querySelector('[data-custom-pie="current"]')).toBe(node);
-            /* eslint-enable testing-library/no-container, testing-library/no-node-access */
-            expect(onReady).toHaveBeenLastCalledWith({dimensions: {width: 800, height: 530}});
-        },
-    );
-
-    test('custom pie rejection preserves original cause', async () => {
-        const {ref, container, onReady, custom} = await readyPie();
-        const gate = deferred<SVGElement>();
-        custom.mockReturnValue(gate.promise);
-        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
-        let completion!: Promise<void>;
-        act(() => {
-            completion = ref.current!.reflow({immediate: true});
-        });
-        await waitFor(() => expect(custom).toHaveBeenCalled());
-        const failure = new Error('custom pie failed');
-        await act(async () => {
-            gate.reject(failure);
-            await expect(completion).rejects.toBe(failure);
-        });
-        expect(onReady).not.toHaveBeenCalled();
-    });
-
-    test.each(['resolve', 'reject'] as const)(
-        'ignores custom pie %s after unmount',
-        async (outcome) => {
-            const {ref, container, unmount, onReady, custom} = await readyPie();
+            const {ref, container, custom, pieData} = await readyPie();
             const gate = deferred<SVGElement>();
             custom.mockReturnValue(gate.promise);
             Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
@@ -570,20 +688,54 @@ describe('Chart/reflow completion', () => {
             act(() => {
                 completion = ref.current!.reflow({immediate: true});
             });
-            await waitFor(() => expect(custom).toHaveBeenCalled());
-            unmount();
-            await expect(completion).rejects.toThrow('unmounted');
-            const node = customNode('unmounted');
+            await waitFor(() => expect(custom).toHaveBeenCalledTimes(1));
+            await completion;
+            /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Verify main pie geometry before optional callback settles. */
+            const segment = container.querySelector('.gcharts-pie__segment')!;
+            expect(segment.getAttribute('d')).toContain('A150,150');
+            expect(segment.getAttribute('d')).toContain('A40,40');
+            expect((segment as SVGElement).style.stroke).toBe('red');
+            const node = customNode('optional');
             await act(async () => {
-                if (outcome === 'resolve') {
-                    gate.resolve(node);
-                } else {
-                    gate.reject(new Error('unmounted custom shape failed'));
-                }
+                if (outcome === 'resolve') gate.resolve(node);
+                if (outcome === 'reject') gate.reject(new Error('optional pie failed'));
             });
-            // A completed callback must not resurrect DOM or report readiness after unmount.
-            expect(node.isConnected).toBe(false);
-            expect(onReady).not.toHaveBeenCalled();
+            expect(container.querySelector('.gcharts-pie__segment')).toBe(segment);
+            if (outcome === 'resolve') expect(node.isConnected).toBe(true);
+            /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+            expect(pieData.series.data[0]).not.toHaveProperty('customShape');
+            expect(pieData.series.data[0].data[0]).not.toHaveProperty('customShape');
+        },
+    );
+
+    test.each(['resize', 'unmount'] as const)(
+        'ignores optional pie nodes after %s',
+        async (change) => {
+            const {ref, container, custom, unmount} = await readyPie();
+            const gate = deferred<SVGElement>();
+            custom
+                .mockReturnValueOnce(gate.promise)
+                .mockImplementation(() => customNode('current'));
+            Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+            let completion!: Promise<void>;
+            act(() => {
+                completion = ref.current!.reflow({immediate: true});
+            });
+            await waitFor(() => expect(custom).toHaveBeenCalledTimes(1));
+            await completion;
+            if (change === 'unmount') unmount();
+            else {
+                Object.defineProperty(container, 'clientHeight', {value: 530, configurable: true});
+                act(() => {
+                    completion = ref.current!.reflow({immediate: true});
+                });
+                await completion;
+            }
+            const stale = customNode('stale');
+            await act(async () => {
+                gate.resolve(stale);
+            });
+            expect(stale.isConnected).toBe(false);
         },
     );
 
