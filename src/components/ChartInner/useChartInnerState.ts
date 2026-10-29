@@ -5,20 +5,18 @@ import isEqual from 'lodash/isEqual';
 
 import {EventType, isMacintosh} from '~core/utils';
 
-import type {PreparedRangeSlider, PreparedTooltip, RangeSliderState, ZoomState} from '../../hooks';
+import type {PreparedTooltip, RangeSliderState, ZoomState} from '../../hooks';
 
 type Props = {
     dispatcher: Dispatch<object>;
-    preparedRangeSlider: PreparedRangeSlider;
     tooltip?: PreparedTooltip;
 };
 
 export function useChartInnerState(props: Props) {
-    const {dispatcher, preparedRangeSlider, tooltip} = props;
+    const {dispatcher, tooltip} = props;
     const [tooltipPinned, setTooltipPinned] = React.useState(false);
     const [zoomState, setZoomState] = React.useState<Partial<ZoomState>>({});
     const [rangeSliderState, setRangeSliderState] = React.useState<RangeSliderState | undefined>();
-    const [initialized, setInitialized] = React.useState(!preparedRangeSlider.enabled);
     const tooltipEnabled = tooltip?.enabled;
     const tooltipPinEnabled = tooltip?.pin?.enabled;
     const modifierKey = tooltip?.pin?.modifierKey;
@@ -88,9 +86,7 @@ export function useChartInnerState(props: Props) {
     );
 
     return {
-        initialized,
         rangeSliderState,
-        setInitialized,
         tooltipPinned,
         togglePinTooltip: tooltipEnabled && tooltipPinEnabled ? togglePinTooltip : undefined,
         unpinTooltip: tooltipEnabled && tooltipPinEnabled ? unpinTooltip : undefined,
