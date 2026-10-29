@@ -4,9 +4,11 @@ import {expect, test} from '@playwright/experimental-ct-react';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 
+import {DAY} from '~core/constants';
+
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {lineTwoYAxisData, scatterLinearXAxisData} from '../__stories__/__data__';
-import type {ChartData, DeepPartial} from '../types';
+import type {ChartAxisRangeSlider, ChartData, DeepPartial} from '../types';
 
 import {dragElementByCalculatedPosition, getLocator, getLocatorBoundingBox} from './utils';
 
@@ -313,5 +315,35 @@ test.describe('Range slider', () => {
         // Click on the first legend item to hide the series
         await legendItem.click();
         await expect(component).toHaveScreenshot();
+    });
+
+    test('Data without range slider ignores the previous default range', async ({mount}) => {
+        const getBarData = (rangeSlider?: ChartAxisRangeSlider): ChartData => ({
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Series 1',
+                        data: Array.from({length: 10}, (_, i) => ({
+                            x: new Date('2024-01-01').getTime() + i * DAY,
+                            y: i + 1,
+                        })),
+                    },
+                ],
+            },
+            xAxis: {type: 'datetime', rangeSlider},
+        });
+        // The range slider draws its own copy of the bars, so count only the bars in the plot.
+        const plotBars = '.gcharts-chart__content .gcharts-bar-x__segment';
+        const component = await mount(<ChartTestStory data={getBarData()} />);
+        await expect(component.locator(plotBars)).toHaveCount(10);
+
+        await component.update(
+            <ChartTestStory data={getBarData({enabled: true, defaultRange: {size: 'P2D'}})} />,
+        );
+        await expect(component.locator(plotBars)).toHaveCount(2);
+
+        await component.update(<ChartTestStory data={getBarData()} />);
+        await expect(component.locator(plotBars)).toHaveCount(10);
     });
 });

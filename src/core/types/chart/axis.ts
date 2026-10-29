@@ -124,7 +124,9 @@ export interface ChartAxisRangeSlider {
      */
     brush?: ChartBrush;
     /**
-     * Configuration for the range slider state after the initial chart render.
+     * Configuration for the range slider state when the slider is initialized: on the initial chart
+     * render, and again when the slider is turned on, the x-axis type changes, or a new
+     * `defaultRange` object is passed.
      */
     defaultRange?: {
         /**

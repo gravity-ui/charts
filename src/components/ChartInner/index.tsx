@@ -3,10 +3,9 @@ import React from 'react';
 import {ArrowRotateLeft} from '@gravity-ui/icons';
 import {Button, ButtonIcon, useUniqId} from '@gravity-ui/uikit';
 
-import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {getVisibleSeries} from '~core/series/utils';
 import {prepareTooltipHeaderFormat} from '~core/tooltip/header';
-import {EventType, getDispatcher, isBandScale} from '~core/utils';
+import {EventType, getDispatcher} from '~core/utils';
 import {getChartClosest} from '~core/utils/get-closest-data';
 
 import {useCrosshair, usePrevious} from '../../hooks';
@@ -27,7 +26,6 @@ import {RangeSlider} from '../RangeSlider';
 import type {RangeSliderHandle} from '../RangeSlider';
 import {Title} from '../Title';
 import {Tooltip} from '../Tooltip';
-import {getInitialRangeSliderState} from '../utils';
 
 import type {ChartInnerProps} from './types';
 import {useChartInnerHandlers} from './useChartInnerHandlers';
@@ -65,12 +63,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
             tooltip: data.tooltip,
         });
     }, [data.tooltip]);
-    const preparedRangeSlider = React.useMemo(() => {
-        return getPreparedRangeSlider({xAxis: data.xAxis});
-    }, [data.xAxis]);
     const {
-        initialized,
-        setInitialized,
         tooltipPinned,
         togglePinTooltip,
         unpinTooltip,
@@ -80,7 +73,6 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
         zoomState,
     } = useChartInnerState({
         dispatcher,
-        preparedRangeSlider,
         tooltip: preparedTooltip,
     });
     const {
@@ -257,7 +249,6 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
     });
     const clickHandler = data.chart?.events?.click;
     const pointerMoveHandler = data.chart?.events?.pointermove;
-    const prevRangeSliderDefaultRange = usePrevious(preparedRangeSlider.defaultRange);
 
     useCrosshair({
         resetKey: hoverResetKey,
@@ -388,44 +379,6 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
     const xAxisDataItems = useAsyncState<AxisXData[]>([], setXAxisDataItems, axisDataReady);
 
     React.useEffect(() => {
-        if (!initialized && xScale) {
-            if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
-                setInitialized(true);
-                return;
-            }
-
-            const defaultRange = preparedRangeSlider.defaultRange;
-            const initialRangeSliderState = getInitialRangeSliderState({
-                defaultRange,
-                xScale,
-            });
-
-            updateRangeSliderState(initialRangeSliderState);
-            setInitialized(true);
-        } else if (preparedRangeSlider.defaultRange !== prevRangeSliderDefaultRange && xScale) {
-            if (!preparedRangeSlider.enabled || isBandScale(xScale)) {
-                return;
-            }
-
-            const defaultRange = preparedRangeSlider.defaultRange;
-            const initialRangeSliderState = getInitialRangeSliderState({
-                defaultRange,
-                xScale,
-            });
-
-            updateRangeSliderState(initialRangeSliderState);
-        }
-    }, [
-        initialized,
-        preparedRangeSlider.defaultRange,
-        preparedRangeSlider.enabled,
-        prevRangeSliderDefaultRange,
-        setInitialized,
-        updateRangeSliderState,
-        xScale,
-    ]);
-
-    React.useEffect(() => {
         if (shapesReady) {
             onReady?.({dimensions: {width, height}});
         }
@@ -551,7 +504,7 @@ function ChartInnerComponent(props: ChartInnerProps, forwardedRef: React.Forward
                 onTouchMove={throttledHandleTouchMove}
                 onClick={handleChartClick}
             >
-                {initialized ? chartContent : null}
+                {chartContent}
             </svg>
             <div
                 className={b('html-layer')}
