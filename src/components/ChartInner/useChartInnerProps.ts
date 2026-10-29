@@ -91,6 +91,7 @@ type ChartState = {
     preparedSeries: PreparedSeries[];
     preparedSeriesOptions: PreparedSeriesOptions;
     preparedSplit: PreparedSplit;
+    rendering?: Promise<void>;
     shapes: React.ReactElement[];
     shapesData: TooltipItemData[];
     xAxis: PreparedXAxis | null;
@@ -194,6 +195,7 @@ export function useChartInnerProps(props: Props) {
         } = preparation;
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const controller = new AbortController();
         const selectedLegendItems = selectedLegendItemsRef.current;
 
         (async function () {
@@ -368,7 +370,8 @@ export function useChartInnerProps(props: Props) {
                 return gradientReference.data;
             };
 
-            const {shapes, shapesData, layerIndexes} = await getShapes({
+            const {shapes, shapesData, layerIndexes, rendering} = await getShapes({
+                signal: controller.signal,
                 boundsWidth,
                 boundsHeight,
                 dispatcher,
@@ -418,6 +421,7 @@ export function useChartInnerProps(props: Props) {
                 preparedSeriesOptions,
                 preparedSplit,
                 shapes,
+                rendering,
                 shapesData,
                 xAxis,
                 xScale,
@@ -446,6 +450,7 @@ export function useChartInnerProps(props: Props) {
             }
         });
         return () => {
+            controller.abort();
             currentRunRef.current++;
         };
     }, [preparation, reportPreparationError]);

@@ -58,7 +58,11 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
             return true;
         });
     }, [preparedSeries, activeLegendItems]);
+    const renderControllerRef = React.useRef<AbortController>();
     const prepare = React.useCallback(async () => {
+        renderControllerRef.current?.abort();
+        const controller = new AbortController();
+        renderControllerRef.current = controller;
         const {xAxis: preparedXAxis, yAxis: preparedYAxis} = await getAxes({
             boundsHeight: preparedRangeSlider.height,
             height,
@@ -80,7 +84,8 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
             xAxis: preparedXAxis,
             yAxis: preparedYAxis,
         });
-        const {shapes} = await getShapes({
+        const {shapes, rendering} = await getShapes({
+            signal: controller.signal,
             gradientReference,
             boundsHeight: preparedRangeSlider.height,
             boundsWidth,
@@ -95,7 +100,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
             yAxis: preparedYAxis,
             yScale,
         });
-        return {preparedXAxis, preparedYAxis, xScale, yScale, shapes};
+        return {preparedXAxis, preparedYAxis, xScale, yScale, shapes, rendering};
     }, [
         preparedRangeSlider.height,
         height,
@@ -113,14 +118,20 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         htmlLayout,
         filteredPreparedSeries,
     ]);
+    React.useEffect(() => () => renderControllerRef.current?.abort(), [prepare]);
     const {value: prepared, isReady} = useAsyncState<{
         preparedXAxis: PreparedRangeSliderProps['preparedXAxis'];
         preparedYAxis: PreparedRangeSliderProps['preparedYAxis'];
         xScale?: ChartScale;
         yScale?: (ChartScale | undefined)[];
         shapes: React.ReactElement[];
+        rendering?: Promise<void>;
     }>({preparedXAxis: null, preparedYAxis: [], shapes: []}, prepare, true, onError);
-    const {preparedXAxis, preparedYAxis, xScale, yScale, shapes} = prepared;
+    const {preparedXAxis, preparedYAxis, xScale, yScale, shapes, rendering} = prepared;
+    const awaitRendering = React.useCallback(async () => {
+        await rendering;
+    }, [rendering]);
+    const {isReady: renderingReady} = useAsyncState(undefined, awaitRendering, isReady, onError);
     const selection = React.useMemo(() => {
         if (rangeSliderState) {
             return getRangeSliderSelection({rangeSliderState, xScale: xScale});
@@ -211,7 +222,7 @@ export function useRangeSlider(props: UseRangeSliderProps): PreparedRangeSliderP
         preparedYAxis,
         selection,
         shapes,
-        isReady,
+        isReady: isReady && renderingReady,
         width: boundsWidth,
         xScale,
     };

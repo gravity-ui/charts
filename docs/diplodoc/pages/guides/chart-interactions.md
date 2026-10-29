@@ -36,7 +36,11 @@ The `chart` API comes from the click payload. You can retain it for later querie
 
 For a screenshot or export after changing the container size, await `ref.current.reflow()`. It completes after the current shapes, axes, legend and range slider preview have committed, including coalesced resize requests. Identical requests join the preparation already in progress. If the size is unchanged and the chart is already ready, it completes without another `onReady` callback. Use `reflow({immediate: true})` to skip the resize debounce.
 
-Optional pie nodes returned by `renderCustomShape` are inserted when their callbacks finish. They do not delay the main chart or `reflow()` completion; a failed callback omits only its custom node. If an export needs these nodes, wait for your custom renderer's completion as well.
+Pie nodes returned by `renderCustomShape`, including built-in `CustomShapeRenderer.pieCenterText` totals, are inserted when their callbacks finish. The main chart renders immediately, while `reflow()` waits for the current nodes to be inserted.
+
+A rejected callback omits only its custom node and allows completion. A callback that never settles keeps the export promise pending without hiding the main chart.
+
+A newer resize supersedes unfinished rendering; pending requests then wait for the latest chart. Unmounting cancels pending requests, and obsolete callbacks cannot insert nodes.
 
 Preparation errors reject with their original cause. An ignored promise still reports a preparation failure as an unhandled rejection. Host-unavailable, zero-size and unmount cancellations also reject, but are handled automatically for callers that ignore the promise.
 

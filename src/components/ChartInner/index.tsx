@@ -105,6 +105,7 @@ function ChartInnerComponent(
         preparedSeriesOptions,
         preparedSplit,
         shapes,
+        rendering,
         shapesData,
         shapesReady,
         shapesCurrent,
@@ -471,8 +472,23 @@ function ChartInnerComponent(
     const sliderReady =
         !sliderEnabled ||
         (debouncedRangeSliderData === rangeSliderData && sliderReadyFor === sliderGeneration);
+    const awaitRendering = React.useCallback(async () => {
+        await rendering;
+    }, [rendering]);
+    const {isReady: renderingReady} = useAsyncState(
+        undefined,
+        awaitRendering,
+        shapesCurrent,
+        handlePreparationError,
+    );
     const ready =
-        initialized && shapesCurrent && xAxisReady && yAxisReady && legendReady && sliderReady;
+        initialized &&
+        shapesCurrent &&
+        renderingReady &&
+        xAxisReady &&
+        yAxisReady &&
+        legendReady &&
+        sliderReady;
     React.useLayoutEffect(() => {
         if (!ready) {
             readyRef.current = false;

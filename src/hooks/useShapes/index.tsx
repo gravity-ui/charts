@@ -27,6 +27,7 @@ import './styles.scss';
 export type {TooltipItemData};
 
 interface Args {
+    signal?: AbortSignal;
     boundsWidth: number;
     boundsHeight: number;
     clipPathId: string;
@@ -135,6 +136,7 @@ function resolveClipPathId(args: {
 
 export async function getShapes(args: Args) {
     const {
+        signal,
         boundsWidth,
         boundsHeight,
         clipPathId,
@@ -178,6 +180,7 @@ export async function getShapes(args: Args) {
         ),
     );
 
+    const rendering: Promise<void>[] = [];
     const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
     const layers: ShapeLabels[] = [];
@@ -217,9 +220,20 @@ export async function getShapes(args: Args) {
             zoomState,
         });
 
+        let onRenderComplete!: () => void;
+        let onRenderError!: (error: unknown) => void;
+        rendering.push(
+            new Promise<void>((resolve, reject) => {
+                onRenderComplete = resolve;
+                onRenderError = reject;
+            }),
+        );
         shapes[index] = (
             <SeriesShapes
                 key={groupKey}
+                signal={signal}
+                onRenderComplete={onRenderComplete}
+                onRenderError={onRenderError}
                 plugin={plugin}
                 isRangeSlider={isRangeSlider}
                 preparedData={renderData}
@@ -253,7 +267,12 @@ export async function getShapes(args: Args) {
             );
         }
     }
-    return {shapes, shapesData, layerIndexes};
+    return {
+        shapes,
+        shapesData,
+        layerIndexes,
+        rendering: Promise.all(rendering).then(() => undefined),
+    };
 }
 
 export const useShapes = (args: Args) => {

@@ -6,8 +6,10 @@ import React from 'react';
 import {act, fireEvent, screen, waitFor} from '@testing-library/react';
 
 import * as axisGenerators from '../../core/utils/axis-generators/bottom';
+import * as textUtils from '../../core/utils/text';
 import * as shapes from '../../hooks/useShapes';
 import type {ChartData, PieSeries} from '../../types';
+import {CustomShapeRenderer} from '../../utils';
 import * as xAxis from '../AxisX/prepare-axis-data';
 import * as yAxis from '../AxisY/prepare-axis-data';
 import {Chart} from '../index';
@@ -677,65 +679,276 @@ describe('Chart/reflow completion', () => {
         return {...view, custom, pieData};
     }
 
+    test('export completion waits for built-in pie center text measurement and insertion', async () => {
+        const total = 'EXPORT TOTAL 42';
+        const {ref, container} = await readyChart({
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'pie',
+                        innerRadius: 60,
+                        data: [{name: 'Slice', value: 2}],
+                        renderCustomShape: CustomShapeRenderer.pieCenterText(total),
+                    },
+                ],
+            },
+        });
+        const gate = deferred<void>();
+        const original = textUtils.getLabelsSize;
+        let measurementStarted = false;
+        jest.spyOn(textUtils, 'getLabelsSize').mockImplementation(async (args) => {
+            if (args.labels.includes(total)) {
+                measurementStarted = true;
+                await gate.promise;
+            }
+            return original(args);
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        let completion!: Promise<void>;
+        let completed = false;
+        act(() => {
+            completion = ref.current!.reflow({immediate: true});
+            completion.then(() => {
+                completed = true;
+            });
+        });
+        await waitFor(() => expect(measurementStarted).toBe(true));
+        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Export requires current geometry and the actual built-in total. */
+        expect(container.querySelector('.gcharts-pie__segment')).not.toBeNull();
+        expect(container.querySelector('.gcharts-pie__item text')).toBeNull();
+        expect(completed).toBe(false);
+        await act(async () => {
+            gate.resolve();
+        });
+        await completion;
+        expect(container.querySelector('.gcharts-pie__item text tspan')?.textContent).toBe(total);
+        expect(container.querySelector('svg')?.getAttribute('height')).toBe('472');
+        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+    });
+
+    test('coalesced exports wait for every asynchronous consumer pie node', async () => {
+        const custom = [
+            jest.fn(() => Promise.resolve(customNode('initial'))),
+            jest.fn(() => Promise.resolve(customNode('initial'))),
+        ];
+        const {ref, container} = await readyChart({
+            legend: {enabled: false},
+            series: {
+                data: custom.map((renderCustomShape) => ({
+                    type: 'pie' as const,
+                    data: [{name: 'Slice', value: 2}],
+                    renderCustomShape,
+                })),
+            },
+        });
+        const first = deferred<SVGCircleElement>();
+        const second = deferred<SVGCircleElement>();
+        custom[0].mockClear().mockReturnValue(first.promise);
+        custom[1].mockClear().mockReturnValue(second.promise);
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        let completion!: Promise<void>;
+        let joined!: Promise<void>;
+        let completed = false;
+        act(() => {
+            completion = ref.current!.reflow({immediate: true});
+            completion.then(() => {
+                completed = true;
+            });
+        });
+        await waitFor(() => expect(custom[1]).toHaveBeenCalledTimes(1));
+        act(() => {
+            joined = ref.current!.reflow({immediate: true});
+        });
+        const firstNode = customNode('first');
+        await act(async () => {
+            first.resolve(firstNode);
+        });
+        expect(firstNode.isConnected).toBe(true);
+        expect(completed).toBe(false);
+        const secondNode = customNode('second');
+        await act(async () => {
+            second.resolve(secondNode);
+        });
+        await Promise.all([completion, joined]);
+        expect(secondNode.isConnected).toBe(true);
+        expect(custom[0]).toHaveBeenCalledTimes(1);
+        expect(custom[1]).toHaveBeenCalledTimes(1);
+    });
+
+    test('export waits for asynchronous pie preview nodes while main series is visible', async () => {
+        const custom = jest.fn<
+            ReturnType<NonNullable<PieSeries['renderCustomShape']>>,
+            [Parameters<NonNullable<PieSeries['renderCustomShape']>>[0]]
+        >(() => customNode('initial'));
+        const {ref, container} = await readyChart({
+            ...data,
+            legend: {enabled: false},
+            xAxis: {rangeSlider: {enabled: true, height: 40}},
+            series: {
+                data: [
+                    ...data.series.data,
+                    {
+                        type: 'pie',
+                        innerRadius: '50%',
+                        data: [{name: 'Slice', value: 2}],
+                        renderCustomShape: custom,
+                    },
+                ],
+            },
+        });
+        const gate = deferred<SVGElement>();
+        let previewStarted = false;
+        custom.mockImplementation(({series}) => {
+            if (series.innerRadius <= 20) {
+                previewStarted = true;
+                return gate.promise;
+            }
+            return customNode('main');
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
+        let completion!: Promise<void>;
+        let completed = false;
+        act(() => {
+            completion = ref.current!.reflow({immediate: true});
+            completion.then(() => {
+                completed = true;
+            });
+        });
+        await waitFor(() => expect(previewStarted).toBe(true));
+        /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Main series stays visible while preview content is pending. */
+        expect(
+            container.querySelectorAll('.gcharts-chart__content .gcharts-line path').length,
+        ).toBeGreaterThan(0);
+        expect(
+            container.querySelector('.gcharts-range-slider .gcharts-pie__segment'),
+        ).not.toBeNull();
+        expect(completed).toBe(false);
+        const preview = customNode('preview');
+        await act(async () => {
+            gate.resolve(preview);
+        });
+        await completion;
+        expect(container.querySelector('.gcharts-range-slider [data-custom-pie="preview"]')).toBe(
+            preview,
+        );
+        /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+    });
+
     test.each(['pending', 'resolve', 'reject'] as const)(
-        'commits main pie and completes reflow while optional node is %s',
+        'renders main pie immediately while export waits for %s optional node',
         async (outcome) => {
-            const {ref, container, custom, pieData} = await readyPie();
+            const {ref, container, custom, pieData, onReady, unmount} = await readyPie();
             const gate = deferred<SVGElement>();
             custom.mockReturnValue(gate.promise);
             Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
             let completion!: Promise<void>;
+            let completed = false;
             act(() => {
                 completion = ref.current!.reflow({immediate: true});
+                completion.then(
+                    () => {
+                        completed = true;
+                    },
+                    () => undefined,
+                );
             });
             await waitFor(() => expect(custom).toHaveBeenCalledTimes(1));
-            await completion;
             /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Verify main pie geometry before optional callback settles. */
             const segment = container.querySelector('.gcharts-pie__segment')!;
             expect(segment.getAttribute('d')).toContain('A150,150');
             expect(segment.getAttribute('d')).toContain('A40,40');
             expect((segment as SVGElement).style.stroke).toBe('red');
+            expect(completed).toBe(false);
+            expect(onReady).toHaveBeenLastCalledWith({dimensions: {width: 800, height: 472}});
             const node = customNode('optional');
-            await act(async () => {
-                if (outcome === 'resolve') gate.resolve(node);
-                if (outcome === 'reject') gate.reject(new Error('optional pie failed'));
-            });
-            expect(container.querySelector('.gcharts-pie__segment')).toBe(segment);
-            if (outcome === 'resolve') expect(node.isConnected).toBe(true);
+            if (outcome === 'pending') {
+                unmount();
+                await expect(completion).rejects.toThrow('unmounted');
+            } else {
+                await act(async () => {
+                    if (outcome === 'resolve') gate.resolve(node);
+                    else gate.reject(new Error('optional pie failed'));
+                });
+                await completion;
+                expect(completed).toBe(true);
+                expect(container.querySelector('.gcharts-pie__segment')).toBe(segment);
+                expect(node.isConnected).toBe(outcome === 'resolve');
+            }
             /* eslint-enable testing-library/no-container, testing-library/no-node-access */
             expect(pieData.series.data[0]).not.toHaveProperty('customShape');
             expect(pieData.series.data[0].data[0]).not.toHaveProperty('customShape');
         },
     );
 
-    test.each(['resize', 'unmount'] as const)(
-        'ignores optional pie nodes after %s',
+    test.each(['resize', 'resize during preparation', 'unmount'] as const)(
+        'stale optional pie completion after %s cannot append or complete current export',
         async (change) => {
             const {ref, container, custom, unmount} = await readyPie();
-            const gate = deferred<SVGElement>();
-            custom
-                .mockReturnValueOnce(gate.promise)
-                .mockImplementation(() => customNode('current'));
+            const old = deferred<SVGElement>();
+            const current = deferred<SVGElement>();
+            custom.mockReturnValueOnce(old.promise).mockReturnValue(current.promise);
             Object.defineProperty(container, 'clientHeight', {value: 472, configurable: true});
-            let completion!: Promise<void>;
+            let first!: Promise<void>;
+            let completed = false;
             act(() => {
-                completion = ref.current!.reflow({immediate: true});
+                first = ref.current!.reflow({immediate: true});
+                first.then(
+                    () => {
+                        completed = true;
+                    },
+                    () => undefined,
+                );
             });
             await waitFor(() => expect(custom).toHaveBeenCalledTimes(1));
-            await completion;
-            if (change === 'unmount') unmount();
-            else {
+            expect(completed).toBe(false);
+            let second!: Promise<void>;
+            const preparation = deferred<void>();
+            let preparing = false;
+            if (change === 'resize during preparation') {
+                const original = shapes.getShapes;
+                jest.spyOn(shapes, 'getShapes').mockImplementation(async (args) => {
+                    preparing = true;
+                    await preparation.promise;
+                    return original(args);
+                });
+            }
+            if (change === 'unmount') {
+                unmount();
+                await expect(first).rejects.toThrow('unmounted');
+            } else {
                 Object.defineProperty(container, 'clientHeight', {value: 530, configurable: true});
                 act(() => {
-                    completion = ref.current!.reflow({immediate: true});
+                    second = ref.current!.reflow({immediate: true});
                 });
-                await completion;
+                if (change === 'resize')
+                    await waitFor(() => expect(custom).toHaveBeenCalledTimes(2));
+                else await waitFor(() => expect(preparing).toBe(true));
             }
             const stale = customNode('stale');
             await act(async () => {
-                gate.resolve(stale);
+                old.resolve(stale);
             });
-            expect(stale.isConnected).toBe(false);
+            // Even a detached obsolete group must not receive the stale node.
+            // eslint-disable-next-line testing-library/no-node-access -- Verify no append even to a detached obsolete group.
+            expect(stale.parentNode).toBeNull();
+            expect(completed).toBe(false);
+            if (change !== 'unmount') {
+                await act(async () => {
+                    preparation.resolve();
+                });
+                await waitFor(() => expect(custom).toHaveBeenCalledTimes(2));
+                const node = customNode('current');
+                await act(async () => {
+                    current.resolve(node);
+                });
+                await Promise.all([first, second]);
+                expect(completed).toBe(true);
+                expect(node.isConnected).toBe(true);
+                /* eslint-disable testing-library/no-container, testing-library/no-node-access -- Export must commit latest dimensions. */
+                expect(container.querySelector('svg')?.getAttribute('height')).toBe('530');
+                /* eslint-enable testing-library/no-container, testing-library/no-node-access */
+            }
         },
     );
 

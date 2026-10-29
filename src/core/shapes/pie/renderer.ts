@@ -29,6 +29,8 @@ export function renderPie(
     preparedData: PreparedPieData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
+    registerCompletion?: (completion: Promise<void>) => void,
+    signal?: AbortSignal,
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
@@ -113,16 +115,19 @@ export function renderPie(
         .style('fill', 'none');
 
     let cancelled = false;
-    // Optional custom nodes never delay the chart's main content or export completion.
+    // Optional nodes delay export completion, while main paths remain immediately visible.
+    const pending: Promise<void>[] = [];
     shapesSelection.each(function (d) {
         const node = this;
-        Promise.resolve()
+        const completion = Promise.resolve()
             .then(() => d.series.renderCustomShape?.({series: {innerRadius: d.innerRadius}}))
             .then((customShape) => {
-                if (!cancelled && customShape) node.append(customShape as Node);
+                if (!cancelled && !signal?.aborted && customShape) node.append(customShape as Node);
             })
             .catch(() => undefined);
+        pending.push(completion);
     });
+    registerCompletion?.(Promise.all(pending).then(() => undefined));
 
     const eventName = `hover-shape.pie`;
     const hoverOptions = get(seriesOptions, 'pie.states.hover');

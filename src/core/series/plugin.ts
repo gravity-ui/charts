@@ -118,6 +118,10 @@ export interface RenderShapesArgs {
     boundsWidth: number;
     boundsHeight: number;
     dispatcher?: Dispatch<object>;
+    /** Register asynchronous DOM work during renderShapes; synchronous renderers can omit this. */
+    registerCompletion?: (completion: Promise<void>) => void;
+    /** Aborted when this preparation is superseded or its owner unmounts. */
+    signal?: AbortSignal;
 }
 
 export interface ValidateSeriesArgs<T = ChartSeries> {

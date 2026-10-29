@@ -25,6 +25,9 @@ interface Props {
     labels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
     isRangeSlider?: boolean;
+    signal?: AbortSignal;
+    onRenderComplete?: () => void;
+    onRenderError?: (error: unknown) => void;
 }
 
 export const SeriesShapes = ({
@@ -39,6 +42,9 @@ export const SeriesShapes = ({
     labels,
     seriesOptions,
     isRangeSlider,
+    signal,
+    onRenderComplete,
+    onRenderError,
 }: Props) => {
     const b = block(plugin.type);
     const ref = React.useRef<SVGGElement>(null);
@@ -47,6 +53,8 @@ export const SeriesShapes = ({
 
     React.useEffect(() => {
         if (!ref.current || !labelsRef.current) return () => {};
+        let cancelled = false;
+        const pending: Promise<void>[] = [];
         const plot = ref.current;
         const cleanup = plugin.renderShapes({
             plot: ref.current,
@@ -57,7 +65,17 @@ export const SeriesShapes = ({
             boundsWidth,
             boundsHeight,
             dispatcher,
+            registerCompletion: (completion) => pending.push(completion),
+            signal,
         });
+        Promise.all(pending).then(
+            () => {
+                if (!cancelled && !signal?.aborted) onRenderComplete?.();
+            },
+            (error: unknown) => {
+                if (!cancelled && !signal?.aborted) onRenderError?.(error);
+            },
+        );
         const markers = markerRef.current;
         const interaction = plugin.interaction;
         const unregister =
@@ -67,6 +85,7 @@ export const SeriesShapes = ({
                   )
                 : undefined;
         return () => {
+            cancelled = true;
             unregister?.();
             cleanup?.();
         };
@@ -79,6 +98,9 @@ export const SeriesShapes = ({
         labels,
         seriesOptions,
         isRangeSlider,
+        onRenderComplete,
+        onRenderError,
+        signal,
     ]);
 
     const annotations = React.useMemo(
