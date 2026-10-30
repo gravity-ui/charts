@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {Divider} from '@gravity-ui/uikit';
-import {get, isEqual} from 'es-toolkit/compat';
+import {get, isEqual, toPath} from 'es-toolkit/compat';
 import parse from 'html-react-parser';
 
 import {i18n} from '~core/i18n';
@@ -88,10 +88,12 @@ export const DefaultTooltipContent = ({
             return cell.source({item: tooltipDataChunk});
         }
 
+        // Paths go through toPath, which parses them as lodash does: compat's get skips empty
+        // segments in some strings, such as the last one in 'data.custom.'.
         return (
-            get(tooltipDataChunk, cell.source) ??
-            get(tooltipDataChunk, 'data.' + cell.source) ??
-            get(tooltipDataChunk, 'series.' + cell.source)
+            get(tooltipDataChunk, toPath(cell.source)) ??
+            get(tooltipDataChunk, toPath('data.' + cell.source)) ??
+            get(tooltipDataChunk, toPath('series.' + cell.source))
         );
     };
 

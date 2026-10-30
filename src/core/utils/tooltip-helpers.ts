@@ -1,8 +1,10 @@
 import {bisector, sort} from 'd3-array';
-import {get, groupBy} from 'es-toolkit/compat';
+import {get} from 'es-toolkit/compat';
 
 import type {ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
 import type {PreparedSeries} from '../series/types';
+
+import {groupBy} from './array';
 
 export interface ShapePoint {
     x: number;

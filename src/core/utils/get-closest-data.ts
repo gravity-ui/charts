@@ -1,10 +1,11 @@
-import {get, groupBy} from 'es-toolkit/compat';
+import {get} from 'es-toolkit/compat';
 
 import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
 
 import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
+import {groupBy} from './array';
 import {toPublicInteractionItem} from './chart-interaction';
 import {getNearestItem} from './nearest-point';
 import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';

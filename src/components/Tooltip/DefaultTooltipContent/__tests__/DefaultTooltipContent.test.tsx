@@ -694,6 +694,28 @@ describe('DefaultTooltipContent — rowRenderer color argument', () => {
 
         expect(renderer.mock.calls.map(([args]) => args.color)).toEqual(['#123456']);
     });
+
+    test('a string cell source keeps empty path segments', () => {
+        const hovered = makeChunk({
+            data: {x: 1, y: 10, custom: {'': '#123456'}},
+            color: '#111111',
+            series: {type: 'area', id: 's', name: 'S', color: '#abcdef'},
+        });
+        const renderer = jest.fn<
+            ReturnType<NonNullable<ChartTooltip['rowRenderer']>>,
+            [ChartTooltipRowRendererArgs]
+        >(({id}) => <tr key={id} />);
+
+        renderTooltip(
+            <DefaultTooltipContent
+                hovered={hovered}
+                rows={[{cells: [{id: 'color', source: 'data.custom.'}], renderer}]}
+                yAxis={{type: 'linear'}}
+            />,
+        );
+
+        expect(renderer.mock.calls.map(([args]) => args.color)).toEqual(['#123456']);
+    });
 });
 
 describe('DefaultTooltipContent — default color cell rendering', () => {

@@ -2,8 +2,6 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 import {pointer} from 'd3-selection';
-import type {DebouncedFunc} from 'es-toolkit/compat';
-import {throttle} from 'es-toolkit/compat';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
@@ -12,6 +10,7 @@ import {EventType} from '~core/utils';
 import {getChartTargets} from '~core/utils/chart-interaction';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
+import {throttle} from '~core/utils/throttle';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {useHoverResetKey} from '../../hooks/useHoverResetKey';
@@ -154,7 +153,7 @@ export function useChartInnerHandlers(props: Props) {
         [svgContainer, handleMove],
     );
 
-    const throttledHandlePointerMove = React.useMemo<DebouncedFunc<typeof handlePointerMove>>(
+    const throttledHandlePointerMove = React.useMemo(
         () => throttle(handlePointerMove, tooltipThrottle),
         [handlePointerMove, tooltipThrottle],
     );
@@ -178,7 +177,7 @@ export function useChartInnerHandlers(props: Props) {
         [svgContainer, handleMove],
     );
 
-    const throttledHandleTouchMove = React.useMemo<DebouncedFunc<typeof handleTouchMove>>(
+    const throttledHandleTouchMove = React.useMemo(
         () => throttle(handleTouchMove, tooltipThrottle),
         [handleTouchMove, tooltipThrottle],
     );
