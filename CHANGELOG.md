@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.71.0](https://github.com/gravity-ui/charts/compare/v1.70.0...v1.71.0) (2026-10-29)
+
+
+### Features
+
+* add configurable axis padding ([#783](https://github.com/gravity-ui/charts/issues/783)) ([06d0703](https://github.com/gravity-ui/charts/commit/06d0703e48f891083cb5627a0fb831025a43d169))
+* add custom aggregation for stack labels ([#811](https://github.com/gravity-ui/charts/issues/811)) ([ea454b0](https://github.com/gravity-ui/charts/commit/ea454b008fd026358c239035ccf9f97cf886ed1d))
+* **waterfall:** support toggling connectors ([#793](https://github.com/gravity-ui/charts/issues/793)) ([bed27c5](https://github.com/gravity-ui/charts/commit/bed27c5babe3889490853bf6ee565820e806faba))
+
+
+### Bug Fixes
+
+* calculate percentage padding from the initial scale ([#806](https://github.com/gravity-ui/charts/issues/806)) ([3b50450](https://github.com/gravity-ui/charts/commit/3b50450746be79bd73fdcdab81a59670fe3e5ac5))
+* position tooltip in transformed SVG screen coordinates ([#801](https://github.com/gravity-ui/charts/issues/801)) ([9ae4278](https://github.com/gravity-ui/charts/commit/9ae42781dcef3d43db272e1726cade9813446226))
+* reset range slider state when new data disables the slider ([#814](https://github.com/gravity-ui/charts/issues/814)) ([38abec5](https://github.com/gravity-ui/charts/commit/38abec5a5ca14ab248a095cc7b2fae74e840f831))
+
+
+### Performance Improvements
+
+* import lodash functions by path ([#808](https://github.com/gravity-ui/charts/issues/808)) ([f95f8e9](https://github.com/gravity-ui/charts/commit/f95f8e9747e473e3e2351438324be0f02297f2c8))
+
 ## [1.70.0](https://github.com/gravity-ui/charts/compare/v1.69.0...v1.70.0) (2026-10-23)
 
 
