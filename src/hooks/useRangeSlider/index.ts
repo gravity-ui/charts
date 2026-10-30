@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {pointer} from 'd3-selection';
-import {isEqual} from 'es-toolkit/compat';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import type {UseBrushProps} from '~core/brush/types';
 import {getNormalizedSelection, isOneDimensionalSelection} from '~core/brush/utils';

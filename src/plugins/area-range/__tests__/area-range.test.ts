@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 
 import {scaleBand, scaleLinear, scaleOrdinal} from 'd3-scale';
-import {cloneDeep} from 'es-toolkit/compat';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';

@@ -1,7 +1,8 @@
 import React from 'react';
 
 import type {Meta, StoryObj} from '@storybook/react';
-import {random, range} from 'es-toolkit/compat';
+import random from 'es-toolkit/compat/random';
+import range from 'es-toolkit/compat/range';
 
 import {randomString} from '~core/utils';
 

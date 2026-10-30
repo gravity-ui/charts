@@ -1,5 +1,5 @@
 import type {ScaleOrdinal} from 'd3-scale';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';

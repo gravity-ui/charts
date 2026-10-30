@@ -1,4 +1,5 @@
-import {random, range} from 'es-toolkit/compat';
+import random from 'es-toolkit/compat/random';
+import range from 'es-toolkit/compat/range';
 
 import {randomString} from '~core/utils';
 

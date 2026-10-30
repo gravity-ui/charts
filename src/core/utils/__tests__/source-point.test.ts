@@ -1,5 +1,5 @@
 import {scaleOrdinal} from 'd3-scale';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {ChartInteractionItem, ChartSeries} from '../../../types';
 import {getSeriesPlugin} from '../../series/seriesRegistry';

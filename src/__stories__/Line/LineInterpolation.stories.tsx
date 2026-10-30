@@ -2,7 +2,8 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
-import {cloneDeep, set} from 'es-toolkit/compat';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';

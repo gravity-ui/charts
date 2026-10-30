@@ -1,4 +1,4 @@
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {ChartAxis, ChartSeries} from '../../types';
 import type {PreparedAxis, PreparedYAxis} from '../axes/types';

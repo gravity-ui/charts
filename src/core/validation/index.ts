@@ -1,4 +1,4 @@
-import {isEmpty} from 'es-toolkit/compat';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import type {ChartData, ChartInteractionItem, ChartTooltip, MeaningfulAny} from '~core/types';
 

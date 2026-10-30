@@ -1,4 +1,5 @@
-import {get, merge} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
+import merge from 'es-toolkit/compat/merge';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {

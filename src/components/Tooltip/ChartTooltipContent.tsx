@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {isNil} from 'es-toolkit/compat';
+import isNil from 'es-toolkit/compat/isNil';
 
 import type {
     ChartTooltip,

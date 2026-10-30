@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {isEqual} from 'es-toolkit/compat';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import type {PreparedSeries} from '~core/series/types';
 

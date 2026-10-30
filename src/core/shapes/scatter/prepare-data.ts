@@ -1,4 +1,4 @@
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {HtmlItem, ScatterSeriesData} from '../../../types';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../../axes/types';

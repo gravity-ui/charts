@@ -1,5 +1,5 @@
 import {bisector, sort} from 'd3-array';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {ChartSeriesData, MeaningfulAny, TooltipDataChunk} from '../../types';
 import type {PreparedSeries} from '../series/types';

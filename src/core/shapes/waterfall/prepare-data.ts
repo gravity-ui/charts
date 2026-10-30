@@ -1,5 +1,6 @@
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
-import {get, sortBy} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
+import sortBy from 'es-toolkit/compat/sortBy';
 
 import type {LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';

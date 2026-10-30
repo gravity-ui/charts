@@ -2,7 +2,7 @@ import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
 import {line as lineGenerator} from 'd3-shape';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {LabelData} from '../../../types';
 import {block} from '../../../utils';

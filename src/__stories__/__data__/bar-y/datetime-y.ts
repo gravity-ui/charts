@@ -1,4 +1,4 @@
-import {range} from 'es-toolkit/compat';
+import range from 'es-toolkit/compat/range';
 
 import type {ChartData} from '../../../types';
 

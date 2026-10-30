@@ -2,7 +2,10 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import {median} from 'd3-array';
-import {cloneDeep, merge, range, set} from 'es-toolkit/compat';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import merge from 'es-toolkit/compat/merge';
+import range from 'es-toolkit/compat/range';
+import set from 'es-toolkit/compat/set';
 
 import {randomString} from '~core/utils';
 

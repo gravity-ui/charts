@@ -1,7 +1,9 @@
 import React from 'react';
 
 import {Divider} from '@gravity-ui/uikit';
-import {get, isEqual, toPath} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
+import isEqual from 'es-toolkit/compat/isEqual';
+import toPath from 'es-toolkit/compat/toPath';
 import parse from 'html-react-parser';
 
 import {i18n} from '~core/i18n';

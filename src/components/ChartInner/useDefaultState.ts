@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';

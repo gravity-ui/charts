@@ -1,4 +1,4 @@
-import {isNil} from 'es-toolkit/compat';
+import isNil from 'es-toolkit/compat/isNil';
 
 import {SIZE_REGEXP} from '../constants/dimensions';
 

@@ -1,4 +1,4 @@
-import {memoize} from 'es-toolkit/compat';
+import memoize from 'es-toolkit/compat/memoize';
 
 import {
     decodeHtmlEntities,

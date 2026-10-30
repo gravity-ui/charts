@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import {ChartTestStory} from '../../../playwright/components/ChartTestStory';
 import type {ChartData, ScatterClusterData} from '../../types';

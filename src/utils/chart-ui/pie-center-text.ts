@@ -1,5 +1,5 @@
 import {select} from 'd3-selection';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import {calculateNumericProperty} from '~core/utils/math';
 import {getLabelsSize, handleOverflowingText} from '~core/utils/text';

@@ -1,7 +1,7 @@
 import {group, max} from 'd3-array';
 import type {PieArcDatum} from 'd3-shape';
 import {arc, line as lineGenerator} from 'd3-shape';
-import {merge} from 'es-toolkit/compat';
+import merge from 'es-toolkit/compat/merge';
 
 import type {HtmlItem, PieSeries, PointPosition} from '../../../types';
 import {DEFAULT_DATALABELS_STYLE} from '../../constants';

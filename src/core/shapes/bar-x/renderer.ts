@@ -1,7 +1,7 @@
 import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import {select} from 'd3-selection';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import {block} from '../../../utils';
 import type {PreparedSeriesOptions} from '../../series/types';

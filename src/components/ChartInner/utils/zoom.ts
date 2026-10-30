@@ -1,4 +1,5 @@
-import {intersection, merge} from 'es-toolkit/compat';
+import intersection from 'es-toolkit/compat/intersection';
+import merge from 'es-toolkit/compat/merge';
 
 import {brushDefaults} from '~core/constants';
 import type {ZoomType} from '~core/constants';

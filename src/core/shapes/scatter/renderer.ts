@@ -1,7 +1,7 @@
 import type {Dispatch} from 'd3-dispatch';
 import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
-import {get} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 
 import type {TooltipDataChunk, TooltipDataChunkScatter} from '../../../types';
 import {block} from '../../../utils';

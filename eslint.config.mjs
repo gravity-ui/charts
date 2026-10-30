@@ -50,6 +50,12 @@ export default [
                     selector: "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
                     message: "Don't use React.FC",
                 },
+                {
+                    selector:
+                        "ImportDeclaration[source.value=/^es-toolkit(\\u002Fcompat)?$/][importKind!='type']",
+                    message:
+                        "Import es-toolkit functions by path, e.g. import get from 'es-toolkit/compat/get': in CommonJS the root entry loads the whole library.",
+                },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],

@@ -1,4 +1,5 @@
-import {get, isEmpty} from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import type {BaseTextStyle, ChartSplit, SplitPlotOptions} from '../../types';
 import {calculateNumericProperty, getTextSizeFn} from '../utils';

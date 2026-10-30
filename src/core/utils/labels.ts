@@ -1,4 +1,4 @@
-import {sortBy} from 'es-toolkit/compat';
+import sortBy from 'es-toolkit/compat/sortBy';
 
 import type {SeriesDataWithLabels} from '../../types';
 import type {LabelRect, ShapeLabels, SvgLabel} from '../shapes/types';
