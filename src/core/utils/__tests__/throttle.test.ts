@@ -79,6 +79,18 @@ describe('throttle', () => {
         expect(fn).toHaveBeenLastCalledWith('b');
     });
 
+    test('takes an interval given as a string', () => {
+        const fn = jest.fn();
+        const throttled = throttle(fn, '100' as unknown as number);
+
+        throttled('a');
+        throttled('b');
+        expect(fn.mock.calls).toEqual([['a']]);
+
+        jest.advanceTimersByTime(100);
+        expect(fn).toHaveBeenLastCalledWith('b');
+    });
+
     test('runs every call at once with a zero interval', () => {
         const fn = jest.fn();
         const throttled = throttle(fn, 0);

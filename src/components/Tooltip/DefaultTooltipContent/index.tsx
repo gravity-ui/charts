@@ -31,11 +31,17 @@ const b = block('tooltip');
 
 // Parsed cell source paths, reused across points and renders. toPath parses them as lodash does:
 // compat's get skips empty segments in some strings, such as the last one in 'data.custom.'.
+// Like lodash's own path cache, it is cleared at 500 entries, so it does not grow with every
+// config a long-lived page renders.
+const MAX_SOURCE_PATHS = 500;
 const sourcePaths = new Map<string, string[]>();
 
 function getSourcePath(path: string) {
     let parsed = sourcePaths.get(path);
     if (!parsed) {
+        if (sourcePaths.size >= MAX_SOURCE_PATHS) {
+            sourcePaths.clear();
+        }
         parsed = toPath(path);
         sourcePaths.set(path, parsed);
     }

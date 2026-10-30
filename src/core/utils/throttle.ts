@@ -14,6 +14,8 @@ export function throttle<T extends (...args: never[]) => void>(
     fn: T,
     wait: number,
 ): ThrottledFunction<T> {
+    // As in lodash: `tooltip.throttle` is not validated, so a string such as '100' still works.
+    const interval = Number(wait) || 0;
     let lastRun = -Infinity;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let pendingArgs: Parameters<T> | undefined;
@@ -24,7 +26,7 @@ export function throttle<T extends (...args: never[]) => void>(
     };
 
     const throttled = (...args: Parameters<T>) => {
-        const remaining = lastRun + wait - performance.now();
+        const remaining = lastRun + interval - performance.now();
         if (remaining <= 0 && timer === undefined) {
             run(args);
             return;

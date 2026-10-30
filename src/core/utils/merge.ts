@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- the wrapper that other code uses instead
 import mergeWith from 'es-toolkit/compat/mergeWith';
 
 function isPlainContainer(value: unknown): value is object {
@@ -62,32 +63,29 @@ function mergeValue(target: unknown, source: unknown): unknown {
     if (!isPlainContainer(source)) {
         return source;
     }
-    // In place of a function, es-toolkit puts the source object itself, so that a later source
-    // changes the user's object; lodash merges it into a new one.
-    if (typeof target === 'function') {
+    // In place of a function or a primitive, es-toolkit puts the source object itself, so that a
+    // later source changes the user's object; lodash merges it into a new one.
+    if (target !== null && target !== undefined && typeof target !== 'object') {
         return mergeWith(Array.isArray(source) ? [] : {}, source, mergeValue);
     }
     return undefined;
 }
 
-// es-toolkit remembers merged objects across all sources of one call, so sharing between sources
-// counts too.
-function unshare(sources: unknown[]) {
-    const seen = new Set<object>();
-    const shared = sources.some((source) => hasSharedPaths(source, seen, new Set()));
-    return shared ? sources.map((source) => copyPaths(source, new Set())) : sources;
+function unshare(source: unknown) {
+    return hasSharedPaths(source, new Set(), new Set()) ? copyPaths(source, new Set()) : source;
 }
 
 /**
- * es-toolkit's merge from the compat layer, for user options. When one object of the sources sits
- * at several paths, es-toolkit merges it once and reuses that result for the other paths: an
- * options object shared by two series types would get the defaults of the first type. Such sources
- * are copied first, so every path is merged on its own, as lodash did. Other objects of a source,
- * such as dates or class instances, replace the target value, as in lodash.
+ * es-toolkit's merge from the compat layer, for user options. When one object of a source sits at
+ * several paths, es-toolkit merges it once and reuses that result for the other paths: an options
+ * object shared by two series types would get the defaults of the first type. Such a source is
+ * copied first, so every path is merged on its own, as lodash did. Dates, class instances and other
+ * non-plain objects of a source replace the target value, and a source object that replaces a
+ * function or a primitive is copied, also as in lodash.
  */
 export function merge<T, U>(object: T, source: U): T & U;
 export function merge<T, U, V>(object: T, source1: U, source2: V): T & U & V;
 export function merge<T, U, V, W>(object: T, source1: U, source2: V, source3: W): T & U & V & W;
 export function merge(object: unknown, ...sources: unknown[]) {
-    return mergeWith(object, ...unshare(sources), mergeValue);
+    return mergeWith(object, ...sources.map(unshare), mergeValue);
 }

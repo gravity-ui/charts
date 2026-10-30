@@ -50,12 +50,6 @@ export default [
                     selector: "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
                     message: "Don't use React.FC",
                 },
-                {
-                    selector:
-                        "ImportDeclaration[source.value=/^es-toolkit(\\u002Fcompat)?$/][importKind!='type']",
-                    message:
-                        "Import es-toolkit functions by path, e.g. import get from 'es-toolkit/compat/get': in CommonJS the root entry loads the whole library.",
-                },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
@@ -86,13 +80,11 @@ export default [
             'no-restricted-imports': [
                 'error',
                 {
-                    paths: [
-                        {
-                            name: 'es-toolkit/compat/merge',
-                            message:
-                                "Use merge from '~core/utils/merge': es-toolkit's merge reuses one result for an object shared by several paths.",
-                        },
-                    ],
+                    paths: ['merge', 'mergeWith', 'defaultsDeep'].map((name) => ({
+                        name: `es-toolkit/compat/${name}`,
+                        message:
+                            "Use merge from '~core/utils/merge': es-toolkit's merge reuses one result for an object shared by several paths.",
+                    })),
                 },
             ],
         },
@@ -105,6 +97,19 @@ export default [
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 {prefer: 'type-imports', fixStyle: 'separate-type-imports'},
+            ],
+            '@typescript-eslint/no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            regex: '^es-toolkit(?!/compat/[^/]+$)(/|$)',
+                            allowTypeImports: true,
+                            message:
+                                "Import es-toolkit functions by path, e.g. import get from 'es-toolkit/compat/get': in CommonJS the root and category entries load all of their functions.",
+                        },
+                    ],
+                },
             ],
         },
     },

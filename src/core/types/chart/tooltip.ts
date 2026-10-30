@@ -238,8 +238,8 @@ export interface TooltipRowCellItem {
     id: string;
     /**
      * What to render in the cell:
-     * - Data field: `'data.fieldName'` — lodash `get(chunk.data, 'fieldName')`.
-     * - Series field: `'series.fieldName'` — lodash `get(chunk.series, 'fieldName')`.
+     * - Data field: `'data.fieldName'` — the lodash-style path `fieldName` in `chunk.data`.
+     * - Series field: `'series.fieldName'` — the lodash-style path `fieldName` in `chunk.series`.
      */
     source: string | TooltipRowCellItemSourceFn;
     /**
