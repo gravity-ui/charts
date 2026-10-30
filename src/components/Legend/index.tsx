@@ -34,6 +34,8 @@ interface Props {
     htmlLayout: HTMLElement | null;
     onItemClick: OnLegendItemClick;
     onUpdate?: () => void;
+    onReady?: (ready: boolean) => void;
+    onError?: (error: unknown) => void;
 }
 
 const getLegendPosition = (args: {
@@ -163,9 +165,21 @@ async function appendPaginator(args: {
 }
 
 export const Legend = (props: Props) => {
-    const {dispatcher, chartSeries, legend, items, config, htmlLayout, onItemClick, onUpdate} =
-        props;
+    const {
+        dispatcher,
+        chartSeries,
+        legend,
+        items,
+        config,
+        htmlLayout,
+        onItemClick,
+        onUpdate,
+        onReady,
+        onError,
+    } = props;
     const ref = React.useRef<SVGGElement>(null);
+    const onErrorRef = React.useRef(onError);
+    onErrorRef.current = onError;
     const tooltipController = React.useMemo(
         () => createLegendTooltipController(dispatcher),
         [dispatcher],
@@ -191,6 +205,8 @@ export const Legend = (props: Props) => {
 
     React.useEffect(() => {
         let cancelled = false;
+        const handleError = onErrorRef.current;
+        onReady?.(false);
         async function prepareLegend() {
             if (!ref.current || !htmlLayout) {
                 return;
@@ -509,14 +525,20 @@ export const Legend = (props: Props) => {
                 .style('opacity', 1);
             htmlContainer?.style('transform', `translate(${legendLeft}px, ${legendTop}px)`);
             tooltipController.sync();
+            onReady?.(true);
         }
 
-        prepareLegend();
+        prepareLegend().catch((error: unknown) => {
+            if (cancelled) return;
+            if (handleError) handleError(error);
+            else throw error;
+        });
         return () => {
             cancelled = true;
         };
     }, [
         chartSeries,
+        onReady,
         onItemClick,
         onUpdate,
         legend,

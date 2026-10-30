@@ -27,6 +27,7 @@ import './styles.scss';
 export type {TooltipItemData};
 
 interface Args {
+    signal?: AbortSignal;
     boundsWidth: number;
     boundsHeight: number;
     clipPathId: string;
@@ -135,6 +136,7 @@ function resolveClipPathId(args: {
 
 export async function getShapes(args: Args) {
     const {
+        signal,
         boundsWidth,
         boundsHeight,
         clipPathId,
@@ -178,6 +180,7 @@ export async function getShapes(args: Args) {
         ),
     );
 
+    const rendering: Promise<void>[] = [];
     const shapesData: TooltipItemData[] = [];
     const shapes: React.ReactElement[] = [];
     const layers: ShapeLabels[] = [];
@@ -217,9 +220,20 @@ export async function getShapes(args: Args) {
             zoomState,
         });
 
+        let onRenderComplete!: () => void;
+        let onRenderError!: (error: unknown) => void;
+        rendering.push(
+            new Promise<void>((resolve, reject) => {
+                onRenderComplete = resolve;
+                onRenderError = reject;
+            }),
+        );
         shapes[index] = (
             <SeriesShapes
                 key={groupKey}
+                signal={signal}
+                onRenderComplete={onRenderComplete}
+                onRenderError={onRenderError}
                 plugin={plugin}
                 isRangeSlider={isRangeSlider}
                 preparedData={renderData}
@@ -253,95 +267,10 @@ export async function getShapes(args: Args) {
             );
         }
     }
-    return {shapes, shapesData, layerIndexes};
-}
-
-export const useShapes = (args: Args) => {
-    const {
-        boundsWidth,
-        boundsHeight,
-        clipPathId,
-        dispatcher,
-        htmlLayout,
-        isOutsideBounds = IS_OUTSIDE_BOUNDS,
-        isRangeSlider,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        xScale,
-        yAxis,
-        yScale,
-        zoomState,
-        getGradientReference,
-        gradientReference,
-    } = args;
-
-    const [shapesElements, setShapesElements] = React.useState<React.ReactElement[]>([]);
-    const [shapesElementsData, setShapesElementsData] = React.useState<TooltipItemData[]>([]);
-    const shapesReadyRef = React.useRef(false);
-
-    const countedRef = React.useRef(0);
-
-    React.useEffect(() => {
-        countedRef.current++;
-
-        if (!boundsHeight || !boundsWidth) {
-            return;
-        }
-
-        (async () => {
-            const currentRun = countedRef.current;
-
-            const {shapes, shapesData} = await getShapes({
-                boundsHeight,
-                boundsWidth,
-                clipPathId,
-                dispatcher,
-                htmlLayout,
-                isOutsideBounds,
-                isRangeSlider,
-                series,
-                seriesOptions,
-                split,
-                xAxis,
-                xScale,
-                yAxis,
-                yScale,
-                zoomState,
-                getGradientReference,
-                gradientReference,
-            });
-
-            if (countedRef.current === currentRun) {
-                shapesReadyRef.current = true;
-                setShapesElements(shapes);
-                setShapesElementsData(shapesData);
-            }
-        })();
-    }, [
-        boundsHeight,
-        boundsWidth,
-        clipPathId,
-        dispatcher,
-        htmlLayout,
-        isOutsideBounds,
-        isRangeSlider,
-        series,
-        seriesOptions,
-        split,
-        xAxis,
-        xScale,
-        yAxis,
-        yScale,
-        zoomState,
-        getGradientReference,
-        gradientReference,
-    ]);
-
     return {
-        shapes: shapesElements,
-        shapesData: shapesElementsData,
-        shapesReady: shapesReadyRef.current,
+        shapes,
+        shapesData,
+        layerIndexes,
+        rendering: Promise.all(rendering).then(() => undefined),
     };
-};
+}

@@ -42,28 +42,46 @@ export function hasAtLeastOneSeriesDataPerPlot(
     return [...hasDataMap.values()].every((hasData) => hasData);
 }
 
-export function useAsyncState<T>(value: T, setState: () => Promise<T>, isReady = true) {
-    const [stateValue, setValue] = React.useState<T>(value);
-    const countedRef = React.useRef(0);
-    const prevValue = React.useRef(value);
+export function useAsyncState<T>(
+    value: T,
+    prepare: () => Promise<T>,
+    enabled = true,
+    onError?: (error: unknown) => void,
+) {
+    const [result, setResult] = React.useState<{value: T; prepare?: typeof prepare}>({value});
+    const onErrorRef = React.useRef(onError);
+    onErrorRef.current = onError;
     React.useEffect(() => {
-        // Always increment to invalidate any in-flight run from the previous cycle.
-        countedRef.current++;
-        if (!isReady) {
-            return;
+        let cancelled = false;
+        // Keep errors bound to the generation that started this work.
+        const handleError = onErrorRef.current;
+        if (enabled) {
+            prepare().then(
+                (nextValue) => {
+                    if (!cancelled) {
+                        setResult((current) => ({
+                            value: isEqual(current.value, nextValue) ? current.value : nextValue,
+                            prepare,
+                        }));
+                    }
+                },
+                (error: unknown) => {
+                    if (!cancelled) {
+                        if (handleError) {
+                            handleError(error);
+                        } else {
+                            throw error;
+                        }
+                    }
+                },
+            );
         }
-        const currentRun = countedRef.current;
-        (async function () {
-            const newValue = await setState();
+        return () => {
+            cancelled = true;
+        };
+    }, [prepare, enabled]);
 
-            if (countedRef.current === currentRun && !isEqual(prevValue.current, newValue)) {
-                setValue(newValue);
-                prevValue.current = newValue;
-            }
-        })();
-    }, [setState, isReady]);
-
-    return stateValue;
+    return {value: result.value, isReady: enabled && result.prepare === prepare};
 }
 
 export function getResetZoomButtonStyle(

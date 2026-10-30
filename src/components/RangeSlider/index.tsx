@@ -20,9 +20,10 @@ export interface RangeSliderHandle {
 }
 
 function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<RangeSliderHandle>) {
-    const {onUpdate} = props;
+    const {onUpdate, onReady} = props;
     const clipPathId = useUniqId();
     const {
+        isReady,
         brush,
         defaultRange,
         height,
@@ -89,6 +90,10 @@ function RangeSliderComponent(props: RangeSliderProps, forwardedRef: React.Ref<R
         selection,
         type: 'x',
     });
+
+    React.useEffect(() => {
+        if (isReady) onReady?.();
+    }, [isReady, onReady]);
 
     return (
         <g

@@ -11,6 +11,8 @@ import type {GradientLayoutReference} from '../useShapes/types';
 export type {RangeSliderState};
 
 export interface RangeSliderProps {
+    onReady?: () => void;
+    onError?: (error: unknown) => void;
     gradientReference?: GradientLayoutReference;
     activeLegendItems: string[];
     boundsOffsetLeft: number;
@@ -35,6 +37,7 @@ export interface UseRangeSliderProps extends RangeSliderProps {
 }
 
 export interface PreparedRangeSliderProps extends Omit<PreparedRangeSlider, 'enabled'> {
+    isReady: boolean;
     htmlLayout: HTMLElement | null;
     offsetLeft: number;
     offsetTop: number;
