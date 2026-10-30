@@ -34,6 +34,10 @@ export default defineConfig({
     resolve: {
         alias: {
             '~core': resolve(__dirname, '../../src/core'),
+            '@gravity-ui/charts/migration/v1': resolve(
+                __dirname,
+                '../../src/migration/v1/index.ts',
+            ),
             '@gravity-ui/charts': resolve(__dirname, '../../src/index.ts'),
         },
     },

@@ -305,7 +305,7 @@
     "ChartAxisPadding": ["max", "min"],
     "ChartAxisRangeSlider": ["brush", "defaultRange", "enabled", "height", "margin"],
     "ChartAxisTickMarks": ["enabled", "length"],
-    "ChartAxisTicks": ["interval", "pixelInterval", "values"],
+    "ChartAxisTicks": ["interval", "values"],
     "ChartAxisTitle": ["align", "margin", "maxRowCount", "style", "text"],
     "ChartBrush": ["borderColor", "borderWidth", "handles", "style"],
     "ChartConfig": [
@@ -384,7 +384,6 @@
       "lineColor",
       "lineVisible",
       "max",
-      "maxPadding",
       "min",
       "order",
       "padding",
@@ -409,7 +408,6 @@
       "lineColor",
       "lineVisible",
       "max",
-      "maxPadding",
       "min",
       "order",
       "padding",
@@ -487,7 +485,6 @@
       "precision",
       "prefix",
       "showRankDelimiter",
-      "unit",
       "units"
     ],
     "FormatUnitScale": ["delimiter", "scale"],

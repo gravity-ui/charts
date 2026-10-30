@@ -5,16 +5,16 @@ import type {Locator} from '@playwright/test';
 
 import AxisPaddingExample from '../../docs/examples/src/charts/layout/axis-padding';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
+import {migrateChartDataV1} from '../migration/v1';
+import type {ChartDataV1} from '../migration/v1';
 import type {ChartData, ChartSeries} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
 
+// Baselines captured from the v1 configuration at be030612.
 for (const type of ['bar-x', 'bar-y'] as const) {
-    test(`percentage maximum preserves ${type} geometry and measured labels after resize`, async ({
-        mount,
-        page,
-    }) => {
-        const legacy: ChartData = {
+    test(`v1 adapter preserves ${type} geometry after resize`, async ({mount}) => {
+        const legacy: ChartDataV1 = {
             legend: {enabled: false},
             xAxis: {maxPadding: 0.25, startOnTick: false, endOnTick: false},
             yAxis: [{maxPadding: 0.25, startOnTick: false, endOnTick: false}],
@@ -38,53 +38,28 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                 ],
             },
         };
-        const replacement: ChartData = {
-            ...legacy,
-            xAxis: {padding: {max: '25%'}, startOnTick: false, endOnTick: false},
-            yAxis: [{padding: {max: '25%'}, startOnTick: false, endOnTick: false}],
+        const data = migrateChartDataV1(legacy).data;
+        let readyCount = 0;
+        const onRender = () => {
+            readyCount++;
         };
+        const getReadyCount = () => readyCount;
         const component = await mount(
-            <ChartTestStory data={legacy} styles={{width: 350, height: 300}} />,
+            <ChartTestStory data={data} styles={{width: 350, height: 300}} onRender={onRender} />,
         );
-        const shapes = component.locator(`.gcharts-${type}__segment`);
-        const geometry = () =>
-            component
-                .locator(
-                    `.gcharts-${type}__segment, .gcharts-x-axis__tick text, .gcharts-y-axis__tick text`,
-                )
-                .evaluateAll((nodes) =>
-                    nodes.map((node) => {
-                        const rect = node.getBoundingClientRect();
-                        return {
-                            text: node.textContent,
-                            x: rect.x,
-                            y: rect.y,
-                            width: rect.width,
-                            height: rect.height,
-                        };
-                    }),
-                );
+        await expect.poll(getReadyCount).toBeGreaterThan(0);
         for (const width of [350, 650]) {
-            await component.update(<ChartTestStory data={legacy} styles={{width, height: 300}} />);
-            await expect(component.locator('svg').first()).toHaveAttribute('width', String(width));
-            await expect(shapes).toHaveCount(2);
-            await page.evaluate(
-                () =>
-                    new Promise<void>((resolve) =>
-                        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-                    ),
-            );
-            const before = await geometry();
+            const previousReadyCount = readyCount;
             await component.update(
-                <ChartTestStory data={replacement} styles={{width, height: 300}} />,
+                <ChartTestStory data={data} styles={{width, height: 300}} onRender={onRender} />,
             );
-            await page.evaluate(
-                () =>
-                    new Promise<void>((resolve) =>
-                        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-                    ),
+            if (width !== 350) {
+                await expect.poll(getReadyCount).toBeGreaterThan(previousReadyCount);
+            }
+            await expect(component.locator('svg').first()).toHaveAttribute('width', String(width));
+            await expect(component.locator('.gcharts-chart')).toHaveScreenshot(
+                `v1-${type}-${width}.png`,
             );
-            await expect.poll(geometry).toEqual(before);
         }
     });
 }

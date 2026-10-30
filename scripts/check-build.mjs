@@ -4,6 +4,7 @@
 // or a CommonJS file with ESM syntax fails here. CSS and JSON keysets are handled the way
 // bundlers handle them: Node cannot import CSS, and imports JSON only with an import attribute.
 // Both builds must export the same names.
+import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {createRequire, registerHooks} from 'node:module';
 import {resolve} from 'node:path';
@@ -65,3 +66,35 @@ if (onlyCjs.length || onlyEsm.length || !esm.includes('Chart')) {
     exit(1);
 }
 stdout.write('Both builds load and export the same names.\n');
+
+// Use a fresh process without the CSS/JSON hooks above. The migration entry point must
+// resolve through package exports and work without loading React or chart plugins.
+execFileSync(
+    process.execPath,
+    [
+        '--input-type=module',
+        '-e',
+        `
+        import assert from 'node:assert/strict';
+        import {createRequire} from 'node:module';
+        import * as esm from '@gravity-ui/charts/migration/v1';
+        const require = createRequire(import.meta.url);
+        const cjs = require('@gravity-ui/charts/migration/v1');
+        const names = ['inspectChartDataV1', 'migrateChartDataV1'];
+        for (const module of [esm, cjs]) {
+            assert.deepEqual(Object.keys(module).filter((name) => name !== '__esModule').sort(), names);
+            const input = {series: {data: []}, xAxis: {ticks: {pixelInterval: 60}}};
+            assert.deepEqual(module.migrateChartDataV1(input).data.xAxis.ticks, {interval: 60});
+            assert.deepEqual(input.xAxis.ticks, {pixelInterval: 60});
+        }
+        assert(!Object.keys(require.cache).some((file) => /node_modules[/\\\\](react|react-dom)[/\\\\]/.test(file)));
+        `,
+    ],
+    {cwd: ROOT, stdio: 'inherit'},
+);
+if (['inspectChartDataV1', 'migrateChartDataV1'].some((name) => esm.includes(name))) {
+    throw new Error(
+        'Migration helpers must only be exported from @gravity-ui/charts/migration/v1.',
+    );
+}
+stdout.write('The v1 migration entry point loads independently in ESM and CommonJS.\n');

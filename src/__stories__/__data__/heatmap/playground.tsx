@@ -100,7 +100,7 @@ function prepareData(): ChartData {
                             },
                         ],
                     },
-                    yAxis: [{visible: false, maxPadding: 0.25}],
+                    yAxis: [{visible: false, padding: {max: '25%'}}],
                     xAxis: {
                         grid: {enabled: false},
                         type: 'category',

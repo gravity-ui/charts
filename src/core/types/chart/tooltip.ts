@@ -234,7 +234,7 @@ export type ChartTooltipSortComparator<T = MeaningfulAny> = (
 type TooltipRowCellItemSourceFn<T = MeaningfulAny> = (args: {item: TooltipDataChunk<T>}) => unknown;
 
 export interface TooltipRowCellItem {
-    /** cell name - used in tooltip rowRenderer(if defined) to transfer colors/names, etc. */
+    /** Cell identifier; also used to resolve arguments for custom row renderers. */
     id: string;
     /**
      * What to render in the cell:
@@ -245,7 +245,7 @@ export interface TooltipRowCellItem {
     /**
      * Optional value format applied when the source resolves to a raw value.
      *
-     * For the built-in `'value'` cell, format priority (highest to lowest):
+     * For default rendering of the built-in `'value'` cell, format priority (highest to lowest):
      * `cell.format` → `series.tooltip.valueFormat` → `tooltip.valueFormat`.
      */
     format?: ValueFormat;
@@ -262,8 +262,7 @@ export interface ChartTooltipRow {
     /**
      * Custom renderer for a single tooltip row.
      *
-     * Takes precedence over the deprecated top-level `rowRenderer`.
-     * If provided, `cells` is ignored for that row.
+     * Takes precedence over `tooltip.rowRenderer`. Arguments are resolved from this row's cells.
      *
      * The returned React element must be a `<tr>`. Apply the `className` arg to get
      * the correct active/striped styles.
@@ -271,8 +270,7 @@ export interface ChartTooltipRow {
      */
     renderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
     /**
-     * Declarative cell configuration for each default tooltip row. Replaces the built-in cells entirely when provided.
-     * Ignored when `renderer` is set.
+     * Cells for this row. Supply the default rendering and values passed to custom row renderers.
      */
     cells?: TooltipRowCellItem[];
 }
@@ -282,8 +280,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
     /** Specifies the renderer for the tooltip. If returned null default tooltip renderer will be used. */
     renderer?: (args: ChartTooltipRendererArgs<T>) => RendererElement | null;
     /**
-     * Defines the way a single data/series is displayed (corresponding to a separate selected point/ruler/shape on the chart).
-     * It is useful in cases where you need to display additional information, but keep the general format of the tooltip.
+     * Custom renderer applied to each resolved tooltip row, including rows provided by plugins.
+     * A row's `rows[].renderer` takes precedence.
      *
      * The returned React element must be a `<tr>` so that it fits into the table layout used by the tooltip.
      * Apply the `className` arg to the root `<tr>` to get the correct active/striped styles.
@@ -307,11 +305,8 @@ export interface ChartTooltip<T = MeaningfulAny> {
      */
     rowRenderer?: ((args: ChartTooltipRowRendererArgs) => RendererElement | string) | null;
     /**
-     * Row-level configuration. Groups the custom row renderer and declarative cell overrides
-     * under a single key.
-     *
-     * `row.renderer` takes precedence over the deprecated top-level `rowRenderer`.
-     * `row.cells` is ignored when a renderer is active.
+     * Explicit row definitions that replace the plugin-provided rows.
+     * Each row can define cells and override `rowRenderer` with its own `renderer`.
      * @experimental This API is unstable and may change without notice.
      */
     rows?: ChartTooltipRow[];
@@ -325,7 +320,7 @@ export interface ChartTooltip<T = MeaningfulAny> {
      * Formatting settings for tooltip value.
      *
      * Lowest-priority fallback for value cells: overridden by `series.tooltip.valueFormat`,
-     * and then by `row.cells.items[].format`.
+     * and then by `rows[].cells[].format` for default cell rendering.
      */
     valueFormat?: ValueFormat;
     /**

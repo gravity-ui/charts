@@ -1,5 +1,7 @@
 import type {AxisPlot} from '../../types';
 import {DEFAULT_AXIS_LABEL_FONT_SIZE} from '../constants';
+import {getSeriesPlugin} from '../series/seriesRegistry';
+import type {PreparedSeries} from '../series/types';
 
 export function prepareAxisPlotLabel(d: AxisPlot) {
     return {
@@ -12,4 +14,9 @@ export function prepareAxisPlotLabel(d: AxisPlot) {
         padding: d.label?.padding ?? 5,
         qa: d.label?.qa,
     };
+}
+
+export function getDefaultAxisPadding(series: PreparedSeries[], axis: 'x' | 'y') {
+    if (series.some((item) => getSeriesPlugin(item.type).defaultAxisPadding === false)) return 0;
+    return axis === 'x' ? '1%' : '5%';
 }

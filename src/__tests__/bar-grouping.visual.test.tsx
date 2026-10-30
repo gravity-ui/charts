@@ -233,7 +233,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                     name,
                     grouping: false,
                     barPadding: name === 'Plan' ? 0.2 : 0.6,
-                    dataLabels: {enabled: name === 'Actual', inside: true},
+                    dataLabels: {enabled: name === 'Actual', placement: ['inside-center']},
                     data: values.map((value, index) =>
                         vertical
                             ? {x: categories[index], y: value}
@@ -352,7 +352,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                         ...s,
                         dataLabels: {
                             enabled: s.name === 'Actual',
-                            inside: true,
+                            placement: ['inside-center'],
                             html: true,
                         },
                     })),

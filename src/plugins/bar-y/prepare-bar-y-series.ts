@@ -51,7 +51,7 @@ async function prepareDataLabels(series: BarYSeries) {
         style,
         html,
     });
-    const inside = series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
+    const inside = series.stacking === 'percent';
     const padding =
         enabled || placement !== undefined
             ? (series.dataLabels?.padding ?? DEFAULT_LABEL_PADDING)

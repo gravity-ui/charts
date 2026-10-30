@@ -70,7 +70,7 @@ test.describe('Bar-x series', () => {
                     lineColor: 'transparent',
                     startOnTick: true,
                     endOnTick: true,
-                    maxPadding: 0,
+                    padding: {max: 0},
                 },
             ],
         };
@@ -520,14 +520,20 @@ test.describe('Bar-x series', () => {
         test.describe('Linear X-axis', () => {
             test('nullMode=skip', async ({mount}) => {
                 const data = cloneDeep(barXNullModeSkipLinearXData);
-                set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+                set(data, 'series.data[0].dataLabels', {
+                    enabled: true,
+                    placement: ['inside-center'],
+                });
                 const component = await mount(<ChartTestStory data={data} />);
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
 
             test('nullMode=zero', async ({mount}) => {
                 const data = cloneDeep(barXNullModeZeroLinearXData);
-                set(data, 'series.data[0].dataLabels', {enabled: true, inside: true});
+                set(data, 'series.data[0].dataLabels', {
+                    enabled: true,
+                    placement: ['inside-center'],
+                });
                 const component = await mount(<ChartTestStory data={data} />);
                 await expect(component.locator('svg')).toHaveScreenshot();
             });
@@ -669,8 +675,8 @@ test.describe('Bar-x series', () => {
                     },
                 ],
             },
-            yAxis: [{maxPadding: 0}],
-            xAxis: {maxPadding: 0},
+            yAxis: [{padding: {max: 0}}],
+            xAxis: {padding: {max: 0}},
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -984,7 +990,7 @@ test.describe('Bar-x series', () => {
                     type: 'category',
                     categories: ['Positive', 'Negative', 'Short', 'Zero', 'Mixed'],
                 },
-                yAxis: [{min: -15, max: 15, maxPadding: 0}],
+                yAxis: [{min: -15, max: 15, padding: {max: 0}}],
             };
             const plain = cloneDeep(data);
             plain.series.options = {'bar-x': {...plain.series.options?.['bar-x'], borderWidth: 0}};

@@ -19,6 +19,16 @@
         "types": "./dist/cjs/index.d.ts",
         "default": "./dist/cjs/index.js"
       }
+    },
+    "./migration/v1": {
+      "import": {
+        "types": "./dist/esm/migration/v1/index.d.ts",
+        "default": "./dist/esm/migration/v1/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/migration/v1/index.d.ts",
+        "default": "./dist/cjs/migration/v1/index.js"
+      }
     }
   },
   "sideEffects": [

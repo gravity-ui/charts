@@ -144,6 +144,8 @@ export interface SeriesPlugin<
      * reserve positive headroom. Explicit bounds and zoom take precedence.
      */
     axisBaseline?: 'x' | 'y';
+    /** Whether the chart's default axis padding applies. Explicit padding remains available. */
+    defaultAxisPadding?: boolean;
     /**
      * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
      * Omit to use series.type: all series of this plugin share one layer by default.
@@ -270,9 +272,7 @@ export interface SeriesPlugin<
          * - Function: called per chunk, allowing conditional extra rows
          *   (e.g. waterfall adds a "Subtotal" row for non-total bars).
          *
-         * Each entry maps to one rendered `<tr>`. The first entry is the *primary* row
-         * and is the only one that respects user overrides (`row.cells.items` /
-         * `row.renderer`). Extra entries are always rendered with the plugin's cells.
+         * Each entry maps to one rendered `<tr>`. Explicit `tooltip.rows` replaces this list.
          */
         rows:
             | ReadonlyArray<TooltipRowDef>

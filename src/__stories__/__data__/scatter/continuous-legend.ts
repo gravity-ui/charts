@@ -24,7 +24,13 @@ function prepareData(): ChartData {
                     name: 'Series 1',
                     data,
                     dataLabels: {
-                        format: {type: 'number', unit: 'auto'},
+                        format: {
+                            type: 'number',
+                            units: {
+                                scale: {base: 1000, postfixes: ['', 'K', 'M', 'B', 'T']},
+                                delimiter: '',
+                            },
+                        },
                     },
                 },
             ],
@@ -42,7 +48,7 @@ function prepareData(): ChartData {
         tooltip: {
             valueFormat: {
                 type: 'number',
-                unit: 'k',
+                units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''},
             },
         },
     };

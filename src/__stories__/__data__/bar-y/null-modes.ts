@@ -26,7 +26,7 @@ export const barYNullModeSkipLinearXData: ChartData = {
                 nullMode: 'skip',
                 dataLabels: {
                     enabled: true,
-                    inside: true,
+                    placement: ['inside-center'],
                 },
             },
         ],
@@ -43,7 +43,7 @@ export const barYNullModeZeroLinearXData: ChartData = {
                 nullMode: 'zero',
                 dataLabels: {
                     enabled: true,
-                    inside: true,
+                    placement: ['inside-center'],
                 },
             },
         ],
@@ -60,7 +60,7 @@ export const barYNullModeSkipCategoryYData: ChartData = {
                 nullMode: 'skip',
                 dataLabels: {
                     enabled: true,
-                    inside: true,
+                    placement: ['inside-center'],
                 },
             },
         ],
@@ -83,7 +83,7 @@ export const barYNullModeZeroCategoryYData: ChartData = {
                 nullMode: 'zero',
                 dataLabels: {
                     enabled: true,
-                    inside: true,
+                    placement: ['inside-center'],
                 },
             },
         ],
