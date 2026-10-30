@@ -50,11 +50,6 @@ export default [
                     selector: "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
                     message: "Don't use React.FC",
                 },
-                {
-                    selector: 'ImportDeclaration[source.value=/^lodash\\b/]',
-                    message:
-                        "Use es-toolkit instead of lodash, e.g. import {get} from 'es-toolkit/compat'.",
-                },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
