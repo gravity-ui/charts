@@ -3,6 +3,7 @@ import React from 'react';
 import type {Dispatch} from 'd3-dispatch';
 import isEqual from 'lodash/isEqual';
 
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries} from '~core/series/types';
 
 import {getPreparedHovered} from '../../components/Tooltip/DefaultTooltipContent/utils';
@@ -72,9 +73,12 @@ export const useTooltip = ({dispatcher, tooltip, seriesData, xAxis, yAxis}: Args
                         shapes: AxisPlotShape[];
                     },
                 ) => {
-                    const filteredNextHovered = nextHovered?.filter((item) =>
-                        'y' in item.data ? item.data.y !== null : true,
-                    );
+                    const filteredNextHovered = nextHovered?.filter((item) => {
+                        const isNullValue = getSeriesPlugin(item.series.type).tooltip.isNullValue;
+                        return isNullValue
+                            ? !isNullValue(item)
+                            : !('y' in item.data) || item.data.y !== null;
+                    });
                     const preparedHovered = getPreparedHovered({
                         hovered: filteredNextHovered ?? [],
                         sorting: tooltip?.sorting,

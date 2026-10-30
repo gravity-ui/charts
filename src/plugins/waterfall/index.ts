@@ -52,7 +52,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: data, tooltipItems: data};
 }
 
-export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
+export const waterfallPlugin: SeriesPlugin<WaterfallSeries, TooltipDataChunkWaterfall> = {
     type: 'waterfall',
     axisBaseline: 'y',
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
@@ -113,6 +113,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipYValue,
+        isNullValue: (item) => !item.data.total && item.data.y === null,
         header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (chunk) => {
             const c = chunk as TooltipDataChunkWaterfall;

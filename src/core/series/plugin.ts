@@ -247,6 +247,12 @@ export interface SeriesPlugin<
          * Omit to use the point's scalar value, or its Y value for axis-based points.
          */
         getValue?(args: GetTooltipValueArgs<TTooltipChunk>): AxisDomainValue;
+        /**
+         * Whether a hovered chunk has no value to show, so `useTooltip` excludes it from the
+         * hovered chunks. Defaults to `data.y === null`. Override when the plugin's displayed
+         * value does not track `data.y`, e.g. waterfall's calculated totals.
+         */
+        isNullValue?(item: TTooltipChunk): boolean;
         /** Omit for series without a tooltip header. */
         header?: {
             /** Unformatted header value, resolved once before applying headerFormat. */

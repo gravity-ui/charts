@@ -25,7 +25,7 @@ function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
             );
         case 'skip':
         default:
-            return data.filter((d) => d.y !== null);
+            return data.filter((d) => d.total || d.y !== null);
     }
 }
 
