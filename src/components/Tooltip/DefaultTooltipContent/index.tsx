@@ -29,6 +29,19 @@ import type {HoveredValue} from './utils';
 
 const b = block('tooltip');
 
+// Parsed cell source paths, reused across points and renders. toPath parses them as lodash does:
+// compat's get skips empty segments in some strings, such as the last one in 'data.custom.'.
+const sourcePaths = new Map<string, string[]>();
+
+function getSourcePath(path: string) {
+    let parsed = sourcePaths.get(path);
+    if (!parsed) {
+        parsed = toPath(path);
+        sourcePaths.set(path, parsed);
+    }
+    return parsed;
+}
+
 interface Props {
     hovered: TooltipDataChunk[];
     pinned?: boolean;
@@ -90,12 +103,10 @@ export const DefaultTooltipContent = ({
             return cell.source({item: tooltipDataChunk});
         }
 
-        // Paths go through toPath, which parses them as lodash does: compat's get skips empty
-        // segments in some strings, such as the last one in 'data.custom.'.
         return (
-            get(tooltipDataChunk, toPath(cell.source)) ??
-            get(tooltipDataChunk, toPath('data.' + cell.source)) ??
-            get(tooltipDataChunk, toPath('series.' + cell.source))
+            get(tooltipDataChunk, getSourcePath(cell.source)) ??
+            get(tooltipDataChunk, getSourcePath('data.' + cell.source)) ??
+            get(tooltipDataChunk, getSourcePath('series.' + cell.source))
         );
     };
 

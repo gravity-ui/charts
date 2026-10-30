@@ -78,6 +78,26 @@ export default [
         },
     },
 
+    // Library code merges user options through core/utils/merge
+    {
+        files: ['src/**/*.{ts,tsx}'],
+        ignores: ['src/**/__tests__/**', 'src/**/__stories__/**', 'src/**/*.test.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: 'es-toolkit/compat/merge',
+                            message:
+                                "Use merge from '~core/utils/merge': es-toolkit's merge reuses one result for an object shared by several paths.",
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+
     // TypeScript-specific custom rules
     {
         files: ['**/*.ts', '**/*.mts', '**/*.cts', '**/*.tsx', '**/*.mtsx', '**/*.ctsx'],

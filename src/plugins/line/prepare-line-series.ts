@@ -1,5 +1,4 @@
 import get from 'es-toolkit/compat/get';
-import merge from 'es-toolkit/compat/merge';
 
 import {
     DASH_STYLE,
@@ -19,6 +18,7 @@ import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
+import {merge} from '~core/utils/merge';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {

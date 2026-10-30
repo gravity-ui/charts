@@ -7,7 +7,8 @@ export interface ThrottledFunction<T extends (...args: never[]) => void> {
 /**
  * Calls `fn` at once, then at most once per `wait` milliseconds with the latest arguments, at the
  * end of each interval. es-toolkit's throttle waits `wait` after the last call instead, which
- * slows down updates during continuous pointer moves.
+ * slows down updates during continuous pointer moves. Time comes from performance.now(), which,
+ * unlike Date.now(), does not jump when the system clock is set.
  */
 export function throttle<T extends (...args: never[]) => void>(
     fn: T,
@@ -18,12 +19,12 @@ export function throttle<T extends (...args: never[]) => void>(
     let pendingArgs: Parameters<T> | undefined;
 
     const run = (args: Parameters<T>) => {
-        lastRun = Date.now();
+        lastRun = performance.now();
         fn(...args);
     };
 
     const throttled = (...args: Parameters<T>) => {
-        const remaining = lastRun + wait - Date.now();
+        const remaining = lastRun + wait - performance.now();
         if (remaining <= 0 && timer === undefined) {
             run(args);
             return;

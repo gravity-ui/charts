@@ -1,6 +1,5 @@
 import {sort} from 'd3-array';
 import get from 'es-toolkit/compat/get';
-import merge from 'es-toolkit/compat/merge';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {
@@ -14,6 +13,7 @@ import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
+import {merge} from '~core/utils/merge';
 
 import type {AreaRangeSeries, AreaRangeSeriesData} from '../../types';
 

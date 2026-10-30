@@ -1,4 +1,4 @@
-import merge from 'es-toolkit/compat/merge';
+import {merge} from '~core/utils/merge';
 
 import type {ChartSeriesOptions} from '../../types';
 import {seriesOptionsDefaults} from '../constants';

@@ -1,6 +1,7 @@
 import clone from 'es-toolkit/compat/clone';
 import get from 'es-toolkit/compat/get';
-import merge from 'es-toolkit/compat/merge';
+
+import {merge} from '~core/utils/merge';
 
 import type {BaseTextStyle, ChartData, LegendConfig} from '../../types';
 import type {PreparedChart} from '../chart/types';

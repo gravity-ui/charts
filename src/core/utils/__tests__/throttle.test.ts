@@ -67,6 +67,18 @@ describe('throttle', () => {
         expect(fn).toHaveBeenLastCalledWith('c');
     });
 
+    test('keeps its schedule when the system clock is set back', () => {
+        const fn = jest.fn();
+        const throttled = throttle(fn, 100);
+
+        throttled('a');
+        jest.setSystemTime(Date.now() - 9000);
+        jest.advanceTimersByTime(100);
+        throttled('b');
+
+        expect(fn).toHaveBeenLastCalledWith('b');
+    });
+
     test('runs every call at once with a zero interval', () => {
         const fn = jest.fn();
         const throttled = throttle(fn, 0);
