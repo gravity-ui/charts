@@ -2,7 +2,6 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 import {pointer} from 'd3-selection';
-import throttle from 'lodash/throttle';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
@@ -11,6 +10,7 @@ import {EventType} from '~core/utils';
 import {getChartTargets} from '~core/utils/chart-interaction';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
+import {throttle} from '~core/utils/throttle';
 
 import type {PreparedXAxis, PreparedYAxis} from '../../hooks';
 import type {useHoverResetKey} from '../../hooks/useHoverResetKey';

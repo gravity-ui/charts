@@ -1,6 +1,6 @@
 import {max, min} from 'd3-array';
-import groupBy from 'lodash/groupBy';
 
+import {groupBy} from '../../utils/array';
 import {getRectDistance} from '../../utils/geometry';
 import type {
     GetTooltipDataArgs,

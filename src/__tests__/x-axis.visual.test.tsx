@@ -2,8 +2,8 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import {median} from 'd3-array';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import {DAY} from '~core/constants';
 

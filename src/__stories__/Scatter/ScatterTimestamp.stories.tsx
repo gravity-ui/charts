@@ -2,8 +2,8 @@ import React from 'react';
 
 import {dateTimeUtc} from '@gravity-ui/date-utils';
 import type {Meta, StoryObj} from '@storybook/react';
-import random from 'lodash/random';
-import range from 'lodash/range';
+import random from 'es-toolkit/compat/random';
+import range from 'es-toolkit/compat/range';
 
 import type {ChartData, ScatterSeries, ScatterSeriesData} from '../../types';
 import {ChartStory} from '../ChartStory';

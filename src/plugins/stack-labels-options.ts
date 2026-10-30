@@ -1,4 +1,4 @@
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {i18n} from '~core/i18n';

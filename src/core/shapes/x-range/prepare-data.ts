@@ -1,6 +1,6 @@
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';

@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {BaseTextStyle, ChartAxisLabels, ChartXAxis} from '../../types';
 import {

@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {getYAxisLabelMaxWidth} from '~core/axes/y-axis';
 import type {ChartScale} from '~core/scales/types';

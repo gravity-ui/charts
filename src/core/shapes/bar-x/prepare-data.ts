@@ -1,7 +1,7 @@
 import {ascending, descending, max, min, reverse, sort} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {BarXSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';

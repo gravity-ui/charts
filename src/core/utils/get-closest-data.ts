@@ -1,11 +1,11 @@
-import get from 'lodash/get';
-import groupBy from 'lodash/groupBy';
+import get from 'es-toolkit/compat/get';
 
 import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
 
 import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
 import type {TooltipItemData} from '../shapes/types';
 
+import {groupBy} from './array';
 import {toPublicInteractionItem} from './chart-interaction';
 import {getNearestItem} from './nearest-point';
 import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';

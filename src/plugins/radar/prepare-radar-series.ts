@@ -1,6 +1,5 @@
 import {scaleOrdinal} from 'd3-scale';
-import get from 'lodash/get';
-import merge from 'lodash/merge';
+import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {
@@ -12,6 +11,7 @@ import type {PreparedLegendOptions, PreparedRadarSeries} from '~core/series/type
 import {prepareLegendSymbol} from '~core/series/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getUniqId} from '~core/utils';
+import {merge} from '~core/utils/merge';
 
 import type {ChartSeriesOptions, RadarSeries} from '../../types';
 

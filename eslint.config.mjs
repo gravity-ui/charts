@@ -50,11 +50,6 @@ export default [
                     selector: "TSTypeReference>TSQualifiedName[left.name='React'][right.name='FC']",
                     message: "Don't use React.FC",
                 },
-                {
-                    selector: "ImportDeclaration[source.value='lodash'][importKind!='type']",
-                    message:
-                        "Import lodash functions by path, e.g. import get from 'lodash/get': the 'lodash' entry pulls the whole library into the bundle.",
-                },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
             'jsx-a11y/no-autofocus': ['error', {ignoreNonDOM: true}],
@@ -77,6 +72,24 @@ export default [
         },
     },
 
+    // Library code merges user options through core/utils/merge
+    {
+        files: ['src/**/*.{ts,tsx}'],
+        ignores: ['src/**/__tests__/**', 'src/**/__stories__/**', 'src/**/*.test.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: ['merge', 'mergeWith', 'defaultsDeep'].map((name) => ({
+                        name: `es-toolkit/compat/${name}`,
+                        message:
+                            "Use merge from '~core/utils/merge': es-toolkit's merge reuses one result for an object shared by several paths.",
+                    })),
+                },
+            ],
+        },
+    },
+
     // TypeScript-specific custom rules
     {
         files: ['**/*.ts', '**/*.mts', '**/*.cts', '**/*.tsx', '**/*.mtsx', '**/*.ctsx'],
@@ -84,6 +97,19 @@ export default [
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 {prefer: 'type-imports', fixStyle: 'separate-type-imports'},
+            ],
+            '@typescript-eslint/no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            regex: '^es-toolkit(?!/compat/[^/]+$)(/|$)',
+                            allowTypeImports: true,
+                            message:
+                                "Import es-toolkit functions by path, e.g. import get from 'es-toolkit/compat/get': in CommonJS the root and category entries load all of their functions.",
+                        },
+                    ],
+                },
             ],
         },
     },

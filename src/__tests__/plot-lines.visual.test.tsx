@@ -1,9 +1,9 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import cloneDeep from 'lodash/cloneDeep';
-import merge from 'lodash/merge';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import merge from 'es-toolkit/compat/merge';
+import set from 'es-toolkit/compat/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {

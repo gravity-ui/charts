@@ -2,9 +2,9 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import type {Locator} from '@playwright/test';
-import cloneDeep from 'lodash/cloneDeep';
-import range from 'lodash/range';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import range from 'es-toolkit/compat/range';
+import set from 'es-toolkit/compat/set';
 
 import LegendLabelsExample from '../../docs/examples/src/charts/legend/labels';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
