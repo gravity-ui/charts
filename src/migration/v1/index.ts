@@ -110,9 +110,14 @@ function analyze(data: unknown, collectPatches: boolean) {
 
         if (!isOptions(value) || !Object.prototype.hasOwnProperty.call(value, 'maxPadding')) return;
         const {maxPadding, ...next} = value;
+        const ignoredMaxPadding =
+            path[0] === 'yAxis' && value.type === 'datetime' && Boolean(value.timestamps);
         if (
             maxPadding !== undefined &&
-            (typeof maxPadding !== 'number' || !Number.isFinite(maxPadding * 100) || maxPadding < 0)
+            (typeof maxPadding !== 'number' ||
+                !Number.isFinite(maxPadding) ||
+                maxPadding < 0 ||
+                (!ignoredMaxPadding && !Number.isFinite(maxPadding * 100)))
         ) {
             review(
                 [...path, 'maxPadding'],
@@ -122,7 +127,7 @@ function analyze(data: unknown, collectPatches: boolean) {
             return;
         }
         const padding = isOptions(value.padding) ? value.padding : {};
-        if (padding.max === undefined && maxPadding !== undefined) {
+        if (padding.max === undefined && maxPadding !== undefined && !ignoredMaxPadding) {
             // Size strings do not accept exponent notation, including for tiny fractions.
             const percentage = (maxPadding * 100).toLocaleString('en-US', {
                 useGrouping: false,
@@ -133,9 +138,10 @@ function analyze(data: unknown, collectPatches: boolean) {
         warnings.push({
             code: 'axis-max-padding',
             path: [...path, 'maxPadding'],
-            message:
-                'maxPadding was removed; use padding.max as a percentage of the original domain.',
-            replacement: 'padding.max',
+            message: ignoredMaxPadding
+                ? 'maxPadding was ignored by datetime Y axes with timestamps; removed without adding padding.'
+                : 'maxPadding was removed; use padding.max as a percentage of the original domain.',
+            replacement: ignoredMaxPadding ? undefined : 'padding.max',
             resolution: 'automatic',
         });
         patch(path, next);

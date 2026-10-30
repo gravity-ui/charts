@@ -81,11 +81,13 @@ For the other legacy values:
 - `unit: 'm'`, `'b'` or `'t'`: use a fixed scale with factor `1e6`, `1e9` or `1e12` and suffix `M`, `B` or `T`.
 - `unit: null`: use a fixed scale with factor `1`, an empty postfix and an empty delimiter. On numeric axes, this also disables automatic abbreviation.
 
-An existing `units` option keeps its priority. In executable configurations, an explicitly present `unit: undefined` is converted to `units: undefined`, preserving its ability to disable automatic axis abbreviation.
+An existing `units` scale keeps its priority. An omitted or `undefined` scale keeps automatic axis abbreviation.
 
 {% note info %}
 
 The `FORMAT_UNITS_NUMBERS` preset adds a space before the suffix by default. Set `delimiter: ''` to preserve v1's spacing.
+
+In executable configurations, an explicitly present `unit: undefined` is migrated like `unit: null` and still disables automatic axis abbreviation.
 
 {% endnote %}
 
@@ -108,6 +110,8 @@ Migrated HTML inside labels are centered correctly. Outside labels follow the va
 The adapter converts this field automatically, preserves `padding.min` and keeps any explicit `padding.max`, including `0` and `'auto'`. See [axis padding](../guides/axes/index.md#axis-padding) for the replacement options and their interaction with explicit limits.
 
 {% note info %}
+
+On datetime Y axes with explicit `timestamps`, v1 ignored `maxPadding`. The adapter removes it without adding padding and preserves any explicit `padding` settings.
 
 The new padding calculation fixes axis direction and zoom handling: zoomed boundaries stay fixed, and category axes ignore padding. On logarithmic axes, percentage padding extends the logarithmic range. For a domain of `[1, 100]`, `'25%'` produces an upper bound of approximately `316.23` before tick rounding and other offsets. The old orientation-dependent result was a bug and is not preserved. Adjust the percentage or set explicit axis limits if needed.
 

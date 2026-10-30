@@ -129,6 +129,14 @@ function makeDatetimeAxis(dateFormat?: string): PreparedAxis {
     } as unknown as PreparedAxis;
 }
 
+test('undefined numeric units retain automatic axis abbreviation', () => {
+    const axis = {
+        type: 'linear',
+        labels: {numberFormat: {units: undefined, lang: 'en'}},
+    } as PreparedAxis;
+    expect(formatAxisTickLabel({axis, value: 1500, step: 1000})).toBe('1.5K');
+});
+
 describe('formatAxisTickLabel - datetime smart sub-day formatting', () => {
     // 2024-01-15 00:00:00 UTC
     const MIDNIGHT_JAN15 = 1705276800000;

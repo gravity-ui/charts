@@ -1,6 +1,9 @@
 import {inspectChartDataV1, migrateChartDataV1} from '..';
-import {getFormattedValue} from '../../../core/utils/format';
-import {formatNumber, getDefaultNumberUnits} from '../../../libs/format-number';
+import type {PreparedAxis} from '../../../core/axes/types';
+import {createXScale} from '../../../core/scales/x-scale';
+import {createYScale} from '../../../core/scales/y-scale';
+import {formatAxisTickLabel, getFormattedValue} from '../../../core/utils/format';
+import {formatNumber} from '../../../libs/format-number';
 import type {ChartData} from '../../../types';
 import {migrateNumberFormatV1} from '../number-format';
 import type {ChartDataV1, FormatNumberOptionsV1} from '../types';
@@ -21,8 +24,12 @@ test.each(
 test.each([null, undefined] as const)(
     'explicit unit %s disables automatic axis abbreviation',
     (unit) => {
-        const options = migrateNumberFormatV1({unit});
-        expect(formatNumber(1500, {units: getDefaultNumberUnits(1000), ...options})).toBe('1 500');
+        const {data} = migrateChartDataV1({
+            yAxis: [{labels: {numberFormat: {unit, lang: 'en'}}}],
+            series: {data: []},
+        });
+        const axis = {type: 'linear', labels: data.yAxis?.[0].labels} as PreparedAxis;
+        expect(formatAxisTickLabel({axis, value: 1500, step: 1000})).toBe('1,500');
     },
 );
 
@@ -208,6 +215,61 @@ test.each([-1, NaN, Infinity, Number.MAX_VALUE])(
 test('uses decimal percentage notation for a small maxPadding fraction', () => {
     const result = migrateChartDataV1({xAxis: {maxPadding: 1e-12}, series: {data: []}});
     expect(result.data.xAxis?.padding?.max).toBe('0.0000000001%');
+});
+
+test.each([
+    {maxPadding: 0.25, padding: undefined, expected: [1704067200000, 1704153600000]},
+    {maxPadding: Number.MAX_VALUE, padding: undefined, expected: [1704067200000, 1704153600000]},
+    {maxPadding: 0.25, padding: {min: '10%'}, expected: [1704058560000, 1704153600000]},
+    {maxPadding: 0.25, padding: {max: '10%'}, expected: [1704067200000, 1704162240000]},
+])(
+    'preserves datetime Y timestamps when maxPadding was ignored (%j)',
+    ({maxPadding, padding, expected}) => {
+        const input: ChartDataV1 = {
+            yAxis: [
+                {
+                    type: 'datetime',
+                    timestamps: [1704067200000, 1704153600000],
+                    maxPadding,
+                    startOnTick: false,
+                    endOnTick: false,
+                    padding,
+                },
+            ],
+            series: {data: []},
+        };
+        const {data, warnings} = migrateChartDataV1(input);
+        const axis = {...data.yAxis?.[0], labels: {lineHeight: 12}} as PreparedAxis;
+        expect(createYScale({axis, boundsHeight: 300, series: []})?.domain().map(Number)).toEqual(
+            expected,
+        );
+        expect(data.yAxis?.[0]).not.toHaveProperty('maxPadding');
+        expect(data.yAxis?.[0].padding).toBe(padding);
+        expect(input.yAxis?.[0].maxPadding).toBe(maxPadding);
+        expect(warnings).toEqual([
+            expect.objectContaining({code: 'axis-max-padding', resolution: 'automatic'}),
+        ]);
+        expect(inspectChartDataV1(input)).toEqual(warnings);
+        expect(migrateChartDataV1(data).warnings).toEqual([]);
+    },
+);
+
+test('datetime X timestamps retain migrated maximum padding', () => {
+    const {data} = migrateChartDataV1({
+        xAxis: {
+            type: 'datetime',
+            timestamps: [1704067200000, 1704153600000],
+            maxPadding: 0.25,
+            startOnTick: false,
+            endOnTick: false,
+        },
+        series: {data: []},
+    });
+    const axis = data.xAxis;
+    if (!axis) throw new Error('Missing migrated X axis');
+    expect(createXScale({axis, boundsWidth: 300, series: []})?.domain().map(Number)).toEqual([
+        1704067200000, 1704175200000,
+    ]);
 });
 
 test('converts logarithmic maxPadding to the corrected percentage calculation', () => {

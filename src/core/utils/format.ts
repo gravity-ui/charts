@@ -4,7 +4,7 @@ import type {AxisDomain} from 'd3-axis';
 import capitalize from 'lodash/capitalize';
 
 import {formatNumber, getDefaultNumberUnits} from '../../libs';
-import type {FormatOptions} from '../../libs/format-number/types';
+import type {FormatNumberOptions} from '../../libs/format-number/types';
 import type {CustomFormatContext, ValueFormat} from '../../types';
 import type {PreparedAxis} from '../axes/types';
 import {DEFAULT_DATE_FORMAT} from '../constants';
@@ -146,9 +146,11 @@ export function formatAxisTickLabel(args: {axis: PreparedAxis; value: AxisDomain
         }
         case 'linear':
         default: {
-            const numberFormat: FormatOptions = {
-                units: value && step ? getDefaultNumberUnits(step) : undefined,
+            const numberFormat: FormatNumberOptions = {
                 ...axis.labels.numberFormat,
+                units:
+                    axis.labels.numberFormat?.units ??
+                    (value && step ? getDefaultNumberUnits(step) : undefined),
             };
 
             return formatNumber(value as number, numberFormat);

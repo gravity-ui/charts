@@ -6,14 +6,13 @@ import type {FormatNumberOptionsV1} from './types';
 export function migrateNumberFormatV1(options: FormatNumberOptionsV1): FormatNumberOptions {
     const {unit, ...result} = options;
     if (options.units || !Object.prototype.hasOwnProperty.call(options, 'unit')) return result;
-    if (unit === undefined) return {...result, units: undefined};
     if (unit === 'auto') {
         return {
             ...result,
             units: {scale: {base: 1000, postfixes: ['', 'K', 'M', 'B', 'T']}, delimiter: ''},
         };
     }
-    const index = unit === null ? 0 : ['k', 'm', 'b', 't'].indexOf(unit) + 1;
+    const index = unit === null || unit === undefined ? 0 : ['k', 'm', 'b', 't'].indexOf(unit) + 1;
     return {
         ...result,
         units: {
