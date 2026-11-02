@@ -1631,7 +1631,7 @@ export const lineDualAxesSplitData: ChartData = {
     },
     xAxis: {
         ticks: {
-            pixelInterval: 120,
+            interval: 120,
         },
         labels: {
             enabled: false,
@@ -1650,7 +1650,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 0,
@@ -1668,7 +1668,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 0,
@@ -1686,7 +1686,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 1,
@@ -1704,7 +1704,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 1,
@@ -1722,7 +1722,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 2,
@@ -1740,7 +1740,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 2,
@@ -1758,7 +1758,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 3,
@@ -1776,7 +1776,7 @@ export const lineDualAxesSplitData: ChartData = {
                 enabled: true,
             },
             ticks: {
-                pixelInterval: 72,
+                interval: 72,
             },
             lineColor: 'transparent',
             plotIndex: 3,

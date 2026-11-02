@@ -57,7 +57,7 @@ test.describe('X-axis', () => {
             xAxis: {
                 labels: {
                     numberFormat: {
-                        unit: 'k',
+                        units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''},
                     },
                 },
             },

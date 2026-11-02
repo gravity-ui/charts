@@ -12,7 +12,7 @@ import {createGradientRect, getContinuesColorFn, getTextSizeFn, getUniqId} from 
 import {axisBottom} from '~core/utils/axis-generators';
 
 import type {LegendItem, OnLegendItemClick, PreparedLegend, PreparedSeries} from '../../hooks';
-import {formatNumber} from '../../libs';
+import {compactNumberUnits, formatNumber} from '../../libs';
 import type {LegendConfig} from '../../types';
 import {block} from '../../utils';
 
@@ -484,7 +484,8 @@ export const Legend = (props: Props) => {
                         labelsLineHeight: legend.ticks.labelsLineHeight,
                         maxTickCount: 4,
                         tickColor: '#fff',
-                        labelFormat: (value: number) => formatNumber(value, {unit: 'auto'}),
+                        labelFormat: (value: number) =>
+                            formatNumber(value, {units: compactNumberUnits}),
                         labelsStyle: legend.ticks.style,
                     },
                 });

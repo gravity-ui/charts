@@ -20,7 +20,7 @@ function prepareData(): ChartData {
         yAxis: [
             {
                 type: 'linear',
-                maxPadding: 0,
+                padding: {max: 0},
             },
         ],
     };

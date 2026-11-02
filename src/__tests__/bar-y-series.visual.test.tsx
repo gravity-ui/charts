@@ -107,7 +107,7 @@ test.describe('Bar-y series', () => {
                     xAxis: {
                         ...barYBasicData.xAxis,
                         order: 'reverse',
-                        maxPadding: 0.5,
+                        padding: {max: '50%'},
                     },
                 }}
             />,
@@ -811,7 +811,7 @@ test.describe('Bar-y series', () => {
                         },
                     ],
                 },
-                yAxis: [{maxPadding: 0}],
+                yAxis: [{padding: {max: 0}}],
             };
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
@@ -827,7 +827,7 @@ test.describe('Bar-y series', () => {
                         },
                     ],
                 },
-                yAxis: [{maxPadding: 0}],
+                yAxis: [{padding: {max: 0}}],
             };
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
@@ -876,7 +876,7 @@ test.describe('Bar-y series', () => {
                             {y: 1, x: 1, label: 'Data label: 1'},
                             {y: 2, x: 100, label: 'Data label: 100'},
                         ],
-                        dataLabels: {enabled: true, inside: true},
+                        dataLabels: {enabled: true, placement: ['inside-center']},
                     },
                 ],
             },

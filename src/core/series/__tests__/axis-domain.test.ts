@@ -72,7 +72,7 @@ it('groups contributions once per plugin, retaining series order, references and
                 boundsWidth: 600,
                 axis: {
                     type: 'linear',
-                    maxPadding: 0,
+                    padding: {max: 0},
                     startOnTick: false,
                     endOnTick: false,
                 } as PreparedAxis,

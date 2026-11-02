@@ -27,7 +27,7 @@ const AxisTitle = () => {
         yAxis: [
             {
                 title,
-                maxPadding: 0,
+                padding: {max: 0},
                 min: 0,
             },
         ],

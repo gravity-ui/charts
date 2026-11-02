@@ -98,7 +98,6 @@ type PreparedBaseAxis = Omit<
     grid: {
         enabled: boolean;
     };
-    maxPadding: number;
     ticks: {
         pixelInterval?: number;
         values?: (number | string)[];

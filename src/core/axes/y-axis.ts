@@ -75,7 +75,7 @@ function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
         return 0;
     }
 
-    return 0.05;
+    return '5%';
 }
 
 const VALID_Y_AXIS_TITLE_ROTATION = [0, -90, 90];
@@ -224,14 +224,16 @@ export const getPreparedYAxis = ({
                 },
                 min: get(axisItem, 'min'),
                 max: get(axisItem, 'max'),
-                padding: axisItem.padding,
+                padding: {
+                    ...axisItem.padding,
+                    max:
+                        axisItem.padding?.max ??
+                        (axisItem.type === 'datetime' && axisItem.timestamps
+                            ? 0
+                            : getMaxPaddingBySeries({series: axisSeriesData})),
+                },
                 startOnTick: get(axisItem, 'startOnTick'),
                 endOnTick: get(axisItem, 'endOnTick'),
-                maxPadding: get(
-                    axisItem,
-                    'maxPadding',
-                    getMaxPaddingBySeries({series: axisSeriesData}),
-                ),
                 grid: {
                     enabled: gridEnabled,
                 },
@@ -241,7 +243,7 @@ export const getPreparedYAxis = ({
                               base: height,
                               value: axisItem.ticks?.interval,
                           })
-                        : axisItem.ticks?.pixelInterval,
+                        : undefined,
                     values: axisItem.ticks?.values,
                 },
                 tickMarks: {

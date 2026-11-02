@@ -69,20 +69,8 @@ export interface FormatNumberOptions extends FormatOptions {
     /** String appended to the formatted value (e.g. `' USD'`). */
     postfix?: string;
     /**
-     * Compact unit suffix applied to large numbers.
-     * - `'auto'` — picks the most appropriate unit automatically (`k`, `m`, `b`, `t`).
-     * - `'k'` — thousands (÷ 1 000).
-     * - `'m'` — millions (÷ 1 000 000).
-     * - `'b'` — billions (÷ 1 000 000 000).
-     * - `'t'` — trillions (÷ 1 000 000 000 000).
-     * - `null` — no unit suffix.
-     * @deprecated Use `units` for custom scales. This option is fully ignored when `units` is set.
-     */
-    unit?: 'auto' | 'k' | 'm' | 'b' | 't' | null;
-    /**
      * Custom unit scale, or a single `FormatUnitScaleEntry` as sugar for
-     * locking every value to one unit (equivalent to the legacy `unit: 'k'`).
-     * When set, fully overrides `unit`.
+     * locking every value to one unit.
      *
      * Unit selection is always automatic: the entry with the largest `factor`
      * such that `|value| / factor >= 1`, clamped to the smallest entry for

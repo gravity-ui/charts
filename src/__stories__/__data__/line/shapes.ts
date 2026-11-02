@@ -83,7 +83,7 @@ function prepareData(): ChartData {
                     enabled: true,
                 },
                 ticks: {
-                    pixelInterval: 120,
+                    interval: 120,
                 },
             },
         ],

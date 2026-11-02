@@ -177,7 +177,7 @@ function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
         return 0;
     }
 
-    return 0.01;
+    return '1%';
 }
 
 export const getPreparedXAxis = async ({
@@ -233,9 +233,6 @@ export const getPreparedXAxis = async ({
     const shouldHideGrid =
         isAxisVisible === false || seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
     const preparedRangeSlider = getPreparedRangeSlider({xAxis});
-    const maxPadding = preparedRangeSlider.enabled
-        ? 0
-        : get(xAxis, 'maxPadding', getMaxPaddingBySeries({series: seriesData}));
 
     const preparedXAxis: PreparedXAxis = {
         type: get(xAxis, 'type', 'linear'),
@@ -276,8 +273,10 @@ export const getPreparedXAxis = async ({
         max: get(xAxis, 'max'),
         startOnTick: get(xAxis, 'startOnTick'),
         endOnTick: get(xAxis, 'endOnTick'),
-        maxPadding,
-        padding: xAxis?.padding,
+        padding: {
+            ...xAxis?.padding,
+            max: xAxis?.padding?.max ?? getMaxPaddingBySeries({series: seriesData}),
+        },
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
         },
@@ -287,7 +286,7 @@ export const getPreparedXAxis = async ({
                       base: width,
                       value: xAxis.ticks.interval,
                   })
-                : xAxis?.ticks?.pixelInterval,
+                : undefined,
             values: xAxis?.ticks?.values,
         },
         tickMarks: {

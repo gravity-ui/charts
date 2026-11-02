@@ -120,14 +120,6 @@ export interface BarYSeries<T = MeaningfulAny> extends BaseSeries {
         BarSeriesDataLabelPlacementOptions & {
             /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
             format?: BarYValueFormat<T>;
-            /**
-             * Whether to align the data label inside or outside the box.
-             * For percent stacks, labels are centered inside when `placement` is omitted.
-             * Ignored when `placement` is set.
-             * @deprecated Use `placement` instead.
-             * @default false
-             */
-            inside?: boolean;
         };
     tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
         /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */

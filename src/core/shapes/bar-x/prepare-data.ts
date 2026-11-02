@@ -81,7 +81,7 @@ async function getLabelData(
     if (d.series.dataLabels.html) {
         let y = Math.max(height, d.y - d.series.dataLabels.padding);
         if (d.series.dataLabels.inside) {
-            y = d.y + d.height / 2;
+            y = d.y + d.height / 2 + height / 2;
         }
         const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
         return {
