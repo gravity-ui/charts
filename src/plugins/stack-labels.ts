@@ -11,9 +11,10 @@ import {
     getLayerLabelRects,
 } from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {getSourcePoint} from '~core/utils/source-point';
 import {getMultilineTextInfo, getTextSizeFn} from '~core/utils/text';
 
-import type {BaseTextStyle, StackLabelsOptions} from '../types';
+import type {BaseTextStyle, StackLabelsAggregationArgs, StackLabelsOptions} from '../types';
 
 // Prepared geometry may be rounded to hundredths of a pixel while plot bounds are not.
 const COORDINATE_EPSILON = 0.01;
@@ -25,6 +26,16 @@ export interface StackLabelAnchor {
     total: number;
     direction: 'top' | 'bottom' | 'left' | 'right';
     plotIndex: number;
+}
+
+export function getStackLabelValue(
+    options: StackLabelsOptions | undefined,
+    points: StackLabelsAggregationArgs['points'],
+    total: number,
+): number {
+    return typeof options?.aggregation === 'function'
+        ? options.aggregation({points: points.map(getSourcePoint)})
+        : total;
 }
 
 interface StackLabelCandidate extends LabelRect {

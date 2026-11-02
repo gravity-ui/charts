@@ -29,6 +29,8 @@ export function renderPie(
     preparedData: PreparedPieData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
+    registerCompletion?: (completion: Promise<void>) => void,
+    signal?: AbortSignal,
 ): () => void {
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
@@ -38,7 +40,7 @@ export function renderPie(
     const connectorSelector = `.${b('connector')}`;
 
     const shapesSelection = svgElement
-        .selectAll('pie')
+        .selectAll<SVGGElement, PreparedPieData>('pie')
         .data(preparedData)
         .join('g')
         .attr('id', (pieData) => pieData.id)
@@ -112,18 +114,20 @@ export function renderPie(
         .attr('stroke-linecap', 'round')
         .style('fill', 'none');
 
-    // Render custom shapes if defined
-    shapesSelection.each(async function (d, index, nodes) {
-        const customShape = await d.series.renderCustomShape?.({
-            series: {
-                innerRadius: d.innerRadius,
-            },
-        });
-
-        if (customShape) {
-            (nodes[index] as Element).append(customShape as Node);
-        }
+    let cancelled = false;
+    // Optional nodes delay export completion, while main paths remain immediately visible.
+    const pending: Promise<void>[] = [];
+    shapesSelection.each(function (d) {
+        const node = this;
+        const completion = Promise.resolve()
+            .then(() => d.series.renderCustomShape?.({series: {innerRadius: d.innerRadius}}))
+            .then((customShape) => {
+                if (!cancelled && !signal?.aborted && customShape) node.append(customShape as Node);
+            })
+            .catch(() => undefined);
+        pending.push(completion);
     });
+    registerCompletion?.(Promise.all(pending).then(() => undefined));
 
     const eventName = `hover-shape.pie`;
     const hoverOptions = get(seriesOptions, 'pie.states.hover');
@@ -198,6 +202,7 @@ export function renderPie(
     });
 
     return () => {
+        cancelled = true;
         dispatcher?.on(eventName, null);
     };
 }

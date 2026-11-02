@@ -40,7 +40,9 @@ A logarithmic axis uses a logarithmic scale where each interval represents a mul
 
 ### Data Restrictions
 
-- All data points must be strictly positive
+Numeric values must be strictly positive. Use `null` for missing points.
+
+Logarithmic X and Y axes now reject nonnumeric point types with an `INVALID_DATA` error. If your data previously used numeric strings, convert them to numbers before passing them to the chart: `'10'` → `10`. Apply this migration to `x` or `y` according to the logarithmic axis. Strings remain supported on category axes.
 
 ## DateTime Axis
 

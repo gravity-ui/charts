@@ -5,6 +5,7 @@ import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getDataCategoryValue} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
 
+import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
@@ -56,7 +57,14 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
                 options,
                 x: outer.x + outer.width / 2,
                 y,
-                total,
+                total:
+                    typeof options.aggregation === 'function'
+                        ? getStackLabelValue(
+                              options,
+                              points.map((item) => item.data),
+                              total,
+                          )
+                        : total,
                 direction: extendsUp ? 'top' : 'bottom',
                 plotIndex,
             });

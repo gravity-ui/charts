@@ -132,7 +132,8 @@ jobs:
           fi
         shell: bash
 
-      # Each run replaces the previous report of the PR.
+      # Each run overwrites the previous report of the PR. The key may not delete objects, so
+      # snapshots of an earlier base stay in the bucket, unreferenced by the new index.html.
       - name: Upload to S3
         if: steps.head.outputs.current && env.MEASURED == 'true'
         env:
@@ -142,9 +143,9 @@ jobs:
           AWS_EC2_METADATA_DISABLED: true
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
-          aws s3 sync bundle-size-report "s3://playwright-reports/charts/pulls/${PR_NUMBER}/bundle-size/" \
+          aws s3 cp bundle-size-report "s3://playwright-reports/charts/pulls/${PR_NUMBER}/bundle-size/" \
             --endpoint-url=https://storage.yandexcloud.net \
-            --delete
+            --recursive
         shell: bash
 
       - name: Build Comment
