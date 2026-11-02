@@ -1,5 +1,5 @@
 import {create} from 'd3-selection';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {DashStyle} from '../constants';
 import type {GetTooltipValueArgs} from '../series/plugin';

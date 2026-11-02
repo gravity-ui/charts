@@ -1,5 +1,5 @@
 import {color as parseColor} from 'd3-color';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import {DEFAULT_AXIS_TYPE} from '../constants';

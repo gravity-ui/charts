@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {DEFAULT_AXIS_TYPE, DEFAULT_PALETTE} from '~core/constants';
@@ -19,6 +19,7 @@ import {
     getZoomedSeriesData,
     isBandScale,
 } from '~core/utils';
+import {isDataEqual} from '~core/utils/equal';
 import {hasGradient} from '~core/utils/gradient';
 
 import {getShapes, getVisibleSeries, useZoom} from '../../hooks';
@@ -180,7 +181,7 @@ export function useChartInnerProps(props: Props) {
 
         (async function () {
             const chartDataChanged = !(
-                previousChartData.current && isEqual(previousChartData.current, data)
+                previousChartData.current && isDataEqual(previousChartData.current, data)
             );
 
             const preparedTitle = await getPreparedTitle({

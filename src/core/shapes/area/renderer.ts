@@ -3,7 +3,7 @@ import type {Dispatch} from 'd3-dispatch';
 import type {BaseType} from 'd3-selection';
 import {select} from 'd3-selection';
 import {area as areaGenerator, line as lineGenerator} from 'd3-shape';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {LabelData, TooltipDataChunkArea} from '../../../types';
 import {block} from '../../../utils';

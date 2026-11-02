@@ -1,9 +1,9 @@
-import intersection from 'lodash/intersection';
-import merge from 'lodash/merge';
+import intersection from 'es-toolkit/compat/intersection';
 
 import {brushDefaults} from '~core/constants';
 import type {ZoomType} from '~core/constants';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import {merge} from '~core/utils/merge';
 
 import type {PreparedZoom} from '../../../hooks/types';
 import type {ChartBrush, ChartSeries, ChartZoom} from '../../../types';

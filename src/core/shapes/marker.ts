@@ -1,6 +1,6 @@
 import type {BaseType, Selection} from 'd3-selection';
 import {symbol} from 'd3-shape';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {block} from '../../utils';
 import {SymbolType} from '../constants';

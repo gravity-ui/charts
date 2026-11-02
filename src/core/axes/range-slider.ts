@@ -1,4 +1,4 @@
-import merge from 'lodash/merge';
+import {merge} from '~core/utils/merge';
 
 import type {ChartXAxis} from '../../types';
 import {brushDefaults} from '../constants';
