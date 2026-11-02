@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.72.0](https://github.com/gravity-ui/charts/compare/v1.71.0...v1.72.0) (2026-11-02)
+
+
+### Features
+
+* await committed chart reflow for exports ([#815](https://github.com/gravity-ui/charts/issues/815)) ([33146c3](https://github.com/gravity-ui/charts/commit/33146c368e251d520689f9f6b6d2e3dd4471f086))
+
 ## [1.71.0](https://github.com/gravity-ui/charts/compare/v1.70.0...v1.71.0) (2026-10-29)
 
 
