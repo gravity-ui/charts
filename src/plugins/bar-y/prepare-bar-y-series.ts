@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, seriesOptionsDefaults} from '~core/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';

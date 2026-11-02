@@ -1,5 +1,4 @@
-import get from 'lodash/get';
-import merge from 'lodash/merge';
+import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {
@@ -13,6 +12,7 @@ import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getSymbolType, getUniqId} from '~core/utils';
+import {merge} from '~core/utils/merge';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';

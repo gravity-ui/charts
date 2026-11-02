@@ -1,7 +1,7 @@
 import {group, min, sort} from 'd3-array';
 import type {ScaleLogarithmic} from 'd3-scale';
-import isEqual from 'lodash/isEqual';
-import round from 'lodash/round';
+import isEqual from 'es-toolkit/compat/isEqual';
+import round from 'es-toolkit/compat/round';
 
 import type {AreaSeriesData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';

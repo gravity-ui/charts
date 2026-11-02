@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {getTickValues} from '../../components/AxisY/utils';
 import type {BaseTextStyle, ChartAxisTitleRotation, ChartYAxis} from '../../types';
