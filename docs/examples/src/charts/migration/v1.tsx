@@ -36,5 +36,6 @@ export const meta = {
     seriesType: 'Line',
     title: 'Migrate v1 settings',
     description: 'Keep compact numeric labels and tick spacing when converting v1 options.',
-    docsUrl: 'pages/development/migration-v2.html#render-v1',
+    docsUrl: 'pages/migration/v2.html#render-v1',
+    gallery: {group: 'migration'},
 } satisfies ExampleMeta;

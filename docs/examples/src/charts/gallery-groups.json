@@ -14,5 +14,9 @@
   {
     "id": "data-labels",
     "title": "Data labels"
+  },
+  {
+    "id": "migration",
+    "title": "Migration"
   }
 ]

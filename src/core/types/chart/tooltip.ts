@@ -307,7 +307,6 @@ export interface ChartTooltip<T = MeaningfulAny> {
     /**
      * Explicit row definitions that replace the plugin-provided rows.
      * Each row can define cells and override `rowRenderer` with its own `renderer`.
-     * @experimental This API is unstable and may change without notice.
      */
     rows?: ChartTooltipRow[];
     pin?: {

@@ -45,7 +45,16 @@ export interface ChartDataV1<
 
 /** Structured, localizable diagnostic. Paths address the input, including array indices. */
 export interface MigrationV1Warning {
-    code: string;
+    code:
+        | 'axis-max-padding'
+        | 'axis-pixel-interval'
+        | 'number-unit'
+        | 'bar-label-inside'
+        | 'point-category'
+        | 'invalid-axis-max-padding'
+        | 'invalid-axis-pixel-interval'
+        | 'invalid-number-unit'
+        | 'invalid-bar-label-inside';
     path: (string | number)[];
     message: string;
     /** Automatic rules are applied by migrateChartDataV1; review rules leave the option intact. */

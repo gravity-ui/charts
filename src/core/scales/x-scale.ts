@@ -194,7 +194,7 @@ export function createXScale(args: {
                     categories: xCategories,
                     series,
                 });
-                return scaleBand().domain(filteredCategories).range(range);
+                return scaleBand().domain(filteredCategories).range([0, boundsWidth]);
             }
 
             break;

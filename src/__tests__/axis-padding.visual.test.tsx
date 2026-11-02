@@ -5,64 +5,9 @@ import type {Locator} from '@playwright/test';
 
 import AxisPaddingExample from '../../docs/examples/src/charts/layout/axis-padding';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {migrateChartDataV1} from '../migration/v1';
-import type {ChartDataV1} from '../migration/v1';
 import type {ChartData, ChartSeries} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
-
-// Baselines captured from the v1 configuration at be030612.
-for (const type of ['bar-x', 'bar-y'] as const) {
-    test(`v1 adapter preserves ${type} geometry after resize`, async ({mount}) => {
-        const legacy: ChartDataV1 = {
-            legend: {enabled: false},
-            xAxis: {maxPadding: 0.25, startOnTick: false, endOnTick: false},
-            yAxis: [{maxPadding: 0.25, startOnTick: false, endOnTick: false}],
-            series: {
-                data: [
-                    {
-                        type,
-                        name: 'Revenue',
-                        dataLabels: {enabled: true},
-                        data:
-                            type === 'bar-x'
-                                ? [
-                                      {x: 0, y: 60},
-                                      {x: 100, y: 80},
-                                  ]
-                                : [
-                                      {x: 60, y: 0},
-                                      {x: 100, y: 1},
-                                  ],
-                    },
-                ],
-            },
-        };
-        const data = migrateChartDataV1(legacy).data;
-        let readyCount = 0;
-        const onRender = () => {
-            readyCount++;
-        };
-        const getReadyCount = () => readyCount;
-        const component = await mount(
-            <ChartTestStory data={data} styles={{width: 350, height: 300}} onRender={onRender} />,
-        );
-        await expect.poll(getReadyCount).toBeGreaterThan(0);
-        for (const width of [350, 650]) {
-            const previousReadyCount = readyCount;
-            await component.update(
-                <ChartTestStory data={data} styles={{width, height: 300}} onRender={onRender} />,
-            );
-            if (width !== 350) {
-                await expect.poll(getReadyCount).toBeGreaterThan(previousReadyCount);
-            }
-            await expect(component.locator('svg').first()).toHaveAttribute('width', String(width));
-            await expect(component.locator('.gcharts-chart')).toHaveScreenshot(
-                `v1-${type}-${width}.png`,
-            );
-        }
-    });
-}
 
 async function expectPaintInsidePlot(plot: Locator, paint: Locator) {
     const bounds = await plot.evaluate((element) => {

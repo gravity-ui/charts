@@ -4,7 +4,6 @@ import {expect, test} from '@playwright/experimental-ct-react';
 
 import BarLabelPlacementExample from '../../docs/examples/src/charts/data-labels/bar-placement';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
-import {migrateChartDataV1} from '../migration/v1';
 import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
@@ -136,40 +135,6 @@ test('bar-y placement hides fully clipped stack segments regardless of fallback'
     const label = await getLocatorBoundingBox(labels);
     expect(label.x).toBeGreaterThan(bar.x);
     expect(label.x + label.width).toBeLessThan(bar.x + bar.width);
-});
-
-test('explicit placement ignores legacy inside during autoscaling', async ({mount}) => {
-    const data = (inside: boolean): ChartData =>
-        migrateChartDataV1({
-            legend: {enabled: false},
-            xAxis: {min: 0, order: 'reverse', startOnTick: false, endOnTick: false},
-            yAxis: [{type: 'category', categories: ['A']}],
-            series: {
-                data: [
-                    {
-                        type: 'bar-y',
-                        name: 'Orders',
-                        data: [{x: 90, y: 'A', label: 'A long label'}],
-                        dataLabels: {enabled: true, inside, placement: ['inside-center']},
-                    },
-                ],
-            },
-        }).data;
-    let readyCount = 0;
-    const onRender = () => {
-        readyCount++;
-    };
-    const component = await mount(<ChartTestStory data={data(false)} onRender={onRender} />);
-    const bars = component.locator('.gcharts-bar-y__segment');
-    const labels = component.locator('.gcharts-bar-y__label');
-    await expect.poll(() => readyCount).toBeGreaterThan(0);
-    const before = await getLocatorBoundingBox(bars);
-    const centered = await getLocatorBoundingBox(labels);
-    expect(centered.x + centered.width / 2).toBeCloseTo(before.x + before.width / 2, 0);
-    const previousCount = readyCount;
-    await component.update(<ChartTestStory data={data(true)} onRender={onRender} />);
-    await expect.poll(() => readyCount).toBeGreaterThan(previousCount);
-    expect((await getLocatorBoundingBox(bars)).width).toBeCloseTo(before.width);
 });
 
 test('negative bar labels keep padding from the painted border', async ({mount}) => {

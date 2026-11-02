@@ -25,25 +25,25 @@ function isOptions(value: unknown): value is Options {
 function visit(
     value: unknown,
     pattern: readonly string[],
-    callback: (value: unknown, path: Path) => void,
+    callback: (value: unknown, path: Path) => boolean | void,
     path: Path = [],
-) {
+): boolean {
     if (!pattern.length) {
-        callback(value, path);
-        return;
+        return callback(value, path) === true;
     }
     const [key, ...rest] = pattern;
     if (key === '*') {
         if (Array.isArray(value)) {
-            value.forEach((item, index) => visit(item, rest, callback, [...path, index]));
+            return value.some((item, index) => visit(item, rest, callback, [...path, index]));
         } else if (isOptions(value)) {
-            Object.keys(value).forEach((name) =>
+            return Object.keys(value).some((name) =>
                 visit(value[name], rest, callback, [...path, name]),
             );
         }
     } else if (isOptions(value) && Object.prototype.hasOwnProperty.call(value, key)) {
-        visit(value[key], rest, callback, [...path, key]);
+        return visit(value[key], rest, callback, [...path, key]);
     }
+    return false;
 }
 
 function analyze(data: unknown, collectPatches: boolean) {
@@ -52,7 +52,12 @@ function analyze(data: unknown, collectPatches: boolean) {
     const patch = (path: Path, value: unknown) => {
         if (collectPatches) patches.push({path, value});
     };
-    const review = (path: Path, code: string, message: string, replacement?: string) => {
+    const review = (
+        path: Path,
+        code: MigrationV1Warning['code'],
+        message: string,
+        replacement?: string,
+    ) => {
         warnings.push({code, path, message, replacement, resolution: 'review'});
     };
     const numberFormat = (value: unknown, path: Path) => {
@@ -66,7 +71,8 @@ function analyze(data: unknown, collectPatches: boolean) {
             review(
                 [...path, 'unit'],
                 'invalid-number-unit',
-                'Unknown v1 numeric unit; left unchanged.',
+                "Unknown v1 numeric unit; left unchanged. Without explicit units, v1 abbreviated automatically. Use units: {...FORMAT_UNITS_NUMBERS, delimiter: ''} to preserve that behavior.",
+                'units',
             );
             return;
         }
@@ -95,7 +101,23 @@ function analyze(data: unknown, collectPatches: boolean) {
                     return;
                 const {pixelInterval, ...next} = ticks;
                 // v1 uses a truthy interval before falling back to pixelInterval, including interval: 0.
-                if (!next.interval) next.interval = pixelInterval;
+                if (!next.interval) {
+                    if (
+                        pixelInterval !== undefined &&
+                        (typeof pixelInterval !== 'number' ||
+                            !Number.isFinite(pixelInterval) ||
+                            pixelInterval < 0)
+                    ) {
+                        review(
+                            [...ticksPath, 'pixelInterval'],
+                            'invalid-axis-pixel-interval',
+                            'pixelInterval must be a finite nonnegative number; left unchanged.',
+                            'interval',
+                        );
+                        return;
+                    }
+                    next.interval = pixelInterval;
+                }
                 warnings.push({
                     code: 'axis-pixel-interval',
                     path: [...ticksPath, 'pixelInterval'],
@@ -129,7 +151,11 @@ function analyze(data: unknown, collectPatches: boolean) {
         const padding = isOptions(value.padding) ? value.padding : {};
         if (padding.max === undefined && maxPadding !== undefined && !ignoredMaxPadding) {
             // Size strings do not accept exponent notation, including for tiny fractions.
-            const percentage = (maxPadding * 100).toLocaleString('en-US', {
+            const rawPercentage = maxPadding * 100;
+            const roundedPercentage = Number(rawPercentage.toPrecision(15));
+            const percentage = (
+                Number.isFinite(roundedPercentage) ? roundedPercentage : rawPercentage
+            ).toLocaleString('en-US', {
                 useGrouping: false,
                 maximumSignificantDigits: 21,
             });
@@ -185,11 +211,12 @@ function analyze(data: unknown, collectPatches: boolean) {
                         );
                         return;
                     }
-                    if (next.placement === undefined && inside !== undefined) {
-                        next.placement =
-                            series.stacking === 'percent' || inside
-                                ? ['inside-center']
-                                : ['outside'];
+                    if (
+                        next.placement === undefined &&
+                        inside === true &&
+                        series.stacking !== 'percent'
+                    ) {
+                        next.placement = ['inside-center'];
                     }
                     warnings.push({
                         code: 'bar-label-inside',
@@ -208,7 +235,10 @@ function analyze(data: unknown, collectPatches: boolean) {
             visit(
                 series,
                 field.path,
-                (_, fieldPath) => review(fieldPath, field.code, field.message, field.replacement),
+                (_, fieldPath) => {
+                    review(fieldPath, field.code, field.message, field.replacement);
+                    return true;
+                },
                 path,
             );
         }

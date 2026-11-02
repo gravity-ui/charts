@@ -24,12 +24,14 @@ items:
     href: ./pages/get-started.md
   - name: Examples
     href: ./pages/examples.md
+  - name: Migration
+    items:
+      - name: From v1 to v2
+        href: ./pages/migration/v2.md
   - name: Development
     items:
       - name: Local development
         href: ./pages/development.md
-      - name: Migrating from v1 to v2
-        href: ./pages/development/migration-v2.md
       - name: Adding a series plugin
         href: ./pages/development/adding-series-plugin.md
   - name: Integrations

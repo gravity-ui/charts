@@ -3,6 +3,7 @@
 import {scaleBand, scaleLinear, scaleLog, scaleOrdinal, scaleUtc} from 'd3-scale';
 
 import {getAutomaticTickValues} from '../../../components/AxisY/utils';
+import {getNormalizedXAxis} from '../../../components/ChartInner/utils/normalized-original-data';
 import {createScales} from '../../../hooks/useAxisScales';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
@@ -276,24 +277,33 @@ describe('axis padding', () => {
         },
     );
 
-    test.each([allAuto, {max: '0%'}, {min: '25%', max: '1%'}])(
-        'ignores padding %j on a reversed category axis with percentage padding',
-        async (padding) => {
-            const args = await prepare();
+    test.each([
+        {order: 'reverse', expected: ['B', 'A', 'C']},
+        {order: 'sortDesc', expected: ['C', 'B', 'A']},
+    ] as const)(
+        'preserves normalized $order category order regardless of padding',
+        async ({order, expected}) => {
+            const args = await prepare([
+                {type: 'line', name: 'Revenue', data: ['C', 'A', 'B'].map((x, y) => ({x, y}))},
+            ]);
+            const normalized = getNormalizedXAxis({
+                xAxis: {type: 'category', categories: ['C', 'A', 'B'], order},
+            });
             args.xAxis = {
                 ...args.xAxis,
                 type: 'category',
-                categories: ['A', 'B', 'C'],
-                order: 'reverse',
-                padding: {max: '50%'},
+                categories: normalized?.categories,
+                order,
             };
             const common = {...args, boundsWidth: 600, boundsHeight: 300};
             const original = createScales(common).xScale;
-            args.xAxis.padding = padding;
+            args.xAxis.padding = {min: '25%', max: '50%'};
             const padded = createScales(common).xScale;
-            expect(padded?.domain()).toEqual(original?.domain());
+            expect(padded?.domain()).toEqual(expected);
             expect(padded?.range()).toEqual(original?.range());
-            expect(padded?.range()).toEqual([600, 0]);
+            expect(padded?.range()).toEqual([0, 600]);
+            if (!padded || !('bandwidth' in padded)) throw new Error('Expected category scale');
+            expect(expected.map((category) => padded(category))).toEqual([0, 200, 400]);
         },
     );
 

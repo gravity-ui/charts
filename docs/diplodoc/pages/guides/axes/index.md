@@ -69,7 +69,7 @@ Automatic padding measures markers in line, area, area-range, and scatter series
 
 `maxPadding` has been replaced by `padding.max`. Convert fractions to percentage strings: `maxPadding: 0.25` becomes `padding: {max: '25%'}`. Numbers inside `padding` are pixels.
 
-See [Migrating from v1 to v2](../../development/migration-v2.md) for automatic conversion and the corrected zoom and logarithmic behavior.
+See [Migrating from v1 to v2](../../migration/v2.md) for automatic conversion and the corrected zoom and logarithmic behavior.
 
 {% endnote %}
 

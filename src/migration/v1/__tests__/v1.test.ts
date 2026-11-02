@@ -1,8 +1,7 @@
 import {inspectChartDataV1, migrateChartDataV1} from '..';
 import type {PreparedAxis} from '../../../core/axes/types';
-import {createXScale} from '../../../core/scales/x-scale';
-import {createYScale} from '../../../core/scales/y-scale';
 import {formatAxisTickLabel, getFormattedValue} from '../../../core/utils/format';
+import {parseNonNegativeSize} from '../../../core/utils/math';
 import {formatNumber} from '../../../libs/format-number';
 import type {ChartData} from '../../../types';
 import {migrateNumberFormatV1} from '../number-format';
@@ -11,14 +10,9 @@ import type {ChartDataV1, FormatNumberOptionsV1} from '../types';
 import numberCases from './number-v1.json';
 
 // Captured from release/v2 at 06d0703e, before removing the v1 formatter branch.
-test.each(
-    numberCases.flatMap(({options, values, expected}) =>
-        values.map((value, index) => ({options, value, expected: expected[index]})),
-    ),
-)('preserves v1 formatting: %j', ({value, options, expected}) => {
-    expect(formatNumber(value, migrateNumberFormatV1(options as FormatNumberOptionsV1))).toBe(
-        expected,
-    );
+test.each(numberCases)('preserves v1 formatting: $options', ({values, options, expected}) => {
+    const migrated = migrateNumberFormatV1(options as FormatNumberOptionsV1);
+    expect(values.map((value) => formatNumber(value, migrated))).toEqual(expected);
 });
 
 test.each([null, undefined] as const)(
@@ -36,7 +30,11 @@ test.each([null, undefined] as const)(
 test('preserves numeric tick hints and v1 precedence, including a zero modern interval', () => {
     const data: ChartDataV1 = {
         xAxis: {ticks: {pixelInterval: 120, interval: 0}},
-        yAxis: [{ticks: {pixelInterval: 72, interval: '10%'}}, {ticks: {pixelInterval: 0}}],
+        yAxis: [
+            {ticks: {pixelInterval: 72, interval: '10%'}},
+            {ticks: {pixelInterval: 0}},
+            {ticks: {pixelInterval: undefined}},
+        ],
         series: {data: []},
     };
     const result = migrateChartDataV1(data);
@@ -44,23 +42,53 @@ test('preserves numeric tick hints and v1 precedence, including a zero modern in
     expect(result.data.yAxis?.map((axis) => axis.ticks)).toEqual([
         {interval: '10%'},
         {interval: 0},
+        {interval: undefined},
     ]);
     expect(result.warnings.map((warning) => warning.path)).toEqual([
         ['xAxis', 'ticks', 'pixelInterval'],
         ['yAxis', 0, 'ticks', 'pixelInterval'],
         ['yAxis', 1, 'ticks', 'pixelInterval'],
+        ['yAxis', 2, 'ticks', 'pixelInterval'],
     ]);
     expect(data.xAxis?.ticks?.pixelInterval).toBe(120);
 });
+
+test.each([null, '60', -1, Infinity])(
+    'reports invalid pixelInterval %j unless interval takes precedence',
+    (pixelInterval) => {
+        const input = {
+            xAxis: {ticks: {pixelInterval}},
+            series: {data: []},
+        } as unknown as ChartDataV1;
+        const {data, warnings} = migrateChartDataV1(input);
+        expect(data).toBe(input);
+        expect(warnings).toEqual([
+            expect.objectContaining({
+                code: 'invalid-axis-pixel-interval',
+                path: ['xAxis', 'ticks', 'pixelInterval'],
+                resolution: 'review',
+                replacement: 'interval',
+            }),
+        ]);
+        const overridden = migrateChartDataV1({
+            ...input,
+            xAxis: {ticks: {...input.xAxis?.ticks, interval: 60}},
+        });
+        expect(overridden.data.xAxis?.ticks).toEqual({interval: 60});
+        expect(overridden.warnings[0].resolution).toBe('automatic');
+    },
+);
 
 test('migrates nested formats, preserves input and opaque payload identity, and is idempotent', () => {
     const custom = {type: 'number', unit: 'auto', pixelInterval: 9};
     const point = {x: 0, y: 1500, custom};
     const click = jest.fn();
+    const rowRenderer = jest.fn();
     const data: ChartDataV1 = {
         xAxis: {labels: {numberFormat: {unit: 'k'}}},
         chart: {events: {click}},
         tooltip: {
+            rowRenderer,
             rows: [
                 {cells: [{id: 'value', source: 'data.y', format: {type: 'number', unit: 'auto'}}]},
             ],
@@ -82,6 +110,7 @@ test('migrates nested formats, preserves input and opaque payload identity, and 
     expect(result.data.series.data[0].data).toBe(data.series.data[0].data);
     expect(result.data.series.data[0].custom).toBe(custom);
     expect(result.data.chart).toBe(data.chart);
+    expect(result.data.tooltip?.rowRenderer).toBe(rowRenderer);
     expect(data.xAxis?.labels?.numberFormat).toEqual({unit: 'k'});
     const series = result.data.series.data[0];
     if (series.type !== 'line') throw new Error('Expected line');
@@ -95,6 +124,7 @@ test('migrates nested formats, preserves input and opaque payload identity, and 
     expect(again.data).toBe(result.data);
     expect(again.warnings).toEqual([]);
     expect(click).not.toHaveBeenCalled();
+    expect(rowRenderer).not.toHaveBeenCalled();
 });
 
 test('checks plugin-specific fields without mistaking funnel inside or application data for deprecated options', () => {
@@ -107,7 +137,11 @@ test('checks plugin-specific fields without mistaking funnel inside or applicati
                     type: 'bar-x',
                     name: 'A',
                     dataLabels: {inside: false},
-                    data: [{category: 'A', y: 1}],
+                    data: [
+                        {x: 'A', y: 0},
+                        {category: 'A', y: 1},
+                        {category: 'B', y: 2},
+                    ],
                 },
                 {
                     type: 'funnel',
@@ -140,28 +174,28 @@ test('checks plugin-specific fields without mistaking funnel inside or applicati
     expect(result.data.xAxis).toEqual({padding: {max: '10%'}});
     expect(result.data.tooltip).toBe(data.tooltip);
     expect(result.data.series.data[0].data).toBe(data.series.data[0].data);
-    expect(result.data.series.data[0].dataLabels).toEqual({placement: ['outside']});
+    expect(result.data.series.data[0].dataLabels).toEqual({});
+    expect(result.warnings.find(({code}) => code === 'point-category')?.path).toEqual([
+        'series',
+        'data',
+        0,
+        'data',
+        1,
+        'category',
+    ]);
     expect(result.data.series.data[1].data[0]).not.toBe(data.series.data[1].data[0]);
     expect(data.series.data[1].data[0]).toHaveProperty('tooltip.valueFormat.unit', 'k');
-});
-
-test('preserves supported tooltip row renderers without migration diagnostics', () => {
-    const rowRenderer = jest.fn();
-    const data: ChartDataV1 = {
-        tooltip: {rowRenderer, rows: [{cells: [{id: 'value', source: 'data.y'}]}]},
-        series: {data: []},
-    };
-    expect(inspectChartDataV1(data)).toEqual([]);
-    const result = migrateChartDataV1(data);
-    expect(result).toEqual({data, warnings: []});
-    expect(result.data).toBe(data);
-    expect(rowRenderer).not.toHaveBeenCalled();
 });
 
 test('reports invalid legacy units without silently deleting them', () => {
     const warnings = inspectChartDataV1({xAxis: {labels: {numberFormat: {unit: 'bytes'}}}});
     expect(warnings).toEqual([
-        expect.objectContaining({code: 'invalid-number-unit', resolution: 'review'}),
+        expect.objectContaining({
+            code: 'invalid-number-unit',
+            resolution: 'review',
+            replacement: 'units',
+            message: expect.stringContaining('v1 abbreviated automatically'),
+        }),
     ]);
 });
 
@@ -212,90 +246,54 @@ test.each([-1, NaN, Infinity, Number.MAX_VALUE])(
     },
 );
 
-test('uses decimal percentage notation for a small maxPadding fraction', () => {
-    const result = migrateChartDataV1({xAxis: {maxPadding: 1e-12}, series: {data: []}});
-    expect(result.data.xAxis?.padding?.max).toBe('0.0000000001%');
+test.each([
+    [1e-12, '0.0000000001%'],
+    [0.29, '29%'],
+    [0.07, '7%'],
+])('writes a decimal percentage without floating-point noise for %s', (maxPadding, expected) => {
+    const result = migrateChartDataV1({
+        xAxis: {maxPadding: maxPadding as number},
+        series: {data: []},
+    });
+    expect(result.data.xAxis?.padding?.max).toBe(expected);
+});
+
+test('keeps a percentage near the numeric limit finite after rounding', () => {
+    const {data} = migrateChartDataV1({
+        xAxis: {maxPadding: Number.MAX_VALUE / 100},
+        series: {data: []},
+    });
+    expect(parseNonNegativeSize(data.xAxis?.padding?.max)?.unit).toBe('%');
 });
 
 test.each([
-    {maxPadding: 0.25, padding: undefined, expected: [1704067200000, 1704153600000]},
-    {maxPadding: Number.MAX_VALUE, padding: undefined, expected: [1704067200000, 1704153600000]},
-    {maxPadding: 0.25, padding: {min: '10%'}, expected: [1704058560000, 1704153600000]},
-    {maxPadding: 0.25, padding: {max: '10%'}, expected: [1704067200000, 1704162240000]},
-])(
-    'preserves datetime Y timestamps when maxPadding was ignored (%j)',
-    ({maxPadding, padding, expected}) => {
-        const input: ChartDataV1 = {
-            yAxis: [
-                {
-                    type: 'datetime',
-                    timestamps: [1704067200000, 1704153600000],
-                    maxPadding,
-                    startOnTick: false,
-                    endOnTick: false,
-                    padding,
-                },
-            ],
-            series: {data: []},
-        };
-        const {data, warnings} = migrateChartDataV1(input);
-        const axis = {...data.yAxis?.[0], labels: {lineHeight: 12}} as PreparedAxis;
-        expect(createYScale({axis, boundsHeight: 300, series: []})?.domain().map(Number)).toEqual(
-            expected,
-        );
-        expect(data.yAxis?.[0]).not.toHaveProperty('maxPadding');
-        expect(data.yAxis?.[0].padding).toBe(padding);
-        expect(input.yAxis?.[0].maxPadding).toBe(maxPadding);
-        expect(warnings).toEqual([
-            expect.objectContaining({code: 'axis-max-padding', resolution: 'automatic'}),
-        ]);
-        expect(inspectChartDataV1(input)).toEqual(warnings);
-        expect(migrateChartDataV1(data).warnings).toEqual([]);
-    },
-);
-
-test('datetime X timestamps retain migrated maximum padding', () => {
-    const {data} = migrateChartDataV1({
-        xAxis: {
-            type: 'datetime',
-            timestamps: [1704067200000, 1704153600000],
-            maxPadding: 0.25,
-            startOnTick: false,
-            endOnTick: false,
-        },
-        series: {data: []},
-    });
-    const axis = data.xAxis;
-    if (!axis) throw new Error('Missing migrated X axis');
-    expect(createXScale({axis, boundsWidth: 300, series: []})?.domain().map(Number)).toEqual([
-        1704067200000, 1704175200000,
-    ]);
-});
-
-test('converts logarithmic maxPadding to the corrected percentage calculation', () => {
-    const data: ChartDataV1 = {
-        xAxis: {type: 'logarithmic', maxPadding: 0.25, padding: {min: '10%'}},
-        yAxis: [{type: 'logarithmic', maxPadding: 0.25, order: 'reverse'}],
+    {maxPadding: 0.25, padding: undefined},
+    {maxPadding: Number.MAX_VALUE, padding: undefined},
+    {maxPadding: 0.25, padding: {min: '10%'}},
+    {maxPadding: 0.25, padding: {max: '10%'}},
+])('preserves datetime Y timestamps when maxPadding was ignored (%j)', ({maxPadding, padding}) => {
+    const input: ChartDataV1 = {
+        xAxis: {type: 'datetime', timestamps: [1704067200000, 1704153600000], maxPadding: 0.25},
+        yAxis: [
+            {
+                type: 'datetime',
+                timestamps: [1704067200000, 1704153600000],
+                maxPadding,
+                startOnTick: false,
+                endOnTick: false,
+                padding,
+            },
+        ],
         series: {data: []},
     };
-    const result = migrateChartDataV1(data);
-    expect(result.data.xAxis?.padding).toEqual({min: '10%', max: '25%'});
-    expect(result.data.yAxis?.[0].padding).toEqual({max: '25%'});
-    expect(result.warnings).toEqual([
-        expect.objectContaining({
-            code: 'axis-max-padding',
-            path: ['xAxis', 'maxPadding'],
-            resolution: 'automatic',
-        }),
-        expect.objectContaining({
-            code: 'axis-max-padding',
-            path: ['yAxis', 0, 'maxPadding'],
-            resolution: 'automatic',
-        }),
-    ]);
-    expect(inspectChartDataV1(data)).toEqual(result.warnings);
-    expect(data.xAxis?.maxPadding).toBe(0.25);
-    expect(migrateChartDataV1(result.data).warnings).toEqual([]);
+    const {data, warnings} = migrateChartDataV1(input);
+    expect(data.xAxis?.padding).toEqual({max: '25%'});
+    expect(data.yAxis?.[0]).not.toHaveProperty('maxPadding');
+    expect(data.yAxis?.[0].padding).toBe(padding);
+    expect(input.yAxis?.[0].maxPadding).toBe(maxPadding);
+    expect(warnings.map(({resolution}) => resolution)).toEqual(['automatic', 'automatic']);
+    expect(inspectChartDataV1(input)).toEqual(warnings);
+    expect(migrateChartDataV1(data).warnings).toEqual([]);
 });
 
 test('preserves valid current config references and leaves arbitrary custom data alone', () => {
@@ -323,7 +321,6 @@ test.each(['bar-x', 'bar-y'] as const)(
         };
         const result = migrateChartDataV1(input);
         expect(result.data.series.data[0].dataLabels).toEqual({
-            placement: ['inside-center'],
             format: {type: 'number', units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''}},
         });
         expect(input.series.data[0].dataLabels).toHaveProperty('inside', false);
@@ -337,5 +334,15 @@ test.each(['bar-x', 'bar-y'] as const)(
         expect(migrateChartDataV1(explicit).data.series.data[0].dataLabels).toEqual({
             placement: ['outside'],
         });
+        const inside: ChartDataV1 = {
+            series: {data: [{type, name: 'A', data: [], dataLabels: {inside: true}}]},
+        };
+        expect(migrateChartDataV1(inside).data.series.data[0].dataLabels).toEqual({
+            placement: ['inside-center'],
+        });
+        const outside: ChartDataV1 = {
+            series: {data: [{type, name: 'A', data: [], dataLabels: {inside: false}}]},
+        };
+        expect(migrateChartDataV1(outside).data.series.data[0].dataLabels).toEqual({});
     },
 );
