@@ -37,12 +37,16 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
+    registerCompletion,
+    signal,
 }: RenderShapesArgs) {
     return renderPie(
         {plot, labelsPlot},
         preparedData as PreparedPieData[],
         seriesOptions,
         dispatcher,
+        registerCompletion,
+        signal,
     );
 }
 

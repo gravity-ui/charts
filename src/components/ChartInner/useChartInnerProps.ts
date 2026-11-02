@@ -46,7 +46,7 @@ import {isGradientReferenceCurrent} from './gradientReferenceCache';
 import {prepareAxisLayout} from './prepareAxisLayout';
 import {prepareGradientReference} from './prepareGradientReference';
 import {reconcileLegendSelection} from './reconcileLegendSelection';
-import type {ChartInnerProps} from './types';
+import type {ChartInnerProps, ChartPreparation} from './types';
 import {getNormalizedXAxis, getNormalizedYAxis, getPreparedChart, getPreparedTitle} from './utils';
 import {hasAtLeastOneSeriesDataPerPlot} from './utils/common';
 
@@ -100,6 +100,7 @@ function isRangeSliderChanged(previous: RangeSliderConfig | undefined, next: Ran
 }
 
 type ChartState = {
+    preparation: ChartPreparation;
     gradientReference?: GradientLayoutReference;
     allPreparedSeries: PreparedSeries[];
     boundsHeight: number;
@@ -113,6 +114,7 @@ type ChartState = {
     preparedSeries: PreparedSeries[];
     preparedSeriesOptions: PreparedSeriesOptions;
     preparedSplit: PreparedSplit;
+    rendering?: Promise<void>;
     shapes: React.ReactElement[];
     shapesData: TooltipItemData[];
     xAxis: PreparedXAxis | null;
@@ -137,6 +139,8 @@ export function useChartInnerProps(props: Props) {
         updateRangeSliderState,
         updateZoomState,
         zoomState,
+        reflowId,
+        onRenderError,
     } = props;
 
     const selectedLegendItemsRef = React.useRef<string[] | null>(null);
@@ -155,9 +159,75 @@ export function useChartInnerProps(props: Props) {
         () => getPreparedRangeSlider({xAxis: data.xAxis}),
         [data.xAxis],
     );
+    const preparation = React.useMemo(
+        () => ({
+            height,
+            width,
+            data,
+            legendSelectionVersion,
+            zoomState,
+            rangeSliderState,
+            preparedRangeSlider,
+            dispatcher,
+            htmlLayout,
+            updateRangeSliderState,
+            clipPathId,
+            reflowId,
+        }),
+        [
+            height,
+            width,
+            data,
+            legendSelectionVersion,
+            zoomState,
+            rangeSliderState,
+            preparedRangeSlider,
+            dispatcher,
+            htmlLayout,
+            updateRangeSliderState,
+            clipPathId,
+            reflowId,
+        ],
+    );
+    const currentPreparation = React.useRef(preparation);
+    currentPreparation.current = preparation;
+    const failedPreparation = React.useRef<object>();
+    const onRenderErrorRef = React.useRef(onRenderError);
+    onRenderErrorRef.current = onRenderError;
+    const reportPreparationError = React.useCallback(
+        (error: unknown, generation: ChartPreparation) => {
+            if (generation !== currentPreparation.current) return;
+            failedPreparation.current = generation;
+            if (onRenderErrorRef.current) {
+                onRenderErrorRef.current(error, generation);
+            } else {
+                throw error;
+            }
+        },
+        [],
+    );
+    const handlePreparationError = React.useCallback(
+        (error: unknown) => {
+            if (chartState) reportPreparationError(error, chartState.preparation);
+        },
+        [chartState, reportPreparationError],
+    );
     React.useEffect(() => {
+        const {
+            height,
+            width,
+            data,
+            zoomState,
+            rangeSliderState,
+            preparedRangeSlider,
+            dispatcher,
+            htmlLayout,
+            updateRangeSliderState,
+            clipPathId,
+        } = preparation;
         currentRunRef.current++;
         const currentRun = currentRunRef.current;
+        const controller = new AbortController();
         const selectedLegendItems = selectedLegendItemsRef.current;
         const rangeSlider: RangeSliderConfig = {
             axisType: data.xAxis?.type ?? DEFAULT_AXIS_TYPE,
@@ -360,7 +430,8 @@ export function useChartInnerProps(props: Props) {
                 return gradientReference.data;
             };
 
-            const {shapes, shapesData, layerIndexes} = await getShapes({
+            const {shapes, shapesData, layerIndexes, rendering} = await getShapes({
+                signal: controller.signal,
                 boundsWidth,
                 boundsHeight,
                 dispatcher,
@@ -395,6 +466,7 @@ export function useChartInnerProps(props: Props) {
                 ? await getGradientReference()
                 : undefined;
             const newStateValue = {
+                preparation,
                 gradientReference: activeGradientReference,
                 allPreparedSeries,
                 boundsHeight,
@@ -409,6 +481,7 @@ export function useChartInnerProps(props: Props) {
                 preparedSeriesOptions,
                 preparedSplit,
                 shapes,
+                rendering,
                 shapesData,
                 xAxis,
                 xScale,
@@ -422,26 +495,25 @@ export function useChartInnerProps(props: Props) {
             if (currentRunRef.current === currentRun) {
                 selectedLegendItemsRef.current = nextSelectedLegendItems;
                 gradientReferenceRef.current = hasVisibleGradient ? gradientReference : undefined;
-                if (!isEqual(prevStateValue.current, newStateValue)) {
+                if (
+                    prevStateValue.current?.preparation !== preparation ||
+                    !isEqual(prevStateValue.current, newStateValue)
+                ) {
                     setState(newStateValue);
                     prevStateValue.current = newStateValue;
                 }
                 previousChartData.current = data;
             }
-        })();
-    }, [
-        height,
-        width,
-        data,
-        legendSelectionVersion,
-        zoomState,
-        rangeSliderState,
-        dispatcher,
-        htmlLayout,
-        preparedRangeSlider,
-        updateRangeSliderState,
-        clipPathId,
-    ]);
+        })().catch((error: unknown) => {
+            if (currentRunRef.current === currentRun) {
+                reportPreparationError(error, preparation);
+            }
+        });
+        return () => {
+            controller.abort();
+            currentRunRef.current++;
+        };
+    }, [preparation, reportPreparationError]);
 
     // additional start
 
@@ -544,7 +616,10 @@ export function useChartInnerProps(props: Props) {
         yAxis,
         shapesData: chartState?.shapesData ?? [],
         layerIndexes: chartState?.layerIndexes ?? EMPTY_LAYER_INDEXES,
+        hasFailed: () => failedPreparation.current === preparation,
         shapesReady: Boolean(chartState),
+        shapesCurrent: chartState?.preparation === preparation,
+        handlePreparationError,
         handleLegendItemClick,
         preparedTitle: chartState?.preparedTitle,
         preparedChart: chartState?.preparedChart,
