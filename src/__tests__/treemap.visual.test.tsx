@@ -15,6 +15,64 @@ test.describe('Treemap series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Point opacity survives selection updates and hover', async ({mount, page}) => {
+        const getData = (selected?: string): ChartData => ({
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: 'Values',
+                        data: [
+                            {id: 'parent', name: 'Group'},
+                            ...['first', 'second'].map((id) => ({
+                                id,
+                                name: id,
+                                parentId: 'parent',
+                                value: 10,
+                                opacity: selected ? 1 : undefined,
+                                ...(selected && selected !== id ? {opacity: 0.5} : {}),
+                            })),
+                            {id: 'hidden', name: 'Hidden', value: 10, opacity: 0},
+                        ],
+                    },
+                ],
+                options: {treemap: {states: {inactive: {enabled: true, opacity: 0.2}}}},
+            },
+        });
+        const component = await mount(<ChartTestStory data={getData('first')} />);
+        const first = component.locator('rect[id="first"]');
+        const second = component.locator('rect[id="second"]');
+        const hidden = component.locator('rect[id="hidden"]');
+
+        for (const selected of ['first', 'second', undefined]) {
+            await component.update(<ChartTestStory data={getData(selected)} />);
+            const firstOpacity = selected === 'second' ? '0.5' : '1';
+            const secondOpacity = selected === 'first' ? '0.5' : '1';
+            if (selected) {
+                await expect(first).toHaveAttribute('opacity', firstOpacity);
+                await expect(second).toHaveAttribute('opacity', secondOpacity);
+            } else {
+                await expect(first).not.toHaveAttribute('opacity');
+                await expect(second).not.toHaveAttribute('opacity');
+            }
+
+            await first.hover();
+            await expect(second).toHaveAttribute('opacity', String(Number(secondOpacity) * 0.2));
+            await expect(hidden).toHaveAttribute('opacity', '0');
+            await second.hover();
+            await expect(first).toHaveAttribute('opacity', String(Number(firstOpacity) * 0.2));
+            await page.mouse.move(0, 0);
+            if (selected) {
+                await expect(first).toHaveAttribute('opacity', firstOpacity);
+                await expect(second).toHaveAttribute('opacity', secondOpacity);
+            } else {
+                await expect(first).not.toHaveAttribute('opacity');
+                await expect(second).not.toHaveAttribute('opacity');
+            }
+            await expect(hidden).toHaveAttribute('opacity', '0');
+        }
+    });
+
     test('With special symbols', async ({mount}) => {
         const data: ChartData = {
             series: {

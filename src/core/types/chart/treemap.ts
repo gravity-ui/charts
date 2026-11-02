@@ -9,6 +9,8 @@ export interface TreemapSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> 
     name: string | string[];
     /** The value of the node. All nodes should have this property except nodes that have children. */
     value?: number;
+    /** Individual opacity for the rectangle. The inactive state multiplies this value. */
+    opacity?: number;
     /** An id for the node. Used to group children. */
     id?: string;
     /**
