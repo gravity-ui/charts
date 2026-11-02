@@ -80,7 +80,7 @@
     "@bem-react/classname": "^1.6.0",
     "@gravity-ui/date-utils": "^2.7.3",
     "@gravity-ui/i18n": "^1.6.0",
-    "@gravity-ui/icons": "^2.15.0",
+    "@gravity-ui/icons": "^2.23.1",
     "csstype": "^3.2.3",
     "d3-array": "^3.2.4",
     "d3-axis": "^3.0.0",
