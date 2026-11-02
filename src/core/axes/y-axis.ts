@@ -30,7 +30,7 @@ import {
 } from '../utils';
 
 import type {PreparedYAxis} from './types';
-import {getDefaultAxisPadding, prepareAxisPlotLabel} from './utils';
+import {prepareAxisPlotLabel} from './utils';
 
 export const getYAxisLabelMaxWidth = async (args: {
     axis: PreparedYAxis;
@@ -69,6 +69,14 @@ export const getYAxisLabelMaxWidth = async (args: {
 
     return {height: size.maxHeight, width: size.maxWidth};
 };
+
+function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
+    if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
+        return 0;
+    }
+
+    return '5%';
+}
 
 const VALID_Y_AXIS_TITLE_ROTATION = [0, -90, 90];
 
@@ -222,7 +230,7 @@ export const getPreparedYAxis = ({
                         axisItem.padding?.max ??
                         (axisItem.type === 'datetime' && axisItem.timestamps
                             ? 0
-                            : getDefaultAxisPadding(axisSeriesData, 'y')),
+                            : getMaxPaddingBySeries({series: axisSeriesData})),
                 },
                 startOnTick: get(axisItem, 'startOnTick'),
                 endOnTick: get(axisItem, 'endOnTick'),
