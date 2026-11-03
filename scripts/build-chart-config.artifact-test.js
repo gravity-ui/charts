@@ -160,6 +160,38 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('treemap point opacity is available in declarations and constrained in schema', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'treemap-opacity-usage.ts'),
+                declaration +
+                    `
+                    const series: TreemapSeries = {
+                        type: 'treemap', name: 'Values',
+                        data: [{name: 'Value', value: 10, opacity: 0.5}],
+                    };
+                    void series;
+                `,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const opacity of [undefined, 0, 0.5, 1, -1, 2, null, '0.5']) {
+            expect(
+                validateConfig({
+                    series: {
+                        data: [
+                            {
+                                type: 'treemap',
+                                name: 'Values',
+                                data: [{name: 'Value', value: 10, opacity}],
+                            },
+                        ],
+                    },
+                }),
+            ).toBe([undefined, 0, 0.5, 1].includes(opacity));
+        }
+    });
+
     test('bar series opacity is available in declarations and constrained in schema', () => {
         const usage = `
             const vertical: BarXSeries = {type: 'bar-x', name: 'Plan', opacity: 0, data: [{x: 0, y: 10, opacity: null}]};

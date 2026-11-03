@@ -100,7 +100,7 @@ export function renderTreemap(
             const inactive = Boolean(inactiveEnabled && hoveredData && !hovered);
             currentLabel.attr('opacity', () => {
                 if (inactive) {
-                    return inactiveOptions?.opacity || null;
+                    return inactiveOptions?.opacity ?? null;
                 }
                 return null;
             });
