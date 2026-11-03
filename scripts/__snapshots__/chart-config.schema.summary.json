@@ -723,6 +723,7 @@
       "dataLabels",
       "id",
       "name",
+      "opacity",
       "parentId",
       "tooltip",
       "value"
