@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.73.0](https://github.com/gravity-ui/charts/compare/v1.72.0...v1.73.0) (2026-11-03)
+
+
+### Features
+
+* support per-point treemap opacity ([#823](https://github.com/gravity-ui/charts/issues/823)) ([7c2e570](https://github.com/gravity-ui/charts/commit/7c2e57038609c5fd224809cee157dbcfa66b7585))
+
 ## [1.72.0](https://github.com/gravity-ui/charts/compare/v1.71.0...v1.72.0) (2026-11-02)
 
 
