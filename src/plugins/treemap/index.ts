@@ -54,6 +54,20 @@ function validateTreemapData(series: TreemapSeries) {
         }
     });
     series.data.forEach((d) => {
+        const opacity = d.opacity;
+        if (
+            opacity !== undefined &&
+            (typeof opacity !== 'number' || !Number.isFinite(opacity) || opacity < 0 || opacity > 1)
+        ) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: i18n('error', 'label_invalid-series-property', {
+                    key: 'data.opacity',
+                    values: 'a finite number in [0, 1]',
+                }),
+            });
+        }
+
         let idOrName = d.id;
         if (!idOrName) {
             idOrName = Array.isArray(d.name) ? d.name.join() : d.name;
