@@ -429,6 +429,26 @@ describe('getClosestPoints with mixed series types', () => {
 });
 
 describe('getClosestPoints geometry', () => {
+    test('measures stepped lines and returns an original point', async () => {
+        const line = await prepareLine(
+            [
+                [100, 100],
+                [200, 300],
+            ],
+            {interpolation: {type: 'step', position: 'after'}},
+        );
+        const scatter = await prepareScatter([{x: 150, y: 210, radius: 1}]);
+        const data = [...line, ...scatter];
+
+        // The horizontal step wins where the straight chord would be far away.
+        const active = getActive(data, [180, 100]);
+        expect(getId(active)).toBe(line[0].series.id);
+        expect(active.data).toBe(line[0].points[1].data);
+        // The vertical step also wins, but the space at the former chord is empty.
+        expect(getId(getActive(data, [200, 250]))).toBe(line[0].series.id);
+        expect(getId(getActive(data, [150, 200]))).toBe(scatter[0].point.series.id);
+    });
+
     test('respects the line cap', async () => {
         const scatter = await prepareScatter([{x: 205, y: 300, radius: 1}]);
         const scatterId = scatter[0].point.series.id;

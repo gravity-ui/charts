@@ -68,6 +68,17 @@ export type LineSeriesInterpolation =
            * @default 0
            */
           tension?: number;
+      }
+    | {
+          type: 'step';
+          /**
+           * Where Y changes between adjacent points `(x1, y1)` and `(x2, y2)`.
+           * - `'middle'`: Change Y halfway between x1 and x2.
+           * - `'before'`: Change Y at x1, then continue horizontally.
+           * - `'after'`: Continue horizontally at y1 until x2, then change Y.
+           * @default 'middle'
+           */
+          position?: 'middle' | 'before' | 'after';
       };
 
 export type LineSeriesDataLabelPlacementPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -102,7 +113,7 @@ export interface LineSeriesDataLabels extends BaseDataLabels {
 }
 
 export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLineBaseStyle {
-    /** Line series: points joined by line segments or a smooth curve. */
+    /** Line series: points joined by straight segments, steps, or a smooth curve. */
     type: typeof SERIES_TYPE.Line;
     data: LineSeriesData<T>[];
     /**
@@ -137,13 +148,15 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
      */
     nullMode?: 'connect' | 'zero' | 'skip';
     /**
-     * Configures smooth curve interpolation between data points.
+     * Configures interpolation between data points.
      *
      * - `'linear'`: Straight line segments (default behavior)
      * - `'monotone'`: Smooth curve for data ordered monotonically by x that passes through every data point without introducing artificial extrema
      * - `'cardinal'`: Cardinal spline with optional `tension` parameter (0–1, default 0)
+     * - `'step'`: Horizontal and vertical segments with optional `position` (`'middle'` by default)
      *
-     * Markers, tooltips, and interactions remain attached to original data points regardless of interpolation.
+     * Markers and tooltip values remain attached to original data points.
+     * Line interactions and automatic data-label placement follow the interpolated geometry.
      */
     interpolation?: LineSeriesInterpolation;
     /**

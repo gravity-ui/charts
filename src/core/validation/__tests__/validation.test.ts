@@ -582,6 +582,10 @@ describe('validation/validateData', () => {
         {type: 'cardinal', tension: Number.NaN},
         {type: 'cardinal', tension: -0.1},
         {type: 'cardinal', tension: 1.1},
+        {type: 'step', position: 'invalid'},
+        {type: 'step', position: null},
+        {type: 'step', position: 0},
+        {type: 'step', position: {}},
     ])(
         'validateData should reject invalid line interpolation (interpolation: %j)',
         (interpolation) => {
@@ -603,6 +607,10 @@ describe('validation/validateData', () => {
         {type: 'cardinal'},
         {type: 'cardinal', tension: 0},
         {type: 'cardinal', tension: 1},
+        {type: 'step'},
+        {type: 'step', position: 'middle'},
+        {type: 'step', position: 'before'},
+        {type: 'step', position: 'after'},
     ])(
         'validateData should accept valid line interpolation (interpolation: %j)',
         (interpolation) => {

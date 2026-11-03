@@ -2,7 +2,8 @@ import {i18n} from '~core/i18n';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 
-const AVAILABLE_INTERPOLATION_TYPES = ['linear', 'monotone', 'cardinal'];
+const AVAILABLE_INTERPOLATION_TYPES = ['linear', 'monotone', 'cardinal', 'step'];
+const AVAILABLE_STEP_POSITIONS = ['middle', 'before', 'after'];
 
 interface ValidatableLineSeries {
     interpolation?: unknown;
@@ -34,7 +35,11 @@ export function validateInterpolation({series}: ValidateLineSeriesArgs) {
         throwInvalidSeriesProperty('interpolation.type', AVAILABLE_INTERPOLATION_TYPES);
     }
 
-    const {type, tension} = interpolation as {tension?: unknown; type?: unknown};
+    const {type, tension, position} = interpolation as {
+        tension?: unknown;
+        type?: unknown;
+        position?: unknown;
+    };
     if (typeof type !== 'string' || !AVAILABLE_INTERPOLATION_TYPES.includes(type)) {
         throwInvalidSeriesProperty('interpolation.type', AVAILABLE_INTERPOLATION_TYPES);
     }
@@ -45,6 +50,14 @@ export function validateInterpolation({series}: ValidateLineSeriesArgs) {
         (typeof tension !== 'number' || !Number.isFinite(tension) || tension < 0 || tension > 1)
     ) {
         throwInvalidSeriesProperty('interpolation.tension', '0 ≤ tension ≤ 1');
+    }
+
+    if (
+        type === 'step' &&
+        position !== undefined &&
+        (typeof position !== 'string' || !AVAILABLE_STEP_POSITIONS.includes(position))
+    ) {
+        throwInvalidSeriesProperty('interpolation.position', AVAILABLE_STEP_POSITIONS);
     }
 }
 
