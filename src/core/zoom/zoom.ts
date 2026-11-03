@@ -67,6 +67,19 @@ function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoo
     return Array.isArray(series.data);
 }
 
+function spansXRange(
+    from: number | string | null | undefined,
+    to: number | string | null | undefined,
+    [min, max]: [number, number],
+): boolean {
+    if (from === null || from === undefined || to === null || to === undefined) {
+        return false;
+    }
+    const start = Number(from);
+    const end = Number(to);
+    return (start < min && end > max) || (start > max && end < min);
+}
+
 export function getZoomedSeriesData(args: {
     seriesData: PreparedSeries[];
     zoomState: Partial<ZoomState>;
@@ -94,6 +107,14 @@ export function getZoomedSeriesData(args: {
         if (!isPreparedZoomableSeries(seriesItem)) {
             return;
         }
+
+        let lastShapePointIndex = -1;
+        const appendShapePoint = (index: number) => {
+            if (index > lastShapePointIndex) {
+                filteredShapesData?.push(seriesItem.data[index]);
+                lastShapePointIndex = index;
+            }
+        };
 
         // For stacked series the chart-space position of each point is the
         // cumulative stack sum, not its individual value, so the value-axis
@@ -170,15 +191,23 @@ export function getZoomedSeriesData(args: {
             }
 
             if (filteredShapesData) {
-                if (prevPointInRange && !currentPointInRange) {
-                    filteredShapesData.push(point);
-                } else if (!isFirstPoint && !prevPointInRange && currentPointInRange) {
-                    filteredShapesData.push(prevPoint, point);
+                if (currentPointInRange) {
+                    if (!isFirstPoint && !prevPointInRange) {
+                        appendShapePoint(i - 1);
+                    }
+                    appendShapePoint(i);
+                } else if (prevPointInRange) {
+                    appendShapePoint(i);
                 } else if (
-                    (isFirstPoint || (!isFirstPoint && prevPointInRange)) &&
-                    currentPointInRange
+                    zoomState.x &&
+                    prevPoint &&
+                    'x' in prevPoint &&
+                    'x' in point &&
+                    spansXRange(prevPoint.x, point.x, zoomState.x)
                 ) {
-                    filteredShapesData.push(point);
+                    // Both anchors can be outside the viewport while their segment crosses it.
+                    appendShapePoint(i - 1);
+                    appendShapePoint(i);
                 }
             }
         });

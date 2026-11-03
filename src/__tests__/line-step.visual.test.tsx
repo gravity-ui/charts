@@ -7,7 +7,7 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
 
 import {ChartInteractionTestStory} from './components/ChartInteractionTestStory';
-import {getLocatorBoundingBox} from './utils';
+import {dragElementByCalculatedPosition, getLocatorBoundingBox} from './utils';
 
 test.describe('Step interpolation', () => {
     test('positions with markers and automatic labels', async ({mount}) => {
@@ -72,8 +72,100 @@ test.describe('Step interpolation', () => {
             await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(
                 nullMode === 'zero' ? 5 : 4,
             );
+            const geometry = await path.evaluate((node) => {
+                const line = node as SVGPathElement;
+                const start = line.getPointAtLength(0);
+                const end = line.getPointAtLength(line.getTotalLength());
+                const at = (x: number, y: number) =>
+                    new DOMPoint(
+                        start.x + (x / 4) * (end.x - start.x),
+                        start.y + ((y - 20) / 10) * (end.y - start.y),
+                    );
+                const matrix = line.getScreenCTM();
+                if (!matrix) throw new Error('Line transform is unavailable');
+                const zero = at(2, 0).matrixTransform(matrix);
+                return {
+                    firstPlateau: line.isPointInStroke(at(0.5, 20)),
+                    connectedPlateau: line.isPointInStroke(at(2.5, 40)),
+                    zeroPlateau: line.isPointInStroke(at(2.5, 0)),
+                    zeroTransition: line.isPointInStroke(at(2, 20)),
+                    zero: {x: zero.x, y: zero.y},
+                };
+            });
+            expect(geometry.firstPlateau).toBe(true);
+            expect(geometry.connectedPlateau).toBe(nullMode === 'connect');
+            expect(geometry.zeroPlateau).toBe(nullMode === 'zero');
+            expect(geometry.zeroTransition).toBe(nullMode === 'zero');
+            if (nullMode === 'zero') {
+                const marker = await getLocatorBoundingBox(
+                    component.locator('.gcharts-marker__symbol').nth(2),
+                );
+                expect(marker.x + marker.width / 2).toBeCloseTo(geometry.zero.x, 0);
+                expect(marker.y + marker.height / 2).toBeCloseTo(geometry.zero.y, 0);
+            }
         });
     }
+
+    test('keeps a plateau when zooming between recorded changes', async ({mount, page}) => {
+        const data: ChartData = {
+            chart: {zoom: {enabled: true, type: 'x'}},
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Price',
+                        interpolation: {type: 'step', position: 'after'},
+                        data: [
+                            {x: 0, y: 20},
+                            {x: 10, y: 80},
+                        ],
+                    },
+                    {type: 'scatter', name: 'Reference', data: [{x: 3, y: 50}]},
+                ],
+            },
+            xAxis: {min: 0, max: 10},
+            yAxis: [{min: 0, max: 100}],
+        };
+        const component = await mount(<ChartTestStory data={data} />);
+        const path = component.locator('.gcharts-line > path');
+        await expect(path).toHaveAttribute('d', /M/);
+        const initialPath = (await path.getAttribute('d')) ?? '';
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-chart__content .gcharts-brush .overlay',
+            getDragOptions: ({boundingBox}) => ({
+                from: [
+                    boundingBox.x + boundingBox.width * 0.2,
+                    boundingBox.y + boundingBox.height / 2,
+                ],
+                to: [
+                    boundingBox.x + boundingBox.width * 0.4,
+                    boundingBox.y + boundingBox.height / 2,
+                ],
+            }),
+        });
+        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+        await expect(path).not.toHaveAttribute('d', initialPath);
+        await expect(path).toHaveAttribute('d', /M/);
+        const plot = await getLocatorBoundingBox(
+            component.locator('.gcharts-chart__content .gcharts-brush .overlay'),
+        );
+        const onPlateau = await path.evaluate((node, bounds) => {
+            const line = node as SVGPathElement;
+            const matrix = line.getScreenCTM();
+            if (!matrix) throw new Error('Line transform is unavailable');
+            return [0.25, 0.75].every((fraction) => {
+                const point = new DOMPoint(
+                    bounds.x + bounds.width * fraction,
+                    bounds.y + bounds.height * 0.8,
+                ).matrixTransform(matrix.inverse());
+                return line.isPointInStroke(point);
+            });
+        }, plot);
+        expect(onPlateau).toBe(true);
+    });
 
     test('clicks the step and keeps tooltip values at original points', async ({mount, page}) => {
         const points = [

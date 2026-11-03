@@ -122,6 +122,7 @@ const CURVE_STEPS = 8;
 class SegmentCollector {
     readonly segments: PlacementSegment[] = [];
     private readonly halfWidth: number;
+    private runStart = 0;
     private x = 0;
     private y = 0;
 
@@ -130,11 +131,22 @@ class SegmentCollector {
     }
 
     moveTo(x: number, y: number) {
+        this.runStart = this.segments.length;
         this.x = x;
         this.y = y;
     }
 
     lineTo(x: number, y: number) {
+        // Repeated vertices must not turn an endpoint cap into an internal round join.
+        // Keep one zero-length segment only when the whole run is coincident.
+        if (this.x === x && this.y === y) {
+            if (this.segments.length > this.runStart) return;
+        } else if (this.segments.length === this.runStart + 1) {
+            const first = this.segments[this.runStart];
+            if (first.x1 === first.x2 && first.y1 === first.y2) {
+                this.segments.pop();
+            }
+        }
         this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
         this.x = x;
         this.y = y;

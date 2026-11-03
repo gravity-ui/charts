@@ -387,6 +387,39 @@ describe('legend and domain updates', () => {
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
     });
 
+    test.each(['linear', 'datetime'] as const)(
+        'retained anchors keep %s axis domains when a line has no samples inside the zoom',
+        async (type) => {
+            const props = getProps({
+                legend: {enabled: false},
+                xAxis: {type, maxPadding: 0},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Price',
+                            interpolation: {type: 'step', position: 'after'},
+                            data: [
+                                {x: 0, y: 20},
+                                {x: 10, y: 80},
+                            ],
+                        },
+                        {type: 'scatter', name: 'Reference', data: [{x: 3, y: 50}]},
+                    ],
+                },
+            });
+            const {result} = renderHook(useChartInnerProps, {
+                initialProps: {...props, zoomState: {x: [2, 4] as [number, number]}},
+            });
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            expect(result.current.preparedSeries[0].data).toEqual([]);
+            expect(result.current.xScale?.domain().map(Number)).toEqual([2, 4]);
+            const yDomain = result.current.yScale?.[0]?.domain().map(Number) ?? [];
+            expect(Math.min(...yDomain)).toBeLessThanOrEqual(20);
+            expect(Math.max(...yDomain)).toBeGreaterThanOrEqual(80);
+        },
+    );
+
     test('x domain is not limited by a range slider that the next data turns off before it is prepared', async () => {
         const series: ChartData['series'] = {
             data: [

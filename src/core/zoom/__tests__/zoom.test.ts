@@ -100,6 +100,47 @@ describe('zoom/getZoomedSeriesData', () => {
     );
 
     test.each(['line', 'area', 'area-range'] as const)(
+        '%s preserves a segment spanning an X range without samples',
+        (type) => {
+            const data = [-5, 0, 10, 20].map((x) => ({x, y: 5, y0: 1, y1: 5}));
+            const result = getZoomedSeriesData({
+                seriesData: [{type, data}] as unknown as PreparedSeries[],
+                xAxis: linearXAxis(),
+                zoomState: {x: [2, 4]},
+            });
+            expect(result.preparedSeries[0].data).toEqual([]);
+            expect(result.preparedShapesSeries[0].data).toEqual(data.slice(1, 3));
+        },
+    );
+
+    test('retains descending numeric-string neighbors without duplicating crossing points', () => {
+        const data = ['10', '0', '10'].map((x) => ({x, y: 5}));
+        const result = getZoomedSeriesData({
+            seriesData: [{type: 'line', data}] as unknown as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(result.preparedShapesSeries[0].data).toEqual(data);
+    });
+
+    test('does not retain a segment entirely outside the X range', () => {
+        const result = getZoomedSeriesData({
+            seriesData: [
+                {
+                    type: 'line',
+                    data: [
+                        {x: -5, y: 5},
+                        {x: 0, y: 5},
+                    ],
+                },
+            ] as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(result.preparedShapesSeries[0].data).toEqual([]);
+    });
+
+    test.each(['line', 'area', 'area-range'] as const)(
         '%s does not preserve neighbors on a category X axis',
         (type) => {
             const data = ['A', 'B', 'C', 'D'].map((x) => ({x, y: 5, y0: 1, y1: 5}));

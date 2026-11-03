@@ -357,7 +357,13 @@ export function useChartInnerProps(props: Props) {
                 preparedChart,
                 legendConfig,
                 preparedLegend,
-                preparedSeries,
+                // A series without samples in the viewport can still have a crossing segment.
+                // Its retained anchors keep the axis domains from collapsing to other series.
+                preparedSeries: preparedSeries.map((series, index) =>
+                    Array.isArray(series.data) && series.data.length === 0
+                        ? preparedShapesSeries[index]
+                        : series,
+                ),
                 preparedSeriesOptions,
                 width,
                 xAxis: normalizedXAxis,
