@@ -10,14 +10,6 @@
 * migrate deprecated config to isolated v1 adapter ([#812](https://github.com/gravity-ui/charts/issues/812))
 * migrate to @gravity-ui/uikit 8 and drop React 17 ([#800](https://github.com/gravity-ui/charts/issues/800))
 
-### Features
-
-* build real CommonJS and strict ESM like uikit 8 ([#813](https://github.com/gravity-ui/charts/issues/813)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
-* compile to ES2022 like uikit 8 ([#817](https://github.com/gravity-ui/charts/issues/817)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
-* migrate deprecated config to isolated v1 adapter ([#812](https://github.com/gravity-ui/charts/issues/812)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
-* migrate to @gravity-ui/uikit 8 and drop React 17 ([#800](https://github.com/gravity-ui/charts/issues/800)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
-
-
 ### Performance Improvements
 
 * replace lodash with es-toolkit ([#818](https://github.com/gravity-ui/charts/issues/818)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
