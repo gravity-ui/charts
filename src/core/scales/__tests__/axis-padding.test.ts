@@ -3,6 +3,7 @@
 import {scaleBand, scaleLinear, scaleLog, scaleOrdinal, scaleUtc} from 'd3-scale';
 
 import {getAutomaticTickValues} from '../../../components/AxisY/utils';
+import {getNormalizedXAxis} from '../../../components/ChartInner/utils/normalized-original-data';
 import {createScales} from '../../../hooks/useAxisScales';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
@@ -41,7 +42,7 @@ async function prepare(raw: ChartSeries[] = [line], options?: ChartSeriesOptions
         seriesOptions: getPreparedOptions(options),
         xAxis: {
             type: 'linear',
-            maxPadding: 0,
+            padding: {max: 0},
             startOnTick: false,
             endOnTick: false,
             ticks: {},
@@ -51,7 +52,7 @@ async function prepare(raw: ChartSeries[] = [line], options?: ChartSeriesOptions
             {
                 type: 'linear',
                 plotIndex: 0,
-                maxPadding: 0,
+                padding: {max: 0},
                 startOnTick: false,
                 endOnTick: false,
                 ticks: {},
@@ -276,24 +277,33 @@ describe('axis padding', () => {
         },
     );
 
-    test.each([allAuto, {max: '0%'}, {min: '25%', max: '1%'}])(
-        'ignores padding %j on a reversed category axis with legacy maxPadding',
-        async (padding) => {
-            const args = await prepare();
+    test.each([
+        {order: 'reverse', expected: ['B', 'A', 'C']},
+        {order: 'sortDesc', expected: ['C', 'B', 'A']},
+    ] as const)(
+        'preserves normalized $order category order regardless of padding',
+        async ({order, expected}) => {
+            const args = await prepare([
+                {type: 'line', name: 'Revenue', data: ['C', 'A', 'B'].map((x, y) => ({x, y}))},
+            ]);
+            const normalized = getNormalizedXAxis({
+                xAxis: {type: 'category', categories: ['C', 'A', 'B'], order},
+            });
             args.xAxis = {
                 ...args.xAxis,
                 type: 'category',
-                categories: ['A', 'B', 'C'],
-                order: 'reverse',
-                maxPadding: 0.5,
+                categories: normalized?.categories,
+                order,
             };
             const common = {...args, boundsWidth: 600, boundsHeight: 300};
             const original = createScales(common).xScale;
-            args.xAxis.padding = padding;
+            args.xAxis.padding = {min: '25%', max: '50%'};
             const padded = createScales(common).xScale;
-            expect(padded?.domain()).toEqual(original?.domain());
+            expect(padded?.domain()).toEqual(expected);
             expect(padded?.range()).toEqual(original?.range());
-            expect(padded?.range()).toEqual([600, 0]);
+            expect(padded?.range()).toEqual([0, 600]);
+            if (!padded || !('bandwidth' in padded)) throw new Error('Expected category scale');
+            expect(expected.map((category) => padded(category))).toEqual([0, 200, 400]);
         },
     );
 
@@ -551,16 +561,16 @@ describe('axis padding', () => {
         expect(preview.yScale[0]?.domain()).toEqual([0, 100]);
     });
 
-    test('preserves legacy padding and lets an explicit new maximum override it', async () => {
+    test('lets maximum padding be disabled independently of minimum padding', async () => {
         const args = await prepare();
-        args.xAxis.maxPadding = 0.2;
-        args.yAxis[0].maxPadding = 0.2;
+        args.xAxis.padding = {max: '20%'};
+        args.yAxis[0].padding = {max: '20%'};
         const common = {...args, boundsWidth: 600, boundsHeight: 300};
-        const legacy = createScales(common);
-        expect(legacy.xScale?.domain()).toEqual([0, 2.4]);
-        expect(legacy.yScale[0]?.domain()).toEqual([0, 120]);
+        const initial = createScales(common);
+        expect(initial.xScale?.domain()).toEqual([0, 2.4]);
+        expect(initial.yScale[0]?.domain()).toEqual([0, 120]);
         args.xAxis.padding = {max: 0};
-        args.yAxis[0].padding = {min: 0};
+        args.yAxis[0].padding = {min: 0, max: '20%'};
         const override = createScales(common);
         expect(override.xScale?.domain()).toEqual([0, 2]);
         expect(override.yScale[0]?.domain()).toEqual([0, 120]);

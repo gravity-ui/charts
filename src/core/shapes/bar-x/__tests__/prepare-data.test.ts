@@ -8,6 +8,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import {seriesOptionsDefaults} from '../../../constants';
 import type {PreparedSplit} from '../../../layout/split-types';
 import type {PreparedBarXSeries, PreparedLegend} from '../../../series/types';
+import * as textUtils from '../../../utils/text';
 import {prepareBarXData} from '../prepare-data';
 import {getBarXPaths} from '../utils';
 
@@ -24,6 +25,7 @@ async function prepare(
         grid?: boolean;
         isRangeSlider?: boolean;
         yAxis?: PreparedYAxis[];
+        dataLabels?: BarXSeries['dataLabels'];
     } = {},
 ) {
     const series = prepareBarXSeries({
@@ -33,6 +35,7 @@ async function prepare(
             stacking,
             borderWidth: options.borderWidth,
             data: [{x: 1, y}],
+            dataLabels: options.dataLabels,
         })),
         colorScale: scaleOrdinal([] as string[], ['#000']),
         colors: [],
@@ -71,6 +74,25 @@ async function prepare(
 }
 
 describe('bar-x percentage', () => {
+    test('centers default HTML labels inside percent bars', async () => {
+        const measure = jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({
+            width: 20,
+            height: 18,
+            hangingOffset: 2,
+        }));
+        try {
+            const bars = await prepare([20, 80], 'percent', 200, {
+                dataLabels: {enabled: true, html: true},
+            });
+            for (const bar of bars) {
+                const label = bar.htmlLabels[0];
+                expect(label.y + label.size.height / 2).toBeCloseTo(bar.y + bar.height / 2);
+            }
+        } finally {
+            measure.mockRestore();
+        }
+    });
+
     test.each([200, 600].flatMap((height) => [1, 1e-14].map((unit) => ({height, unit}))))(
         'uses raw values at height $height and scale $unit',
         async ({height, unit}) => {

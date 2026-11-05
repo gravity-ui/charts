@@ -6,23 +6,21 @@ import type {ChartScaleLinear, ChartScaleTime} from './types';
 interface DomainPadding {
     minFraction: number;
     maxFraction: number;
-    legacyMaxFraction: number;
 }
 
 /** Resolve percentages before band/label offsets and tick rounding. */
 export function getDomainPadding(
-    axis: Pick<ChartAxis, 'type' | 'padding' | 'maxPadding'>,
+    axis: Pick<ChartAxis, 'type' | 'padding'>,
     isZoomed = false,
 ): DomainPadding {
     if (axis.type === 'category') {
-        return {minFraction: 0, maxFraction: 0, legacyMaxFraction: axis.maxPadding ?? 0};
+        return {minFraction: 0, maxFraction: 0};
     }
     const min = parseNonNegativeSize(axis.padding?.min);
     const max = parseNonNegativeSize(axis.padding?.max);
     return {
         minFraction: !isZoomed && min?.unit === '%' ? min.value / 100 : 0,
         maxFraction: !isZoomed && max?.unit === '%' ? max.value / 100 : 0,
-        legacyMaxFraction: axis.padding?.max === undefined ? (axis.maxPadding ?? 0) : 0,
     };
 }
 
@@ -76,13 +74,12 @@ export function getPaddedDomain(args: {
     const isConstantDomain = domain[0] === domain[1];
     let minFraction = isMinSpecified || isConstantDomain ? 0 : padding.minFraction;
     let maxFraction = isMaxSpecified || isConstantDomain ? 0 : padding.maxFraction;
-    const legacyMax = isConstantDomain ? 0 : size * padding.legacyMaxFraction;
     const candidate = minFraction || maxFraction ? scale.copy() : undefined;
     const range = scale.range();
 
     while (true) {
         const minOffset = size * minFraction + offsetMin;
-        const maxOffset = size * maxFraction + legacyMax + offsetMax;
+        const maxOffset = size * maxFraction + offsetMax;
         let min = domain[0];
         let max = domain[1];
         if (!isMinSpecified) {
@@ -98,7 +95,7 @@ export function getPaddedDomain(args: {
                     : domain[1] + Math.abs(Number(scale.invert(maxOffset)) - zero);
         }
         const nextDomain: [number, number] = [min, max];
-        // Preserve the legacy path, including bar/label offsets.
+        // Bar and label offsets also apply when no percentage is requested.
         if (!candidate || (!minFraction && !maxFraction)) return nextDomain;
         candidate.domain(nextDomain);
         const positions = domain.map((value) => candidate(value));

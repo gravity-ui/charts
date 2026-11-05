@@ -21,10 +21,10 @@ export interface BarSeriesDataLabelPlacementOptions {
      * within the visible bar, with `padding` at both ends along the value axis.
      * In stacks, outside is skipped for inner segments when inside candidates are available.
      * Outside-only placement labels every segment, including inner segments.
-     * Takes precedence over `inside`, including in percent stacks.
+     * Explicit placement is respected in percent stacks too.
      * Uses the available plot space without reserving extra axis space for labels,
      * except for non-percent bar-y with only outside candidates, which reserves X axis space.
-     * When omitted, the existing `inside` behavior is preserved.
+     * When omitted, percent stacks use inside labels; other series use outside labels.
      */
     placement?: 'auto' | BarSeriesDataLabelPlacementPositions;
     /**

@@ -12,10 +12,10 @@ npm install @gravity-ui/uikit @gravity-ui/charts
 
 ## Usage
 
-Import the `@gravity-ui/uikit` styles once in your entry point, wrap your app in `ThemeProvider`, and render a `Chart` inside a container with an explicit height:
+Import the `@gravity-ui/uikit` styles once in your entry point, wrap your app in `Provider`, and render a `Chart` inside a container with an explicit height:
 
 ```tsx
-import {ThemeProvider} from '@gravity-ui/uikit';
+import {Provider} from '@gravity-ui/uikit';
 import {Chart} from '@gravity-ui/charts';
 
 import '@gravity-ui/uikit/styles/fonts.css';
@@ -40,11 +40,11 @@ const data = {
 
 export default function App() {
   return (
-    <ThemeProvider theme="light">
+    <Provider theme="light">
       <div style={{height: 300}}>
         <Chart data={data} />
       </div>
-    </ThemeProvider>
+    </Provider>
   );
 }
 ```
@@ -88,7 +88,7 @@ A declarative React charting library for Gravity UI apps — render line, area, 
 - **The component is `Chart`, not `ChartKit`.** Import `{Chart}` from `@gravity-ui/charts`; `ChartKit` belongs to the separate legacy `@gravity-ui/chartkit` package.
 - **The data prop is `data`, shaped `{series: {data: [...]}}`.** Each entry in `series.data` is one series with its own `type` and `data` array — there is no top-level array of series.
 - **Nothing renders without a sized container.** `Chart` fills its parent, so give the wrapper an explicit height.
-- **Requires uikit setup.** Wrap in `ThemeProvider` and import `@gravity-ui/uikit/styles/styles.css`; `@gravity-ui/uikit` is a required peer dependency.
+- **Requires uikit setup.** Wrap in `Provider` and import `@gravity-ui/uikit/styles/styles.css`; `@gravity-ui/uikit` is a required peer dependency.
 
 ### Useful docs
 

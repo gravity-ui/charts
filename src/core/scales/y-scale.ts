@@ -1,7 +1,7 @@
 import {extent, tickStep, ticks} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis} from '../axes/types';
@@ -444,11 +444,7 @@ export function createYScale(args: {
                     scale,
                     domain: [yMin, yMax],
                     type: axis.type,
-                    // Explicit timestamps have never used the legacy maxPadding fallback.
-                    padding: getDomainPadding(
-                        {type: axis.type, padding: axis.padding},
-                        Boolean(zoomStateY),
-                    ),
+                    padding: getDomainPadding(axis, Boolean(zoomStateY)),
                     size: boundsHeight,
                     offsetMin: 0,
                     offsetMax: 0,

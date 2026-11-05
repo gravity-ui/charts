@@ -83,7 +83,7 @@ In stacks, inner segments use inside candidates when available. `placement: ['ou
 
 If no candidate fits, `placementFallback: 'show'` (default) draws the first available candidate shifted into the plot; it may overlap the bar edge. Use `'hide'` to omit the label instead. Label overlap filtering still follows `allowOverlap`.
 
-SVG and HTML labels recalculate after resize, zoom, and reset. Explicit `placement` overrides the deprecated `inside`: use `['inside-center']` for `inside: true` and `['outside']` for `inside: false` in non-percent series. When omitted, existing behavior is preserved; percent stacks always use inside labels regardless of `inside`.
+SVG and HTML labels recalculate after resize, zoom, and reset. Use `placement: ['inside-center']` for centered inside labels and `placement: ['outside']` for outside labels. When placement is omitted, percent stacks use inside labels.
 
 For negative values and reversed axes, `['outside']` follows the value end, correcting legacy outside labels that preferred the screen's top or right side regardless of value direction.
 

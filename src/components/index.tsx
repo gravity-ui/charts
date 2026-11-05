@@ -1,7 +1,7 @@
 import React from 'react';
 
-import type {DebouncedFunc} from 'lodash';
-import debounce from 'lodash/debounce';
+import type {DebouncedFunc} from 'es-toolkit/compat';
+import debounce from 'es-toolkit/compat/debounce';
 
 import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';

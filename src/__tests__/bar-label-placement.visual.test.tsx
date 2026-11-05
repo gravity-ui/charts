@@ -33,7 +33,6 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                             dataLabels: {
                                 enabled: true,
                                 html,
-                                inside: false,
                                 placement: outsideOnly ? ['outside'] : 'auto',
                                 placementFallback: percent && outsideOnly ? 'hide' : 'show',
                                 allowOverlap: true,
@@ -138,39 +137,6 @@ test('bar-y placement hides fully clipped stack segments regardless of fallback'
     expect(label.x + label.width).toBeLessThan(bar.x + bar.width);
 });
 
-test('explicit placement ignores legacy inside during autoscaling', async ({mount}) => {
-    const data = (inside: boolean): ChartData => ({
-        legend: {enabled: false},
-        xAxis: {min: 0, order: 'reverse', startOnTick: false, endOnTick: false},
-        yAxis: [{type: 'category', categories: ['A']}],
-        series: {
-            data: [
-                {
-                    type: 'bar-y',
-                    name: 'Orders',
-                    data: [{x: 90, y: 'A', label: 'A long label'}],
-                    dataLabels: {enabled: true, inside, placement: ['inside-center']},
-                },
-            ],
-        },
-    });
-    let readyCount = 0;
-    const onRender = () => {
-        readyCount++;
-    };
-    const component = await mount(<ChartTestStory data={data(false)} onRender={onRender} />);
-    const bars = component.locator('.gcharts-bar-y__segment');
-    const labels = component.locator('.gcharts-bar-y__label');
-    await expect.poll(() => readyCount).toBeGreaterThan(0);
-    const before = await getLocatorBoundingBox(bars);
-    const centered = await getLocatorBoundingBox(labels);
-    expect(centered.x + centered.width / 2).toBeCloseTo(before.x + before.width / 2, 0);
-    const previousCount = readyCount;
-    await component.update(<ChartTestStory data={data(true)} onRender={onRender} />);
-    await expect.poll(() => readyCount).toBeGreaterThan(previousCount);
-    expect((await getLocatorBoundingBox(bars)).width).toBeCloseTo(before.width);
-});
-
 test('negative bar labels keep padding from the painted border', async ({mount}) => {
     const data = (placement: 'outside' | 'inside-end'): ChartData => ({
         legend: {enabled: false},
@@ -212,7 +178,7 @@ test('reversed percent stacks honor explicit inside-end', async ({mount}) => {
                 name: String(value),
                 stacking: 'percent',
                 data: [{x: 'A', y: value}],
-                dataLabels: {enabled: true, inside: false, placement: ['inside-end'], padding: 5},
+                dataLabels: {enabled: true, placement: ['inside-end'], padding: 5},
             })),
         },
     };
@@ -235,9 +201,15 @@ for (const type of ['bar-y', 'bar-x'] as const) {
                 chart: {zoom: {enabled: true, type: 'xy'}},
                 xAxis: vertical
                     ? {type: 'category', categories: ['Small', 'Large']}
-                    : {min: 0, max: 1082.4, startOnTick: false, endOnTick: false, maxPadding: 0},
+                    : {
+                          min: 0,
+                          max: 1082.4,
+                          startOnTick: false,
+                          endOnTick: false,
+                          padding: {max: 0},
+                      },
                 yAxis: vertical
-                    ? [{min: 0, max: 1000, startOnTick: false, endOnTick: false, maxPadding: 0}]
+                    ? [{min: 0, max: 1000, startOnTick: false, endOnTick: false, padding: {max: 0}}]
                     : [{type: 'category', categories: ['Small', 'Large']}],
                 legend: {enabled: false},
                 tooltip: {enabled: false},
@@ -258,7 +230,6 @@ for (const type of ['bar-y', 'bar-x'] as const) {
                             ).map((point) => ({...point, dataLabels: {enabled: true}})),
                             dataLabels: {
                                 enabled: !pointOverride,
-                                inside: true,
                                 html,
                                 placement: html ? 'auto' : ['outside', 'inside-end'],
                                 padding: 5,

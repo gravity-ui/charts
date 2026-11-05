@@ -2,8 +2,8 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import {median} from 'd3-array';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {scatterBasicData} from '../__stories__/__data__';
@@ -58,7 +58,7 @@ test.describe('Y-axis', () => {
 
     test('maxPadding=0', async ({mount}) => {
         const data = cloneDeep(scatterBasicData);
-        set(data, 'yAxis[0].maxPadding', 0);
+        set(data, 'yAxis[0].padding.max', 0);
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();
     });
@@ -301,7 +301,7 @@ test.describe('Y-axis', () => {
                     labels: {html: true},
                 },
             ],
-            xAxis: {maxPadding: 0},
+            xAxis: {padding: {max: 0}},
         };
 
         test('default settings', async ({mount}) => {
@@ -722,7 +722,7 @@ test.describe('Y-axis', () => {
                 yAxis: [
                     {
                         min: 0,
-                        maxPadding: 0,
+                        padding: {max: 0},
                     },
                 ],
                 series: {
@@ -969,7 +969,7 @@ test.describe('Y-axis', () => {
             xAxis: {
                 type: 'datetime',
                 ticks: {
-                    pixelInterval: 120,
+                    interval: 120,
                 },
             },
             yAxis: [
@@ -1104,7 +1104,7 @@ test.describe('Y-axis', () => {
                         },
                     ],
                 },
-                xAxis: {maxPadding: 0},
+                xAxis: {padding: {max: 0}},
                 yAxis: [
                     {
                         type: 'category',

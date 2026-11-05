@@ -49,7 +49,7 @@ function prepareData(): ChartData {
             title: {
                 text: 'Terrestrial date',
             },
-            ticks: {pixelInterval: 200},
+            ticks: {interval: 200},
         },
         title: {
             text: 'Mars weather',

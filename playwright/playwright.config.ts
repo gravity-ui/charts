@@ -53,17 +53,8 @@ const config: PlaywrightTestConfig = {
             resolve: {
                 alias: {
                     '~core': pathFromRoot('src/core'),
+                    '@gravity-ui/charts/migration/v1': pathFromRoot('src/migration/v1/index.ts'),
                     '@gravity-ui/charts': pathFromRoot('src/index.ts'),
-                    // React 17 doesn't ship `react-dom/client`; Playwright CT's
-                    // registerSource imports `createRoot` from there. Redirect
-                    // to a thin compat shim built on ReactDOM.render.
-                    ...(process.env.REACT_VERSION === '17'
-                        ? {
-                              'react-dom/client': pathFromRoot(
-                                  'playwright/shims/react-dom-client.ts',
-                              ),
-                          }
-                        : {}),
                 },
             },
         },

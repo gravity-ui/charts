@@ -36,12 +36,12 @@ const htmlTitleWithLink =
 
 const ChartTitleStoryContent = () => {
     return (
-        <Container spaceRow={5}>
-            <Row space={1}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-1">
                 <Text variant="subheader-3">Long title</Text>
             </Row>
-            <Row space={3}>
-                <Col s={6}>
+            <Row gap="spacing-3">
+                <Col size={6}>
                     <Text variant="body-2">Ellipsis (default)</Text>
                     <ChartStory
                         data={{
@@ -50,7 +50,7 @@ const ChartTitleStoryContent = () => {
                         }}
                     />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <Text variant="body-2">Multiline (maxRowCount: 3)</Text>
                     <ChartStory
                         data={{

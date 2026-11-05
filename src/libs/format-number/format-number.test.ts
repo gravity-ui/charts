@@ -126,10 +126,6 @@ describe('plugins/shared', () => {
         expect(formatNumber(2, {units: BYTES, multiplier: 1024})).toEqual('2 KB');
     });
 
-    test('units overrides deprecated unit option', () => {
-        expect(formatNumber(2048, {units: BYTES, unit: 'k'})).toEqual('2 KB');
-    });
-
     describe('single-entry sugar (lock to one unit)', () => {
         test('lock to K — small value scales into K', () => {
             expect(formatNumber(300, {units: {factor: 1000, postfix: 'K'}, precision: 1})).toEqual(

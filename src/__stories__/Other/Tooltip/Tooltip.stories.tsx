@@ -35,20 +35,20 @@ export const TotalsSum = {
 
 const TooltipFormattedValues = () => {
     return (
-        <Container spaceRow={5}>
-            <Row space={2}>
-                <Col s={6}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-2">
+                <Col size={6}>
                     <ChartStory data={tooltipWithNumberFormat} />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <ChartStory data={tooltipWithDateFormat} />
                 </Col>
             </Row>
-            <Row space={2}>
-                <Col s={6}>
+            <Row gap="spacing-2">
+                <Col size={6}>
                     <ChartStory data={tooltipWithUnits} />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <ChartStory data={tooltipWithCustomFormatter} />
                 </Col>
             </Row>

@@ -2,8 +2,8 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import {median} from 'd3-array';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
@@ -291,8 +291,8 @@ test.describe('Area series', () => {
                         },
                     ],
                 },
-                yAxis: [{maxPadding: 0}],
-                xAxis: {maxPadding: 0},
+                yAxis: [{padding: {max: 0}}],
+                xAxis: {padding: {max: 0}},
             };
             const component = await mount(<ChartTestStory data={chartData} />);
             await expect(component.locator('svg')).toHaveScreenshot();
@@ -409,8 +409,8 @@ test.describe('Area series', () => {
                     },
                 ],
             },
-            yAxis: [{maxPadding: 0}],
-            xAxis: {maxPadding: 0},
+            yAxis: [{padding: {max: 0}}],
+            xAxis: {padding: {max: 0}},
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -430,8 +430,8 @@ test.describe('Area series', () => {
                     },
                 ],
             },
-            yAxis: [{maxPadding: 0}],
-            xAxis: {maxPadding: 0},
+            yAxis: [{padding: {max: 0}}],
+            xAxis: {padding: {max: 0}},
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -703,7 +703,7 @@ test.describe('Area series', () => {
                     lineColor: 'transparent',
                     startOnTick: true,
                     endOnTick: true,
-                    maxPadding: 0,
+                    padding: {max: 0},
                 },
             ],
         };

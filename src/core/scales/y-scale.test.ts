@@ -10,7 +10,7 @@ import {createYScale} from './y-scale';
 
 interface AxisOptions {
     max?: number;
-    maxPadding: number;
+    padding: PreparedAxis['padding'];
     min?: number;
     order?: PreparedAxis['order'];
     values?: number[];
@@ -40,7 +40,7 @@ function getAxis(options: AxisOptions): PreparedAxis {
             padding: 4,
         },
         max: options.max,
-        maxPadding: options.maxPadding,
+        padding: options.padding,
         min: options.min,
         order: options.order,
         startOnTick: true,
@@ -61,14 +61,14 @@ function getDomain(options: AxisOptions) {
 }
 
 test('keeps a percentage-padded secondary axis finite when tick synchronization overflows', () => {
-    const axis = {...getAxis({maxPadding: 0}), padding: {max: '75%'}};
+    const axis = {...getAxis({padding: {max: 0}}), padding: {max: '75%'}};
     const series = SERIES.map((item) => ({
         ...item,
         data: item.data.map((point, index) => ({...point, y: index * 1e308})),
     }));
     const scale = createYScale({
         axis,
-        primaryAxis: getAxis({maxPadding: 0}),
+        primaryAxis: getAxis({padding: {max: 0}}),
         primaryTicksCount: 3,
         boundsHeight: 300,
         series,
@@ -82,7 +82,7 @@ describe('createYScale with explicit tick values', () => {
     test('keeps a reversed domain identical to automatic ticks', () => {
         const options = {
             max: 100,
-            maxPadding: 0,
+            padding: {max: 0},
             min: 0,
             order: 'reverse' as const,
         };
@@ -92,7 +92,7 @@ describe('createYScale with explicit tick values', () => {
 
     test('keeps start/end alignment and padding identical to automatic ticks', () => {
         const options = {
-            maxPadding: 0.05,
+            padding: {max: '5%'},
             min: 0,
         };
 
@@ -120,7 +120,7 @@ test('waterfall Y domain includes running totals in the original point order', (
         colors: [],
         legend: {enabled: false} as PreparedLegend,
     }) as PreparedWaterfallSeries[];
-    const axis = {...getAxis({maxPadding: 0}), startOnTick: false, endOnTick: false};
+    const axis = {...getAxis({padding: {max: 0}}), startOnTick: false, endOnTick: false};
 
     expect(series.map((s) => s.data.map((d) => d.x))).toEqual([[2], [0, 4], [1, 3, 5]]);
     expect(createYScale({axis, boundsHeight: 100, series})?.domain()).toEqual([-10, 5]);
@@ -143,12 +143,12 @@ describe('createScales with a synchronized secondary Y axis', () => {
 
     function getDomains(values?: number[]) {
         const primaryAxis = {
-            ...getAxis({min: 0, max: 100, maxPadding: 0, values}),
+            ...getAxis({min: 0, max: 100, padding: {max: 0}, values}),
             plotIndex: 0,
             position: 'left',
         } as PreparedYAxis;
         const secondaryAxis = {
-            ...getAxis({min: -10, max: 90, maxPadding: 0}),
+            ...getAxis({min: -10, max: 90, padding: {max: 0}}),
             plotIndex: 0,
             position: 'right',
         } as PreparedYAxis;

@@ -21,7 +21,7 @@ export function getStackLabelsData(
                 data: values.map((value, category) =>
                     horizontal ? {x: value, y: category} : {x: category, y: value},
                 ),
-                dataLabels: {enabled: type !== 'area', inside: true},
+                dataLabels: {enabled: type !== 'area', placement: ['inside-center']},
             })),
             options: {
                 [type]: {

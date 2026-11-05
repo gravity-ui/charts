@@ -2,8 +2,8 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
@@ -18,12 +18,12 @@ const HeatmapNullHandlingComparison = () => {
     set(zeroData, 'series.data[0].dataLabels', {enabled: true});
 
     return (
-        <Container spaceRow={5}>
-            <Row space={3}>
-                <Col s={12} m={6}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-3">
+                <Col size={{xs: 12, m: 6}}>
                     <ChartStory data={skipData} />
                 </Col>
-                <Col s={12} m={6}>
+                <Col size={{xs: 12, m: 6}}>
                     <ChartStory data={zeroData} />
                 </Col>
             </Row>
