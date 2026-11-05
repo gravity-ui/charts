@@ -73,7 +73,7 @@ A declarative React charting library — render line, area, bar, pie, scatter, t
 
 ### When to use
 
-- Standard business charts: `line`, `area`, `area-range`, `bar-x`/`bar-y`, `pie`, `scatter`, `treemap`, `waterfall`, `sankey`, `radar`, `heatmap`, `funnel`, `x-range`.
+- Supported series types: `line`, `area`, `area-range`, `bar-x`/`bar-y`, `pie`, `scatter`, `treemap`, `waterfall`, `sankey`, `radar`, `heatmap`, `funnel`, `x-range`.
 - Visualizations that must follow Gravity UI theming (light/dark) and share tokens with a `@gravity-ui/uikit` app.
 - Rendering a chart from declarative data rather than drawing imperatively.
 
