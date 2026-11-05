@@ -25,7 +25,7 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
 import {validateInterpolation, validateLabelAnchor} from './validation';
-import {prepareLineAxisSeries} from './zoom';
+import {getLineAxisDomainValues} from './zoom';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -100,15 +100,8 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         preserveAdjacentPoints: true,
-        prepareAxisSeries: prepareLineAxisSeries,
     },
-    getAxisDomainValues: ({series, axis}) => {
-        if (axis === 'x') return undefined;
-        return series.flatMap((item) => {
-            const data = ('axisDomainData' in item ? item.axisDomainData : undefined) ?? item.data;
-            return Array.from(data, (point) => point?.y);
-        });
-    },
+    getAxisDomainValues: getLineAxisDomainValues,
     prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
     prepareSeries: prepareLineSeries,
     validate: ({series, xAxis, yAxis}) => {

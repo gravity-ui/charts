@@ -186,16 +186,26 @@ describe('zoom/getZoomedSeriesData', () => {
             {x: 0, y: 20},
             {x: 10, y: 80},
         ];
+        const prepared = prepareLineSeries({
+            series: [{type: 'line', name: 'Price', interpolation: {type: 'step'}, data}],
+            colorScale: scaleOrdinal<string, string>().range(['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        });
         const result = getZoomedSeriesData({
-            seriesData: [{type: 'line', interpolation: {type: 'step'}, data}] as PreparedSeries[],
+            seriesData: prepared,
             xAxis: linearXAxis(),
             zoomState: {x: [2, 4]},
         });
-        expect(getAxisDomainValues(result.preparedAxisSeries, 'x')).toEqual([0, 10]);
-        expect(getAxisDomainValues(result.preparedAxisSeries, 'y')).toEqual([20]);
-        expect(result.preparedAxisSeries[0].data).toEqual(data);
+        const viewport = {
+            x: {type: 'linear' as const, range: [2, 4] as const},
+            y: {type: 'linear' as const},
+        };
+        expect(getAxisDomainValues(result.preparedShapesSeries, 'x', {viewport})).toEqual([0, 10]);
+        expect(getAxisDomainValues(result.preparedShapesSeries, 'y', {viewport})).toEqual([20]);
+        expect(getAxisDomainValues(result.preparedShapesSeries, 'y')).toEqual([20, 80]);
         expect(result.preparedShapesSeries[0].data).toEqual(data);
-        expect(result.preparedShapesSeries[0]).not.toHaveProperty('axisDomainData');
+        expect(prepared[0].data).toBe(data);
     });
 
     test.each(['line', 'area', 'area-range'] as const)(

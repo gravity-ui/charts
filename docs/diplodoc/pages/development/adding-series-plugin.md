@@ -42,11 +42,17 @@ Compare existing plugins and their actual behavior. For each capability, documen
 
 ### Axis domains
 
-Implement `getAxisDomainValues({series, axis})` when scalar point coordinates do not describe the series domain. It receives an ordered group of this plugin's raw or prepared series and the axis direction. Return an array of unformatted values for core to merge and deduplicate across plugins. Returning `[]` excludes the group; omitting the callback or returning `undefined` uses scalar `x`/`y` coordinates of axis-related series.
+Implement `getAxisDomainValues({series, axis, viewport})` when scalar point coordinates do not describe the series domain. It receives an ordered group of this plugin's raw or prepared series and the axis direction. Return an array of unformatted values for core to merge and deduplicate across plugins. Returning `[]` excludes the group; omitting the callback or returning `undefined` uses scalar `x`/`y` coordinates from the caller's point selection.
 
 For independent points, flatten their values or interval endpoints. Calculate stacks and cumulative values for the whole group. The `core/series/stacked-domain.ts` helper accepts coordinate roles and a point selector, grouping stacks and summing each sign separately.
 
-The caller selects visibility, zoom filtering, and axis membership. Preserve that selection, including the all-hidden fallback; do not filter hidden series again or mutate input points or their order.
+The caller selects visibility and axis membership, including the all-hidden fallback. Do not filter hidden series again or mutate input points or their order.
+
+During zoom or range-slider selection, `series` includes the boundary points retained to draw the geometry. These points can lie outside the window. `viewport.x` and `viewport.y` describe each axis type, optional active range, and category names when applicable. An absent range means that dimension is not filtered.
+
+The plugin decides which values its geometry occupies inside the window. For a linear or stepped path, include interior samples and intersections at the X edges; the shared `plugins/path-domain.ts` helper performs this calculation. Area plugins additionally own their lower boundaries and stack accumulation. Point-based domains can use `getDomainPoints` to preserve sample selection and the retained-anchor fallback when no sample is inside.
+
+Core collects the contributions once per Y axis and reuses them for scales and label measurement. Plugins do not need to track preparation passes or cache viewport calculations themselves.
 
 Declare separate `axisBaseline: 'x'` or `'y'` metadata when the value axis needs a baseline. Core includes zero in free linear bounds if any plugin requests it, considering all contributions on the axis. Explicit bounds and zoom take precedence. Logarithmic Y retains positive headroom; logarithmic X and percent domains follow their scale policies.
 

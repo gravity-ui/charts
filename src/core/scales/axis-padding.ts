@@ -4,6 +4,7 @@ import {scaleLinear} from 'd3-scale';
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
+import type {AxisDomainValue} from '../series/plugin';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '../series/types';
 import type {ChartMargin} from '../types';
@@ -52,6 +53,7 @@ function hasPadding(axis: PreparedAxis) {
 }
 
 function fitAxis(args: {
+    domainValues?: AxisDomainValue[];
     axis: PreparedAxis;
     direction: 'x' | 'y';
     scale: ChartScale;
@@ -219,6 +221,7 @@ function fitAxis(args: {
             // Use the same tick thinning as the rendered Y axis. A generic nice()
             // alone may choose an end tick that gets dropped on a short chart.
             const tickArgs = {
+                domainValues: args.domainValues,
                 axis,
                 range: [range[0], range[1]] as [number, number],
                 scale: candidate as ChartScaleLinear,
@@ -249,7 +252,11 @@ function fitAxis(args: {
 }
 
 export function applyAxisPadding(
-    args: PrepareAxisPaddingArgs & {fixedX?: boolean; fixedY?: boolean[]},
+    args: PrepareAxisPaddingArgs & {
+        fixedX?: boolean;
+        fixedY?: boolean[];
+        domainValues?: AxisDomainValue[][];
+    },
 ) {
     const {xAxis, yAxis, xScale, yScale, series} = args;
     if (!hasPadding(xAxis) && !yAxis.some(hasPadding)) return;
@@ -309,6 +316,7 @@ export function applyAxisPadding(
         if (!padY[index] && !syncTicks) return;
         const primaryTicksCount = syncWithPrimary
             ? getAutomaticTickValues({
+                  domainValues: args.domainValues?.[primaryIndex],
                   axis: primary,
                   scale: primaryScale,
                   labelLineHeight: primary.labels.lineHeight,
@@ -317,6 +325,7 @@ export function applyAxisPadding(
             : undefined;
         const previousDomain = scale.domain().map(Number);
         fitAxis({
+            domainValues: args.domainValues?.[index],
             axis,
             direction: 'y',
             scale,

@@ -5,6 +5,7 @@ import type {ChartScale} from '~core/scales/types';
 import {clusterYAxes} from '~core/scales/utils';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
+import type {AxisDomainValue} from '~core/series/plugin';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {getAxisHeight, getOnlyVisibleSeries} from '~core/utils';
 
@@ -22,6 +23,7 @@ export {createXScale} from '~core/scales/x-scale';
 export {createYScale} from '~core/scales/y-scale';
 
 interface Args {
+    yDomainValues?: AxisDomainValue[][];
     seriesOptions?: PreparedSeriesOptions;
     boundsWidth: number;
     boundsHeight: number;
@@ -36,6 +38,7 @@ interface Args {
 
 export const createScales = (args: Args) => {
     const {
+        yDomainValues,
         seriesOptions,
         boundsWidth,
         boundsHeight,
@@ -64,6 +67,7 @@ export const createScales = (args: Args) => {
             });
             const visiblePrimaryAxisSeries = getOnlyVisibleSeries(primaryAxisSeries);
             const primaryAxisScale = createYScale({
+                domainValues: yDomainValues?.[index],
                 axis: primaryAxis,
                 boundsHeight: axisHeight,
                 series: visiblePrimaryAxisSeries.length
@@ -78,6 +82,7 @@ export const createScales = (args: Args) => {
 
             if (primaryAxisScale && secondaryAxis && !isRangeSlider) {
                 primaryTicksCount = getAutomaticTickValues({
+                    domainValues: yDomainValues?.[index - 1],
                     axis: primaryAxis,
                     scale: primaryAxisScale,
                     labelLineHeight: primaryAxis.labels.lineHeight,
@@ -94,6 +99,7 @@ export const createScales = (args: Args) => {
             const visibleSecondAxisSeries = getOnlyVisibleSeries(secondAxisSeries);
             const secondaryAxisScale = secondaryAxis
                 ? createYScale({
+                      domainValues: yDomainValues?.[index],
                       axis: secondaryAxis,
                       boundsHeight: axisHeight,
                       primaryAxis,
@@ -127,6 +133,7 @@ export const createScales = (args: Args) => {
     };
     if (!isRangeSlider && xAxis && scales.xScale) {
         applyAxisPadding({
+            domainValues: yDomainValues,
             ...scales,
             xScale: scales.xScale,
             xAxis,

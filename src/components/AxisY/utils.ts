@@ -1,3 +1,4 @@
+import type {AxisDomainValue} from '~core/series/plugin';
 import {
     getDomainDataYBySeries,
     getExplicitAxisTickValues,
@@ -14,11 +15,13 @@ export function getAutomaticTickValues({
     axis,
     labelLineHeight,
     series,
+    domainValues,
 }: {
     scale: ChartScale;
     axis: PreparedAxis;
     labelLineHeight: number;
     series: PreparedSeries[];
+    domainValues?: AxisDomainValue[];
 }) {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
         const range = scale.range();
@@ -28,7 +31,7 @@ export function getAutomaticTickValues({
         }
 
         const getScaleTicks = () => {
-            const domainData = getDomainDataYBySeries(series) as number[];
+            const domainData = (domainValues ?? getDomainDataYBySeries(series)) as number[];
 
             if (series.some((s) => s.type === 'bar-y')) {
                 if (domainData.length < 3) {

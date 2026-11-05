@@ -1,8 +1,9 @@
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries, PreparedZoomableSeries} from '../series';
+import {isValueInAxisRange} from '../series/domain-points';
 import {getSeriesPlugin} from '../series/seriesRegistry';
-import type {ChartAxisType, ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
+import type {ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
 
 import type {ZoomState} from './types';
 
@@ -13,54 +14,11 @@ function isValueInRange(args: {
     max: number | string;
 }) {
     const {axis, max, min, value} = args;
-
-    if (value === undefined) {
-        return false;
-    }
-
-    const axisType: ChartAxisType = axis?.type || 'linear';
-
-    switch (axisType) {
-        case 'datetime':
-        case 'linear':
-        case 'logarithmic': {
-            const numValue = typeof value === 'string' ? Number(value) : value;
-            const numMin = typeof min === 'string' ? Number(min) : min;
-            const numMax = typeof max === 'string' ? Number(max) : max;
-
-            if (Number.isNaN(numValue) || Number.isNaN(numMin) || Number.isNaN(numMax)) {
-                return false;
-            }
-
-            return numValue >= numMin && numValue <= numMax;
-        }
-        case 'category': {
-            const categories = axis?.categories || [];
-
-            if (typeof value === 'string' && typeof min === 'number' && typeof max === 'number') {
-                const valueIndex = categories.indexOf(value);
-
-                if (min === -1 || max === -1 || valueIndex === -1) {
-                    return false;
-                }
-
-                return valueIndex >= Math.min(min, max) && valueIndex <= Math.max(min, max);
-            }
-
-            if (typeof value === 'number' && typeof min === 'number' && typeof max === 'number') {
-                if (min === -1 || max === -1) {
-                    return false;
-                }
-
-                return value >= Math.min(min, max) && value <= Math.max(min, max);
-            }
-
-            return false;
-        }
-        default: {
-            return false;
-        }
-    }
+    return isValueInAxisRange(value, {
+        type: axis?.type ?? 'linear',
+        categories: axis?.categories,
+        range: [Number(min), Number(max)],
+    });
 }
 
 function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoomableSeries {
@@ -92,13 +50,11 @@ export function getZoomedSeriesData(args: {
         return {
             preparedSeries: seriesData,
             preparedShapesSeries: seriesData,
-            preparedAxisSeries: seriesData,
         };
     }
 
     const zoomedSeriesData: PreparedSeries[] = [];
     const zoomedShapesSeriesData: PreparedSeries[] = [];
-    const zoomedAxisSeriesData: PreparedSeries[] = [];
 
     seriesData.forEach((seriesItem) => {
         const zoomOptions = getSeriesPlugin(seriesItem.type).zoom;
@@ -220,34 +176,19 @@ export function getZoomedSeriesData(args: {
             }
         });
 
-        const zoomedSeries = {
+        zoomedSeriesData.push({
             ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredData,
-        } as PreparedSeries;
-        const shapeSeries = {
+        } as PreparedSeries);
+        zoomedShapesSeriesData.push({
             ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredShapesData || filteredData,
-        } as PreparedSeries;
-        const axisSeries = filteredData.length ? zoomedSeries : shapeSeries;
-        zoomedSeriesData.push(zoomedSeries);
-        zoomedShapesSeriesData.push(shapeSeries);
-        zoomedAxisSeriesData.push(
-            (zoomState.x && filteredShapesData
-                ? zoomOptions?.prepareAxisSeries?.({
-                      series: axisSeries,
-                      shapeSeries,
-                      xRange: zoomState.x,
-                      xAxis,
-                      yAxis: yAxis?.[yAxisIndex],
-                  })
-                : undefined) ?? axisSeries,
-        );
+        } as PreparedSeries);
     });
 
     return {
         preparedSeries: zoomedSeriesData,
         preparedShapesSeries: zoomedShapesSeriesData,
-        preparedAxisSeries: zoomedAxisSeriesData,
     };
 }
 

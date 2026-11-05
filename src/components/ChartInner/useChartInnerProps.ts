@@ -7,6 +7,7 @@ import {getPreparedRangeSlider} from '~core/axes/range-slider';
 import {DEFAULT_AXIS_TYPE, DEFAULT_PALETTE} from '~core/constants';
 import {getHorizontalAxisOffsets} from '~core/layout/chart-dimensions';
 import {getPreparedSeries} from '~core/series';
+import {collectYAxisDomainValues} from '~core/series/axis-domain';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
@@ -330,12 +331,17 @@ export function useChartInnerProps(props: Props) {
                 effectiveZoomState.y = zoomState.y;
             }
 
-            const {preparedSeries, preparedShapesSeries, preparedAxisSeries} = getZoomedSeriesData({
+            const {preparedSeries, preparedShapesSeries} = getZoomedSeriesData({
                 seriesData: visiblePreparedSeries,
                 xAxis: normalizedXAxis,
                 yAxis: normalizedYAxis,
                 zoomState: effectiveZoomState,
             });
+            const axisSeries = preparedSeries.map((series, index) =>
+                Array.isArray(series.data) && series.data.length === 0
+                    ? preparedShapesSeries[index]
+                    : series,
+            );
 
             const {preparedLegend, legendConfig, legendItems} = await finalizePreparedLegend({
                 chartWidth: width,
@@ -358,7 +364,14 @@ export function useChartInnerProps(props: Props) {
                 preparedChart,
                 legendConfig,
                 preparedLegend,
-                preparedSeries: preparedAxisSeries,
+                preparedSeries: axisSeries,
+                yDomainValues: collectYAxisDomainValues({
+                    series: preparedShapesSeries,
+                    fallbackSeries: axisSeries,
+                    xAxis: normalizedXAxis,
+                    yAxis: normalizedYAxis,
+                    zoomState: effectiveZoomState,
+                }),
                 preparedSeriesOptions,
                 width,
                 xAxis: normalizedXAxis,
